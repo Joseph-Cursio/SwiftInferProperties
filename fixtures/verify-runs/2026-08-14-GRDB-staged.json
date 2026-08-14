@@ -1,0 +1,3075 @@
+{
+  "capturedAt" : "2026-08-14T16:18:29Z",
+  "label" : "GRDB @ b83108d10 — sources STAGED into Sources/GRDB (shim), platform floor fixed",
+  "records" : [
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x006887095291693B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "unadapted()",
+      "subjectFingerprint" : "9EDF3AADB6EED8FA",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x016FC3EE69C8DFF6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "F17B74112933BB8A",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0x03B5D71E8C2D8479",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "BC4F5529AB105B08",
+      "templateName" : "binary-idempotence"
+    },
+    {
+      "carrier" : "DatabaseSchemaSource",
+      "identityHash" : "0x04D480A927BBD2BD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: some DatabaseSchemaSource",
+      "primaryFunctionName" : "then(_:)",
+      "subjectFingerprint" : "7D90A909EB1BAF4C",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x0517C69019C98A90",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "count(_:)",
+      "subjectFingerprint" : "3FB6B303E04B4FD5",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x05F83BFFDD552575",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "||(lhs:rhs:)",
+      "subjectFingerprint" : "88C44BAE8A974D8A",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "SQLOrdering",
+      "identityHash" : "0x06048BD9B24F3099",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLOrdering",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "F0CFA98AFF01438B",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "DatabaseRegionConvertible",
+      "identityHash" : "0x06DC7CB4FD217FF9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseRegionConvertible",
+      "primaryFunctionName" : "fullDatabase()",
+      "subjectFingerprint" : "BE618A42AEA2DFCA",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x070E2C0B2DCB85DF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "<=(lhs:rhs:)",
+      "subjectFingerprint" : "24D21AB5920FAE92",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "JSONRequiredEncoder",
+      "identityHash" : "0x082F177A265130BD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: JSONRequiredEncoder",
+      "primaryFunctionName" : "JSONRequiredEncoder.superEncoder()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabasePromise",
+      "identityHash" : "0x08D05CD905AE5079",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: functor-identity",
+      "primaryFunctionName" : "map(_:)",
+      "subjectFingerprint" : "EBA1C26A1A2A5239",
+      "templateName" : "functor-identity"
+    },
+    {
+      "carrier" : "KeyedContainer",
+      "identityHash" : "0x0968796B81EE760E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "F0FFFFE3400D5099",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DatabaseError",
+      "identityHash" : "0x096DBBE8E2583151",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseError",
+      "primaryFunctionName" : "connectionIsClosed()",
+      "subjectFingerprint" : "D11C1DD64CED09FE",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLSubquery",
+      "identityHash" : "0x0AD9091E78312654",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "columnCount(_:)",
+      "subjectFingerprint" : "7223817C7F693CA6",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "MetalDatabasePreUpdateEventImpl",
+      "identityHash" : "0x0D146EFD6B56D70B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy(_:)",
+      "subjectFingerprint" : "0423875E640CA1E4",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TableAliasBase",
+      "identityHash" : "0x0DBAFDD3124F5644",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "root()",
+      "subjectFingerprint" : "BFA7FD6888D21664",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SingleValueRowDecoder",
+      "identityHash" : "0x0DDA3798D7AD10A7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "1B79CBD0BA1623EE",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0x101949C2A9C700D8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "194D0E863884D4E2",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "ValueObservation",
+      "identityHash" : "0x102F549F5E8BFA23",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: functor-identity",
+      "primaryFunctionName" : "map(_:)",
+      "subjectFingerprint" : "F690A108FBA931F5",
+      "templateName" : "functor-identity"
+    },
+    {
+      "carrier" : "PrefetchedRowsDecoder",
+      "identityHash" : "0x1065ADDACD6AB958",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: PrefetchedRowsDecoder",
+      "primaryFunctionName" : "PrefetchedRowsDecoder.nestedUnkeyedContainer()",
+      "subjectFingerprint" : "C510892CA2E83D0F",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "MetalDatabaseEventImpl",
+      "identityHash" : "0x12333ECB0A4C6A37",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy(_:)",
+      "subjectFingerprint" : "CD860EFB931CD330",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x1233C12D5A8F640D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate",
+      "primaryFunctionName" : "*(lhs:rhs:)",
+      "subjectFingerprint" : "8E9D5B4837D9DC88",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x12935875D00129DE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "unscoped()",
+      "subjectFingerprint" : "5F2EC6184B9DC317",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseCursor",
+      "identityHash" : "0x12A975D86174DA6D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseCursor",
+      "primaryFunctionName" : "columnCount()",
+      "subjectFingerprint" : "5A20D03EED14CBA5",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "AdaptedRowImpl",
+      "identityHash" : "0x12ED3B93AF6D9211",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "unscopedRow(_:)",
+      "subjectFingerprint" : "97997AE6476FD64A",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseValueDecodingContainer",
+      "identityHash" : "0x14118AD3D4D7EC29",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "BF576C3A869C9E88",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0x1450A6D94707873A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "1F0FEF8D553FDFF0",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x175F067DC1F041B7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "withStableOrder()",
+      "subjectFingerprint" : "A97C1529AEC39057",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x19CF6B24638E4ACA",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: The two halves live in different types (Row vs RowImpl) — a variant is usually declared beside its reference, so this pairing is weaker evidence that they implement one specification",
+      "primaryFunctionName" : "decode(_:atIndex:)",
+      "subjectFingerprint" : "C44375A6BFC2CCFB",
+      "templateName" : "differential-equivalence"
+    },
+    {
+      "carrier" : "AdaptedRowImpl",
+      "identityHash" : "0x1B41F4A6C2921BB5",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AdaptedRowImpl",
+      "primaryFunctionName" : "hasNull(atUncheckedIndex:)",
+      "subjectFingerprint" : "561D28B6AF48ED9A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x1C1E5D9AD9891856",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "85832C22DF7FBAE9",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x1CCA5A7FAF4E050B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "CAB7ED365C15929D",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x20417E84A8E9E52D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "43528C32643FDCD1",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x216BCB971DED945F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "2931D462B5A471CD",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x2182FB5B34B1DA90",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "sqlExpression()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x227D74316BCF9F60",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "deleteAll(_:)",
+      "subjectFingerprint" : "EF7CF46874115782",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "AdaptedRowImpl",
+      "identityHash" : "0x229E96313134F2EB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "copiedRow(_:)",
+      "subjectFingerprint" : "DD4A5969CA4353F1",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0x23C049D5BBD20794",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "CBC0E4DFDCE60521",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "StatementRowImpl",
+      "identityHash" : "0x23E4E0A08CE354CA",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copiedRow(_:)",
+      "subjectFingerprint" : "6F247E930B767280",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseValueConvertible",
+      "identityHash" : "0x24D95FD932756E00",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLiteStatement",
+      "primaryFunctionName" : "decode(fromStatement:atUncheckedIndex:context:)",
+      "subjectFingerprint" : "F3649215A2559687",
+      "templateName" : "differential-equivalence"
+    },
+    {
+      "carrier" : "RowImpl",
+      "identityHash" : "0x24EE971A6E50C5F1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copiedRow(_:)",
+      "subjectFingerprint" : "90F527212B8D3957",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0x25F27CAC43247F46",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "ignoringInternalSQLiteTables()",
+      "subjectFingerprint" : "853321FB60A85F32",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "JSONRequiredEncoder",
+      "identityHash" : "0x2777967204F76F47",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: JSONRequiredEncoder",
+      "primaryFunctionName" : "JSONRequiredEncoder.nestedUnkeyedContainer()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "CustomTransactionClock",
+      "identityHash" : "0x28958CAF3B0AEC7D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "now(_:)",
+      "subjectFingerprint" : "3EA236E746943287",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x2A963F5A60BF2DE9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "withStableOrder()",
+      "subjectFingerprint" : "1C94B620D20D2DED",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseEvent",
+      "identityHash" : "0x2D1007BE8AAC1231",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseEvent",
+      "primaryFunctionName" : "matchesKind(_:)",
+      "subjectFingerprint" : "E1462DF87620DF9D",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DatabaseDateComponents",
+      "identityHash" : "0x2DCD4574DEA2764F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseDateComponents",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "9F526A1EB750D4BD",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "Sequence",
+      "identityHash" : "0x2FC2B29768CD8F7F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: (Element) throws -> Bool",
+      "primaryFunctionName" : "countElements(where:)",
+      "subjectFingerprint" : "1ED3BCA6D931E1BA",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLQueryGenerator",
+      "identityHash" : "0x30A111D631F06AF7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "columnCount(_:)",
+      "subjectFingerprint" : "67EA919861713339",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "DatabaseWriter",
+      "identityHash" : "0x315D176A9C237484",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: state-machine",
+      "primaryFunctionName" : "add(transactionObserver:extent:)",
+      "subjectFingerprint" : "9B6BC050C6E76635",
+      "templateName" : "state-machine"
+    },
+    {
+      "carrier" : "DatabaseObservationBroker",
+      "identityHash" : "0x32724B60AD195A6F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: state-machine",
+      "primaryFunctionName" : "add(transactionObserver:extent:)",
+      "subjectFingerprint" : "798F824C20185DE0",
+      "templateName" : "state-machine"
+    },
+    {
+      "carrier" : "DatabaseEvent",
+      "identityHash" : "0x32810B6EEA94A400",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy()",
+      "subjectFingerprint" : "5629E9A5ECD73674",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0x32D7FCEC9B732529",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "836FD77909D22625",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x331964EDB1B5E866",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "hasNull(atIndex:)",
+      "subjectFingerprint" : "1499E9D95DF9A873",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0x34FA591ED7D67E7C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "836FD77909D22625",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "SQLCTE",
+      "identityHash" : "0x35C393461530B8AC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "columnCount(_:)",
+      "subjectFingerprint" : "CC1812C0057441CC",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "_LayoutedColumnMapping",
+      "identityHash" : "0x3625254C410FF986",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: _LayoutedColumnMapping",
+      "primaryFunctionName" : "_mapping()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "PrefetchedRowsDecoder",
+      "identityHash" : "0x363A47BCF3258B2B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: PrefetchedRowsDecoder",
+      "primaryFunctionName" : "PrefetchedRowsDecoder.decodeNil()",
+      "subjectFingerprint" : "8DAE1BA7446B0FD1",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x373E8BEE2472F485",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "617C7E7A7C32312B",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x39731C945BB17F95",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "countDistinct(_:)",
+      "subjectFingerprint" : "2AB3BCDDAA4BB6D2",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x3983E35167E0C730",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "A2BF9B93EA0C8A82",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "AdaptedRowImpl",
+      "identityHash" : "0x39CF70FDA15B38C4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AdaptedRowImpl",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "4D59DADCADE1E870",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "DatabaseValueDecodingContainer",
+      "identityHash" : "0x3A36604010AF0FE6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "F436DDB3C1BAC23F",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x3B2785B91C98AA2C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "countDistinct(_:)",
+      "subjectFingerprint" : "7D4A4927C3BA880B",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0x3E2A931C25483FB7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "1E6D6FCEEACB55F8",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TableRecord",
+      "identityHash" : "0x408771C38ED39FC9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "numberOfSelectedColumns(_:)",
+      "subjectFingerprint" : "833AE0C5FD200C5B",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x40C2737ABD7FEC66",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: QueryInterfaceRequest",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "0F84EB4836B0D682",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQLCollection",
+      "identityHash" : "0x40EEFD503CDB3F6E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "59C2B7ED66046EB7",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "ObservationState",
+      "identityHash" : "0x41277A3697F269F1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "notObserving()",
+      "subjectFingerprint" : "AEEFF0A7F90CB51B",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "StatementRowImpl",
+      "identityHash" : "0x4152A9FE970DACB0",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "hasNull(atUncheckedIndex:)",
+      "subjectFingerprint" : "776E078F9B599455",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x4328C1A92C75E98B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "count(_:)",
+      "subjectFingerprint" : "5010D1FE976FC87C",
+      "templateName" : "round-trip"
+    },
+    {
+      "identityHash" : "0x4417993329054E28",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: (@Sendable () -> Void)?",
+      "primaryFunctionName" : "concat(_:_:)",
+      "subjectFingerprint" : "86C2BF4721696881",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x4649F52071DE11AE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: input-totality",
+      "primaryFunctionName" : "decode(_:forColumn:)",
+      "subjectFingerprint" : "87E813269808240E",
+      "templateName" : "input-totality"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x470CB3DEE7F9FE1A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "8773695C0F990156",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0x47FE58A10389D7CC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "withStableOrder()",
+      "subjectFingerprint" : "5FD8B93BFD2092F2",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x497AEB2E5DC59B42",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: QueryInterfaceRequest",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "6C5F0915F05318C9",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x4A02FD04FB313F79",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : ">=(lhs:rhs:)",
+      "subjectFingerprint" : "83D1A3D16027E82D",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0x4A9146F834F4A653",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "194D0E863884D4E2",
+      "templateName" : "binary-idempotence"
+    },
+    {
+      "carrier" : "PrefetchedRowsDecoder",
+      "identityHash" : "0x4D4DE95EB9AE9678",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: PrefetchedRowsDecoder",
+      "primaryFunctionName" : "PrefetchedRowsDecoder.superDecoder()",
+      "subjectFingerprint" : "C510892CA2E83D0F",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TableRecord",
+      "identityHash" : "0x4D57098A76DE517C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "5529DA1D94314E74",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLCollection",
+      "identityHash" : "0x4FCCEB243A38D8EB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "A18EEE1FF42F98F9",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "SQLOrdering",
+      "identityHash" : "0x50E32FB481BE4BDE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLOrdering",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "F0CFA98AFF01438B",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Set",
+      "identityHash" : "0x51A9778CE012D726",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Set",
+      "primaryFunctionName" : "formUnion(_:)",
+      "subjectFingerprint" : "F61E7B6BC4768CB0",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "ForeignKeyDefinition",
+      "identityHash" : "0x5275D6847AB05B85",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: ForeignKeyDefinition",
+      "primaryFunctionName" : "unique()",
+      "subjectFingerprint" : "19ED2FEDE47ADBB5",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "MetalDatabaseEventImpl",
+      "identityHash" : "0x53EA699C10C84E16",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy(_:)",
+      "subjectFingerprint" : "F70903F285A2173C",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "DatabaseRegionObserver",
+      "identityHash" : "0x55CEC9A1FB734D99",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "observes(eventsOfKind:)",
+      "subjectFingerprint" : "6AE700F5B4F46251",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x55FEAE4188DC7B93",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "count(_:)",
+      "subjectFingerprint" : "3FB6B303E04B4FD5",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x56CE1F1564A06D94",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "removingPrefetchedAssociations()",
+      "subjectFingerprint" : "503302B2FAD4CBE5",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0x58D9323DB99D2F1F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "distinct()",
+      "subjectFingerprint" : "59824FF2CE102EE3",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x5A3BF894F110C2F2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "5B699ED9ECD590E3",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "TransactionClock",
+      "identityHash" : "0x5B589D0EE63E2584",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: TransactionClock",
+      "primaryFunctionName" : "`default`()",
+      "subjectFingerprint" : "2B2A072B3E7FE60B",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "JSONRequiredEncoder",
+      "identityHash" : "0x5BBEBA3968C540BF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: JSONRequiredEncoder",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "913D4E67DA6F1B42",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "StatementArguments",
+      "identityHash" : "0x5DA78EDBBC5A6CA5",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: StatementArguments",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "5DE71548E0E2C066",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x5DBFA4646DADF07D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "A33CC203A018469B",
+      "templateName" : "round-trip"
+    },
+    {
+      "identityHash" : "0x5EC8859A2E2CE900",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate<RowDecoder>",
+      "primaryFunctionName" : "abs(_:)",
+      "subjectFingerprint" : "37CD1DA7D7A13E1C",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Set",
+      "identityHash" : "0x5FDFC8B642E8FF2D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Set",
+      "primaryFunctionName" : "formIntersection(_:)",
+      "subjectFingerprint" : "1CDE35665ED4D699",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x60310B71FC8E02AD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "countDistinct(_:)",
+      "subjectFingerprint" : "2AB3BCDDAA4BB6D2",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "Database",
+      "identityHash" : "0x6114087936AEFF81",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "maximumStatementArgumentCount()",
+      "subjectFingerprint" : "210E96AE8F2FC906",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x6154FB8467D0A68D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: QueryInterfaceRequest",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "1C6F1B9F3B6A4BEA",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x61DC6A9D6C32B0C8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "copy()",
+      "subjectFingerprint" : "7370EFB086BDE808",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLSubquery",
+      "identityHash" : "0x62354538D06E3D13",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLSubquery",
+      "primaryFunctionName" : "sqlSubquery()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLGenerationContext",
+      "identityHash" : "0x644BFED791412271",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "append(arguments:)",
+      "subjectFingerprint" : "B70C97FD5BE3676E",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FTS5Tokenizer",
+      "identityHash" : "0x645A10400AD5EF07",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "tokenize(document:)",
+      "subjectFingerprint" : "7F46891558C0F599",
+      "templateName" : "input-totality"
+    },
+    {
+      "carrier" : "SchedulingWatchdog",
+      "identityHash" : "0x645B4A8ABF4B329F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "allows(_:)",
+      "subjectFingerprint" : "BFEB7A9224CD30BB",
+      "templateName" : "predicate"
+    },
+    {
+      "identityHash" : "0x65018BCBBB072963",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "abs(_:)",
+      "subjectFingerprint" : "7999D7E1A79CED0D",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x6718CF5F843B72F9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "1A9FCC1F47AA3CF3",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "DatabaseSnapshot",
+      "identityHash" : "0x684CA11341F76C4B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "configure(_:)",
+      "subjectFingerprint" : "FE2E139A85D64C6E",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "StatementArguments",
+      "identityHash" : "0x688CDF34F3126E38",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: StatementArguments",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "5DE71548E0E2C066",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x68C54A53F2B6E061",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "A2BF9B93EA0C8A82",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0x6AEE0119CB5F1663",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "contains(rowID:)",
+      "subjectFingerprint" : "9CD530B2F91DE7B4",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FilteredRequest",
+      "identityHash" : "0x6AF08F6F96F306BF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FilteredRequest",
+      "primaryFunctionName" : "all()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0x6CDEB597B977E68B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "1F0FEF8D553FDFF0",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AdaptedRowImpl",
+      "identityHash" : "0x6D49DAEEC96CA715",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "unadaptedRow(_:)",
+      "subjectFingerprint" : "59EEC1175E0D5C1C",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x6D932D013833CC23",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "A33CC203A018469B",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x6E05802CC70F1F8C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: QueryInterfaceRequest",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "5D5B752858D8B3A8",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x6E0ADC12DAA81F21",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate",
+      "primaryFunctionName" : "!(aggregate:)",
+      "subjectFingerprint" : "C14B1DF6A0956147",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLCollection",
+      "identityHash" : "0x6E77EB19940921AD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "1D0D333138080C33",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SchemaInfo",
+      "identityHash" : "0x6E78CE9529717C17",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SchemaInfo",
+      "primaryFunctionName" : "containsObjectNamed(_:ofType:)",
+      "subjectFingerprint" : "947DDB3FAE8A7802",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0x6F54BF67500F273E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "BC4F5529AB105B08",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0x6FB2012DCD7568D1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "194D0E863884D4E2",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x7089F6A1318F8921",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "count(_:)",
+      "subjectFingerprint" : "7A5B1531DBB0FE52",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x710C4FA8E5E1D203",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "!==(lhs:rhs:)",
+      "subjectFingerprint" : "45CDEC0C3BFC02F7",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x7148998564E5EE48",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "==(lhs:rhs:)",
+      "subjectFingerprint" : "CD7614E29837625C",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x71DE2092D44FF767",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "count(_:)",
+      "subjectFingerprint" : "7A5B1531DBB0FE52",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0x738B220AB08BEA80",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "BC4F5529AB105B08",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "StatementArguments",
+      "identityHash" : "0x74C51F7A62FBBA3E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: StatementArguments",
+      "primaryFunctionName" : "StatementArguments.append(contentsOf:)",
+      "subjectFingerprint" : "E62AA6BFC5D1ADF9",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseValueDecodingContainer",
+      "identityHash" : "0x795B594BDDB76973",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "ECD452F4506CB461",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "Table",
+      "identityHash" : "0x7B93AD709986BE33",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "5529DA1D94314E74",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "DatabasePreUpdateEvent",
+      "identityHash" : "0x7BCB632C247F1C92",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabasePreUpdateEvent",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "CC5911BE7DA70CF0",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x7CBFD437C8F23432",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "/(lhs:rhs:)",
+      "subjectFingerprint" : "7A0D53AEA0BCB74A",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x7D2039AB624CF92E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "!(aggregate:)",
+      "subjectFingerprint" : "8850A8B2205DCB80",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "Ordering",
+      "identityHash" : "0x7E2AC8206A5048FD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "9980C8E1A0FC4BAC",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "DatabaseValueConvertible",
+      "identityHash" : "0x7E90048A2C31596D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "decodeIfPresent(fromRow:atUncheckedIndex:)",
+      "subjectFingerprint" : "C4A8F1ACB080BED1",
+      "templateName" : "differential-equivalence"
+    },
+    {
+      "carrier" : "RowImpl",
+      "identityHash" : "0x816C3CCB464A1504",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "hasNull(atUncheckedIndex:)",
+      "subjectFingerprint" : "29EE425BE4788A2F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x81A49E1718D2CFEB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "30674228CEAB9BAE",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "ArrayRowImpl",
+      "identityHash" : "0x81F2776922CAF7E2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "B1A4614AD6D798B4",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "Inflections",
+      "identityHash" : "0x822B4F6C6250624C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isUncountable(_:)",
+      "subjectFingerprint" : "227B6FB77D74C7A8",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x836E861AE48263EA",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : ">(lhs:rhs:)",
+      "subjectFingerprint" : "9A38A510CE58018B",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "FTS5ColumnDefinition",
+      "identityHash" : "0x85D37FF7CFDC58A9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FTS5ColumnDefinition",
+      "primaryFunctionName" : "notIndexed()",
+      "subjectFingerprint" : "23A94F1537CA3CFB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TransactionObservation",
+      "identityHash" : "0x860DE34DA39A3A4C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: some TransactionObserver",
+      "primaryFunctionName" : "isWrapping(_:)",
+      "subjectFingerprint" : "333DEFE21FBE2D1A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FilteredRequest",
+      "identityHash" : "0x8731F7FEB8C8F467",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FilteredRequest",
+      "primaryFunctionName" : "none()",
+      "subjectFingerprint" : "61DB861A8AA91E8B",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0x87415B7474557A16",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "F436D38E12C2F0D6",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "ColumnDecoder",
+      "identityHash" : "0x8742F6BC078DF10C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "6584308F742BFD78",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "StatementRowImpl",
+      "identityHash" : "0x87A923AD550CA64D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "4D1650107277E8C6",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "ValueConcurrentObserver",
+      "identityHash" : "0x87E7C4B6A3B83B40",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: ValueConcurrentObserver",
+      "primaryFunctionName" : "observes(eventsOfKind:)",
+      "subjectFingerprint" : "8B7C1DCB1E2CD36C",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Element",
+      "identityHash" : "0x87EA2C88CF9A5689",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "9B144ED1FB5EDEF5",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0x88233035D7F5C97F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "7B75956B9F702DE4",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x8A8FEC91E14E5757",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "jsonBuilderExpression()",
+      "subjectFingerprint" : "CB0BDFBCED884E50",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0x8C6B1BDC66B50E60",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "*(lhs:rhs:)",
+      "subjectFingerprint" : "8D894EB77ACA8277",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "DatabasePreUpdateEvent",
+      "identityHash" : "0x928CE225FB08CB0F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabasePreUpdateEvent",
+      "primaryFunctionName" : "matchesKind(_:)",
+      "subjectFingerprint" : "E1462DF87620DF9D",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FTS4ColumnDefinition",
+      "identityHash" : "0x92DE55651142F0EB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FTS4ColumnDefinition",
+      "primaryFunctionName" : "asLanguageId()",
+      "subjectFingerprint" : "710276B485BED3E2",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "TableRecord",
+      "identityHash" : "0x95FB62BB9BBBD19E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "deleteAll(_:)",
+      "subjectFingerprint" : "B536007A775C0837",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "Parser",
+      "identityHash" : "0x97575429FBE3137F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "parse(_:)",
+      "subjectFingerprint" : "BDFD6AFAEC70DC87",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TableRequest",
+      "identityHash" : "0x97E01D5735A0B933",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: TableRequest",
+      "primaryFunctionName" : "orderByPrimaryKey()",
+      "subjectFingerprint" : "1825DA46FCB8BAF5",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "DatabaseSnapshotPool",
+      "identityHash" : "0x97FD1B232A43DF73",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "snapshotIsLost(_:)",
+      "subjectFingerprint" : "3EEE39C3BB453B99",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x991E495384F8826D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: The two halves live in different types (Row vs AdaptedRowImpl) — a variant is usually declared beside its reference, so this pairing is weaker evidence that they implement one specification",
+      "primaryFunctionName" : "decode(_:atIndex:)",
+      "subjectFingerprint" : "E32947B4E827702A",
+      "templateName" : "differential-equivalence"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x999B22A083AFCA64",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: QueryInterfaceRequest",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "5D5B752858D8B3A8",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0x9C0BE0E15F7B13A5",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:atIndex:)",
+      "subjectFingerprint" : "E0C26641C0EA2E61",
+      "templateName" : "differential-equivalence"
+    },
+    {
+      "carrier" : "DatabaseMigrator",
+      "identityHash" : "0x9CE90F8A0760BE63",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseMigrator",
+      "primaryFunctionName" : "disablingDeferredForeignKeyChecks()",
+      "subjectFingerprint" : "298B5B30E12BD23D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0x9E12D788A164A64B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: QueryInterfaceRequest",
+      "primaryFunctionName" : "distinct()",
+      "subjectFingerprint" : "8270B10EBD1F29CB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0x9E4B47F0258115E4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "3DF6CDC12086AF03",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0x9F605837E0F77D76",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "EA578B3B31E056DE",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "FilteredRequest",
+      "identityHash" : "0xA0D8C9C3F3ABAB4C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FilteredRequest",
+      "primaryFunctionName" : "none()",
+      "subjectFingerprint" : "2AF370F964AC355E",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xA13DB8251AC6A828",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "F7D3CD7EFB18F2DC",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0xA17F843059816507",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "765F366A42DEEBD5",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0xA1818BAFADA86637",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "0BEC0FB31668AE58",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "ColumnExpression",
+      "identityHash" : "0xA3076A3F82756278",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: ColumnExpression",
+      "primaryFunctionName" : "rowID()",
+      "subjectFingerprint" : "31272D856E3D5467",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseSnapshotPool",
+      "identityHash" : "0xA385E98576F5E54C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "configure(_:)",
+      "subjectFingerprint" : "E18FE899F090B131",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0xA409C1AFB6F3594E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "unorderedUnlessLimited()",
+      "subjectFingerprint" : "0B39947FB86A92EC",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AdaptedFetchRequest",
+      "identityHash" : "0xA6B40E41D1FF9186",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "9569468A3B45559B",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "ColumnDecoder",
+      "identityHash" : "0xA7AED9EB3F553969",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "6584308F742BFD78",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0xA8E95BC5038B7EC0",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "fetchTrivialCount(_:)",
+      "subjectFingerprint" : "442A5727DD15B141",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "Row.Index",
+      "identityHash" : "0xA94FB5B0BB084865",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "distance(to:)",
+      "subjectFingerprint" : "436F28008D9EF6B2",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "CopiedDatabasePreUpdateEventImpl",
+      "identityHash" : "0xAAD6010ECEAD7E0E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy(_:)",
+      "subjectFingerprint" : "0A352908AAAB6805",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Database",
+      "identityHash" : "0xAB34DD8D45AB7805",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "changesCount()",
+      "subjectFingerprint" : "49C94C5AD15262FB",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0xAB9D3680B842FDF4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "CCC9D5757C5DDDDF",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "ColumnDefinition",
+      "identityHash" : "0xABEDE26F1E0F308E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: ColumnDefinition",
+      "primaryFunctionName" : "indexed()",
+      "subjectFingerprint" : "5F4D32265631223D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "MutablePersistableRecord",
+      "identityHash" : "0xAD80C2E2719C93CD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-pair: insert(_:onConflict:)",
+      "primaryFunctionName" : "insert(_:onConflict:)",
+      "subjectFingerprint" : "46BFB6758FF5C8E6",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xADB59E6975BC9783",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "F7D3CD7EFB18F2DC",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "FetchRequestEraser",
+      "identityHash" : "0xADE0F67A9397B08D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "843DAB3FE8390245",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "CopiedDatabaseEventImpl",
+      "identityHash" : "0xAE16C0D11C4B943B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy(_:)",
+      "subjectFingerprint" : "0A352908AAAB6805",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0xAF53D8D414695588",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "withStableOrder()",
+      "subjectFingerprint" : "1D133AFE77397F40",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Ordering",
+      "identityHash" : "0xAFD2EEFE8BE5FBBC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation.Ordering",
+      "primaryFunctionName" : "appending(_:)",
+      "subjectFingerprint" : "BE73B343B5FB37D4",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Parser",
+      "identityHash" : "0xAFD735EA7710BD48",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "parseDigit(into:)",
+      "subjectFingerprint" : "C7428D73A04D308B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DatabaseObservationBroker",
+      "identityHash" : "0xAFF9E624BB474827",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseObservationBroker",
+      "primaryFunctionName" : "observesDeletions(on:)",
+      "subjectFingerprint" : "53BF5A8EA3A09658",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0xB07942E57160608F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "count(_:)",
+      "subjectFingerprint" : "5010D1FE976FC87C",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0xB0AD60945EF89CC3",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "809965E716E3540A",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Statement",
+      "identityHash" : "0xB16A93F1E95E5FB8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Statement",
+      "primaryFunctionName" : "columnCount()",
+      "subjectFingerprint" : "E8BD0445FF0EF6F1",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "FTS5",
+      "identityHash" : "0xB26AAB89EEFB9A49",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: input-totality",
+      "primaryFunctionName" : "tokenize(query:)",
+      "subjectFingerprint" : "36E9E6A57FA4D357",
+      "templateName" : "input-totality"
+    },
+    {
+      "carrier" : "ArrayRowImpl",
+      "identityHash" : "0xB38E0EFC9530B3D1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copiedRow(_:)",
+      "subjectFingerprint" : "499A2CB85E47A0EF",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "EmptyRowImpl",
+      "identityHash" : "0xB3F657F51535B243",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "913D4E67DA6F1B42",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "Database",
+      "identityHash" : "0xB5360D9E3EBC5BD7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "totalChangesCount()",
+      "subjectFingerprint" : "19469E7F617575EC",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xB676533F156D4150",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate",
+      "primaryFunctionName" : "*(lhs:rhs:)",
+      "subjectFingerprint" : "8E9D5B4837D9DC88",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "Element",
+      "identityHash" : "0xB70D99A58AB13543",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "9B144ED1FB5EDEF5",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Ordering",
+      "identityHash" : "0xB74696428F6EA379",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "9980C8E1A0FC4BAC",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "MetalDatabasePreUpdateEventImpl",
+      "identityHash" : "0xB84B6750EF892219",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy(_:)",
+      "subjectFingerprint" : "45942DCB19F6D191",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "SQLiteStatementRowImpl",
+      "identityHash" : "0xBCCC679525F448DA",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "4D1650107277E8C6",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0xBCD53C6D03B53B06",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "countDistinct(_:)",
+      "subjectFingerprint" : "7D4A4927C3BA880B",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "ResultCode",
+      "identityHash" : "0xBCECB0CB670AFF8D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: ResultCode",
+      "primaryFunctionName" : "primaryResultCode()",
+      "subjectFingerprint" : "36D5413BA1A7DB55",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0xBD49486A00613833",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "765F366A42DEEBD5",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0xBE7073C6D2C1CB65",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "BC4F5529AB105B08",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SingleValueRowDecoder",
+      "identityHash" : "0xC066DB714FF5F6CE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "1B79CBD0BA1623EE",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SingleValueRowDecoder",
+      "identityHash" : "0xC213A07A3B28CC07",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "1B79CBD0BA1623EE",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "DatabaseDataEncodingStrategy",
+      "identityHash" : "0xC254966E97A7E56F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: input-totality",
+      "primaryFunctionName" : "encode(_:)",
+      "subjectFingerprint" : "53849688C744A262",
+      "templateName" : "input-totality"
+    },
+    {
+      "carrier" : "FTS4ColumnDefinition",
+      "identityHash" : "0xC3769CAD8A8B6128",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FTS4ColumnDefinition",
+      "primaryFunctionName" : "notIndexed()",
+      "subjectFingerprint" : "63A99896AF402B84",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQLRequest",
+      "identityHash" : "0xC4B8F2F1BA3F6F08",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "27084035059385B3",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "SQLOrdering",
+      "identityHash" : "0xC4C76AD360795633",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLOrdering",
+      "primaryFunctionName" : "sqlOrdering()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "RowImpl",
+      "identityHash" : "0xC5BD3CC6925D0B78",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "unscopedRow(_:)",
+      "subjectFingerprint" : "9A6C8A91CEC1E03E",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0xC6C59955DF9E1443",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "unorderedUnlessLimited()",
+      "subjectFingerprint" : "0E05AD91121576FC",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0xC70DBF4EEB706333",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "formUnion(_:)",
+      "subjectFingerprint" : "B5C8243AF12D85A4",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0xC8482CBCC9E64D2F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "CBC0E4DFDCE60521",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLCollection",
+      "identityHash" : "0xC9F022CA9C49A13E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "B9D6C07DC0D3155E",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0xCB3D23737CC887BE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "1F0FEF8D553FDFF0",
+      "templateName" : "binary-idempotence"
+    },
+    {
+      "carrier" : "OrderedDictionary",
+      "identityHash" : "0xCBB67710F795E7D5",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: functor-identity",
+      "primaryFunctionName" : "mapValues(_:)",
+      "subjectFingerprint" : "3094FF2352C14D6E",
+      "templateName" : "functor-identity"
+    },
+    {
+      "carrier" : "Ordering",
+      "identityHash" : "0xCCAF478422C86450",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation.Ordering",
+      "primaryFunctionName" : "appending(_:)",
+      "subjectFingerprint" : "BE73B343B5FB37D4",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "Association",
+      "identityHash" : "0xCD9CA99F72A0646B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Association",
+      "primaryFunctionName" : "unordered()",
+      "subjectFingerprint" : "BBB9C10AF1FD7B0F",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SchemaCache",
+      "identityHash" : "0xCDC533A8162ADBF4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database.SchemaCache",
+      "primaryFunctionName" : "SchemaCache.clear()",
+      "subjectFingerprint" : "DB13524174EE71DC",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "[SQLSelection]",
+      "identityHash" : "0xCF2D514F53F46F7B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLGenerationContext",
+      "primaryFunctionName" : "columnCount(_:)",
+      "subjectFingerprint" : "B00447696BC87526",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xCF8820184A4C769D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "!=(lhs:rhs:)",
+      "subjectFingerprint" : "EDCD70AB03BB0DAA",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "FTS3",
+      "identityHash" : "0xCFB95D814D92F7A3",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: input-totality",
+      "primaryFunctionName" : "tokenize(_:withTokenizer:)",
+      "subjectFingerprint" : "EC9702CC23F662B0",
+      "templateName" : "input-totality"
+    },
+    {
+      "identityHash" : "0xCFF88853D308F7E4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate<RowDecoder>",
+      "primaryFunctionName" : "length(_:)",
+      "subjectFingerprint" : "1D6B15FD8539D720",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLCollection",
+      "identityHash" : "0xD031DB7908DA7A3E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "2B85B2A27D622762",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "Database",
+      "identityHash" : "0xD1115859AF155B41",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: state-machine",
+      "primaryFunctionName" : "add(function:)",
+      "subjectFingerprint" : "1AEF0A6F542973E4",
+      "templateName" : "state-machine"
+    },
+    {
+      "identityHash" : "0xD2545375FA636F0C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: (@Sendable (T) -> Void)?",
+      "primaryFunctionName" : "concat(_:_:)",
+      "subjectFingerprint" : "34A6C956D3CFE34B",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "StatementArgumentsSink",
+      "identityHash" : "0xD34E992FA463E799",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "append(arguments:)",
+      "subjectFingerprint" : "3C4194DD64183F63",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SQLSelectable",
+      "identityHash" : "0xD377DBD213A5B8B2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLSelectable",
+      "primaryFunctionName" : "rowID()",
+      "subjectFingerprint" : "31272D856E3D5467",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xD3A1C8984718C45A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "-(lhs:rhs:)",
+      "subjectFingerprint" : "3974078556A27D1C",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "RowImpl",
+      "identityHash" : "0xD462389A093B41FF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "unadaptedRow(_:)",
+      "subjectFingerprint" : "9A6C8A91CEC1E03E",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLCollection",
+      "identityHash" : "0xD497C21D1FC612CC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "837999F0493EC976",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0xD4D96DC393DC23C2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpression",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "5B699ED9ECD590E3",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xD6215E88E1EDDAEF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "===(lhs:rhs:)",
+      "subjectFingerprint" : "FAE24B218386FB00",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xD7416F80BA95E748",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "<(lhs:rhs:)",
+      "subjectFingerprint" : "9D04A2B421AC6DA8",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "QueryInterfaceRequest",
+      "identityHash" : "0xD7C274C619B6915E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: QueryInterfaceRequest",
+      "primaryFunctionName" : "reversed()",
+      "subjectFingerprint" : "A50273E8B4C909C5",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xD81391153E86A00B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "map(_:)",
+      "subjectFingerprint" : "F17EB981D6D73137",
+      "templateName" : "functor-identity"
+    },
+    {
+      "carrier" : "DatabasePreUpdateEvent",
+      "identityHash" : "0xDA6D79E93CB37FB6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copy()",
+      "subjectFingerprint" : "5629E9A5ECD73674",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0xDC6F92684634CDA0",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "union(_:)",
+      "subjectFingerprint" : "194D0E863884D4E2",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0xDD5897EC793E6390",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "836FD77909D22625",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "StatementCopyRowImpl",
+      "identityHash" : "0xDE55E57DA4E6C1DF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "count()",
+      "subjectFingerprint" : "7502245FE02FEB3A",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "SQLSelection",
+      "identityHash" : "0xDF74AF037E310494",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLSelection",
+      "primaryFunctionName" : "sqlSelection()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLRelation",
+      "identityHash" : "0xE112990391DB9454",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLRelation",
+      "primaryFunctionName" : "withStableOrder()",
+      "subjectFingerprint" : "B74E1E53BF3F7071",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "StatementCopyRowImpl",
+      "identityHash" : "0xE1278A988E96D8BC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copiedRow(_:)",
+      "subjectFingerprint" : "499A2CB85E47A0EF",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Table",
+      "identityHash" : "0xE19FB07737DC20D8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Database",
+      "primaryFunctionName" : "deleteAll(_:)",
+      "subjectFingerprint" : "B536007A775C0837",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "TableRequest",
+      "identityHash" : "0xE42FBAFD41848898",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: TableRequest",
+      "primaryFunctionName" : "groupByPrimaryKey()",
+      "subjectFingerprint" : "4FAB02CCB8EF83F5",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseError",
+      "identityHash" : "0xE4322B16E3AA4374",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: DatabaseError",
+      "primaryFunctionName" : "snapshotIsLost()",
+      "subjectFingerprint" : "C663EEAD5B1744A4",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "EmptyRowImpl",
+      "identityHash" : "0xE58EB016AF1EF11C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "copiedRow(_:)",
+      "subjectFingerprint" : "499A2CB85E47A0EF",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLExpression",
+      "identityHash" : "0xE5E915ECA399C8BB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: inverse-pair",
+      "primaryFunctionName" : "not(_:)",
+      "subjectFingerprint" : "EA578B3B31E056DE",
+      "templateName" : "inverse-pair"
+    },
+    {
+      "carrier" : "DatabasePool",
+      "identityHash" : "0xE8E57CF2186C5A3C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "readerConfiguration(_:)",
+      "subjectFingerprint" : "6EE1995913D0DF48",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLExpressible",
+      "identityHash" : "0xEB9E648BB120A2AF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: SQLExpressible",
+      "primaryFunctionName" : "rowID()",
+      "subjectFingerprint" : "31272D856E3D5467",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "ValueWriteOnlyObserver",
+      "identityHash" : "0xEC5416259E637334",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: ValueWriteOnlyObserver",
+      "primaryFunctionName" : "observes(eventsOfKind:)",
+      "subjectFingerprint" : "8B7C1DCB1E2CD36C",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "TableRegion",
+      "identityHash" : "0xED963FEF5F502785",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "836FD77909D22625",
+      "templateName" : "binary-idempotence"
+    },
+    {
+      "carrier" : "EncodableRecord",
+      "identityHash" : "0xEDB9AD1EC8952040",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: EncodableRecord",
+      "primaryFunctionName" : "databaseEquals(_:)",
+      "subjectFingerprint" : "82C0917046426C5F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0xF1B9AD25D063F1FF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Row",
+      "primaryFunctionName" : "hasColumn(_:)",
+      "subjectFingerprint" : "FC60C697E29D8C21",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "AnyFetchRequest",
+      "identityHash" : "0xF328D91868380B6D",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "BE03005CCA1E34DA",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xF37974939B61B512",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: identity-element",
+      "primaryFunctionName" : "&&(lhs:rhs:)",
+      "subjectFingerprint" : "02495676D5679C2A",
+      "templateName" : "identity-element"
+    },
+    {
+      "carrier" : "AssociationAggregate",
+      "identityHash" : "0xF74FF1A852113F43",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: AssociationAggregate",
+      "primaryFunctionName" : "-(aggregate:)",
+      "subjectFingerprint" : "88ABBA5391A2BB4A",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SQLiteDateParser",
+      "identityHash" : "0xF7736B67344BD67E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "parseTimeZone(parser:into:)",
+      "subjectFingerprint" : "3315E4E90AEB4802",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FTS4ColumnDefinition",
+      "identityHash" : "0xF77F27E6C89078CB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FTS4ColumnDefinition",
+      "primaryFunctionName" : "notIndexed()",
+      "subjectFingerprint" : "23A94F1537CA3CFB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0xF7AB7B8C906669C6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "intersection(_:)",
+      "subjectFingerprint" : "1F0FEF8D553FDFF0",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "ConcreteFetchRequestEraser",
+      "identityHash" : "0xF8C77961CCA57758",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "fetchCount(_:)",
+      "subjectFingerprint" : "BE03005CCA1E34DA",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "TableRequest",
+      "identityHash" : "0xF97C1CFD3FE96BFC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: TableRequest",
+      "primaryFunctionName" : "orderByPrimaryKey()",
+      "subjectFingerprint" : "778D87B65285E045",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "MutablePersistableRecord",
+      "identityHash" : "0xFB2EC6F93DCD79BB",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-pair: save(_:onConflict:)",
+      "primaryFunctionName" : "save(_:onConflict:)",
+      "subjectFingerprint" : "DEAC0B4A4C945F25",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "Row",
+      "identityHash" : "0xFB7835BCFD68EB12",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: The two halves live in different types (Row vs StatementRowImpl) — a variant is usually declared beside its reference, so this pairing is weaker evidence that they implement one specification",
+      "primaryFunctionName" : "decode(_:atIndex:)",
+      "subjectFingerprint" : "A388693F025EFEAD",
+      "templateName" : "differential-equivalence"
+    },
+    {
+      "carrier" : "ColumnDecoder",
+      "identityHash" : "0xFD62184F8A682C3B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "decode(_:)",
+      "subjectFingerprint" : "6584308F742BFD78",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "TransactionObservation",
+      "identityHash" : "0xFDFCD0DA557F4D78",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: TransactionObservation",
+      "primaryFunctionName" : "observes(eventsOfKind:)",
+      "subjectFingerprint" : "E3CAEDC11D694AB6",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DatabaseEventPredicate",
+      "identityHash" : "0xFFB18070B0C34026",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: some DatabaseEventProtocol",
+      "primaryFunctionName" : "callAsFunction(_:)",
+      "subjectFingerprint" : "0AF2FB4E3EF28162",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SQL",
+      "identityHash" : "0x04349089195E9DBD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "SQL.append(literal:)",
+      "subjectFingerprint" : "8FDB869275B391E7",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "OrderedDictionary",
+      "identityHash" : "0x0C23FB6089B88818",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V0C23FB6089B88818/main.swift:89:33: error: 'OrderedDictionary' is ambiguous for type loo…",
+      "primaryFunctionName" : "merge(_:uniquingKeysWith:)",
+      "subjectFingerprint" : "7F46BED4E01AEA3E",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "_LayoutedColumnMapping",
+      "identityHash" : "0x0C4123A7BFF12210",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "baseColumnIndex(atMappingIndex:)",
+      "subjectFingerprint" : "088F1F7DC42857D8",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "DatabaseSchemaID",
+      "identityHash" : "0x1180BB67521A0ABD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "internal-api-not-accessible",
+      "primaryFunctionName" : "name(name:)",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "EscapableBinaryOperator",
+      "identityHash" : "0x13034842BCD265C3",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V13034842BCD265C3/main.swift:97:20: error: binary operator '!=' cannot be applied to two…",
+      "primaryFunctionName" : "negated()",
+      "subjectFingerprint" : "5D5831AED9B19D92",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "String",
+      "identityHash" : "0x1B528232421E7489",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V1B528232421E7489/main.swift:92:28: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "trimmedSQLStatement()",
+      "subjectFingerprint" : "C2013C88E9410F1F",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "OrderedDictionary",
+      "identityHash" : "0x1BA3FD757B6D71D5",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "index(after:)",
+      "subjectFingerprint" : "69B1DC4F9A587150",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "DatabaseColumnDecodingStrategy",
+      "identityHash" : "0x1D910AF8CCF03B27",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "_convertFromSnakeCase(_:)",
+      "subjectFingerprint" : "4326E164D2648497",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseError",
+      "identityHash" : "0x274E56D6E89A0031",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V274E56D6E89A0031/main.swift:91:30: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "noSuchSchema(_:)",
+      "subjectFingerprint" : "9BDB20CE63F5C7B0",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "Database",
+      "identityHash" : "0x34E86ECE22AE47AD",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isGRDBInternalTable(_:)",
+      "subjectFingerprint" : "A9E03D9168917575",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SQL",
+      "identityHash" : "0x3896EBD04B1C4106",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V3896EBD04B1C4106/main.swift:93:18: error: cannot convert value of type 'SQLExpression' …",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "C4F7C3979F01D11B",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "EqualityOperator",
+      "identityHash" : "0x38BE65E70C651B31",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V38BE65E70C651B31/main.swift:103:28: error: cannot call value of non-function type 'SQLE…",
+      "primaryFunctionName" : "negated()",
+      "subjectFingerprint" : "9B480B333F3005C3",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "String",
+      "identityHash" : "0x3AFEB412A46FF8F0",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V3AFEB412A46FF8F0/main.swift:92:28: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "uppercasingFirstCharacter()",
+      "subjectFingerprint" : "12C409224A42AD59",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "String",
+      "identityHash" : "0x3F03B3973E91235A",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V3F03B3973E91235A/main.swift:92:28: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "singularized()",
+      "subjectFingerprint" : "1F3D54ED5C143B85",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "String",
+      "identityHash" : "0x686A9E324D2FD359",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V686A9E324D2FD359/main.swift:92:28: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "quotedDatabaseIdentifier()",
+      "subjectFingerprint" : "6B047E07D0E3D1F3",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "EscapableBinaryOperator",
+      "identityHash" : "0x70A54F43430F16D7",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V70A54F43430F16D7/main.swift:95:28: error: cannot call value of non-function type 'SQLEx…",
+      "primaryFunctionName" : "negated()",
+      "subjectFingerprint" : "5D5831AED9B19D92",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Row.Index",
+      "identityHash" : "0x7720400FCFA571C9",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V7720400FCFA571C9/main.swift:96:16: error: binary operator '>' cannot be applied to two …",
+      "primaryFunctionName" : "distance(to:)",
+      "subjectFingerprint" : "A71E1FE44AA1D23F",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "Inflections",
+      "identityHash" : "0x7B6516E779550883",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "singularize(_:)",
+      "subjectFingerprint" : "588DA55D870A6807",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Inflections",
+      "identityHash" : "0x7BC5CEEB2F9FD99A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "pluralize(_:)",
+      "subjectFingerprint" : "3016BFE9A2D0973A",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "EqualityOperator",
+      "identityHash" : "0x7E71A1762E9F7970",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "negated()",
+      "subjectFingerprint" : "9B480B333F3005C3",
+      "templateName" : "involution"
+    },
+    {
+      "carrier" : "DatabaseSchemaID",
+      "identityHash" : "0x8533D77A902D5288",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V8533D77A902D5288/main.swift:91:30: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "attached(_:)",
+      "subjectFingerprint" : "98A331080EC78ACD",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "DatabaseSchemaID",
+      "identityHash" : "0x8591BA72E895DB8B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "internal-api-not-accessible",
+      "primaryFunctionName" : "name(name:)",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "DatabaseBackupProgress",
+      "counterexample" : "DatabaseBackupProgress(remainingPageCount: 586749361146457251, totalPageCount: -485790543525831844, isCompleted: true)",
+      "identityHash" : "0x88CB377F3254D6D5",
+      "outcome" : "measured-defaultFails",
+      "outcomeDetail" : "trial=1",
+      "primaryFunctionName" : "completedPageCount()",
+      "subjectFingerprint" : "E1BBC6B732B20E86",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "DatabaseError",
+      "identityHash" : "0x8E51A32B908ADD10",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V8E51A32B908ADD10/main.swift:91:30: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "noSuchTable(_:)",
+      "subjectFingerprint" : "AE98F80C8E45444C",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "_LayoutedColumnMapping",
+      "identityHash" : "0x905FB09964AB19F2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "baseColumnIndex(atMappingIndex:)",
+      "subjectFingerprint" : "088F1F7DC42857D8",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseColumnEncodingStrategy",
+      "identityHash" : "0x95D3D1C6843000DF",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "_convertToSnakeCase(_:)",
+      "subjectFingerprint" : "C489523235089229",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "OrderedDictionary",
+      "identityHash" : "0x9905DC57F78D9173",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/V9905DC57F78D9173/main.swift:89:33: error: 'OrderedDictionary' is ambiguous for type loo…",
+      "primaryFunctionName" : "merge(_:uniquingKeysWith:)",
+      "subjectFingerprint" : "7F46BED4E01AEA3E",
+      "templateName" : "dual-style-consistency"
+    },
+    {
+      "carrier" : "DatabaseError",
+      "identityHash" : "0xA13EDB4968672EC4",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VA13EDB4968672EC4/main.swift:91:30: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "noSuchTable(_:)",
+      "subjectFingerprint" : "5C401696A9264542",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "String",
+      "identityHash" : "0xA77C4C8C1B4D237A",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VA77C4C8C1B4D237A/main.swift:92:28: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "digitlessRadical()",
+      "subjectFingerprint" : "506DB862FBA9774C",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "FTS5TokenizerDescriptor",
+      "identityHash" : "0xAC6BC93B8DD57B2F",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VAC6BC93B8DD57B2F/main.swift:101:19: error: binary operator '!=' cannot be applied to tw…",
+      "primaryFunctionName" : "porter(wrapping:)",
+      "subjectFingerprint" : "6E5C4B2F374ED0C5",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Database",
+      "identityHash" : "0xB0B50A383EAD8437",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "filteringPrimaryKeyColumn(_:)",
+      "subjectFingerprint" : "F8A5FD581B3C3989",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseValue",
+      "identityHash" : "0xB158739F81EE59B7",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VB158739F81EE59B7/main.swift:99:15: error: type 'Gen<Data>' has no member 'data' | /priv…",
+      "primaryFunctionName" : "databaseValue()",
+      "subjectFingerprint" : "D3678214F9409F01",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseSchemaID",
+      "identityHash" : "0xC24B2A1C6AECCD6A",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VC24B2A1C6AECCD6A/main.swift:91:30: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "attached(_:)",
+      "subjectFingerprint" : "A6ACF853F8A944F5",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SQL",
+      "identityHash" : "0xD73E70DAA8074EED",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VD73E70DAA8074EED/main.swift:94:18: error: cannot convert value of type 'SQLExpression' …",
+      "primaryFunctionName" : "+(lhs:rhs:)",
+      "subjectFingerprint" : "C4F7C3979F01D11B",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "DatabaseError",
+      "identityHash" : "0xDF160FD061E02535",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VDF160FD061E02535/main.swift:91:30: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "noSuchSchema(_:)",
+      "subjectFingerprint" : "1F2EAD6138FA397F",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "DatabaseSchemaID",
+      "identityHash" : "0xE02D703CF37B4F73",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "internal-api-not-accessible",
+      "primaryFunctionName" : "name(name:)",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "Database",
+      "identityHash" : "0xE5188583498CB91F",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isSQLiteInternalTable(_:)",
+      "subjectFingerprint" : "22290F6C15D647BD",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Cursor",
+      "identityHash" : "0xE75A165FB3E1EED9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "joined(separator:)",
+      "subjectFingerprint" : "F03B7B1EF3D8CCFD",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseSchemaID",
+      "identityHash" : "0xE7BE2240D54B77C0",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "viewNameInErrorMessages(_:)",
+      "subjectFingerprint" : "2BA84936D6D244D1",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DatabaseRegion",
+      "identityHash" : "0xEE5F970441501685",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VEE5F970441501685/main.swift:102:20: error: cannot find 'TableRegion' in scope | /privat…",
+      "primaryFunctionName" : "isModified(byEventsOfKind:)",
+      "subjectFingerprint" : "4CBA8FF0E19C1BE4",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DatabaseSchemaID",
+      "identityHash" : "0xF0310B6D1E9D5D10",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VF0310B6D1E9D5D10/main.swift:91:30: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "attached(_:)",
+      "subjectFingerprint" : "EA0739575A843442",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "String",
+      "identityHash" : "0xF882B1FD32C29097",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "build-failed: exit=1: /private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus/.swiftinfer/verify-workdir/shared-survey/Sources/VF882B1FD32C29097/main.swift:92:28: error: cannot call value of non-function type 'Strin…",
+      "primaryFunctionName" : "pluralized()",
+      "subjectFingerprint" : "17B5500E296EF8B5",
+      "templateName" : "idempotence"
+    }
+  ],
+  "schemaVersion" : 1,
+  "subjectRevision" : "/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/9274408d-0a4a-4040-a9c1-22f703c5a246/scratchpad/grdb-corpus @ b83108d10 (uncommitted changes)",
+  "swiftInferVersion" : "1.149.0 (unattributable build)",
+  "target" : "GRDB",
+  "tiersByIdentity" : {
+    "0x006887095291693B" : "possible",
+    "0x016FC3EE69C8DFF6" : "advisory",
+    "0x03B5D71E8C2D8479" : "advisory",
+    "0x04349089195E9DBD" : "likely",
+    "0x04D480A927BBD2BD" : "possible",
+    "0x0517C69019C98A90" : "possible",
+    "0x05F83BFFDD552575" : "likely",
+    "0x06048BD9B24F3099" : "likely",
+    "0x06DC7CB4FD217FF9" : "possible",
+    "0x070E2C0B2DCB85DF" : "likely",
+    "0x082F177A265130BD" : "likely",
+    "0x08D05CD905AE5079" : "likely",
+    "0x0968796B81EE760E" : "advisory",
+    "0x096DBBE8E2583151" : "possible",
+    "0x0AD9091E78312654" : "possible",
+    "0x0C23FB6089B88818" : "strong",
+    "0x0C4123A7BFF12210" : "possible",
+    "0x0D146EFD6B56D70B" : "advisory",
+    "0x0DBAFDD3124F5644" : "advisory",
+    "0x0DDA3798D7AD10A7" : "advisory",
+    "0x101949C2A9C700D8" : "advisory",
+    "0x102F549F5E8BFA23" : "likely",
+    "0x1065ADDACD6AB958" : "likely",
+    "0x1180BB67521A0ABD" : "strong",
+    "0x12333ECB0A4C6A37" : "advisory",
+    "0x1233C12D5A8F640D" : "possible",
+    "0x12935875D00129DE" : "possible",
+    "0x12A975D86174DA6D" : "possible",
+    "0x12ED3B93AF6D9211" : "possible",
+    "0x13034842BCD265C3" : "likely",
+    "0x14118AD3D4D7EC29" : "advisory",
+    "0x1450A6D94707873A" : "advisory",
+    "0x175F067DC1F041B7" : "possible",
+    "0x19CF6B24638E4ACA" : "advisory",
+    "0x1B41F4A6C2921BB5" : "possible",
+    "0x1B528232421E7489" : "possible",
+    "0x1BA3FD757B6D71D5" : "possible",
+    "0x1C1E5D9AD9891856" : "likely",
+    "0x1CCA5A7FAF4E050B" : "possible",
+    "0x1D910AF8CCF03B27" : "possible",
+    "0x20417E84A8E9E52D" : "advisory",
+    "0x216BCB971DED945F" : "possible",
+    "0x2182FB5B34B1DA90" : "possible",
+    "0x227D74316BCF9F60" : "possible",
+    "0x229E96313134F2EB" : "possible",
+    "0x23C049D5BBD20794" : "likely",
+    "0x23E4E0A08CE354CA" : "advisory",
+    "0x24D95FD932756E00" : "likely",
+    "0x24EE971A6E50C5F1" : "advisory",
+    "0x25F27CAC43247F46" : "advisory",
+    "0x274E56D6E89A0031" : "possible",
+    "0x2777967204F76F47" : "likely",
+    "0x28958CAF3B0AEC7D" : "possible",
+    "0x2A963F5A60BF2DE9" : "possible",
+    "0x2D1007BE8AAC1231" : "possible",
+    "0x2DCD4574DEA2764F" : "likely",
+    "0x2FC2B29768CD8F7F" : "possible",
+    "0x30A111D631F06AF7" : "possible",
+    "0x315D176A9C237484" : "possible",
+    "0x32724B60AD195A6F" : "possible",
+    "0x32810B6EEA94A400" : "advisory",
+    "0x32D7FCEC9B732529" : "advisory",
+    "0x331964EDB1B5E866" : "advisory",
+    "0x34E86ECE22AE47AD" : "possible",
+    "0x34FA591ED7D67E7C" : "advisory",
+    "0x35C393461530B8AC" : "possible",
+    "0x3625254C410FF986" : "possible",
+    "0x363A47BCF3258B2B" : "likely",
+    "0x373E8BEE2472F485" : "advisory",
+    "0x3896EBD04B1C4106" : "possible",
+    "0x38BE65E70C651B31" : "possible",
+    "0x39731C945BB17F95" : "possible",
+    "0x3983E35167E0C730" : "advisory",
+    "0x39CF70FDA15B38C4" : "possible",
+    "0x3A36604010AF0FE6" : "advisory",
+    "0x3AFEB412A46FF8F0" : "possible",
+    "0x3B2785B91C98AA2C" : "possible",
+    "0x3E2A931C25483FB7" : "possible",
+    "0x3F03B3973E91235A" : "possible",
+    "0x408771C38ED39FC9" : "possible",
+    "0x40C2737ABD7FEC66" : "possible",
+    "0x40EEFD503CDB3F6E" : "possible",
+    "0x41277A3697F269F1" : "advisory",
+    "0x4152A9FE970DACB0" : "advisory",
+    "0x4328C1A92C75E98B" : "possible",
+    "0x4417993329054E28" : "possible",
+    "0x4649F52071DE11AE" : "possible",
+    "0x470CB3DEE7F9FE1A" : "possible",
+    "0x47FE58A10389D7CC" : "possible",
+    "0x497AEB2E5DC59B42" : "possible",
+    "0x4A02FD04FB313F79" : "likely",
+    "0x4A9146F834F4A653" : "advisory",
+    "0x4D4DE95EB9AE9678" : "likely",
+    "0x4D57098A76DE517C" : "possible",
+    "0x4FCCEB243A38D8EB" : "possible",
+    "0x50E32FB481BE4BDE" : "possible",
+    "0x51A9778CE012D726" : "strong",
+    "0x5275D6847AB05B85" : "possible",
+    "0x53EA699C10C84E16" : "advisory",
+    "0x55CEC9A1FB734D99" : "advisory",
+    "0x55FEAE4188DC7B93" : "possible",
+    "0x56CE1F1564A06D94" : "possible",
+    "0x58D9323DB99D2F1F" : "possible",
+    "0x5A3BF894F110C2F2" : "possible",
+    "0x5B589D0EE63E2584" : "possible",
+    "0x5BBEBA3968C540BF" : "possible",
+    "0x5DA78EDBBC5A6CA5" : "possible",
+    "0x5DBFA4646DADF07D" : "possible",
+    "0x5EC8859A2E2CE900" : "possible",
+    "0x5FDFC8B642E8FF2D" : "strong",
+    "0x60310B71FC8E02AD" : "possible",
+    "0x6114087936AEFF81" : "possible",
+    "0x6154FB8467D0A68D" : "possible",
+    "0x61DC6A9D6C32B0C8" : "possible",
+    "0x62354538D06E3D13" : "possible",
+    "0x644BFED791412271" : "advisory",
+    "0x645A10400AD5EF07" : "advisory",
+    "0x645B4A8ABF4B329F" : "possible",
+    "0x65018BCBBB072963" : "possible",
+    "0x6718CF5F843B72F9" : "possible",
+    "0x684CA11341F76C4B" : "advisory",
+    "0x686A9E324D2FD359" : "possible",
+    "0x688CDF34F3126E38" : "possible",
+    "0x68C54A53F2B6E061" : "advisory",
+    "0x6AEE0119CB5F1663" : "advisory",
+    "0x6AF08F6F96F306BF" : "possible",
+    "0x6CDEB597B977E68B" : "advisory",
+    "0x6D49DAEEC96CA715" : "possible",
+    "0x6D932D013833CC23" : "possible",
+    "0x6E05802CC70F1F8C" : "likely",
+    "0x6E0ADC12DAA81F21" : "possible",
+    "0x6E77EB19940921AD" : "possible",
+    "0x6E78CE9529717C17" : "possible",
+    "0x6F54BF67500F273E" : "advisory",
+    "0x6FB2012DCD7568D1" : "advisory",
+    "0x7089F6A1318F8921" : "possible",
+    "0x70A54F43430F16D7" : "possible",
+    "0x710C4FA8E5E1D203" : "likely",
+    "0x7148998564E5EE48" : "likely",
+    "0x71DE2092D44FF767" : "possible",
+    "0x738B220AB08BEA80" : "advisory",
+    "0x74C51F7A62FBBA3E" : "likely",
+    "0x7720400FCFA571C9" : "possible",
+    "0x795B594BDDB76973" : "advisory",
+    "0x7B6516E779550883" : "possible",
+    "0x7B93AD709986BE33" : "possible",
+    "0x7BC5CEEB2F9FD99A" : "possible",
+    "0x7BCB632C247F1C92" : "possible",
+    "0x7CBFD437C8F23432" : "likely",
+    "0x7D2039AB624CF92E" : "possible",
+    "0x7E2AC8206A5048FD" : "advisory",
+    "0x7E71A1762E9F7970" : "likely",
+    "0x7E90048A2C31596D" : "likely",
+    "0x816C3CCB464A1504" : "advisory",
+    "0x81A49E1718D2CFEB" : "possible",
+    "0x81F2776922CAF7E2" : "advisory",
+    "0x822B4F6C6250624C" : "advisory",
+    "0x836E861AE48263EA" : "likely",
+    "0x8533D77A902D5288" : "possible",
+    "0x8591BA72E895DB8B" : "strong",
+    "0x85D37FF7CFDC58A9" : "possible",
+    "0x860DE34DA39A3A4C" : "possible",
+    "0x8731F7FEB8C8F467" : "possible",
+    "0x87415B7474557A16" : "possible",
+    "0x8742F6BC078DF10C" : "advisory",
+    "0x87A923AD550CA64D" : "advisory",
+    "0x87E7C4B6A3B83B40" : "possible",
+    "0x87EA2C88CF9A5689" : "advisory",
+    "0x88233035D7F5C97F" : "advisory",
+    "0x88CB377F3254D6D5" : "possible",
+    "0x8A8FEC91E14E5757" : "possible",
+    "0x8C6B1BDC66B50E60" : "likely",
+    "0x8E51A32B908ADD10" : "possible",
+    "0x905FB09964AB19F2" : "possible",
+    "0x928CE225FB08CB0F" : "possible",
+    "0x92DE55651142F0EB" : "possible",
+    "0x95D3D1C6843000DF" : "possible",
+    "0x95FB62BB9BBBD19E" : "possible",
+    "0x97575429FBE3137F" : "advisory",
+    "0x97E01D5735A0B933" : "possible",
+    "0x97FD1B232A43DF73" : "advisory",
+    "0x9905DC57F78D9173" : "strong",
+    "0x991E495384F8826D" : "likely",
+    "0x999B22A083AFCA64" : "possible",
+    "0x9C0BE0E15F7B13A5" : "advisory",
+    "0x9CE90F8A0760BE63" : "possible",
+    "0x9E12D788A164A64B" : "possible",
+    "0x9E4B47F0258115E4" : "possible",
+    "0x9F605837E0F77D76" : "possible",
+    "0xA0D8C9C3F3ABAB4C" : "possible",
+    "0xA13DB8251AC6A828" : "possible",
+    "0xA13EDB4968672EC4" : "possible",
+    "0xA17F843059816507" : "possible",
+    "0xA1818BAFADA86637" : "possible",
+    "0xA3076A3F82756278" : "possible",
+    "0xA385E98576F5E54C" : "advisory",
+    "0xA409C1AFB6F3594E" : "possible",
+    "0xA6B40E41D1FF9186" : "advisory",
+    "0xA77C4C8C1B4D237A" : "possible",
+    "0xA7AED9EB3F553969" : "advisory",
+    "0xA8E95BC5038B7EC0" : "advisory",
+    "0xA94FB5B0BB084865" : "possible",
+    "0xAAD6010ECEAD7E0E" : "advisory",
+    "0xAB34DD8D45AB7805" : "possible",
+    "0xAB9D3680B842FDF4" : "possible",
+    "0xABEDE26F1E0F308E" : "possible",
+    "0xAC6BC93B8DD57B2F" : "possible",
+    "0xAD80C2E2719C93CD" : "strong",
+    "0xADB59E6975BC9783" : "possible",
+    "0xADE0F67A9397B08D" : "advisory",
+    "0xAE16C0D11C4B943B" : "advisory",
+    "0xAF53D8D414695588" : "possible",
+    "0xAFD2EEFE8BE5FBBC" : "possible",
+    "0xAFD735EA7710BD48" : "advisory",
+    "0xAFF9E624BB474827" : "possible",
+    "0xB07942E57160608F" : "possible",
+    "0xB0AD60945EF89CC3" : "possible",
+    "0xB0B50A383EAD8437" : "possible",
+    "0xB158739F81EE59B7" : "possible",
+    "0xB16A93F1E95E5FB8" : "possible",
+    "0xB26AAB89EEFB9A49" : "possible",
+    "0xB38E0EFC9530B3D1" : "advisory",
+    "0xB3F657F51535B243" : "advisory",
+    "0xB5360D9E3EBC5BD7" : "possible",
+    "0xB676533F156D4150" : "possible",
+    "0xB70D99A58AB13543" : "advisory",
+    "0xB74696428F6EA379" : "advisory",
+    "0xB84B6750EF892219" : "advisory",
+    "0xBCCC679525F448DA" : "advisory",
+    "0xBCD53C6D03B53B06" : "possible",
+    "0xBCECB0CB670AFF8D" : "possible",
+    "0xBD49486A00613833" : "possible",
+    "0xBE7073C6D2C1CB65" : "advisory",
+    "0xC066DB714FF5F6CE" : "advisory",
+    "0xC213A07A3B28CC07" : "advisory",
+    "0xC24B2A1C6AECCD6A" : "possible",
+    "0xC254966E97A7E56F" : "likely",
+    "0xC3769CAD8A8B6128" : "possible",
+    "0xC4B8F2F1BA3F6F08" : "possible",
+    "0xC4C76AD360795633" : "possible",
+    "0xC5BD3CC6925D0B78" : "possible",
+    "0xC6C59955DF9E1443" : "possible",
+    "0xC70DBF4EEB706333" : "advisory",
+    "0xC8482CBCC9E64D2F" : "possible",
+    "0xC9F022CA9C49A13E" : "possible",
+    "0xCB3D23737CC887BE" : "advisory",
+    "0xCBB67710F795E7D5" : "likely",
+    "0xCCAF478422C86450" : "possible",
+    "0xCD9CA99F72A0646B" : "possible",
+    "0xCDC533A8162ADBF4" : "likely",
+    "0xCF2D514F53F46F7B" : "possible",
+    "0xCF8820184A4C769D" : "likely",
+    "0xCFB95D814D92F7A3" : "possible",
+    "0xCFF88853D308F7E4" : "possible",
+    "0xD031DB7908DA7A3E" : "possible",
+    "0xD1115859AF155B41" : "possible",
+    "0xD2545375FA636F0C" : "possible",
+    "0xD34E992FA463E799" : "advisory",
+    "0xD377DBD213A5B8B2" : "possible",
+    "0xD3A1C8984718C45A" : "likely",
+    "0xD462389A093B41FF" : "possible",
+    "0xD497C21D1FC612CC" : "possible",
+    "0xD4D96DC393DC23C2" : "possible",
+    "0xD6215E88E1EDDAEF" : "likely",
+    "0xD73E70DAA8074EED" : "possible",
+    "0xD7416F80BA95E748" : "likely",
+    "0xD7C274C619B6915E" : "possible",
+    "0xD81391153E86A00B" : "advisory",
+    "0xDA6D79E93CB37FB6" : "advisory",
+    "0xDC6F92684634CDA0" : "advisory",
+    "0xDD5897EC793E6390" : "advisory",
+    "0xDE55E57DA4E6C1DF" : "advisory",
+    "0xDF160FD061E02535" : "possible",
+    "0xDF74AF037E310494" : "possible",
+    "0xE02D703CF37B4F73" : "strong",
+    "0xE112990391DB9454" : "possible",
+    "0xE1278A988E96D8BC" : "advisory",
+    "0xE19FB07737DC20D8" : "possible",
+    "0xE42FBAFD41848898" : "possible",
+    "0xE4322B16E3AA4374" : "possible",
+    "0xE5188583498CB91F" : "possible",
+    "0xE58EB016AF1EF11C" : "advisory",
+    "0xE5E915ECA399C8BB" : "possible",
+    "0xE75A165FB3E1EED9" : "possible",
+    "0xE7BE2240D54B77C0" : "possible",
+    "0xE8E57CF2186C5A3C" : "advisory",
+    "0xEB9E648BB120A2AF" : "possible",
+    "0xEC5416259E637334" : "possible",
+    "0xED963FEF5F502785" : "advisory",
+    "0xEDB9AD1EC8952040" : "possible",
+    "0xEE5F970441501685" : "possible",
+    "0xF0310B6D1E9D5D10" : "possible",
+    "0xF1B9AD25D063F1FF" : "possible",
+    "0xF328D91868380B6D" : "advisory",
+    "0xF37974939B61B512" : "likely",
+    "0xF74FF1A852113F43" : "possible",
+    "0xF7736B67344BD67E" : "advisory",
+    "0xF77F27E6C89078CB" : "possible",
+    "0xF7AB7B8C906669C6" : "advisory",
+    "0xF882B1FD32C29097" : "possible",
+    "0xF8C77961CCA57758" : "advisory",
+    "0xF97C1CFD3FE96BFC" : "possible",
+    "0xFB2EC6F93DCD79BB" : "strong",
+    "0xFB7835BCFD68EB12" : "advisory",
+    "0xFD62184F8A682C3B" : "advisory",
+    "0xFDFCD0DA557F4D78" : "possible",
+    "0xFFB18070B0C34026" : "possible"
+  }
+}

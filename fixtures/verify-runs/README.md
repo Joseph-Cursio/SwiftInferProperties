@@ -84,6 +84,18 @@ uses `subjectFingerprint` to separate:
 |---|---|---|
 | `2026-08-14-SwiftInferCore.json` | `SwiftInferCore` @ `c998752`, kit 3.28.0 | 2026-08-14 |
 | `2026-08-14-SwiftFormat.json` | swift-format `SwiftFormat` @ `d2bd4b3` — first third-party run | 2026-08-14 |
+| `2026-08-14-GRDB-staged.json` | GRDB `GRDB` @ `b83108d10` — **STAGED**, see below | 2026-08-14 |
+
+**GRDB is a STAGED subject and its numbers must never be quoted as GRDB-as-shipped.** GRDB
+declares `path: "GRDB"`, so its 167 sources sit at repo root and `prove-then-show --target X`
+— which resolves `Sources/<target>` unconditionally and has no `--sources` escape hatch —
+cannot reach the package at all. The run was obtained by `git mv GRDB Sources/GRDB` and
+deleting the `path:` line in a throwaway worktree: two edits, package otherwise untouched,
+builds clean. That is the MacCloud shim precedent (CLAUDE.md's `--sources` row) reused for a
+SwiftPM library rather than an Xcode project.
+
+**The workaround does not close the gap.** Reach is unchanged for any package laid out this
+way; a human moved the files. Recorded as an open finding, not as a fixed one.
 
 **The swift-format entry is the POST-fix arm (arm C).** The pre-fix arm is not retained here on
 purpose: it is 129 rows all reporting one instrument failure (the verifier's macOS floor sat
