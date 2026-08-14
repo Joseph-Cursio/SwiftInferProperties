@@ -101,8 +101,37 @@ synthesizable memberwise structs), **every** pick lands in Unverifiable
 (`unsupported-carrier`), and the command says so plainly rather than implying a
 pass. Widening carrier coverage is what moves picks out of that bucket.
 
+## Retaining a run so the next one can be diffed against it
+
+`--retain-run <path>` writes this run's per-pick records, plus provenance, to a JSON file;
+`--retain-label` names the arm. `swift-infer survey-diff --before X --after Y` then compares
+two of them **row by row**.
+
+```
+swift-infer prove-then-show --target SwiftInferCore --budget small --max-parallel 4 \
+    --retain-run fixtures/verify-runs/2026-08-14-SwiftInferCore.json \
+    --retain-label "SwiftInferCore @ c998752 (kit 3.28.0)"
+```
+
+**Write it somewhere committed.** `.swiftinfer/` is gitignored and swept by `make clean-temp`
+by design, and that is how the four earlier surveys of this repo were lost — see
+`fixtures/verify-runs/README.md`, which carries the full argument and the re-run traps.
+
+Two things the diff does that a bucket count cannot. A change of decline **cause** inside one
+bucket is reported as loudly as a change of bucket, because the best result of the most recent
+pass was two rows whose bucket held and whose cause moved. And a verdict change is split by
+whether `subjectFingerprint` moved — *the body changed too* is ordinary, *the body is
+byte-identical* means the tool changed or the run is not deterministic.
+
+Retaining is **best-effort**: a write failure warns on stderr and never fails the command, since
+the report on stdout is the primary output and a 12-minute survey should not die at the last
+step over a directory permission.
+
 ## Files / tests
 
+- `RetainedSurveyRun.swift` (the artifact), `SurveyRunDiff.swift` (the comparison),
+  `SurveyRunDiffRenderer.swift`, `SurveyDiffCommand.swift`. Tests:
+  `SurveyRunDiffTests` (13) — the load-bearing arm is the cause-only one.
 - `ProveThenShowRenderer.swift` (pure classifier/renderer),
   `ProveThenShowCommand.swift` (the subcommand). The survey entry
   (`Verify.runAllFromIndex`) gained a `quiet` flag + a `[SurveyRecord]` return
