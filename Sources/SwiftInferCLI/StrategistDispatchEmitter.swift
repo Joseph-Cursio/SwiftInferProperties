@@ -224,6 +224,28 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
     /// `.rawRepresentable` (enum-lifted form). Cases v1.47 defers:
     /// `.memberwiseArbitrary` (needs zip-composition emission;
     /// v1.48 candidate) and `.todo` (no strategy — error out).
+    /// Imports every strategist-routed stub needs.
+    ///
+    /// **`PropertyLawKit` is in here because a rendered expression can reference it and the
+    /// recipe that renders one cannot always tell.** `Gen` is `PropertyBased`'s; the kit's
+    /// Foundation generators (`Gen<Data>.data()`, `Gen<URL>.url()`, `Gen<UUID>.uuid()`,
+    /// `Gen<Decimal>.decimal()`, `Gen<Date>.date()`) are extensions in `PropertyLawKit`. A
+    /// memberwise or enum-payload recipe embeds its members' expressions verbatim, so a
+    /// carrier with one `Data` field emits a kit call from a path that had no idea it would.
+    ///
+    /// **Measured on GRDB (2026-08-14):** `DatabaseValue` renders
+    /// `Gen<Data>.data().map { DatabaseValue.Storage.blob($0) }` and the stub imported
+    /// `Foundation` + `PropertyBased` only — `type 'Gen<Data>' has no member 'data'`, for a
+    /// generator that exists and a product the target already links.
+    ///
+    /// **Third occurrence of one class.** `.algebraic` was missing the PRODUCT until
+    /// 2026-08-04 (open-threads → *The `Gen<URL>` defect*); the composite path was missing the
+    /// IMPORT until its own fix, whose comment says a verify stub "imports `PropertyBased` and
+    /// nothing else". Both fixed one route. Declaring it once, for every route, is what ends
+    /// the class — and it is free, because `VerifierWorkdir+Products` links `PropertyLawKit`
+    /// in every mode unconditionally, so no recipe can want it without having it.
+    static let baseImports = ["Foundation", "PropertyBased", "PropertyLawKit"]
+
     private static func recipe(
         for strategy: DerivationStrategy,
         carrier: String
@@ -233,7 +255,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return GeneratorRecipe(
                 expression: "\(carrier).gen()",
                 carrierTypeName: carrier,
-                imports: ["Foundation", "PropertyBased"]
+                imports: baseImports
             )
 
         case .caseIterable:
@@ -243,7 +265,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return GeneratorRecipe(
                 expression: "Gen.element(of: \(carrier).allCases).map { $0! }",
                 carrierTypeName: carrier,
-                imports: ["Foundation", "PropertyBased"]
+                imports: baseImports
             )
 
         case let .rawRepresentable(rawType):
@@ -252,7 +274,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             return GeneratorRecipe(
                 expression: lifted,
                 carrierTypeName: carrier,
-                imports: ["Foundation", "PropertyBased"]
+                imports: baseImports
             )
 
         case let .memberwiseArbitrary(members):
@@ -271,7 +293,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
                         typeName: carrier, strategy: strategy
                     ),
                     carrierTypeName: carrier,
-                    imports: ["Foundation", "PropertyBased"]
+                    imports: baseImports
                 ),
                 carrier: carrier
             )

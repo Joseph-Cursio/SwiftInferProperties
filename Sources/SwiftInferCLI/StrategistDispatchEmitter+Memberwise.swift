@@ -19,7 +19,7 @@ extension StrategistDispatchEmitter {
         return GeneratorRecipe(
             expression: expression,
             carrierTypeName: carrier,
-            imports: ["Foundation", "PropertyBased"]
+            imports: Self.baseImports
         )
     }
 
@@ -44,7 +44,7 @@ extension StrategistDispatchEmitter {
         return GeneratorRecipe(
             expression: expression,
             carrierTypeName: carrier,
-            imports: ["Foundation", "PropertyBased"]
+            imports: Self.baseImports
         )
     }
 
