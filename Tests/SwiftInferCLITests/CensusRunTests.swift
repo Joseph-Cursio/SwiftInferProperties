@@ -129,6 +129,36 @@ struct CensusRunTests {
         #expect(text.contains("--include-possible"), "flags move the headline by 20%")
     }
 
+    /// A corpus contributing nothing must be visible as such in the report.
+    ///
+    /// **The regression this pins is `swift-collections`.** Its registered target `Collections`
+    /// is a real, buildable SwiftPM target and a **pure re-export umbrella** — five
+    /// `… reexports.swift` files of typealiases, zero declarations — so the census scanned real
+    /// files and found no API, and printed `0 rows` next to corpora printing four figures. Once
+    /// the entry gained `sources: "Sources"` the same corpus reports **1,012 rows over 23
+    /// templates**.
+    ///
+    /// A zero row is legitimate and is also exactly what a wrong scan path looks like, so the
+    /// command warns rather than refuses — but the *report* must never let a zero pass as an
+    /// ordinary row, because the first one was caught by eye in a table, which is not a
+    /// mechanism.
+    @Test("A corpus that contributed nothing is still named in the report, with its zero")
+    func aZeroContributorIsNamed() {
+        let text = CensusRenderer.render(
+            Self.run([
+                Self.member("umbrella-target", rows: [:]),
+                Self.member("real-code", rows: ["idempotence": 12])
+            ]),
+            wroteTo: nil
+        )
+        #expect(
+            text.contains("umbrella-target"),
+            "a corpus contributing nothing must still appear in the denominator it belongs to"
+        )
+        #expect(text.contains("0 rows"), "its zero must be shown, not elided")
+        #expect(text.contains("ACROSS THESE 2 CORPORA"), "the zero corpus still counts as surveyed")
+    }
+
     /// `CorpusPin.token` is stored in the artifact, so it is a contract rather than copy.
     ///
     /// The rendered sentences beside it have been reworded twice this month. If the artifact

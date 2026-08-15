@@ -123,26 +123,7 @@ extension SwiftInferCommand {
         /// missing path reports zero rows for every template, which is the exact shape of
         /// *every template is dead* — the conclusion this command exists to keep honest.
         private func survey(entry: CorpusManifest.Entry, root: URL) throws -> CensusRun.Member {
-            let tree = entry.resolvedPath(repositoryRoot: root)
-            let scanPath: URL
-            if let sources = entry.sources {
-                scanPath = tree.appendingPathComponent(sources)
-            } else if let target = entry.target {
-                scanPath = tree.appendingPathComponent("Sources").appendingPathComponent(target)
-            } else {
-                throw UnscannableCorpus(id: entry.id, reason: "it names neither sources nor a target")
-            }
-            var isDirectory: ObjCBool = false
-            let exists = FileManager.default.fileExists(
-                atPath: scanPath.path, isDirectory: &isDirectory
-            )
-            guard exists, isDirectory.boolValue else {
-                throw UnscannableCorpus(
-                    id: entry.id,
-                    reason: "its scan path '\(scanPath.path)' is not a directory. Set `sources` "
-                        + "on the entry if this subject's code is not under Sources/<target>"
-                )
-            }
+            let scanPath = try Self.scanPath(for: entry, root: root)
 
             let status = CorpusStatus.resolve(entry, repositoryRoot: root)
             for warning in Self.warnings(for: status) {
@@ -157,6 +138,26 @@ extension SwiftInferCommand {
             var rows: [String: Int] = [:]
             for suggestion in result.suggestions { rows[suggestion.templateName, default: 0] += 1 }
 
+            // A corpus contributing nothing is legitimate and is also what a misconfigured scan
+            // path looks like, so it is said rather than left to be noticed. `swift-collections`
+            // is why: its `Collections` target is a pure re-export umbrella with zero
+            // declarations, so the census scanned real files and found no API, and reported
+            // `0 rows` next to corpora reporting four figures. That was caught by eye, in a
+            // table, once — which is not a mechanism.
+            //
+            // A WARNING and not a refusal: zero rows over a real corpus is a true answer, and
+            // refusing would make the tool unable to report the finding a census exists to
+            // find. What is not acceptable is zero passing silently.
+            if rows.isEmpty {
+                FileHandle.standardError.write(Data(("""
+                warning: corpus '\(entry.id)' contributed 0 rows from \(scanPath.path) — \
+                legitimate if the subject genuinely offers no laws, but this is also what an \
+                umbrella target or a wrong scan path looks like. Check that path holds \
+                declarations before reading this census.
+
+                """).utf8))
+            }
+
             var revision: String?
             var dirty = false
             if case let .resolved(_, head, isDirty) = status.checkout {
@@ -170,6 +171,38 @@ extension SwiftInferCommand {
                 pin: status.pin.token,
                 rowsByTemplate: rows
             )
+        }
+
+        /// Where a census READS, which is not always where `prove-then-show` BUILDS.
+        ///
+        /// `sources` wins when present, because it answers this question directly; `target` is
+        /// the fallback and means the conventional `Sources/<target>`. Both may be set, and on
+        /// `swift-collections` they must be: `Collections` is the buildable target and a pure
+        /// re-export umbrella, so scanning it finds zero declarations.
+        private static func scanPath(for entry: CorpusManifest.Entry, root: URL) throws -> URL {
+            let tree = entry.resolvedPath(repositoryRoot: root)
+            let path: URL
+            if let sources = entry.sources {
+                path = tree.appendingPathComponent(sources)
+            } else if let target = entry.target {
+                path = tree.appendingPathComponent("Sources").appendingPathComponent(target)
+            } else {
+                throw UnscannableCorpus(
+                    id: entry.id, reason: "it names neither sources nor a target"
+                )
+            }
+            var isDirectory: ObjCBool = false
+            let exists = FileManager.default.fileExists(
+                atPath: path.path, isDirectory: &isDirectory
+            )
+            guard exists, isDirectory.boolValue else {
+                throw UnscannableCorpus(
+                    id: entry.id,
+                    reason: "its scan path '\(path.path)' is not a directory. Set `sources` on "
+                        + "the entry if this subject's code is not under Sources/<target>"
+                )
+            }
+            return path
         }
 
         /// Said on stderr as well as stored, because a caveat only in the artifact is one the

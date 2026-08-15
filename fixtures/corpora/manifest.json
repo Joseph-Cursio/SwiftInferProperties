@@ -100,11 +100,11 @@
       "subject": "swift-collections",
       "kind": "package",
       "target": "Collections",
-      "sources": null,
+      "sources": "Sources",
       "remote": "https://github.com/apple/swift-collections.git",
       "localPath": "~/GitHub_projects/swift-collections",
       "role": "unfamiliar",
-      "why": "The equality corpus, and the only subject carrying known-wrong arms. 49 Equatable conformances; the three real projection bugs (OrderedSet order, BitArray padding, Deque head rotation) that pass 4/4 Equatable laws and drove EqualityBodyShape and the model-law families. Also the only corpus on which the kit-coverage A/B moved a row: 12 removed, 3 added, 0 elsewhere.",
+      "why": "The equality corpus, and the only subject carrying known-wrong arms. 49 Equatable conformances; the three real projection bugs (OrderedSet order, BitArray padding, Deque head rotation) that pass 4/4 Equatable laws and drove EqualityBodyShape and the model-law families. Also the only corpus on which the kit-coverage A/B moved a row: 12 removed, 3 added, 0 elsewhere. Its census scan path is Sources rather than Sources/Collections: the Collections target is a pure re-export umbrella — five reexports files, zero declarations — so scanning it returned 0 rows beside corpora returning four figures. target says what to BUILD, sources says what to SCAN.",
       "measurements": [
         {
           "apparatus": "kit-suite-backtest",
