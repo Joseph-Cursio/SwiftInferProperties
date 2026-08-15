@@ -123,20 +123,24 @@ extension SwiftInferCommand {
         /// missing path reports zero rows for every template, which is the exact shape of
         /// *every template is dead* — the conclusion this command exists to keep honest.
         private func survey(entry: CorpusManifest.Entry, root: URL) throws -> CensusRun.Member {
-            let scanPath = try Self.scanPath(for: entry, root: root)
+            let scanPaths = try Self.scanPaths(for: entry, root: root)
 
             let status = CorpusStatus.resolve(entry, repositoryRoot: root)
             for warning in Self.warnings(for: status) {
                 FileHandle.standardError.write(Data(("warning: " + warning + "\n").utf8))
             }
 
-            let result = try Discover.collectVisibleSuggestions(
-                directory: scanPath,
-                includePossible: includePossible,
-                diagnostics: SilentDiagnostics()
-            )
             var rows: [String: Int] = [:]
-            for suggestion in result.suggestions { rows[suggestion.templateName, default: 0] += 1 }
+            for scanPath in scanPaths {
+                let result = try Discover.collectVisibleSuggestions(
+                    directory: scanPath,
+                    includePossible: includePossible,
+                    diagnostics: SilentDiagnostics()
+                )
+                for suggestion in result.suggestions {
+                    rows[suggestion.templateName, default: 0] += 1
+                }
+            }
 
             // A corpus contributing nothing is legitimate and is also what a misconfigured scan
             // path looks like, so it is said rather than left to be noticed. `swift-collections`
@@ -150,7 +154,8 @@ extension SwiftInferCommand {
             // find. What is not acceptable is zero passing silently.
             if rows.isEmpty {
                 FileHandle.standardError.write(Data(("""
-                warning: corpus '\(entry.id)' contributed 0 rows from \(scanPath.path) — \
+                warning: corpus '\(entry.id)' contributed 0 rows from \
+                \(scanPaths.map(\.path).joined(separator: ", ")) — \
                 legitimate if the subject genuinely offers no laws, but this is also what an \
                 umbrella target or a wrong scan path looks like. Check that path holds \
                 declarations before reading this census.
@@ -169,40 +174,53 @@ extension SwiftInferCommand {
                 revision: revision,
                 dirty: dirty,
                 pin: status.pin.token,
+                scanPaths: scanPaths.map(\.lastPathComponent),
                 rowsByTemplate: rows
             )
         }
 
         /// Where a census READS, which is not always where `prove-then-show` BUILDS.
         ///
-        /// `sources` wins when present, because it answers this question directly; `target` is
-        /// the fallback and means the conventional `Sources/<target>`. Both may be set, and on
-        /// `swift-collections` they must be: `Collections` is the buildable target and a pure
-        /// re-export umbrella, so scanning it finds zero declarations.
-        private static func scanPath(for entry: CorpusManifest.Entry, root: URL) throws -> URL {
+        /// `sources` wins when present and is a LIST, because a subject's code is not always in
+        /// one place: `SwiftProjectLint` keeps 425 of its 874 files under `Packages/` and 48
+        /// under `Sources/`. `target` is the fallback and means the conventional
+        /// `Sources/<target>`. Both may be set, and on `swift-collections` they must be —
+        /// `Collections` is the buildable target and a pure re-export umbrella, so scanning it
+        /// finds zero declarations.
+        ///
+        /// **Each path is scanned separately and the counts summed, which is NOT the same as
+        /// scanning their union**, because cross-function pairing spans whatever is in scope at
+        /// once. Measured on `SwiftProjectLint`: `Sources` gives 9 and `Packages` 390, while the
+        /// enclosing root gives 776 — and 365 of the difference is one template, `inverse-pair`,
+        /// absent from both sub-scans. Summing is the conservative reading: it counts what each
+        /// path can support on its own and never invents a pair across a boundary the author
+        /// did not ask to cross. `CensusRun` records the paths so the choice is legible.
+        private static func scanPaths(for entry: CorpusManifest.Entry, root: URL) throws -> [URL] {
             let tree = entry.resolvedPath(repositoryRoot: root)
-            let path: URL
-            if let sources = entry.sources {
-                path = tree.appendingPathComponent(sources)
+            let candidates: [URL]
+            if let sources = entry.sources, !sources.isEmpty {
+                candidates = sources.map { tree.appendingPathComponent($0) }
             } else if let target = entry.target {
-                path = tree.appendingPathComponent("Sources").appendingPathComponent(target)
+                candidates = [tree.appendingPathComponent("Sources").appendingPathComponent(target)]
             } else {
                 throw UnscannableCorpus(
                     id: entry.id, reason: "it names neither sources nor a target"
                 )
             }
-            var isDirectory: ObjCBool = false
-            let exists = FileManager.default.fileExists(
-                atPath: path.path, isDirectory: &isDirectory
-            )
-            guard exists, isDirectory.boolValue else {
-                throw UnscannableCorpus(
-                    id: entry.id,
-                    reason: "its scan path '\(path.path)' is not a directory. Set `sources` on "
-                        + "the entry if this subject's code is not under Sources/<target>"
+            for path in candidates {
+                var isDirectory: ObjCBool = false
+                let exists = FileManager.default.fileExists(
+                    atPath: path.path, isDirectory: &isDirectory
                 )
+                guard exists, isDirectory.boolValue else {
+                    throw UnscannableCorpus(
+                        id: entry.id,
+                        reason: "its scan path '\(path.path)' is not a directory. Set `sources` "
+                            + "on the entry if this subject's code is not under Sources/<target>"
+                    )
+                }
             }
-            return path
+            return candidates
         }
 
         /// Said on stderr as well as stored, because a caveat only in the artifact is one the

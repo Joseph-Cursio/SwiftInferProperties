@@ -99,7 +99,7 @@ struct CorpusRunPlan {
         // the reader to clone a repo that still would not survey.
         guard let target = entry.target, entry.isSurveyable else {
             throw ResolveError.notSurveyable(
-                id: entry.id, kind: entry.kind, sources: entry.sources
+                id: entry.id, kind: entry.kind, sources: entry.sources?.joined(separator: " + ")
             )
         }
         let status = CorpusStatus.resolve(entry, repositoryRoot: manifestRoot)

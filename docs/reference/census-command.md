@@ -51,6 +51,34 @@ says so on every run, with the corpus count in the sentence:
 | scan path is not a directory | same shape, one corpus at a time — and it is how the first run failed, see below |
 | corpus names neither `sources` nor `target` | nothing to scan, and guessing a path would invent the previous row |
 
+## `sources` is a LIST, and summing is not the same as widening
+
+A subject's code is not always in one place. `SwiftProjectLint` keeps **425 of its 874**
+non-vendored files under `Packages/` and 48 under `Sources/`, so the registered
+`Sources/Core` reached 11 files and reported **1 row**. It now scans `["Sources", "Packages"]`
+and reports **399**.
+
+**Each path is scanned separately and the counts summed — deliberately not the same as scanning
+their union.** Cross-function pairing spans whatever is in scope at once, so a wider scan does
+not merely add rows from more files, it *creates pairs a narrower scan cannot see*:
+
+| scan of SwiftProjectLint | rows |
+|---|---:|
+| `Sources/Core` (the old entry) | 1 |
+| `Sources` | 9 |
+| `Packages` | 390 |
+| `["Sources", "Packages"]` — summed | **399** |
+| the enclosing repo root | **776** |
+
+The root's extra 377 is **365 `inverse-pair` rows that appear in no sub-scan**, all `Advisory`,
+pairing across the test/product boundary. That is a Daikon-shaped flood rather than signal, so
+the root is not the right answer either.
+
+Summing is the conservative reading: it counts what each path supports on its own and never
+invents a pair across a boundary the author did not ask to cross. **`CensusRun.Member.scanPaths`
+records the choice**, because two censuses of the same corpus at the same revision can differ
+twofold on the scan path alone — and without the field that reads as a change in the catalog.
+
 ## A census scans a DIRECTORY; `prove-then-show` builds a TARGET
 
 This is why `census` resolves its own scan path instead of reusing `CorpusRunPlan`, and the
