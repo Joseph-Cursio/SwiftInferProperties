@@ -82,6 +82,35 @@ asserting a denominator, `make docs-drift` reporting a behind-by-N clone as its 
 `DeferralFalsifierTests` answering `unavailable` rather than "absent" — the same rule in a
 fourth place.
 
+### The failure mode the three states do NOT separate — present, at the wrong path
+
+`could not be checked` means *no directory at `localPath`*. It does **not** distinguish a clone
+this machine genuinely lacks from one it **has, at a path the manifest gets wrong** — and the
+second is worse, because the fix is a one-line edit rather than a clone and the state reads as
+the benign case.
+
+**Both of the registry's first-day entries for `~/GitHub_projects/swift-numerics` and
+`~/GitHub_projects/swift-algorithms` were this** (corrected 2026-08-15 to `~/calibration/…`).
+Both checkouts were present, both carry the matching `origin` remote, and swift-numerics sat at
+**exactly its pinned `899af71`** while being reported as uncheckable. The involution measurement
+in `swiftorg-property-test-study-findings.md` §10.5 is taken from that corpus, and it is the
+witness that a census called dead — so the wrong path was hiding a checkout that refutes a
+finding.
+
+**A cheap partial check exists and is not built:** the manifest already carries `remote`, so a
+present-but-elsewhere clone is detectable by matching `git remote get-url origin` across
+candidate roots, and a pin is verifiable with `git cat-file -t <rev>` without checking anything
+out. **`cat-file` alone is not enough** — an unreachable pin usually means *the clone is behind*,
+not *the pin is wrong*: four of six unreachable pins here resolved after a plain `git fetch`
+(`swift-syntax` `1b5cd99`, `swift-argument-parser` `2f77f2f`, `swift-foundation` `96d4094`,
+`swift-algorithms` `ff223da`). **Fetch before reporting a pin as lost**, which is
+`make docs-drift`'s rule arriving in a fifth place.
+
+Two pins did **not** resolve after fetching and are recorded as open rather than diagnosed:
+`swift-nio` `590dd7b` and `SwiftLintRuleStudio` `6ffc755`. A revision that no longer exists in
+its origin is a genuinely different state from a stale clone, and neither `--strict` nor this
+README currently names it.
+
 ## The four kinds of subject
 
 The registry covers more than "third-party SwiftPM library", because the corpus always did and
