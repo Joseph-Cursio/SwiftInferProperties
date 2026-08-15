@@ -2711,6 +2711,23 @@ ratio.
 Both are counting bugs rather than inference bugs — the laws themselves are fine — which
 is why neither showed up in a year of reading `discover` output one corpus at a time.
 
+> **Item 2 is FIXED — re-measured 2026-08-15 at `3548db4`: the over-count is 0.4%, not 17%.**
+> Collecting `Identity:` hashes per target over a seeded run of all eight targets and taking
+> the distinct set gives **1,895 naive → 1,888 distinct, 7 rows**, with three identities
+> appearing under more than one target. The cause is `TestTargetScope` (2026-08-08), which
+> scoped test-lifting to the test targets that *transitively depend* on the scanned target —
+> precisely the population this item's over-count was made of. **Summing `--stats-only` over
+> targets is now defensible to within half a percent**, so read this warning as closed rather
+> than obeyed.
+>
+> **The residual 7 is not a bug and should not be chased.** Transitive dependency is a sound
+> over-approximation, as `roadtest-self-dogfood-2026-08-08.md` §1.1 states: a law authored in a
+> test target still lands on every target that target depends on, and closing that needs the law
+> attributed to the target declaring the symbol it names. Three identities is what that
+> approximation costs here.
+>
+> Item 1 (the duplicate `Strong` rows) is **not** re-measured and is not covered by this note.
+
 ### 10.5 `involution` was never dead, and the witness predates the census (2026-08-15)
 
 **Measured.** `discover --target ComplexModule` on **swift-numerics @ `899af71`** — the

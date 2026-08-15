@@ -923,13 +923,63 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
   than an unseeded one, because 662 `restricted-function` seeds vouch for private functions a plain
   run never opens. Never report one count as evidence about the other, and say which reading of
   "default tier" you mean.
-  **2026-08-15, and read the halves separately.** The *seed* side is re-measured at `e06e39fc`:
-  **2,278 seeds** on SwiftInferProperties — 1,284 `pure-function`, 701 `restricted-function`, 290
-  `extractable-kernel`, 3 `idempotency`, **0 `carrier`** (this repo declares no domain newtype the
-  three rules recognise, so the new kind is live in the producer and unexercised on this corpus).
-  The *pick* side was **NOT re-run** and 180 / 3 / 27 / 1,738 are still the 2026-08-06 figures
-  against an observer 40 commits older. **Do not pair them.** That is this trap's own warning
-  turned on the trap: a ratio built from two dates is a third number belonging to neither.
+  **2026-08-15 — both halves re-measured on the same day, so they may finally be paired.** The
+  *seed* side at `e06e39fc`: **2,278 seeds** on SwiftInferProperties — 1,284 `pure-function`, 701
+  `restricted-function`, 290 `extractable-kernel`, 3 `idempotency`, **0 `carrier`** (this repo
+  declares no domain newtype the three rules recognise, so the new kind is live in the producer
+  and unexercised on this corpus). The *pick* side, same seeds, observer at `3548db4`, one
+  release binary, **a fresh `git worktree` so `.swiftinfer/` is absent by construction**, default
+  flags, summed over all eight targets:
+
+  | | 2026-08-06 | 2026-08-15 |
+  |---|---:|---:|
+  | seeds | 2,096 | **2,278** |
+  | seeded rows | 1,738 | **1,888** |
+  | unseeded rows | — | **348** |
+  | "default tier" (non-`Advisory`) | 180 | **180** |
+  | `Strong` | 3 | **12** |
+  | `Likely` | 27 | **7** |
+
+  **The mechanism the trap describes is confirmed and is large: 348 → 1,888, a 5.4× increase from
+  seeding.** 701 `restricted-function` seeds vouch for `private` functions a plain run never
+  opens, so the seeded run prints *more*, not fewer.
+
+  **Three cautions, and the second is the one that stops this being a trend.**
+
+  *(a) Say which reading you mean, still.* Three defensible numbers come out of one run —
+  **1,888** rows total, **180** non-`Advisory`, **19** `Strong`+`Likely`. The middle one is what
+  2026-08-06 called "default-tier". `--include-possible` gives a fourth (1,935), which is the
+  flags warning below arriving on schedule.
+
+  *(b) The tier split is NOT comparable and the totals are.* This arm is clean by construction;
+  the 2026-08-06 arm's `.swiftinfer/` state is **unrecorded**, and the road test's §10 measured
+  that a stale `verify-evidence.json` in the working directory moves the headline on its own —
+  *"what was run in this directory last week"*. So `3 → 12 Strong` and `27 → 7 Likely` are two
+  arms differing in contamination as well as date. **Do not read them as movement.**
+  Correspondingly, **non-`Advisory` landing on exactly 180 twice is not evidence of stability** —
+  it is unexplained, and with (b) in hand the honest reading is coincidence.
+
+  *(c) Per-target counts are now very nearly additive, which they were not.* Study §10.4 measured
+  the same four lifted identities appearing under *every* target — ~203 summed against a true 174,
+  a **17%** over-count. Re-measured here by collecting `Identity:` hashes per target and taking
+  the distinct set: **1,895 naive → 1,888 distinct, 7 rows, 0.4%.** Three identities appear under
+  more than one target. `TestTargetScope` (2026-08-08) is the plain cause — it scoped test-lifting
+  to the test targets that transitively depend on the scanned one, which is exactly the population
+  §10.4's over-count came from. **So the sum is defensible now and was not when the warning was
+  written; the warning should be read as closed rather than obeyed.**
+
+  > **Method note, and it cost an hour: the first run of this measurement reported a confident
+  > zero on all eight targets.** `--seeds <path>` was passed through an unquoted zsh variable, and
+  > **zsh does not word-split unquoted parameters**, so ArgumentParser received one argument named
+  > `"--seeds /…/seeds.json"` and rejected it. stdout was empty, stderr was going to `/dev/null`,
+  > and the harness dutifully tabulated `0` eight times. The tool was never involved.
+  >
+  > Two things this repeats. **The failure shape is `confident zero`** — the exact thing
+  > `Discover+Seeds` is designed to make impossible on the tool's side, reproduced one level up in
+  > the apparatus reading it. And **`2>/dev/null` is what hid it**, which is
+  > `Discover+EvidenceDiagnostics`' own recorded finding — its coverage `note:` went unseen through
+  > an entire eight-corpus census run for the same reason, *including the runs whose numbers went
+  > into the findings doc*. **When a measurement returns zero, read stderr before believing it.**
 - **The repo's own README opens with "THIS IS AN EXPERIMENT IN VIBE-CODING"** and says outright that
   some rules are bad ideas, some are poorly implemented, and some are both. The testability and
   idempotency families are the road-tested ones; treat a rule outside them as unvetted until measured.
