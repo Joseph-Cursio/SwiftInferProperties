@@ -216,15 +216,29 @@ denominator could not be reconstructed from the registry that exists to make it 
 registered now, revision recovered from the checkout's reflog: exactly one entry, the 2026-03-13
 clone, and no `FETCH_HEAD`, so the tree could not have been anything else on census day.
 
-**No guard is added, and the reason is the interesting part.** The obvious one — make membership
-machine-readable by giving each of the eight a `census` measurement — founders on revisions:
-nobody recorded what five of them were checked out at on 2026-08-01, so it would take five more
-`null`s, and `null` is worth having only while it is rare enough to read as a flag. And the
-`--apparatus` axis cannot stand in: `census` is the apparatus of *several* sweeps, so
+**No guard is added over this table, and the reason is the interesting part.** The obvious one —
+make membership machine-readable by giving each of the eight a `census` measurement — founders on
+revisions: nobody recorded what five of them were checked out at on 2026-08-01, so it would take
+five more `null`s, and `null` is worth having only while it is rare enough to read as a flag. And
+the `--apparatus` axis cannot stand in: `census` is the apparatus of *several* sweeps, so
 `--apparatus census` selects seven corpora that are not these eight. **A denominator stated in
 prose is not checkable, and this one now sits in prose in one place instead of two that
-disagreed.** The remedy that would work is recording the corpus list at run time, by id, as part
-of the sweep — which is a change to how a census is run, not to this file.
+disagreed.**
+
+> **The remedy this paragraph named is BUILT (2026-08-15): `swift-infer census`.** It records the
+> corpus list, by id, as part of the run — with the revision each checkout actually stood on and
+> the flags the pipeline used — so a *future* census does not need a table like the one above.
+> See `docs/reference/census-command.md`.
+>
+> **It does not retroactively fix the 2026-08-01 sweep**, and that is the honest limit: the
+> denominator of a run taken by a shell loop is not recoverable by building a better loop. The
+> table above stays as the settled record of that sweep, and this section stays with it.
+>
+> Building it also found a modelling gap this file had not noticed. A census scans a
+> **directory**; `prove-then-show` builds a **target**. `swiftlang-swift` had `target: "stdlib"`,
+> and there is no SwiftPM target named `stdlib` — the compiler repo has no `Sources/` at all and
+> its stdlib is at `stdlib/public/core`. The entry now reads `sources: "stdlib/public/core"` with
+> a null target, which is both scannable and truer.
 
 ### A revision may not postdate its own measurement — five did, and are now recovered
 

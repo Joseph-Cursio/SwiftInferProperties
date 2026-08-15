@@ -302,12 +302,12 @@
       "id": "swiftlang-swift",
       "subject": "swift (the compiler repo)",
       "kind": "package",
-      "target": "stdlib",
-      "sources": null,
+      "target": null,
+      "sources": "stdlib/public/core",
       "remote": "https://github.com/swiftlang/swift.git",
       "localPath": "~/GitHub_projects/swift",
       "role": "unfamiliar",
-      "why": "The swift.org study's primary corpus, and the only member with an answer key frozen BEFORE the tool ran — which is what makes its recall number a measurement rather than the tool grading its own homework.",
+      "why": "The swift.org study's primary corpus, and the only member with an answer key frozen BEFORE the tool ran — which is what makes its recall number a measurement rather than the tool grading its own homework. Its scan path is set explicitly because the compiler repo has no Sources/ directory at all — the stdlib sits at stdlib/public/core, which no SwiftPM target names, and the census scanned it by path.",
       "measurements": [
         {
           "apparatus": "swiftorg-study",
@@ -350,12 +350,12 @@
       "id": "swift-project-lint",
       "subject": "SwiftProjectLint",
       "kind": "sibling",
-      "target": "SwiftProjectLintCore",
+      "target": "Core",
       "sources": null,
       "remote": "https://github.com/Joseph-Cursio/SwiftProjectLint.git",
       "localPath": "../SwiftProjectLint",
       "role": "unfamiliar",
-      "why": "The upstream producer in the toolchain — it emits the pbt-seeds this repo consumes — and the first SCORED road test, with a frozen answer key. Reading its design doc against the code surfaced three consumer-side defects here in one pass, all the same class: a field the producer sends that this repo does not act on.",
+      "why": "The upstream producer in the toolchain — it emits the pbt-seeds this repo consumes — and the first SCORED road test, with a frozen answer key. Reading its design doc against the code surfaced three consumer-side defects here in one pass, all the same class: a field the producer sends that this repo does not act on. Its target was recorded as SwiftProjectLintCore until 2026-08-15 and no such target exists — the package declares Core at Sources/Core. Found by running , which refuses a scan path that is not a directory; the manifest guard that would have caught it is scoped to in-repo corpora, because an external clone may legitimately be absent.",
       "measurements": [
         {
           "apparatus": "road-test",
