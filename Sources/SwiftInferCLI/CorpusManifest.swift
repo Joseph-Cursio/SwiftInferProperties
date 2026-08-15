@@ -119,6 +119,30 @@ struct CorpusManifest: Codable, Sendable {
         /// - `backtest` — taken at a revision chosen *because* a fix landed after it, so the
         ///   subject is known-wrong there. Must carry `expectedOutcome`.
         /// - `census` — a counted sweep whose record is a findings doc, not an artifact.
+        /// - `superseded` — **was** the baseline, and a later sweep replaced it. Must name its
+        ///   successor in `arm`.
+        ///
+        /// ## Why `superseded` is its own kind rather than a stretched `frozen`
+        ///
+        /// Re-basing is a normal operation — `fixtures/corpora/README.md` says so in as many
+        /// words, *"surveying a newer commit is exactly how a baseline gets re-based"* — and every
+        /// re-base strands the run it replaces. Two rules then collide: at most one `baseline` per
+        /// entry, and every retained run on disk must be registered by exactly one measurement. So
+        /// the old run needs a kind, and **deleting it is the one answer ruled out**: this registry
+        /// exists because four surveys were lost exactly that way.
+        ///
+        /// `frozen` was the near miss and is wrong for a stateable reason. It means *re-running
+        /// would destroy what this evidences* — an answer key, a paired arm — which is a claim
+        /// about the measurement's nature. A superseded baseline is not protected from re-running;
+        /// it has simply **stopped being the thing a later run is diffed against**. Filing it as
+        /// `frozen` would say the wrong thing about why it is exempt, and `frozenBecause` — the
+        /// field that exists so an exemption cannot be indistinguishable from an oversight — would
+        /// have to carry a sentence that is not about freezing.
+        ///
+        /// **It carries a pin and does not set one.** `baselineMeasurement` filters on `baseline`,
+        /// so a superseded row keeps its revision as the record of what that run measured while
+        /// contributing nothing to the at-pin verdict. That is the point: the history stays
+        /// readable and the comparison target stays single.
         let kind: String
 
         /// Full 40-character SHA, or `nil` when the revision is **unrecoverable**.
