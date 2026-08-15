@@ -101,15 +101,34 @@ finding.
 present-but-elsewhere clone is detectable by matching `git remote get-url origin` across
 candidate roots, and a pin is verifiable with `git cat-file -t <rev>` without checking anything
 out. **`cat-file` alone is not enough** — an unreachable pin usually means *the clone is behind*,
-not *the pin is wrong*: four of six unreachable pins here resolved after a plain `git fetch`
-(`swift-syntax` `1b5cd99`, `swift-argument-parser` `2f77f2f`, `swift-foundation` `96d4094`,
-`swift-algorithms` `ff223da`). **Fetch before reporting a pin as lost**, which is
-`make docs-drift`'s rule arriving in a fifth place.
+not *the pin is wrong*: **five of seven** unreachable pins here resolved after a plain
+`git fetch` (`swift-syntax` `1b5cd99`, `swift-argument-parser` `2f77f2f`, `swift-foundation`
+`96d4094`, `swift-algorithms` `ff223da`, and **`swiftlang-swift` `408632e`**). **Fetch before
+reporting a pin as lost**, which is `make docs-drift`'s rule arriving in a fifth place.
+
+> **This said "four of six" until 2026-08-15 and the missing one is the consequential one.**
+> `swiftlang-swift` `408632e` is the swift.org Q2 corpus — *the only registry member with an
+> answer key frozen before the tool ran*, so it is the one pin whose loss would cost a recall
+> number rather than a re-clone. It was still unreachable when the sentence was written and
+> resolved on the next fetch, which is the rule working and the count not keeping up.
+>
+> **The manifest's own note is why it looked lost**: that revision was *"re-pinned off the local
+> PR branch, which was 1,894 commits behind AND had edited a corpus file."* A pin whose
+> provenance mentions a local branch invites the reading that it was never pushed. It was; the
+> clone was simply behind. **Do not infer a lost commit from a pin's history — fetch and look.**
 
 Two pins did **not** resolve after fetching and are recorded as open rather than diagnosed:
 `swift-nio` `590dd7b` and `SwiftLintRuleStudio` `6ffc755`. A revision that no longer exists in
 its origin is a genuinely different state from a stale clone, and neither `--strict` nor this
 README currently names it.
+
+> **Re-confirmed 2026-08-15 after a second, independent fetch round** — these two are the
+> residue, not an artifact of one stale sweep. They are also the two the *available/at-pin*
+> summary is least equipped to describe: both checkouts are present and readable, so
+> `corpus` counts them among *"21 checked"* while the measurement banked against each is
+> **not re-derivable from the clone in front of you**. `swift-nio` `590dd7b` backs the
+> catalog-health census and `SwiftLintRuleStudio` `6ffc755` a road test, so in both cases the
+> record survives and the subject state behind it does not.
 
 ## The four kinds of subject
 
