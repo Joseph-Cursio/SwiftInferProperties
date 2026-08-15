@@ -2795,17 +2795,34 @@ is checkable: the finding that 6 of 39 templates never fire depends on which cor
 it."* **That sentence was written about this exact number and did not prompt anyone to check
 it.**
 
-**And checking it now surfaces a second discrepancy, unresolved.** Four registry entries claim
-membership in *"the eight-corpus catalog-health sweep"* — `swift-nio`, `swift-algorithms`,
-`swift-argument-parser`, `swift-effect-inference` — and **only `swift-nio` appears in the eight
-this section names**. `swift-package-manager` is in the stated eight and is in no registry
-entry at all. So the two records of the same run's denominator disagree about at least four of
-eight members. **Not resolved here**, because settling it means knowing which run produced
-the distribution table and that is exactly what neither record pins; recorded so the next
-census does not inherit an ambiguous denominator. The remedy is cheap and structural: name the
-corpus list **by registry id** and let `swift-infer corpus` print it, rather than restating it
-in prose in two places that nothing joins. A `why` field is prose, and nothing checks it
-against the record it cites.
+**And checking it surfaced a second discrepancy — now RESOLVED 2026-08-15, in this section's
+favour.** Four registry entries claimed membership in *"the eight-corpus catalog-health sweep"* —
+`swift-nio`, `swift-algorithms`, `swift-argument-parser`, `swift-effect-inference` — and only
+`swift-nio` was in it, while `swift-package-manager` was a member with no registry entry at all.
+
+**§10.3 settled it, and that is the argument for having written it that way.** This section's
+prose names the eight; §10.3's A/B table names them *with a row count each*. A summary can drift;
+**an eight-row table of measured numbers cannot**, because every row would have to drift
+together and stay internally consistent. The two agree exactly, so the registry was wrong on all
+four counts and is corrected:
+
+- `swift-algorithms` — its pin `ff223da` is the **swift.org study's corpus survey** table,
+  verbatim (Tier 3: 8 `check*`, 0 loops). Re-filed there.
+- `swift-argument-parser` — the whole-to-parts half of its `why` was true; the census half was not.
+- `swift-effect-inference` — *"17 rows, unchanged with the coverage veto disabled"* is the
+  **coverage-veto A/B**, a different measurement over a different six corpora, now `discover-ab`.
+  **Its only record anywhere is CLAUDE.md's `ProtocolCoverageAudit` row** — no doc under `docs/`
+  carries it.
+- `swift-package-manager` is registered, revision recovered from its reflog (one entry, the
+  2026-03-13 clone, no `FETCH_HEAD` — the tree could not have been anything else on census day).
+
+**The structural remedy proposed here was tried and does not work.** *"Name the corpus list by
+registry id and let `swift-infer corpus` print it"* founders twice: five of the eight have no
+recorded revision for 2026-08-01, so per-member census measurements would need five `null`s, and
+`null` is only worth having while it is rare enough to read as a flag; and `census` is the
+apparatus of *several* sweeps, so `--apparatus census` selects seven corpora that are not these
+eight. What would work is recording the corpus list **at run time, by id, as part of the sweep** —
+a change to how a census is run, not to where its denominator is written down afterwards.
 
 ## 11. The `[reference]` backlog was over-reported 3x — the tags had fallen behind the templates
 

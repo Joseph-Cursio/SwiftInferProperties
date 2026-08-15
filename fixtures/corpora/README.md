@@ -180,6 +180,52 @@ Two decisions worth keeping:
 than a real pin and the field for recording a known loss turns into the field for recording that
 nobody looked.
 
+### The catalog-health census ran over these eight, and the registry used to disagree
+
+`swiftorg-property-test-study-findings.md` §10 states the corpora, and **§10.3's A/B table lists
+them corpus by corpus with a row count each** — which is the strong evidence, because a table
+with eight rows of numbers cannot be a summary that drifted. The two agree exactly:
+
+| # | registry id | census row |
+|---|---|---|
+| 1 | `swiftlang-swift` (target `stdlib`) | stdlib 786 → 797 |
+| 2 | `swift-collections` | 701 → 715 |
+| 3 | `swift-nio` | 400 → 409 |
+| 4 | `swift-foundation` | 1,283 → 1,284 |
+| 5 | `swift-syntax` | 1,121 → 1,122 |
+| 6 | **`swift-package-manager`** | 598 → 598 |
+| 7 | `swift-project-lint` | 3 → 3 |
+| 8 | `swift-infer-core` (this repo) | 247 → 247 |
+
+**Four registry entries used to claim membership and only `swift-nio` was in it** — corrected
+2026-08-15, each in its own `arm`:
+
+- **`swift-algorithms`** — not a census member. Its pin `ff223da` is the swift.org study's
+  **corpus survey** table, verbatim, so the entry now records that (Tier 3: 8 `check*`, 0 loops).
+- **`swift-argument-parser`** — not a census member. Its whole-to-parts membership was the true
+  half and is kept.
+- **`swift-effect-inference`** — not a census member. Its *"17 rows, unchanged with the coverage
+  veto disabled"* is the **coverage-veto A/B**, a different measurement over a different six
+  corpora, now filed as `discover-ab`. **Its only record anywhere is CLAUDE.md's
+  `ProtocolCoverageAudit` row** — no doc under `docs/` carries it, which is its own finding.
+- **`swift-nio`** — correctly a member; its `record` pointed at
+  `dogfood-new-templates-findings.md`, which contains no census.
+
+**`swift-package-manager` was the eighth member and had no entry at all**, so the sweep's
+denominator could not be reconstructed from the registry that exists to make it checkable. It is
+registered now, revision recovered from the checkout's reflog: exactly one entry, the 2026-03-13
+clone, and no `FETCH_HEAD`, so the tree could not have been anything else on census day.
+
+**No guard is added, and the reason is the interesting part.** The obvious one — make membership
+machine-readable by giving each of the eight a `census` measurement — founders on revisions:
+nobody recorded what five of them were checked out at on 2026-08-01, so it would take five more
+`null`s, and `null` is worth having only while it is rare enough to read as a flag. And the
+`--apparatus` axis cannot stand in: `census` is the apparatus of *several* sweeps, so
+`--apparatus census` selects seven corpora that are not these eight. **A denominator stated in
+prose is not checkable, and this one now sits in prose in one place instead of two that
+disagreed.** The remedy that would work is recording the corpus list at run time, by id, as part
+of the sweep — which is a change to how a census is run, not to this file.
+
 ### A revision may not postdate its own measurement — five did, and are now recovered
 
 A measurement cannot have run against code that did not exist yet. **Five entries recorded a
