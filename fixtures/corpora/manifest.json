@@ -15,9 +15,20 @@
         {
           "apparatus": "prove-then-show",
           "kind": "baseline",
+          "revision": "0cc4345d465005f6378f46ff704e0ac8e7fc996e",
+          "takenOn": "2026-08-15",
+          "arm": "re-based control — the 2026-08-14 baseline reproduced at HEAD after seven merges. 87 Proven / 2 Refuted / 61 Unverifiable / 9 Inconclusive, identical at row level to the run it replaces. A REFRESH, not movement: this is the confirmation the README describes, and the correct weak outcome, since none of those merges touched scoring.",
+          "record": "fixtures/verify-runs/2026-08-15-SwiftInferCore.json",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        },
+        {
+          "apparatus": "prove-then-show",
+          "kind": "superseded",
           "revision": "ecaa66f6616bad91728144c97df6a8c20e1aa5ea",
           "takenOn": "2026-08-14",
-          "arm": "post-fix sweep",
+          "arm": "post-fix sweep. SUPERSEDED 2026-08-15 by `fixtures/verify-runs/2026-08-15-SwiftInferCore.json`, which reproduced it at `0cc4345` — `survey-diff` reports the two identical at row level, 87/2/61/9, no row changing bucket or cause and none added or removed. Kept rather than deleted: a retained run is the only evidence of what the tool did on its date, and this registry exists because four surveys were lost by treating them as disposable.",
           "record": "fixtures/verify-runs/2026-08-14-SwiftInferCore.json",
           "frozenBecause": null,
           "expectedOutcome": null,

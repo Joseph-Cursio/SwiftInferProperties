@@ -139,7 +139,7 @@ extension CorpusManifestTests {
     func frozenMeasurementsExplainTheirExemption() throws {
         for (entry, measurement) in try Self.allMeasurements() {
             #expect(
-                ["baseline", "frozen", "backtest", "census"].contains(measurement.kind),
+                ["baseline", "frozen", "backtest", "census", "superseded"].contains(measurement.kind),
                 "corpus '\(entry.id)' has measurement kind '\(measurement.kind)'"
             )
             guard measurement.kind == "frozen" else { continue }
@@ -151,5 +151,42 @@ extension CorpusManifestTests {
                 """
             )
         }
+    }
+
+    /// A superseded baseline must name the run that replaced it, and that run must exist.
+    ///
+    /// **This is the arm that stops a re-base producing the registry's founding failure.** Every
+    /// re-base strands a retained run: it keeps its revision, its record and its row counts, and
+    /// it stops being the thing anything is diffed against. Left unlabelled it is indistinguishable
+    /// from a live baseline — the same shape as an unregistered run *"sitting there looking like a
+    /// baseline, getting diffed against"*, which is why `everyRetainedRunIsRegistered` exists.
+    ///
+    /// Naming the successor is what makes the chain walkable in the direction a reader needs: from
+    /// an old run in hand to the current one. Asserting the successor **exists on disk** is what
+    /// stops the pointer rotting into the dangling kind this suite already refuses elsewhere.
+    @Test("A superseded measurement names its successor, and the successor is there")
+    func supersededMeasurementsNameTheirSuccessor() throws {
+        var seen = 0
+        for (entry, measurement) in try Self.allMeasurements()
+        where measurement.kind == "superseded" {
+            seen += 1
+            let named = try Self.manifest().corpora
+                .first { $0.id == entry.id }?
+                .measurements
+                .first { $0.kind == "baseline" }
+                .map { URL(fileURLWithPath: $0.record).lastPathComponent }
+
+            #expect(
+                named.map { measurement.arm.contains($0) } == true,
+                """
+                corpus '\(entry.id)' has a superseded measurement whose arm does not name the \
+                record that replaced it (\(named ?? "no baseline")). A superseded run that does \
+                not point forward is indistinguishable from a live baseline.
+                """
+            )
+        }
+        // The exemption in `atMostOneBaseline` only bites once a re-base has happened; without
+        // this the arm above is vacuous and reads exactly like a satisfied one.
+        #expect(seen > 0, "no superseded measurement — is this arm still reachable?")
     }
 }

@@ -124,6 +124,34 @@ was `SwiftInferCLI`, not the surveyed target.
 A clean sweep is the weak-but-correct outcome. The informative version of this run would have
 been a surprise, and there wasn't one.
 
+### Re-base of 2026-08-15 (`0cc4345`) — and what a `superseded` run is for
+
+The control had drifted seven merges past its baseline, so `corpus --strict` reported it
+`MOVED OFF` and every diff against it would have mixed a change in the subject with a change in
+the tool. Re-running at HEAD is the documented remedy: *"surveying a newer commit is exactly how
+a baseline gets re-based."*
+
+`survey-diff` reports the two runs **identical at row level** — 87 Proven / 2 Refuted / 61
+Unverifiable / 9 Inconclusive, no row changing bucket or cause, none added or removed. So this is
+a **refresh, not movement**: a confirmation that a newer commit reproduces the baseline, which is
+the correct weak outcome given that none of those seven merges touched scoring.
+
+**The old run is kept, under the `superseded` kind.** Every re-base strands the run it replaces,
+and two registry rules then collide — at most one `baseline` per corpus, and every retained run
+on disk registered by exactly one measurement. Deleting is the one answer ruled out: this
+directory exists because four surveys were lost that way. `superseded` carries its revision
+without setting the pin, and `CorpusManifestTests` requires it to **name its successor**, so a
+stranded run cannot sit here looking like a live baseline — the silent failure the Inventory note
+above already describes.
+
+> **An in-repo control can never be at-pin-clean, and that is a fixed point rather than a bug.**
+> `swift-infer-core`'s `localPath` is `.`, so the commit that *records* a baseline moves `HEAD`
+> past the revision that baseline names. It is off by one the instant it is written, and no
+> ordering fixes it — amending to the new SHA changes the SHA again. So read `MOVED OFF` on this
+> corpus as *how far past the anchor the tool has come*, not as the subject-moved condition
+> `--strict` exists to catch; the other twenty-one corpora are where that verdict means what it
+> says.
+
 ## Inventory
 
 **This table is prose; `fixtures/corpora/manifest.json` is the checked copy.**
@@ -134,7 +162,8 @@ baseline while carrying no remote, no revision binding and no reason for existin
 
 | file | subject | taken |
 |---|---|---|
-| `2026-08-14-SwiftInferCore.json` | `SwiftInferCore` @ `ecaa66f` — post-fix sweep | 2026-08-14 |
+| `2026-08-15-SwiftInferCore.json` | `SwiftInferCore` @ `0cc4345` — **re-based control, the current baseline** | 2026-08-15 |
+| `2026-08-14-SwiftInferCore.json` | `SwiftInferCore` @ `ecaa66f` — post-fix sweep, **`superseded`** | 2026-08-14 |
 | `2026-08-14-SwiftFormat.json` | swift-format `SwiftFormat` @ `d2bd4b3` — post-fix sweep | 2026-08-14 |
 | `2026-08-14-GRDB-staged.json` | GRDB `GRDB` @ `b83108d10` — **STAGED**, see below | 2026-08-14 |
 | `2026-08-14-GRDB-native.json` | GRDB `GRDB` @ `b83108d10` — **NATIVE**, untouched checkout, post-fix sweep | 2026-08-14 |

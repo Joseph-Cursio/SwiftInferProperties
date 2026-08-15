@@ -1,0 +1,1601 @@
+{
+  "capturedAt" : "2026-08-15T16:42:16Z",
+  "label" : "SwiftInferProperties SwiftInferCore @ 0cc4345 (off pin — baseline taken at ecaa66f)",
+  "records" : [
+    {
+      "carrier" : "ReduceClosureWalker",
+      "identityHash" : "0x01CF6332F7E5B937",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "closureParameterCount(_:)",
+      "subjectFingerprint" : "45971F45CEE9434B",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "ValueSemanticDiscoverer",
+      "identityHash" : "0x02F4A08298EBE4CE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "baseName(of:)",
+      "subjectFingerprint" : "622B02B763683218",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "LiftedTransformation",
+      "identityHash" : "0x03EF76CE1952F2CF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "lessThan(_:_:)",
+      "subjectFingerprint" : "CD057E285C2FCAA1",
+      "templateName" : "comparator"
+    },
+    {
+      "carrier" : "FunctionScannerVisitor",
+      "identityHash" : "0x0557AEC0D98C0AD7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FunctionScannerVisitor",
+      "primaryFunctionName" : "hasSPIAttribute(_:)",
+      "subjectFingerprint" : "406C7ED76CF7B9F0",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ValueSemanticDiscoverer",
+      "identityHash" : "0x07B0926EE0CE5565",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "stripAttributes(_:)",
+      "subjectFingerprint" : "2D1492ECE22B5E74",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DedupGateClassifier",
+      "identityHash" : "0x14A16F679CC44483",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isCapabilityVerb(_:)",
+      "subjectFingerprint" : "8B2D74AC9CFD152F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "BodySignalVisitor",
+      "identityHash" : "0x14BF50C9DD88D90B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isIdentityShapedLiteral(_:)",
+      "subjectFingerprint" : "A70C560C6B794B98",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "StableIdentityDiscoverer",
+      "identityHash" : "0x16CA6D2A250AFFC6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "returnsVoid(_:)",
+      "subjectFingerprint" : "AEA5C5990C41F01B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "BodySignalVisitor",
+      "identityHash" : "0x1BBAEA4E77457836",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isEmptyStringLiteral(_:)",
+      "subjectFingerprint" : "4095993A66580096",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "EffectAnnotationRenderer",
+      "identityHash" : "0x1E6186DF5AACB720",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: carrier `EffectAnnotationRenderer` is a caseless enum — a namespace with no values, so no generator can exist for it",
+      "primaryFunctionName" : "render(_:)",
+      "templateName" : "differential-equivalence"
+    },
+    {
+      "carrier" : "CorroborationRule",
+      "identityHash" : "0x269C22D30581A90A",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "monotonicity-domain-not-comparable: Score",
+      "primaryFunctionName" : "positiveChannelCount(_:)",
+      "subjectFingerprint" : "F0F4E506C288C0BF",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "EqualityBodyClassifier",
+      "identityHash" : "0x2835E4BDE8101D38",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "drawsFromTwoIterators(_:)",
+      "subjectFingerprint" : "7BF21AA403A63508",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SwiftSourceFiles",
+      "identityHash" : "0x2B8BFA4523241574",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isSymbolicLink(_:)",
+      "subjectFingerprint" : "6391987628E5C641",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DedupGateClassifier",
+      "identityHash" : "0x2BBC3EF2C6D1A4ED",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "effectDominatedByGate(_:gateIndex:)",
+      "subjectFingerprint" : "6B42F33F1CCFE1F7",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "EqualityBodyClassifier",
+      "identityHash" : "0x2D750BE3FA271052",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "returnsFalse(_:)",
+      "subjectFingerprint" : "164A3245251CDC05",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DocCommentExtractor",
+      "identityHash" : "0x2EC8A77414181C35",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "stripLine(_:)",
+      "subjectFingerprint" : "FBF2B0D255DFE7D6",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SeedFocus",
+      "identityHash" : "0x355C1C726E60735F",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: filter-subset",
+      "primaryFunctionName" : "filter(_:to:declaredSubjects:)",
+      "subjectFingerprint" : "44EDC5128B7721E8",
+      "templateName" : "filter-subset"
+    },
+    {
+      "carrier" : "FunctionScannerVisitor",
+      "identityHash" : "0x386A647495732890",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isReadOnlyGetter(_:)",
+      "subjectFingerprint" : "7536C1E061CC4F0B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "EqualityBodyClassifier",
+      "identityHash" : "0x4227258517D70A78",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "comparesTwoSubscripts(_:)",
+      "subjectFingerprint" : "98C0801BA894910F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SpeculativeWidening",
+      "identityHash" : "0x463AEEDC16BE9DEC",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "containsWord(_:in:)",
+      "subjectFingerprint" : "9343564D6F5C52E5",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ReduceClosureWalker",
+      "identityHash" : "0x4DB168EA5A192C99",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "closureParameterCount(_:)",
+      "subjectFingerprint" : "45971F45CEE9434B",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "CarrierKindResolver",
+      "identityHash" : "0x4ECF21F28E4DD5B8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isClassBound(_:)",
+      "subjectFingerprint" : "39D183365CD5CD60",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DedupGateClassifier",
+      "identityHash" : "0x507322CFD32A3E19",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "accumulates(_:)",
+      "subjectFingerprint" : "9C35E34A39BCB212",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "AttributeScanner",
+      "identityHash" : "0x551E53C9045E28C1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "stringLiteralValue(of:)",
+      "subjectFingerprint" : "51719F5798D6DD4D",
+      "templateName" : "value-round-trip"
+    },
+    {
+      "carrier" : "Suggestion",
+      "identityHash" : "0x56EF3D4AD7390452",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "calleeName(from:)",
+      "subjectFingerprint" : "4C8010031A1AEA0C",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "EffectResolver",
+      "identityHash" : "0x5E326941468E5435",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: Effect",
+      "primaryFunctionName" : "carriesInformationUpward(_:)",
+      "subjectFingerprint" : "9A257B6490D9D2FD",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SpeculativeWidening",
+      "identityHash" : "0x5EB8FD2DC5D13259",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isIdentifierCharacter(_:)",
+      "subjectFingerprint" : "CB935B6B4AD52B3B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SamplingSeed",
+      "identityHash" : "0x5FDE3AADB8D2567B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: carrier `SamplingSeed` is a caseless enum — a namespace with no values, so no generator can exist for it",
+      "primaryFunctionName" : "derive(fromIdentityHash:)",
+      "subjectFingerprint" : "9B749DB52E3FABC5",
+      "templateName" : "round-trip"
+    },
+    {
+      "carrier" : "SubjectFingerprint",
+      "identityHash" : "0x646B085DF4CD25E2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "digest(_:)",
+      "subjectFingerprint" : "C017B690B8A2010B",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DefensiveCopyDiscoverer",
+      "identityHash" : "0x6B54EA05A16112AD",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "returnsVoid(_:)",
+      "subjectFingerprint" : "AEA5C5990C41F01B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ReducerDiscoveryVisitor",
+      "identityHash" : "0x7A2C791019CF59F7",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "pushType(_:memberBlock:)",
+      "subjectFingerprint" : "F0C0EAA9935A0099",
+      "templateName" : "state-machine"
+    },
+    {
+      "carrier" : "DocstringPropertyCorroborator",
+      "identityHash" : "0x8866F73EF35AB322",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isNegated(phraseStart:in:)",
+      "subjectFingerprint" : "BAB5A66047214409",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Visitor",
+      "identityHash" : "0x8AE91FEA1DC15D73",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isAssignmentOperator(_:)",
+      "subjectFingerprint" : "3641D505B6D76AF9",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "BodySignalVisitor",
+      "identityHash" : "0x910CBD1FEC2B5CB9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isEmptyDictionaryLiteral(_:)",
+      "subjectFingerprint" : "B183B088F94EB2D6",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "NonDeterministicAPIs",
+      "identityHash" : "0x9378A211DA7E7AA0",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "matches(_:)",
+      "subjectFingerprint" : "4B3964A8352EBD4C",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "EqualityBodyClassifier",
+      "identityHash" : "0x93CB2D332E410D49",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "deduplicated(_:)",
+      "subjectFingerprint" : "3730F54AC41F307B",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "EqualityBodyClassifier",
+      "identityHash" : "0x9B7CB054363942C3",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "iteratesAZipOfBoth(_:)",
+      "subjectFingerprint" : "684F17BBB63B1F6A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "MemberBlockInspector",
+      "identityHash" : "0xA29FC1314A111D77",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isStaticOrClass(_:)",
+      "subjectFingerprint" : "ED1C398426C59672",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Visitor",
+      "identityHash" : "0xA4A87E8EB8C66AD1",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isStaticOrSelfMemberAccess(_:)",
+      "subjectFingerprint" : "78321B1D7499C5A5",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SetAlgebraShape",
+      "identityHash" : "0xB38BEDF0D3E6AD17",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FunctionSummary",
+      "primaryFunctionName" : "isSelfTypedBinaryOp(_:)",
+      "subjectFingerprint" : "0682474BCA7C6675",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Visitor",
+      "identityHash" : "0xB41E09E3CB4F9FD2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isStatic(_:)",
+      "subjectFingerprint" : "B11DEA7CB25FB17C",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FunctionScannerVisitor",
+      "identityHash" : "0xB60F90897D10CA76",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: FunctionScannerVisitor",
+      "primaryFunctionName" : "isNestedLocalFunction(_:)",
+      "subjectFingerprint" : "3D4B7A402D055E0A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "BodySignalVisitor",
+      "identityHash" : "0xB71DAC452590D11B",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isIdentityShapedSeed(_:)",
+      "subjectFingerprint" : "876239BE98DFBE48",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Ranked",
+      "identityHash" : "0xB8151EE414A50865",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: its enclosing type is `private` or `fileprivate`, so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.",
+      "primaryFunctionName" : "isRankedAbove(_:)",
+      "subjectFingerprint" : "6D8773041F788A51",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SamplingSeed",
+      "identityHash" : "0xBC2A6D70D8D8519C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "packUInt64(_:offset:)",
+      "subjectFingerprint" : "13A566ED2426E757",
+      "templateName" : "input-totality"
+    },
+    {
+      "carrier" : "TemplatePack",
+      "identityHash" : "0xC6CB3C87C658A368",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: input-totality",
+      "primaryFunctionName" : "parse(_:)",
+      "subjectFingerprint" : "EB5A8FAA48A1C0DE",
+      "templateName" : "input-totality"
+    },
+    {
+      "carrier" : "FunctionScannerVisitor",
+      "identityHash" : "0xC824BAD9948C9CA8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "unescaped(_:)",
+      "subjectFingerprint" : "7D3F624334360B6C",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "ValueSemanticDiscoverer",
+      "identityHash" : "0xCC2454D862BF0DDE",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "returnsVoid(_:)",
+      "subjectFingerprint" : "AEA5C5990C41F01B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "EquatableResolver",
+      "identityHash" : "0xCC2736C9074CB6E6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "hasTopLevelColon(_:)",
+      "subjectFingerprint" : "4C2F8538840C56EF",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DedupGateClassifier",
+      "identityHash" : "0xCF040CCB4FBC3DC9",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "hasEffectCall(_:)",
+      "subjectFingerprint" : "0C554E76730ED15C",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DocCommentExtractor",
+      "identityHash" : "0xD19462E96A0AB1A8",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isMachineDirective(_:)",
+      "subjectFingerprint" : "69FD116D6AE14191",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ReducerPin",
+      "identityHash" : "0xD78EF9CA9FEE6F81",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: input-totality",
+      "primaryFunctionName" : "parse(_:)",
+      "subjectFingerprint" : "1F17274BF0A27481",
+      "templateName" : "input-totality"
+    },
+    {
+      "identityHash" : "0xE1776D91BA3D47C2",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-template: invariant-preservation",
+      "primaryFunctionName" : "Set(_:)",
+      "templateName" : "invariant-preservation"
+    },
+    {
+      "carrier" : "DefensiveCopyDiscoverer",
+      "identityHash" : "0xE1DE6B44E596ECB6",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "returnsOwnType(_:typeName:)",
+      "subjectFingerprint" : "C2B2DC824973CE38",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ProtocolCoverageMap",
+      "identityHash" : "0xE31948CA02026074",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "unsupported-carrier: S",
+      "primaryFunctionName" : "anyCovers(_:_:)",
+      "subjectFingerprint" : "07840EFFDED79F3A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "InteractionMetricsRenderer",
+      "identityHash" : "0xE76E9A6EF1E8617E",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "anyFamilyExceedsSkipThreshold(_:threshold:)",
+      "subjectFingerprint" : "39CBEA8AD6472266",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ValueSemanticDiscoverer",
+      "identityHash" : "0xE79826E10961028C",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isClosureType(_:)",
+      "subjectFingerprint" : "23BF127664C33319",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DedupGateClassifier",
+      "identityHash" : "0xE89E52F929F6CC23",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "blockReturns(_:)",
+      "subjectFingerprint" : "53F1A311DC1E4BAC",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ViewModelDiscoverer",
+      "identityHash" : "0xEB3780A3681DDDBF",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "not-a-candidate: no test can name the subject: it is `private` or `fileprivate`, so no test can call it — not even with `@testable import`. Widen it to `internal` (a test target using `@testable import` will see it), or lift the logic into a type of its own.",
+      "primaryFunctionName" : "isDependencyType(_:)",
+      "subjectFingerprint" : "8F9AA3C9DA49E097",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ProtocolCoverageAudit",
+      "identityHash" : "0xFDB6BBD3B76A7EE4",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "monotonicity-domain-not-comparable: [Finding]",
+      "primaryFunctionName" : "lawTotal(for:)",
+      "subjectFingerprint" : "25B49D27B2F6C3C8",
+      "templateName" : "monotonicity"
+    },
+    {
+      "carrier" : "Refutability",
+      "identityHash" : "0x00F42E395C580C92",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies. Flushed before the trap: VERIFY_TRIAL_CARRIER: Suggestion",
+      "primaryFunctionName" : "isWorthSurfacingBelowCut(_:)",
+      "subjectFingerprint" : "D0D507FC378543FA",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "IdempotenceCandidateShape",
+      "identityHash" : "0x03CFC10FEA2D1D5E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isOptional(_:of:)",
+      "subjectFingerprint" : "D557DB77A78FE641",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "InteractionDecisions",
+      "identityHash" : "0x06CD97907100941D",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "087D3B6A427A2BEB",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "MutatorBlockedFromIdempotence",
+      "identityHash" : "0x07F1DE6C88C3585F",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isBlocked(_:)",
+      "subjectFingerprint" : "5C97EAE337CC67A9",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "HostileInputEntryPoints",
+      "identityHash" : "0x0B426022BEF2E227",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "normalizedLabel(_:)",
+      "subjectFingerprint" : "24DA329E71A67353",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "Decisions",
+      "identityHash" : "0x0D0D9BCD38C7BE8F",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "087D3B6A427A2BEB",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "MemberBlockInspector",
+      "identityHash" : "0x0E0842FF192F873A",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "hasUserGen(in:)",
+      "subjectFingerprint" : "EB4223851900D623",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SeedEffect",
+      "identityHash" : "0x104C1067D5376003",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "978A61189916CA3F",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "PostAcceptanceOutcomeLog",
+      "identityHash" : "0x12A42D53D24BAD54",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "FB66CF287EBE29EE",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "ViewModelNameHeuristics",
+      "identityHash" : "0x15D7F52358A47FDB",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isPresentationName(_:)",
+      "subjectFingerprint" : "60865CC88A9DD25A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "CarrierKindResolver",
+      "identityHash" : "0x1947B1BA2190964D",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isClosureType(_:)",
+      "subjectFingerprint" : "1886D2E7E4390B0A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ReducerDiscoverer",
+      "identityHash" : "0x1D1EB281ED07DA1F",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isStateEffectTuple(_:expectedFirst:)",
+      "subjectFingerprint" : "79D564696CF2CA84",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "PostAcceptanceOutcomeLog",
+      "identityHash" : "0x1DBA359F32FF9243",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "FB66CF287EBE29EE",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "PeerProposal",
+      "identityHash" : "0x21D1F59AA785A347",
+      "outcome" : "architectural-coverage-pending",
+      "outcomeDetail" : "instance-method-shape-not-supported",
+      "primaryFunctionName" : "stubTypeName(reducerStateTypeName:)",
+      "subjectFingerprint" : "C830E65518B26731",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "ResultBuilderMethods",
+      "identityHash" : "0x2274123A5577C009",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isBuilderMethod(_:)",
+      "subjectFingerprint" : "E1E44E498CDDE897",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "KitEvidenceLog",
+      "identityHash" : "0x2949F532557B5A81",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "confirmedEqualityOracle(for:)",
+      "subjectFingerprint" : "DF18DBE25EC79242",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "HostileInputEntryPoints",
+      "identityHash" : "0x2A8F229D6157520E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "hasResultNoun(_:)",
+      "subjectFingerprint" : "CF3E79655904AA43",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FloatingPointEquatableTypes",
+      "identityHash" : "0x2D042D403453FDF3",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "stripGenericParameters(_:)",
+      "subjectFingerprint" : "4FBA02168E4D4494",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "VerifyEvidenceLog",
+      "identityHash" : "0x2E39FEDF89FE0696",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "2F36730901171AD8",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "StreamConsumption",
+      "identityHash" : "0x3242486D0938A391",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isRestoring(_:)",
+      "subjectFingerprint" : "7877BB2756D6AF81",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ReducerDiscoverer",
+      "identityHash" : "0x35221BA9A4F72BFE",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "looksLikeEffect(_:)",
+      "subjectFingerprint" : "5775795A38ABAA5F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SpeculativeWidening",
+      "identityHash" : "0x36025AC5C092CF7E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "isWidenable(_:)",
+      "subjectFingerprint" : "59CC1C85CE31C139",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FloatingPointStorageNames",
+      "identityHash" : "0x368D8390BF501326",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "strippingGenericParameters(_:)",
+      "subjectFingerprint" : "5EE4F1436EC0626D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SeedFocus",
+      "identityHash" : "0x3800F0E5EDF75D10",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "functionBaseName(_:)",
+      "subjectFingerprint" : "F698080EA4B0FEB8",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "ReducerPin",
+      "identityHash" : "0x3B0CC55441F6E32E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "matches(_:)",
+      "subjectFingerprint" : "AE10CA47B2E8D3F1",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "CollisionBias",
+      "identityHash" : "0x3C71468F6096E712",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isPathShaped(_:)",
+      "subjectFingerprint" : "98DEBFEC86F3F149",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SoundPurity",
+      "identityHash" : "0x433B54B10E181E28",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "isPure(_:)",
+      "subjectFingerprint" : "5D036E4F3F2DF115",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "BuildIdentity",
+      "counterexample" : "XO8hGC",
+      "identityHash" : "0x4656C825D66D9779",
+      "outcome" : "measured-defaultFails",
+      "outcomeDetail" : "trial=0",
+      "primaryFunctionName" : "versionString(_:)",
+      "subjectFingerprint" : "78F9620A6DCD8D14",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "IdempotenceCandidateShape",
+      "identityHash" : "0x48AE1213BE8BB4FF",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "admitsIdempotenceLaw(parameterType:returnType:)",
+      "subjectFingerprint" : "D4BF0262C0945948",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "HostileInputEntryPoints",
+      "identityHash" : "0x49A151212B6E1CE4",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "hasEgressVerb(_:)",
+      "subjectFingerprint" : "D866BEB22E45958E",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "VerifyEvidenceScoring",
+      "identityHash" : "0x53AE823AF649E5AD",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies. Flushed before the trap: VERIFY_TRIAL_CARRIER: Suggestion",
+      "primaryFunctionName" : "isContradictedByAuthor(_:)",
+      "subjectFingerprint" : "685BC3BCE21D188D",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DedupGateClassifier",
+      "identityHash" : "0x543FF34E2480CB43",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "isFetchedNilCheck(_:fetchedNames:)",
+      "subjectFingerprint" : "CE19CC2060EDBF81",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FloatingPointEquatableTypes",
+      "identityHash" : "0x57D06CE709E14DEF",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isFloatingPointEquatable(typeText:)",
+      "subjectFingerprint" : "3C5D06EEBC6A35EF",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "OrderSensitiveCarrierNames",
+      "identityHash" : "0x59D2861CA9DE596A",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "strippingGenericParameters(_:)",
+      "subjectFingerprint" : "5EE4F1436EC0626D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DocstringAdvisor",
+      "identityHash" : "0x5B99F839717F25D8",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isContract(_:)",
+      "subjectFingerprint" : "9DF2BF81300ADF0F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ProtocolCoverageMap",
+      "identityHash" : "0x5E15EB66005C749B",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "strippingGenericParameters(_:)",
+      "subjectFingerprint" : "5EE4F1436EC0626D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "InversePair",
+      "identityHash" : "0x61327CD8E2D6BB99",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "E6A86931F6765E6A",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "ConventionRule",
+      "identityHash" : "0x62B1C68CE2FDC657",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "matches(typeName:inheritedTypeNames:)",
+      "subjectFingerprint" : "54D719939983E8CF",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Decisions",
+      "identityHash" : "0x6619FF4B44E5030C",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "087D3B6A427A2BEB",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "Refutability",
+      "identityHash" : "0x67E34EEA2A8414C1",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies. Flushed before the trap: VERIFY_TRIAL_CARRIER: Suggestion | VERIFY_TRIAL_INDEX: 0 | VERIFY_TRIAL_INPUT: Suggestion(templateName: \"b4Bi2JC\", evidence: [SwiftInferCore.Evidence(displayName: \"Pq3\", signature: \"\", location: SwiftInferCore.SourceLocation(file: \"4pUWyvJ8\", line: -691367222…",
+      "primaryFunctionName" : "isRoleEntailed(_:)",
+      "subjectFingerprint" : "FFE47B74E1AD5D43",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FloatingPointStorageNames",
+      "identityHash" : "0x6DF12BC2F5AC352E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "CFC066790A8203FD",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ViewModelNameHeuristics",
+      "identityHash" : "0x6EA0AAF4C205DF64",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isBool(_:)",
+      "subjectFingerprint" : "9B66A74D967DE608",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "IdentityOperatorAlgebra",
+      "identityHash" : "0x6F55FE452B581B5B",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isIncompatibleFamily(identityName:opName:)",
+      "subjectFingerprint" : "6E802F38182D9FDF",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "InteractionDecisions",
+      "identityHash" : "0x6F6FF916A00B073F",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "087D3B6A427A2BEB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "InteractionBaseline",
+      "identityHash" : "0x70564A5EC969A265",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "contains(identityHash:)",
+      "subjectFingerprint" : "C81CFC2690003B8B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "AccessRestriction",
+      "identityHash" : "0x759387A2452F89FE",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "disagrees(with:)",
+      "subjectFingerprint" : "F6547A7328CA2DFC",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "HostileInputEntryPoints",
+      "identityHash" : "0x7B20FD64384EEB0F",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "hasInterpretationVerb(_:)",
+      "subjectFingerprint" : "6CF3D21CAFB47087",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ViewModelNameHeuristics",
+      "identityHash" : "0x8153BB279B759E45",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isOptional(_:)",
+      "subjectFingerprint" : "9EA85EE86382D17F",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "CarrierKindResolver",
+      "identityHash" : "0x8454E302FAC7F5BB",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "strippingGenericParameters(_:)",
+      "subjectFingerprint" : "5EE4F1436EC0626D",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "KitEvidenceLog",
+      "identityHash" : "0x85029B1FE2CA2DA0",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "wasExercised(_:)",
+      "subjectFingerprint" : "E76BDAB477099EC1",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ProtocolCoverageAudit",
+      "identityHash" : "0x86EE1B055518B0E1",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "lawTotal(for:)",
+      "subjectFingerprint" : "25B49D27B2F6C3C8",
+      "templateName" : "homomorphism"
+    },
+    {
+      "carrier" : "EquatableResolver",
+      "identityHash" : "0x87CD36758CD01DFD",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isProvablyNonEquatable(_:)",
+      "subjectFingerprint" : "73ABC9A81D227DE7",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ProtocolCoverageMap",
+      "identityHash" : "0x8CFE50455A208FFE",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "covers(_:_:)",
+      "subjectFingerprint" : "B3C0D4EA31657C91",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "CorroborationRule",
+      "identityHash" : "0x8D94AA272081761E",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies.",
+      "primaryFunctionName" : "positiveChannelCount(_:)",
+      "subjectFingerprint" : "F0F4E506C288C0BF",
+      "templateName" : "measure-non-negativity"
+    },
+    {
+      "carrier" : "SeedKind",
+      "identityHash" : "0x8DA79E60712F3AFD",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "0F727957A1759D84",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "ReducerDiscoveryVisitor",
+      "identityHash" : "0x8DCE43EF5BC92948",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "declaresReducerConformance(_:)",
+      "subjectFingerprint" : "E37536175F0FD879",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SubjectFingerprint",
+      "identityHash" : "0x8F51ED97FCB630AA",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "normalized(_:)",
+      "subjectFingerprint" : "65A0C0047DFF3B5B",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "VerifyEvidenceLog",
+      "identityHash" : "0x8FAF3D6BFEF0B30C",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "2F36730901171AD8",
+      "templateName" : "associativity"
+    },
+    {
+      "carrier" : "CarrierKindResolver",
+      "identityHash" : "0x8FF0A7C0C0BD3ABA",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isLikelyGenericParameter(_:)",
+      "subjectFingerprint" : "54AB3D2C83EF31A9",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FloatingPointStorageNames",
+      "identityHash" : "0x93A7D854B92F8811",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isKitSupported(_:)",
+      "subjectFingerprint" : "42A38DB453BF8698",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FunctionScannerVisitor",
+      "identityHash" : "0x9401AD7AD4FFEE1E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "couldCarryDedupGate(_:)",
+      "subjectFingerprint" : "EA63D4B25CB8DAE3",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "DualStyleNamePair",
+      "identityHash" : "0x94E7D671DE0D1C81",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "1F92C0E045D09BA8",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "StreamConsumption",
+      "identityHash" : "0x97A494A14BB4D0EE",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isConsumingVerb(_:)",
+      "subjectFingerprint" : "36CB356AF5F42733",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "VerifyEvidenceLog",
+      "identityHash" : "0x9973B2D01C8546D7",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "2F36730901171AD8",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "Decisions",
+      "identityHash" : "0x9D8FC1E7C95FD4EB",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "087D3B6A427A2BEB",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "ProxyConstruction",
+      "identityHash" : "0xA15B5D66D96B40C3",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isParserConstructed(_:)",
+      "subjectFingerprint" : "B8DFBFE78C215612",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Vocabulary",
+      "identityHash" : "0xA1A67619BFFC60BD",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "C90D6A2CC83E8769",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "InteractionIndexEntry",
+      "identityHash" : "0xA4EFB93DD0A4D28E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "updated(from:)",
+      "subjectFingerprint" : "6E49BD00240DF7D6",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "ViewModelNameHeuristics",
+      "identityHash" : "0xA5B0FE00A6A19A4E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isCollection(_:)",
+      "subjectFingerprint" : "095B273A5C70B6CA",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ViewModelNameHeuristics",
+      "identityHash" : "0xA659A83B16DE14BE",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "stripOptional(_:)",
+      "subjectFingerprint" : "492B317703F26733",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "DocstringPropertyCorroborator",
+      "identityHash" : "0xA6A970FDFF49D7C7",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "mentionsPropertyAsSubject(_:)",
+      "subjectFingerprint" : "19F38DF1CC320F4C",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "InteractionDecisions",
+      "identityHash" : "0xAC74FA1C4CE27221",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "087D3B6A427A2BEB",
+      "templateName" : "commutativity"
+    },
+    {
+      "carrier" : "ReducerDiscoverer",
+      "identityHash" : "0xAF88F4D3B1C78826",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isScalarTypeName(_:)",
+      "subjectFingerprint" : "F6A08B947A76A2D8",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Baseline",
+      "identityHash" : "0xAFE276DF21165166",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "contains(identityHash:)",
+      "subjectFingerprint" : "C81CFC2690003B8B",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ViewModelMethodBodyWalker",
+      "identityHash" : "0xB33BA094E0661EE3",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "isAssignmentOperator(_:)",
+      "subjectFingerprint" : "EC1A1022E28241C8",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "FunctionScannerVisitor",
+      "identityHash" : "0xB36195C0E132FD16",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "isUnaryEndomorphism(_:)",
+      "subjectFingerprint" : "906299A575200198",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "OrderedCarrierDiscriminator",
+      "identityHash" : "0xB53550AF487F60D2",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isOrderSensitive(forConformances:)",
+      "subjectFingerprint" : "219BDA2AA59F0007",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "RefutedExpectation",
+      "identityHash" : "0xB63A54867F26EA5C",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "statesAFork(tier:hasCounterexample:coverage:attribution:)",
+      "subjectFingerprint" : "1AA6543821A6C336",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ViewModelDiscoveryVisitor",
+      "identityHash" : "0xBAA6B999D9D3A793",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "isStored(_:)",
+      "subjectFingerprint" : "B892C727386B00D9",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "RegisteredGenerator",
+      "identityHash" : "0xBADB6FC534756B8B",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "40AAF663BAD52002",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "DedupGateClassifier",
+      "identityHash" : "0xBEFD418D7A37E4BF",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies. Runtime said: Swift/Range.swift:761: Fatal error: Range requires lowerBound <= upperBound. Flushed before the trap: │         │   ├─colon: colon | │         │   ╰─value: IntegerLiteralExprSyntax | │         │     ╰─literal: integerLiteral(\"95\") | │         ╰─rightSquare: rightSquare | ╰─semicolon: semicolon], -6084115373196373027)",
+      "primaryFunctionName" : "hasUngatedAccumulator(_:beforeGate:)",
+      "subjectFingerprint" : "AC22C9B5A357AD0D",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SeedFocus",
+      "identityHash" : "0xC54DF40A83585A33",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies.",
+      "primaryFunctionName" : "seedIndependent(in:)",
+      "subjectFingerprint" : "27FB8E380FEBCC82",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "ReducerDiscoverer",
+      "identityHash" : "0xCDAD44BD7E39BF5B",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "hasReducerAttribute(_:)",
+      "subjectFingerprint" : "F7CF4893A32E8533",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SeedRestriction",
+      "identityHash" : "0xD1380E90C1FEF63E",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "0F727957A1759D84",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "HostileInputEntryPoints",
+      "identityHash" : "0xD19F60BF61C9E41B",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isLocationLabel(_:)",
+      "subjectFingerprint" : "858601A0A934E957",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "MarkerPair",
+      "identityHash" : "0xD7645E3AE9BDC2D5",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "9D5D4151448E1422",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "StreamConsumption",
+      "identityHash" : "0xD848FD5808BCD1A8",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isStreamCarrier(_:)",
+      "subjectFingerprint" : "C42F3E7BCA82DC03",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "Refutability",
+      "identityHash" : "0xDCE954DEBF58E082",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies. Flushed before the trap: VERIFY_TRIAL_CARRIER: Suggestion | VERIFY_TRIAL_INDEX: 0 | VERIFY_TRIAL_INPUT: Suggestion(templateName: \"uvYUbS\", evidence: [SwiftInferCore.Evidence(displayName: \"gWGi6b2\", signature: \"D1V\", location: SwiftInferCore.SourceLocation(file: \"Z2tPKb\", line: 785127…",
+      "primaryFunctionName" : "isRefutable(_:)",
+      "subjectFingerprint" : "FC3B859B34E718EF",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SeedFocus",
+      "identityHash" : "0xDD64EEA69F3E8A24",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies. Flushed before the trap: VERIFY_TRIAL_CARRIER: Suggestion | VERIFY_TRIAL_INDEX: 0 | VERIFY_TRIAL_INPUT: (SwiftInferCore.Suggestion(templateName: \"DC\", evidence: [SwiftInferCore.Evidence(displayName: \"dm2gsYt\", signature: \"s\", location: SwiftInferCore.SourceLocation(file: \"\", line: 74…",
+      "primaryFunctionName" : "isUnseedableLifted(_:declaredSubjects:)",
+      "subjectFingerprint" : "326C35ED556C7B11",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "HostileInputEntryPoints",
+      "identityHash" : "0xE18890FA18A6FDAD",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "isContentLabel(_:)",
+      "subjectFingerprint" : "91085426EE7DCF5A",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "OrderSensitiveCarrierNames",
+      "identityHash" : "0xE26DB6C1B486C2E8",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "contains(_:)",
+      "subjectFingerprint" : "86EE5F3488C1F5BE",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SemanticIndexEntry",
+      "identityHash" : "0xEB5148E556CDEE95",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "76F5D9C5BB0AAE7F",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "PostAcceptanceOutcomeLog",
+      "identityHash" : "0xEBD32959F2ADE2C7",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "merge(_:)",
+      "subjectFingerprint" : "FB66CF287EBE29EE",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "SemanticIndexEntry",
+      "identityHash" : "0xEF7A112D9CB38D62",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "updated(from:)",
+      "subjectFingerprint" : "2287D34E0D3BDE66",
+      "templateName" : "idempotence"
+    },
+    {
+      "carrier" : "CorroborationRule",
+      "identityHash" : "0xF0A8250B5FE22F67",
+      "outcome" : "measured-error",
+      "outcomeDetail" : "parse-error: the verifier trapped (signal 5) — the law was neither confirmed nor refuted. A generated input drove the code into a runtime trap before the property was compared, so this is evidence about the generator's domain, not about the law. The usual cause is a derived generator wider than the code assumes — an unbounded Int drawn for a field the code sums or multiplies. Flushed before the trap: VERIFY_TRIAL_CARRIER: Score",
+      "primaryFunctionName" : "isCorroborated(_:)",
+      "subjectFingerprint" : "084E702D55548006",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SeedRole",
+      "identityHash" : "0xF565FF2FE61A635B",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "encode(to:)",
+      "subjectFingerprint" : "0F727957A1759D84",
+      "templateName" : "codable-round-trip"
+    },
+    {
+      "carrier" : "MemberBlockInspector",
+      "identityHash" : "0xF62653D34C171A36",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=0 edgeSampled=0",
+      "primaryFunctionName" : "hasUserInit(in:)",
+      "subjectFingerprint" : "A4C5E0A3B2D70B55",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "ReducerDiscoverer",
+      "identityHash" : "0xF81A5D653E1E90AB",
+      "outcome" : "measured-bothPass",
+      "outcomeDetail" : "defaultTrials=100 edgeTrials=100 edgeSampled=0",
+      "primaryFunctionName" : "looksLikeMobiusNext(_:expectedFirst:)",
+      "subjectFingerprint" : "B83D735A96AF4075",
+      "templateName" : "predicate"
+    },
+    {
+      "carrier" : "SubjectFingerprint",
+      "counterexample" : "",
+      "identityHash" : "0xFA16B712BAD76A7C",
+      "outcome" : "measured-defaultFails",
+      "outcomeDetail" : "trial=0",
+      "primaryFunctionName" : "of(bodyText:)",
+      "subjectFingerprint" : "BCAD8234412632C0",
+      "templateName" : "idempotence"
+    }
+  ],
+  "schemaVersion" : 1,
+  "subjectRevision" : "/tmp/claude-501/-Users-joecursio-xcode-projects-SwiftInferProperties/a6e75f04-fc96-46fe-b4cf-6b1e4b30d96f/scratchpad/rebase @ 0cc4345",
+  "swiftInferVersion" : "1.149.0 (unattributable build)",
+  "target" : "SwiftInferCore",
+  "tiersByIdentity" : {
+    "0x00F42E395C580C92" : "possible",
+    "0x01CF6332F7E5B937" : "advisory",
+    "0x02F4A08298EBE4CE" : "advisory",
+    "0x03CFC10FEA2D1D5E" : "possible",
+    "0x03EF76CE1952F2CF" : "advisory",
+    "0x0557AEC0D98C0AD7" : "possible",
+    "0x06CD97907100941D" : "likely",
+    "0x07B0926EE0CE5565" : "advisory",
+    "0x07F1DE6C88C3585F" : "possible",
+    "0x0B426022BEF2E227" : "possible",
+    "0x0D0D9BCD38C7BE8F" : "likely",
+    "0x0E0842FF192F873A" : "possible",
+    "0x104C1067D5376003" : "likely",
+    "0x12A42D53D24BAD54" : "likely",
+    "0x14A16F679CC44483" : "advisory",
+    "0x14BF50C9DD88D90B" : "advisory",
+    "0x15D7F52358A47FDB" : "possible",
+    "0x16CA6D2A250AFFC6" : "advisory",
+    "0x1947B1BA2190964D" : "possible",
+    "0x1BBAEA4E77457836" : "advisory",
+    "0x1D1EB281ED07DA1F" : "possible",
+    "0x1DBA359F32FF9243" : "strong",
+    "0x1E6186DF5AACB720" : "strong",
+    "0x21D1F59AA785A347" : "possible",
+    "0x2274123A5577C009" : "possible",
+    "0x269C22D30581A90A" : "possible",
+    "0x2835E4BDE8101D38" : "advisory",
+    "0x2949F532557B5A81" : "possible",
+    "0x2A8F229D6157520E" : "possible",
+    "0x2B8BFA4523241574" : "advisory",
+    "0x2BBC3EF2C6D1A4ED" : "advisory",
+    "0x2D042D403453FDF3" : "possible",
+    "0x2D750BE3FA271052" : "advisory",
+    "0x2E39FEDF89FE0696" : "likely",
+    "0x2EC8A77414181C35" : "advisory",
+    "0x3242486D0938A391" : "possible",
+    "0x35221BA9A4F72BFE" : "possible",
+    "0x355C1C726E60735F" : "possible",
+    "0x36025AC5C092CF7E" : "possible",
+    "0x368D8390BF501326" : "possible",
+    "0x3800F0E5EDF75D10" : "possible",
+    "0x386A647495732890" : "advisory",
+    "0x3B0CC55441F6E32E" : "possible",
+    "0x3C71468F6096E712" : "possible",
+    "0x4227258517D70A78" : "advisory",
+    "0x433B54B10E181E28" : "possible",
+    "0x463AEEDC16BE9DEC" : "advisory",
+    "0x4656C825D66D9779" : "possible",
+    "0x48AE1213BE8BB4FF" : "possible",
+    "0x49A151212B6E1CE4" : "possible",
+    "0x4DB168EA5A192C99" : "advisory",
+    "0x4ECF21F28E4DD5B8" : "advisory",
+    "0x507322CFD32A3E19" : "advisory",
+    "0x53AE823AF649E5AD" : "possible",
+    "0x543FF34E2480CB43" : "possible",
+    "0x551E53C9045E28C1" : "advisory",
+    "0x56EF3D4AD7390452" : "advisory",
+    "0x57D06CE709E14DEF" : "possible",
+    "0x59D2861CA9DE596A" : "possible",
+    "0x5B99F839717F25D8" : "possible",
+    "0x5E15EB66005C749B" : "possible",
+    "0x5E326941468E5435" : "possible",
+    "0x5EB8FD2DC5D13259" : "advisory",
+    "0x5FDE3AADB8D2567B" : "possible",
+    "0x61327CD8E2D6BB99" : "likely",
+    "0x62B1C68CE2FDC657" : "possible",
+    "0x646B085DF4CD25E2" : "advisory",
+    "0x6619FF4B44E5030C" : "strong",
+    "0x67E34EEA2A8414C1" : "possible",
+    "0x6B54EA05A16112AD" : "advisory",
+    "0x6DF12BC2F5AC352E" : "possible",
+    "0x6EA0AAF4C205DF64" : "possible",
+    "0x6F55FE452B581B5B" : "possible",
+    "0x6F6FF916A00B073F" : "likely",
+    "0x70564A5EC969A265" : "possible",
+    "0x759387A2452F89FE" : "possible",
+    "0x7A2C791019CF59F7" : "advisory",
+    "0x7B20FD64384EEB0F" : "possible",
+    "0x8153BB279B759E45" : "possible",
+    "0x8454E302FAC7F5BB" : "likely",
+    "0x85029B1FE2CA2DA0" : "possible",
+    "0x86EE1B055518B0E1" : "likely",
+    "0x87CD36758CD01DFD" : "possible",
+    "0x8866F73EF35AB322" : "advisory",
+    "0x8AE91FEA1DC15D73" : "advisory",
+    "0x8CFE50455A208FFE" : "possible",
+    "0x8D94AA272081761E" : "possible",
+    "0x8DA79E60712F3AFD" : "likely",
+    "0x8DCE43EF5BC92948" : "possible",
+    "0x8F51ED97FCB630AA" : "strong",
+    "0x8FAF3D6BFEF0B30C" : "likely",
+    "0x8FF0A7C0C0BD3ABA" : "possible",
+    "0x910CBD1FEC2B5CB9" : "advisory",
+    "0x9378A211DA7E7AA0" : "advisory",
+    "0x93A7D854B92F8811" : "possible",
+    "0x93CB2D332E410D49" : "advisory",
+    "0x9401AD7AD4FFEE1E" : "possible",
+    "0x94E7D671DE0D1C81" : "likely",
+    "0x97A494A14BB4D0EE" : "possible",
+    "0x9973B2D01C8546D7" : "strong",
+    "0x9B7CB054363942C3" : "advisory",
+    "0x9D8FC1E7C95FD4EB" : "likely",
+    "0xA15B5D66D96B40C3" : "possible",
+    "0xA1A67619BFFC60BD" : "likely",
+    "0xA29FC1314A111D77" : "advisory",
+    "0xA4A87E8EB8C66AD1" : "advisory",
+    "0xA4EFB93DD0A4D28E" : "possible",
+    "0xA5B0FE00A6A19A4E" : "possible",
+    "0xA659A83B16DE14BE" : "possible",
+    "0xA6A970FDFF49D7C7" : "possible",
+    "0xAC74FA1C4CE27221" : "strong",
+    "0xAF88F4D3B1C78826" : "possible",
+    "0xAFE276DF21165166" : "possible",
+    "0xB33BA094E0661EE3" : "possible",
+    "0xB36195C0E132FD16" : "possible",
+    "0xB38BEDF0D3E6AD17" : "possible",
+    "0xB41E09E3CB4F9FD2" : "advisory",
+    "0xB53550AF487F60D2" : "possible",
+    "0xB60F90897D10CA76" : "possible",
+    "0xB63A54867F26EA5C" : "possible",
+    "0xB71DAC452590D11B" : "advisory",
+    "0xB8151EE414A50865" : "advisory",
+    "0xBAA6B999D9D3A793" : "possible",
+    "0xBADB6FC534756B8B" : "likely",
+    "0xBC2A6D70D8D8519C" : "advisory",
+    "0xBEFD418D7A37E4BF" : "possible",
+    "0xC54DF40A83585A33" : "possible",
+    "0xC6CB3C87C658A368" : "possible",
+    "0xC824BAD9948C9CA8" : "advisory",
+    "0xCC2454D862BF0DDE" : "advisory",
+    "0xCC2736C9074CB6E6" : "advisory",
+    "0xCDAD44BD7E39BF5B" : "possible",
+    "0xCF040CCB4FBC3DC9" : "advisory",
+    "0xD1380E90C1FEF63E" : "likely",
+    "0xD19462E96A0AB1A8" : "advisory",
+    "0xD19F60BF61C9E41B" : "possible",
+    "0xD7645E3AE9BDC2D5" : "likely",
+    "0xD78EF9CA9FEE6F81" : "possible",
+    "0xD848FD5808BCD1A8" : "possible",
+    "0xDCE954DEBF58E082" : "possible",
+    "0xDD64EEA69F3E8A24" : "possible",
+    "0xE1776D91BA3D47C2" : "strong",
+    "0xE18890FA18A6FDAD" : "possible",
+    "0xE1DE6B44E596ECB6" : "advisory",
+    "0xE26DB6C1B486C2E8" : "possible",
+    "0xE31948CA02026074" : "possible",
+    "0xE76E9A6EF1E8617E" : "advisory",
+    "0xE79826E10961028C" : "advisory",
+    "0xE89E52F929F6CC23" : "advisory",
+    "0xEB3780A3681DDDBF" : "advisory",
+    "0xEB5148E556CDEE95" : "likely",
+    "0xEBD32959F2ADE2C7" : "likely",
+    "0xEF7A112D9CB38D62" : "possible",
+    "0xF0A8250B5FE22F67" : "possible",
+    "0xF565FF2FE61A635B" : "likely",
+    "0xF62653D34C171A36" : "possible",
+    "0xF81A5D653E1E90AB" : "possible",
+    "0xFA16B712BAD76A7C" : "possible",
+    "0xFDB6BBD3B76A7EE4" : "possible"
+  }
+}
