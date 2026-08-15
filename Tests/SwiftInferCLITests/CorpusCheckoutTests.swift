@@ -52,7 +52,7 @@ struct CorpusCheckoutTests {
         )
     }
 
-    static func measurement(revision: String, kind: String = "baseline") -> CorpusManifest.Measurement {
+    static func measurement(revision: String?, kind: String = "baseline") -> CorpusManifest.Measurement {
         CorpusManifest.Measurement(
             apparatus: "prove-then-show",
             kind: kind,
@@ -134,6 +134,40 @@ struct CorpusCheckoutTests {
         let pin = CorpusPin.verdict(entry: subject, checkout: .missing(path: "/nonexistent"))
         #expect(pin == .uncheckable)
         #expect(pin != .noBaseline)
+    }
+
+    /// A baseline that records no revision is its own verdict, and the two arms it must not
+    /// collapse into are the ones a reader would act on wrongly.
+    ///
+    /// `noBaseline` says *enqueued, never swept* — go and sweep it, which would silently produce
+    /// an incomparable run. `movedOff` says *check out the pin* — a pin that does not exist. The
+    /// measurement HAPPENED; what is gone is the revision it happened against, and the only
+    /// remedy is re-running it.
+    @Test("A baseline with no revision is unrecoverable, not merely unpinned or moved off")
+    func absentRevisionIsItsOwnVerdict() {
+        let subject = Self.entry(localPath: "/x", measurements: [Self.measurement(revision: nil)])
+        let checkout = CorpusCheckout.resolved(path: "/x", head: Self.absentRevision, dirty: false)
+        let pin = CorpusPin.verdict(entry: subject, checkout: checkout)
+
+        #expect(pin == .revisionUnrecoverable)
+        #expect(pin != .noBaseline, "a measurement exists, so 'never swept' is false")
+        #expect(
+            !pin.isComparable,
+            "nothing can be compared against a revision that was never recorded"
+        )
+    }
+
+    /// The unreadable-checkout precedence holds against the new state too: with no tree there is
+    /// nothing to compare *from*, which is the fact to act on first.
+    @Test("An unreadable checkout outranks an unrecoverable revision")
+    func uncheckableOutranksUnrecoverableRevision() {
+        let subject = Self.entry(
+            localPath: "/nonexistent/corpus/probe",
+            measurements: [Self.measurement(revision: nil)]
+        )
+        let pin = CorpusPin.verdict(entry: subject, checkout: .missing(path: "/nonexistent"))
+        #expect(pin == .uncheckable)
+        #expect(pin != .revisionUnrecoverable)
     }
 
     @Test("A head matching the baseline is at pin; a dirty tree at the pin is not comparable")

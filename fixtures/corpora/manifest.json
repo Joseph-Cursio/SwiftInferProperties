@@ -421,9 +421,9 @@
         {
           "apparatus": "road-test",
           "kind": "census",
-          "revision": "6ffc7553b6f203550e22ae6aef855283627d2abe",
-          "takenOn": "2026-08-12",
-          "arm": "road test — out-of-catalog subjects",
+          "revision": null,
+          "takenOn": "2026-07-22",
+          "arm": "road test — out-of-catalog subjects. REVISION UNRECOVERABLE: this entry read `6ffc7553b6f203550e22ae6aef855283627d2abe` until 2026-08-15, and that object exists nowhere — GitHub answers HTTP 422, and it is absent from the local checkout's object store, its reflog, and the sibling SwiftLintRuleStudioTeam clone. The record it cites never captured a subject revision: every SHA in that doc (`748dd81`, `9e1e066`, `3bf23e0`, …) is a SwiftInferProperties FIX commit, not a SwiftLintRuleStudio one. `takenOn` corrected 2026-08-12 → 2026-07-22 to match that record's own date; 08-12 was when the registry was written. Re-running is the only way to restore a pin — fetching cannot.",
           "record": "docs/measurements/roadtest-swiftlintrulestudio.md",
           "frozenBecause": null,
           "expectedOutcome": null,

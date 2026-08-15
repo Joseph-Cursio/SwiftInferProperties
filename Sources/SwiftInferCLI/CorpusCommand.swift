@@ -55,11 +55,22 @@ extension SwiftInferCommand {
                 CorpusStatusRenderer.render(statuses, apparatus: apparatus), terminator: ""
             )
             guard strict else { return }
+            // `--strict` fails on the states the person running it can fix BEFORE the sweep they
+            // are about to start: check out the pin, or clean the tree. Everything else is
+            // reported loudly and passes.
+            //
+            // `.revisionUnrecoverable` is the uncomfortable one and it deliberately does NOT
+            // fail. It is a defect in the *record*, identical on every machine, and unfixable
+            // by anything at gate time — the only remedy is re-running the measurement. Failing
+            // on it would hold the gate red until someone re-runs a road test, and a gate that
+            // is permanently red is one people route around, which costs the `.movedOff`
+            // detection this exists for. The pressure to fix it lives in the summary line, which
+            // names it in capitals and never folds it into `noBaseline`.
             let unsound = statuses.filter { status in
                 switch status.pin {
                 case .movedOff: return true
                 case let .atPin(dirty): return dirty
-                case .noBaseline, .uncheckable: return false
+                case .noBaseline, .uncheckable, .revisionUnrecoverable: return false
                 }
             }
             guard unsound.isEmpty else {

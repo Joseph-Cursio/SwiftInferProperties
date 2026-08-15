@@ -59,6 +59,17 @@ enum CorpusPin: Equatable, Sendable {
 
     case movedOff(head: String, pinned: String, dirty: Bool)
 
+    /// The entry HAS a baseline, and that baseline records no revision — so there is nothing to
+    /// stand at or off, and never will be.
+    ///
+    /// **Deliberately not folded into `noBaseline` or `movedOff`.** `noBaseline` says *enqueued,
+    /// never swept*, which invites a sweep; `movedOff` says *check out the pin*, which invites a
+    /// fetch. Both are actionable and both would be wrong here — the measurement happened and its
+    /// subject revision is gone, so the only honest instruction is *re-run it and record the
+    /// revision this time*. This is the same argument `uncheckable` already makes against being
+    /// merged into the other two.
+    case revisionUnrecoverable
+
     /// **The checkout is read first, and the order is a decision.** For a corpus that is
     /// neither cloned nor swept both answers are true, and `noBaseline` is the misleading one:
     /// *nothing to compare a run here against* implies the tree is present and merely unswept,
@@ -66,9 +77,10 @@ enum CorpusPin: Equatable, Sendable {
     static func verdict(entry: CorpusManifest.Entry, checkout: CorpusCheckout) -> Self {
         guard case let .resolved(_, head, dirty) = checkout else { return .uncheckable }
         guard let baseline = entry.baselineMeasurement else { return .noBaseline }
-        return head == baseline.revision
+        guard let pinned = baseline.revision else { return .revisionUnrecoverable }
+        return head == pinned
             ? .atPin(dirty: dirty)
-            : .movedOff(head: head, pinned: baseline.revision, dirty: dirty)
+            : .movedOff(head: head, pinned: pinned, dirty: dirty)
     }
 
     /// True when a survey taken here would be comparable against the retained baseline.

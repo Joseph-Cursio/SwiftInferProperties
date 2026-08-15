@@ -67,8 +67,9 @@ enum CorpusStatusRenderer {
         }
         return entry.measurements.map { measurement in
             let expectation = measurement.expectedOutcome == nil ? "" : "  [expected outcome]"
+            let revision = measurement.revision.map(short) ?? "(revision unrecoverable)"
             return "    \(measurement.apparatus)/\(measurement.kind)  \(measurement.takenOn)  "
-                + "\(short(measurement.revision))  \(measurement.arm)\(expectation)"
+                + "\(revision)  \(measurement.arm)\(expectation)"
         }
     }
 
@@ -88,6 +89,11 @@ enum CorpusStatusRenderer {
         case let .movedOff(head, pinned, dirty):
             let suffix = dirty ? ", and DIRTY" : ""
             return "MOVED OFF — head \(short(head)), baseline taken at \(short(pinned))\(suffix)"
+
+        case .revisionUnrecoverable:
+            return "REVISION UNRECOVERABLE — the baseline records no revision, so nothing here "
+                + "can be compared against it. Re-run the measurement and record the revision; "
+                + "fetching cannot help."
         }
     }
 
@@ -96,11 +102,23 @@ enum CorpusStatusRenderer {
         let total = statuses.count
         let uncheckable = statuses.filter { $0.pin == .uncheckable }.count
         let noBaseline = statuses.filter { $0.pin == .noBaseline }.count
+        // Counted from the MEASUREMENTS, not from the pin, and the difference is load-bearing.
+        // A lost revision on a `census` leaves the pin verdict correctly at `noBaseline` — there
+        // genuinely is no baseline — so counting the pin would file the loss under a bucket that
+        // reads *enqueued, never swept*, and a sweep would clear the bucket without recovering
+        // anything. The registry's defect is a property of the record, so it is counted there.
+        let unrecoverable = statuses.filter { status in
+            status.entry.measurements.contains { $0.revision == nil }
+        }.count
         let comparable = statuses.filter(\.pin.isComparable).count
         let checked = total - uncheckable
         let noun = total == 1 ? "corpus" : "corpora"
         var parts = ["\(total) \(noun)", "\(checked) checked", "\(comparable) at pin and clean"]
         if noBaseline > 0 { parts.append("\(noBaseline) with no baseline") }
+        // Counted separately from `noBaseline` for the reason `CorpusPin` states: a measurement
+        // exists, so "never swept" is false, and folding it in would hide a permanently
+        // uncomparable row inside a bucket a sweep would clear.
+        if unrecoverable > 0 { parts.append("\(unrecoverable) with an UNRECOVERABLE revision") }
         if uncheckable > 0 { parts.append("\(uncheckable) COULD NOT BE CHECKED") }
         var line = parts.joined(separator: " · ")
         if uncheckable > 0 {
