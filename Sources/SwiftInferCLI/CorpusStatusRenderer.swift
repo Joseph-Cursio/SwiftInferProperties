@@ -48,7 +48,8 @@ enum CorpusStatusRenderer {
 
     private static func block(for status: CorpusStatus) -> [String] {
         let entry = status.entry
-        let reach = entry.target.map { "target \($0)" } ?? "sources \(entry.sources ?? "?")"
+        let reach = entry.target.map { "target \($0)" }
+            ?? "sources \(entry.sources?.joined(separator: " + ") ?? "?")"
         var lines = [
             "  \(entry.id)  —  \(entry.subject), \(reach)  [\(entry.kind) · \(entry.role)]",
             "    pin      \(describe(status.pin))",

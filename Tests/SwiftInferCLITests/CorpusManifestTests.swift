@@ -214,6 +214,12 @@ struct CorpusManifestTests {
             if entry.kind == "app" {
                 #expect(hasSources, "app corpus '\(entry.id)' must be reached by sources")
             }
+            // An empty list is not "no sources": it decodes, passes a nil check, and then
+            // scans nothing — the confident zero this whole file is written against.
+            #expect(
+                entry.sources.map { !$0.isEmpty } ?? true,
+                "corpus '\(entry.id)' sets sources to an EMPTY list, which scans nothing"
+            )
             #expect(
                 ["package", "sibling", "app", "mutant"].contains(entry.kind),
                 "corpus '\(entry.id)' has kind '\(entry.kind)'"

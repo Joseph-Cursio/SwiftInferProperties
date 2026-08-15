@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "corpora": [
     {
       "id": "swift-infer-core",
@@ -100,7 +100,9 @@
       "subject": "swift-collections",
       "kind": "package",
       "target": "Collections",
-      "sources": "Sources",
+      "sources": [
+        "Sources"
+      ],
       "remote": "https://github.com/apple/swift-collections.git",
       "localPath": "~/GitHub_projects/swift-collections",
       "role": "unfamiliar",
@@ -303,7 +305,9 @@
       "subject": "swift (the compiler repo)",
       "kind": "package",
       "target": null,
-      "sources": "stdlib/public/core",
+      "sources": [
+        "stdlib/public/core"
+      ],
       "remote": "https://github.com/swiftlang/swift.git",
       "localPath": "~/GitHub_projects/swift",
       "role": "unfamiliar",
@@ -351,11 +355,14 @@
       "subject": "SwiftProjectLint",
       "kind": "sibling",
       "target": "Core",
-      "sources": null,
+      "sources": [
+        "Sources",
+        "Packages"
+      ],
       "remote": "https://github.com/Joseph-Cursio/SwiftProjectLint.git",
       "localPath": "../SwiftProjectLint",
       "role": "unfamiliar",
-      "why": "The upstream producer in the toolchain — it emits the pbt-seeds this repo consumes — and the first SCORED road test, with a frozen answer key. Reading its design doc against the code surfaced three consumer-side defects here in one pass, all the same class: a field the producer sends that this repo does not act on. Its target was recorded as SwiftProjectLintCore until 2026-08-15 and no such target exists — the package declares Core at Sources/Core. Found by running , which refuses a scan path that is not a directory; the manifest guard that would have caught it is scoped to in-repo corpora, because an external clone may legitimately be absent.",
+      "why": "The upstream producer in the toolchain — it emits the pbt-seeds this repo consumes — and the first SCORED road test, with a frozen answer key. Reading its design doc against the code surfaced three consumer-side defects here in one pass, all the same class: a field the producer sends that this repo does not act on. Its target was recorded as SwiftProjectLintCore until 2026-08-15 and no such target exists — the package declares Core at Sources/Core. Found by running , which refuses a scan path that is not a directory; the manifest guard that would have caught it is scoped to in-repo corpora, because an external clone may legitimately be absent. Its census scan paths are Sources AND Packages: 425 of its 874 non-vendored files live under Packages/ and 48 under Sources/, so Sources/Core reached 11 files and 1 row. Scanning the enclosing root instead yields 776, of which 365 are inverse-pair rows absent from either sub-scan — pairing across the test/product boundary — so the root is not the answer either.",
       "measurements": [
         {
           "apparatus": "road-test",
@@ -423,7 +430,9 @@
       "subject": "MacCloud_client_iOS",
       "kind": "app",
       "target": null,
-      "sources": "Shared",
+      "sources": [
+        "Shared"
+      ],
       "remote": "https://github.com/Joseph-Cursio/MacCloud_client_iOS.git",
       "localPath": "../MacCloud_client_iOS",
       "role": "unfamiliar",
@@ -447,7 +456,9 @@
       "subject": "SwiftLintRuleStudio",
       "kind": "app",
       "target": null,
-      "sources": "SwiftLintRuleStudio",
+      "sources": [
+        "SwiftLintRuleStudio"
+      ],
       "remote": "https://github.com/Joseph-Cursio/SwiftLintRuleStudio.git",
       "localPath": "../SwiftLintRuleStudio",
       "role": "unfamiliar",
@@ -471,7 +482,9 @@
       "subject": "SwiftFormatRuleStudio",
       "kind": "app",
       "target": null,
-      "sources": "SwiftFormatRuleStudioCore",
+      "sources": [
+        "SwiftFormatRuleStudioCore"
+      ],
       "remote": "https://github.com/Joseph-Cursio/SwiftFormatRuleStudio.git",
       "localPath": "../SwiftFormatRuleStudio",
       "role": "unfamiliar",

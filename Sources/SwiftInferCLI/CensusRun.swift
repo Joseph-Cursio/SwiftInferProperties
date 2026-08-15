@@ -73,6 +73,21 @@ struct CensusRun: Codable, Sendable {
         /// Whether the checkout stood where its baseline was taken, as `CorpusPin` renders it.
         let pin: String
 
+        /// Which directories were scanned, checkout-relative.
+        ///
+        /// **Recorded because the scan path is not a filter over one fixed answer — it decides
+        /// what the answer can be.** Cross-function pairing spans whatever is in scope at once,
+        /// so widening a path does not merely add rows from more files: it creates pairs no
+        /// narrower scan can see. Measured on `SwiftProjectLint`, whose code is split across two
+        /// trees — `Sources` gives 9 rows and `Packages` 390, while the enclosing root gives
+        /// **776**, and 365 of the difference is a single template (`inverse-pair`) absent from
+        /// both sub-scans.
+        ///
+        /// So two censuses of the same corpus at the same revision can differ by a factor of
+        /// two on the scan path alone. Without this field that difference is invisible, and the
+        /// artifact would present it as a change in the catalog.
+        let scanPaths: [String]
+
         /// Rows per `templateName`. **Templates that fired zero times are absent**, which is why
         /// `CensusRun.zeroRowTemplates(against:)` takes the catalog as an argument: a zero is a
         /// fact about a template *and* this corpus list, and it cannot be read off the counts.

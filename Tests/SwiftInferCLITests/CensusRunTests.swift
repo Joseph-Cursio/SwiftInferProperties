@@ -19,9 +19,17 @@ struct CensusRunTests {
         rows: [String: Int],
         revision: String? = String(repeating: "a", count: 40),
         dirty: Bool = false,
-        pin: String = "at-pin"
+        pin: String = "at-pin",
+        scanPaths: [String] = ["Sources"]
     ) -> CensusRun.Member {
-        CensusRun.Member(id: id, revision: revision, dirty: dirty, pin: pin, rowsByTemplate: rows)
+        CensusRun.Member(
+            id: id,
+            revision: revision,
+            dirty: dirty,
+            pin: pin,
+            scanPaths: scanPaths,
+            rowsByTemplate: rows
+        )
     }
 
     private static func run(_ members: [CensusRun.Member]) -> CensusRun {
@@ -157,6 +165,29 @@ struct CensusRunTests {
         )
         #expect(text.contains("0 rows"), "its zero must be shown, not elided")
         #expect(text.contains("ACROSS THESE 2 CORPORA"), "the zero corpus still counts as surveyed")
+    }
+
+    /// The scan paths are part of the result and must survive into the artifact.
+    ///
+    /// **A scan path is not a filter over one fixed answer; it decides what the answer can be.**
+    /// Cross-function pairing spans whatever is in scope at once, so widening a path creates
+    /// pairs no narrower scan can see. Measured on `SwiftProjectLint`: `Sources` gives 9 rows,
+    /// `Packages` 390, and the enclosing root **776** — with 365 of the difference in a single
+    /// template (`inverse-pair`) that appears in neither sub-scan.
+    ///
+    /// Two censuses of the same corpus at the same revision can therefore differ twofold on the
+    /// scan path alone. Drop this field and that difference reads as a change in the catalog.
+    @Test("The scan paths survive into the artifact, in order")
+    func scanPathsAreRecorded() throws {
+        let original = Self.run([
+            Self.member("multi", rows: ["idempotence": 1], scanPaths: ["Sources", "Packages"])
+        ])
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("census-\(UUID().uuidString).json")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        try CensusRun.write(original, to: url)
+        #expect(try CensusRun.read(from: url).corpora[0].scanPaths == ["Sources", "Packages"])
     }
 
     /// `CorpusPin.token` is stored in the artifact, so it is a contract rather than copy.

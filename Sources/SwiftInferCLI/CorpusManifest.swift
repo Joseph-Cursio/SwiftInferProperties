@@ -43,8 +43,9 @@ struct CorpusManifest: Codable, Sendable {
     /// Bumped only on a **breaking** change to this envelope. Additive optional fields do not
     /// need it (synthesized `Codable` uses `decodeIfPresent` for optionals), which is the same
     /// argument `RetainedSurveyRun.currentSchemaVersion` makes. Bumped to 2 when `runs` became
-    /// `measurements` and the subject kinds widened past "third-party SwiftPM library".
-    static let currentSchemaVersion = 2
+    /// `measurements` and the subject kinds widened past "third-party SwiftPM library". Bumped
+    /// to 3 when `sources` became a LIST and stopped being mutually exclusive with `target`.
+    static let currentSchemaVersion = 3
 
     /// Repo-relative location, so every caller names it the same way.
     static let relativePath = "fixtures/corpora/manifest.json"
@@ -75,13 +76,36 @@ struct CorpusManifest: Codable, Sendable {
         /// The SwiftPM target surveyed. One per entry: two targets of one package are two
         /// measurements, and folding them into a row would make the pin ambiguous.
         ///
-        /// Exactly one of `target` / `sources` is set, and `CorpusManifestTests` asserts it.
+        /// What to **build**. At least one of `target` / `sources` is set, and
+        /// `CorpusManifestTests` asserts it — see `sources` for why it is no longer *exactly*
+        /// one.
         let target: String?
 
-        /// Path *within the checkout* to a source directory, for a subject with no manifest to
-        /// resolve a target against. The `--sources` escape hatch, which is how every user of
-        /// an Xcode project meets this tool.
-        let sources: String?
+        /// Paths *within the checkout* to scan — what to **read**, which is not always what to
+        /// build.
+        ///
+        /// Originally the `--sources` escape hatch for a subject with no manifest to resolve a
+        /// target against, which is how every user of an Xcode project meets this tool. It has
+        /// since had to answer a second question, and the two came apart on real corpora:
+        ///
+        /// - **A target that builds but holds no code.** `swift-collections` declares
+        ///   `Collections`, a genuine SwiftPM target and a pure re-export umbrella — five
+        ///   `… reexports.swift` files of typealiases, zero declarations. A census pointed at it
+        ///   read real files and found no API, reporting `0 rows` beside corpora reporting four
+        ///   figures. It still deserves its target: `prove-then-show` must compile something.
+        /// - **Code no target names.** The `swiftlang-swift` checkout has no `Sources/` at all;
+        ///   its stdlib is at `stdlib/public/core`.
+        /// - **Code in more than one place.** `SwiftProjectLint` keeps 425 of its 874 files under
+        ///   `Packages/` and 48 under `Sources/`, so no single path reaches the subject.
+        ///
+        /// That last one is why this is a LIST rather than a second string. **It is not merely a
+        /// union, and the difference is measured:** cross-function pairing spans the whole
+        /// scanned set, so `Sources` (9 rows) and `Packages` (390) scanned separately miss pairs
+        /// that a wider scan finds — the repo root yields 776, and 365 of the extra rows are a
+        /// single template, `inverse-pair`, absent from every sub-scan. **A scan path does not
+        /// just include code; it decides what can pair.** So the paths a census used are part of
+        /// its result, which is why `CensusRun` records them.
+        let sources: [String]?
 
         /// Where the subject comes from. The authority — `localPath` is only a hint about
         /// where a clone was last seen.
