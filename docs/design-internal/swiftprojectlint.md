@@ -1,6 +1,6 @@
 # SwiftProjectLint — the entry point
 
-> **Status:** `reference` · **As of:** 2026-08-12
+> **Status:** `reference` · **As of:** 2026-08-15
 
 
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
@@ -47,6 +47,48 @@
 > than reading: the parity guard did not open nested objects, and widening the rule made a latent
 > bare-symbol join reachable, which applied 5 effects for 3 seeds. Subject now `db4be6b6`.
 >
+> **Seventh pass, 2026-08-15 — counts re-verified against `e06e39fc`, and the headline is that the
+> subject closed all four filed issues and the doc did not notice.** #73/#74/#75/#76 are CLOSED.
+> Two of them landed *guards*, which changes how this section should be read: the catalogue's
+> residue arithmetic is no longer this doc's job, because `RuleRegistrationResidualTests` now
+> asserts it against the **live registry** and `READMERuleCountTests` asserts the README against
+> `RuleIdentifier.selectableRules`. Both are green at `e06e39fc`. **Prefer them to any count
+> written here** — a grep answers *is this identifier mentioned somewhere*, which was never the
+> question.
+>
+> **Three claims did not survive contact, and only one of them is drift.**
+>
+> *(a) Not drift — wrong when written.* The counting-method note said **six** `.unknown`
+> placeholders in three files. There were **eight, in six files**, at `d59cd782` as well, and one
+> of them (`BasePatternVisitor.placeholderPattern`) is **production**, not a test-only convenience
+> init — it is the placeholder cross-file visitors hold before their pattern is set. The 192 did
+> not depend on it (that figure came from *distinct* values, not occurrences), which is why the
+> error survived three passes.
+>
+> *(b) `onTapGestureMissingAccessibility` was a REAL DEFECT and this doc recorded it as an
+> arrangement.* The residue note said it *"**is** emitted — at `OnTapGestureInsteadOfButtonVisitor.swift:97`,
+> via `ruleName:`"*, and treated that as the third special case that made the arithmetic come out
+> to zero. It was emitted and then **filtered out of its own visitor's output** by
+> `SourcePatternDetector.runVisitors`, because a rule with no registered pattern never survives
+> that filter — so it never fired on a default run. Upstream found it by writing the reason down:
+> it was the single entry in `unregisteredByDesign`, and the *"no exception is stale"* arm forced
+> it to be fixed rather than excused. It now has a pattern and the exception list is **empty**.
+> **The lesson is the one this doc keeps paying for: a plausible sentence about why a count works
+> out is not a check.** Three passes tuned the arithmetic; none asked whether the rule ran.
+>
+> *(c) The effect-tier demotion has silently stopped firing here.* The sixth pass measured **3
+> idempotency seeds carrying `anchor: declaration`**, two at `depth: 5`, and called it *"the first
+> time anything in this repository has been demoted on linter-resolved evidence."* Re-measured
+> against `e06e39fc`: the same three seeds, same symbols, same depths — and all three now carry
+> **`anchor: heuristic`**. `carriesEnoughEvidenceToDemote` excludes `.heuristic` by design, so the
+> demotion is correctly not applied and the capability is now **unexercised on this corpus**.
+> Nothing is broken on either side; the producer reclassified. Worth knowing because a feature
+> that stops firing looks exactly like a feature that was never wired.
+>
+> **And the biggest change is a decline this doc argued against, which then shipped.** §1b's
+> *"none of these three rules seed"* is false: the domain-type family seeds as a new
+> `carrier` kind, and **both sides already handle it**. See §1b.
+>
 > **What the first pass got wrong, and how it was caught.** This doc was written against
 > `6c88715` — a local checkout that turned out to be **46 commits behind its origin**. Two counts
 > were stale within hours (`RuleIdentifier` 197 → 202, the testability family 7 → 9), and
@@ -54,7 +96,7 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-12 subject=SwiftProjectLint@0eec5f95 observer=SwiftInferProperties@21bc279 -->
+<!-- doc-provenance date=2026-08-15 subject=SwiftProjectLint@e06e39fc observer=SwiftInferProperties@392fb2a -->
 
 ---
 
@@ -86,6 +128,8 @@ It never says whether a property *holds*. It says where to look and what to fix.
 |---|---|---|
 | **consumes** | a directory of Swift source | files on disk, parsed with SwiftSyntax; no build, no run, no network |
 | | `.swiftprojectlint.yml` (optional) | severity overrides, category and rule enable/disable |
+| | `--target-type auto\|app\|library` | **new 2026-08-14** — the caller states what auto-detection cannot |
+| | `--include-nested-packages` | off by default; a nested first-party package is **skipped and said so on stderr** |
 | | **SwiftEffectInference**, in-process | the purity oracle — a library dependency, not a CLI hop |
 | **produces (1)** | the human report | `text` (default, collapses candidates) · `json` · `csv` — for a person |
 | **produces (2)** | the seed manifest | `--format pbt-seeds` → JSON v2 — for `swift-infer discover --seeds`, and nothing else |
@@ -96,19 +140,51 @@ The two output channels are computed from **one** `issues` array. That is why di
 to tidy the report also empties the manifest, and why the candidate flood is fixed in presentation
 rather than detection (§ *The census flood*).
 
+> **Two input knobs added 2026-08-14, and both change what a manifest means.**
+>
+> **`--target-type auto|app|library`.** A few rules assume the single-target app model —
+> `publicInAppTarget` most clearly, where *"in an app a `public` declaration is over-exposure …
+> in a library `public` IS the API."* The old sniff looked for a `Package.swift` beside the
+> analysed path and answered "app" for everything else, including a framework target in an Xcode
+> project (no manifest at all) and a package linted from a subdirectory (manifest further up).
+> Both are libraries that do not look like one from the path handed in. **This matters here
+> because access level is what the `restricted-function` demotion turns on**, and a subject linted
+> as the wrong target type gets a different `public` story.
+>
+> **`--include-nested-packages`, off by default.** A nested first-party package is skipped, and
+> the CLI says so on **stderr**: *"Cross-file rules (e.g. architecture and protocol checks) cannot
+> span the package boundary."* Quote the flag with any seed count taken from a repo that has
+> nested packages — the default is a **narrower** scan than a reader will assume, and every seed
+> figure in this doc was taken with it off.
+
 ---
 
 ## The rule catalogue, and how little of it is about properties
 
-`RuleIdentifier` has **203** cases, and **every one is accounted for**: 201 live rules and 2
+`RuleIdentifier` has **204** cases, and **every one is accounted for**: **202** live rules and 2
 deliberate sentinels.
 
-> **2026-08-12:** +1 since the last pass — `.unreachableEffectClosure`, which lands in
-> `testability` (taking that family to 10). The distinct-`name:` figures below are left at their
-> 2026-08-06 values deliberately: this pass verified the enum count and the new case's category
-> from the diff, and did not re-run the two greps whose overcounting the footnote documents.
-> Re-running them with a different pattern would replace a measured number with an
-> incomparable one.
+> **2026-08-15 — and the count is no longer this doc's to keep.** +1 since the last pass:
+> `.navigationButtonShouldBeLink`, which lands in `accessibility` (taking that family to 21).
+> Upstream now vends the distinction as API — **`RuleIdentifier.selectableRules`** (`allCases`
+> minus `RuleIdentifier.sentinels`), written because the definition of "a rule" was being
+> re-derived by an inline `subtracting` at each site, *"which meant … the count in the README
+> could disagree with the code without anything noticing — it did, by roughly a quarter."*
+>
+> **Read `selectableRules.count`. Do not count anything by hand.** Two suites assert it against
+> the tree and both are green at `e06e39fc` (run 2026-08-15, 7 tests, 2 suites):
+> `RuleRegistrationResidualTests` — every selectable rule is registered *exactly once* in the
+> registry `PatternRegistryFactory.createConfiguredSystem()` builds, no sentinel is registered,
+> and the documented-exception list is **empty and asserted non-stale** — and
+> `READMERuleCountTests`, which scans the README for the *pattern* rather than fixed lines so a
+> fifth mention is covered without editing the test.
+>
+> **2026-08-12 (superseded, kept for the reasoning):** +1 for `.unreachableEffectClosure`
+> (`testability` → 10). The distinct-`name:` figures below were left at their 2026-08-06 values
+> deliberately, on the argument that re-running a grep with a different pattern replaces a
+> measured number with an incomparable one. That argument was sound and is now moot: the
+> registry test answers the question the greps were approximating, and answers a *stricter*
+> version of it (see the residue note).
 
 > **This section said "10 enum cases are declared but never registered" until 2026-08-06, and that
 > was wrong.** It compared 202 against the **192** registered in `SwiftProjectLintRules` and read the
@@ -130,23 +206,58 @@ deliberate sentinels.
 > [#73](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/73), *with the false alarm as the
 > argument for the test*: nothing records this result, so the obvious arithmetic reproduces it.
 
-What survives, and is still true: **nothing asserts the enum and the registry agree.** The catalogue
-happens to be healthy; no test says so, and establishing it took a cross-package scan plus three
-special cases.
+> **2026-08-15 — #73 is CLOSED, the residue is asserted rather than argued, and the third special
+> case above was a DEFECT.** `RuleRegistrationResidualTests` checks every selectable rule against
+> the registry `PatternRegistryFactory.createConfiguredSystem()` builds, which is the registry the
+> CLI runs. That is strictly stronger than the arithmetic this section reached for, and its own
+> header says why: *"an identifier can be mentioned in a registrar that is never wired into a
+> category, and would then pass a textual check while reaching no analysis."*
+>
+> **Which is exactly what `onTapGestureMissingAccessibility` was doing.** The paragraph above
+> reports it as emitted-via-`ruleName:`, one of three special cases that made the residue come out
+> to zero. It was emitted and then **dropped**: `SourcePatternDetector.runVisitors` filters a
+> visitor's findings against the registered patterns, and this rule had none, so it **never fired
+> on a default run**. It was the sole entry in the new test's `unregisteredByDesign` map, and the
+> *"no exception is stale"* arm is what forced it to be fixed rather than left as a written excuse.
+> It now has its own pattern; the map is **empty**. Re-verified at `e06e39fc`: `ruleName:` is used
+> by 175 identifiers and **none of them is reachable only that way**.
+>
+> So the current arithmetic is 204 = 202 registered + 2 sentinels — but **quote the test, not the
+> sum.** The sum was right three times while a rule sat dead behind it.
 
-> **Counting method, because the obvious one is wrong.** A raw grep for `category: \.` returns
-> **195**, and for `name: \.` returns 198 across 193 distinct values. Both overcount: six
-> `SyntaxPattern(name: .unknown, …)` placeholders live in **test-only convenience initializers**
-> (`MagicNumberVisitor`, `HardcodedStringVisitor`, `MemoryManagementVisitor`), three of which also
-> set a category. Dropping the `.unknown` blocks gives 192, all distinct. The naive count inflates
-> `accessibility` by 1 and `memoryManagement` by 2.
+What has changed since: **the enum and the registry are now asserted to agree** (2026-08-15). This
+section previously closed on *"nothing asserts the enum and the registry agree — the catalogue
+happens to be healthy; no test says so."* Something says so now, and it found a dead rule on its
+first run.
+
+> **Counting method — superseded 2026-08-15, and kept because a reader will still reach for a
+> grep.** Re-measured at `e06e39fc` over **git-tracked files only**: `category: \.` returns
+> **222**, `name: \.` returns 218 occurrences across **204** distinct values, 203 after dropping
+> `.unknown`. (The 2026-08-06 figures were 195 / 198 / 193 / 192.) All four still overcount or
+> mislead, for the same reason, and none of them is the registry.
+>
+> **First trap: `.build`.** The obvious `grep -r … Packages Sources` sweeps vendored
+> **swift-syntax checkouts**, which contribute **786 of 1,112** `name: \.` hits and answer a
+> question about somebody else's parser. Use `git ls-files`.
+>
+> **Second trap, and this doc fell into it: the placeholder count was wrong when written.** The
+> note said **six** `SyntaxPattern(name: .unknown, …)` placeholders in **test-only convenience
+> initializers** (`MagicNumberVisitor`, `HardcodedStringVisitor`, `MemoryManagementVisitor`).
+> There are **eight, in six files** — add `AccessibilityVisitor`, `DocumentationVisitor` and
+> **two** in `BasePatternVisitor` — and it was eight at `d59cd782` too, so this is an error, not
+> drift. **One of them is not test-only:** `BasePatternVisitor.placeholderPattern` is a production
+> `static let`, *"used for cross-file visitors that set their pattern after initialization."*
+>
+> The 192 was nevertheless right, because it came from *distinct values* and every one of the
+> eight spells `.unknown`. **That is why the error survived three passes** — an occurrence count
+> stated beside a distinct count, where only the distinct count was load-bearing.
 
 | category | rules | anything for property inference? |
 |---|---|---|
 | `codeQuality` | 52 | incidental — `couldBePrivateMember` **fights** the pipeline (§ 1a) |
-| `architecture` | 32 | **3 rules** — the domain-type family (§ 1b), none of which seed |
+| `architecture` | 32 | **3 rules** — the domain-type family (§ 1b), **all three of which now SEED** |
 | `modernization` | 25 | no |
-| `accessibility` | 20 | no |
+| `accessibility` | **21** | no |
 | `performance` | 14 | no |
 | `stateManagement` | 13 | `Missing Equatable on State Type` is a blocker (§ 1c) |
 | `animation` | 10 | no |
@@ -157,7 +268,15 @@ special cases.
 | `memoryManagement` | 3 | no |
 | `networking` | 3 | no |
 | `other` | 2 | the two sentinels — not rules |
-| **total** | **203** | **~12 rules, 4 of which seed** |
+| **total** | **204** | **~12 rules, 7 of which seed** |
+
+> **2026-08-15:** re-derived over all 204 cases at `e06e39fc` by parsing the `category` switch, so
+> it still partitions by construction — **204 distinct, no case classified twice, none missing**.
+> Only two cells moved: `accessibility` 20 → **21** (`.navigationButtonShouldBeLink`) and the
+> total. The seeding figure moved for a different reason and is the bigger change: **4 → 7**, the
+> domain-type family having shipped as `carrier` seeds (§ 1b). Upstream's own
+> `READMERuleCountTests` asserts this same table against the README, so a third copy of it now
+> exists that cannot silently disagree.
 
 > **This table was 12 rows totalling 192 until 2026-08-06, and the missing row held a seeding
 > rule.** `idempotency` is a whole category the census never had, because the census scanned
@@ -168,10 +287,10 @@ special cases.
 > rather than by summing what a grep found.
 
 **The ratio is the point, and correcting the table did not move it.** Roughly 6% of the catalogue is
-upstream of property inference, and only **four** rules reach the manifest at all. Everything else is
-a SwiftUI architecture linter that happens to ship in the same binary. A reader who assumes "202
-rules feed `swift-infer`" will mis-estimate both the coverage and the flood; the correct mental model
-is a large linter with a small deliberate seam cut into it.
+upstream of property inference, and only **seven** rules reach the manifest at all (four until
+2026-08-12). Everything else is a SwiftUI architecture linter that happens to ship in the same
+binary. A reader who assumes "202 rules feed `swift-infer`" will mis-estimate both the coverage and
+the flood; the correct mental model is a large linter with a small deliberate seam cut into it.
 
 `--categories testability` selects the 10, which is **not** the same set as the 4 that seed — two of
 the seeding rules are testability, and the flood-collapsing opt-in is keyed to the category, not to
@@ -272,6 +391,32 @@ attached, so a `pure-function` kind would be a lie and a new kind would be a v3 
 > saying which of the two repos the work actually lands in before the decision is re-litigated.
 > Filed as [#76](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/76).
 
+> **SHIPPED — #76 is CLOSED, on both sides, and the paragraph above is now wrong in its
+> conclusion while right in its analysis.** Verified 2026-08-15.
+>
+> Producer: `PBTSeedsFormatter.seedKinds` maps **seven** rules, the three new ones being the
+> domain-type family, all to a fifth kind `PBTSeedKind.carrier` (`9dbc335d`, *"Seed the domain-type
+> rules as carrier seeds"*). **Their `symbol` is a type name, not a function name** — which is
+> precisely the join problem the consumer-side note predicted, addressed rather than dodged.
+>
+> Consumer: `SeedManifest.SeedKind` has `case carrier` with `isAnalysable == true`, and `SeedFocus`
+> resolves it — *"a `carrier` seed joins on the type name alone, deliberately unscoped by file"* —
+> with `SeedFocusCarrierTests` covering it. So the join change landed here, in the repo the note
+> correctly said owned it.
+>
+> **No schema bump, and the producer's reasoning names this consumer by symbol.** Its docstring:
+> *"a consumer built before this case decodes it as unrecognised and skips it loudly —
+> `SwiftInferProperties.SeedKind` has an explicit `case unrecognised(String)` with
+> `isAnalysable == false`, chosen because guessing 'analysable' for an unknown kind is"* the wrong
+> default. That is the v1 → v2 argument reused for an additive change: an old consumer degrades to
+> exactly its pre-`carrier` behaviour, which is all a version bump would have bought.
+>
+> **What this doc got right and wrong.** Right: the stated blocker (*"no callable function
+> attached"*) did not hold, the templates state laws over carriers, and the real work was a join on
+> this side. Wrong: the framing *"whether these should seed is **open**, not decided"* outlived the
+> decision by three days, and the seed count in the catalogue table went stale with it — the
+> summary-drift shape again, in the section that argued for the change.
+
 ### 1c. Blockers — things to remove before anything works
 
 `Global Mutable State` · `Non-Injected Nondeterminism` · `Missing Equatable on State Type` ·
@@ -321,6 +466,13 @@ on SwiftInferProperties (2.7%) are `enclosing-type` — small, non-zero, and sil
 direction that would have been misread. No version bump: absent means "producer does not classify",
 and a seed without it is byte-identical to one written before. Re-measured 2026-08-06 at `08a4b09`:
 **15 of 662** on SwiftInferProperties, the same shape.
+
+> **Re-measured 2026-08-15 at `e06e39fc`, and the shape is stable across a year's worth of rule
+> churn:** **27 of 349** restricted seeds on SwiftProjectLint (7.7% — the numerator is unchanged
+> and the denominator grew by 11) and **17 of 701** on SwiftInferProperties (2.4%). Both runs are
+> the shipped CLI against the repo root, default flags. The stable numerator on the subject is
+> worth noting: `enclosing-type` tracks how many `private` *types* hold pure helpers, which does
+> not move when rules are added.
 
 **That paragraph turned out to be a prediction, and it was right about this repo.** *"A consumer
 acting on the kind alone can emit a patch that unblocks nothing"* is not hypothetical —
@@ -400,6 +552,26 @@ Three things make this more than a convenience field:
 > `depth: 5` — five hops, which `EffectResolver`'s one-hop local pass structurally cannot see inside
 > §13's 2-second ceiling. That is the case the field was built for, and it is the first time
 > anything in this repository has been demoted on linter-resolved evidence.
+>
+> > **Re-measured 2026-08-15 at `e06e39fc`: the anchor flipped, and the demotion has stopped
+> > firing here.** The same 3 idempotency seeds are present — same symbol (`record`), same files
+> > (`VerifyCorpusStore.swift`, `VerifyEvidenceRecorder.swift` ×2), same depths (5, 5, 3), same
+> > `declared: idempotent` / `resolved: non_idempotent` / `provenance: inferred-upward` — and all
+> > three now say **`anchor: heuristic`**, where the sixth pass measured `declaration`.
+> >
+> > **Nothing is broken on either side.** `carriesEnoughEvidenceToDemote` excludes `.heuristic`
+> > deliberately (the `save` failure, by the producer's own admission), so the correct behaviour is
+> > to withhold, and it does. What changed is upstream's classification of the anchoring
+> > declaration, not this repo's reading of it.
+> >
+> > **Record it because the capability is now unexercised, and that is the state this doc exists to
+> > catch.** *"The first time anything in this repository has been demoted on linter-resolved
+> > evidence"* was true when written and is not true today; the plumbing is live, the population is
+> > zero. A feature that stopped firing is indistinguishable from one that was never wired — which
+> > is the §3.6 valid-sequence shape, and the reason `anchor` was worth measuring rather than
+> > assuming. **The three seeds are the standing witness: if any of them returns to
+> > `anchor: declaration`, the demotion should reappear, and if it does not, that is a defect
+> > here.**
 >
 > **Two defects fell out of building it, and both were found by running rather than reading.**
 >
@@ -510,16 +682,25 @@ seeds lacked it, so absence means a malformed document, not an honest unknown. I
 unrecognised-`kind` warning: *"kind 'x' is unrecognised"* tells a reader to upgrade, while naming
 the rule tells them which half of the producer moved.
 
-### The four seeding rules
+### The seven seeding rules
 
 ```swift
 static let seedKinds: [RuleIdentifier: PBTSeedKind] = [
     .pureFunctionCandidate:  .pureFunction,
     .idempotencyViolation:   .idempotency,
     .extractablePureKernel:  .extractableKernel,
-    .pureClosureCandidate:   .extractableKernel
+    .pureClosureCandidate:   .extractableKernel,
+    // The domain-type family. Their symbol is a type name — see `PBTSeedKind.carrier`.
+    .primitiveBypassingItsDomainType: .carrier,
+    .primitiveNamedForItsDomainType:  .carrier,
+    .sharedDomainEnumField:           .carrier
 ]
 ```
+
+> **This section was headed "The four seeding rules" until 2026-08-15.** The bottom three landed
+> with `9dbc335d` and are §1b's decline, reversed — see the banner there. The count matters beyond
+> bookkeeping: *"`PBTSeedsFormatter.seedKinds` maps exactly four rules"* is quoted twice more in
+> this doc as the reason the domain-type family is invisible to the pipeline.
 
 `.pureClosureCandidate` was held back once as "a separate, deliberate step," and the source records
 what that cost: the kernel visitor is arithmetic-shaped, so on the road-test fixture it seeded
@@ -539,15 +720,21 @@ code.
 | `kind` | *whether a tool can call it yet* | `PBTSeedKind.isAnalysable` |
 | `role` | *what law it owes* | `PBTSeedRole.impliesEntailedLaw` |
 
-**`kind` — analysable vs refactor-pending.** Four cases produced, five recognised:
+**`kind` — analysable vs refactor-pending.** **Five** cases produced, **six** recognised
+(2026-08-15; four and five before `carrier`):
 
 | kind | produced by | `isAnalysable` | what it means |
 |---|---|---|---|
 | `pure-function` | `.pureFunctionCandidate` | ✅ | pure and total; index it, propose laws |
 | `idempotency` | `.idempotencyViolation` | ✅ | arrives with a ready-made property to verify |
 | `restricted-function` | *demotion* of `pure-function` | ✅ | named and analysable; `private`, so not *verifiable* cross-module |
+| **`carrier`** | the three domain-type rules (§ 1b) | ✅ | **`symbol` is a TYPE name, not a function** — joins unscoped by file |
 | `extractable-kernel` | `.extractablePureKernel`, `.pureClosureCandidate` | ❌ | the logic has no name yet; `symbol` is the **enclosing** function |
 | `unrecognised(_)` | — *consumer-side only* | ❌ | a spelling this consumer does not know; fails loudly, never silently |
+
+> **`carrier` is the one kind whose `symbol` is not a function**, which is the whole reason it
+> needed a join change here rather than a schema change there. A reader wiring anything new onto
+> `symbol` should branch on the kind rather than assume a callable.
 
 `restricted-function` has no rule of its own — it is `pure-function` demoted in
 `PBTSeedsFormatter.effectiveKind` once `TestReachability` says no test can call the symbol.
@@ -608,9 +795,20 @@ rule's contribution** — a confident zero at the entry point of the whole loop.
 argument for detecting the loss where it happens. `PBTSeedsFormatter.droppedSeeds` returns a
 per-rule tally; the CLI prints it to **stderr** so stdout stays a clean manifest.
 
-**The census flood.** On its own repository a default run produces **876 findings, 664 of them (76%)
-from the two candidate rules** — 460 pure functions and 204 pure closures. That is not a bug in either
-rule; the pipeline needs every one. It is a bug in what a human sees: the road test's sharpest result
+**The census flood.** On its own repository a default run produces **975 findings, 734 of them (75%)
+from the two candidate rules** — 507 pure functions and 227 pure closures. That is not a bug in either
+rule; the pipeline needs every one.
+
+> **Re-measured 2026-08-15 at `e06e39fc`** (was 876 / 664 / 76% / 460 / 204 at `d59cd782`). The
+> flood grew with the codebase and **the ratio did not move** — 76% → 75% — which is the durable
+> half of this finding. The next-largest rule is `Missing Documentation` at **32**, an order of
+> magnitude down: the distribution is two rules and a long tail, not a gradient.
+>
+> One number moved for a reason worth knowing: **`Could Be Private Member` is 27, down from the
+> hundreds** implied by the `line`-determinism note below (472 of 476 moving findings came from the
+> two could-be-private rules). `5edd5e2c` *"Stop the could-be-private rules flagging reachable
+> declarations"* landed 2026-08-14. That does not affect the manifest — neither rule seeds — but it
+> does mean **the report is materially quieter than when the collapsing behaviour was designed**. It is a bug in what a human sees: the road test's sharpest result
 was that the linter found a real defect in its own configuration code, reported it correctly, and
 **the finding went unread**, buried among hundreds of "this function is pure" lines that require no
 action and cannot be wrong. *Volume that large does not inform; it functions as silence.* This is the
@@ -659,13 +857,18 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
 
 ## Traps
 
-- **Rule counts disagree across four places.** README says 160 (in four separate lines, plus "150
+- ~~**Rule counts disagree across four places.**~~ **Mostly FIXED 2026-08-15 — #75 is CLOSED and
+  the README is now guarded.** The trap read: README says 160 (in four separate lines, plus "150
   files" of rule docs against **203** on disk), Appendix C says 189, `RuleIdentifier.swift` has
-  **202** `case`s, and `SwiftProjectLintRules` registers **192**. **Read the enum** for "how many
-  rules exist" (`RuleIdentifier.allCases.count` is the only figure anything tests against); read the
-  category census for "how many are reachable by `--categories`". Do not silently pick whichever
-  number supports the sentence you are writing. Filed upstream as
-  [#75](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/75).
+  **202** `case`s, and `SwiftProjectLintRules` registers **192**. Today the README says **202** in
+  three places and that is *correct* — it equals `RuleIdentifier.selectableRules.count`
+  (204 cases − 2 sentinels) — and `READMERuleCountTests` fails the suite if a new rule lands
+  without updating it, per-category table included. **The canonical figure is
+  `selectableRules.count`, not `allCases.count`**, which is the refinement the fix added: the
+  sentinels are not rules and a user cannot enable, disable or select either one.
+  **Two disagreements survive, both unguarded.** `Docs/rules/RULES.md` opens *"all 165 lint
+  rules"*, and `Docs/rules/` holds **205** `.md` files against 202 rules. Neither is in any test's
+  scope. Do not silently pick whichever number supports the sentence you are writing.
 - ~~**The 10-case gap is unexplained and untested.**~~ **Retracted 2026-08-06 — there is no gap, and
   this trap was itself the trap.** 202 = 199 referenced via `name:` across *all* packages + 1 via
   `ruleName:` + 2 sentinels. The "10" came from subtracting one package's registrations from the
@@ -675,10 +878,19 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
   declared-but-unregistered identifier would still be a real hazard** — configurable, nameable in a
   severity override, and never firing — which is why the check is worth having even though it
   currently passes.
-- **Counting registered rules by grepping `category:` or `name:` overcounts.** Six `.unknown`
-  `SyntaxPattern` placeholders sit in test-only convenience inits and are not rules. This bit *this
-  doc* — see the counting-method note in the catalogue section — and the naive numbers (195 / 193)
-  are close enough to the right one to survive review.
+  **2026-08-15: the check exists (`RuleRegistrationResidualTests`, #73 CLOSED) and the hazard was
+  real.** It did *not* "currently pass" — `onTapGestureMissingAccessibility` was registered under
+  no pattern and so was filtered out of its own visitor's output, never firing on a default run.
+  The last clause of this trap was the right instinct and the sentence before it was wrong.
+- **Counting registered rules by grepping `category:` or `name:` overcounts, and the greps have
+  their own trap underneath.** `.unknown` `SyntaxPattern` placeholders are not rules — **eight of
+  them, in six files, one of them production** (`BasePatternVisitor.placeholderPattern`), which
+  this doc miscounted as "six, all test-only" for three passes. And the obvious recursive grep
+  sweeps `.build/checkouts/swift-syntax`, which supplied **786 of 1,112** `name:` hits at
+  `e06e39fc`; use `git ls-files`. This bit *this doc* twice — see the counting-method note in the
+  catalogue section — and the naive numbers are close enough to the right one to survive review.
+  **Since 2026-08-15 there is no reason to grep at all: `RuleIdentifier.selectableRules` is the
+  answer and a test asserts it against the live registry.**
 - ~~**`PBTSeed.role`'s doc comment is stale.**~~ **Fixed upstream 2026-08-06** (`0d56d982`, *"Say how
   many rules classify a seed role, and name them"*). The standing fact it recorded still holds and is
   the thing to remember: **three of the four seeding rules classify a role** — the two candidate
@@ -694,16 +906,30 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
   what was present when it was last regenerated. Regenerate `SwiftInferProperties/fixtures/seed-manifest-parity/seeds.json`
   as part of any producer schema change, and treat "the parity test is green" as evidence about the
   fixture's age, not about the producer.
-- **Only `PureFunctionCandidateVisitor` sets `testReachability`** ([#74](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/74)). Everything else leaves it
-  `.unknown`, which `effectiveKind` treats as reachable — deliberately, since demoting on "the rule
-  did not look" would silently shrink the manifest. Consequence: the `restricted-function` demotion
-  applies to pure-function seeds and to nothing else today.
+- ~~**Only `PureFunctionCandidateVisitor` sets `testReachability`**~~ ([#74](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/74) **CLOSED 2026-08-06; re-verified
+  2026-08-15**). **Two visitors set it now** — `PureFunctionCandidateVisitor` and
+  `IdempotencyViolationVisitor` — so the demotion reaches idempotency seeds as well. Everything
+  else still leaves it `.unknown`, which `effectiveKind` treats as reachable, deliberately: demoting
+  on "the rule did not look" would silently shrink the manifest.
+  **`carrier` is excluded from the demotion on purpose, and the reason is worth carrying**: the kind
+  it would demote to names *"a pure, total, **named** function that no test can call"*, and a
+  carrier's symbol is a type — *"demoting one would hand a consumer a type name under a kind that
+  promises a callable."* No domain-type rule computes reachability today, so nothing is lost; the
+  guard is there so adding one later fails visibly rather than mislabelling. **A private type is a
+  real obstacle that still has no vocabulary in this schema.**
 - **The seed count is not a suggestion count.** Re-measured 2026-08-06: **2,096 seeds → 180
   default-tier picks** on SwiftInferProperties (was 1,657 → 21), of which only **3 `strong` + 27
   `likely`** — the other 150 are rescue and advisory rows. A **seeded** run prints **1,738**, *more*
   than an unseeded one, because 662 `restricted-function` seeds vouch for private functions a plain
   run never opens. Never report one count as evidence about the other, and say which reading of
   "default tier" you mean.
+  **2026-08-15, and read the halves separately.** The *seed* side is re-measured at `e06e39fc`:
+  **2,278 seeds** on SwiftInferProperties — 1,284 `pure-function`, 701 `restricted-function`, 290
+  `extractable-kernel`, 3 `idempotency`, **0 `carrier`** (this repo declares no domain newtype the
+  three rules recognise, so the new kind is live in the producer and unexercised on this corpus).
+  The *pick* side was **NOT re-run** and 180 / 3 / 27 / 1,738 are still the 2026-08-06 figures
+  against an observer 40 commits older. **Do not pair them.** That is this trap's own warning
+  turned on the trap: a ratio built from two dates is a third number belonging to neither.
 - **The repo's own README opens with "THIS IS AN EXPERIMENT IN VIBE-CODING"** and says outright that
   some rules are bad ideas, some are poorly implemented, and some are both. The testability and
   idempotency families are the road-tested ones; treat a rule outside them as unvetted until measured.
