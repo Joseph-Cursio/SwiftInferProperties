@@ -121,10 +121,29 @@ struct CorpusManifest: Codable, Sendable {
         /// - `census` — a counted sweep whose record is a findings doc, not an artifact.
         let kind: String
 
-        /// Full 40-character SHA. **Full, not short**: `b83108d10` is nine characters, which is
-        /// neither a git default nor collision-proof, and a short SHA cannot be resolved in a
-        /// clone that does not already contain the object.
-        let revision: String
+        /// Full 40-character SHA, or `nil` when the revision is **unrecoverable**.
+        ///
+        /// **Full, not short**: `b83108d10` is nine characters, which is neither a git default
+        /// nor collision-proof, and a short SHA cannot be resolved in a clone that does not
+        /// already contain the object.
+        ///
+        /// ## Why this is optional
+        ///
+        /// A measurement whose subject revision cannot be established is a real state, and it
+        /// used to be unrepresentable — so it was recorded as a SHA-shaped string that resolves
+        /// nowhere, which reads exactly like a stale clone and invites a `git fetch` that cannot
+        /// succeed. `swiftlint-rule-studio` was this: `6ffc7553…` is absent from GitHub (HTTP
+        /// 422), from the local object store, from the reflog and from the sibling team clone,
+        /// and the road test it cites records only *this repository's* fix commits — it never
+        /// captured the subject's revision at all.
+        ///
+        /// **`nil` is not a lesser pin, it is a different fact.** Off-pin says *a diff here mixes
+        /// two changes*; `nil` says *no diff is possible at all, and no amount of fetching will
+        /// change that*. Substituting a working SHA to make the field non-optional would be
+        /// worse than either: this type's whole contract is that a revision records the version
+        /// a measurement **was taken against**, so inventing one falsifies the record it exists
+        /// to preserve.
+        let revision: String?
 
         /// ISO date, as a plain string — this is read by people, and re-encoding a `Date`
         /// through a formatter is a way to change a committed file by accident.

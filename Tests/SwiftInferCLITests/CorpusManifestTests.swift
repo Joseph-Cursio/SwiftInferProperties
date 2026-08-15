@@ -162,22 +162,52 @@ struct CorpusManifestTests {
 
     // MARK: - Pins
 
-    @Test("Every pinned revision is a full 40-character SHA")
+    /// A recorded revision is a full 40-character SHA — or absent, which is its own state.
+    ///
+    /// **`nil` is exempted rather than forbidden, and the arm below is why.** A measurement whose
+    /// subject revision cannot be established was previously unrepresentable, so it was written as
+    /// a SHA-shaped string resolving nowhere — which is indistinguishable from a stale clone and
+    /// sends a reader to `git fetch` forever. Absence says the true thing.
+    @Test("Every recorded revision is a full 40-character SHA, or explicitly absent")
     func revisionsAreFullLength() throws {
         let hex = CharacterSet(charactersIn: "0123456789abcdef")
         for (entry, measurement) in try Self.allMeasurements() {
+            guard let revision = measurement.revision else { continue }
             #expect(
-                measurement.revision.count == 40,
+                revision.count == 40,
                 """
-                corpus '\(entry.id)' pins '\(measurement.revision)' — a short SHA cannot be \
+                corpus '\(entry.id)' pins '\(revision)' — a short SHA cannot be \
                 resolved in a clone that does not already hold the object
                 """
             )
             #expect(
-                CharacterSet(charactersIn: measurement.revision).isSubset(of: hex),
-                "corpus '\(entry.id)' pins a non-hex revision '\(measurement.revision)'"
+                CharacterSet(charactersIn: revision).isSubset(of: hex),
+                "corpus '\(entry.id)' pins a non-hex revision '\(revision)'"
             )
         }
+    }
+
+    /// A `nil` revision must SAY it is unrecoverable, in the arm a reader sees.
+    ///
+    /// Without this, `nil` is cheaper than a real pin: someone registering a measurement they
+    /// cannot be bothered to pin gets silence instead of a short-SHA failure, and the field
+    /// designed to record a known loss becomes the field used to record not looking.
+    @Test("An absent revision explains itself in the arm")
+    func absentRevisionsAreExplained() throws {
+        var seen = 0
+        for (entry, measurement) in try Self.allMeasurements() where measurement.revision == nil {
+            seen += 1
+            #expect(
+                measurement.arm.uppercased().contains("REVISION UNRECOVERABLE"),
+                """
+                corpus '\(entry.id)' records no revision but its arm does not say \
+                REVISION UNRECOVERABLE — absence must be a stated finding, not an omission
+                """
+            )
+        }
+        // Asserting the denominator: if this ever reaches zero the arm above is vacuous, and a
+        // vacuous guard reads exactly like a satisfied one. `scanIsNotEmpty`, again.
+        #expect(seen > 0, "no corpus records an absent revision — is this arm still reachable?")
     }
 
     @Test("At most one baseline per corpus — the baseline is what sets the pin")

@@ -122,13 +122,87 @@ Two pins did **not** resolve after fetching and are recorded as open rather than
 its origin is a genuinely different state from a stale clone, and neither `--strict` nor this
 README currently names it.
 
-> **Re-confirmed 2026-08-15 after a second, independent fetch round** — these two are the
-> residue, not an artifact of one stale sweep. They are also the two the *available/at-pin*
-> summary is least equipped to describe: both checkouts are present and readable, so
-> `corpus` counts them among *"21 checked"* while the measurement banked against each is
-> **not re-derivable from the clone in front of you**. `swift-nio` `590dd7b` backs the
-> catalog-health census and `SwiftLintRuleStudio` `6ffc755` a road test, so in both cases the
-> record survives and the subject state behind it does not.
+> **BOTH RESOLVED 2026-08-15, and they turned out to be different problems with different
+> fixes.** The paragraph above treated them as one residue; they are not.
+>
+> **`swift-nio` `590dd7b` was a CLONE defect, and the pin was always right.** The commit is on
+> `origin/main` (a 2026-07-17 Windows build PR). The clone's fetch refspec was
+> `+refs/tags/2.79.0:refs/tags/2.79.0` — a single-tag clone sitting on a local branch — so
+> `git fetch origin` legitimately brought nothing, twice, and looked like a lost commit both
+> times. Adding `+refs/heads/*:refs/remotes/origin/*` and fetching resolves it. **No manifest
+> change was needed. A fetch that succeeds is not a fetch that fetched anything** — check the
+> refspec before concluding a commit is gone.
+>
+> **`SwiftLintRuleStudio` `6ffc755` was a RECORD defect and is not recoverable.** GitHub answers
+> HTTP 422, and the object is absent from the local store, the reflog and the sibling
+> `SwiftLintRuleStudioTeam` clone. The road test it cites never captured a subject revision at
+> all: every SHA in that document (`748dd81`, `9e1e066`, `3bf23e0`, …) is a **SwiftInferProperties
+> fix commit**. So the registry's revision had no source in the record it points at, and its
+> `takenOn` (2026-08-12) was the day the registry was written, not the day of the measurement
+> (the doc is dated 2026-07-22).
+>
+> It is now recorded as `"revision": null`. **Substituting a working SHA was rejected outright** —
+> this file's own rule is that a revision names the version a measurement *was taken against*, so
+> inventing one falsifies the record the registry exists to preserve. See *An unrecoverable
+> revision* below.
+
+### An unrecoverable revision is a fourth state, and it is not "no baseline"
+
+`revision` is optional. `null` means **the measurement happened and the version it was taken
+against cannot be established** — which was previously unrepresentable, so it was written as a
+SHA-shaped string resolving nowhere. That is the worst available option: it is indistinguishable
+from a stale clone, so it sends every reader to `git fetch`, forever, for a commit that does not
+exist. `swift-nio` and `SwiftLintRuleStudio` sat in the same paragraph of this file for exactly
+that reason, and only one of them was a fetch problem.
+
+**`null` is not a weaker pin; it is a different fact.** Off-pin says *a diff here mixes a change
+in the subject with a change in the tool*. `null` says *no diff is possible at all, and no amount
+of fetching will change that*. The only remedy is to re-run the measurement and record the
+revision — which is why `CorpusPin.revisionUnrecoverable` refuses to fold into `noBaseline`
+(*enqueued, never swept* — invites a sweep that would silently produce an incomparable run) or
+into `movedOff` (*check out the pin* — a pin that does not exist).
+
+Two decisions worth keeping:
+
+- **The summary counts it from the MEASUREMENTS, not from the pin verdict.** A lost revision on a
+  `census` leaves the pin correctly at `noBaseline`, because there is genuinely no baseline — so
+  counting the pin would file a permanent loss inside a bucket that a single sweep clears. The
+  defect is a property of the record, so it is counted there and named in capitals.
+- **`--strict` does NOT fail on it**, and that is deliberate rather than lenient. Strict fails on
+  what the person running it can fix before the sweep they are about to start: check out the pin,
+  clean the tree. A record defect is identical on every machine and unfixable at gate time, so
+  failing would hold the gate red until someone re-runs a road test — and a permanently red gate
+  is one people route around, costing the off-pin detection strict exists for. The pressure lives
+  in the summary line.
+
+`CorpusManifestTests` requires an absent revision to say `REVISION UNRECOVERABLE` in its `arm`,
+**and asserts that at least one entry does** — without the denominator arm, `null` becomes cheaper
+than a real pin and the field for recording a known loss turns into the field for recording that
+nobody looked.
+
+### The wider problem this exposed, and it is NOT fixed
+
+A commit cannot postdate the measurement taken against it. **Five entries have exactly that**, so
+their recorded revision is provably not the one the measurement used:
+
+| corpus | revision | `takenOn` | commit date |
+|---|---|---|---|
+| `swift-project-lint` | `e06e39f` | 2026-08-12 | 2026-08-14 |
+| `swift-effect-inference` | `50c5d3a` | 2026-08-01 | 2026-08-07 |
+| `planted-defect-arm` | `ecaa66f` | 2026-08-13 | 2026-08-14 |
+| `cycle27-surface` | `ecaa66f` | 2026-08-05 | 2026-08-14 |
+| `leaderboard-sort` | `ecaa66f` | 2026-07-31 | 2026-08-14 |
+
+The last three share one revision — this repository's HEAD around the day the registry was
+written — which is the same failure as `SwiftLintRuleStudio`, caught earlier: **a revision filled
+in from what was checked out at registration time rather than read off the measurement.** With
+`6ffc755` that produced a SHA belonging to nothing; here it produces SHAs that resolve, which is
+worse, because they look right.
+
+**Deliberately left as found.** Correcting them means recovering what each measurement actually
+ran against, and that is a per-measurement investigation, not an edit. Recorded here so the next
+reader does not take a resolving SHA as a verified one — and it is a cheap mechanical check
+(`git log -1 --format=%cs <rev>` against `takenOn`) that no test performs yet.
 
 ## The four kinds of subject
 
