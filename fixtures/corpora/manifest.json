@@ -174,7 +174,7 @@
       "target": "RealModule",
       "sources": null,
       "remote": "https://github.com/apple/swift-numerics.git",
-      "localPath": "~/GitHub_projects/swift-numerics",
+      "localPath": "~/calibration/swift-numerics",
       "role": "unfamiliar",
       "why": "The low-conformance end of the Equatable measurement: 2 conformances against swift-collections' 49. Registered as the contrast that made 'conformance does not predict refutability' checkable rather than asserted.",
       "measurements": [
@@ -198,7 +198,7 @@
       "target": "Algorithms",
       "sources": null,
       "remote": "https://github.com/apple/swift-algorithms.git",
-      "localPath": "~/GitHub_projects/swift-algorithms",
+      "localPath": "~/calibration/swift-algorithms",
       "role": "unfamiliar",
       "why": "A census corpus in the eight-corpus catalog-health sweep. Registered so the sweep's denominator is checkable: the finding that 6 of 39 templates never fire depends on which corpora were in it.",
       "measurements": [

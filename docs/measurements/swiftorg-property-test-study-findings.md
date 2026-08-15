@@ -1,6 +1,6 @@
 # Findings — the swift.org property-style-test study
 
-> **Status:** `measured` · **As of:** 2026-08-01
+> **Status:** `measured` · **As of:** 2026-08-15
 
 
 Companion to `swiftorg-property-test-study-scope.md`, which is the plan. This is the
@@ -2481,12 +2481,17 @@ template against the 39 declared `templateName`s.
 
 | rows | templates |
 |---:|---|
-| **0** | `diff-disjointness`, `homomorphism`, `involution`, `multiplicative-homomorphism`, `partition`, `selection-subset` |
+| **0** | `diff-disjointness`, `homomorphism`, ~~`involution`~~, `multiplicative-homomorphism`, `partition`, `selection-subset` |
 | 1–2 | `composition`, `caseiterable-case-coverage`, `caseiterable-key-injectivity`, `override-precedence`, `invariant-preservation`, `bulk-incremental-agreement` |
 | 3–23 | `comparator` (3) … `set-relation-model-law` / `binary-idempotence` (23) |
 | 48–1,598 | `commutativity` (48) … `idempotence` (**1,598**) |
 
 **6 of 39 templates (15%) never fire. 12 of 39 (31%) produce two rows or fewer.**
+
+> **Read that as "never fire ON THESE EIGHT CORPORA" — `involution` did not belong in the zero
+> row even on the day this was written, and §10.5 has the measurement.** The number is a claim
+> about a *scope*, and this table stated it as a property of the *template*. Nothing else in the
+> distribution is retracted; the census was not re-run.
 
 And the head is heavy: `idempotence` + `predicate` + `round-trip` = **2,724 of 4,102
 rows, 66% of all output**. That is the quantitative form of the observation that the
@@ -2578,6 +2583,15 @@ Five templates remain at zero: `diff-disjointness`, `involution`,
 `multiplicative-homomorphism`, `partition`, `selection-subset`. `involution` is known
 *not* to share `homomorphism`'s cause — it already handles a member form — so each
 wants its own diagnosis rather than a batch fix.
+
+> **CORRECTED 2026-08-15: four, not five — `involution` was never in this list, and the witness
+> was already in this repository when the list was written.** See §10.5. The surviving four are
+> `diff-disjointness`, `multiplicative-homomorphism`, `partition`, `selection-subset`, **at zero
+> on the eight census corpora as of 2026-08-01 and not re-measured since** — so read them as
+> *unwitnessed*, not as *dead*, which is precisely the distinction this section spent three
+> paragraphs establishing and then dropped one sentence later. (`partition` has since been
+> measured from the other direction: `whole-to-parts-partition-declined.md` puts a third form at
+> ~4% against a 70% bar, so its silence is diagnosed even though its count is not re-run.)
 
 ### 10.3 Did the template push actually gain laws? A controlled A/B (2026-08-01)
 
@@ -2696,6 +2710,85 @@ ratio.
 
 Both are counting bugs rather than inference bugs — the laws themselves are fine — which
 is why neither showed up in a year of reading `discover` output one corpus at a time.
+
+### 10.5 `involution` was never dead, and the witness predates the census (2026-08-15)
+
+**Measured.** `discover --target ComplexModule` on **swift-numerics @ `899af71`** — the
+revision `fixtures/corpora/manifest.json` pins for that corpus, in a fresh `git worktree` so
+`.swiftinfer/` is absent by construction:
+
+```
+Template: involution
+  ✓ Involution verb match: 'conjugate' — applying it twice returns the original (+40)
+  ✓ Proven analog: `Complex` satisfies `z.conjugate.conjugate == z`
+```
+
+**1 pick, and it is a DEFAULT-tier row** — not rescued by `--include-possible`, which was
+checked separately because a `--include-possible` count is a different number (§10.3's own
+warning). `RealModule` and `IntegerUtilities` are 0, so the population is one declaration.
+
+**A second, independent witness landed 2026-08-14**: GRDB @ `b83108d10`, **8 involution
+proposals, 1 Proven** (`EqualityOperator.negated()`) —
+`exploratory-swiftformat-grdb.md` §7.3, which called it *"fired for the first time"*. That
+framing is generous to this section and wrong on the facts: it was the first time on a corpus
+anyone was watching.
+
+**Neither corpus was among the census's eight.** That is the whole mechanism, and no code
+changed to produce either row.
+
+#### The part worth keeping: the refutation was already in the repository
+
+`dogfood-new-templates-findings.md` carries a header update dated **2026-07-15** — a
+fortnight *before* this census — recording Epic 1 making the scanner surface read-only
+computed properties as nullary `self -> T` summaries, *"so involution now fires on
+`Complex.conjugate` (verified: +1 pick on real swift-numerics ComplexModule)."* Same corpus,
+same target, same declaration, same count. The census then filed `involution` under *never
+fires*, and §10.2 repeated it, and CLAUDE.md's index row quoted §10.2.
+
+**Nothing joined the two documents, and one of them is internally inconsistent**, which is
+why reading could not settle it: that doc's *header* says involution fires on
+`Complex.conjugate`, and its *body table* — three screens down, under an `As of 2026-07-18`
+that postdates the header — records `involution … 0` for `ComplexModule`. The body table is
+the pre-Epic-1 measurement and was never re-run; the header is right. **This is the
+detail-maintained / summary-stale shape inverted** — here the *summary* was updated and the
+*detail* was left, and an index quoting either one had a 50% chance of being wrong.
+
+#### What this does and does not change
+
+- **Does not** re-run the census. The distribution table's other rows stand as measured on
+  2026-08-01 over those eight corpora.
+- **Does** move the dead list from five to four, and reframes those four as *unwitnessed on a
+  known corpus set* rather than *inert*.
+- **Does not** ask for any change to `InvolutionTemplate`. It is correct, it is narrow, and
+  §10's own note that it *"does NOT share `homomorphism`'s cause — it already handles a member
+  form"* was right for a reason it did not know: the template was not broken, so there was
+  nothing for a member form to fix.
+
+#### The process finding
+
+§10 argued a catalog health census *"belongs in CI"*. This is the sharper version of that
+argument, and it is not about frequency: **a census is only as wide as its corpus list, and
+its zero row is the one cell that cannot be trusted without knowing that list.** A template
+with a witness in a ninth corpus is indistinguishable, in this table, from one with no witness
+anywhere — and the repo held the ninth corpus, registered, pinned, and already measured.
+
+The corpus registry (`fixtures/corpora/README.md`) is what makes the denominator checkable at
+all; its own entry for swift-algorithms says as much — *"registered so the sweep's denominator
+is checkable: the finding that 6 of 39 templates never fire depends on which corpora were in
+it."* **That sentence was written about this exact number and did not prompt anyone to check
+it.**
+
+**And checking it now surfaces a second discrepancy, unresolved.** Four registry entries claim
+membership in *"the eight-corpus catalog-health sweep"* — `swift-nio`, `swift-algorithms`,
+`swift-argument-parser`, `swift-effect-inference` — and **only `swift-nio` appears in the eight
+this section names**. `swift-package-manager` is in the stated eight and is in no registry
+entry at all. So the two records of the same run's denominator disagree about at least four of
+eight members. **Not resolved here**, because settling it means knowing which run produced
+the distribution table and that is exactly what neither record pins; recorded so the next
+census does not inherit an ambiguous denominator. The remedy is cheap and structural: name the
+corpus list **by registry id** and let `swift-infer corpus` print it, rather than restating it
+in prose in two places that nothing joins. A `why` field is prose, and nothing checks it
+against the record it cites.
 
 ## 11. The `[reference]` backlog was over-reported 3x — the tags had fallen behind the templates
 
