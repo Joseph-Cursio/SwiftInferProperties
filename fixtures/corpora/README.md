@@ -180,29 +180,43 @@ Two decisions worth keeping:
 than a real pin and the field for recording a known loss turns into the field for recording that
 nobody looked.
 
-### The wider problem this exposed, and it is NOT fixed
+### A revision may not postdate its own measurement — five did, and are now recovered
 
-A commit cannot postdate the measurement taken against it. **Five entries have exactly that**, so
-their recorded revision is provably not the one the measurement used:
+A measurement cannot have run against code that did not exist yet. **Five entries recorded a
+commit dated after their own `takenOn`**, so the revision was provably not the one used:
 
-| corpus | revision | `takenOn` | commit date |
-|---|---|---|---|
-| `swift-project-lint` | `e06e39f` | 2026-08-12 | 2026-08-14 |
-| `swift-effect-inference` | `50c5d3a` | 2026-08-01 | 2026-08-07 |
-| `planted-defect-arm` | `ecaa66f` | 2026-08-13 | 2026-08-14 |
-| `cycle27-surface` | `ecaa66f` | 2026-08-05 | 2026-08-14 |
-| `leaderboard-sort` | `ecaa66f` | 2026-07-31 | 2026-08-14 |
+| corpus | was | `takenOn` was | **now** | recovered from |
+|---|---|---|---|---|
+| `swift-project-lint` | `e06e39f` (08-14) | 2026-08-12 | **`feeea0f`** · 2026-07-24 | the record states it: *"answer key frozen at `9abcfde`, subject SHA `feeea0f`"* |
+| `swift-effect-inference` | `50c5d3a` (08-07) | 2026-08-01 | **`1f2265a`** · 2026-08-01 | `Package.swift` git history — the SEI pin on that date, replaced by `290e161` on 08-04 |
+| `cycle27-surface` | `ecaa66f` (08-14) | 2026-08-05 | **`6848025`** · 2026-08-01 | the commit that FROZE the key it cites |
+| `leaderboard-sort` | `ecaa66f` (08-14) | 2026-07-31 | **`ed1f970`** · 2026-08-01 | last commit to change the record's content |
+| `planted-defect-arm` | `ecaa66f` (08-14) | 2026-08-13 | **`8c9845b`** · 2026-08-08 | last commit to change the record's content |
 
-The last three share one revision — this repository's HEAD around the day the registry was
-written — which is the same failure as `SwiftLintRuleStudio`, caught earlier: **a revision filled
-in from what was checked out at registration time rather than read off the measurement.** With
-`6ffc755` that produced a SHA belonging to nothing; here it produces SHAs that resolve, which is
-worse, because they look right.
+**One mistake, five times: a revision filled in from what was checked out when the *registry* was
+written, rather than read off the measurement.** The last three literally share registration-day
+HEAD. It is the same error `swiftlint-rule-studio` records — except **these SHAs resolve, which is
+worse, because a resolving SHA reads as a verified one** and `cat-file` says nothing against it.
 
-**Deliberately left as found.** Correcting them means recovering what each measurement actually
-ran against, and that is a per-measurement investigation, not an edit. Recorded here so the next
-reader does not take a resolving SHA as a verified one — and it is a cheap mechanical check
-(`git log -1 --format=%cs <rev>` against `takenOn`) that no test performs yet.
+**Two of the five are recoveries; three are bounds, and the entries say which.** `feeea0f` and
+`1f2265a` are stated facts — one written in the record, one in `Package.swift`'s history. The
+three in-repo fixtures name no revision anywhere, so they take **the last commit that changed
+their record's content**, labelled `DERIVED FROM THE RECORD, not captured at run time`: it bounds
+the measurement rather than naming the tree it ran on. That is weaker than a captured SHA and
+strictly better than registration-day HEAD, which was neither.
+
+**What could not be recovered is said rather than guessed.** `cycle27-surface`'s 2026-08-05
+reconfirmation is recorded only as *v1.148.0*, and this project has separately measured that
+string staying put across ~40 commits — so it does not identify a revision, and the entry pins the
+key's freeze instead and says so. Dating a commit and picking whatever was HEAD would have
+produced a plausible SHA and no fact.
+
+**Guarded** by `CorpusManifestTests.revisionsDoNotPostdateTheirMeasurement`, one
+`git log -1 --format=%cs` per row. It uses the **committer** date, not the author date: a rebased
+commit keeps its author date and takes a new committer date, and the question is when the code
+landed in a tree a measurement could have run against. A checkout that cannot answer is skipped
+rather than failed — the two-machine case above — with a denominator arm so that exemption cannot
+quietly empty the test. Verified by control: restoring one old value fails and names it.
 
 ## The four kinds of subject
 
