@@ -26,7 +26,7 @@ Sibling checkouts expected at `../SwiftPropertyLaws` and `../SwiftEffectInferenc
 
 Consumers over the SemanticIndex, split by audience and trust bar: `query` (author, all tiers, raw rows) · `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**). Async is admitted only via the `@ClockDeterministic` claim — bare `async` keeps a clean rejection that says how to make the claim.
 
-Suites green at **5,360 tests** (5,277 fast + 83 across `perf` and the eight batches; full `make test` verified green 2026-08-10 **at `b3be02a`**, exit 0 with zero failures across all ten runs). **Flake note:** the long measured/calibration suites occasionally drop one issue under load — rerun before diagnosing.
+Suites green at **5,576 tests** (5,493 fast + 83 across `perf` and the eight batches; full `make test` verified green 2026-08-15 **at `4fac986`**, exit 0 with zero failures across all ten runs, ~22 min). **The batch total is the number to watch, and it has not moved: 83.** The fast suite grew by 216 since 2026-08-10 and the batches by zero, which is `SubprocessBatchCoverageTests` doing its job — a new `*MeasuredTests` suite that never reached a batch would show up here as the fast count rising while the batch count stands still, and that is exactly what a *correct* run of unbatched-but-cheap work looks like too. Quote both halves, never the total alone. **Flake note:** the long measured/calibration suites occasionally drop one issue under load — rerun before diagnosing. None flaked on this run, `MemoryCeilingPerformanceTests` included.
 
 ## Where to look
 
