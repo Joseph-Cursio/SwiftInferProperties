@@ -159,8 +159,32 @@
           "kind": "census",
           "revision": "590dd7b4bc222700b429aebb86945d2cd0dddadd",
           "takenOn": "2026-08-01",
-          "arm": "catalog health census — rows per template across eight corpora",
-          "record": "docs/measurements/dogfood-new-templates-findings.md",
+          "arm": "catalog health census (§10 / §10.3) — one of the EIGHT, confirmed by §10.3's per-corpus A/B table, where it reads 400 → 409. Record corrected 2026-08-15: this pointed at `dogfood-new-templates-findings.md`, which contains no census.",
+          "record": "docs/measurements/swiftorg-property-test-study-findings.md",
+          "frozenBecause": null,
+          "expectedOutcome": null,
+          "answerKey": null
+        }
+      ]
+    },
+    {
+      "id": "swift-package-manager",
+      "subject": "swift-package-manager",
+      "kind": "package",
+      "target": "Basics",
+      "sources": null,
+      "remote": "https://github.com/swiftlang/swift-package-manager.git",
+      "localPath": "~/GitHub_projects/swift-package-manager",
+      "role": "unfamiliar",
+      "why": "The eighth member of the catalog-health census, and it was the one the registry never listed — so the sweep's own denominator could not be reconstructed from the registry that exists to make it checkable. It is also the census's flattest corpus: 598 rows at both A/B commits, the only one that moved by zero.",
+      "measurements": [
+        {
+          "apparatus": "census",
+          "kind": "census",
+          "revision": "5bf62ec1fbec2799c37fdae8e6f6f265a5d39ff5",
+          "takenOn": "2026-08-01",
+          "arm": "catalog health census (§10 / §10.3) — 598 rows at both A/B commits, delta 0. Revision RECOVERED 2026-08-15 from the checkout's reflog, which holds exactly one entry — the 2026-03-13 clone — and no FETCH_HEAD, so the tree could not have been anything else on census day.",
+          "record": "docs/measurements/swiftorg-property-test-study-findings.md",
           "frozenBecause": null,
           "expectedOutcome": null,
           "answerKey": null
@@ -200,15 +224,15 @@
       "remote": "https://github.com/apple/swift-algorithms.git",
       "localPath": "~/calibration/swift-algorithms",
       "role": "unfamiliar",
-      "why": "A census corpus in the eight-corpus catalog-health sweep. Registered so the sweep's denominator is checkable: the finding that 6 of 39 templates never fire depends on which corpora were in it.",
+      "why": "Tier 3 of the swift.org study: a small population (8) but one of the classic algebraic corpora, registered because its value is consistency-checking against claims this project already made — the place a contradiction with our own record would surface. Also a §13 performance reference corpus and a member of the v1 algebraic corpus behind fixtures/cycle27-surface.",
       "measurements": [
         {
-          "apparatus": "census",
+          "apparatus": "swiftorg-study",
           "kind": "census",
           "revision": "ff223da637a97d091d3b54fe46d83451233a6053",
-          "takenOn": "2026-08-01",
-          "arm": "catalog health census — 15% of templates are dead",
-          "record": "docs/measurements/dogfood-new-templates-findings.md",
+          "takenOn": "2026-07-16",
+          "arm": "swift.org study corpus survey — Tier 3, 8 `check*` sites, 0 loops, 29 recognisable, 0 round-trip. CORRECTED 2026-08-15: this claimed membership in the eight-corpus catalog-health sweep and is not one of the eight — §10 names them and §10.3's A/B table lists them corpus by corpus. The pin `ff223da` is this table's, verbatim.",
+          "record": "docs/archive/swiftorg-property-test-study-scope.md",
           "frozenBecause": null,
           "expectedOutcome": null,
           "answerKey": null
@@ -224,7 +248,7 @@
       "remote": "https://github.com/apple/swift-argument-parser.git",
       "localPath": "~/GitHub_projects/swift-argument-parser",
       "role": "unfamiliar",
-      "why": "A census corpus in the eight-corpus catalog-health sweep, and one of the ten in the whole-to-parts census that measured that template at ~4% against a 70% bar.",
+      "why": "One of the ten in the whole-to-parts census, contributing 2 admitted rows. CORRECTED 2026-08-15: this also claimed membership in the eight-corpus catalog-health sweep, and it is not one of the eight.",
       "measurements": [
         {
           "apparatus": "census",
@@ -371,12 +395,12 @@
       "why": "The purity oracle that runs inside this package and has no CLI of its own, pinned by revision because it carries no version tags. Registered because the pin has silently gone stale four times, each time missing a shipped capability.",
       "measurements": [
         {
-          "apparatus": "census",
+          "apparatus": "discover-ab",
           "kind": "census",
           "revision": "1f2265a0fa63a9659886024a01fb3221bddc8768",
           "takenOn": "2026-08-01",
-          "arm": "catalog health census — 17 rows, unchanged with the coverage veto disabled. Revision RECOVERED 2026-08-15 from `Package.swift`'s git history: SEI carries no version tags and is pinned by revision, and on 2026-08-01 that pin was `1f2265a0` — `290e161` (2026-08-04) is what replaced it. This entry read `50c5d3a` (2026-08-07), which is three pin bumps later and postdates its own takenOn.",
-          "record": "docs/measurements/dogfood-new-templates-findings.md",
+          "arm": "coverage-veto A/B — 17 rows, identical with ProtocolCoverageMap's veto disabled. CORRECTED 2026-08-15: this claimed the eight-corpus catalog-health sweep and is a DIFFERENT measurement over a different six corpora. Its only record anywhere is CLAUDE.md's ProtocolCoverageAudit row — no doc under docs/ carries it, which is its own finding.",
+          "record": "CLAUDE.md",
           "frozenBecause": null,
           "expectedOutcome": null,
           "answerKey": null
