@@ -187,17 +187,29 @@ struct CorpusManifestTests {
 
     // MARK: - Reach
 
-    @Test("Exactly one of target / sources, and an app is reached by sources")
+    /// A corpus must be reachable, and the two fields answer different questions.
+    ///
+    /// **This asserted EXACTLY one until 2026-08-15, and that was too strong.** The rule encoded
+    /// the `prove-then-show` model — a package is reached by `target`, an app by `sources` — and
+    /// a third case exists: a package whose code is not under `Sources/<target>`.
+    /// `swift-collections` is the witness. `Collections` is a real, buildable target and the
+    /// right thing for a survey to compile; it is also a **pure re-export umbrella** — five
+    /// `… reexports.swift` files holding typealiases and **zero declarations** — so a census
+    /// pointed at it scans real files and finds no API. It reported `0 rows` beside corpora
+    /// reporting four figures, which is the shape of a dead catalog rather than of a
+    /// misconfigured path.
+    ///
+    /// So `target` is **what to build** and `sources` is **what to scan**, they may both be
+    /// present, and at least one must be. What is still forbidden is *neither*, which leaves the
+    /// corpus unreachable by either route.
+    @Test("A corpus is reachable by target, by sources, or by both — never by neither")
     func reachIsUnambiguous() throws {
         for entry in try Self.manifest().corpora {
             let hasTarget = entry.target != nil
             let hasSources = entry.sources != nil
             #expect(
-                hasTarget != hasSources,
-                """
-                corpus '\(entry.id)' sets \(hasTarget && hasSources ? "both" : "neither") of \
-                target / sources
-                """
+                hasTarget || hasSources,
+                "corpus '\(entry.id)' sets neither target nor sources, so nothing can reach it"
             )
             if entry.kind == "app" {
                 #expect(hasSources, "app corpus '\(entry.id)' must be reached by sources")
