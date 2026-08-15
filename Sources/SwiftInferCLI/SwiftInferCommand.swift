@@ -36,6 +36,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
             ProveThenShow.self,
             SurveyDiff.self,
             Corpus.self,
+            Census.self,
             KnownProperties.self,
             Report.self,
             SuggestRefactors.self,

@@ -83,6 +83,23 @@ enum CorpusPin: Equatable, Sendable {
             : .movedOff(head: head, pinned: pinned, dirty: dirty)
     }
 
+    /// A stable one-word token for the verdict, for artifacts rather than for readers.
+    ///
+    /// **Separate from the rendered sentence on purpose.** `CorpusStatusRenderer.describe`
+    /// writes prose that is meant to be re-worded whenever it explains the state badly — it has
+    /// been, twice. A recorded run must survive that: a census from last month has to stay
+    /// comparable with one from today, and it would not if its stored verdict were whatever
+    /// sentence the renderer happened to use. Tokens are the contract; sentences are the copy.
+    var token: String {
+        switch self {
+        case .noBaseline: return "no-baseline"
+        case .uncheckable: return "uncheckable"
+        case .revisionUnrecoverable: return "revision-unrecoverable"
+        case let .atPin(dirty): return dirty ? "at-pin-dirty" : "at-pin"
+        case let .movedOff(_, _, dirty): return dirty ? "moved-off-dirty" : "moved-off"
+        }
+    }
+
     /// True when a survey taken here would be comparable against the retained baseline.
     ///
     /// `noBaseline` is **not** comparable — there is nothing to compare with — and saying so

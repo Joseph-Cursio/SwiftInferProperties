@@ -2824,6 +2824,23 @@ apparatus of *several* sweeps, so `--apparatus census` selects seven corpora tha
 eight. What would work is recording the corpus list **at run time, by id, as part of the sweep** —
 a change to how a census is run, not to where its denominator is written down afterwards.
 
+> **BUILT 2026-08-15 — `swift-infer census`** (`docs/reference/census-command.md`). It surveys
+> corpora named by registry id and writes the list into the artifact alongside the counts, with
+> each checkout's run-time revision, its dirty flag, and the pipeline flags. So the next census
+> carries its own denominator and this section's excavation does not have to be repeated.
+>
+> **It does not repair this one.** The denominator of a sweep taken by a shell loop is not
+> recoverable by building a better loop, so §10's eight remain established the way they were —
+> by reading §10.3's per-corpus table against the prose. The value here is prospective only, and
+> saying otherwise would be the same over-claim this section is correcting.
+>
+> Two things fell out of building it, both recorded in the command's doc. A census scans a
+> **directory** while `prove-then-show` builds a **target**, which the registry did not model:
+> `swiftlang-swift` claimed `target: "stdlib"` and the compiler repo has no `Sources/` at all.
+> And routing a census at a path that does not exist failed with *"the file couldn't be opened
+> because it isn't in the correct format"* — a decode error from a missing directory, which is
+> now a refusal that names the path.
+
 ## 11. The `[reference]` backlog was over-reported 3x — the tags had fallen behind the templates
 
 §9 called the 49 `[reference]` rows "the standing catalog backlog". That number was
