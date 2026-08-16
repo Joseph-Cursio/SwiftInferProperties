@@ -1,6 +1,6 @@
 # SwiftEffectInference — the shared leaf
 
-> **Status:** `reference` · **As of:** 2026-08-12
+> **Status:** `reference` · **As of:** 2026-08-16
 
 
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
@@ -30,10 +30,14 @@
 > warning rather than a diagnosis and a false one costs a reader a wasted lookup. Item 4 and the
 > anchor's "open end" are both **further along than this doc says**: `verdict(for:)` is adopted at the
 > scan boundary and `anchor` is read by `SeedEffectResolver`. Both corrected below with what remains
-> genuinely open. Size re-counted: **13 files / 3,975 lines**. The §13 perf table and every other
-> number still describe `bc084fb`/`6f45139` and were **not** retaken.
+> genuinely open. Size re-counted: **13 files / 3,975 lines**.
+>
+> **Later the same day the pins moved for real.** SEI grew a shared nondeterminism classifier and a
+> clock-determinism refuter (SEI #10, #11); both consumers now pin `22342ca`, and the **§13 table has
+> a fresh column measured at that pin** — the first re-measurement since `bc084fb`. Every other
+> number still describes `bc084fb`/`6f45139` and was not retaken.
 
-<!-- doc-provenance date=2026-08-16 subject=SwiftEffectInference@94610c0 pinned=50c5d3a03c1620e5db7e7a71fac3f62378c6c0dd observer=SwiftInferProperties@392fb2a -->
+<!-- doc-provenance date=2026-08-16 subject=SwiftEffectInference@22342ca pinned=22342caf2015e528bb71cad3b677eb64fad11aaf observer=SwiftInferProperties@2bedd17 -->
 
 
 ```
@@ -66,11 +70,13 @@ files, and there is no format to version.
 it, an author's explicit *"I cannot determine this"* returned the same `nil` as an unannotated
 declaration **and** as a misspelled tier — three different situations collapsed into one.
 
-That claim is the thing to check when reading this doc, because **the two consumers do not compile
-against the same revision, and as of 2026-08-03 they deliberately cannot** — closing the gap costs a
-measured ~2× regression on this repo's hot path, filed as
-[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1). See
-[The pin divergence](#the-pin-divergence).
+That claim is the thing to check when reading this doc, because for most of this document's history
+**the two consumers did not compile against the same revision** — and between 2026-08-03 and
+2026-08-06 they deliberately could not, the gap costing a measured ~2× regression on this repo's hot
+path, filed as
+[SwiftEffectInference#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1). As of
+2026-08-16 both pin `22342ca` and the claim holds; it is a state that has broken repeatedly, so read
+the pin rather than this sentence. See [The pin divergence](#the-pin-divergence).
 
 ---
 
@@ -125,6 +131,22 @@ Measured by grep over `Sources/` on 2026-08-03: `PurityInferrer` 4 references,
 cross-file grading machinery — call-graph lub with depth tracking, framework-gated call-site
 classification, collision-withdrawal — is **SwiftProjectLint's half of the library**. This repo uses
 the two leaf primitives and none of the graph.
+
+> **2026-08-16 — "SwiftProjectLint's half of the library" is half right, and the wrong half is
+> load-bearing.** A grep over *both* consumers, run when asking what the linter was missing, found
+> `EffectSymbolTable` heavily used there (and `BodyInference.anchor` with it) — but
+> **`CallSiteEffectInferrer` has zero references in either repository.** SwiftProjectLint rolled its
+> own `HeuristicEffectInferrer` instead.
+>
+> That leaves `CallSiteEffectInferrer` (536 lines) plus the three internals only it reaches —
+> `FrameworkGates` (505), `ReceiverShapes` (339), `StdlibIdempotentMutations` (83) — at **1,463 of
+> SEI's 3,975 lines, 37% of the package, consumed by nobody.** It is tested and maintained and no
+> caller exists. Recorded, not acted on: the choice is to migrate SwiftProjectLint's inferrer onto
+> it or to drop it, and that is a decision rather than a cleanup.
+>
+> The framing above survives for `EffectSymbolTable` and `BodyEffectInferrer`. It was never checked
+> against the linter for `CallSiteEffectInferrer` — the 2026-08-03 grep it cites was over **this**
+> repo's `Sources/` only, and "this repo doesn't use it" was read as "the other one must."
 
 ### `PurityInferrer` — the one that matters here
 
@@ -261,15 +283,23 @@ divergence is the thing worth remembering: it ran for weeks, and it had a named 
 
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
-| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `50c5d3a` | **2 behind** (2026-08-16) — README commit + merge, docs only |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `fc82ec4` | **4 behind** (2026-08-16), still **docs only** |
+| SwiftInferProperties | `Package.swift:122` | `22342ca` | **at HEAD** (2026-08-16) |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `22342ca` | **at HEAD** (2026-08-16) |
 
-> **2026-08-16 — both consumers are now behind, and they are behind by different amounts.** SEI took
-> `81a1843` + `94610c0` (the README repair). Re-checked rather than inherited, per this section's own
-> rule: `git diff --stat fc82ec4..94610c0` touches `README.md` and one line of a design doc and **no
-> file under `Sources/`**, so no inference behaviour differs across any of the three pins. The two
-> consumers still disagree with each other by two commits — the state this section exists to track —
-> but the disagreement remains inert.
+> **2026-08-16 — a divergence opened across real source for the first time in this record, and was
+> closed the same day.** Every previous gap this section tracks was inert; this one was not. SEI
+> gained `NondeterminismSources` and `ClockDeterminismRefuter` (SEI #10, #11), SwiftProjectLint
+> bumped to consume them, and for the length of that work the two consumers compiled against
+> different oracles. It was still *additive* — nothing this repo calls changed, so behaviour here
+> was identical throughout — but "additive" is a weaker guarantee than the one the shared leaf
+> exists to give, and the invariant is equality, not compatibility.
+>
+> Closed by bumping this repo to `22342ca`. `make perf` first and `make test` second, in that order,
+> per the protocol below — the ordering exists because a bump that costs wall-clock should fail at
+> the budget rather than 20 minutes later. All 8 budgets green; see the §13 table.
+>
+> Note also that `Package.resolved` is **not tracked** in this repo, so the manifest line is the
+> whole of the pin here. The row above used to name both.
 
 > **2026-08-12 — the roles reversed, and the pin is the thing to read, not the prose below it.**
 > This repo is now **at** SEI's tip (`50c5d3a`, verified against `origin/main` after a fetch) while
@@ -324,13 +354,13 @@ implements the remedy proposed below verbatim: `inferredEffect(for:)` stops dele
 **Re-measured on this repo, 2026-08-06, at pin `6f45139`** — a full `make test` run, the §13 perf
 target in its own isolated step:
 
-| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` |
-|---|---|---|---|---|---|
-| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | **4.310s** ✅ |
-| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | **0.690s** ✅ |
-| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | **0.960s** ✅ |
-| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | **2.406s** ✅ |
-| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | **245.6 MB** ✅ |
+| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` | at `22342ca` |
+|---|---|---|---|---|---|---|
+| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | 4.310s ✅ | **3.573s** ✅ |
+| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | 0.690s ✅ | **0.560s** ✅ |
+| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | 0.960s ✅ | **0.752s** ✅ |
+| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | 2.406s ✅ | **1.827s** ✅ |
+| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | 245.6 MB ✅ | **256.0 MB** ✅ |
 
 The `bc084fb` column was taken 2026-08-07 by `make perf` (serial, alone, 22.1s, 8 tests). Every row
 is within noise of `6f45139` — the anchor work adds a field to `BodyInference` and does not change
@@ -447,6 +477,13 @@ to carry.
 
 Item 3 has a **new** motivating symptom rather than a hypothetical one — see the `@EffectUnknown` row
 above. A guard phrased as *equality with the sibling consumer* would currently fail, correctly.
+
+> **2026-08-16 — it would now pass, and that is the weakest moment to leave it unwritten.** Both
+> consumers pin `22342ca`, so the guard has nothing to catch today. But the divergence it exists to
+> catch opened *and* closed within this one day, and for the first time across real source rather
+> than docs — the window in which the linter and the inference engine consulted different oracles
+> was hours, and nothing would have reported it. A guard is worth writing while the failure is
+> fresh; every previous closure of this section was followed by a re-opening nobody predicted.
 
 ---
 
