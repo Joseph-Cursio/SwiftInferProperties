@@ -35,9 +35,14 @@
 > **Later the same day the pins moved for real.** SEI grew a shared nondeterminism classifier and a
 > clock-determinism refuter (SEI #10, #11); both consumers now pin `22342ca`, and the **§13 table has
 > a fresh column measured at that pin** — the first re-measurement since `bc084fb`. Every other
-> number still describes `bc084fb`/`6f45139` and was not retaken.
+> number still describes `bc084fb`/`6f45139` and was not retaken. Size after those two: **15 files /
+> 4,362 lines**.
+>
+> **And the dead subsystem stopped being dead.** SwiftProjectLint's `HeuristicEffectInferrer` was
+> migrated onto `CallSiteEffectInferrer` (SwiftProjectLint #105), so **every engine in the table now
+> has a consumer** and the 37% figure recorded earlier that day is obsolete. See § *The engines*.
 
-<!-- doc-provenance date=2026-08-16 subject=SwiftEffectInference@22342ca pinned=22342caf2015e528bb71cad3b677eb64fad11aaf observer=SwiftInferProperties@2bedd17 -->
+<!-- doc-provenance date=2026-08-16 subject=SwiftEffectInference@22342ca pinned=22342caf2015e528bb71cad3b677eb64fad11aaf observer=SwiftInferProperties@7d2efcc -->
 
 
 ```
@@ -47,8 +52,8 @@ SwiftProjectLint ──▶ SwiftInferProperties ──▶ SwiftPropertyLaws ─�
 ```
 
 The smallest package in the toolchain and the only one with **no CLI and no dependents below it** —
-13 source files, ~3,975 lines (re-counted 2026-08-16), depends on nothing in the set. It is a library two other tools
-*embed*, which is the entire architectural point: **the linter and the inference engine consult one
+15 source files, ~4,362 lines (re-counted 2026-08-16, after SEI #10/#11), depends on nothing in the
+set. It is a library two other tools *embed*, which is the entire architectural point: **the linter and the inference engine consult one
 purity oracle, so they cannot disagree about what is pure.**
 
 ### In and out, precisely
@@ -115,15 +120,25 @@ once already when `pure` was inserted at the bottom.
 
 ---
 
-## The four engines
+## The engines
 
 | type | what it answers | swift-infer uses it? |
 |---|---|---|
 | `PurityInferrer` | is this function referentially transparent? | **yes** — via `SoundPurity` |
 | `EffectAnnotationParser` | what did the author *declare*? | **yes** — 3 sites |
-| `CallSiteEffectInferrer` | what does this call expression do? | **no** |
+| `CallSiteEffectInferrer` | what does this call expression do? | **no** — SwiftProjectLint's, since `a9a242c` |
 | `BodyEffectInferrer` | what does this body do, from its callees? | **no** |
 | `EffectSymbolTable` | cross-file declared+inferred lookup | **no** |
+| `NondeterminismSources` | is this expression determined by its inputs? | **no** — added 2026-08-16 |
+| `ClockDeterminismRefuter` | does this body contradict its own `@ClockDeterministic`? | **no** — added 2026-08-16 |
+
+> **2026-08-16 — the heading said "four" and the table listed five; it now lists seven.** The two
+> additions are the shared nondeterminism classifier and the clock-determinism refuter (SEI #10,
+> #11). Both are **refuters**, which is the pattern to notice rather than the count: like
+> `PurityInferrer`, each answers *contradicted* or *no opinion* and neither will confirm a claim.
+> `NondeterminismSources` is the one place the marker sets live, after the same argument-aware scan
+> was found written twice — here and in SwiftProjectLint's `NonInjectedNondeterminismVisitor`, which
+> now consumes it.
 
 Measured by grep over `Sources/` on 2026-08-03: `PurityInferrer` 4 references,
 `EffectAnnotationParser` 5, and **zero** for `EffectSymbolTable`, `BodyEffectInferrer`,
@@ -143,6 +158,31 @@ the two leaf primitives and none of the graph.
 > SEI's 3,975 lines, 37% of the package, consumed by nobody.** It is tested and maintained and no
 > caller exists. Recorded, not acted on: the choice is to migrate SwiftProjectLint's inferrer onto
 > it or to drop it, and that is a decision rather than a cleanup.
+>
+> **Resolved the same day — migrated, not dropped** (SwiftProjectLint
+> [#105](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/105), `a9a242c`). **Every engine in
+> the table above now has a consumer** — all seven, counting the two added the same day — and the
+> 37% figure is obsolete.
+>
+> The comparison is the part worth keeping, because it changes what the duplication *was*. These were
+> not parallel implementations that happened to agree: SEI's inferrer was **lifted from an earlier
+> revision of SwiftProjectLint's** and then maintained separately, and they had barely moved apart.
+> `FrameworkGates` and SwiftProjectLint's `FrameworkAllowlist` were **byte-identical** once the type
+> name was normalised — all 505 lines. `StdlibIdempotentMutations` differed only in access modifiers.
+> `ReceiverShapes` differed only by helpers SEI had extracted from the other's inline forms. The four
+> name allowlists were identical and the decision trees matched rule for rule, orderings included.
+>
+> So the linter carried **1,471 lines that are now 242** — forwarders onto the leaf, keeping the
+> local API so the 260 existing assertions (212 `infer`, 29 `resolve`, 19 `isExcluded`) stay pointed
+> at it and serve as the migration's regression suite. They pass unchanged, which is the evidence
+> that no verdict moved.
+>
+> **The migration also fixed a defect the line count hides.** SwiftProjectLint's copy computed the
+> effect and its reason in *two parallel decision trees*, each with its own `*Reason` helpers; SEI
+> resolves both from one walk. Two trees over one rule set can disagree about which rule fired, and
+> a violation crediting the wrong heuristic is exactly where that surfaces. Duplication is not only
+> a maintenance cost — one of the copies had already grown a way to be wrong that the other could
+> not.
 >
 > The framing above survives for `EffectSymbolTable` and `BodyEffectInferrer`. It was never checked
 > against the linter for `CallSiteEffectInferrer` — the 2026-08-03 grep it cites was over **this**
