@@ -25,7 +25,15 @@
 > describe `6f45139`** and have not been retaken. The bump was source-compatible (additive, defaulted
 > argument), so the diagnoses are unaffected.
 
-<!-- doc-provenance date=2026-08-12 subject=SwiftEffectInference@50c5d3a pinned=50c5d3a03c1620e5db7e7a71fac3f62378c6c0dd observer=SwiftInferProperties@21bc279 -->
+> **2026-08-16 — three claims went stale, and one of them was a Trap.** SEI's README was fixed
+> (`94610c0`), so *Traps* item 1 no longer describes it — corrected in place, because a trap is a live
+> warning rather than a diagnosis and a false one costs a reader a wasted lookup. Item 4 and the
+> anchor's "open end" are both **further along than this doc says**: `verdict(for:)` is adopted at the
+> scan boundary and `anchor` is read by `SeedEffectResolver`. Both corrected below with what remains
+> genuinely open. Size re-counted: **13 files / 3,975 lines**. The §13 perf table and every other
+> number still describe `bc084fb`/`6f45139` and were **not** retaken.
+
+<!-- doc-provenance date=2026-08-16 subject=SwiftEffectInference@94610c0 pinned=50c5d3a03c1620e5db7e7a71fac3f62378c6c0dd observer=SwiftInferProperties@392fb2a -->
 
 
 ```
@@ -35,7 +43,7 @@ SwiftProjectLint ──▶ SwiftInferProperties ──▶ SwiftPropertyLaws ─�
 ```
 
 The smallest package in the toolchain and the only one with **no CLI and no dependents below it** —
-13 source files, ~3,830 lines, depends on nothing in the set. It is a library two other tools
+13 source files, ~3,975 lines (re-counted 2026-08-16), depends on nothing in the set. It is a library two other tools
 *embed*, which is the entire architectural point: **the linter and the inference engine consult one
 purity oracle, so they cannot disagree about what is pure.**
 
@@ -253,8 +261,15 @@ divergence is the thing worth remembering: it ran for weeks, and it had a named 
 
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
-| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `50c5d3a` | **at HEAD** |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `fc82ec4` | **2 commits behind**, still **docs only** |
+| SwiftInferProperties | `Package.swift:122` + `Package.resolved` | `50c5d3a` | **2 behind** (2026-08-16) — README commit + merge, docs only |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `fc82ec4` | **4 behind** (2026-08-16), still **docs only** |
+
+> **2026-08-16 — both consumers are now behind, and they are behind by different amounts.** SEI took
+> `81a1843` + `94610c0` (the README repair). Re-checked rather than inherited, per this section's own
+> rule: `git diff --stat fc82ec4..94610c0` touches `README.md` and one line of a design doc and **no
+> file under `Sources/`**, so no inference behaviour differs across any of the three pins. The two
+> consumers still disagree with each other by two commits — the state this section exists to track —
+> but the disagreement remains inert.
 
 > **2026-08-12 — the roles reversed, and the pin is the thing to read, not the prose below it.**
 > This repo is now **at** SEI's tip (`50c5d3a`, verified against `origin/main` after a fetch) while
@@ -288,9 +303,15 @@ Both consumers compile against the full five-method `PurityInferrer` — `inferr
 **What the 2026-08-07 bump adds here.** `01bcdf7` *Track what an inferred effect rests on* gives
 `BodyInference` an `Anchor` (`.declared` / `.heuristic`), so a consumer can tell an author's
 annotation from a name-or-framework guess. It is **additive with a default argument**, and this repo
-constructs no `BodyInference` — it only calls `applyBodyInference` — so the bump is source-compatible
-and nothing here reads the anchor yet. That last clause is the open end: the anchor exists to let a
-consumer *decline* a heuristic, and declining is not wired up.
+constructs no `BodyInference` — it only calls `applyBodyInference` — so the bump is source-compatible.
+
+> **2026-08-16 — "nothing here reads the anchor yet… declining is not wired up" is no longer true.**
+> `SeedEffect` carries its own `Anchor`, and `SeedEffectResolver` withholds on it: seeds are filtered
+> to `$0.anchor == .heuristic` and to upward chains with **no anchor stated** (`provenance ==
+> .inferredUpward && anchor == nil`), both excluded, with the counts named in the withholding
+> message. So declining a name guess is exactly what it does. An upward chain anchored on
+> `.declaration` is a multi-hop cross-file walk and is admitted; a `.heuristic` one is a guess and is
+> not — *"this tool does not veto on names."*
 
 ### The bump was blocked 2026-08-03, and is UNBLOCKED as of 2026-08-06
 
@@ -398,14 +419,31 @@ Progress against the ordered list this section used to carry:
 | | item | state |
 |---|---|---|
 | 1 | **SEI#1** — restore the cheap path | ✅ **done** (`6470222`) |
-| 2 | bump, re-running `make perf` before `make test` | ✅ **done** — this repo is at HEAD, budgets green |
+| 2 | bump, re-running `make perf` before `make test` | ✅ **done** — budgets green (this repo reached HEAD 2026-08-07; 2 docs-only commits behind as of 2026-08-16) |
 | 3 | pin-equality guard, phrased as *equality with the sibling consumer* | ⚠️ **half** — intra-repo guarded there, cross-repo unguarded |
-| 4 | adopt `verdict(for:)` for `.pureButPartial` | **open, and now actually reachable** — the method is in the pinned surface for the first time |
+| 4 | adopt `verdict(for:)` for `.pureButPartial` | ⚠️ **half — corrected 2026-08-16.** Adopted at the scan boundary; **no consumer reads the third state**, deliberately |
 | 5 | SwiftProjectLint may be paying the regression unmeasured | ✅ **moot** — its pin is past the fix |
 
 Item 4 is the one with value left in it: a `.pureButPartial` function is a real candidate whose law
 narrows to the success set, and it is the surface the seed manifest's own `isPartial` field was built
-to carry. This repo has had the method available since 2026-08-06 and does not call it.
+to carry.
+
+> **2026-08-16 — the sentence that used to end this paragraph said this repo "does not call it," and
+> that was wrong.** `SoundPurity.verdict(for:)` calls `PurityInferrer().verdict(for:)`, and
+> `FunctionScannerVisitor+Summary.swift:71` computes it at scan time and carries it on
+> `FunctionSummary.purityVerdict`. What is *actually* open is one step further in: **nothing reads
+> `.pureButPartial`.** That is a measured decision, not an oversight — of 2,500 functions on this
+> repo, 2,206 are `.pure`, **35 are `.pureButPartial`**, 259 refuted, and the only consumer of the
+> purity signal is the `/// @lint.effect pure` advisory, which those 35 cannot honestly take: SEI
+> defines the tier as deterministic **and total**, and the lattice has no tier for
+> deterministic-but-partial. So the adoption exists to stop the distinction being destroyed at the
+> scan boundary, where `isPure` collapsed three states into two irrecoverably. The open work is a
+> consumer that narrows a law's domain to the success set — not the plumbing.
+>
+> Note the shape, because it is the same one this document keeps recording: the item was tracked as
+> *"open"* on the strength of a reading, and stayed that way through two dated revisions after the
+> code had moved. **A status line is a claim about behaviour, and re-reading the source is how it
+> gets checked.**
 
 Item 3 has a **new** motivating symptom rather than a hypothetical one — see the `@EffectUnknown` row
 above. A guard phrased as *equality with the sibling consumer* would currently fail, correctly.
@@ -414,10 +452,15 @@ above. A guard phrased as *equality with the sibling consumer* would currently f
 
 ## Traps
 
-- **The README is stale in a way that inverts its meaning.** It says *"Status: Pre-extraction
-  skeleton"* and *"The current skeleton has no behavior; the test target only asserts the namespaces
-  compile."* There are ~3,700 lines of working engines and a mutation corpus. Read `Sources/`, not
-  the README.
+- ~~**The README is stale in a way that inverts its meaning.**~~ **Fixed 2026-08-16 (`94610c0`).**
+  It used to say *"Status: Pre-extraction skeleton"* and *"The current skeleton has no behavior; the
+  test target only asserts the namespaces compile"* — while `Sources/` held ~3,975 lines of working
+  engines. It now describes the shipped library, and the primitives list finally includes
+  `PurityInferrer`, which it had **omitted entirely** despite that being the canonical oracle both
+  consumers embed. Kept struck through rather than deleted: this was the toolchain's longest-lived
+  documentation defect, and the failure mode it illustrates — a README that *inverts* rather than
+  merely lags, so a reader concludes there is nothing to consult and leaves — is worth recognizing
+  again elsewhere.
 - **`Effect.rank` values are not stable.** They shifted when `pure` was inserted at the bottom. Never
   serialize them.
 - **The marker sets are token-matched, not AST-matched.** `Date(timeIntervalSince1970:)` refutes
