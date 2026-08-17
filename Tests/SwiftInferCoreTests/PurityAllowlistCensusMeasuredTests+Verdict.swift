@@ -95,36 +95,58 @@ extension PurityAllowlistCensusMeasuredTests {
         )
     }
 
-    /// **The finding this census was not looking for, pinned so the fix
-    /// announces itself.** `bodyHasRefutingMarker` is handed `function.body`, and
-    /// a default argument lives in the signature — so
-    /// `func bridges(…, now: Date = Date())` reads the clock on every call that
-    /// omits the argument and is judged `.pure`. Measured: 15 subjects, every one
-    /// of them a `Date()` or a `FileManager` read, all hand-checked.
+    /// **The finding this census was not looking for — FIXED 2026-08-17, and this
+    /// is now the guard rather than the pin.** `bodyHasRefutingMarker` was handed
+    /// `function.body`, and a default argument lives in the signature, so
+    /// `func bridges(…, now: Date = Date())` read the clock on every call that
+    /// omitted the argument and was judged `.pure`. 15 subjects, every one a
+    /// `Date()` or a `FileManager` read, all hand-checked.
     ///
-    /// **This test fails the day the hole is closed, and that is its job** — the
-    /// same shape as `computedPropertyAdviceIsAccidentallyCorrect`. It is a
-    /// standing claim that the defect is still open, not a claim that it should
-    /// be. Closing it means deleting this test in the same commit, which is
-    /// exactly the notification a comment would not give.
-    @Test("a marker in a default argument is still invisible to the body scan")
-    func markersInDefaultArgumentsAreStillMissed() {
+    /// The fix is `PurityInferrer.hasRefutingDefaultArgument` in
+    /// SwiftEffectInference, scanning default **values** only — a marker in a
+    /// parameter *type* is not an impurity, and the two controls in that repo's
+    /// `DefaultArgumentPurityTests` were watched failing in both directions.
+    ///
+    /// **Its first form asserted the defect was still open and failed the day it
+    /// closed**, which is the notification a comment would not give. Inverted
+    /// here rather than deleted, because this repo pins SEI by revision: if the
+    /// pin ever moves backwards, the hole reopens silently and only a live
+    /// assertion over this corpus would notice. Deleting the test would have left
+    /// the pin the only thing standing between the fix and its own regression.
+    @Test("a marker in a default argument no longer reads as pure")
+    func markersInDefaultArgumentsAreRefuted() {
         #expect(
-            !Self.markerInDefaultArgument.isEmpty,
+            Self.markerInDefaultArgument.isEmpty,
             """
-            No non-refuted subject defaults a parameter to a marker any more. If PurityInferrer \
-            learned to scan default values, delete this test with the fix; if the corpus merely \
-            stopped exhibiting the shape, the hole is still open and needs a synthetic witness.
+            \(Self.markerInDefaultArgument.count) non-refuted subjects default a parameter to a \
+            marker: \(Self.markerInDefaultArgument.prefix(5).map(\.subject.name)). The SEI pin \
+            may have moved backwards — PurityInferrer.hasRefutingDefaultArgument is the fix.
             """
         )
-        // Every row is a genuine impurity-on-the-default-path, hand-checked at
-        // the measured tree. The shape is narrow enough to say so: nothing here
-        // is a parameter *type* mentioning a marker, which would be pure.
-        for entry in Self.markerInDefaultArgument {
-            #expect(
-                !entry.markers.isEmpty,
-                "\(entry.subject.file):\(entry.subject.name) attributed no marker"
-            )
-        }
+    }
+
+    /// The control for the assertion above, and the reason it is not vacuous.
+    ///
+    /// "Zero subjects default a parameter to a marker" is also what a corpus with
+    /// no defaulted parameters at all would report, and what a broken collector
+    /// would report. So: the corpus must still *contain* the shape the fix acts
+    /// on, and those functions must now be refuted rather than absent.
+    @Test("the corpus still exercises the fixed path")
+    func theDefaultArgumentPathIsStillExercised() {
+        let refutedWithImpureDefault = zip(Self.corpus, Self.verdicts)
+            .filter { $0.1 == .refuted }
+            .filter { subject, _ in
+                PurityRefutationCensusMeasuredTests.Attributor()
+                    .causes(of: subject.function)
+                    .contains(.markerInDefault)
+            }
+        #expect(
+            refutedWithImpureDefault.count >= 15,
+            """
+            \(refutedWithImpureDefault.count) refuted subjects carry an impure default. Measured \
+            at 32 — 15 that the fix newly refuted, plus 17 already refuted for a propagated `try` \
+            and therefore never rankable. If this collapses to zero the assertion above is vacuous.
+            """
+        )
     }
 }

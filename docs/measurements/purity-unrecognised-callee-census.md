@@ -199,10 +199,10 @@ direction that does not flatter the finding.
 
 ---
 
-## 5 · The finding this census was not looking for
+## 5 · The finding this census was not looking for — FIXED 2026-08-17
 
-**15 non-refuted subjects default a parameter to a marker expression, and the
-body scan cannot see it.** `bodyHasRefutingMarker` is handed `function.body`;
+**15 non-refuted subjects defaulted a parameter to a marker expression, and the
+body scan could not see it.** `bodyHasRefutingMarker` is handed `function.body`;
 a default value lives in the signature.
 
 ```swift
@@ -224,6 +224,58 @@ to `parameters.defaultValue` and says so.
 
 This is a different defect from item 30's: no allowlist, no axioms, no population
 cost beyond those 15. It is a scan that stops one node too early.
+
+### The fix, and its A/B
+
+`PurityInferrer.hasRefutingDefaultArgument` (SwiftEffectInference `c66fceb`,
+[PR #13](https://github.com/Joseph-Cursio/SwiftEffectInference/pull/13)), pinned
+here at `Package.swift:122`. Default **values** only — the `func f(_ d: Date)`
+control is what separates the fix from the naive whole-signature scan that would
+refute the very shape dependency injection produces, and both directions were
+watched failing rather than asserted.
+
+On a tree otherwise byte-identical:
+
+| | before | after |
+|---|---|---|
+| `.pure` | 2,417 | 2,404 |
+| `.pureButPartial` | 39 | 37 |
+| `.refuted` | 284 | **299** |
+| advisory rows (`summaries.filter(\.isInferredPure)`) | 2,597 | **2,584** |
+
+**13 false `/// @lint.effect pure` recommendations were retracted.** Thirteen and
+not fifteen because two of the fifteen were `.pureButPartial`, which never
+entered the advisory. **This is the opposite of item 40's result and worth saying
+plainly**: there the unchecked claim was accidentally correct and 0 rows moved,
+so it was reported as a latent unsoundness with a zero base rate. Here the tool
+was telling thirteen functions something false, on every defaulted call.
+
+Both other consumers were run against the branch before it merged:
+SwiftProjectLint 3,327 tests green, this repo 5,508 green. The pin moved in both
+on the same SHA, which also closed the standing `SEICrossRepoPinTests` red.
+
+### What it cost item 29, which is the part worth reading
+
+The fix **moved the answer to a different open item**, and not by a little.
+`markerInDefault` holds of **32** rows:
+
+- **15 are newly refuted** — the ones above.
+- **17 were already refuted and already counted as *rankable ignorance*.** They
+  carry `propagatedTry` **and** an impure default, so no annotation on any
+  blocked callee could ever have freed them.
+
+So the item 29 bucket goes 284 → 299 while its *rankable* population goes
+**152 → 135**, and the split flips from 152-ignorance / 132-witness to
+135-ignorance / **164-witness**. Item 29's headline — *ignorance is the majority*
+— was true when measured and is not true now. `ignoranceIsNotARoundingError`
+carries the weaker claim that survives, and the reasoning for the change is in
+its doc comment rather than in a silently relaxed bound.
+
+**The transferable lesson is item 32's, a fourth time**: a bucket's size is not
+its leverage, and every refuter added *anywhere* shrinks it again. A leverage
+report built on the 152 would have promised 17 rows that no annotation could
+ever have moved — and nothing in the ranking itself would have revealed that.
+The correction arrived from closing an unrelated hole.
 
 ---
 
