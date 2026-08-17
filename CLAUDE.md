@@ -54,19 +54,22 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,600 tests — 5,508 fast + 92 across `perf` and the eight batches**
+Suites green at **5,620 tests — 5,508 fast + 112 across `perf` and the eight batches**
 (last full `make test` verified green 2026-08-15 at `4fac986`, ~22 min, when it read
 5,493 + 83; both halves re-counted 2026-08-17 by running `test-fast` and `batch2`
-directly — the other batches and `perf` are unchanged arithmetic, not a fresh full run).
+directly — the other batches and `perf` are unchanged arithmetic, not a fresh full run.
+The batch half moved 92 → 112 as the four purity censuses joined batch2;
+the fast half did not move, which is the regex doing its job).
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Known red, and not a regression:** `SEICrossRepoPinTests` fails against a *current*
-`../SwiftProjectLint` checkout — the linter moved its SEI pin to `8127f26` while
-`Package.swift:122` still reads `22342ca`. That is the guard doing its job across repos;
-bumping is a deliberate joint act, not a fix to fold into unrelated work.
+**The `SEICrossRepoPinTests` red is CLEARED (2026-08-17).** Both repos now pin SEI
+`c66fceb` — the joint bump that carried the default-argument purity refuter
+(SwiftEffectInference #13) out to its two consumers, which is what "a deliberate joint
+act" is for. Keep them equal: disjoint pins mean the linter and the inference engine are
+not consulting one purity oracle, and that guard is the only thing that can say so.
 
 ## Where to look
 
@@ -90,7 +93,10 @@ decline, because the hook states the verdict and the annotation states what was 
 | **The verify edge pass** (why `bothPass` used to under-claim) | `docs/design/verify-edge-pass.md` | Pass 2 was a zero-trial sentinel; boundary values belong in an **advisory** pass, swapped at the rendered expression |
 | **Why is 88% of `discover`'s default output `predicate`?** | `docs/design/predicate-display-order.md` | Fixed by **ordering**, not hiding — a law the code owes is never hidden |
 | **Why does `verify` decline so much?** | `docs/measurements/verify-carrier-reach-census.md` | **Not** carrier support: carrier is ~4% of declines, template reach is 65% |
-| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured: 54% is ignorance**, and all of it actionable. 180 of the bucket was an initialiser DEFAULT — fixed, 0 advisory rows moved |
+| **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured: no — a subprocess spawn is judged `.pure`.** But the allowlist fix costs 65% of `.pure`; the 18 real rows are one hop inside the package. §5's default-argument hole is FIXED — 13 false `pure` advisories retracted |
+| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45% hours later** — check which SEI pin a figure belongs to. Rankable ceiling **135, not 152** |
+| **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over.** 13–31 rows of leverage behind a 135-row population, all landing in a tier nothing reads. The index's top entry is `String(contentsOf:)` |
+| **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 27 rows, base rate unmeasurable |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` | The rest of `docs/archive/` is shipped-then-archived design records. Archived ≠ superseded — read for reasoning, never for counts |
 | Per-cycle change story | `git log` | The per-cycle findings docs were folded into the archive above |
 | Road tests (third-party subjects) | `docs/measurements/roadtest-*.md` | SwiftProjectLint (first scored, frozen key), SwiftLintRuleStudio, MacCloud server / client |

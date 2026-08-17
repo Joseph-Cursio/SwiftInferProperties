@@ -210,25 +210,49 @@ struct PurityRefutationCensusMeasuredTests {
         )
     }()
 
-    /// **The answer to item 29: ignorance is the MAJORITY of the bucket, not a
-    /// rounding error.** Measured 2026-08-17 — 152 of 284 refutations name
-    /// nothing in the source at all. The consequence is that the bucket is worth
-    /// reading, so the *measurement* precondition on items 30–33 is discharged in
-    /// the direction that permits them.
+    /// **The answer to item 29, and it MOVED on 2026-08-17 — the same day, by a
+    /// fix the census itself provoked.**
     ///
-    /// Asserted as an inequality rather than as `152`, because the corpus is this
-    /// repo's own `Sources/` and grows every commit. The exact counts and the
-    /// tree they were taken on are in the measurements doc. What must not drift
-    /// is the *direction*: the day witnesses become the majority, the argument
-    /// for ranking this bucket is gone and this test is where that shows up.
-    @Test("ignorance outnumbers witnesses in the refuted bucket")
-    func ignoranceIsTheMajority() {
+    /// As first measured, ignorance was the majority: 152 ignorance-only against
+    /// 132 witness-bearing, of 284. That is what discharged the measurement
+    /// precondition on items 30–33 in the direction that permits them.
+    ///
+    /// Then item 41 landed — `PurityInferrer` learned that a **default argument**
+    /// is code the function runs — and the split became **135 ignorance-only
+    /// against 164 witness-bearing, of 299**. Witnesses are now the majority. Two
+    /// separate movements, and the second is the interesting one:
+    ///
+    /// - **15 rows are newly refuted**, having previously been judged `.pure`
+    ///   while defaulting a parameter to `Date()` or a `FileManager` read.
+    /// - **17 rows were already refuted and already counted as *rankable
+    ///   ignorance*.** They carry `propagatedTry` **and** an impure default, so
+    ///   no annotation on any blocked callee could ever have freed them. They
+    ///   were never in the population item 31 is about.
+    ///
+    /// **So the rankable ceiling is 135, not 152**, and the correction came from
+    /// closing an unrelated hole rather than from re-reading the ranking. That is
+    /// item 32's warning arriving a third time: a bucket's *size* is not its
+    /// leverage, and every refuter added anywhere shrinks it again.
+    ///
+    /// **The direction assertion is kept, inverted, and re-argued.** This test's
+    /// previous form said the day witnesses became the majority, the argument for
+    /// ranking the bucket was gone. That was too strong, and saying so is the
+    /// honest correction rather than quietly relaxing the bound: what the
+    /// majority claim ever supported was *the bucket is not a rounding error*,
+    /// and 135 of 299 — 45%, all of it actionable, `noBody` still 0 — is not a
+    /// rounding error. What it no longer supports is *most of the bucket is
+    /// unread*, which is the stronger sentence items 31–33 were sold on. The
+    /// assertion below is now the weaker, true one, with the stronger one
+    /// recorded above as having been measured and lost.
+    @Test("ignorance is a large minority of the refuted bucket, and all of it actionable")
+    func ignoranceIsNotARoundingError() {
         #expect(
-            Self.split.ignoranceOnly > Self.split.witnessBearing,
+            Self.split.ignoranceOnly * 3 > Self.split.refuted,
             """
-            \(Self.split.ignoranceOnly) ignorance-only vs \(Self.split.witnessBearing) \
-            witness-bearing of \(Self.split.refuted). If this has flipped, re-read \
-            docs/measurements/purity-refuted-bucket-census.md before ranking anything.
+            \(Self.split.ignoranceOnly) ignorance-only of \(Self.split.refuted) refuted \
+            (\(Self.split.witnessBearing) witness-bearing). Below a third, the bucket stops \
+            being worth ranking at all — re-read \
+            docs/measurements/purity-refuted-bucket-census.md before building over it.
             """
         )
     }

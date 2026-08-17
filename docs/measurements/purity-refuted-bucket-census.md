@@ -8,6 +8,12 @@ harness, and `make batch2` runs it.
 Discharges the measurement precondition on open-threads item 29, which is the
 precondition on items 30–33.
 
+**Two SEI pins are reported here, and only the later one is current.** The census
+was taken on `22342ca`; item 41 landed hours later on `c66fceb` and moved the
+split. Sections carrying the earlier numbers say so at the top. **Do not quote a
+figure from this document without checking which pin it belongs to** — the
+headline reversed.
+
 ---
 
 ## The question
@@ -60,15 +66,32 @@ character since 2026-08-04 and still unconsumed.
 
 ---
 
-## The split — the answer
+## The split — the answer, and it moved the same day
 
-| | rows | share of `.refuted` |
-|---|---|---|
-| **witness-bearing** — at least one named construct refutes | 132 | 46% |
-| **ignorance-only** — nothing in the source refutes | **152** | **54%** |
+> **Superseded numbers below, kept because the change is the finding.** Every
+> figure in this section and the two that follow was measured against SEI pin
+> `22342ca`. On **2026-08-17**, hours later, open item 41 landed — `PurityInferrer`
+> learned that a **default argument** is code the function runs — and the split
+> changed materially. Both readings are given; the post-fix one is authoritative.
+> See *After item 41* below, and
+> `docs/measurements/purity-unrecognised-callee-census.md` §5 for the fix.
 
-**Ignorance is the majority.** Not a rounding error. The measurement therefore
-comes back in the direction that *permits* items 30–33 rather than closing them.
+| | rows (pin `22342ca`) | share | rows (pin `c66fceb`) | share |
+|---|---|---|---|---|
+| **witness-bearing** — at least one named construct refutes | 132 | 46% | **164** | **55%** |
+| **ignorance-only** — nothing in the source refutes | **152** | **54%** | 135 | 45% |
+| `.refuted` total | 284 | | 299 | |
+
+**As first measured, ignorance was the majority** — not a rounding error — and
+that is what returned the answer in the direction that *permits* items 30–33
+rather than closing them.
+
+**It is no longer the majority.** What survives is the weaker claim: ignorance is
+45% of the bucket, all of it actionable, and that is still not a rounding error.
+What does *not* survive is *most of the bucket is unread*, which is the stronger
+sentence items 31–33 were sold on. `ignoranceIsNotARoundingError` carries the
+surviving claim; the assertion was re-argued in its doc comment rather than
+quietly relaxed.
 
 ### By cause
 
@@ -102,6 +125,47 @@ A function may satisfy several causes; these do not sum to 284.
 | `asyncSignature` | 1 |
 | `nonTotal+propagatedTry` | 1 |
 
+### After item 41 — the authoritative split
+
+Re-run on SEI pin `c66fceb`, same corpus, `markerInDefault` added to the frozen
+taxonomy as a **witness** (it names a construct; it is simply not inside the
+braces):
+
+| cause | kind | rows |
+|---|---|---|
+| `propagatedTry` | ignorance, **actionable** | 219 |
+| `marker` | witness | 111 |
+| **`markerInDefault`** | **witness** | **32** |
+| `asyncSignature` | witness | 31 |
+| `reducerEffect` | witness | 26 |
+| `nonTotal` | witness | 8 |
+| `noBody` | ignorance, **inert** | **0** |
+
+The 32 divide into two populations that must not be added together:
+
+- **15 newly refuted** — previously `.pure` while defaulting a parameter to
+  `Date()` or a `FileManager` read. These are the rows the fix moved.
+- **17 already refuted, and already counted here as rankable ignorance.** Their
+  cause set was `propagatedTry` alone; it is now
+  `markerInDefault+propagatedTry`. They carry an independent witness, so **no
+  annotation on any blocked callee could ever have freed them.**
+
+The four largest cause sets afterwards: `propagatedTry` 135, `marker` 49,
+`marker+propagatedTry` 35, `markerInDefault+propagatedTry` 17,
+`markerInDefault` 15.
+
+**So the leverage ceiling is 135, not 152** — and finding #2 below, which says a
+decline-reason tally over-reports by 44%, now under-states its own point: on the
+post-fix numbers `propagatedTry` holds of 219 rows and *blocks* 135, an
+over-report of **62%**.
+
+**This is item 32's warning a fourth time, and the sharpest instance yet: the
+correction came from closing an unrelated hole, not from re-reading the
+ranking.** A leverage report built on the 152 would have promised 17 rows that
+nothing could move, and nothing inside the ranking would have revealed it. Every
+refuter added *anywhere* shrinks this bucket again, so any build over it must
+re-take the number rather than cite this document.
+
 ---
 
 ## Three findings the split makes visible
@@ -117,11 +181,13 @@ Two consequences. First, `PurityVerdict.refuted`'s doc names a case *this
 consumer cannot produce* — the sentence is true of the type and false of every
 use of it here. Second, and the useful half: **every ignorance row has a named
 callee behind it**, so a blocking-callee index needs no triage step to separate
-the rankable rows from the hopeless ones. All 152 are rankable.
+the rankable rows from the hopeless ones. All 152 are rankable — **135 after item
+41**, which took 17 of them into the witness-bearing half.
 
 ### 2. A decline-reason tally over-reports the leverage ceiling by 44%
 
-`propagatedTry` holds of **219** rows. It *blocks* **152**. The other 67 carry a
+**Pre-item-41 numbers; the post-fix over-report is 62%, not 44%.** `propagatedTry`
+holds of **219** rows. It *blocks* **152**. The other 67 carry a
 witness as well and would remain `.refuted` however many callees were resolved.
 
 This is the standing **"state a gain as ROWS MOVED, never LAWS GAINED"** rule
@@ -203,8 +269,11 @@ still worth fixing: the claim was unchecked and its base rate here was zero.
 
 ## What this does and does not license
 
-**Discharged.** The measurement precondition on items 30–33. Ignorance is 54% of
-the bucket and 100% actionable, so a blocking-callee index has a population.
+**Discharged.** The measurement precondition on items 30–33. Ignorance is **45%**
+of the bucket (54% before item 41) and 100% actionable, so a blocking-callee
+index has a population — 135 rows, not the 152 this document reported for a few
+hours. The precondition is discharged on *not a rounding error*, which survives;
+it was never discharged on *most of the bucket*, which does not.
 
 **Also discharged, and it was a precondition nobody had filed:** the 180
 computed-property defaults are gone, so a ranking can now be built over
@@ -219,9 +288,9 @@ first leverage report over an input 39% of which was noise.
   vocabulary nobody reads*, not a fix. This census says the bucket is worth
   reading; it does not say a report is the way to read it.
 - **Whether the freed laws are refutable.** Item 32's own caveat, and item 22's
-  transferable practice: 152 rows moved is only a win if their laws can fail.
+  transferable practice: 135 rows moved is only a win if their laws can fail.
   Score any candidate against the laws that HELD.
-- **Precision of the witnesses.** 132 rows carry a witness; some of those
+- **Precision of the witnesses.** 164 rows carry a witness; some of those
   witnesses are deliberate over-refutations (`Date(timeIntervalSince1970:)` is
   deterministic and is refuted anyway). This census counts whether a refutation
   *names* something, never whether the naming is right.
@@ -253,8 +322,17 @@ finding rather than its integer, because the corpus is this repo and grows every
 commit. The integers above belong to tree `d6285dff` and should be re-taken, not
 extrapolated.
 
-The one figure that moved after the run is the corpus size: fixing finding 3 added
+Two things moved after the run, and they are different in kind.
+
+**The corpus size, harmlessly.** Fixing finding 3 added
 `SoundPurity.verdict(forGetter:)`, so the function census reads 2,740 / 2,417
-`.pure` on the fixed tree rather than 2,739 / 2,416. The 284 `.refuted` and its
-132 / 152 split are unchanged — the new function is pure, and the fix touched no
-refuter.
+`.pure` rather than 2,739 / 2,416. The 284 `.refuted` and its 132 / 152 split
+were unchanged — the new function is pure, and the fix touched no refuter.
+
+**The split itself, materially.** Item 41 added a refuter (SEI `c66fceb`), and
+the census reads **2,404 `.pure` / 37 `.pureButPartial` / 299 `.refuted`**, split
+164 witness / 135 ignorance. That is the reversal recorded above. **The lesson is
+about this document, not about the fix:** a census over a corpus is only valid
+against the *oracle* it was taken with, and the oracle is a pinned dependency
+that can move without any of this repo's own code changing. The provenance table
+names the SEI pin for exactly this reason, and it earned its place within a day.

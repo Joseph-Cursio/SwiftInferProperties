@@ -34,6 +34,18 @@ extension PurityRefutationCensusMeasuredTests {
         /// A force-unwrap, `try!`, `as!`, or a trap call. **Witness.**
         case nonTotal
 
+        /// A marker or a trap in a **default argument** — code the function runs
+        /// on exactly the calls that omit it. **Witness**: it names the
+        /// construct, it is just not inside the braces.
+        ///
+        /// Added 2026-08-17 when `PurityInferrer` learned to scan default values
+        /// (open item 41). The census that found the hole is
+        /// `PurityAllowlistCensusMeasuredTests`; this cause is what keeps the
+        /// **attribution** honest afterwards, because without it the 15 rows the
+        /// fix moved arrive here refuted-but-unattributed and read as ignorance —
+        /// which is the opposite of what they are.
+        case markerInDefault
+
         /// `throws`, and the body `try`s into a callee this leaf cannot see.
         /// **Ignorance, actionable** — there is a callee to name.
         case propagatedTry
@@ -41,7 +53,7 @@ extension PurityRefutationCensusMeasuredTests {
         /// Does this cause point at something in the source?
         var isWitness: Bool {
             switch self {
-            case .reducerEffect, .asyncSignature, .marker, .nonTotal: return true
+            case .reducerEffect, .asyncSignature, .marker, .nonTotal, .markerInDefault: return true
             case .noBody, .propagatedTry: return false
             }
         }
@@ -86,6 +98,7 @@ extension PurityRefutationCensusMeasuredTests {
             }
             if hasMarker(in: body) { causes.insert(.marker) }
             if !isTotal(body) { causes.insert(.nonTotal) }
+            if hasRefutingDefault(function.signature) { causes.insert(.markerInDefault) }
             if function.signature.effectSpecifiers?.throwsClause != nil, sawTry(in: body) {
                 causes.insert(.propagatedTry)
             }
@@ -100,9 +113,24 @@ extension PurityRefutationCensusMeasuredTests {
             guard ReducerPurityAnalyzer.analyze(function) == .pure else { return .refuted }
             guard let body = function.body else { return .refuted }
             guard function.signature.effectSpecifiers?.asyncSpecifier == nil else { return .refuted }
-            guard !hasMarker(in: body), isTotal(body) else { return .refuted }
+            guard !hasMarker(in: body), isTotal(body),
+                  !hasRefutingDefault(function.signature) else { return .refuted }
             guard function.signature.effectSpecifiers?.throwsClause != nil else { return .pure }
             return sawTry(in: body) ? .refuted : .pureButPartial
+        }
+
+        /// `PurityInferrer.hasRefutingDefaultArgument`. Default **values** only —
+        /// a marker in a parameter *type* is not an impurity, and scanning the
+        /// whole signature would refute `func f(_ d: Date)`, which is the shape
+        /// dependency injection produces.
+        private func hasRefutingDefault(_ signature: FunctionSignatureSyntax) -> Bool {
+            signature.parameterClause.parameters.contains { parameter in
+                guard let value = parameter.defaultValue?.value else { return false }
+                let checker = CensusTotalityChecker(viewMode: .sourceAccurate)
+                checker.walk(value)
+                return value.tokens(viewMode: .sourceAccurate).contains { markers.contains($0.text) }
+                    || !checker.isTotal
+            }
         }
 
         private func hasMarker(in body: CodeBlockSyntax) -> Bool {
