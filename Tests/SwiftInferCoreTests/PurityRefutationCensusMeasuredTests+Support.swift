@@ -65,9 +65,18 @@ extension PurityRefutationCensusMeasuredTests {
     /// there. Guarded by `verdictAgreesWithSoundPurity` over the whole corpus.
     struct Attributor {
         /// `PurityInferrer.sideEffectMarkers`.
+        ///
+        /// **`FileHandle` / `Process` / `Pipe` joined at SEI `3ea25f2`**, which
+        /// closed the non-throwing half of the I/O hole: `throwsOnlyItsOwnErrors`
+        /// only ever covered *throwing* functions, and
+        /// `FileHandle.standardError.write(_:)` does not throw. `String` and
+        /// `Data` are deliberately still absent — matched by bare identifier they
+        /// would refute nearly everything, and `String(contentsOf:)` /
+        /// `Data(contentsOf:)` throw, so the `try` gate already reaches them.
         static let sideEffectMarkers: Set<String> = [
             "print", "NSLog", "FileManager", "URLSession", "UserDefaults",
-            "NotificationCenter", "DispatchQueue"
+            "NotificationCenter", "DispatchQueue",
+            "FileHandle", "Process", "Pipe"
         ]
 
         /// `PurityInferrer.nondeterministicMarkers`.
@@ -123,18 +132,43 @@ extension PurityRefutationCensusMeasuredTests {
         /// a marker in a parameter *type* is not an impurity, and scanning the
         /// whole signature would refute `func f(_ d: Date)`, which is the shape
         /// dependency injection produces.
+        /// **Routes through the same `hasMarker` as the body**, because SEI's does:
+        /// `hasRefutingDefaultArgument` calls `hasRefutingMarker(in:)`, so the
+        /// classifier half of the union reaches default values too. Scanning the
+        /// value only — a marker in a parameter *type* is not an impurity, and
+        /// scanning the whole signature would refute `func f(_ d: Date)`, the
+        /// shape dependency injection produces.
         private func hasRefutingDefault(_ signature: FunctionSignatureSyntax) -> Bool {
             signature.parameterClause.parameters.contains { parameter in
                 guard let value = parameter.defaultValue?.value else { return false }
                 let checker = CensusTotalityChecker(viewMode: .sourceAccurate)
                 checker.walk(value)
-                return value.tokens(viewMode: .sourceAccurate).contains { markers.contains($0.text) }
-                    || !checker.isTotal
+                return hasMarker(in: value) || !checker.isTotal
             }
         }
 
-        private func hasMarker(in body: CodeBlockSyntax) -> Bool {
-            body.tokens(viewMode: .sourceAccurate).contains { markers.contains($0.text) }
+        /// `PurityInferrer.hasRefutingMarker` — **two passes unioned, as of SEI
+        /// `3ea25f2`**, and the union is the point rather than an optimisation.
+        ///
+        /// The token scan is broad and shape-blind; `NondeterminismSources` is
+        /// narrow and shape-aware, knowing the monotonic clocks, the
+        /// clock-acquisition types and the ambient-environment properties that no
+        /// token names. Neither subsumes the other, and *replacing* the token set
+        /// with the classifier would relax the gate — the classifier reads
+        /// `Date(timeIntervalSince1970:)` as deterministic, where the token set
+        /// over-refutes `Date` on purpose. Either one refuting is enough.
+        ///
+        /// The classifier is **consulted, not re-derived**, unlike every other
+        /// refuter in this Attributor: `NondeterminismSources` is `public`, and a
+        /// fourth hand-rolled copy of "does this reach for ambient time" is
+        /// exactly the drift that type was extracted to end.
+        private func hasMarker(in syntax: some SyntaxProtocol) -> Bool {
+            let tokenHit = syntax.tokens(viewMode: .sourceAccurate)
+                .contains { markers.contains($0.text) }
+            if tokenHit { return true }
+            let checker = CensusNondeterminismChecker(viewMode: .sourceAccurate)
+            checker.walk(syntax)
+            return checker.sawSource
         }
 
         private func isTotal(_ body: CodeBlockSyntax) -> Bool {
@@ -152,6 +186,31 @@ extension PurityRefutationCensusMeasuredTests {
 }
 
 // MARK: - Replicated checkers
+
+/// `PurityInferrer.NondeterminismChecker`, re-derived — but note what is and is
+/// not copied here. The *walk* is replicated; the *answer* is not. Every `source`
+/// question goes to `NondeterminismSources`, the public shared classifier, so
+/// this file cannot drift from SEI on which forms count as nondeterminism.
+///
+/// Both overloads are needed and a call-only walk is not enough:
+/// `source(of: FunctionCallExprSyntax)` catches `ContinuousClock()`,
+/// `mach_absolute_time()` and `DispatchTime.now()`, while
+/// `source(of: MemberAccessExprSyntax)` catches the property forms —
+/// `SuspendingClock.now`, `Locale.current`, `TimeZone.current` — which are not
+/// calls at all.
+final class CensusNondeterminismChecker: SyntaxVisitor {
+    private(set) var sawSource = false
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        if NondeterminismSources.source(of: node) != nil { sawSource = true }
+        return .visitChildren
+    }
+
+    override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
+        if NondeterminismSources.source(of: node) != nil { sawSource = true }
+        return .visitChildren
+    }
+}
 
 /// `PurityInferrer.TotalityChecker`, re-derived. See the suite header for why a
 /// copy here is safe.
