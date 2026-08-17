@@ -270,89 +270,6 @@ struct PurityRefutationCensusMeasuredTests {
         )
     }
 
-    /// **A third population is in the bucket that neither half of the taxonomy
-    /// describes: verdicts nobody computed.** `makeSummary(fromComputedProperty:)`
-    /// passes no `purityVerdict`, so all 180 read-only computed properties under
-    /// `Sources/` take `FunctionSummary.init`'s `.refuted` default — while being
-    /// handed `isInferredPure: true` unconditionally, which the field's own doc
-    /// says is impossible (*"`isInferredPure` is `purityVerdict == .pure`"*).
-    ///
-    /// So the bucket a consumer sees is not 284 but 464, and 39% of it is a
-    /// question that was never asked. Any ranking built over `purityVerdict`
-    /// without excluding these is ranking a default.
-    ///
-    /// **The unchecked `true` has cost nothing measured here** — see the
-    /// measurements doc: `PurityInferrer.isPure(_ accessor:)` refutes 0 of the
-    /// 180, so no false `pure` advisory has been emitted on this corpus. It is a
-    /// latent unsoundness with a zero base rate, not a live wrong answer, and it
-    /// is reported that way deliberately.
-    @Test("computed properties occupy the refuted bucket without a verdict")
-    func computedPropertiesTakeTheDefaultVerdict() throws {
-        let summaries = try FunctionScanner.scan(directory: Self.packageSourcesRoot)
-        let computed = summaries.filter(\.isComputedProperty)
-        let withComputedVerdict = computed.filter { $0.purityVerdict != .refuted }.count
-        let notFlaggedPure = computed.filter { !$0.isInferredPure }.count
-        #expect(!computed.isEmpty)
-        #expect(
-            withComputedVerdict == 0,
-            "\(withComputedVerdict) computed properties now carry a verdict — update the census doc"
-        )
-        #expect(
-            notFlaggedPure == 0,
-            "the unconditional `isInferredPure: true` has changed — update the census doc"
-        )
-    }
-
-    /// **The cost of the unchecked claim above, measured rather than assumed.**
-    /// `PurityInferrer.isPure(_ accessor:)` is the oracle a computed property's
-    /// getter should be put through, and it exists — it is simply not called. Run
-    /// it over the same 180 and it refutes **none** of them.
-    ///
-    /// So the defect has emitted no false `/// @lint.effect pure` advisory on
-    /// this corpus. Reporting it as "the advisory is unsound" without this number
-    /// would be manufacturing a defect that is not there — the second of the two
-    /// ways this repo has recorded doing that. What is true is narrower and still
-    /// worth fixing: the claim is unchecked, and its base rate here is zero.
-    ///
-    /// The day this stops being zero, the advisory is emitting a wrong `pure` and
-    /// this test says so.
-    @Test("the unchecked purity claim on computed properties costs nothing measured here")
-    func computedPropertyAdviceIsAccidentallyCorrect() throws {
-        let summaries = try FunctionScanner.scan(directory: Self.packageSourcesRoot)
-        // Keyed by (file, name), not by name alone — a bare-name key silently
-        // collapses same-named properties in different files, which would shrink
-        // the denominator without saying so.
-        let computedKeys = Set(summaries.filter(\.isComputedProperty).map {
-            "\(URL(fileURLWithPath: $0.location.file).lastPathComponent)#\($0.name)"
-        })
-        let inferrer = PurityInferrer()
-        var matched: Set<String> = []
-        var refutedByOracle: [String] = []
-        for file in SwiftSourceFiles.sorted(in: Self.packageSourcesRoot) {
-            guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
-            let collector = CensusFunctionCollector(viewMode: .sourceAccurate)
-            collector.walk(Parser.parse(source: source))
-            for (name, accessor) in collector.accessorsByName {
-                let key = "\(file.lastPathComponent)#\(name)"
-                guard computedKeys.contains(key) else { continue }
-                matched.insert(key)
-                if !inferrer.isPure(accessor) { refutedByOracle.append(key) }
-            }
-        }
-        #expect(
-            matched == computedKeys,
-            "matched \(matched.count) accessors for \(computedKeys.count) computed-property summaries"
-        )
-        #expect(
-            refutedByOracle.isEmpty,
-            """
-            The advisory is now emitting `pure` for a getter its own oracle refutes: \
-            \(refutedByOracle.prefix(10).joined(separator: ", ")). This is no longer a \
-            latent defect — fix makeSummary(fromComputedProperty:).
-            """
-        )
-    }
-
     // MARK: - The census
 
     /// Prints the whole census. Not an assertion — the assertions are above; this
@@ -379,11 +296,18 @@ struct PurityRefutationCensusMeasuredTests {
         for (set, rows) in bySet.sorted(by: { $0.value.count > $1.value.count }) {
             lines.append("  \(set): \(rows.count)")
         }
+        // The computed-property half, which reaches the same bucket by a
+        // different route. Before 2026-08-17 every one of these was `.refuted`
+        // by an initialiser default while claiming `isInferredPure`; both halves
+        // are printed so the bucket a CONSUMER sees can be read off directly,
+        // rather than inferred from the function census above.
         let summaries = try FunctionScanner.scan(directory: Self.packageSourcesRoot)
         let computed = summaries.filter(\.isComputedProperty)
+        let computedRefuted = computed.filter { $0.purityVerdict == .refuted }.count
         lines.append("summaries scanned: \(summaries.count)")
-        lines.append("  computed properties (verdict never computed, defaults .refuted): \(computed.count)")
-        lines.append("  of those, isInferredPure == true: \(computed.filter(\.isInferredPure).count)")
+        lines.append("  computed properties: \(computed.count)")
+        lines.append("    .pure: \(computed.count - computedRefuted) · .refuted: \(computedRefuted)")
+        lines.append("bucket a consumer reads (.refuted over all summaries): \(Self.split.refuted + computedRefuted)")
         print(lines.joined(separator: "\n"))
     }
 }

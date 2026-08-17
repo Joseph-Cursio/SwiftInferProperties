@@ -206,16 +206,21 @@ public struct FunctionSummary: Sendable, Equatable {
     /// answered `false` for all 294 non-pure functions alike, so nothing
     /// downstream could tell "reads the clock" from "throws its own error".
     ///
-    /// **Two warnings before you count `.refuted` rows.** First, `.refuted` is
-    /// still three cases wearing one: re-measured 2026-08-17, **54% of it names
-    /// nothing in the source at all** and is the analyzer reporting its own
-    /// blindness (`docs/measurements/purity-refuted-bucket-census.md`). Second,
-    /// and worse for a count — *"`.refuted` for a summary nobody computed one
-    /// for"* above is not a rare edge: `makeSummary(fromComputedProperty:)`
-    /// passes no verdict, so **every** read-only computed property lands here by
-    /// default while carrying `isInferredPure == true`, which is the exact
-    /// combination this field's first paragraph says cannot happen. 180 of them
-    /// under `Sources/`. Filter on `isComputedProperty` before reading this.
+    /// **A warning before you count `.refuted` rows.** It is still three cases
+    /// wearing one: re-measured 2026-08-17, **54% of it names nothing in the
+    /// source at all** and is the analyzer reporting its own blindness rather
+    /// than evidence (`docs/measurements/purity-refuted-bucket-census.md`). A
+    /// count of `.refuted` is not a count of findings.
+    ///
+    /// *"`.refuted` for a summary nobody computed one for"* above **used to be
+    /// the larger half of that bucket in practice** and is now genuinely the
+    /// edge case it reads as. Until 2026-08-17
+    /// `makeSummary(fromComputedProperty:)` passed no verdict, so all 180
+    /// read-only computed properties under `Sources/` landed here by default
+    /// while carrying `isInferredPure == true` — the exact combination this
+    /// field's first paragraph says cannot happen — and the bucket a consumer
+    /// read was 464 rather than 284. Both routes now compute a verdict
+    /// (`SoundPurity.verdict(forGetter:)`), so no filtering is required.
     public let purityVerdict: PurityVerdict
 
     /// Fingerprint of this function's BODY, for validating verify evidence against the code

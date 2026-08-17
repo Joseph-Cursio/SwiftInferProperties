@@ -142,6 +142,14 @@ extension FunctionScannerVisitor {
         let isStatic = modifiers.contains("static") || modifiers.contains("class")
         let position = node.bindingSpecifier.positionAfterSkippingLeadingTrivia
         let sourceLocation = converter.location(for: position)
+        // Same posture as the function path above: the verdict is computed here,
+        // the one place the live accessor syntax exists, and `isInferredPure` is
+        // DERIVED from it rather than asserted alongside it. Until 2026-08-17
+        // this passed `isInferredPure: true` with no oracle consulted and no
+        // verdict at all — so every computed property claimed purity while
+        // taking the `.refuted` default, and the `@lint.effect pure` advisory
+        // (which filters on exactly this Bool) advised all of them unchecked.
+        let purityVerdict = SoundPurity.verdict(forGetter: accessorBlock)
         return FunctionSummary(
             name: pattern.identifier.text,
             parameters: [],
@@ -153,12 +161,13 @@ extension FunctionScannerVisitor {
             location: SourceLocation(file: file, line: sourceLocation.line, column: sourceLocation.column),
             containingTypeName: containingTypeName,
             bodySignals: .empty,
-            isInferredPure: true,
+            isInferredPure: purityVerdict == .pure,
             isComputedProperty: true,
             docComment: DocCommentExtractor.docComment(from: node.leadingTrivia),
             // The accessor block is this subject's body — a computed property reached by a
             // law is verified by executing its getter, so it must be fingerprinted like any
             // other body or its evidence could outlive a rewritten getter.
+            purityVerdict: purityVerdict,
             bodyFingerprint: SubjectFingerprint.of(bodyText: accessorBlock.description)
         )
     }

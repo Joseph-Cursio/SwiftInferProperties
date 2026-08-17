@@ -131,42 +131,73 @@ actual ceiling of 152. Note the ratio is much kinder than the ~5:1 recorded
 elsewhere — but it is not 1:1, and the report is the only thing anyone would
 check.
 
-### 3. 180 entries in the bucket are a default, not a verdict
+### 3. 180 entries in the bucket were a default, not a verdict — FIXED 2026-08-17
 
-`makeSummary(fromComputedProperty:)` builds a `FunctionSummary` for every
-read-only computed property and **passes no `purityVerdict`**, so all 180 under
-`Sources/` take `FunctionSummary.init`'s `.refuted` default. They are
+`makeSummary(fromComputedProperty:)` built a `FunctionSummary` for every
+read-only computed property and **passed no `purityVerdict`**, so all 180 under
+`Sources/` took `FunctionSummary.init`'s `.refuted` default. They were
 simultaneously handed `isInferredPure: true` — unconditionally, with no oracle
 consulted — which contradicts the field's own documentation: *"`isInferredPure`
 is `purityVerdict == .pure`."*
 
-So **the bucket a consumer reads is 464, not 284, and 39% of it is a question
+So **the bucket a consumer read was 464, not 284, and 39% of it was a question
 that was never asked.** Any ranking, report or leverage figure built over
-`purityVerdict` without excluding computed properties is ranking an initialiser
-default. That is the largest single distortion this census found, and it is not
-in either half of the taxonomy — it is a third population.
+`purityVerdict` would have been ranking an initialiser default. That was the
+largest single distortion this census found, and it is not in either half of the
+taxonomy — it is a third population.
 
-**Why it survived: the invariant has a guard, and the guard cannot reach the
-violating path.** `PurityVerdictAdoptionTests.boolIsTheCollapse` asserts exactly
-`isInferredPure == (purityVerdict == .pure)` — over six cases, **all of them
-`func` declarations**. The computed-property route is the only route that breaks
-the invariant and it is the one route the parameterisation does not enter. Six
-green cases and a live contradiction, which is *verify a suppression by removing
+**The fix is `SoundPurity.verdict(forGetter:)`**, and `isInferredPure` is now
+*derived* from it rather than asserted beside it. The meet is taken exactly as
+the function path takes it — `ReducerPurityAnalyzer` for the TCA/concurrency
+surface and static writes, `PurityInferrer.isPure(_ accessor:)` for markers and
+totality — because a getter can return a `Task` or write `Self.cache` as readily
+as a function can, and claiming `.pure` on one refuter is the lattice-bottom
+mistake whatever shape it is claimed about.
+
+| | before | after |
+|---|---|---|
+| advisory rows (`summaries.filter(\.isInferredPure)`) | 2,597 | **2,597** |
+| computed properties among them | 180 | **180** |
+| `.refuted` bucket a consumer reads | 464 | **284** |
+
+**0 rows moved, and that is the point.** Both refuters return zero over all 180,
+so the unchecked `true` had been accidentally correct on this corpus the whole
+time. The A/B was taken with the tree otherwise byte-identical — only the two
+assignment lines differed — so the 2,597 is a comparison, not two separate
+measurements.
+
+**Never `.pureButPartial`, and that is a filter rather than a property.**
+`isReadOnlyGetter` rejects `async` and `throws` accessors before the oracle is
+reached, and SEI's accessor entry point is a `Bool` with no third state. If that
+filter is ever widened to admit a throwing getter, `verdict(forGetter:)` — not
+the filter — is what must learn the distinction, or a partial getter will read as
+fully pure.
+
+**Why it survived, and what was done about that.** The invariant *has* a guard —
+`PurityVerdictAdoptionTests.boolIsTheCollapse` asserts exactly
+`isInferredPure == (purityVerdict == .pure)` — over six cases, **all six of them
+`func` declarations**. The computed-property route was the only route that broke
+the invariant and the only route the parameterisation never entered. It now
+carries two more cases, one per polarity, so an oracle wired to a constant fails
+whichever constant it is wired to. `clockReadingGetterIsRefuted` pins the shape
+the defect admitted — `var now: Date { Date() }`, which would have been advised
+`/// @lint.effect pure` — and was watched failing against the pre-fix code.
+
+That witness is **synthetic on purpose**: the failing shape is one this corpus
+does not contain, and the alternative was waiting for a real one to appear.
+
+**Six green cases and a live contradiction** is *verify a suppression by removing
 it* wearing different clothes: a guard that never fires on the shape that would
-fail it reports the same green as one that holds.
+fail it reports the same green as one that holds. The general lesson is about
+parameterised guards specifically — the six cases read as thorough coverage of
+the invariant, and the count is exactly what made the gap invisible.
 
-**The unchecked `true` has cost nothing measured.**
-`PurityInferrer.isPure(_ accessor:)` is the right oracle for a getter, it exists,
-and it is simply not called; run over the same 180 it refutes **0**. So no false
-`/// @lint.effect pure` advisory has been emitted on this corpus.
-
-Reported that way on purpose. Calling the advisory *unsound* on the strength of
-the code path alone would be manufacturing a defect that is not there — the
-second of the two recorded ways of doing that. What is true is narrower and still
-worth fixing: **the claim is unchecked and its base rate here is zero.** The
-failure mode it admits is real — `var now: Date { Date() }` would be advised
-`pure` — and `computedPropertyAdviceIsAccidentallyCorrect` fails the day one
-appears.
+**On how this was reported before it was fixed.** The zero base rate came first,
+and the wording followed it. Calling the advisory *unsound* on the strength of
+the code path alone would have been manufacturing a defect that is not there —
+the second of the two recorded ways of doing that. What was true was narrower and
+still worth fixing: the claim was unchecked and its base rate here was zero.
+`noAccessorInThisRepoIsRefuted` keeps that number under measurement.
 
 ---
 
@@ -174,6 +205,11 @@ appears.
 
 **Discharged.** The measurement precondition on items 30–33. Ignorance is 54% of
 the bucket and 100% actionable, so a blocking-callee index has a population.
+
+**Also discharged, and it was a precondition nobody had filed:** the 180
+computed-property defaults are gone, so a ranking can now be built over
+`purityVerdict` directly. Doing it in the other order would have computed the
+first leverage report over an input 39% of which was noise.
 
 **Not discharged, and not touched by this census:**
 
@@ -216,3 +252,9 @@ The suite prints the full census; the assertions pin the *direction* of each
 finding rather than its integer, because the corpus is this repo and grows every
 commit. The integers above belong to tree `d6285dff` and should be re-taken, not
 extrapolated.
+
+The one figure that moved after the run is the corpus size: fixing finding 3 added
+`SoundPurity.verdict(forGetter:)`, so the function census reads 2,740 / 2,417
+`.pure` on the fixed tree rather than 2,739 / 2,416. The 284 `.refuted` and its
+132 / 152 split are unchanged — the new function is pure, and the fix touched no
+refuter.

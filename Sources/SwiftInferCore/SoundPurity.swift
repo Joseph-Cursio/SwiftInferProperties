@@ -52,11 +52,12 @@ public enum SoundPurity {
     /// **132 carry a witness and 152 name nothing in the source at all** — a
     /// `throws` whose `try` reaches a callee this leaf cannot resolve.
     /// `docs/measurements/purity-refuted-bucket-census.md` has the split, and
-    /// two things a caller reading this field should know before counting it:
-    /// the *"could not be inspected at all"* half of `PurityVerdict.refuted`'s
-    /// own doc is **unreachable** through `FunctionScanner` (protocol bodies are
-    /// skipped), and the 180 computed-property summaries reach `.refuted` by an
-    /// initialiser default without ever being asked.
+    /// one thing a caller reading this should know before counting it: the
+    /// *"could not be inspected at all"* half of `PurityVerdict.refuted`'s own
+    /// doc is **unreachable** through `FunctionScanner`, which skips protocol
+    /// bodies — so every refutation here has a callee to name. (The census also
+    /// found 180 computed-property summaries reaching `.refuted` by an
+    /// initialiser default; that is fixed below, in `verdict(forGetter:)`.)
     ///
     /// **Nothing consumes `.pureButPartial` yet, and that is deliberate.**
     /// Measured on this repo 2026-08-04: of 2,500 functions, 2,206 are `.pure`,
@@ -83,5 +84,45 @@ public enum SoundPurity {
     public static func verdict(for function: FunctionDeclSyntax) -> PurityVerdict {
         guard ReducerPurityAnalyzer.analyze(function) == .pure else { return .refuted }
         return PurityInferrer().verdict(for: function)
+    }
+
+    /// The same verdict for a **read-only computed property's getter**, which
+    /// the templates model as a nullary `self -> T` map.
+    ///
+    /// This exists because the scan had no oracle for that shape and answered
+    /// with a constant. `makeSummary(fromComputedProperty:)` passed
+    /// `isInferredPure: true` unconditionally and no `purityVerdict` at all, so
+    /// every computed property simultaneously claimed purity and took
+    /// `FunctionSummary.init`'s `.refuted` default — the one combination that
+    /// field's own doc says cannot occur. Measured 2026-08-17: 180 of them under
+    /// `Sources/`, which is **39% of the `.refuted` bucket a consumer reads**,
+    /// none of it a verdict. See `docs/measurements/purity-refuted-bucket-census.md`.
+    ///
+    /// **The meet is taken here for the same reason it is taken above**, not as
+    /// belt-and-braces: `PurityInferrer.isPure(_ accessor:)` answers the effect
+    /// question — markers and totality — and says so in its own doc, while
+    /// `ReducerPurityAnalyzer` owns the TCA/concurrency surface and static
+    /// writes. A getter can return a `Task` or write to `Self.cache` as readily
+    /// as a function can. Claiming `.pure` on one refuter is the lattice-bottom
+    /// mistake, whichever shape it is claimed about.
+    ///
+    /// **Never `.pureButPartial`, and the reason is a filter rather than a
+    /// property.** `isReadOnlyGetter` rejects `async` and `throws` accessors
+    /// before this is reached, so no partial getter arrives; SEI's accessor
+    /// oracle is a `Bool` and offers no third state anyway. If that filter is
+    /// ever widened to admit a throwing getter, this method — not the filter —
+    /// is what has to learn the distinction, or the partial case will silently
+    /// read as fully pure.
+    ///
+    /// **A/B when this replaced the constant: 0 advisory rows moved.** Neither
+    /// refuter fires on any of the 180 (measured separately, both at zero), so
+    /// the unchecked `true` had been accidentally correct on this corpus the
+    /// whole time. That is the measurement that keeps this a repair of an
+    /// unasked question rather than a bug fix with a victim — and it is exactly
+    /// why the shape it admits (`var now: Date { Date() }`, advised `pure`) is
+    /// pinned by a test rather than left to the next corpus to discover.
+    public static func verdict(forGetter accessor: AccessorBlockSyntax) -> PurityVerdict {
+        guard ReducerPurityAnalyzer.analyze(Syntax(accessor)) == .pure else { return .refuted }
+        return PurityInferrer().isPure(accessor) ? .pure : .refuted
     }
 }
