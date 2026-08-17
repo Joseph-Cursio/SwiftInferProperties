@@ -1,0 +1,96 @@
+# Additions for `openthreads.md` — purity as a consumed tier
+
+> **Status:** `open` · **As of:** 2026-08-17
+
+Merge-ready. Rows are numbered from 29 (28 is the highest in the table today). Terse per the
+file's own rule; the reasoning that does not fit a row is in the two *Decisions* stubs at the
+bottom, which need your dates and SHAs before they go in.
+
+**Item 29 has since been MEASURED (2026-08-17)** — it was the falsifier for everything else
+here, and it did not falsify. Rows 29, 31, 32 and the closing section carry the result; row 40
+is a finding the census turned up that nothing had filed.
+
+---
+
+## For `## Open items`
+
+| # | item | where it stands |
+|---|---|---|
+| 29 | ~~**`PurityVerdict.refuted` collapses evidence and ignorance**~~ | **MEASURED 2026-08-17, and the answer permits 30–33 rather than closing them.** `docs/measurements/purity-refuted-bucket-census.md`; the harness is `PurityRefutationCensusMeasuredTests`, taxonomy frozen at `20e134c1` **before** the run. On `Sources/` at tree `d6285dff`: 2,739 functions → 2,416 `.pure`, 39 `.pureButPartial`, **284 `.refuted`, of which 132 carry a witness and 152 name nothing at all**. Ignorance is the majority, so there is a bucket. **Three things the split shows that the undivided number could not.** (1) **`noBody` is 0, structurally** — `FunctionScannerVisitor` skips protocol bodies, so the *"could not be inspected at all"* half of the doc is unreachable through this consumer; every ignorance row has a callee to name and the half needs no triage step. (2) **A decline-reason tally over-reports the ceiling by 44%** — `propagatedTry` holds of 219 rows and *blocks* 152, the other 67 carrying a witness too. That is *rows moved, never laws gained* in a new place, and it is exactly the arithmetic item 32 warns about. (3) **180 entries are an initialiser default, not a verdict** — see the new item 40, which is the finding this measurement was not looking for. Original framing follows. Its own doc says it means *"an impurity or nondeterminism refuter fired, **or** the shape could not be inspected at all."* Those are different facts and only the first is a finding. **This is item 2's shape one level down** — `isPure` answered `false` for all 294 non-pure functions alike, and widening it to `verdict(for:)` was worth doing; `.refuted` is still a Bool wearing three cases. **The measurement comes first and is not a build**: of the **259 `.refuted`** counted over 2,500 functions on 2026-08-04, how many carry a witness and how many are ignorance? One query against the same corpus. If ignorance is a rounding error the rest of items 31–33 are unwarranted; if it is most of them, the bucket is the largest unread population in the toolchain. **Do not re-use the 259** — §10.3, same binary, same day |
+| 30 | **An unrecognised callee is silently innocent, against the stated posture** | `PurityInferrer` documents *"any doubt refutes"* and the marker sets *"err toward flagging"* — true of the tokens they recognise. There is no allowlist, so a call to something unlisted refutes nothing and the function stays `.pure`. **The error direction is opposite to the documented one**: `Date(timeIntervalSince1970:)` over-refutes *deliberately*, and that trade stands; this one under-refutes accidentally. Needs a seed set of known-pure stdlib operations, with unrecognised ⇒ the item-29 ignorance case rather than a pass. **The seed set is asserted, not proven** — separate file, counted separately, every downstream claim reads *pure given these axioms* |
+| 31 | **Nothing can name the callee that blocked a verdict** | **Unblocked 2026-08-17 by item 29's census, and it sized the population: 152 rows, all of them rankable** (`noBody` is 0, so no row is hopeless). **The ceiling is 152, not the 219 a `propagatedTry` tally would report** — 67 of those carry a witness as well and stay refuted however many callees resolve. Quote the 152. Original framing follows. **Fourth instance of *the consumer keeps asking the producer, in English*.** Item 28 established the budget asymmetry and closed the tier half: `EffectResolver` runs `applyBodyInference` **one hop** against §13's 2s `discover` ceiling, and a linter running ahead has no such constraint, so it *"arrives already resolved — for free."* Same asymmetry, unexploited fact: at the point SEI gives up, it knows **which** callee it gave up on, and that never leaves the inferrer. Inverse-index it — key by blocking callee, list the functions whose verdict rests on it. **Wiring, not analysis**: `BodyInference.anchor` already distinguishes `.declared` from `.heuristic` (shipped `a5795819`, consumed by `carriesEnoughEvidenceToDemote`). Depends on 29 |
+| 32 | **Leverage over the bucket is not additive, and the obvious implementation is wrong** | **The census measured the first half of this and it is worse than "not additive" — it is not even *attributable*.** 67 of the 219 `propagatedTry` rows carry an independent witness, so they are unmovable by any annotation whatsoever; a naive report promises 219 against a ceiling of 152 before greedy-with-recompute is even reached. **Any ranking must also exclude the 180 computed properties (item 40)**, which are `.refuted` by an initialiser default and would otherwise be ranked as blocked. Original framing follows. Two blockers can jointly block one function, so a single-pass sort recommends five annotations that together unblock far less than the report promised — plausible-looking, and the report is the only thing anyone would check. Needs greedy-with-recompute. **Score it against the laws that HELD, not the class it targets** — item 22's transferable practice. An annotation that decides 40 functions is only a win if their laws are refutable; 40 new unrefutable greens is the [Daikon trap](glossary.md#daikon-trap) reached through a new door. Depends on 31 |
+| 33 | **Purity does not propagate through a higher-order call** | Closure *literals* are handled (`isPure(closure:)`, `refuteIfCaptured`, locally-bound-name tracking). What is missing is the conditional form — `map` is not pure or impure, it is pure-if-its-argument-is, which is `rethrows` semantics for purity. Without it every chain terminates at the first `map`/`reduce`/`filter`, which is where the laws are; leaf arithmetic is not where the value is. **Note the adjacency to item 22**: that closed *measured-not-buildable* with the reopen condition *"a dataflow proposal, scored against the same 47 rows"* — parameterised purity is a dataflow analysis, so building this may be the reopen, and the 47 rows are the scorer that already exists |
+| 34 | **The 35 `.pureButPartial` are still unconsumed, and now have two possible consumers instead of one** | Filed 2026-08-04 as waiting on *"a consumer that can narrow a law's domain to the non-throwing inputs."* Still true. The second, unnamed one: a `.pureButPartial` function is safe to **shrink and replay**, which is the property PBT actually needs, and is weaker than what the advisory refuses to say. Worth deciding whether the shrink-safety consumer is the same build or a different one |
+| 35 | **The `pure` advisory is outbound-only** | `discover --effect-annotations` recommends `/// @lint.effect pure` lines (`EffectAnnotationAdvice` / `EffectAnnotationRenderer`) and nothing reads them back — *one tool talking to itself in English*, noted in *Decisions → Idempotency vocabulary* but never filed. Item 20's shape a third time, with both ends inside one repo. The read-back is what makes item 31's ranking actionable: without it a leverage report names annotations that, once written, still change nothing |
+| 36 | **SwiftProjectLint has no indeterminate verdict, so the bucket flattens at the reporting boundary** | Findings are Error / Warning / Info. An undecided purity verdict is neither a violation nor a style note, and reporting it as a warning is the specific way this information normally gets discarded. `CrossFileAnalysisEngine` and the pre-scan → per-file → cross-file pipeline are already the right shape to carry it; the gap is the severity vocabulary, not the analysis |
+| 37 | **The runtime tier can refute purity and cannot confirm it — unlike the idempotency one** | `#assertIdempotent` works because idempotence has a witness: invoke twice, compare via `Equatable`. Purity has none — a second invocation proves determinism on that input, and the impurities that matter (logging, cache fill, metric emission, a global write) are invisible to a return-value comparison. Generalising `IdempotentEffectRecorder` gives a *single-invocation* "were there any effects" check, which is the cheaper question. **Consequence for reporting**: these numbers are not comparable to SwiftIdempotency's and must not share a column — same rule as the tier cut in *The whole-corpus number* |
+| 38 | **SwiftSyntax cannot resolve the call graph, and that caps 31–33**  ⚠️ decision, not a task | No IndexStore in any of the five packages (`swift-syntax` exact `602.0.0` throughout). Overloads, generics and protocol witnesses are unresolvable, so cross-module purity is out of reach and every leverage figure carries that as unmeasured attrition. Options are IndexStoreDB (real edges, and the build already happens) or SIL, where the optimiser's own effect analysis already lives. **Do not start here** — 29–33 are worth doing at current precision, and a build dependency in a parse-only toolchain is a larger change than anything above it |
+| 39 | **`PBT_EFFECT_VOCABULARY_SURVEY.md` argues against the code, and `make docs-drift` did not say so** | The survey lists *"Add `.pure` to SEI's `Effect`"* as Idea-#4 next-step work; `Effect.swift` ships `.pure` at rank 0 with the full lattice rationale. It also records SwiftInferProperties as **not** importing SEI; `Package.swift:133` imports it. **The interesting half is not the staleness** — it is that this is the *doc that characterises a set by a property its newest member lacks* pattern, and the standing detector did not fire. Either the survey carries no provenance trailer, or it does and the drift check does not cover cross-repo claims. Worth knowing which before trusting the detector elsewhere |
+
+| 40 | ~~**A computed property's purity verdict is an initialiser default, and its `isInferredPure` is an unchecked `true`**~~ ⚠️ found by item 29's census, not filed ahead of it | **CLOSED 2026-08-17, same day it was filed.** `SoundPurity.verdict(forGetter:)` takes the same meet the function path takes — `ReducerPurityAnalyzer` for the TCA surface and static writes, `PurityInferrer.isPure(_ accessor:)` for markers and totality — and `isInferredPure` is now **derived** from the verdict rather than asserted beside it. **A/B with the tree otherwise byte-identical: 2,597 → 2,597 advisory rows, 180 → 180 of them computed properties.** Zero rows moved, which is the point: the constant had been accidentally correct here all along, and the `.refuted` bucket a consumer reads drops 464 → 284 with no output change at all. **The guard that could not reach the failing path now can** — `boolIsTheCollapse` gains a case per polarity, and `clockReadingGetterIsRefuted` pins `var now: Date { Date() }`, watched failing against the pre-fix code. The witness is synthetic on purpose: the failing shape is one this corpus does not contain, and waiting for a real one was the alternative. **One thing deliberately not built**: `verdict(forGetter:)` can never answer `.pureButPartial`, because `isReadOnlyGetter` filters throwing accessors out upstream and SEI's accessor oracle is a `Bool`. That is a *filter*, not a property — if the filter widens, this method is what has to learn the distinction. Original framing follows. `makeSummary(fromComputedProperty:)` passes **no** `purityVerdict`, so all **180** read-only computed properties under `Sources/` take `FunctionSummary.init`'s `.refuted` default — while being handed `isInferredPure: true` unconditionally. The field's own doc says *"`isInferredPure` is `purityVerdict == .pure`"*, so those two facts cannot both be right, and today neither is computed. **It survived because the invariant's guard cannot reach the violating path** — `PurityVerdictAdoptionTests.boolIsTheCollapse` asserts exactly that equality over six cases, **all six of them `func` declarations**, and the computed-property route is the only one that breaks it. *Verify a suppression by removing it*, in new clothes: six green cases and a live contradiction. **Consequence for everything above: the bucket a consumer reads is 464, not 284, and 39% of it is a question nobody asked.** A ranking built over `purityVerdict` without excluding computed properties ranks a default. **The unchecked `true` has cost NOTHING measured** — `PurityInferrer.isPure(_ accessor:)` is the right oracle, exists, is not called, and refutes **0 of the 180**, so no false `/// @lint.effect pure` has been emitted here. Filing it as *"the advisory is unsound"* would be [manufacturing a defect that is not there](open-threads.md); what is true is narrower — the claim is unchecked and its base rate is zero, and `computedPropertyAdviceIsAccidentallyCorrect` fails the day that changes. **The fix is small and its A/B is predictable**: call the accessor oracle, derive `isInferredPure` from the verdict rather than asserting it, and expect **0 advisory rows to move** while 180 leave the refuted bucket. Do it before item 31, not after — otherwise the first leverage report is computed over a population 39% of which is noise |
+
+---
+
+## Stubs for `## Decisions taken in conversation`
+
+These need your dates and a tree SHA. Written as claims, not as prose, so they can be
+falsified.
+
+### The bucket is a channel, not a report (undated — needs a session date)
+
+Items 31/32 look like reporting work and are not. The standing observation *the consumer keeps
+asking the producer for things, in English* has three recorded instances (`role` on a seed,
+`KitEvidence`, the rescue warnings) and this is the fourth, with the same signature: the
+producer already computed the fact, the consumer structurally cannot recompute it, and the
+current carrier is prose.
+
+What is different here is that item 28 **already priced it**. The `effect` object on
+`idempotency` seeds closed because a linter with no §13 ceiling can pay for a multi-hop join
+that `EffectResolver`'s one-hop pass cannot. The blocking-callee identity is the same class of
+fact reaching the same boundary, and it needs no new channel — the seed `effect` object is
+already there.
+
+**The trap to avoid**: shipping the bucket as a rendered report first. Item 20's lesson is that
+a vocabulary nobody reads is indistinguishable from one that does not exist, and item 28 is the
+same with roles reversed. If the ranking has no consumer, it is a third instance rather than a
+fix.
+
+### Purity's tiers are asymmetric in what they can be proven by (undated)
+
+Three tiers, three different strengths of evidence, and putting their numbers in one column
+would repeat exactly the error the tier cut in *The whole-corpus number* corrected:
+
+| tier | can confirm | can refute | denominator |
+|---|---|---|---|
+| axioms (item 30) | — | — | asserted; not a measurement |
+| static inference | yes, given the axioms | yes | functions analysed |
+| runtime recorder (item 37) | **no** | yes | invocations observed |
+
+The static tier's confirmations are conditional on a hand-curated list. The runtime tier cannot
+confirm at all. So a headline "N% pure" averages three populations asked three different
+questions — the 139-of-281 mistake, in a new place. Report the tiers separately or not at all.
+
+### What would falsify the whole line of work — TAKEN 2026-08-17, and it did not falsify
+
+Item 29's measurement. The condition was: if most of the `.refuted` carry a real witness, there
+is no bucket, 31–33 have nothing to rank, and the honest close is *measured-not-worth-building*
+with the number attached — the same posture as item 22.
+
+**It came back the other way.** 152 of 284 refutations name nothing in the source, so ignorance
+is the majority and the bucket exists. `docs/measurements/purity-refuted-bucket-census.md`.
+
+Three things to carry forward, because the measurement changed the shape of 30–33 rather than
+merely licensing them:
+
+- **The rankable population is 152, and the number a naive report would print is 219.** The gap
+  is 67 rows that carry an independent witness. Item 32's warning was about *joint* blockers; the
+  census found a blunter version underneath it, which is rows that no annotation can move at all.
+- **`noBody` is 0, so the ignorance half needs no triage.** Every row has a callee to name.
+- **A new precondition sits in front of item 31**: the 180 computed properties in item 40 are
+  `.refuted` by an initialiser default and must be excluded before anything is ranked. Rank
+  first and 39% of the input is a question nobody asked.
+
+**What the census deliberately does NOT discharge** is item 35 — the `pure` advisory is
+outbound-only, so a leverage report may still have no consumer, and the trap named two
+paragraphs up (shipping the bucket as a rendered report first) is untouched by this number.

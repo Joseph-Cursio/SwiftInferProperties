@@ -37,7 +37,20 @@ struct PurityVerdictAdoptionTests {
             """),
             ("reads the clock", "func f() -> Date { Date() }"),
             ("async", "func f(_ x: Int) async -> Int { x }"),
-            ("partial — force unwrap", "func f(_ x: Int?) -> Int { x! }")
+            ("partial — force unwrap", "func f(_ x: Int?) -> Int { x! }"),
+            // The computed-property route. It is here because for a month this
+            // parameterisation had six cases and every one of them was a `func`,
+            // while the ONE shape that broke the invariant was the one it never
+            // entered: `makeSummary(fromComputedProperty:)` asserted
+            // `isInferredPure: true` and passed no verdict, so all 180 computed
+            // properties under `Sources/` read as pure AND refuted at once. A
+            // guard that cannot reach the failing shape is green for the same
+            // reason a guard that holds is — which is the standing "verify a
+            // suppression by removing it" lesson, arriving through a different
+            // door. Both polarities, so an oracle wired to a constant fails one
+            // of them whichever constant it is wired to.
+            ("computed property — pure", "struct S { var doubled: Int { 2 * 2 } }"),
+            ("computed property — reads the clock", "struct S { var now: Date { Date() } }")
         ]
     )
     func boolIsTheCollapse(label: String, source: String) throws {
@@ -81,6 +94,41 @@ struct PurityVerdictAdoptionTests {
         """)
         #expect(value.purityVerdict == .refuted)
         #expect(value.isInferredPure == false)
+    }
+
+    /// **The witness for the shape the unchecked claim admitted.** An agreement
+    /// test cannot catch this on its own: before the fix, `isInferredPure` was
+    /// `true` and `purityVerdict` was `.refuted` for this getter, so the two
+    /// disagreed — but they disagreed for *every* computed property, pure ones
+    /// included, so nothing distinguished a clock reader from a doubling.
+    ///
+    /// `var now: Date { Date() }` is the case `PurityInferrer.isPure(_
+    /// accessor:)` documents as the reason a caller checking only *names* is not
+    /// enough — it reads no mutable state at all, and only the marker scan
+    /// refutes it. It would have been advised `/// @lint.effect pure`.
+    ///
+    /// Measured before the fix: 0 of the 180 computed properties in this repo
+    /// were refuted by either oracle, so the constant had been accidentally
+    /// correct and no wrong advisory ever shipped. That is why this test names a
+    /// synthetic getter rather than a real one — the failing case is a shape the
+    /// corpus does not currently contain, and waiting for it to appear was the
+    /// alternative.
+    @Test("a getter that reads the clock is not advised pure")
+    func clockReadingGetterIsRefuted() throws {
+        let value = try summary("struct S { var now: Date { Date() } }")
+        #expect(value.isComputedProperty)
+        #expect(value.purityVerdict == .refuted)
+        #expect(value.isInferredPure == false)
+    }
+
+    /// The other polarity, so the fix is not just "refuse everything": an
+    /// ordinary derived value keeps the verdict — and the advisory — it should.
+    @Test("an ordinary derived value is still pure")
+    func plainGetterStaysPure() throws {
+        let value = try summary("struct S { var doubled: Int { count * 2 } }")
+        #expect(value.isComputedProperty)
+        #expect(value.purityVerdict == .pure)
+        #expect(value.isInferredPure)
     }
 
     /// A summary nobody computed a verdict for must not read as pure.

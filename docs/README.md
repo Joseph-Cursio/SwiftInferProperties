@@ -14,7 +14,7 @@ to catch.
 | Directory | What lives here | The question it answers |
 |---|---|---|
 | `docs/` (root) | The two PRDs, and nothing else | *What is this product meant to be?* |
-| `reference/` | Command and feature docs | *How does this work today?* |
+| `reference/` | Command and feature docs, plus `index-annotations.md` — the long form of CLAUDE.md's index | *How does this work today?* |
 | `design/` | Design records for decisions that shipped, and spikes that deliberately did **not** ship | *Why is it built this way?* |
 | `measurements/` | Road tests, backtests, censuses, findings — anything with a score in it | *What happened when we pointed it at something?* |
 | `plans/` | Scopes, build plans, live trackers | *What are we doing next?* |
@@ -59,6 +59,14 @@ missing status fails the fast suite rather than silently becoming a ninth catego
 nobody maintains, and the last sweep found eleven unreachable files — two of which
 held standing constraints on live code. Sweep `docs/**/*.md`, not `docs/*.md`: the
 non-descending glob is exactly how seven `design-internal/` docs stayed invisible.
+
+**A row is two halves, and both are yours.** CLAUDE.md carries the hook — one line, the
+verdict and the target — and `docs/reference/index-annotations.md` carries the
+annotation: what was measured, against what bar, what was rejected, what would reopen
+it. They were one file until 2026-08-17, when the index reached 158 KB of context loaded
+at the start of every session. Splitting them buys nothing if the hook drifts from the
+annotation, so change both in the same commit, and keep the Question column verbatim in
+each — it is what joins them.
 
 **Citing a doc from code is a real dependency.** 117 Swift files name a `docs/…`
 path, and `DocCitationTests` asserts every one resolves — **case-sensitively**,

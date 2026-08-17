@@ -43,7 +43,12 @@ BATCH1 := TCAVerifyCorpusMeasuredTests|TCACarrierMeasuredTests|MobiusVerifyCorpu
 # TrapAttributionCensusMeasuredTests is batched to satisfy the coverage guard but
 # is opt-in (SWIFT_INFER_RUN_TRAP_CENSUS) — it re-surveys corpora this batch and
 # BATCH4/BATCH7 already build, so it costs nothing here unless asked for.
-BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests|TrapAttributionCensusMeasuredTests
+# PurityRefutationCensusMeasuredTests spawns nothing — it is here because it
+# parses all of Sources/ four times over and would add ~20s to the ~35s fast
+# path, which is the developer loop. Named `…MeasuredTests` so SUBPROCESS_RE
+# skips it there, and batched here so the coverage guard is satisfied and it
+# actually runs.
+BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests|TrapAttributionCensusMeasuredTests|PurityRefutationCensusMeasuredTests
 BATCH3 := VerifyPipeline
 BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests|IdempotenceSurveyCorpusMeasuredTests|VerifyInteractionSurveyMeasuredTests|PromotionDeterminismMeasuredTests|ConservationSurveyCorpusMeasuredTests|AlgebraicSurveyCorpusMeasuredTests
 # MVVM-carrier verify suites (dependency-free builds — light; one batch is fine).

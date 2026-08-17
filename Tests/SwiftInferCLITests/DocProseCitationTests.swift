@@ -181,13 +181,16 @@ struct DocProseCitationTests {
             path: "docs/Design/foo.md",
             reason: "a deliberately mis-cased path, illustrating the APFS blind spot"
         ),
+        // Both sentences lived in CLAUDE.md until 2026-08-17, when the index's
+        // long-form annotations were moved out of it wholesale. The prose is
+        // unchanged; only the file it sits in moved.
         Exemption(
-            file: "CLAUDE.md",
+            file: "docs/reference/index-annotations.md",
             path: "docs/calibration-cycle-N-findings.md",
             reason: "quotes the pointer this line used to carry, to say it was wrong"
         ),
         Exemption(
-            file: "CLAUDE.md",
+            file: "docs/reference/index-annotations.md",
             path: "docs/glossary.md",
             reason: "quotes the stale path a row carried until 2026-08-06"
         )
