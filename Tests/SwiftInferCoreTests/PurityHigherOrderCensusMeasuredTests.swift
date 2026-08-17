@@ -167,18 +167,25 @@ struct PurityHigherOrderCensusMeasuredTests {
         )
     }
 
-    // MARK: - The finding this census was not looking for
+    // MARK: - The finding this census was not looking for — now FIXED upstream
 
     /// Names that `throwsOnlyItsOwnErrors`' **own doc** lists as the impurities
     /// the `throws` gate used to mask — *"`Process`, `Pipe`, `FileHandle`,
-    /// `String(contentsOf:)`, `Data(contentsOf:)`, the SQLite surface"* — and
-    /// which are in **neither marker set**.
+    /// `String(contentsOf:)`, `Data(contentsOf:)`, the SQLite surface"*.
     ///
     /// That gate re-closed the hole for **throwing** functions only. A
-    /// non-throwing function that uses them is still waved through, and
+    /// non-throwing function that used them was waved through, and
     /// `FileHandle.standardError.write(_:)` does not throw — it is the most
     /// common non-throwing I/O call in a Swift CLI. This package's own
-    /// `writeDiagnostic(_:)` is exactly that shape.
+    /// `writeDiagnostic(_:)` is exactly that shape, and was judged `.pure`.
+    ///
+    /// **These three are now in `sideEffectMarkers` (SEI `3ea25f2`)**, so this set
+    /// is no longer "the names in neither marker set" — it is the *witness list*
+    /// for the fix, and `maskedIOIsRefuted` holds them refuted. The other two
+    /// names in that doc's list stay out of both mechanisms deliberately:
+    /// `String` and `Data` are matched by bare identifier and are among the most
+    /// common pure types in Swift, and `String(contentsOf:)` / `Data(contentsOf:)`
+    /// throw, so the `try` gate already reaches them.
     static let maskedIOMarkers: Set<String> = ["FileHandle", "Process", "Pipe"]
 
     /// Non-refuted functions whose body names one of them.
@@ -197,32 +204,49 @@ struct PurityHigherOrderCensusMeasuredTests {
             return hits.isEmpty ? nil : UnmaskedIORow(subject: subject, verdict: verdict, names: hits.sorted())
         }
 
-    /// **`FileHandle` / `Process` / `Pipe` reach `.pure`, and the doc that names
-    /// them says they must not.** Pinned as a standing claim that the hole is
-    /// open; it fails the day the marker set grows, which is the notification a
-    /// comment would not give.
+    /// **CLOSED at SEI `3ea25f2`, and this assertion is inverted rather than
+    /// deleted.** It used to pin the hole *open* — `!unmaskedIO.isEmpty`, with the
+    /// instruction *"if the marker set grew, delete this test with the fix"*. The
+    /// marker set grew: `50125f8` put `FileHandle` / `Process` / `Pipe` into
+    /// `sideEffectMarkers`, and the falsifier fired on the very run that bumped
+    /// the pin, which is the notification a comment would not have given.
+    ///
+    /// **Inverted instead of deleted because the two directions guard different
+    /// things.** Deleting it would leave nothing to notice the hole reopening —
+    /// and it can reopen without anyone touching this repo, since the marker set
+    /// lives in a pinned dependency. The falsifier's job was to fail when the gap
+    /// closed; this one's is to fail if it ever reopens. Same measurement, and
+    /// the probe is kept because the count alone cannot distinguish *"the oracle
+    /// refutes these"* from *"the corpus stopped exhibiting the shape"*.
     ///
     /// Kept in *this* suite rather than filed away because of how it was found:
     /// the base rate for item 33's over-claim measured zero, and the reason it
-    /// measured zero is that the instrument shares the blindness. The closure
+    /// measured zero is that the instrument shared the blindness. The closure
     /// handed to `EffectResolver.resolve(diagnostic:)` is
     /// `{ diagnostics.writeDiagnostic($0) }`, which writes to standard error and
-    /// which `isPure(_ closure:)` calls pure. **A zero measured with a blind
-    /// instrument is not a zero**, and saying so is the finding.
-    @Test("the I/O the throws gate used to mask still reads as pure without throws")
-    func maskedIOIsStillInvisible() {
-        let verdicts = Self.maskedIOMarkers.sorted().map { name -> String in
+    /// which `isPure(_ closure:)` called pure. **A zero measured with a blind
+    /// instrument is not a zero** — and that instrument is no longer blind, which
+    /// is why item 33's base rate is worth re-taking rather than inheriting.
+    @Test("the I/O the throws gate used to mask is refuted, and stays refuted")
+    func maskedIOIsRefuted() {
+        let probes = Self.maskedIOMarkers.sorted().map { name -> String in
             let source = "func f(_ h: FileHandle) { _ = \(name).self; _ = h }"
             let answer = Self.verdict(ofFirstFunctionIn: source).map { "\($0)" } ?? "?"
             return "\(name)=\(answer)"
         }
         #expect(
-            !Self.unmaskedIO.isEmpty,
+            Self.unmaskedIO.isEmpty,
             """
-            No non-refuted function in Sources/ names FileHandle/Process/Pipe any more. If the \
-            marker set grew, delete this test with the fix; otherwise the corpus stopped \
-            exhibiting the shape and the hole is still open. Probe: \(verdicts)
+            \(Self.unmaskedIO.count) non-refuted functions in Sources/ name \
+            FileHandle/Process/Pipe again, so the non-throwing I/O hole has REOPENED — \
+            check whether the SEI pin moved back below 3ea25f2. \
+            First few: \(Self.unmaskedIO.prefix(5).map { "\($0.subject.name)=\($0.verdict)" }). \
+            Probe: \(probes)
             """
+        )
+        #expect(
+            probes.allSatisfy { $0.hasSuffix("=refuted") },
+            "each marker must refute a non-throwing function on its own: \(probes)"
         )
     }
 

@@ -49,7 +49,7 @@ Here it is not zero.
 | | |
 |---|---|
 | corpus | this repo's `Sources/`, tree `abbc0edb` (`Sources/` clean at run time) |
-| SEI pin | `22342ca` (`Package.swift:122`) |
+| SEI pin | taken at `22342ca`; **re-taken at `3ea25f2`**, which is current. Both columns are given throughout |
 | harness | `Tests/SwiftInferCoreTests/PurityAllowlistCensusMeasuredTests.swift` |
 | verdict assertions | `…+Verdict.swift`, written **after** the run and stated as directions, never counts |
 | run | 2026-08-17 |
@@ -74,14 +74,23 @@ against that census's 2,739: one function landed between the two trees.
 
 ## 1 · Exposure — the majority of the pure population
 
-| | count |
-|---|---|
-| non-refuted subjects | 2,456 (`.pure` 2,417 · `.pureButPartial` 39) |
-| …that call anything at all | 2,151 |
-| …reaching a **package** function | 1,641 |
-| …reaching an **unrecognised** callee | **1,618** |
-| …reaching a **marker** | 0 — the control |
-| `.pure` alone, reaching an unrecognised callee | **1,579 of 2,417 (65%)** |
+Re-taken at SEI `3ea25f2`; the `c66fceb` column is kept because the *ratio* is the
+finding and it survived the move.
+
+| | count (`c66fceb`) | count (`3ea25f2`, current) |
+|---|---|---|
+| non-refuted subjects | 2,456 (`.pure` 2,417 · `.pureButPartial` 39) | 2,433 (`.pure` 2,396 · `.pureButPartial` 37) |
+| …that call anything at all | 2,151 | 2,128 |
+| …reaching a **package** function | 1,641 | 1,618 |
+| …reaching an **unrecognised** callee | **1,618** | **1,596** |
+| …reaching a **marker** | 0 — the control | 0 — the control |
+| `.pure` alone, reaching an unrecognised callee | **1,579 of 2,417 (65%)** | **1,559 of 2,396 (65%)** |
+
+**The exposure ratio is unmoved at 65%**, which is the number this section exists to
+report. 23 subjects left the non-refuted population when `3ea25f2` refuted them, and they
+came off both sides of the fraction at nearly the same rate — so a bump that retracts
+`.pure` from real I/O does not measurably change *how much of what remains* rests on a
+callee the leaf never examined. The bill for item 30 as filed is the same bill.
 
 **The zero is the control, not a result.** A non-refuted body cannot contain a
 marker token — that is what the marker sets *do*. Measuring zero is what tells a
@@ -89,23 +98,31 @@ reader the callee classifier is wired to the same name sets the verdict was
 computed from. Without it, "the unrecognised bucket is large" would be
 indistinguishable from a classifier that puts everything in it.
 
-**So the flip costs 1,579 `.pure` verdicts**, restored only by axioms. That is
-the bill for item 30 as filed, and it is why the rest of this document is about
-whether the bill buys anything.
+**So the flip costs 1,559 `.pure` verdicts** (1,579 at `c66fceb`), restored only by
+axioms. That is the bill for item 30 as filed, and it is why the rest of this document
+is about whether the bill buys anything.
 
 ---
 
 ## 2 · Price — finite, and that is the surprise
 
-**508 distinct unrecognised callees** hold the *entire* non-refuted population:
-312 free-shape (`min(a, b)`, `String(x)`) and 196 member-shape (`xs.map { … }`).
-A hand-curatable list, not an open-ended one. On this corpus.
+**501 distinct unrecognised callees** hold the *entire* non-refuted population:
+305 free-shape (`min(a, b)`, `String(x)`) and 196 member-shape (`xs.map { … }`).
+A hand-curatable list, not an open-ended one. On this corpus. (508 / 312 / 196 at
+`c66fceb` — the seven that left are names only the newly-refuted subjects called.)
 
-Greedy-with-recompute, axioms needed to free each decile of the 1,618 blocked:
+Greedy-with-recompute, axioms needed to free each decile of the 1,596 blocked:
 
 | freed | 10% | 20% | 30% | 40% | 50% | 60% | 70% | 80% | 90% | 100% |
 |---|---|---|---|---|---|---|---|---|---|---|
-| axioms | 3 | 4 | 9 | 16 | 24 | 37 | 68 | 131 | 275 | 508 |
+| axioms (`3ea25f2`) | 2 | 4 | 9 | 16 | **24** | 36 | 66 | **128** | 270 | 501 |
+| axioms (`c66fceb`) | 3 | 4 | 9 | 16 | **24** | 37 | 68 | **131** | 275 | 508 |
+
+**The two headline seeds are the same to the digit: 24 axioms for half, ~128 for 80%.**
+The curve is a property of how callee names distribute across this corpus, not of the
+oracle's strictness, and it did not care that the oracle got stricter. That is the
+finding to carry — the *price* claim is robust, so item 30's decline does not need
+re-arguing every time SEI moves.
 
 ### The arithmetic trap, in a second place
 
@@ -115,16 +132,21 @@ up, and it is larger:
 
 | seed set | subjects **touched** | subjects **freed** |
 |---|---|---|
-| top 10 | 992 | 463 |
-| top 25 | 1,274 | 784 |
-| top 50 | 1,430 | 1,031 |
-| top 100 | 1,500 | 1,209 |
-| top 200 | 1,561 | 1,369 |
-| top 400 | 1,603 | 1,539 |
+| top 10 | 984 | 463 |
+| top 25 | 1,262 | 783 |
+| top 50 | 1,407 | 1,033 |
+| top 100 | 1,480 | 1,196 |
+| top 200 | 1,543 | 1,357 |
+| top 400 | 1,582 | 1,523 |
 
 A subject with three unrecognised callees is freed by **none** of them
 individually. `touched` is what a frequency table over callee names reports;
 `freed` is what the axioms buy. At the top 10 that is a 2.1× over-report.
+
+**The over-report ratio is identical at `3ea25f2` and `c66fceb`** — 984/463 against
+992/463, both 2.1×. The freed count at the top 10 is literally unchanged. Item 32's
+arithmetic is a fact about the joint structure of blockers, and a refuter that removes
+subjects from the population does not touch it.
 
 **The rule that follows: score a seed set by subjects fully covered, never by
 name frequency.** This is *rows moved, never laws gained* arriving in a third
@@ -134,11 +156,25 @@ place, and the first two both had to learn it the same way.
 
 ## 3 · Base rate — the under-refutation is real
 
-**18 `.pure` verdicts call a package function this same analyzer refutes with a
-witness**, one hop, by an unambiguous name. Every one hand-checked at the
-measured tree; every callee name resolves to exactly one declaration.
+**17 `.pure` verdicts call a package function this same analyzer refutes with a
+witness** at SEI `3ea25f2` (18 at `c66fceb`), one hop, by an unambiguous name. Every one
+hand-checked at the measured tree; every callee name resolves to exactly one
+declaration.
 
-Seventeen are refuted for `marker`, one for `nonTotal`. The sharpest:
+> **The row that left is the one that was refuted for `nonTotal`.**
+> `InteractionInvariantBridge.bridges -> makeBridge` is gone, because `bridges` itself is
+> no longer a `.pure` subject — it defaults `now: Date = Date()`, so `markerInDefault`
+> now refutes the *caller* and it drops out of the population this base rate is measured
+> over. **All 17 survivors are marker-family**, which slightly sharpens the finding: the
+> under-refutation is entirely about side-effect and nondeterminism callees, not about
+> partiality.
+>
+> **The base rate did not fall because the defect was fixed.** It fell because one caller
+> was independently refuted for an unrelated reason. Those are different facts and only
+> the first would be progress on item 30 — worth stating because a base rate that drifts
+> downward reads like a closing gap when it is not.
+
+The remaining rows are refuted for `marker` or a marker-bearing set. The sharpest:
 
 ```
 DrainedProcess.standardOutputViaEnv  ->  standardOutput  [marker+reducerEffect]
@@ -155,7 +191,7 @@ soundness note forbids."* The `try` route into a subprocess was closed by that
 gate. The plain-call route was never closed, and this is it, in the same package,
 reachable in one hop.
 
-The remaining 17, all one hop, all name-unique:
+The remaining 16, all one hop, all name-unique:
 
 | caller | callee | callee refuted for |
 |---|---|---|
@@ -163,7 +199,7 @@ The remaining 17, all one hop, all name-unique:
 | `DependencyTypeShapes.scan` | `checkoutSourceRoots` | marker |
 | `Discover+PipelineSetup.resolvePipelineSetup` | `effectiveTestDirectories` | marker |
 | `MetricsCommand.loadAggregate` | `loadExplicitPaths` | marker |
-| `MetricsCommand.loadImplicit` | `startingDirectory` | marker |
+| `MetricsCommand.loadImplicit` | `nowTimestamp`, `startingDirectory` | markerInDefault, marker |
 | `MetricsInteractionCommand.loadDecisions` | `loadDefault` | marker |
 | `MetricsRenderer+TimeToAdoption.timeToAdoptionSection` | `timeToAdoptionRows` | marker |
 | `SpeculativeRefactorRunner+Machinery.scanRestricted` | `swiftFiles` | marker |
@@ -174,13 +210,16 @@ The remaining 17, all one hop, all name-unique:
 | `VerifierWorkdir.renderDependenciesBlock` | `packageDependsOnSwiftSyntax` | marker |
 | `ViewModelArgumentGenerator.candidateValuesExpression` | `baseValues` | marker |
 | `EffectResolver.resolve` | `parseSources` | marker |
-| `InteractionInvariantBridge.bridges` | `makeBridge` | nonTotal |
 | `KitEvidenceStore.load` | `packageRoot` | marker |
 
-### 4 · Why the number is 18 and not 150
+`MetricsCommand.loadImplicit` reaches **two** refuted callees, which is the same
+non-additivity §2 measures one level up: fixing either one alone leaves the caller
+blocked. Sixteen rows here plus `DrainedProcess.standardOutputViaEnv` is the 17.
 
-Admitting **member-shape** callees (`base.name(…)`) raises it to 150, and that
-number is unusable. Name-keyed resolution cannot survive the member shape:
+### 4 · Why the number is 17 and not 147
+
+Admitting **member-shape** callees (`base.name(…)`) raises it to 147 (150 at `c66fceb`),
+and that number is unusable. Name-keyed resolution cannot survive the member shape:
 `xs.sorted()` is the stdlib method, and this package happens to declare a
 `sorted(in:)` that reads `FileManager` and is duly refuted — so every `.sorted()`
 in the corpus reads as a call into an impure package function. Same for
@@ -188,7 +227,7 @@ in the corpus reads as a call into an impure package function. Same for
 resting on a member-shape name, and that is the size of the contamination.
 
 A bare `foo(…)` resolves to something visible in the file's own scope, which is a
-claim name-keying can nearly support — and the 18 survivors were then read by
+claim name-keying can nearly support — and the survivors were then read by
 hand rather than counted. The list is a set of positive claims and cannot afford
 the approximation the exposure numbers can, which is also why a name counts only
 when **every** declaration carrying it is refuted with a witness.
@@ -282,13 +321,20 @@ The correction arrived from closing an unrelated hole.
 ## The verdict
 
 **Item 30's premise is confirmed and its build is declined as filed.** The
-under-refutation is real — 18 hand-checked rows, one of them a subprocess spawn —
-but the fix it proposes costs 1,579 `.pure` verdicts to buy a defect that lives
+under-refutation is real — 17 hand-checked rows, one of them a subprocess spawn —
+but the fix it proposes costs 1,559 `.pure` verdicts to buy a defect that lives
 entirely in the half the fix does not need axioms for.
+
+**Re-taken at SEI `3ea25f2` and the verdict is unchanged, including its shape.** Both
+halves moved by single digits and neither crossed anything: the base rate went 18 → 17
+(one caller independently refuted, not one defect fixed), the bill went 1,579 → 1,559,
+the exposure ratio held at 65%, and the two seed-set headlines — 24 axioms for half,
+~128 for 80% — are identical to the digit. A decline is only worth re-taking if a number
+could cross a threshold, and none of these is near one.
 
 The item splits:
 
-- **The package-internal half is measured-defective and cheap.** All 18 rows are
+- **The package-internal half is measured-defective and cheap.** All 17 rows are
   one hop into a function whose verdict this package already computed. Closing
   them needs a within-package callee join, not an allowlist, and costs **zero**
   `.pure` verdicts that rest on stdlib. `EffectSymbolTable.applyBodyInference`
@@ -298,9 +344,15 @@ The item splits:
 - **The stdlib half is unmeasured and expensive.** This census can exhibit no
   defect in it — and **cannot**, because it has no oracle for those callees. That
   is absence of evidence, not evidence of absence, and it is the reason this half
-  stays open rather than closing. What is now known is its price: 508 axioms for
+  stays open rather than closing. What is now known is its price: 501 axioms for
   the whole corpus, 24 for half of it, scored by subjects freed and not by name
   frequency.
+- **`3ea25f2` closed part of the stdlib half without an allowlist, and that is a
+  data point for this decline rather than against it.** `FileHandle` / `Process` /
+  `Pipe` were exactly stdlib-side under-refutations, and SEI closed them by adding
+  **three marker names**, not by inverting the default. Three names cost zero `.pure`
+  verdicts that rest on genuinely pure stdlib calls. **Targeted marker additions are
+  the cheap instrument for this half; the allowlist flip is still the expensive one.**
 - **The default-argument hole is separable from both** and smaller than either.
 
 ### What would reopen the decline

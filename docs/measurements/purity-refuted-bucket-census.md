@@ -8,11 +8,24 @@ harness, and `make batch2` runs it.
 Discharges the measurement precondition on open-threads item 29, which is the
 precondition on items 30–33.
 
-**Two SEI pins are reported here, and only the later one is current.** The census
-was taken on `22342ca`; item 41 landed hours later on `c66fceb` and moved the
-split. Sections carrying the earlier numbers say so at the top. **Do not quote a
-figure from this document without checking which pin it belongs to** — the
-headline reversed.
+**Three SEI pins are reported here, and only the last is current.** The census was
+taken on `22342ca`; item 41 landed hours later on `c66fceb` and moved the split;
+`3ea25f2` moved it again the same day. Sections carrying earlier numbers say so at
+the top. **Do not quote a figure from this document without checking which pin it
+belongs to** — the headline reversed once already.
+
+> **Current reading, pin `3ea25f2`: 174 witness / 133 ignorance of 307.** Ignorance is
+> 43%, all of it actionable, `noBody` still structurally 0. The surviving claim is the
+> weak one — *ignorance is not a rounding error* — not the original *ignorance is the
+> majority*, which was true only at `22342ca`.
+>
+> **This document's numbers rest on a replication, and the replication is guarded.**
+> `verdictAgreesWithSoundPurity` re-assembles every verdict from the refuters this
+> harness re-derives and compares against the shipped `SoundPurity` on all 2,740
+> functions. When SEI moved to `3ea25f2` that control failed with 8 named mismatches
+> before any number here was touched — which is the design working: **a drifted replica
+> voids the census rather than silently misattributing causes.** The replica now mirrors
+> the added I/O markers and consults `NondeterminismSources` directly.
 
 ---
 
@@ -40,7 +53,7 @@ divide. Everything below is a fresh run.
 | | |
 |---|---|
 | corpus | this repo's `Sources/`, tree `d6285dff` (branch point `3c41f704`) |
-| SEI pin | `22342ca` (`Package.swift:122`) |
+| SEI pin | taken at `22342ca`; re-taken at `c66fceb`, then at **`3ea25f2`** (current). Every table names its pin |
 | harness | `Tests/SwiftInferCoreTests/PurityRefutationCensusMeasuredTests.swift` |
 | taxonomy frozen at | `20e134c1`, **before** the run — git order is the proof |
 | run | `20e134c1..b6207a45`, 2026-08-17 |
@@ -54,14 +67,14 @@ denominator is the population the shipped scan actually computes a
 
 ## The population
 
-| verdict | count |
-|---|---|
-| `.pure` | 2,416 |
-| `.pureButPartial` | 39 |
-| `.refuted` | **284** |
-| total | 2,739 |
+| verdict | count (pin `22342ca`) | count (pin `3ea25f2`, current) |
+|---|---|---|
+| `.pure` | 2,416 | 2,396 |
+| `.pureButPartial` | 39 | 37 |
+| `.refuted` | **284** | **307** |
+| total | 2,739 | 2,740 |
 
-The 39 `.pureButPartial` are open-threads item 34's population, unchanged in
+The `.pureButPartial` rows are open-threads item 34's population, unchanged in
 character since 2026-08-04 and still unconsumed.
 
 ---
@@ -76,11 +89,23 @@ character since 2026-08-04 and still unconsumed.
 > See *After item 41* below, and
 > `docs/measurements/purity-unrecognised-callee-census.md` §5 for the fix.
 
-| | rows (pin `22342ca`) | share | rows (pin `c66fceb`) | share |
-|---|---|---|---|---|
-| **witness-bearing** — at least one named construct refutes | 132 | 46% | **164** | **55%** |
-| **ignorance-only** — nothing in the source refutes | **152** | **54%** | 135 | 45% |
-| `.refuted` total | 284 | | 299 | |
+| | rows (pin `22342ca`) | share | rows (pin `c66fceb`) | share | rows (pin `3ea25f2`, **current**) | share |
+|---|---|---|---|---|---|---|
+| **witness-bearing** — at least one named construct refutes | 132 | 46% | 164 | 55% | **174** | **57%** |
+| **ignorance-only** — nothing in the source refutes | **152** | **54%** | 135 | 45% | **133** | 43% |
+| `.refuted` total | 284 | | 299 | | 307 | |
+
+> **Third pin, and the direction is the same both times.** `3ea25f2` (SEI #14) closed
+> the non-throwing half of the I/O hole and made `hasRefutingMarker` consult
+> `NondeterminismSources`. Both are refuters, so both move rows the *same* way item 41
+> did: **out of ignorance and into witness**. Ignorance has now fallen 152 → 135 → 133
+> across three pins while the bucket itself grew 284 → 299 → 307, and no reading has
+> ever moved a row the other way. That is the shape to expect — a refuter can only ever
+> withhold `.pure`, so this census's headline can only ever weaken with time.
+>
+> **The rankable ceiling is 133.** Re-take it rather than quoting this line: it has been
+> 152, then 135, then 133 in a single day, and each drop came from a refuter added
+> somewhere else entirely.
 
 **As first measured, ignorance was the majority** — not a rounding error — and
 that is what returned the answer in the direction that *permits* items 30–33
@@ -95,16 +120,23 @@ quietly relaxed.
 
 ### By cause
 
-A function may satisfy several causes; these do not sum to 284.
+A function may satisfy several causes; these do not sum to the bucket total.
 
-| cause | kind | rows |
-|---|---|---|
-| `propagatedTry` — `throws` + a `try` into a callee this leaf cannot see | ignorance, **actionable** | 219 |
-| `marker` — a side-effect / nondeterminism token in the body | witness | 111 |
-| `asyncSignature` | witness | 31 |
-| `reducerEffect` — `ReducerPurityAnalyzer` refuted | witness | 26 |
-| `nonTotal` — force-unwrap, `try!`, `as!`, trap call | witness | 8 |
-| `noBody` — nothing to inspect | ignorance, **inert** | **0** |
+| cause | kind | rows (`22342ca`) | rows (`3ea25f2`, current) |
+|---|---|---|---|
+| `propagatedTry` — `throws` + a `try` into a callee this leaf cannot see | ignorance, **actionable** | 219 | 219 |
+| `marker` — a side-effect / nondeterminism token in the body | witness | 111 | **128** |
+| `markerInDefault` — a marker in a default *value* (item 41) | witness | — | 33 |
+| `asyncSignature` | witness | 31 | 31 |
+| `reducerEffect` — `ReducerPurityAnalyzer` refuted | witness | 26 | 26 |
+| `nonTotal` — force-unwrap, `try!`, `as!`, trap call | witness | 8 | 8 |
+| `noBody` — nothing to inspect | ignorance, **inert** | **0** | **0** |
+
+**`marker` is the only cause `3ea25f2` moves, and it moves by +17.** That is the whole
+behavioural footprint of the bump in this census: the three I/O names and the
+classifier union both land in `marker`, which is a *witness* cause. `propagatedTry`
+does not budge at 219 — the bump adds no ignorance, which is why the ceiling falls
+rather than rises.
 
 ### By cause set
 
@@ -153,6 +185,31 @@ The 32 divide into two populations that must not be added together:
 The four largest cause sets afterwards: `propagatedTry` 135, `marker` 49,
 `marker+propagatedTry` 35, `markerInDefault+propagatedTry` 17,
 `markerInDefault` 15.
+
+### After `3ea25f2` — the current split
+
+Re-run on SEI pin `3ea25f2`, same corpus and same frozen taxonomy — **the bump added
+no new cause**, which is worth stating because it was the outcome in doubt: two new
+refuters could easily have produced refutations the taxonomy could not attribute, and
+`everyRefutationIsAttributed` is the test that would have said so. Both new refuters
+land inside the existing `marker` cause.
+
+| cause set | rows (`c66fceb`) | rows (`3ea25f2`) |
+|---|---|---|
+| `propagatedTry` | 135 | **133** |
+| `marker` | 49 | 64 |
+| `marker+propagatedTry` | 35 | 37 |
+| `markerInDefault+propagatedTry` | 17 | 17 |
+| `markerInDefault` | 15 | 15 |
+
+**So the leverage ceiling is 133**, and it fell for the same structural reason it fell
+to 135: two rows that were `propagatedTry`-alone gained an independent `marker`
+witness, so no annotation on any blocked callee could ever free them either. The
+pattern is now three-for-three — **every refuter added anywhere shrinks this bucket,
+never grows it** — which is the general form worth carrying rather than any of the
+three numbers.
+
+**The older reading below is kept for the argument, not the arithmetic.**
 
 **So the leverage ceiling is 135, not 152** — and finding #2 below, which says a
 decline-reason tally over-reports by 44%, now under-states its own point: on the
@@ -336,3 +393,19 @@ about this document, not about the fix:** a census over a corpus is only valid
 against the *oracle* it was taken with, and the oracle is a pinned dependency
 that can move without any of this repo's own code changing. The provenance table
 names the SEI pin for exactly this reason, and it earned its place within a day.
+
+**And it earned it twice.** SEI `3ea25f2` moved the oracle again the same day — the
+non-throwing I/O refuter plus the `NondeterminismSources` union — and the census now
+reads **2,396 `.pure` / 37 `.pureButPartial` / 307 `.refuted`**, split **174 witness /
+133 ignorance**. What makes the second time instructive is *how it was caught*: not by
+anyone re-reading this document, but by `verdictAgreesWithSoundPurity` failing with 8
+named mismatches, every one of the form `real=refuted replicated=pure`, all of them
+CLI functions writing to standard error — including both `writeDiagnostic(_:)`, which
+is the exact pair SEI's own commit message cites. **The replication control is the load
+-bearing part of this harness**, and this is the run that proved it: without it the
+numbers here would have silently misattributed 8 rows and nothing would have failed.
+
+The two mechanisms that keep this document honest are therefore different in kind, and
+both are needed. The provenance table records *which oracle a number belongs to*; the
+replication control detects *that the oracle moved at all*. A stale pin recorded
+accurately is still a stale number.

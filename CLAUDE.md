@@ -65,11 +65,23 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**The `SEICrossRepoPinTests` red is CLEARED (2026-08-17).** Both repos now pin SEI
-`c66fceb` — the joint bump that carried the default-argument purity refuter
-(SwiftEffectInference #13) out to its two consumers, which is what "a deliberate joint
-act" is for. Keep them equal: disjoint pins mean the linter and the inference engine are
-not consulting one purity oracle, and that guard is the only thing that can say so.
+**Both repos pin SEI `3ea25f2` (2026-08-17), and `SEICrossRepoPinTests` is green.** Bumped
+as a joint act across all four manifests, which is what the guard exists to enforce:
+disjoint pins mean the linter and the inference engine are not consulting one purity
+oracle, and that guard is the only thing that can say so.
+
+**`3ea25f2` is the first SEI bump that MOVES VERDICTS in this repo** — every earlier one
+was additive. It closes the non-throwing half of the I/O hole (`FileHandle` / `Process` /
+`Pipe` joined `sideEffectMarkers`; `FileHandle.standardError.write(_:)` does not throw, so
+the `try` gate never reached it) and makes `hasRefutingMarker` consult
+`NondeterminismSources` as a **union** with the token set, never a replacement. **What
+this costs when bumping SEI again:** every purity census's numbers are computed against
+the pinned oracle, and `PurityRefutationCensusMeasuredTests` re-derives SEI's `private`
+refuters to attribute causes. `verdictAgreesWithSoundPurity` is the guard —
+**a drifted replica voids the census rather than misattributing quietly**, and it caught
+this bump with 8 named mismatches before any figure was touched. Expect `make batch2` to
+go red on an SEI bump, and treat that as the apparatus working. Re-take the counts; never
+extrapolate them.
 
 ## Where to look
 
@@ -93,10 +105,10 @@ decline, because the hook states the verdict and the annotation states what was 
 | **The verify edge pass** (why `bothPass` used to under-claim) | `docs/design/verify-edge-pass.md` | Pass 2 was a zero-trial sentinel; boundary values belong in an **advisory** pass, swapped at the rendered expression |
 | **Why is 88% of `discover`'s default output `predicate`?** | `docs/design/predicate-display-order.md` | Fixed by **ordering**, not hiding — a law the code owes is never hidden |
 | **Why does `verify` decline so much?** | `docs/measurements/verify-carrier-reach-census.md` | **Not** carrier support: carrier is ~4% of declines, template reach is 65% |
-| **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured: no — a subprocess spawn is judged `.pure`.** But the allowlist fix costs 65% of `.pure`; the 18 real rows are one hop inside the package. §5's default-argument hole is FIXED — 13 false `pure` advisories retracted |
-| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45% hours later** — check which SEI pin a figure belongs to. Rankable ceiling **135, not 152** |
-| **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over.** 13–31 rows of leverage behind a 135-row population, all landing in a tier nothing reads. The index's top entry is `String(contentsOf:)` |
-| **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 27 rows, base rate unmeasurable |
+| **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured: no — a subprocess spawn is judged `.pure`.** But the allowlist fix costs 65% of `.pure`; the 17 real rows are one hop inside the package. §5's default-argument hole is FIXED — 13 false `pure` advisories retracted. Re-taken at SEI `3ea25f2`: verdict unchanged, and the 24-axioms-for-half price is identical to the digit |
+| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45%, now 43%** — check which SEI pin a figure belongs to. Rankable ceiling **133**; it has been 152 and 135. Every refuter added anywhere shrinks this bucket |
+| **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over.** 13–31 rows of leverage behind a 133-row population, all landing in a tier nothing reads. The index's top entry is `String(contentsOf:)`. **The population has moved three times and the leverage has not moved once** |
+| **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 26 rows, base rate unmeasurable — and `3ea25f2` refuted the witness without moving the zero, because the closure oracle never reads the callee's verdict. Item 42 CLOSED there |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` | The rest of `docs/archive/` is shipped-then-archived design records. Archived ≠ superseded — read for reasoning, never for counts |
 | Per-cycle change story | `git log` | The per-cycle findings docs were folded into the archive above |
 | Road tests (third-party subjects) | `docs/measurements/roadtest-*.md` | SwiftProjectLint (first scored, frozen key), SwiftLintRuleStudio, MacCloud server / client |
