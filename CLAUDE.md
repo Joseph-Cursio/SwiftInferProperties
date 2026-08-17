@@ -54,12 +54,19 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,576 tests — 5,493 fast + 83 across `perf` and the eight batches**
-(full `make test` verified green 2026-08-15 at `4fac986`, ~22 min). **Quote both halves,
-never the total alone**: a new `*MeasuredTests` suite that never reached a batch shows up
-here as the fast count rising while the batch count stands still. **Flake note:** the long
-measured/calibration suites occasionally drop one issue under load — rerun before
-diagnosing.
+Suites green at **5,598 tests — 5,506 fast + 92 across `perf` and the eight batches**
+(last full `make test` verified green 2026-08-15 at `4fac986`, ~22 min, when it read
+5,493 + 83; both halves re-counted 2026-08-17 by running `test-fast` and `batch2`
+directly — the other batches and `perf` are unchanged arithmetic, not a fresh full run).
+**Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
+reached a batch shows up here as the fast count rising while the batch count stands
+still. **Flake note:** the long measured/calibration suites occasionally drop one issue
+under load — rerun before diagnosing.
+
+**Known red, and not a regression:** `SEICrossRepoPinTests` fails against a *current*
+`../SwiftProjectLint` checkout — the linter moved its SEI pin to `8127f26` while
+`Package.swift:122` still reads `22342ca`. That is the guard doing its job across repos;
+bumping is a deliberate joint act, not a fix to fold into unrelated work.
 
 ## Where to look
 
