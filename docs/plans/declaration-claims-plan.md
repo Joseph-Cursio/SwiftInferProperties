@@ -236,8 +236,11 @@ Each row's value is measured in *purity verdicts decided*, not findings emitted.
 > `ReducerPurityAnalyzer` covers static and `Self` writes. So the gap is exactly one shape — and the
 > *same write* is refuted inside a closure by `refuteIfCaptured` and admitted inside a function. **An
 > asymmetry between two code paths in one type**, needing no ownership modifier, over a population of
-> every function rather than the zero that declare one. Its base rate is unmeasured and is the number
-> that decides whether it is worth building.
+> every function rather than the zero that declare one. **Its base rate is now MEASURED and is ZERO** —
+> `docs/measurements/module-state-base-rate.md`: `Sources/` declares no file-scope `var` at all, so the
+> hole is real and has no exhibits here. Item 40's shape: a latent unsoundness, not a defect. **The zero
+> belongs to this repository and must not be carried to a road test**, and `corpusHasNoModuleState` fails
+> the day a module-level `var` lands.
 
 ### 4.1 These interact, so a sequential pass under-reports
 
