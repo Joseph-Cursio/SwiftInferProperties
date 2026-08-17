@@ -54,11 +54,11 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,634 tests — 5,508 fast + 126 across `perf` and the eight batches**
+Suites green at **5,639 tests — 5,508 fast + 131 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-17**, ~29 min, every batch counted
 from that one run rather than carried over. The batch half moved 92 → 112 as the four
 purity censuses joined batch2, then 112 → 117 as `PurityFixpointCensusMeasuredTests`
-joined it, then 117 → 121 as `OwnershipPremiseCensusMeasuredTests` did, then **121 → 126** as `ModuleStateCensusMeasuredTests` did; the fast half has not moved through any of it, which is the regex doing its
+joined it, then 117 → 121 as `OwnershipPremiseCensusMeasuredTests` did, then 121 → 126 as `ModuleStateCensusMeasuredTests` did, then **126 → 131** as `PurityBacktestMeasuredTests` did; the fast half has not moved through any of it, which is the regex doing its
 job. Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -160,6 +160,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Is a METAMORPHIC law family worth building?** (the parse-tree catalog gap) | `Tests/SwiftInferCoreTests/TriviaInsensitivityExperimentTests.swift` | A test file whose header carries a standing verdict. Population is not the blocker — this is a *statability* gap |
 | **The interaction-invariant taxonomy — settled, and its last two items were DECLINED not built** | `docs/design/Interaction Invariant Taxonomy.md` | Settled; its last two items were DECLINED, not built — one on measurement, one on evidence model |
 | **Can a verify stub import a carrier its dependency declares?** | `docs/plans/dependency-carrier-imports-scope.md` | **Scoped, recommendation is DON'T** — population is 2 rows; fix the label instead. A degenerate `nil`-only domain is rejected outright |
+| **Does the purity oracle flag REAL historical purity bugs?** | `docs/measurements/purity-backtest.md` | **Measured 0 HITS of 3, 0 false alarms — the only number here an outside reader can check**, since the oracle is a public fix commit predating the tools. Two blind spots: **hash-order nondeterminism** (a `Set` rendered into a returned String — the bug class this repo already paid for in `orderedSources`) and **instance `self` writes on a class** (`ReducerPurityAnalyzer` covers `Self.`, not `self.`) |
 | **How often is a module-state mutation judged pure?** | `docs/measurements/module-state-base-rate.md` | **Measured ZERO — and zero because the corpus declares no file-scope `var` at all**, corroborated by grep four ways. A latent unsoundness in item 40's shape, not a defect: real hole, no exhibits. **Do NOT carry this zero to another corpus.** The first run reported the same 0 with a BLIND detector — `Parser.parse` yields `SequenceExprSyntax`, not `InfixOperatorExprSyntax` |
 | **Do `consuming` / `borrowing` carry purity evidence?** | `docs/measurements/ownership-premise-declined.md` | **Measured NO, twice over — premise false AND population zero.** No clause in `verdict(for:)` examines a parameter, and this corpus declares 0 `consuming` / 0 `borrowing` (52 `inout`). **The probe's real find**: a function mutating a file-scope `var` is `.pure` while `static` mutation is refuted, and a closure doing the same write IS refuted — an asymmetry in one type. Base rate unmeasured |
 | **Should the toolchain infer `final`, ownership, and a `@Pure` negation?** | `docs/plans/declaration-claims-plan.md` | **`proposed`.** Three families split by *can the tool be wrong* — the compiler enforces B's floor, so over-claim detection cannot be a false alarm. **`final` is gated on item 34**, not on itself: the blocking-callee census measured that resolving every blocking callee moves ZERO advisory rows, because `.pureButPartial` has no reader. §6.3's soundness arm has a frozen 17-row trip list; §8's gate is discharged (133 ignorance of 307) |
