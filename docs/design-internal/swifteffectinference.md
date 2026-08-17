@@ -1,6 +1,6 @@
 # SwiftEffectInference — the shared leaf
 
-> **Status:** `reference` · **As of:** 2026-08-16
+> **Status:** `reference` · **As of:** 2026-08-17
 
 
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
@@ -42,7 +42,18 @@
 > migrated onto `CallSiteEffectInferrer` (SwiftProjectLint #105), so **every engine in the table now
 > has a consumer** and the 37% figure recorded earlier that day is obsolete. See § *The engines*.
 
-<!-- doc-provenance date=2026-08-16 subject=SwiftEffectInference@22342ca pinned=22342caf2015e528bb71cad3b677eb64fad11aaf observer=SwiftInferProperties@7d2efcc -->
+> **2026-08-17 — pins and prose only; no count was retaken.** The § *pin divergence* table had gone
+> **two bumps stale** while claiming both consumers were `at HEAD`, which is the one error that
+> section is about. Corrected to `c66fceb` — where both consumers actually agree — and the
+> currency claim replaced with the distance from SEI's tip (`3ea25f2`, 1 source commit ahead). The
+> §13 table gains the `8127f26` column that was measured but never landed, and deliberately stops
+> there. The guard's first live catch is recorded in that section.
+>
+> **Nothing else here was re-verified.** File/line counts, engine figures and every census number
+> still describe the revision each of them names — most `bc084fb`/`6f45139`, some `22342ca`. Read a
+> number together with the pin beside it, never together with this date.
+
+<!-- doc-provenance date=2026-08-17 subject=SwiftEffectInference@c66fceb pinned=c66fceb825eebf77477631388e1ba4326a7aa4e6 observer=SwiftInferProperties@58e1b65 -->
 
 
 ```
@@ -323,8 +334,37 @@ divergence is the thing worth remembering: it ran for weeks, and it had a named 
 
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
-| SwiftInferProperties | `Package.swift:122` | `22342ca` | **at HEAD** (2026-08-16) |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `22342ca` | **at HEAD** (2026-08-16) |
+| SwiftInferProperties | `Package.swift:122` | `c66fceb` | **1 source commit behind** `3ea25f2` (2026-08-17) |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `c66fceb` | **1 source commit behind** `3ea25f2` (2026-08-17) |
+
+> **The `at HEAD` this table used to claim was the failure mode it exists to catch.** Both rows read
+> `22342ca` / **at HEAD** (2026-08-16) while `Package.swift` said `c66fceb` — the manifest had moved
+> twice underneath the prose (`fec2bf0`, then `7dad9f5`) and the table tracked neither. It is the
+> exact error CLAUDE.md's standing instruction names: *read the pin from `Package.swift`, never from
+> prose*. The rule was written because prose copies go stale; this table then went stale in the
+> section whose entire subject is pin staleness. **Equality is the invariant, not currency** — both
+> consumers agree at `c66fceb`, which is the property the shared leaf exists to give. Being a commit
+> behind SEI's tip is a different and much weaker fact, and is now stated as one rather than being
+> rounded up to `at HEAD`.
+
+> **2026-08-16, later still — the guard's first live catch, and it was not a drill.** SEI split its
+> `.clock` kind into five (SEI #12, `8127f26`) so SwiftProjectLint could hold its nondeterminism rule
+> at the scope it had before consuming the shared classifier; the linter bumped, this repo had not
+> yet, and `SEICrossRepoPinTests` failed **unprompted** — naming all four manifests and both
+> revisions. Every earlier divergence in this section was found by a human re-reading a manifest.
+> This one was found by the mechanism, hours after the mechanism was written, which is the entire
+> argument for having written it on a day when it passed.
+>
+> Closed by `fec2bf0` to `8127f26`, then carried forward by `7dad9f5` to `c66fceb` when SEI #13 added
+> the default-argument purity refuter — a bump SwiftProjectLint made in the same act
+> ([SwiftProjectLint #113](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/113)), which is the
+> shape a shared-leaf bump is supposed to have. Both closures were additive here: this repo
+> constructs no `NondeterminismSource` and calls neither new type, so no verdict moved.
+>
+> **The guard caught the divergence; it did not catch this doc.** `SEICrossRepoPinTests` reads the
+> manifests, so the table above stayed wrong through both bumps without failing anything. A pin guard
+> and a prose guard are different instruments — `make docs-drift` is the second one, and it reports
+> against the `doc-provenance` trailer, which is why that trailer moves with this edit.
 
 > **2026-08-16 — a divergence opened across real source for the first time in this record, and was
 > closed the same day.** Every previous gap this section tracks was inert; this one was not. SEI
@@ -394,17 +434,24 @@ implements the remedy proposed below verbatim: `inferredEffect(for:)` stops dele
 **Re-measured on this repo, 2026-08-06, at pin `6f45139`** — a full `make test` run, the §13 perf
 target in its own isolated step:
 
-| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` | at `22342ca` |
-|---|---|---|---|---|---|---|
-| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | 4.310s ✅ | **3.573s** ✅ |
-| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | 0.690s ✅ | **0.560s** ✅ |
-| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | 0.960s ✅ | **0.752s** ✅ |
-| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | 2.406s ✅ | **1.827s** ✅ |
-| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | 245.6 MB ✅ | **256.0 MB** ✅ |
+| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` | at `22342ca` | at `8127f26` |
+|---|---|---|---|---|---|---|---|
+| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | 4.310s ✅ | 3.573s ✅ | **3.535s** ✅ |
+| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | 0.690s ✅ | 0.560s ✅ | **0.566s** ✅ |
+| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | 0.960s ✅ | 0.752s ✅ | **0.746s** ✅ |
+| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | 2.406s ✅ | 1.827s ✅ | **1.812s** ✅ |
+| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | 245.6 MB ✅ | 256.0 MB ✅ | **257.7 MB** ✅ |
 
 The `bc084fb` column was taken 2026-08-07 by `make perf` (serial, alone, 22.1s, 8 tests). Every row
 is within noise of `6f45139` — the anchor work adds a field to `BodyInference` and does not change
 the walk, so a flat reading is the expected shape rather than a reassuring one.
+
+The `8127f26` column was taken by `make perf` before `make test`, per the protocol above — all 8
+budgets green, every row within noise of the `22342ca` column, which is the expected shape for a
+split this repo does not call. **There is deliberately no `c66fceb` column.** The pin moved there in
+`7dad9f5` without a perf run at that revision, and an unmeasured column inferred from the one beside
+it is the precise thing the `097181aa` row exists to warn against — the regression that produced it
+was *reasoned* to be free. The table stops where the measurements stop.
 
 Slightly slower than `1f2265a0` and comfortably inside every budget, which is the expected shape: the
 cheap path is restored, and the extra three methods are real work that path no longer pays for.
