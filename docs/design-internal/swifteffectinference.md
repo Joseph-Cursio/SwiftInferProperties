@@ -53,6 +53,22 @@
 > still describe the revision each of them names — most `bc084fb`/`6f45139`, some `22342ca`. Read a
 > number together with the pin beside it, never together with this date.
 
+> **2026-08-17, later — both consumers bumped to `3ea25f2`, and this is the first bump that MOVES
+> VERDICTS.** Every previous one in this record was additive: a defaulted field, a split kind, a
+> refuter this repo's corpus did not reach. `50125f8` is not. It closes the non-throwing half of the
+> I/O hole — `FileHandle.standardError.write(_:)` does not throw, so the `throwsOnlyItsOwnErrors` gate
+> never covered it, and SEI measured **7 non-refuted functions writing to standard error and judged
+> pure, including both of this package's own `writeDiagnostic(_:)`** — and it makes
+> `hasRefutingMarker` consult `NondeterminismSources` as a **union** with the existing token set
+> rather than a replacement, which matters because the classifier is AST-precise and therefore
+> *narrower* in places; swapping would have relaxed a gate whose over-refutation is deliberate.
+>
+> §13 was re-measured first, per protocol: **all 8 budgets green, every row within noise** of
+> `8127f26` — see the new column. So the extra refutation is free at the perf scale. **What it costs
+> in verdicts is a different question and is not answered here** — the census counts in
+> `docs/measurements/` were taken at `c66fceb` and earlier, and a refuter that withholds `.pure`
+> moves them by construction. Each census doc names its own pin; that is the number to trust.
+
 <!-- doc-provenance date=2026-08-17 subject=SwiftEffectInference@c66fceb pinned=c66fceb825eebf77477631388e1ba4326a7aa4e6 observer=SwiftInferProperties@58e1b65 -->
 
 
@@ -334,18 +350,23 @@ divergence is the thing worth remembering: it ran for weeks, and it had a named 
 
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
-| SwiftInferProperties | `Package.swift:122` | `c66fceb` | **1 source commit behind** `3ea25f2` (2026-08-17) |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `c66fceb` | **1 source commit behind** `3ea25f2` (2026-08-17) |
+| SwiftInferProperties | `Package.swift:122` | `3ea25f2` | equal to the linter's; **verify against SEI's tip, do not trust this cell** |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `3ea25f2` | equal to this repo's; **same** |
 
 > **The `at HEAD` this table used to claim was the failure mode it exists to catch.** Both rows read
 > `22342ca` / **at HEAD** (2026-08-16) while `Package.swift` said `c66fceb` — the manifest had moved
 > twice underneath the prose (`fec2bf0`, then `7dad9f5`) and the table tracked neither. It is the
 > exact error CLAUDE.md's standing instruction names: *read the pin from `Package.swift`, never from
 > prose*. The rule was written because prose copies go stale; this table then went stale in the
-> section whose entire subject is pin staleness. **Equality is the invariant, not currency** — both
-> consumers agree at `c66fceb`, which is the property the shared leaf exists to give. Being a commit
-> behind SEI's tip is a different and much weaker fact, and is now stated as one rather than being
-> rounded up to `at HEAD`.
+> section whose entire subject is pin staleness.
+>
+> **The fourth column no longer states currency, and that is deliberate.** It used to hold `at HEAD`,
+> which is a claim about a *third* repository's tip — the one fact this doc cannot keep true, because
+> nothing in either consumer changes when SEI gains a commit. What the two consumers can be held to
+> is **equality with each other**, which is the property the shared leaf exists to give and which
+> `SEICrossRepoPinTests` and `SEIPinAgreementTests` actually enforce across all four manifests. So
+> the column states equality and sends you to `make docs-drift` for the distance. A cell that cannot
+> be guarded should not read like a measurement.
 
 > **2026-08-16, later still — the guard's first live catch, and it was not a drill.** SEI split its
 > `.clock` kind into five (SEI #12, `8127f26`) so SwiftProjectLint could hold its nondeterminism rule
@@ -434,13 +455,13 @@ implements the remedy proposed below verbatim: `inferredEffect(for:)` stops dele
 **Re-measured on this repo, 2026-08-06, at pin `6f45139`** — a full `make test` run, the §13 perf
 target in its own isolated step:
 
-| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` | at `22342ca` | at `8127f26` |
-|---|---|---|---|---|---|---|---|
-| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | 4.310s ✅ | 3.573s ✅ | **3.535s** ✅ |
-| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | 0.690s ✅ | 0.560s ✅ | **0.566s** ✅ |
-| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | 0.960s ✅ | 0.752s ✅ | **0.746s** ✅ |
-| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | 2.406s ✅ | 1.827s ✅ | **1.812s** ✅ |
-| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | 245.6 MB ✅ | 256.0 MB ✅ | **257.7 MB** ✅ |
+| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` | at `22342ca` | at `8127f26` | at `3ea25f2` |
+|---|---|---|---|---|---|---|---|---|
+| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | 4.310s ✅ | 3.573s ✅ | 3.535s ✅ | **3.551s** ✅ |
+| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | 0.690s ✅ | 0.560s ✅ | 0.566s ✅ | **0.566s** ✅ |
+| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | 0.960s ✅ | 0.752s ✅ | 0.746s ✅ | **0.746s** ✅ |
+| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | 2.406s ✅ | 1.827s ✅ | 1.812s ✅ | **1.814s** ✅ |
+| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | 245.6 MB ✅ | 256.0 MB ✅ | 257.7 MB ✅ | **257.8 MB** ✅ |
 
 The `bc084fb` column was taken 2026-08-07 by `make perf` (serial, alone, 22.1s, 8 tests). Every row
 is within noise of `6f45139` — the anchor work adds a field to `BodyInference` and does not change
@@ -452,6 +473,14 @@ split this repo does not call. **There is deliberately no `c66fceb` column.** Th
 `7dad9f5` without a perf run at that revision, and an unmeasured column inferred from the one beside
 it is the precise thing the `097181aa` row exists to warn against — the regression that produced it
 was *reasoned* to be free. The table stops where the measurements stop.
+
+The `3ea25f2` column was taken the same way, `make perf` alone before `make test`, and all 8 budgets
+are green with every row inside noise of `8127f26` (largest move: 16 ms on the 100-file pipeline,
+0.1 MB on peak RSS). **A flat reading here is worth more than the previous flat ones**, because this
+bump is the first that is *not* additive: `50125f8` adds a non-throwing-I/O refuter and makes
+`hasRefutingMarker` consult `NondeterminismSources`, so unlike the anchor and clock-split bumps it
+does move verdicts in this repo. The budgets say the extra refutation is free at the §13 scale; what
+it costs in *verdicts* is a separate measurement and is recorded in the census docs, not here.
 
 Slightly slower than `1f2265a0` and comfortably inside every budget, which is the expected shape: the
 cheap path is restored, and the extra three methods are real work that path no longer pays for.
