@@ -47,8 +47,10 @@ BATCH1 := TCAVerifyCorpusMeasuredTests|TCACarrierMeasuredTests|MobiusVerifyCorpu
 # parses all of Sources/ four times over and would add ~20s to the ~35s fast
 # path, which is the developer loop. Named `…MeasuredTests` so SUBPROCESS_RE
 # skips it there, and batched here so the coverage guard is satisfied and it
-# actually runs.
-BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests|TrapAttributionCensusMeasuredTests|PurityRefutationCensusMeasuredTests
+# actually runs. PurityAllowlistCensusMeasuredTests shares that suite's parsed
+# corpus, so it belongs in the SAME batch — split them and the second batch pays
+# for the whole scan again.
+BATCH2 := CardinalityVerifyCorpusMeasuredTests|BiconditionalVerifyCorpusMeasuredTests|RefIntVerifyCorpusMeasuredTests|TrapAttributionCensusMeasuredTests|PurityRefutationCensusMeasuredTests|PurityAllowlistCensusMeasuredTests
 BATCH3 := VerifyPipeline
 BATCH4 := InteractionVerifyMeasuredExecutionTests|IdempotenceCorpusMeasuredTests|IdempotenceSurveyCorpusMeasuredTests|VerifyInteractionSurveyMeasuredTests|PromotionDeterminismMeasuredTests|ConservationSurveyCorpusMeasuredTests|AlgebraicSurveyCorpusMeasuredTests
 # MVVM-carrier verify suites (dependency-free builds — light; one batch is fine).
