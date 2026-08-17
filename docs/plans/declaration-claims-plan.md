@@ -225,10 +225,19 @@ Each row's value is measured in *purity verdicts decided*, not findings emitted.
 > refuting purity"* is plausibly **zero by construction**, and the `borrowing` row's overlap is with a
 > capture refuter that never fires on the declarations these annotations attach to.
 >
-> **Measure the population before building either.** Three times in this line of work the documented
-> error direction has been backwards, and item 33 was declined precisely because its premise —
-> *chains terminate at a higher-order call* — measured **false**: nine of ten probe shapes reached
-> `.pure`. A one-afternoon probe settles both rows.
+> **MEASURED 2026-08-17 — both rows are DECLINED, on two independent grounds.**
+> `docs/measurements/ownership-premise-declined.md`. (1) No parameter shape refutes: `inout` mutated,
+> `consuming`, `consuming` mutated and `borrowing` all reach `.pure`, against controls that refute. (2)
+> This corpus declares **0** `consuming` and **0** `borrowing` parameters — 52 `inout`, nothing else —
+> so even with a mechanism there is nothing to score.
+>
+> **And the probe found something larger than the rows it closed.** A function mutating a **file-scope
+> `var`** is judged `.pure`; a function mutating **`static`** state is refuted, because
+> `ReducerPurityAnalyzer` covers static and `Self` writes. So the gap is exactly one shape — and the
+> *same write* is refuted inside a closure by `refuteIfCaptured` and admitted inside a function. **An
+> asymmetry between two code paths in one type**, needing no ownership modifier, over a population of
+> every function rather than the zero that declare one. Its base rate is unmeasured and is the number
+> that decides whether it is worth building.
 
 ### 4.1 These interact, so a sequential pass under-reports
 
@@ -486,7 +495,7 @@ against a package no manifest mentions are one rename from silent breakage, and 
 | **0** | §2.1 scope decision (recommend: requirements out of scope). ~~split `.refuted`~~ — **done, 174/133 of 307** | a decision recorded. The measurement half is discharged |
 | **0.5** | §6.3 **soundness arm** — sandbox the **2,396** `.pure`, against the **frozen 17-row trip list** | precision **and** recall against the answer key, not a bare trip count |
 | **0.6** | §7 backtest arm — purity-failure fix commits | ≥1 pre-fix flagged, post-fix clean |
-| **0.7** | **premise probe for the two ownership rows** (§4) — does any refuter fire on parameter mutation at all? | a population, or a recorded *measured-premise-false* like item 33's |
+| ~~**0.7**~~ | ~~premise probe for the two ownership rows~~ — **DONE 2026-08-17, both rows DECLINED** | `docs/measurements/ownership-premise-declined.md`. Premise false *and* population zero |
 | **1a** | **item 34 — a `.pureButPartial` consumer**, or an explicit decision to accept a legibility-only gain from 1b | a reader exists for the tier `final` frees rows into, or the absence is recorded as the price |
 | **1b** | **`final` inference**, module-scoped, feeding the call graph and the seed via the §2.2 pre-scan route | rows moved out of the **133**, re-baselined per §4.1 — **and rows that reach a reader**, which is what 1a buys |
 | **2** | unnecessary-`async` **edge** (not detector — see §9) | purity candidates created, not findings emitted |
@@ -535,7 +544,10 @@ falsifier that has fired is worth more than one still waiting.
 4. **The over-claim findings are numerous and inert.** Still live. If phases 2–4 emit thousands of rows
    and move no verdict, the honest close is that Swift's declaration-level claims are already well
    maintained in this corpus — itself worth writing down.
-5. **The two ownership rows have no population at all** (§4, phase 0.7). If no refuter fires on
-   parameter mutation, `consuming` and `borrowing` are not purity evidence in this analyzer and the
-   rows close as *measured-premise-false*, the way item 33 did. Cheap to check and it should be checked
-   before either is built.
+5. ~~**The two ownership rows have no population at all.**~~ **RESOLVED 2026-08-17 — they have neither
+   population nor mechanism.** Closed as *measured-premise-false*, the way item 33 was.
+   `docs/measurements/ownership-premise-declined.md`. **Second time a Family C row has been declined for
+   a premise that reads plausibly and measures false**, which is now a pattern rather than an incident:
+   the transferable practice is to probe the premise before scoping the build, and it cost an afternoon
+   against a phase. What replaces the rows is the module-state asymmetry the probe turned up, whose base
+   rate is the next thing to measure.
