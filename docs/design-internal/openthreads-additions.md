@@ -1,5 +1,7 @@
 # Additions for `openthreads.md` — purity as a consumed tier
 
+> **Status:** `open` · **As of:** 2026-08-17
+
 Merge-ready. Rows are numbered from 29 (28 is the highest in the table today). Terse per the
 file's own rule; the reasoning that does not fit a row is in the two *Decisions* stubs at the
 bottom, which need your dates and SHAs before they go in.
