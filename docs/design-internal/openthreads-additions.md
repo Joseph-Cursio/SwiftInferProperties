@@ -39,6 +39,8 @@ closing section carry the new number. **The general form is worth stating once**
 added anywhere shrinks this bucket again, so a build over it must re-take the count rather than
 cite a document — including this one.
 
+<!-- doc-provenance date=2026-08-17 subject=SwiftInferProperties@abbc0edb4cd001b871e60cb40e24011c30f4fd66 observer=SwiftInferProperties@abbc0edb4cd001b871e60cb40e24011c30f4fd66 -->
+
 ---
 
 ## For `## Open items`
