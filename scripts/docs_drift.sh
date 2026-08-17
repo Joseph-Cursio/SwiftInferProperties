@@ -204,8 +204,31 @@ for doc in "$DOCS_DIR"/*.md; do
 done
 
 printf '\n  %s\n' "$(printf '─%.0s' {1..72})"
-printf '  %s doc(s) checked · %s drifted · %s unresolved · %s stale checkout(s)\n\n' \
+printf '  %s doc(s) checked · %s drifted · %s unresolved · %s stale checkout(s)\n' \
     "$checked" "$drifted" "$unresolved" "$stale_clones"
+
+# THE DENOMINATOR. Without it the line above is a count wearing a coverage report:
+# "8 docs checked, 0 drifted" reads as "the docs are fine" and means "the eight docs
+# in one directory are fine". This project's own standing rule — a census's zero cannot
+# be read without its corpus list — was being broken by the tool that reports on docs.
+#
+# Measured when this was added (2026-08-17, open item 39): 9 of 91 docs under `docs/`
+# were in scope, and 49 of the 82 out of scope named a sibling repo, i.e. made exactly
+# the class of claim this check exists to verify. The survey that prompted the item
+# (`PBT_EFFECT_VOCABULARY_SURVEY.md`) was not among either count: it lives in the
+# workspace parent, outside every git repository, where no per-repo check can reach it.
+#
+# Deliberately NOT fixed by widening DOCS_DIR. Every one of those 82 lacks a provenance
+# trailer, so a wider glob prints 82 `?` rows and the signal drowns — the check would
+# become the thing nobody reads, which is the failure mode two other rows in the
+# open-threads doc already record.
+scope_total=$(find docs -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+scope_claims=$(find docs -name '*.md' ! -path "$DOCS_DIR/*" -exec \
+    grep -lE 'SwiftEffectInference|SwiftProjectLint|SwiftPropertyLaws|SwiftIdempotency' {} \; \
+    2>/dev/null | wc -l | tr -d ' ')
+printf '  scope: %s/*.md only — %s of %s docs under docs/. %s out-of-scope doc(s) name a\n' \
+    "$DOCS_DIR" "$checked" "$scope_total" "$scope_claims"
+printf '  sibling repo and are NOT checked here; docs outside the repo are invisible to it.\n\n'
 
 # Restore stdout, then show the buffer only if there is something to act on. Note
 # `unresolved` counts here as loudly as `drifted`: a check that could not answer must
