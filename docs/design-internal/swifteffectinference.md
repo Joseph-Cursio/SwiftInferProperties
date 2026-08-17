@@ -69,7 +69,7 @@
 > `docs/measurements/` were taken at `c66fceb` and earlier, and a refuter that withholds `.pure`
 > moves them by construction. Each census doc names its own pin; that is the number to trust.
 
-<!-- doc-provenance date=2026-08-17 subject=SwiftEffectInference@c66fceb pinned=c66fceb825eebf77477631388e1ba4326a7aa4e6 observer=SwiftInferProperties@58e1b65 -->
+<!-- doc-provenance date=2026-08-17 subject=SwiftEffectInference@3ea25f2 pinned=3ea25f29de9e0fbb86a6a8f20b2c42ead58a039e observer=SwiftInferProperties@74786be -->
 
 
 ```
