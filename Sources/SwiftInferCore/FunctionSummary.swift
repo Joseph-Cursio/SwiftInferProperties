@@ -205,6 +205,17 @@ public struct FunctionSummary: Sendable, Equatable {
     /// 259 `.refuted` of 2,500. Small, and previously invisible — `isPure`
     /// answered `false` for all 294 non-pure functions alike, so nothing
     /// downstream could tell "reads the clock" from "throws its own error".
+    ///
+    /// **Two warnings before you count `.refuted` rows.** First, `.refuted` is
+    /// still three cases wearing one: re-measured 2026-08-17, **54% of it names
+    /// nothing in the source at all** and is the analyzer reporting its own
+    /// blindness (`docs/measurements/purity-refuted-bucket-census.md`). Second,
+    /// and worse for a count — *"`.refuted` for a summary nobody computed one
+    /// for"* above is not a rare edge: `makeSummary(fromComputedProperty:)`
+    /// passes no verdict, so **every** read-only computed property lands here by
+    /// default while carrying `isInferredPure == true`, which is the exact
+    /// combination this field's first paragraph says cannot happen. 180 of them
+    /// under `Sources/`. Filter on `isComputedProperty` before reading this.
     public let purityVerdict: PurityVerdict
 
     /// Fingerprint of this function's BODY, for validating verify evidence against the code

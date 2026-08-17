@@ -47,6 +47,17 @@ public enum SoundPurity {
     /// is: `ReducerPurityAnalyzer` refutes first, and only then does the
     /// syntactic inferrer get to distinguish partial from refuted.
     ///
+    /// **What is in the `.refuted` third is now measured, and it is mostly not
+    /// evidence.** Re-taken 2026-08-17 over `Sources/`: 284 refutations, of which
+    /// **132 carry a witness and 152 name nothing in the source at all** — a
+    /// `throws` whose `try` reaches a callee this leaf cannot resolve.
+    /// `docs/measurements/purity-refuted-bucket-census.md` has the split, and
+    /// two things a caller reading this field should know before counting it:
+    /// the *"could not be inspected at all"* half of `PurityVerdict.refuted`'s
+    /// own doc is **unreachable** through `FunctionScanner` (protocol bodies are
+    /// skipped), and the 180 computed-property summaries reach `.refuted` by an
+    /// initialiser default without ever being asked.
+    ///
     /// **Nothing consumes `.pureButPartial` yet, and that is deliberate.**
     /// Measured on this repo 2026-08-04: of 2,500 functions, 2,206 are `.pure`,
     /// **35 are `.pureButPartial`**, 259 refuted. The single consumer of the
