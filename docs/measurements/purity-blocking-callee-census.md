@@ -18,12 +18,12 @@ the inferrer — the fourth recorded instance of *the consumer keeps asking the
 producer, in English*. Item 31 proposes inverting it: key by blocking callee,
 list the functions whose verdict rests on it.
 
-Item 29 sized the population — 152, then 135 after item 41. Sizing is not
-leverage, and the *Decisions* stub in the additions doc names the trap
-explicitly: *"If the ranking has no consumer, it is a third instance rather than
-a fix."* So two questions had to come before the build.
+Item 29 sized the population — 152, then 135 after item 41, then **133** after SEI
+`3ea25f2`. Sizing is not leverage, and the *Decisions* stub in the additions doc names
+the trap explicitly: *"If the ranking has no consumer, it is a third instance rather
+than a fix."* So two questions had to come before the build.
 
-1. **Does the index have leverage?** How many of the 135 would a within-package
+1. **Does the index have leverage?** How many of the 133 would a within-package
    join actually free?
 2. **Does the leverage have a reader?** What verdict do freed rows land on, and
    does anything consume it?
@@ -37,10 +37,25 @@ The trap was expected to arrive through item 35 — nobody reads a recommended
 
 | | |
 |---|---|
-| corpus | this repo's `Sources/`, tree `7dad9f5b` |
-| SEI pin | `c66fceb` (`Package.swift:122`) — **post item 41**, which is why the population is 135 |
+| corpus | this repo's `Sources/`, tree `7dad9f5b`; re-taken at `3ea25f2` |
+| SEI pin | **`3ea25f2`** (`Package.swift:122`) — population **133**. Was `c66fceb` / 135, and `22342ca` / 152 |
 | harness | `Tests/SwiftInferCoreTests/PurityBlockingCalleeCensusMeasuredTests.swift` |
 | population | the item 29 census's own `refuted` static, filtered to ignorance-only — shared, not recomputed |
+
+> **Re-taken at `3ea25f2`, and the decline is unchanged on both grounds.** The population
+> fell 135 → 133 and **every leverage figure below is identical** — 13 and 27
+> conservative, 17 and 31 optimistic, 9 hops to converge, `String` still the head of the
+> index at 14 rows. A decline that survives a movement in its own population without any
+> of its numbers moving is a stronger decline than the one first recorded.
+>
+> **Ground 2 was the one at risk, and it held.** `3ea25f2` adds a *non-throwing* I/O
+> refuter, which is exactly the shape that could have put a non-throwing row into this
+> population and broken *"every blocked row throws"* — the load-bearing step of the
+> re-ordering below. `theWholePopulationThrows` is asserted rather than argued for
+> precisely this case. It passes: the newly-refuted functions gain a `marker` **witness**,
+> so they leave the ignorance-only population altogether rather than entering it as
+> non-throwing rows. The refuter subtracts from this census's population; it cannot add
+> to it.
 
 **The blocking callee is read at two strengths, and both are reported.** One
 `try` covers a whole expression in Swift, so in `try foo(index(x))` either call
@@ -57,26 +72,32 @@ settled only when **every** declaration carrying it is non-refuted.
 
 | reading | one hop | fixpoint |
 |---|---|---|
-| conservative | 13 of 135 | **27** of 135 (9 hops) |
-| optimistic | 17 of 135 | **31** of 135 (9 hops) |
+| conservative | 13 of 133 | **27** of 133 (9 hops) |
+| optimistic | 17 of 133 | **31** of 133 (9 hops) |
 
-**Item 31's row says *quote the 135*. The 135 is the population; the leverage is
+**Item 31's row says *quote the 135*. The population is the population; the leverage is
 13–31.** That is the same arithmetic error the item's own dependant (item 32)
 warns about, arriving a fifth time and now inside the *corrected* number: 152 was
-an over-report of the rankable set, 135 is right, and 135 is still a 4–10×
+an over-report of the rankable set, 133 is right today, and 133 is still a 4–10×
 over-report of what a join buys.
+
+**The population has now moved three times and the leverage has not moved once** — 152,
+135, 133, against 13–31 throughout. That is the sharpest available statement of item
+32's warning: the number everyone quotes is the one that keeps changing, and the number
+that decides the build is the one that does not. **Quote neither from this document.
+Re-run the harness.**
 
 Multi-hop is worth its budget where it is worth anything at all — fixpoint roughly
 doubles one-hop (13→27, 17→31) and takes 9 hops to converge, well past the one
 hop `EffectResolver` can afford under §13. That is item 28's asymmetry confirmed
 and priced: a linter running ahead could pay for this. It would buy 27 rows.
 
-### Where the other 104 go, which is the finding
+### Where the other 102 go, which is the finding
 
 | | rows |
 |---|---|
 | freed at fixpoint (optimistic) | 31 |
-| blocked by ≥1 **foreign** callee — no within-package join can ever reach them | 36 |
+| blocked by ≥1 **foreign** callee — no within-package join can ever reach them | 34 |
 | blocked **only** by foreign callees | 13 |
 | remainder: resolve fine, to package callees that are **themselves refuted** | ~68 |
 
@@ -95,7 +116,7 @@ filed as a reach item.
 **Every row in this population `throws`.** Structural, not incidental:
 `propagatedTry` is defined as `throwsClause != nil` *and* a `try` in the body,
 and `verdict(for:)` returns `.pure` only when there is no `throwsClause`. So the
-best a resolved callee can do for any of these 135 rows is `.pureButPartial`.
+best a resolved callee can do for any of these 133 rows is `.pureButPartial`.
 
 **Nothing consumes `.pureButPartial`.** It occurs in `Sources/` only inside doc
 comments — no `case`, no `if`, no filter — and `isInferredPure`, the field the
@@ -162,7 +183,7 @@ read and acted on.
 sense — the fact is real, the extraction works, and the index is 126 entries of
 genuine information. What fails is every path from the index to an output:
 
-- its leverage is 13–31 rows, not 135;
+- its leverage is 13–31 rows, not the 133-row population;
 - those rows land in `.pureButPartial`, which nothing reads, so 0 advisory rows
   move;
 - and its top-ranked entries are file reads that no annotation can free.
@@ -177,7 +198,7 @@ would deliver it at the point the fact is known.
 
 - **A consumer for `.pureButPartial` appears** (item 34). That is the precondition
   this census discovered; `thePartialTierHasNoConsumer` fires when it happens.
-- **The freed count reaches a third of the population.** Today 31/135.
+- **The freed count reaches a third of the population.** Today 31/133.
   `theLeverageIsAFractionOfThePopulation` is the guard.
 - **The index's head changes character** — if the top blockers become package
   functions that annotation could legitimately settle, the ranking starts
