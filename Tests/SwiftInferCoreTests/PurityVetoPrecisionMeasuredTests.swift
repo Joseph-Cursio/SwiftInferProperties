@@ -121,6 +121,33 @@ struct PurityVetoPrecisionMeasuredTests {
         """)
     }
 
+    /// **The shipped veto and the scope this census prices must be the same population.**
+    /// They are computed by different code — the census applies the rule itself, the veto
+    /// runs inside `TemplateRegistry.discover` — so nothing but this assertion stops them
+    /// drifting, and a drifted pair would mean the doc prices a veto that is not the one
+    /// shipping.
+    @Test("the shipped veto suppresses exactly the scoped population")
+    func theShippedVetoMatchesTheScope() throws {
+        let root = PurityRefutationCensusMeasuredTests.packageRoot.appendingPathComponent("Sources")
+        let scanned = try FunctionScanner.scanCorpus(directory: root)
+        let suggestions = TemplateRegistry.discover(
+            in: scanned.summaries, identities: scanned.identities, typeDecls: scanned.typeDecls
+        )
+        let vetoed = suggestions.filter { suggestion in
+            suggestion.score.signals.contains { $0.kind == .impureSubject && $0.isVeto }
+        }
+
+        #expect(vetoed.count == Self.measured.narrow.count, """
+        The shipped veto suppressed \(vetoed.count) suggestions; this census prices \
+        \(Self.measured.narrow.count). The doc is then describing a different veto from \
+        the one that ships.
+        """)
+        #expect(vetoed.allSatisfy { $0.score.tier == .suppressed }, "a veto did not collapse the tier")
+        #expect(vetoed.allSatisfy { suggestion in
+            suggestion.explainability.whyMightBeWrong.contains { $0.hasSuffix("(veto)") }
+        }, "a vetoed suggestion does not say why it was withheld")
+    }
+
     @Test("census — what a purity veto would cost")
     func census() {
         let arm = Self.measured

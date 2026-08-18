@@ -46,7 +46,13 @@ public enum PackagePurityJoin {
     /// either. Requiring unanimity is what makes the name safe to act on, and omitting
     /// that check was one cause of the 61% false-positive rate the fixpoint census
     /// measured on its first run.
-    static func refutingNames(in summaries: [FunctionSummary]) -> Set<String> {
+    ///
+    /// **`public` because the veto consumes it** (`TemplateRegistry.applyImpureSubjectVeto`,
+    /// in another module). Sharing the predicate rather than restating it is what makes the
+    /// veto's scope and this join's scope the *same* rule — a second copy would drift, and
+    /// drift between two statements of one rule is what relocating `PurityInferrer` into SEI
+    /// ended.
+    public static func refutingNames(in summaries: [FunctionSummary]) -> Set<String> {
         var byName: [String: [FunctionSummary]] = [:]
         for summary in summaries {
             byName[summary.name, default: []].append(summary)

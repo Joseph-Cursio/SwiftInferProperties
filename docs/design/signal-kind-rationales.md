@@ -317,3 +317,27 @@ Road test §10.2 (`docs/measurements/roadtest-self-dogfood-2026-08-08.md`) is th
 measurement that produced it: because `SuggestionIdentity` is `(template, canonical
 signature)` and deliberately blind to the body, a body-only edit that falsified the law
 left the identity unchanged and `discover` reported the now-false law as `Verified`.
+
+## `subjectNotVisibleToTests`
+
+Relocated 2026-08-18, when `impureSubject` took `Signal+Kind.swift` past its 400-line
+cap. It was the longest remaining rationale in that file.
+
+The subject is `private`/`fileprivate`, or sits inside a type that is — so **no test
+can name it**, whatever generator exists for its carrier.
+
+Score-neutral by construction (`weight: 0`). This is not a judgement about whether the
+law is true; §2 of `docs/measurements/roadtest-self-dogfood-2026-08-08.md` argues the
+law is usually right and the remedy is to LIFT it to the nearest reachable caller, not
+to widen the helper's access. Demoting the row would suppress the advice.
+
+**It exists so `StructuralBlocker` can see what the caveat already says.** `discover`
+has emitted *"NO TEST CAN RUN THIS LAW AS WRITTEN"* on these rows since the caveat
+post-processing landed — as PROSE, which nothing downstream can key on. `verify` then
+built the stub anyway and reported `cannot find 'X' in scope`, filed as `build-failed`:
+an instrument-failure bucket for a fact the tool knew before it started.
+Measured on `SwiftInferCore` (§9.2): `NonDeterministicAPIs.matches(_:)`.
+
+**Two of the four restrictions only.** `.internalOrSPI` is genuinely reached by
+`@testable`, and blocking it would suppress rows that verify today. `.nestedLocal` is
+also unreachable but is left out until measured, on the same conservative footing.
