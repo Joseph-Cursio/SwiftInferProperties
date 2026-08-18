@@ -184,14 +184,31 @@ extension FunctionScannerVisitor {
     /// or an explicit block containing `get` and no `set` — and no `async` /
     /// `throws` getter (a getter that can fail or suspend isn't the pure
     /// `self -> T` map the templates assume).
+    /// Accessor kinds that leave a property read-only. Everything else — `set`,
+    /// `_modify`, `unsafeMutableAddress`, `willSet`, `didSet`, `init` — makes it writable.
+    private static let readOnlyAccessors: Set<String> = ["get", "_read", "unsafeAddress"]
+
     private static func isReadOnlyGetter(_ block: AccessorBlockSyntax) -> Bool {
         switch block.accessors {
         case .getter:
             return true
 
         case let .accessors(list):
-            let specifiers = list.map(\.accessorSpecifier.text)
-            guard specifiers.contains("get"), !specifiers.contains("set") else {
+            let specifiers = Set(list.map(\.accessorSpecifier.text))
+            // **An ALLOWLIST, not a `!contains("set")` check.** Swift has more mutating
+            // accessors than `set`: `_modify` is a coroutine that yields an inout
+            // projection, `unsafeMutableAddress` hands back a writable pointer, and
+            // `willSet`/`didSet` only appear on stored properties but cost nothing to
+            // exclude. Naming the read-only ones means an accessor kind this does not
+            // know about makes the property NOT read-only, which is the conservative
+            // direction; naming the mutating ones would admit each new kind by default.
+            //
+            // Open item 50: the previous `!contains("set")` admitted **8 mutable
+            // properties** in OrderedCollections alone — `unordered`, `elements`,
+            // `keys`, `values`, `header`, `__unstable` — every one of them writable
+            // through `_modify`, and each carrying a law that assumes a pure `self -> T`
+            // map. `set.unordered.insert(x)` writes through exactly that accessor.
+            guard specifiers.contains("get"), specifiers.isSubset(of: Self.readOnlyAccessors) else {
                 return false
             }
             return !list.contains { accessor in
