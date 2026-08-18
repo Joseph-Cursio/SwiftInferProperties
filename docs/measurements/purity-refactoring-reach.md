@@ -2,6 +2,9 @@
 
 > **Status:** `measured` · **As of:** 2026-08-18
 
+**Re-taken the same day it was first written** — open item 43's one-hop join landed between
+the two readings and moved arm 2's population. Every table below is the second reading.
+
 Re-derivable at any time — `PurityRefactoringReachMeasuredTests` *is* the harness, and
 `make batch2` runs it.
 
@@ -58,11 +61,13 @@ Force every `.refuted` and `.pureButPartial` verdict to `.pure`, carrying
 
 | corpus | summaries | baseline | **purity forced** | `isThrows` masked (**control**) |
 |---|---|---|---|---|
-| self (`Sources/`, CLI) | 2,920 | 710 | **710 (0)** | 712 (**+2**) |
+| self (`Sources/`, CLI) | 2,927 | 712 | **712 (0)** | 714 (**+2**) |
 | OrderedCollections | 435 | 160 | **160 (0)** | 160 (0) |
 | SwiftPropertyLaws | 599 | 51 | **51 (0)** | 51 (0) |
 
-**Zero, on every corpus.** And the instrument is deliberately more generous than any real
+**Zero, on every corpus — and still zero after the one-hop join landed**, which is the
+sharper statement: the join moved 31 verdicts across the three corpora and arm 1 did not
+budge, because retracting a verdict nothing reads changes nothing a template does. And the instrument is deliberately more generous than any real
 refactor: a real one changes the body and may change the signature, this one changes only
 the verdict — so **0 is a ceiling, not an estimate**.
 
@@ -91,12 +96,31 @@ suggestions moved** at the other end of the same loop.
 If nothing gates on purity, how many of today's suggestions rest on a subject the
 analyzer refuted?
 
-| corpus | suggestions | touching a refuted subject | **witness** | ignorance-only | computed property |
-|---|---|---|---|---|---|
-| self | 710 | 20 | **8** | 12 | 0 |
-| OrderedCollections | 160 | 27 | **11** | 11 | 8 |
-| SwiftPropertyLaws | 51 | 3 | **3** | 0 | 0 |
-| **total** | **921** | **50** | **22** | **23** | **8** |
+| corpus | suggestions | touching a refuted subject | **witness** | ignorance-only | **joined** | computed property |
+|---|---|---|---|---|---|---|
+| self | 712 | 20 | **8** | 12 | 0 | 0 |
+| OrderedCollections | 160 | 32 | **11** | 11 | **6** | 8 |
+| SwiftPropertyLaws | 51 | 3 | **3** | 0 | 0 | 0 |
+| **total** | **923** | **55** | **22** | **23** | **6** | **8** |
+
+> **Re-taken after open item 43's one-hop join, and the coupling was predicted before it was
+> built.** The join retracts `.pure` verdicts whose body calls a settled-impure package
+> function, so it *grows* this population rather than shrinking it: **+5 suggestions and +6
+> refuted subjects, all on OrderedCollections**. The witness and ignorance halves did not
+> move — 22 and 23 both times — because none of this repo's 16 retracted functions is a law
+> subject.
+>
+> **The `joined` column is a category this census did not have, and for one run it got them
+> wrong.** A joined retraction leaves no *local* syntactic cause, so the attributor found
+> none and bucketed six rows as `ignorance-only` — the analyzer reporting its own blindness,
+> which is the inverse of the truth: these carry a witness **one hop away**. Before the join
+> existed, a `.refuted` subject always carried at least one local cause, so an empty cause
+> set is unambiguous and the fix is exact. The six are `OrderedSet.sort()`, `subtract(_:)`,
+> `subtracting(_:)` ×3 and `symmetricDifference(_:)`, each reaching the `nonTotal`-refuted
+> `_partition` family.
+>
+> **Self's summary count moves for a duller reason**: 2,920 → 2,927 because this change added
+> source files to `Sources/`, which is this corpus. Self-dogfood contamination, not a finding.
 
 **The join resolves every row** — 954/954, 208/208, 52/52 — which is asserted, because a
 suggestion whose evidence matches no summary is dropped silently and a broken join

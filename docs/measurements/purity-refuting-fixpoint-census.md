@@ -5,6 +5,22 @@
 Re-derivable at any time — `PurityFixpointCensusMeasuredTests` *is* the
 harness, and `make batch2` runs it.
 
+> **BUILT 2026-08-18 — `PackagePurityJoin`, open item 43, and it retracts 16 here, not 18.**
+> The shipped rule is **stricter than this census's** and the gap is the whole of the
+> difference: a census can read SEI's refutation causes through a test-only replica,
+> shipped code cannot. So the witness is established from public API alone — `propagatedTry`
+> requires a `throws` clause by definition and `noBody` is structurally unreachable, so a
+> `.refuted` **non-throwing** declaration cannot be ignorance-only. A throwing callee that
+> also carries a marker is a witness the shipped rule cannot see, so it under-retracts by
+> two rows. **That is the safe direction, and the price is now measured rather than
+> assumed.**
+>
+> A/B against the merged per-file scan, which cannot run the join and is therefore the
+> honest baseline: `.pure` **2,583 → 2,567** here, **344 → 332** on OrderedCollections,
+> **323 → 320** on SwiftPropertyLaws. `PackagePurityJoinMeasuredTests` is the guard, and it
+> pins `DrainedProcess.standardOutputViaEnv` — this document's own named witness — as no
+> longer `.pure`. **The loop remains unbuilt**, per this census's own verdict.
+
 **The answer is BUILD the one-hop join. The loop is a second phase, not the
 headline** — and the reason that sentence changed is the most useful thing in this
 document.
