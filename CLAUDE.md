@@ -54,14 +54,16 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,662 tests — 5,511 fast + 151 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-18** after the sandbox-detector merge —
-every stage counted from that one run: fast 5,511 · perf 8 · batches 4 · **72** · 31 · 7 · 8 · 4 ·
-9 · 8. The 147 → **151** is `SandboxDetectorMechanismMeasuredTests` joining batch2, and it
-reconciles with 147 + 4 — **which is why it was re-taken rather than added**: the first full run
-of that branch was piped through `tail -40`, which discarded every per-stage count while keeping
-the exit code, so the arithmetic was available and the measurement was not. Re-running cost half
-an hour and is the whole of this file's standing rule. The prior reading, at 2026-08-17,
+Suites green at **5,669 tests — 5,511 fast + 158 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-18** after the refactoring-reach merge —
+every stage counted from that one run: fast 5,511 · perf 8 · batches 4 · **79** · 31 · 7 · 8 · 4 ·
+9 · 8. The 151 → **158** is `PurityRefactoringReachMeasuredTests` joining batch2, on top of the
+same day's 147 → 151 for `SandboxDetectorMechanismMeasuredTests`, and it
+reconciles with 151 + 7 — **which is why both were re-taken rather than added**. The
+sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
+per-stage count while keeping the exit code: the run proved the branch green and proved nothing
+about the number, so the arithmetic was available and the measurement was not. Re-running cost
+half an hour, twice, and is the whole of this file's standing rule. The prior reading, at 2026-08-17,
 follows — it too was a genuine full run, every batch counted from it rather than carried
 over. The prior 5,654 reading was
 `test-fast` + `batch2` re-run directly with the other seven batches carried, and it is
@@ -71,7 +73,8 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 `OwnershipPremiseCensus`, `ModuleStateCensus`, `PurityBacktest` and
 `BlindSpotBaseRateCensus` joined, then **136 → 147** as items 34/35's two suites and
 `SoundnessArmReachCensusMeasuredTests` landed together, then **147 → 151** for
-`SandboxDetectorMechanismMeasuredTests`. The fast half has not moved for
+`SandboxDetectorMechanismMeasuredTests` and **151 → 158** for
+`PurityRefactoringReachMeasuredTests`. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
 which therefore needs no batch — the regex doing its job in the other direction.
@@ -130,6 +133,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 26 rows, base rate unmeasurable — and `3ea25f2` refuted the witness without moving the zero, because the closure oracle never reads the callee's verdict. Item 42 CLOSED there |
 | **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |
+| **Would refactoring toward purity put more code within a law's reach?** | `docs/measurements/purity-refactoring-reach.md` | **Measured NO at a ceiling — 710/160/51 suggestions, zero moved** by forcing every verdict to `.pure`. The zero is structural: purity is not one of `UnverifiableCause`'s eight causes. **The same fact read back is a soundness finding — 22 of 921 suggestions rest on a witness-refuted subject**, seven of them filesystem predicates here. The signal's use is a VETO, scoped to witness-bearing |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` | The rest of `docs/archive/` is shipped-then-archived design records. Archived ≠ superseded — read for reasoning, never for counts |
 | Per-cycle change story | `git log` | The per-cycle findings docs were folded into the archive above |
 | Road tests (third-party subjects) | `docs/measurements/roadtest-*.md` | SwiftProjectLint (first scored, frozen key), SwiftLintRuleStudio, MacCloud server / client |
