@@ -54,17 +54,20 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,654 tests — 5,511 fast + 143 across `perf` and the eight batches**
-(**not a fresh full run**: `test-fast` and `batch2` were re-run directly 2026-08-17 after the
-items 34/35 rebase; the other seven batches and `perf` are carried unchanged from the genuine
-full `make test` of 2026-08-17, ~29 min, which read 5,647 as 5,511 + 136.
-The batch half moved 92 → 112 as the four
-purity censuses joined batch2, then 112 → 117 as `PurityFixpointCensusMeasuredTests`
-joined it, then 117 → 121 as `OwnershipPremiseCensusMeasuredTests` did, then 121 → 126 as `ModuleStateCensusMeasuredTests` did, then 126 → 131 as `PurityBacktestMeasuredTests` did, then 131 → 136 as `BlindSpotBaseRateCensusMeasuredTests` did, then **136 → 143** as `PartialPurityConsumerMeasuredTests` and `PureAdvisoryRoundTripMeasuredTests` joined it together (+7, measured by filtering to the two suites).
-The fast half has not moved for any of those, which is the regex doing its job; it moved
-5,508 → 5,511 only for `PartitionOrderContainmentTests`, a property suite rather than a
-`*MeasuredTests` one, which therefore needs no batch — the regex doing its job in the other
-direction. Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
+Suites green at **5,658 tests — 5,511 fast + 147 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-17** after the items 34/35 merge —
+every batch counted from that one run, not carried over. The prior 5,654 reading was
+`test-fast` + `batch2` re-run directly with the other seven batches carried, and it is
+superseded rather than merely stale: the union of two branches' batch additions is not
+either branch's arithmetic. The batch half moved 92 → 112 as the four purity censuses
+joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
+`OwnershipPremiseCensus`, `ModuleStateCensus`, `PurityBacktest` and
+`BlindSpotBaseRateCensus` joined, then **136 → 147** as items 34/35's two suites and
+`SoundnessArmReachCensusMeasuredTests` landed together. The fast half has not moved for
+any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
+`PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
+which therefore needs no batch — the regex doing its job in the other direction.
+Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
