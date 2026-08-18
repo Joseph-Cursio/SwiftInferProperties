@@ -122,7 +122,42 @@ public enum SoundPurity {
     /// why the shape it admits (`var now: Date { Date() }`, advised `pure`) is
     /// pinned by a test rather than left to the next corpus to discover.
     public static func verdict(forGetter accessor: AccessorBlockSyntax) -> PurityVerdict {
-        guard ReducerPurityAnalyzer.analyze(Syntax(accessor)) == .pure else { return .refuted }
+        guard ReducerPurityAnalyzer.analyze(getterOnly(of: accessor)) == .pure else { return .refuted }
         return PurityInferrer().isPure(accessor) ? .pure : .refuted
+    }
+
+    /// The getter's statements, not the whole accessor block.
+    ///
+    /// **Open item 50's second half, and it is INERT today — measured, not assumed.**
+    /// `ReducerPurityAnalyzer` walks whatever syntax it is handed, so passing the block
+    /// let it read a `_read` or `unsafeAddress` body it was never asked about: a `get`
+    /// returning `1` beside a `_read` writing `S.cache` measured `hiddenMutability`, which
+    /// is a true statement about the property and a false one about its getter.
+    ///
+    /// **It changes no verdict, because SEI's rule dominates.**
+    /// `PurityInferrer.isPure(_ accessor:)` returns `false` on the *presence* of any
+    /// non-`get` accessor — it never reads that accessor's body — so the meet is
+    /// `.refuted` either way. The narrowing matters only if SEI relaxes that rule, and
+    /// `narrowingIsInertWhileSEIRefusesNonGetAccessors` says so in a test rather than
+    /// leaving the next reader to rediscover it.
+    ///
+    /// Kept anyway, on item 40's precedent: a correct oracle pointed at the right node,
+    /// closing a latent misreading at zero measured cost.
+    static func getterOnly(of accessor: AccessorBlockSyntax) -> Syntax {
+        switch accessor.accessors {
+        case let .getter(statements):
+            // The shorthand `var x: T { … }` — the body IS the getter.
+            return Syntax(statements)
+
+        case let .accessors(list):
+            guard let getter = list.first(where: { $0.accessorSpecifier.tokenKind == .keyword(.get) }),
+                  let body = getter.body else {
+                // No getter to isolate. Hand back the block unchanged rather than an empty
+                // node: an empty one reads as *nothing impure here*, which is the
+                // permissive direction and the one this file exists to avoid.
+                return Syntax(accessor)
+            }
+            return Syntax(body.statements)
+        }
     }
 }

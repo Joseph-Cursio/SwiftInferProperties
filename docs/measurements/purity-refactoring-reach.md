@@ -177,10 +177,17 @@ writes through it — so the guard admits it, and the property carries **8 sugge
 (`inverse-pair` ×4, `round-trip` ×4).
 
 **A second defect masks the first.** `SoundPurity.verdict(forGetter:)` is handed the whole
-`AccessorBlockSyntax`, so it reads the `_modify` body too, sees `self = OrderedSet()`, and
-returns `.refuted`. The property is therefore *reported* impure — correctly, but for a
-reason that has nothing to do with its getter, which is pure. Remove the `_modify` and
-the same misclassification would return a clean `.pure`.
+`AccessorBlockSyntax`, so the property is *reported* impure — correctly, but for reasons
+that have nothing to do with its getter, which is pure.
+
+> **This mechanism was stated too simply, and was corrected 2026-08-18 when it was probed
+> rather than read.** The refutation is **over-determined**, by two oracles that disagree
+> about why. `ReducerPurityAnalyzer` does read the `_modify` body and answers
+> `hiddenMutability` — that half was right. But `PurityInferrer.isPure(_ accessor:)`
+> **never reads a non-getter body at all**: it returns `false` on the *presence* of any
+> non-`get` accessor. So the property refutes whichever oracle is narrowed, and the fix had
+> to be the upstream one — rejecting the property outright. See
+> `docs/measurements/modify-accessor-misclassification.md`.
 
 **Item 40's shape exactly: an oracle pointed at the wrong node.** Neither defect has been
 A/B'd here and neither is fixed in this change — both are filed rather than folded into
