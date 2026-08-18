@@ -105,17 +105,47 @@ upward effect inference described one violation as resting on a 5-hop chain on o
 and a 4-hop chain on the next."* **And it is live in `Sources/` right now**, in a
 function the purity oracle vouches for.
 
-### What is NOT established about it
+### It does NOT escape — measured 2026-08-17, so this is a smell and not a bug
 
-**Whether it reaches a user-visible artifact.** The order is nondeterministic *at this
-function's boundary*; whether a caller sorts downstream is a separate question this
-census does not ask. `finalizeNClass` returns a `map` over the same shape and is the
-same reading.
+The open question was whether the order reaches a user-visible artifact. It does not,
+and the reason is one hop up:
 
-That question matters and should be asked before this is called a bug rather than a
-smell — `ProjectLinterOrderingTests` exists in the sibling linter precisely because
-report order is load-bearing there, so a nondeterministic candidate list is the kind
-of thing that has bitten this toolchain before.
+```swift
+func finalize() -> [PartitionCandidate] {
+    let twoClass = finalizeTwoClass()
+    let nClass = finalizeNClass()
+    return (twoClass + nClass).sorted(by: Self.sortCandidates)
+}
+```
+
+**Which makes the whole question comparator totality, because Swift's sort is not
+stable.** `sorted(by:)` over a *partial* order leaves tied elements in input order, so
+a tie plus a hash-ordered input is nondeterministic output *even though a sort ran*.
+Containment rests entirely on no two candidates comparing equal.
+
+They cannot, and the key types are what guarantee it:
+
+| tier | separates | why a tie is impossible |
+|---|---|---|
+| 1 · `predicateName` | anything with distinct names | — |
+| 2 · two-class before N-class | a two-class from an N-class candidate | — |
+| 3 · `markerSet?.name` | two N-class candidates | `NClassPartitionKey` **is** `(predicateName, markerSetName)` — two distinct rows cannot share both |
+| — | two two-class candidates | `winnerByPredicate` is keyed by `predicateName` alone, so there is at most one |
+
+**Asserted by permutation, not by that argument.** `PartitionOrderContainmentTests`
+sorts every rotation and the reversal of a population built to nearly collide, and
+requires one sequence — and carries a **control that fails against a comparator with
+its last tier removed**, without which the property would pass against anything. The
+reasoning in the table is the kind that has been wrong three times in this line of
+work; the property fails the day a tier is dropped or `NClassPartitionKey` gains a
+field, which no reading catches.
+
+`sortCandidates` moved from `private` to internal so the property could reach it.
+
+**So: the oracle is still wrong** — `finalizeTwoClass` genuinely is nondeterministic at
+its own boundary and is judged `.pure` — **but the defect is contained and no artifact
+is affected.** A smell, not a bug. The row stays in the census because the *oracle's*
+error is the census's subject; what changed is the consequence.
 
 **The count is a lower bound, twice over.** A name declared in another file is
 invisible; a name whose type is inferred rather than annotated is invisible. Both are

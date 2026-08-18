@@ -224,7 +224,16 @@ struct PartitionAggregator {
         }
     }
 
-    private static func sortCandidates(_ lhs: PartitionCandidate, _ rhs: PartitionCandidate) -> Bool {
+    /// The candidate order `finalize()` imposes on a hash-ordered intermediate.
+    ///
+    /// **Internal rather than `private` so its totality can be tested.**
+    /// `finalizeTwoClass` iterates a dictionary, so its output order varies run to run;
+    /// containment rests entirely on this comparator admitting **no ties**, because
+    /// `sorted(by:)` over a partial order leaves tied elements in input order and
+    /// Swift's sort carries no stability guarantee. `PartitionOrderContainmentTests`
+    /// asserts that by permutation — the property that a reading of these three tiers
+    /// cannot establish.
+    static func sortCandidates(_ lhs: PartitionCandidate, _ rhs: PartitionCandidate) -> Bool {
         if lhs.predicateName != rhs.predicateName {
             return lhs.predicateName < rhs.predicateName
         }
