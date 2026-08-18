@@ -27,9 +27,9 @@ import Testing
 /// 2. **Does the leverage have a reader?** What verdict do the freed rows land
 ///    on, and does anything consume it?
 ///
-/// The second question is the one the *Decisions* stub in the additions doc
-/// insists on: *"If the ranking has no consumer, it is a third instance rather
-/// than a fix."* That trap was expected to arrive through item 35 — the `pure`
+/// The second question is the one `docs/design-internal/open-threads.md` →
+/// *The bucket is a channel, not a report* insists on: *"If the ranking has no
+/// consumer, it is a third instance rather than a fix."* That trap was expected to arrive through item 35 — the `pure`
 /// advisory is outbound-only, so nobody reads a recommended annotation back. It
 /// arrives here from a different direction entirely, and much earlier.
 ///
