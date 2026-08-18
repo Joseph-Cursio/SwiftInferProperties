@@ -54,14 +54,14 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,675 tests — 5,513 fast + 162 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-18** after the one-hop-join merge —
-every stage counted from that one run: fast 5,513 · perf 8 · batches 4 · **83** · 31 · 7 · 8 · 4 ·
-9 · 8. **Both halves moved this time, and for opposite reasons**: batch 158 → **162** for
-`PackagePurityJoinMeasuredTests`, and fast 5,511 → **5,513** for `BuilderFieldParityTests`, which
-is a plain unit suite rather than a `*MeasuredTests` one and therefore needs no batch — the regex
-doing its job in both directions on one branch. It
-reconciles with 158 + 4 — **which is why each was re-taken rather than added**. The
+Suites green at **5,688 tests — 5,519 fast + 169 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-18** after the purity-veto branch —
+every stage counted from that one run: fast 5,519 · perf 8 · batches 4 · **90** · 31 · 7 · 8 · 4 ·
+9 · 8. **Both halves moved again, for opposite reasons**: batch 162 → **169** for
+`PurityVetoPrecisionMeasuredTests`, and fast 5,513 → **5,519** for `ImpureSubjectVetoTests`, a
+plain unit suite rather than a `*MeasuredTests` one and therefore needing no batch — the regex
+doing its job in both directions, on two consecutive branches now. It
+reconciles with 162 + 7 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -76,7 +76,8 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 `BlindSpotBaseRateCensus` joined, then **136 → 147** as items 34/35's two suites and
 `SoundnessArmReachCensusMeasuredTests` landed together, then **147 → 151** for
 `SandboxDetectorMechanismMeasuredTests`, **151 → 158** for
-`PurityRefactoringReachMeasuredTests` and **158 → 162** for `PackagePurityJoinMeasuredTests`. The fast half has not moved for
+`PurityRefactoringReachMeasuredTests`, **158 → 162** for `PackagePurityJoinMeasuredTests`
+and **162 → 169** for `PurityVetoPrecisionMeasuredTests`. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
 which therefore needs no batch — the regex doing its job in the other direction, as it did
@@ -137,7 +138,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |
 | **Would refactoring toward purity put more code within a law's reach?** | `docs/measurements/purity-refactoring-reach.md` | **Measured NO at a ceiling — 710/160/51 suggestions, zero moved** by forcing every verdict to `.pure`. The zero is structural: purity is not one of `UnverifiableCause`'s eight causes. **The same fact read back is a soundness finding — 22 of 921 suggestions rest on a witness-refuted subject**, seven of them filesystem predicates here. The signal's use is a VETO, scoped to witness-bearing |
-| **What would a purity veto cost?** | `docs/measurements/purity-veto-precision.md` | **Measured AFFORDABLE when scoped — 0 refutations removed at either scope.** Naive `.refuted` veto: 20 removed, **10 passing laws**, 8 of them `encode(to:)` under the only 100%-yield template. Witness-scoped: 8 removed, **2 passes**, both filesystem predicates the veto exists for. Read the `refuted` column, never the total |
+| **What would a purity veto cost?** | `docs/measurements/purity-veto-precision.md` | **Measured AFFORDABLE when scoped — 0 refutations removed at either scope.** Naive `.refuted` veto: 20 removed, **10 passing laws**, 8 of them `encode(to:)` under the only 100%-yield template. Witness-scoped: 8 removed, **2 passes**, both filesystem predicates the veto exists for. Read the `refuted` column, never the total **SHIPPED 2026-08-18** as `applyImpureSubjectVeto`, witness-scoped, suppressing 8 here — and the gate that matters is `bodyFingerprint != nil`, because `.refuted` is an initialiser DEFAULT |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` | The rest of `docs/archive/` is shipped-then-archived design records. Archived ≠ superseded — read for reasoning, never for counts |
 | Per-cycle change story | `git log` | The per-cycle findings docs were folded into the archive above |
 | Road tests (third-party subjects) | `docs/measurements/roadtest-*.md` | SwiftProjectLint (first scored, frozen key), SwiftLintRuleStudio, MacCloud server / client |

@@ -10,6 +10,22 @@ said outright that its precision was not measured. This is that measurement, and
 follows this repo's standing rule for a candidate veto: **score it against the laws that
 HELD**, not against the class it targets.
 
+> **SHIPPED 2026-08-18 — `TemplateRegistry.applyImpureSubjectVeto`, witness-scoped**, the
+> scope this document priced. `ImpureSubjectVetoTests` guards the rule and
+> `theShippedVetoMatchesTheScope` pins the shipped population to the one priced here, so
+> the two cannot drift into describing different vetoes. It suppresses **8** on this
+> corpus and each withheld row renders its reason.
+>
+> **One thing the measurement did not predict, and it is item 40's finding again.**
+> `.refuted` is `FunctionSummary.init`'s **default**, so on a summary nothing analysed it
+> means *not computed* rather than *refuted*. The first shipped rule read that default as
+> evidence and suppressed **six unrelated suites** whose fixtures build summaries by hand.
+> The gate is `bodyFingerprint != nil` — the field's own doc already states the semantics,
+> *"`nil` for summaries built without a body … or one of the many hand-built summaries in
+> tests"* — and it is a no-op on any scanned corpus, which is why every number below is
+> unchanged by it. **A census over a real scan cannot see a defaulted verdict, so it could
+> not have caught this; the fast suite did.**
+
 **Measured: neither scope removes a single law that found a counterexample.** The naive
 veto removes **10** laws that ran and passed; scoping it to witness-bearing refutations
 removes **2**. The 8 spared are all `encode(to:)` under `codable-round-trip` — the one

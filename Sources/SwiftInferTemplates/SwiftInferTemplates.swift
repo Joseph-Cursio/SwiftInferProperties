@@ -132,8 +132,14 @@ public enum TemplateRegistry {
             generatorTypeByIdentity: collector.generatorTypes,
             typeDecls: typeDecls
         )
+        // The impure-subject veto runs LAST among the content passes and before the
+        // finalisation ones, for the reason `TemplateRegistry+PurityVeto.swift` gives:
+        // it is a claim about whether a law may be EXECUTED, not about how well it is
+        // evidenced, so it must see the suggestion every earlier pass produced rather
+        // than a partly-scored one.
+        let vetoed = applyImpureSubjectVeto(to: withCodableFallback, summaries: summaries)
         return finalizeSuggestions(
-            withCodableFallback,
+            vetoed,
             crossValidation: crossValidationFromTestLifter,
             crossValidationOrigins: crossValidationOriginsFromTestLifter,
             counterSignals: counterSignalsFromTestLifter,

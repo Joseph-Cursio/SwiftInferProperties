@@ -112,27 +112,32 @@ extension Signal {
     /// Rationale relocated to `docs/design/signal-kind-rationales.md` on 2026-08-09,
     /// when adding `subjectNotVisibleToTests` took this file past its 400-line cap.
     /// Relocate, do not trim — every comment here records a measurement.
-        /// The subject is `private`/`fileprivate`, or sits inside a type that is — so **no test
-    /// can name it**, whatever generator exists for its carrier.
-    ///
-    /// Score-neutral by construction (`weight: 0`). This is not a judgement about whether the
-    /// law is true; §2 of `docs/measurements/roadtest-self-dogfood-2026-08-08.md` argues the
-    /// law is usually right and the remedy is to LIFT it to the nearest reachable caller, not
-    /// to widen the helper's access. Demoting the row would suppress the advice.
-    ///
-    /// **It exists so `StructuralBlocker` can see what the caveat already says.** `discover`
-    /// has emitted *"NO TEST CAN RUN THIS LAW AS WRITTEN"* on these rows since the caveat
-    /// post-processing landed — as PROSE, which nothing downstream can key on. `verify` then
-    /// built the stub anyway and reported `cannot find 'X' in scope`, filed as `build-failed`:
-    /// an instrument-failure bucket for a fact the tool knew before it started.
-    /// Measured on `SwiftInferCore` (§9.2): `NonDeterministicAPIs.matches(_:)`.
-    ///
-    /// **Two of the four restrictions only.** `.internalOrSPI` is genuinely reached by
-    /// `@testable`, and blocking it would suppress rows that verify today. `.nestedLocal` is
-    /// also unreachable but is left out until measured, on the same conservative footing.
+    /// Rationale relocated to `docs/design/signal-kind-rationales.md` on 2026-08-18,
+    /// when adding `impureSubject` took this file past its 400-line cap. It was the
+    /// longest remaining rationale here. Relocate, do not trim.
     case subjectNotVisibleToTests
 
     case declaredIdempotentEffect
+
+        /// The suggestion's subject is judged **impure with a witness** — a marker, a
+        /// trap, an `async` signature, or a call to a package function refuted with one.
+        /// A law is generated as a property test that runs the function in-process over
+        /// random inputs, and SEI's own doc calls `.pure` the most dangerous place to land
+        /// wrongly for exactly that reason. A `predicate` law over `directoryExists(_:)`
+        /// passes or fails on what is on disk, and nothing in the output said so.
+        ///
+        /// **Scoped to witness-bearing refutations, and the scope was measured before it
+        /// shipped** (`docs/measurements/purity-veto-precision.md`). Vetoing on `.refuted`
+        /// outright removes 20 rows here, **10 of them laws that ran and passed** — 8 being
+        /// `encode(to:)` under `codable-round-trip`, the one template at 100% yield,
+        /// refuted only by `propagatedTry`, which is the analyzer failing to see past a
+        /// `try` rather than evidence of impurity. Scoped, it removes 8 and **0 laws that
+        /// found a counterexample**, at either scope.
+        ///
+        /// **A veto rather than a demotion**, unlike `kitEqualityOracleRefuted`'s −45: a
+        /// demotion still emits the row, and the objection here is not that the law is
+        /// weakly evidenced but that **executing it means executing an impurity**.
+        case impureSubject
 
         // Negative (non-veto)
         case sideEffectPenalty
