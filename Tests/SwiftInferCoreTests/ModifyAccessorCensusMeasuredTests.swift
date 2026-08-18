@@ -38,20 +38,23 @@ import Testing
 @Suite("Census — a `_modify` property is summarised as read-only", .serialized)
 struct ModifyAccessorCensusMeasuredTests {
 
-    static let corpus = PartialPurityConsumerMeasuredTests.corpora
-        .first { $0.name.contains("OrderedCollections") }
+    static let corpora = PartialPurityConsumerMeasuredTests.corpora
 
     struct Arm {
+        let corpus: String
         let summaries: Int
         let computedProperties: Int
         /// Summaries for a property whose accessor block declares `_modify`.
         let modifyProperties: [String]
         let suggestionsOnModify: Int
         let vetoedOnModify: Int
+        /// Admitted properties whose accessor block declares more than one accessor —
+        /// the population for the second half of open item 50.
+        let multiAccessorAdmitted: [String]
     }
 
-    static let measured: Arm? = {
-        guard let corpus, let scanned = try? FunctionScanner.scanCorpus(directory: corpus.root) else {
+    static let measured: [Arm] = corpora.compactMap { corpus in
+        guard let scanned = try? FunctionScanner.scanCorpus(directory: corpus.root) else {
             return nil
         }
         let suggestions = TemplateRegistry.discover(
@@ -63,16 +66,22 @@ struct ModifyAccessorCensusMeasuredTests {
         let touching = suggestions.filter { suggestion in
             suggestion.evidence.contains { modifyLocations.contains($0.location) }
         }
+        let multi = scanned.summaries
+            .filter { $0.isComputedProperty && accessorSpecifiers(of: $0).count > 1 }
+            .map { "\($0.name) @ \($0.location.line) — \(accessorSpecifiers(of: $0).sorted().joined(separator: "+"))" }
+
         return Arm(
+            corpus: corpus.name,
             summaries: scanned.summaries.count,
             computedProperties: scanned.summaries.filter(\.isComputedProperty).count,
             modifyProperties: modify.map { "\($0.name) @ \($0.location.line)" }.sorted(),
             suggestionsOnModify: touching.count,
             vetoedOnModify: touching.filter { suggestion in
                 suggestion.score.signals.contains { $0.kind == .impureSubject && $0.isVeto }
-            }.count
+            }.count,
+            multiAccessorAdmitted: multi.sorted()
         )
-    }()
+    }
 
     /// Re-parses the declaration and reads its accessor specifiers. The summary carries no
     /// accessor vocabulary, and inferring "has a `_modify`" from the verdict would assume
@@ -117,23 +126,46 @@ struct ModifyAccessorCensusMeasuredTests {
         return []
     }
 
-    @Test("control — the corpus is reachable and has computed properties")
-    func theCorpusIsReachable() throws {
-        let arm = try #require(Self.measured, "OrderedCollections did not resolve")
-        #expect(arm.summaries > 300, "only \(arm.summaries) summaries — the corpus did not scan")
-        #expect(arm.computedProperties > 0, "no computed properties at all; the census cannot fire")
+    @Test("control — the corpora are reachable and have computed properties")
+    func theCorpusIsReachable() {
+        #expect(Self.measured.count >= 2, "only \(Self.measured.count) corpora scanned")
+        #expect(Self.measured.contains { $0.computedProperties > 0 }, """
+        No corpus produced a computed property at all, so every zero below is the \
+        instrument's rather than the corpus's.
+        """)
+    }
+
+    /// **No admitted property declares a second accessor**, which closes the other half of
+    /// open item 50 by removing its population: `SoundPurity.verdict(forGetter:)` is handed
+    /// the whole `AccessorBlockSyntax`, and reading a `_modify` body it should not was the
+    /// complaint. With mutating accessors rejected upstream, every block it now sees holds
+    /// exactly one accessor, so there is nothing else in it to misread.
+    ///
+    /// **Reopens the moment this fires** — a `get` + `_read` pair is legal, admitted, and
+    /// would put the whole-block read back in play.
+    @Test("no admitted property has a second accessor to misread")
+    func theOracleSeesOneAccessor() {
+        for arm in Self.measured {
+            #expect(arm.multiAccessorAdmitted.isEmpty, """
+            \(arm.corpus): \(arm.multiAccessorAdmitted.count) admitted propert(ies) declare \
+            more than one accessor, so `verdict(forGetter:)` is reading a block it was not \
+            asked about: \(arm.multiAccessorAdmitted.joined(separator: ", "))
+            """)
+        }
     }
 
     @Test("census — mutable properties admitted as read-only")
-    func census() throws {
-        let arm = try #require(Self.measured)
-        print("""
-        OrderedCollections: \(arm.summaries) summaries · \(arm.computedProperties) computed properties
-          summarised despite declaring `_modify`: \(arm.modifyProperties.count)
-            \(arm.modifyProperties.joined(separator: "\n    "))
-          suggestions resting on one: \(arm.suggestionsOnModify)
-          …of those, vetoed: \(arm.vetoedOnModify)
-        """)
+    func census() {
+        for arm in Self.measured {
+            print("""
+            \(arm.corpus): \(arm.summaries) summaries · \(arm.computedProperties) computed properties
+              declaring `_modify` yet summarised: \(arm.modifyProperties.count) \
+            \(arm.modifyProperties.joined(separator: ", "))
+              suggestions resting on one: \(arm.suggestionsOnModify) (vetoed \(arm.vetoedOnModify))
+              admitted with more than one accessor: \(arm.multiAccessorAdmitted.count) \
+            \(arm.multiAccessorAdmitted.joined(separator: ", "))
+            """)
+        }
     }
 }
 
