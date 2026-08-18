@@ -54,14 +54,14 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,703 tests — 5,531 fast + 172 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-18** after the accessor-fix branch —
-every stage counted from that one run: fast 5,531 · perf 8 · batches 4 · **93** · 31 · 7 · 8 · 4 ·
-9 · 8. **Both halves moved again**: batch 169 → **172** for `ModifyAccessorCensusMeasuredTests`,
-and fast 5,519 → **5,531** for `ReadOnlyAccessorTests` and `GetterOnlyVerdictTests`, plain unit
-suites rather than `*MeasuredTests` ones and therefore needing no batch — the regex doing its job
-in both directions, on three consecutive branches now. It
-reconciles with 169 + 3 — **which is why each was re-taken rather than added**. The
+Suites green at **5,707 tests — 5,531 fast + 176 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-18** after the soundness-arm branch —
+every stage counted from that one run: fast 5,531 · perf 8 · batches 4 · **97** · 31 · 7 · 8 · 4 ·
+9 · 8. **Only the batch half moved this time** — 172 → **176** for
+`SoundnessArmProbeMeasuredTests`, with the fast half unchanged at 5,531, which is the regex
+doing its job in the ordinary direction. The three branches before it moved both halves; the
+prior reading follows. It
+reconciles with 172 + 4 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -78,7 +78,8 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 `SandboxDetectorMechanismMeasuredTests`, **151 → 158** for
 `PurityRefactoringReachMeasuredTests`, **158 → 162** for `PackagePurityJoinMeasuredTests`
 , **162 → 169** for `PurityVetoPrecisionMeasuredTests`
-and **169 → 172** for `ModifyAccessorCensusMeasuredTests`. The fast half has not moved for
+, **169 → 172** for `ModifyAccessorCensusMeasuredTests`
+and **172 → 176** for `SoundnessArmProbeMeasuredTests`. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
 which therefore needs no batch — the regex doing its job in the other direction, as it did
