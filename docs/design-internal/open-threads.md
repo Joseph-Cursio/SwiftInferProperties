@@ -1348,6 +1348,23 @@ paragraphs up (shipping the bucket as a rendered report first) is untouched by t
 
 Toolchain-level reads with no single owning package. Not tasks; not measurements.
 
+### The documented error direction has been backwards three times, always permissively
+
+Row 30 — `PurityInferrer` documents *"any doubt refutes"* and the marker sets *"err toward
+flagging"*; measured, an unrecognised callee refutes nothing and a subprocess spawn reads `.pure`.
+Row 33 — chains were documented as terminating at the first `map`/`reduce`/`filter`; measured, nine
+of ten probe shapes sail straight through and the real defect is an **over**-claim. Row 35 — the
+`pure` advisory was filed as outbound-only; measured, it is read back and believed, and what is
+inert is every *consumer*.
+
+Three for three, and every one of them errs toward claiming **more** purity than the evidence
+supports — the opposite of the conservative posture each doc comment states.
+
+**A posture stated in a doc comment is a claim about intent, and intent is not measurable from the
+doc that states it.** The transferable practice is row 47's, which paid for itself twice: **probe
+the premise before scoping the build.** An afternoon against a phase, and the premise probe is the
+cheaper half every time — rows 33, 47 and 46 were each closed or re-aimed by one.
+
 ### The consumer keeps asking the producer for things, in English
 
 Three times the downstream tool discovered it needed something upstream already knew, and each was
