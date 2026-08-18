@@ -244,6 +244,14 @@ let package = Package(
             name: "swift-infer",
             dependencies: ["SwiftInferCLI"]
         ),
+        // Phase 0.5's soundness arm. A separate executable because the probe must be a
+        // SEPARATE PROCESS to be sandboxed at all, and `@testable` because five of the
+        // nine trip-list subjects are `internal`. Not exposed as a product — nothing
+        // outside this package can depend on it, and `swift-infer` does not link it.
+        .executableTarget(
+            name: "soundness-probe",
+            dependencies: ["SwiftInferCLI", "SwiftInferCore"]
+        ),
         .testTarget(
             name: "SwiftInferCoreTests",
             dependencies: [
