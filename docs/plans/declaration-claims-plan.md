@@ -356,6 +356,12 @@ counterexample and leaves *no* output, and a sandbox that refutes by SIGKILL rep
 layer down. And **tier the policy** — `observational` is retry-safe but not pure, so a naive
 deny-all produces a wall of `print` refutations. stdout is not a socket.
 
+> **Measured 2026-08-18: the two halves of the first constraint have different prices.**
+> *Not killing* is free — under `sandbox-exec` the process survives every denial and exits 0.
+> *Reporting which policy fired* is not: `process-exec` denials surface as `ENOENT`, and no log
+> channel carries the attribution. See §6.5's note and
+> `docs/measurements/sandbox-detector-mechanism.md`.
+
 ### 6.2 Three clauses, three refuters
 
 | clause | empirical refuter |
@@ -415,8 +421,40 @@ inherited from 139-of-281.
 
 ### 6.5 Reuse
 
+> **MEASURED 2026-08-18 — the premise below is FALSE and the conclusion survives it.**
+> `docs/measurements/sandbox-detector-mechanism.md`; harness
+> `SandboxDetectorMechanismMeasuredTests`, `make batch2`.
+>
+> **There is no interposition hook.** `VerifierSubprocess` sets `DYLD_LIBRARY_PATH` and
+> `DYLD_FRAMEWORK_PATH` to *locate* `libTesting.dylib` — a search path. An interposition hook is
+> `DYLD_INSERT_LIBRARIES` plus a dylib carrying `__DATA,__interpose`, and the package contains
+> **no `DYLD_INSERT_LIBRARIES`, no `__interpose`, no `dlopen`/`dlsym`, and no non-Swift source
+> file at all**. Process isolation exists; the hook was read into it.
+>
+> **The arm does not need one.** Under `sandbox-exec` the probe survives every denial and exits 0,
+> so §6.1's report-rather-than-kill constraint is satisfied by the mechanism. **The corrected
+> reason is better than the stated one** — the arm never needed the hook it was credited with.
+>
+> **Two costs this section does not price, and both are real:**
+>
+> 1. **Attribution is three runs, not a read.** A denied `process-exec` reports `ENOENT`
+>    (*"the file doesn't exist"*), not `EPERM` — and a subprocess spawn is what the answer key's
+>    sharpest row does. `file-write` and `network` do report `EPERM`. Log attribution is
+>    unavailable: `(with report)` is rejected on `deny`, and three log predicates return zero
+>    lines. Use **differential profiles** — one class denied per profile, the policy that fired is
+>    the run that differs.
+> 2. **An allow-list is partial inside its own subpath.** In an explicitly allowed workdir, a
+>    plain write succeeds while `String.write(atomically: true)` and `FileManager.createFile` are
+>    denied. So the harness's own plumbing can trip the detector, which promotes §6.3's control
+>    set from precaution to requirement.
+>
+> **Fourth premise in this line of work to read plausibly and measure false**, after items 30, 33
+> and 47 — and the first to err by understating a *cost* rather than by claiming more purity than
+> the evidence supports. The transferable practice is unchanged: probe the premise before scoping
+> the build.
+
 `VerifierSubprocess` already runs each law as its own process with `DYLD_*` injection — process
-isolation exists and the interposition hook is in place, which is what makes report-rather-than-kill
+isolation exists ~~and the interposition hook is in place~~, which is what makes report-rather-than-kill
 cheap. And *one package for the survey, not one per suggestion* applies with more force: a purity
 probe needs no law, so it is one stub with N invocations, not N SwiftPM builds. Minutes, not the
 survey's 7.7 CPU-hours.
@@ -515,7 +553,7 @@ against a package no manifest mentions are one rename from silent breakage, and 
 | phase | work | gate to proceed |
 |---|---|---|
 | **0** | §2.1 scope decision (recommend: requirements out of scope). ~~split `.refuted`~~ — **done, 174/133 of 307** | a decision recorded. The measurement half is discharged |
-| **0.5** | §6.3 **soundness arm** — sandbox the **2,396** `.pure`, against the **frozen 17-row trip list** | precision **and** recall against the answer key, not a bare trip count |
+| **0.5** | §6.3 **soundness arm** — sandbox the **2,396** `.pure`, against the **frozen 17-row trip list**. **Reach measured** (14 of 17 callable, 9 trivially) and **detector measured** (`sandbox-exec`, differential profiles, no C target) | precision **and** recall against the answer key, not a bare trip count |
 | ~~**0.6**~~ | ~~§7 backtest arm~~ — **DONE 2026-08-17. Gate NOT met: 0 of 3 flagged** | `docs/measurements/purity-backtest.md`. 0 hits, 0 false alarms, two blind spots named |
 | ~~**0.7**~~ | ~~premise probe for the two ownership rows~~ — **DONE 2026-08-17, both rows DECLINED** | `docs/measurements/ownership-premise-declined.md`. Premise false *and* population zero |
 | **1a** | **item 34 — a `.pureButPartial` consumer**, or an explicit decision to accept a legibility-only gain from 1b | a reader exists for the tier `final` frees rows into, or the absence is recorded as the price |
