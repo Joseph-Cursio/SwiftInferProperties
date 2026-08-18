@@ -60,6 +60,13 @@ extension FunctionScannerVisitor {
             ? nil
             : typeStack.joined(separator: ".")
         let bodySignals = scanBody(of: node)
+        // Free-shape callee names, for `PackagePurityJoin`. A second walk of the
+        // body rather than a signal folded into `scanBody`: the join is a
+        // package-wide post-pass with no business inside the per-declaration
+        // signal scan, and keeping them apart means a change to either cannot
+        // silently move the other.
+        let calleeCollector = CalleeNameCollector(viewMode: .sourceAccurate)
+        if let body = node.body { calleeCollector.walk(body) }
         let discoverableGroup = AttributeScanner.discoverableGroup(in: node.attributes)
         let invariantKeypath = AttributeScanner.invariantKeypath(in: node.attributes)
         // Sound purity verdict — computed here, the one place the live
@@ -113,7 +120,8 @@ extension FunctionScannerVisitor {
             docComment: docComment,
             declaredEffect: declaredEffect,
             purityVerdict: purityVerdict,
-            bodyFingerprint: bodyFingerprint
+            bodyFingerprint: bodyFingerprint,
+            calledFreeFunctionNames: calleeCollector.names
         )
     }
 

@@ -110,6 +110,15 @@ extension PurityRefactoringReachMeasuredTests {
         /// attributor replicates, so classifying them with the function causes would be
         /// attributing a verdict to refuters that never ran. Item 40 is the precedent.
         let computedProperty: [String]
+        /// Refuted by `PackagePurityJoin` rather than by anything in their own body —
+        /// **a witness one hop away, not ignorance.** The attributor reads syntax, and a
+        /// joined retraction leaves none: `SoundPurity.verdict(for:)` would answer
+        /// `.pure` for these. Before open item 43 shipped, a `.refuted` subject always
+        /// carried at least one local cause, so an empty cause set is unambiguous.
+        ///
+        /// **Bucketing these as ignorance-only would invert their meaning**, which is
+        /// what this census did for one run after the join landed.
+        let joined: [String]
         /// Subjects the re-parse could not locate at all. Reported, never folded into
         /// any other side — a split that quietly absorbs its own misses is not a split.
         let unclassified: [String]
@@ -136,6 +145,7 @@ extension PurityRefactoringReachMeasuredTests {
         var witness: [String] = []
         var ignorance: [String] = []
         var computedProperty: [String] = []
+        var joined: [String] = []
         var unclassified: [String] = []
 
         for subject in subjects {
@@ -153,7 +163,9 @@ extension PurityRefactoringReachMeasuredTests {
             }
             let causes = attributor.causes(of: function)
             let named = causes.filter(\.isWitness).map(\.rawValue).sorted().joined(separator: "+")
-            if named.isEmpty {
+            if causes.isEmpty {
+                joined.append(label)
+            } else if named.isEmpty {
                 ignorance.append(label)
             } else {
                 witness.append("\(label) — \(named)")
@@ -163,6 +175,7 @@ extension PurityRefactoringReachMeasuredTests {
             witness: witness.sorted(),
             ignorance: ignorance.sorted(),
             computedProperty: computedProperty.sorted(),
+            joined: joined.sorted(),
             unclassified: unclassified.sorted()
         )
     }

@@ -221,6 +221,17 @@ public struct FunctionSummary: Sendable, Equatable {
     /// field's first paragraph says cannot happen — and the bucket a consumer
     /// read was 464 rather than 284. Both routes now compute a verdict
     /// (`SoundPurity.verdict(forGetter:)`), so no filtering is required.
+    /// Free-shape callee names this body reaches, sorted.
+    ///
+    /// **Free shape only** — a member call cannot be resolved without an index (open
+    /// item 38), so joining on member names would match `encode` on any type against
+    /// `encode` on any other. `CalleeNameCollector` explains the boundary.
+    ///
+    /// Carried so `PackagePurityJoin` can consult the verdict this analyzer already
+    /// computed for a callee, which is the fact open item 31 found the producer knows
+    /// and the consumer structurally cannot recompute.
+    public let calledFreeFunctionNames: [String]
+
     public let purityVerdict: PurityVerdict
 
     /// Fingerprint of this function's BODY, for validating verify evidence against the code
@@ -254,7 +265,8 @@ public struct FunctionSummary: Sendable, Equatable {
         declaredEffect: Effect? = nil,
         inferredEffect: Effect? = nil,
         purityVerdict: PurityVerdict = .refuted,
-        bodyFingerprint: String? = nil
+        bodyFingerprint: String? = nil,
+        calledFreeFunctionNames: [String] = []
     ) {
         self.name = name
         self.parameters = parameters
@@ -279,6 +291,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.inferredEffect = inferredEffect
         self.purityVerdict = purityVerdict
         self.bodyFingerprint = bodyFingerprint
+        self.calledFreeFunctionNames = calledFreeFunctionNames
     }
 }
 

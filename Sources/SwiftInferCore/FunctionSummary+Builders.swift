@@ -52,7 +52,43 @@ public extension FunctionSummary {
             declaredEffect: declaredEffect,
             inferredEffect: effect,
             purityVerdict: purityVerdict,
-            bodyFingerprint: bodyFingerprint
+            bodyFingerprint: bodyFingerprint,
+            calledFreeFunctionNames: calledFreeFunctionNames
+        )
+    }
+
+    /// A copy whose purity verdict is `.refuted`, for `PackagePurityJoin`.
+    ///
+    /// `isInferredPure` moves with it because the field's own doc says it *is*
+    /// `purityVerdict == .pure` — open item 40 was filed precisely because those two
+    /// facts were once allowed to disagree, and `PurityVerdictAdoptionTests.boolIsTheCollapse`
+    /// asserts they cannot.
+    func withPurityRetracted() -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: parameters,
+            returnTypeText: returnTypeText,
+            isThrows: isThrows,
+            isAsync: isAsync,
+            isMutating: isMutating,
+            isStatic: isStatic,
+            location: location,
+            containingTypeName: containingTypeName,
+            bodySignals: bodySignals,
+            qualifiedContainingTypeName: qualifiedContainingTypeName,
+            discoverableGroup: discoverableGroup,
+            invariantKeypath: invariantKeypath,
+            isInferredPure: false,
+            isClockDeterministic: isClockDeterministic,
+            declaresUnknownEffect: declaresUnknownEffect,
+            isComputedProperty: isComputedProperty,
+            isInitializer: isInitializer,
+            docComment: docComment,
+            declaredEffect: declaredEffect,
+            inferredEffect: inferredEffect,
+            purityVerdict: .refuted,
+            bodyFingerprint: bodyFingerprint,
+            calledFreeFunctionNames: calledFreeFunctionNames
         )
     }
 }

@@ -83,7 +83,13 @@ public enum FunctionScanner {
             restricted.append(contentsOf: corpus.restricted)
         }
         return ScannedCorpus(
-            summaries: summaries,
+            // The one-hop refuting callee join, applied HERE and deliberately not in
+            // `scanCorpus(source:file:)`. A single file is not a package: the join needs
+            // every declaration's verdict before it can say a name is settled impure, and
+            // running it per-file would let a name resolve against a fraction of its
+            // declarations — the unanimity rule it depends on would be checked against
+            // the wrong set. `PackagePurityJoin` carries the reasoning.
+            summaries: PackagePurityJoin.applied(to: summaries),
             identities: identities,
             typeDecls: typeDecls,
             restricted: restricted
