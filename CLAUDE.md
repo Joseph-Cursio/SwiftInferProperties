@@ -54,16 +54,24 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,658 tests — 5,511 fast + 147 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-17** after the items 34/35 merge —
-every batch counted from that one run, not carried over. The prior 5,654 reading was
+Suites green at **5,662 tests — 5,511 fast + 151 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-18** after the sandbox-detector merge —
+every stage counted from that one run: fast 5,511 · perf 8 · batches 4 · **72** · 31 · 7 · 8 · 4 ·
+9 · 8. The 147 → **151** is `SandboxDetectorMechanismMeasuredTests` joining batch2, and it
+reconciles with 147 + 4 — **which is why it was re-taken rather than added**: the first full run
+of that branch was piped through `tail -40`, which discarded every per-stage count while keeping
+the exit code, so the arithmetic was available and the measurement was not. Re-running cost half
+an hour and is the whole of this file's standing rule. The prior reading, at 2026-08-17,
+follows — it too was a genuine full run, every batch counted from it rather than carried
+over. The prior 5,654 reading was
 `test-fast` + `batch2` re-run directly with the other seven batches carried, and it is
 superseded rather than merely stale: the union of two branches' batch additions is not
 either branch's arithmetic. The batch half moved 92 → 112 as the four purity censuses
 joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 `OwnershipPremiseCensus`, `ModuleStateCensus`, `PurityBacktest` and
 `BlindSpotBaseRateCensus` joined, then **136 → 147** as items 34/35's two suites and
-`SoundnessArmReachCensusMeasuredTests` landed together. The fast half has not moved for
+`SoundnessArmReachCensusMeasuredTests` landed together, then **147 → 151** for
+`SandboxDetectorMechanismMeasuredTests`. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
 which therefore needs no batch — the regex doing its job in the other direction.
