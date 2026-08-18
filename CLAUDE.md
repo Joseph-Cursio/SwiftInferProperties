@@ -54,12 +54,17 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,651 tests — 5,511 fast + 140 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-17**, ~29 min, every batch counted
-from that one run rather than carried over. The batch half moved 92 → 112 as the four
+Suites green at **5,654 tests — 5,511 fast + 143 across `perf` and the eight batches**
+(**not a fresh full run**: `test-fast` and `batch2` were re-run directly 2026-08-17 after the
+items 34/35 rebase; the other seven batches and `perf` are carried unchanged from the genuine
+full `make test` of 2026-08-17, ~29 min, which read 5,647 as 5,511 + 136.
+The batch half moved 92 → 112 as the four
 purity censuses joined batch2, then 112 → 117 as `PurityFixpointCensusMeasuredTests`
-joined it, then 117 → 121 as `OwnershipPremiseCensusMeasuredTests` did, then 121 → 126 as `ModuleStateCensusMeasuredTests` did, then 126 → 131 as `PurityBacktestMeasuredTests` did, then 131 → 136 as `BlindSpotBaseRateCensusMeasuredTests` did, then **136 → 140** as `SoundnessArmReachCensusMeasuredTests` did. The fast half moved 5,508 → 5,511 for `PartitionOrderContainmentTests`, which is a property suite rather than a `*MeasuredTests` one and so needs no batch — the regex doing its job in the other direction; the fast half has not moved through any of it, which is the regex doing its
-job. Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
+joined it, then 117 → 121 as `OwnershipPremiseCensusMeasuredTests` did, then 121 → 126 as `ModuleStateCensusMeasuredTests` did, then 126 → 131 as `PurityBacktestMeasuredTests` did, then 131 → 136 as `BlindSpotBaseRateCensusMeasuredTests` did, then **136 → 143** as `PartialPurityConsumerMeasuredTests` and `PureAdvisoryRoundTripMeasuredTests` joined it together (+7, measured by filtering to the two suites).
+The fast half has not moved for any of those, which is the regex doing its job; it moved
+5,508 → 5,511 only for `PartitionOrderContainmentTests`, a property suite rather than a
+`*MeasuredTests` one, which therefore needs no batch — the regex doing its job in the other
+direction. Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
@@ -111,6 +116,8 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over.** 13–31 rows of leverage behind a 133-row population, all landing in a tier nothing reads. The index's top entry is `String(contentsOf:)`. **The population has moved three times and the leverage has not moved once** |
 | **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **Measured — BUILD the one-hop join; the loop is phase 2.** 18 rows at one hop, **29 at fixpoint** (1.6x, weaker than the promoting direction's 2.1x). Lands in `isInferredPure`, which IS consumed — that, not the loop, is why this one builds. **A hand-check killed the first answer**: 46 of 75 cascade rows were `classify`-style name collisions, 61% false. §7 closes item 30's stdlib half from the other side: **Swift ships `@_effects`, and it covers 20 underscored names, 0 of them called here** |
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 26 rows, base rate unmeasurable — and `3ea25f2` refuted the witness without moving the zero, because the closure oracle never reads the callee's verdict. Item 42 CLOSED there |
+| **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
+| **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` | The rest of `docs/archive/` is shipped-then-archived design records. Archived ≠ superseded — read for reasoning, never for counts |
 | Per-cycle change story | `git log` | The per-cycle findings docs were folded into the archive above |
 | Road tests (third-party subjects) | `docs/measurements/roadtest-*.md` | SwiftProjectLint (first scored, frozen key), SwiftLintRuleStudio, MacCloud server / client |
