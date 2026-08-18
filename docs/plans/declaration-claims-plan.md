@@ -553,7 +553,7 @@ against a package no manifest mentions are one rename from silent breakage, and 
 | phase | work | gate to proceed |
 |---|---|---|
 | **0** | §2.1 scope decision (recommend: requirements out of scope). ~~split `.refuted`~~ — **done, 174/133 of 307** | a decision recorded. The measurement half is discharged |
-| **0.5** | §6.3 **soundness arm** — sandbox the **2,396** `.pure`, against the **frozen 17-row trip list**. **Reach measured** (14 of 17 callable, 9 trivially) and **detector measured** (`sandbox-exec`, differential profiles, no C target) | precision **and** recall against the answer key, not a bare trip count |
+| ~~**0.5**~~ | §6.3 **soundness arm** — **STEP 1 BUILT 2026-08-18: 4 of 9 trip, 0 of 3 controls**, so the precondition is discharged. Reach measured (14 of 17), detector measured (`sandbox-exec`, differential) | `docs/measurements/soundness-arm-probe.md`. **The five that did not trip are not pure — a degenerate argument reaches a function without exercising it.** Steps 2–3 (richer arguments, the `DiagnosticOutput` stub, three cheap constructions) remain |
 | ~~**0.6**~~ | ~~§7 backtest arm~~ — **DONE 2026-08-17. Gate NOT met: 0 of 3 flagged** | `docs/measurements/purity-backtest.md`. 0 hits, 0 false alarms, two blind spots named |
 | ~~**0.7**~~ | ~~premise probe for the two ownership rows~~ — **DONE 2026-08-17, both rows DECLINED** | `docs/measurements/ownership-premise-declined.md`. Premise false *and* population zero |
 | **1a** | **item 34 — a `.pureButPartial` consumer**, or an explicit decision to accept a legibility-only gain from 1b | a reader exists for the tier `final` frees rows into, or the absence is recorded as the price |
