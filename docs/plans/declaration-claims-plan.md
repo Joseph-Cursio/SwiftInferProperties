@@ -438,6 +438,25 @@ post-fix one. `backtest-apple-libraries.md` and `kit-suite-backtest-plan.md` are
 **This is the only arm that produces a number defensible outside the repo**, and it belongs early,
 because it is cheap and because it is the one measurement the phases below cannot invalidate.
 
+> **RUN 2026-08-17, and the gate it set for itself was NOT met.** `≥1 pre-fix flagged, post-fix
+> clean` — measured **0 of 3**. `docs/measurements/purity-backtest.md`. Two independent blind spots,
+> neither needing a new verdict state:
+>
+> - **Hash-order nondeterminism.** A `Set` rendered into a returned `String` differs run to run;
+>   iterating an unordered collection is in neither marker set. **This toolchain has already paid for
+>   this exact bug class** — `CrossFileVisitorBase.orderedSources` documents a hop count that was *a
+>   coin flip* — and its oracle still cannot see it in someone else's code.
+> - **Instance state mutation on a reference type.** `ReducerPurityAnalyzer` covers *static or `Self`*
+>   state, literally the capitalised spelling; `self.x = y` on a `class` is `.pure`. Verified not to
+>   be a harness artifact — struct, class and bare wrappers all agree.
+>
+> **0 false alarms**, which is the better half of the two failure modes but also the reading a tool
+> that answered `.pure` to everything would give.
+>
+> **What this does to §6.3's soundness arm**: it raises its value rather than lowering it. Both blind
+> spots are invisible to a *static* probe by construction, and a sandbox that denies by default sees
+> a nondeterministic result and a shared-state write without needing either to be enumerated.
+
 ---
 
 ## 8. Gates
@@ -497,7 +516,7 @@ against a package no manifest mentions are one rename from silent breakage, and 
 |---|---|---|
 | **0** | §2.1 scope decision (recommend: requirements out of scope). ~~split `.refuted`~~ — **done, 174/133 of 307** | a decision recorded. The measurement half is discharged |
 | **0.5** | §6.3 **soundness arm** — sandbox the **2,396** `.pure`, against the **frozen 17-row trip list** | precision **and** recall against the answer key, not a bare trip count |
-| **0.6** | §7 backtest arm — purity-failure fix commits | ≥1 pre-fix flagged, post-fix clean |
+| ~~**0.6**~~ | ~~§7 backtest arm~~ — **DONE 2026-08-17. Gate NOT met: 0 of 3 flagged** | `docs/measurements/purity-backtest.md`. 0 hits, 0 false alarms, two blind spots named |
 | ~~**0.7**~~ | ~~premise probe for the two ownership rows~~ — **DONE 2026-08-17, both rows DECLINED** | `docs/measurements/ownership-premise-declined.md`. Premise false *and* population zero |
 | **1a** | **item 34 — a `.pureButPartial` consumer**, or an explicit decision to accept a legibility-only gain from 1b | a reader exists for the tier `final` frees rows into, or the absence is recorded as the price |
 | **1b** | **`final` inference**, module-scoped, feeding the call graph and the seed via the §2.2 pre-scan route | rows moved out of the **133**, re-baselined per §4.1 — **and rows that reach a reader**, which is what 1a buys |
