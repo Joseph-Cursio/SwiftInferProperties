@@ -54,17 +54,20 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,654 tests — 5,511 fast + 143 across `perf` and the eight batches**
-(**not a fresh full run**: `test-fast` and `batch2` were re-run directly 2026-08-17 after the
-items 34/35 rebase; the other seven batches and `perf` are carried unchanged from the genuine
-full `make test` of 2026-08-17, ~29 min, which read 5,647 as 5,511 + 136.
-The batch half moved 92 → 112 as the four
-purity censuses joined batch2, then 112 → 117 as `PurityFixpointCensusMeasuredTests`
-joined it, then 117 → 121 as `OwnershipPremiseCensusMeasuredTests` did, then 121 → 126 as `ModuleStateCensusMeasuredTests` did, then 126 → 131 as `PurityBacktestMeasuredTests` did, then 131 → 136 as `BlindSpotBaseRateCensusMeasuredTests` did, then **136 → 143** as `PartialPurityConsumerMeasuredTests` and `PureAdvisoryRoundTripMeasuredTests` joined it together (+7, measured by filtering to the two suites).
-The fast half has not moved for any of those, which is the regex doing its job; it moved
-5,508 → 5,511 only for `PartitionOrderContainmentTests`, a property suite rather than a
-`*MeasuredTests` one, which therefore needs no batch — the regex doing its job in the other
-direction. Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
+Suites green at **5,658 tests — 5,511 fast + 147 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-17** after the items 34/35 merge —
+every batch counted from that one run, not carried over. The prior 5,654 reading was
+`test-fast` + `batch2` re-run directly with the other seven batches carried, and it is
+superseded rather than merely stale: the union of two branches' batch additions is not
+either branch's arithmetic. The batch half moved 92 → 112 as the four purity censuses
+joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
+`OwnershipPremiseCensus`, `ModuleStateCensus`, `PurityBacktest` and
+`BlindSpotBaseRateCensus` joined, then **136 → 147** as items 34/35's two suites and
+`SoundnessArmReachCensusMeasuredTests` landed together. The fast half has not moved for
+any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
+`PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
+which therefore needs no batch — the regex doing its job in the other direction.
+Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
@@ -167,6 +170,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Is a METAMORPHIC law family worth building?** (the parse-tree catalog gap) | `Tests/SwiftInferCoreTests/TriviaInsensitivityExperimentTests.swift` | A test file whose header carries a standing verdict. Population is not the blocker — this is a *statability* gap |
 | **The interaction-invariant taxonomy — settled, and its last two items were DECLINED not built** | `docs/design/Interaction Invariant Taxonomy.md` | Settled; its last two items were DECLINED, not built — one on measurement, one on evidence model |
 | **Can a verify stub import a carrier its dependency declares?** | `docs/plans/dependency-carrier-imports-scope.md` | **Scoped, recommendation is DON'T** — population is 2 rows; fix the label instead. A degenerate `nil`-only domain is rejected outright |
+| **Can the soundness arm reach its own frozen prediction?** | `docs/measurements/soundness-arm-reach.md` | **Measured YES — 14 of 17 callable, 9 with nothing to construct.** The trip list is nearly all `static`, which dodges the receiver problem that caps the verify arm at 139/281. Out: 2 `private`, 1 awkward type. **Reach is a precondition, not a result** — it says nothing about whether a probe would be informative. Build the 9 first |
 | **What do the backtest's blind spots cost this corpus?** | `docs/measurements/blindspot-base-rates.md` | **Bucket 1 (instance `self` writes) ZERO and reconciled** — 1,226 exist, 380/400 sampled are in `init`, out of scope by construction. **Bucket 2 (hash-order) TWO, hand-checked**: `PartitionAggregator.finalizeTwoClass` returns `winnerByPredicate.values.map(…)` — hash-seed order — and the oracle calls it `.pure`. **Measured NOT to escape**: `finalize()` sorts, and the comparator is total because `NClassPartitionKey` is `(predicateName, markerSetName)`. **A smell, not a bug** — the oracle is still wrong |
 | **Does the purity oracle flag REAL historical purity bugs?** | `docs/measurements/purity-backtest.md` | **Measured 0 HITS of 3, 0 false alarms — the only number here an outside reader can check**, since the oracle is a public fix commit predating the tools. Two blind spots: **hash-order nondeterminism** (a `Set` rendered into a returned String — the bug class this repo already paid for in `orderedSources`) and **instance `self` writes on a class** (`ReducerPurityAnalyzer` covers `Self.`, not `self.`) |
 | **How often is a module-state mutation judged pure?** | `docs/measurements/module-state-base-rate.md` | **Measured ZERO — and zero because the corpus declares no file-scope `var` at all**, corroborated by grep four ways. A latent unsoundness in item 40's shape, not a defect: real hole, no exhibits. **Do NOT carry this zero to another corpus.** The first run reported the same 0 with a BLIND detector — `Parser.parse` yields `SequenceExprSyntax`, not `InfixOperatorExprSyntax` |
