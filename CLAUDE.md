@@ -54,12 +54,14 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,669 tests — 5,511 fast + 158 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-18** after the refactoring-reach merge —
-every stage counted from that one run: fast 5,511 · perf 8 · batches 4 · **79** · 31 · 7 · 8 · 4 ·
-9 · 8. The 151 → **158** is `PurityRefactoringReachMeasuredTests` joining batch2, on top of the
-same day's 147 → 151 for `SandboxDetectorMechanismMeasuredTests`, and it
-reconciles with 151 + 7 — **which is why both were re-taken rather than added**. The
+Suites green at **5,675 tests — 5,513 fast + 162 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-18** after the one-hop-join merge —
+every stage counted from that one run: fast 5,513 · perf 8 · batches 4 · **83** · 31 · 7 · 8 · 4 ·
+9 · 8. **Both halves moved this time, and for opposite reasons**: batch 158 → **162** for
+`PackagePurityJoinMeasuredTests`, and fast 5,511 → **5,513** for `BuilderFieldParityTests`, which
+is a plain unit suite rather than a `*MeasuredTests` one and therefore needs no batch — the regex
+doing its job in both directions on one branch. It
+reconciles with 158 + 4 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -73,11 +75,12 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 `OwnershipPremiseCensus`, `ModuleStateCensus`, `PurityBacktest` and
 `BlindSpotBaseRateCensus` joined, then **136 → 147** as items 34/35's two suites and
 `SoundnessArmReachCensusMeasuredTests` landed together, then **147 → 151** for
-`SandboxDetectorMechanismMeasuredTests` and **151 → 158** for
-`PurityRefactoringReachMeasuredTests`. The fast half has not moved for
+`SandboxDetectorMechanismMeasuredTests`, **151 → 158** for
+`PurityRefactoringReachMeasuredTests` and **158 → 162** for `PackagePurityJoinMeasuredTests`. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
-which therefore needs no batch — the regex doing its job in the other direction.
+which therefore needs no batch — the regex doing its job in the other direction, as it did
+again on 2026-08-18 for `BuilderFieldParityTests`.
 Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -129,7 +132,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured: no — a subprocess spawn is judged `.pure`.** But the allowlist fix costs 65% of `.pure`; the 17 real rows are one hop inside the package. §5's default-argument hole is FIXED — 13 false `pure` advisories retracted. Re-taken at SEI `3ea25f2`: verdict unchanged, and the 24-axioms-for-half price is identical to the digit |
 | **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45%, now 43%** — check which SEI pin a figure belongs to. Rankable ceiling **133**; it has been 152 and 135. Every refuter added anywhere shrinks this bucket |
 | **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over.** 13–31 rows of leverage behind a 133-row population, all landing in a tier nothing reads. The index's top entry is `String(contentsOf:)`. **The population has moved three times and the leverage has not moved once** |
-| **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **Measured — BUILD the one-hop join; the loop is phase 2.** 18 rows at one hop, **29 at fixpoint** (1.6x, weaker than the promoting direction's 2.1x). Lands in `isInferredPure`, which IS consumed — that, not the loop, is why this one builds. **A hand-check killed the first answer**: 46 of 75 cascade rows were `classify`-style name collisions, 61% false. §7 closes item 30's stdlib half from the other side: **Swift ships `@_effects`, and it covers 20 underscored names, 0 of them called here** |
+| **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **BUILT 2026-08-18 (`PackagePurityJoin`) — and it retracts 16, not 18**, because the shipped witness rule is public-API-only and under-retracts on purpose. The loop is phase 2 and unbuilt.** 18 rows at one hop, **29 at fixpoint** (1.6x, weaker than the promoting direction's 2.1x). Lands in `isInferredPure`, which IS consumed — that, not the loop, is why this one builds. **A hand-check killed the first answer**: 46 of 75 cascade rows were `classify`-style name collisions, 61% false. §7 closes item 30's stdlib half from the other side: **Swift ships `@_effects`, and it covers 20 underscored names, 0 of them called here** |
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 26 rows, base rate unmeasurable — and `3ea25f2` refuted the witness without moving the zero, because the closure oracle never reads the callee's verdict. Item 42 CLOSED there |
 | **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |

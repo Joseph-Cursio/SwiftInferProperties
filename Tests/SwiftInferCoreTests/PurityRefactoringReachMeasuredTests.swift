@@ -126,7 +126,10 @@ struct PurityRefactoringReachMeasuredTests {
     func theTallyOverReportsTheWitnessHalf() {
         let witnesses = Self.measured.map(\.split.witness.count).reduce(0, +)
         let all = Self.measured
-            .map { $0.split.witness.count + $0.split.ignorance.count + $0.split.computedProperty.count }
+            .map {
+                $0.split.witness.count + $0.split.ignorance.count
+                    + $0.split.joined.count + $0.split.computedProperty.count
+            }
             .reduce(0, +)
         #expect(witnesses < all, """
         Every refuted subject under a law now carries a witness (\(witnesses) of \(all)). \
@@ -144,14 +147,15 @@ struct PurityRefactoringReachMeasuredTests {
             · refuted \(arm.subjectsRefuted)
               suggestions touching a refuted subject: \(arm.join.descriptions.count)
               refuted subjects — witness \(arm.split.witness.count) · ignorance-only \
-            \(arm.split.ignorance.count) · computed-property \(arm.split.computedProperty.count) \
-            · unclassified \(arm.split.unclassified.count)
+            \(arm.split.ignorance.count) · joined \(arm.split.joined.count) · computed-property \
+            \(arm.split.computedProperty.count) · unclassified \(arm.split.unclassified.count)
               evidence rows \(arm.join.evidenceRows), resolved \(arm.join.resolvedRows)
               isThrows-masked control: \(arm.throwsMasked) (\(arm.throwsMasked - arm.baseline))
               purity-forced arm:       \(arm.purityForced) (\(arm.purityForced - arm.baseline))
             """)
             for row in arm.split.witness { print("    W \(row)") }
             for row in arm.split.ignorance { print("    i \(row)") }
+            for row in arm.split.joined { print("    J \(row)") }
             for row in arm.split.computedProperty { print("    P \(row)") }
             for row in arm.split.unclassified { print("    ? \(row)") }
         }
