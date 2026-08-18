@@ -47,10 +47,15 @@ control incomparable to the **+2** that census measured through the same code pa
 that comparison is the only thing establishing this harness reaches the templates at all.
 
 **The denominators reconcile with the item 29 census**, which is worth stating because
-they are not equal: 2,920 summaries here against 2,740 functions there, and 2,576 `.pure`
-against 2,396. Both gaps are **180** — the read-only computed properties, which
-`FunctionScanner` summarises and the function census does not. Two instruments, one
-population, and the difference is fully explained.
+they are not equal: at the first reading, 2,920 summaries here against 2,740 functions
+there, and 2,576 `.pure` against 2,396. Both gaps were **180** — the read-only computed
+properties, which `FunctionScanner` summarises and the function census does not. Two
+instruments, one population, and the difference fully explained.
+
+**Self's count has since drifted upward by this line of work's own commits** (2,920 →
+2,927 → 2,930): the join, the veto and the getter narrowing each added source to
+`Sources/`, which *is* this corpus. Self-dogfood contamination, and it is why
+OrderedCollections is the corpus to read for a clean before/after.
 
 ---
 
@@ -61,8 +66,8 @@ Force every `.refuted` and `.pureButPartial` verdict to `.pure`, carrying
 
 | corpus | summaries | baseline | **purity forced** | `isThrows` masked (**control**) |
 |---|---|---|---|---|
-| self (`Sources/`, CLI) | 2,927 | 712 | **712 (0)** | 714 (**+2**) |
-| OrderedCollections | 435 | 160 | **160 (0)** | 160 (0) |
+| self (`Sources/`, CLI) | 2,930 | 712 | **712 (0)** | 714 (**+2**) |
+| OrderedCollections | 429 | 152 | **152 (0)** | 152 (0) |
 | SwiftPropertyLaws | 599 | 51 | **51 (0)** | 51 (0) |
 
 **Zero, on every corpus — and still zero after the one-hop join landed**, which is the
@@ -99,9 +104,18 @@ analyzer refuted?
 | corpus | suggestions | touching a refuted subject | **witness** | ignorance-only | **joined** | computed property |
 |---|---|---|---|---|---|---|
 | self | 712 | 20 | **8** | 12 | 0 | 0 |
-| OrderedCollections | 160 | 32 | **11** | 11 | **6** | 8 |
+| OrderedCollections | 152 | 24 | **11** | 11 | **6** | **0** |
 | SwiftPropertyLaws | 51 | 3 | **3** | 0 | 0 | 0 |
-| **total** | **923** | **55** | **22** | **23** | **6** | **8** |
+| **total** | **915** | **47** | **22** | **23** | **6** | **0** |
+
+> **Re-taken a THIRD time, 2026-08-18, after open item 50's accessor fix** — which is the
+> point of keeping this table rather than a remembered figure. Rejecting `_modify`
+> properties removed **8 suggestions** from OrderedCollections (160 → 152) and emptied the
+> **computed-property column entirely** (8 → 0): those eight rows were the `unordered`,
+> `elements`, `keys`, `values`, `header` and `__unstable` laws, and they should never have
+> existed. **The witness and ignorance halves have not moved across all three re-takes** —
+> 22 and 23 every time — which is the stable part of this census and the part its verdict
+> rests on.
 
 > **Re-taken after open item 43's one-hop join, and the coupling was predicted before it was
 > built.** The join retracts `.pure` verdicts whose body calls a settled-impure package
@@ -177,10 +191,17 @@ writes through it — so the guard admits it, and the property carries **8 sugge
 (`inverse-pair` ×4, `round-trip` ×4).
 
 **A second defect masks the first.** `SoundPurity.verdict(forGetter:)` is handed the whole
-`AccessorBlockSyntax`, so it reads the `_modify` body too, sees `self = OrderedSet()`, and
-returns `.refuted`. The property is therefore *reported* impure — correctly, but for a
-reason that has nothing to do with its getter, which is pure. Remove the `_modify` and
-the same misclassification would return a clean `.pure`.
+`AccessorBlockSyntax`, so the property is *reported* impure — correctly, but for reasons
+that have nothing to do with its getter, which is pure.
+
+> **This mechanism was stated too simply, and was corrected 2026-08-18 when it was probed
+> rather than read.** The refutation is **over-determined**, by two oracles that disagree
+> about why. `ReducerPurityAnalyzer` does read the `_modify` body and answers
+> `hiddenMutability` — that half was right. But `PurityInferrer.isPure(_ accessor:)`
+> **never reads a non-getter body at all**: it returns `false` on the *presence* of any
+> non-`get` accessor. So the property refutes whichever oracle is narrowed, and the fix had
+> to be the upstream one — rejecting the property outright. See
+> `docs/measurements/modify-accessor-misclassification.md`.
 
 **Item 40's shape exactly: an oracle pointed at the wrong node.** Neither defect has been
 A/B'd here and neither is fixed in this change — both are filed rather than folded into
