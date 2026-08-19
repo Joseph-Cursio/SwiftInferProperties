@@ -2,6 +2,38 @@
 
 > **Status:** `declined` · **As of:** 2026-08-19
 
+> **RE-TAKEN the same day across 17 corpora, and every reason the first version gave was
+> wrong.** The verdict survives; nothing else does. Read this box before the sections
+> below, which are kept as written so the record shows what was claimed.
+>
+> **The first run used THREE corpora** — self, OrderedCollections, SwiftPropertyLaws — while
+> `fixtures/corpora/manifest.json` lists 22 and **17 resolve on this machine**. It declined
+> the class as *"5 rows, all in this repository … the role-distinct shape is what a code
+> generator produces"*. **That is refuted**: it had never looked at swift-format, the Swift
+> standard library, Foundation, NIO or SwiftProjectLint.
+>
+> **And the signal was broken.** `isRoleDistinct` tested only that the two labels *differ* —
+> true of nearly every named pair — while this document's own prose listed `lhs`/`rhs` as
+> symmetric. Across the manifest it fired on the stdlib's `*(a:b:)` and `+(a:b:)` and on
+> Foundation's `+(lhs:rhs:)`: **genuinely commutative arithmetic, 36 rows of false
+> positive.** The design was right and the implementation never matched it.
+>
+> **So the reported "precision 5/5" was an artifact of the corpus**, not a property of the
+> rule. This repository does not write `+(lhs:rhs:)`, so the only corpus it was scored
+> against could not exhibit its failure mode. Two conclusions — the precision and the
+> population — shared one hidden cause.
+>
+> **Corrected signal, corrected universe**: a positional-label set (`lhs`, `rhs`, `a`, `b`,
+> `x`, `y`, `left`, `right`, `first`, `second`, `other`) is excluded, and the census runs
+> over `CorpusManifest.available`. Result: **118 binary-operator suggestions across 17
+> corpora, 2 role-distinct** — both `join(word:bit:)` in the standard library.
+>
+> **The decline therefore stands and is stronger**, on a signal that works and a universe
+> 17 corpora wide rather than 3. **One coverage caveat**: the manifest's `swift-infer-core`
+> entry scans `Sources/SwiftInferCore` only, so this repository's own 5 rows — which live in
+> `SwiftInferCLI` — are outside this run. The class is roughly 7 rows across 18 scanned
+> targets either way.
+
 Re-derivable at any time — `ParameterRoleCensusMeasuredTests` *is* the harness, and
 `make batch2` runs it.
 
