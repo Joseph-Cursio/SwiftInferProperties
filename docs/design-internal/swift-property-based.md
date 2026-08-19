@@ -1,20 +1,35 @@
 # swift-property-based — the engine underneath
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-08-19
 
 
 **Repo:** [`github.com/x-sheep/swift-property-based`](https://github.com/x-sheep/swift-property-based)
 (Lennard Sprong) · **Book home:** Appendix C's closing section; `.fixedSeed` in Chapter 28 §28.1.1.
 
-> **As of 2026-08-03** · subject `swift-property-based@edaffed` (`1.2.0`, the resolved pin) ·
-> observer `SwiftInferProperties@2722975`. **Third-party** — the subject moves on someone else's
+> **As of 2026-08-19** · subject `swift-property-based@f5b24d3` (**`2.0.0`**, the resolved pin) ·
+> observer `SwiftInferProperties@ff20c36`. **Third-party** — the subject moves on someone else's
 > schedule, and only a resolved version bump brings it here.
+>
+> **2.0.0 landed 2026-08-19 and is a BEHAVIOURAL break, not a signature one.** *"A generator that
+> doesn't produce valid results will now fail the test instead of spinning indefinitely."* Adds a
+> `Generator.run` overload taking a maximum attempt count and a `.maximumAttempts(Int)` test trait,
+> default **10,000**. Nothing removed.
+>
+> **Measured before adopting, in both places that matter.** SwiftPropertyLaws' own suite: 942 tests
+> / 133 suites / 7 known issues under 1.2.0 **and** 2.0.0 alike — the known issues pre-existing, not
+> new. Downstream, where the risk actually is: both arms over one frozen 712-entry index, same
+> binary, only the dependency differing — **zero rows changed outcome and zero changed detail**, 163
+> held and 15 refuted either way, and the shipped configuration re-verified the same after release.
+>
+> **That is evidence about THIS corpus, not a general clearance.** A heavily filtered generator can
+> still exhaust 10,000 attempts; the remedy is the new trait, and the stub emitters here do not yet
+> thread it through. Nothing forces that until a corpus trips it.
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
 
-<!-- doc-provenance date=2026-08-03 subject=swift-property-based@edaffedcd90339544fefb2f045f3fa988d94c794 version=1.2.0 observer=SwiftInferProperties@272297564d7842d5c30a6a38775898ed907fedb5 -->
+<!-- doc-provenance date=2026-08-19 subject=swift-property-based@f5b24d3a0468d688934405a9cba9516cb17be2ec version=2.0.0 observer=SwiftInferProperties@ff20c363d1e4c9f7a8b5e2d6c0a91f4b8e7d3c25 -->
 
 
 **Not ours.** The only package in the toolchain nobody here controls, and nothing above runs without
