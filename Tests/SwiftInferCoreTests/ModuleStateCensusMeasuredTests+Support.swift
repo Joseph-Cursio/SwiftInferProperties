@@ -13,17 +13,55 @@ import SwiftSyntax
 /// `ReducerPurityAnalyzer`, so admitting them would double-count a covered case.
 final class FileScopeVarCollector: SyntaxVisitor {
 
+    /// Every file-scope `var`, stored and computed alike. This is what a write must
+    /// be matched against: assigning through a computed `var` runs its setter, and
+    /// that setter is where the state actually moves.
     private(set) var names: Set<String> = []
+
+    /// **Stored** file-scope `var`s — mutable module state in the plain sense.
+    private(set) var storedNames: Set<String> = []
+
+    /// **Computed** file-scope `var`s. Separated because counting them as module
+    /// state inflates the denominator badly and silently: swift-foundation declares
+    /// 86 file-scope `var`s and *every one* is a computed platform shim —
+    /// `internal var CLOCK_REALTIME: clockid_t { ... }` — a constant wearing `var`
+    /// because Swift has no other spelling for a computed global. A census reporting
+    /// "5 of 135 globals mishandled" off the merged count would be quoting a ratio
+    /// whose denominator is mostly constants.
+    ///
+    /// They are still matched for writes, because a computed `var` *with a setter*
+    /// is a real write target — `accessHead` in the stdlib's `Exclusivity.swift`
+    /// writes exclusivity TLS through exactly that route.
+    private(set) var computedNames: Set<String> = []
+
     private var depth = 0
 
     override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
         guard depth == 0, node.bindingSpecifier.text == "var" else { return .visitChildren }
         for binding in node.bindings {
-            if let pattern = binding.pattern.as(IdentifierPatternSyntax.self) {
-                names.insert(pattern.identifier.text)
-            }
+            guard let pattern = binding.pattern.as(IdentifierPatternSyntax.self) else { continue }
+            let name = pattern.identifier.text
+            names.insert(name)
+            if Self.isComputed(binding) { computedNames.insert(name) } else { storedNames.insert(name) }
         }
         return .visitChildren
+    }
+
+    /// Computed means the binding has a `get` — or a bare `{ … }` body, which is
+    /// shorthand for one. **A `willSet`/`didSet` observer does NOT make a `var`
+    /// computed**: `var counter = 0 { didSet { … } }` is stored, mutable module
+    /// state and carries an accessor block all the same. Testing `accessorBlock !=
+    /// nil` would file it as a constant and drop it out of the state count — the
+    /// one direction that flatters the tool.
+    static func isComputed(_ binding: PatternBindingSyntax) -> Bool {
+        guard let accessors = binding.accessorBlock else { return false }
+        switch accessors.accessors {
+        case .getter:
+            return true
+
+        case .accessors(let list):
+            return list.contains { $0.accessorSpecifier.text == "get" }
+        }
     }
 
     // Anything nested inside a type or a function is not file scope.
