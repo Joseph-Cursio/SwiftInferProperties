@@ -54,13 +54,13 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,713 tests — 5,534 fast + 179 across `perf` and the eight batches**
+Suites green at **5,721 tests — 5,540 fast + 181 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,534 · perf 8 · batches 4
-· **100** · 31 · 7 · 8 · 4 · 9 · 8. **Only the fast half moved**, 5,532 → **5,534** for
-`VerifierWorkdirEnginePinTests` — the guard the engine pin never had, added because the 2.0 bump
-needed four workdir lines to move that nothing checked. The prior reading follows. It
-reconciles with 5,532 + 2 — **which is why each was re-taken rather than added**. The
+SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,540 · perf 8 · batches 4
+· **102** · 31 · 7 · 8 · 4 · 9 · 8. **Both halves moved**: fast 5,534 → **5,540** for
+`LiftTargetsTests`, batch 179 → **181** for `LiftCallerReachMeasuredTests`. The prior reading
+follows. It
+reconciles with 5,534 + 6 and 179 + 2 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -79,9 +79,10 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 , **162 → 169** for `PurityVetoPrecisionMeasuredTests`
 , **169 → 172** for `ModifyAccessorCensusMeasuredTests`
 , **172 → 176** for `SoundnessArmProbeMeasuredTests`
-and **176 → 179** as that same suite gained the consumer question. The fast half
-moved 5,531 → 5,532 for `ReleaseBuildabilityTests` and 5,532 → 5,534 for
-`VerifierWorkdirEnginePinTests`. The fast half has not moved for
+and **176 → 179** as that same suite gained the consumer question, then **179 → 181**
+for `LiftCallerReachMeasuredTests`. The fast half moved 5,531 → 5,532 for
+`ReleaseBuildabilityTests`, 5,532 → 5,534 for `VerifierWorkdirEnginePinTests` and
+5,534 → 5,540 for `LiftTargetsTests`. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
 which therefore needs no batch — the regex doing its job in the other direction, as it did
