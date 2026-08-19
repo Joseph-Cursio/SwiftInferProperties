@@ -17,7 +17,7 @@ remembered count carries no record of the flags it was taken with.
 | `2026-08-05-whole-corpus.jsonl` | 281 records, one per index entry, no `--template` filter |
 | `2026-08-05-predicate-ab-before.jsonl` | 129 records, the `--template predicate` A/B **before**-arm |
 | `analyse.py` | buckets a stream by template × outcome; `python3 analyse.py <file>` |
-| `tier_split.py` | buckets by **tier** × outcome — the cut `open-threads.md` calls the honest headline; `python3 tier_split.py <stream.jsonl> <index.json>`. **Needs a second input**, which is why it is not a `--by tier` flag: the stream carries no tier, so it must be joined in from the index the run was taken against |
+| `tier_split.py` | buckets by **tier** × outcome — the cut `open-threads.md` calls the honest headline; `python3 tier_split.py <stream.jsonl> [index.json]`. **The index argument is now optional**: streams from 2026-08-19 carry `tier`, so the stream is read alone and **cannot be paired with the wrong index**. It prints `RUNNABLE tiers` and says outright that the total counts rows which cannot run. The second input remains for older streams |
 
 ## Provenance — everything needed to re-run
 
@@ -62,6 +62,21 @@ the 281-entry population cannot be reconstructed.
 
 **The 76-minute figure above no longer holds** — the re-take took 11 minutes over nearly
 twice the population. Do not budget from the older number.
+
+## The stream now carries its own tier
+
+**Added 2026-08-19, because its absence inverted a headline.** The re-take was first
+reported as *"178 of 538 execute, down from 139 of 281"*; 266 of those 538 are `Advisory`
+and cannot execute a law by construction, so the honest comparison is 178 of 272 against
+139 of 279 — an **increase**, 50% → 65%.
+
+Getting that right required joining to the index the run was taken against, **and that
+index had already been overwritten twice the same day**. A stream carrying its own tier
+cannot be paired with the wrong index, and `analyse.py` now prints the runnable-tier ratio
+beside the total rather than leaving the reader to compute it.
+
+Streams frozen before that date have no `tier`, and both tools say so rather than reporting
+the total as if it were the ratio.
 
 ## Record the INDEX command, not only the verify command
 

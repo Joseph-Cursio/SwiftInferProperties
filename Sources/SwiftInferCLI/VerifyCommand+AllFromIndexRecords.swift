@@ -25,6 +25,7 @@ extension SwiftInferCommand.Verify {
             templateName: context.templateName,
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
+            tier: context.tier,
             outcome: outcome,
             outcomeDetail: detail,
             subjectFingerprint: context.subjectFingerprint
@@ -74,6 +75,7 @@ extension SwiftInferCommand.Verify {
                 templateName: context.templateName,
                 primaryFunctionName: context.primaryFunctionName,
                 carrier: context.carrier,
+                tier: context.tier,
                 outcome: .architecturalCoveragePending,
                 outcomeDetail: detail,
                 subjectFingerprint: context.subjectFingerprint
@@ -84,6 +86,7 @@ extension SwiftInferCommand.Verify {
             templateName: context.templateName,
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
+            tier: context.tier,
             outcome: .measuredError,
             outcomeDetail: BuildDiagnostics.surveyDetail(from: buildOutput),
             subjectFingerprint: context.subjectFingerprint
@@ -137,6 +140,7 @@ extension SwiftInferCommand.Verify {
             templateName: context.templateName,
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
+            tier: context.tier,
             outcome: outcome,
             outcomeDetail: detail,
             counterexample: counterexample,
@@ -174,6 +178,9 @@ extension SwiftInferCommand.Verify {
         let templateName: String
         let primaryFunctionName: String
         let carrier: String?
+        /// The index-time tier, carried onto every record so the stream is readable
+        /// without its index. See `SurveyRecord.tier`.
+        let tier: String?
         /// Carried so every survey record — verdict or decline alike — can stamp the
         /// persisted evidence with the body it was measured against.
         let subjectFingerprint: String?
@@ -185,6 +192,7 @@ extension SwiftInferCommand.Verify {
             templateName: entry.templateName,
             primaryFunctionName: entry.primaryFunctionName,
             carrier: entry.typeName,
+            tier: entry.tier,
             subjectFingerprint: entry.subjectFingerprint
         )
     }
