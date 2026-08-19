@@ -61,6 +61,23 @@ refuted = sum(1 for r in records if r["bucket"] == "ran and REFUTED")
 print(f"records: {total}")
 print(f"LAWS THAT RAN: {ran}  ({held} held, {refuted} refuted, "
       f"{ran - held - refuted} edge-advisory)")
+
+# The denominator that means something. `Advisory` rows cannot execute a law by
+# construction, so counting them makes the ratio smaller for reasons that have
+# nothing to do with the tool getting worse — which is exactly how the 2026-08-19
+# re-take was first reported as a decline when it was a 50% -> 65% increase.
+# Streams from that date carry `tier`; older ones do not, and the line says so
+# rather than silently reporting the total as if it were the ratio.
+runnable = [r for r in records if r.get("tier") in ("Strong", "Likely", "Possible")]
+advisory = [r for r in records if r.get("tier") == "Advisory"]
+if runnable or advisory:
+    ran_runnable = sum(1 for r in runnable if r["bucket"].startswith("ran"))
+    share = f"{100 * ran_runnable / len(runnable):.1f}%" if runnable else "n/a"
+    print(f"OF THE RUNNABLE TIERS: {ran_runnable} of {len(runnable)} = {share}"
+          f"   ({len(advisory)} Advisory rows excluded — they cannot execute a law)")
+else:
+    print("(no `tier` in this stream — pre-2026-08-19; run tier_split.py with an index "
+          "to get the runnable-tier ratio, and do not read the total as one)")
 print()
 
 # ---- per template --------------------------------------------------------

@@ -28,6 +28,24 @@ extension SwiftInferCommand.Verify {
         public let templateName: String
         public let primaryFunctionName: String
         public let carrier: String?
+        /// The suggestion's tier at index time — `"Strong"`, `"Likely"`, `"Possible"`,
+        /// `"Advisory"` — carried so **the stream can be read without its index**.
+        ///
+        /// **This is the field whose absence inverted a headline.** On 2026-08-19 the
+        /// whole-corpus re-take was reported as *"178 of 538 execute, down from 139 of
+        /// 281"*. 266 of those 538 are `Advisory`, which **cannot execute a law by
+        /// construction**, and the earlier index held none — so the honest comparison is
+        /// 178 of 272 against 139 of 279, an increase from 50% to 65%. Computing that
+        /// required joining to the index the run was taken against, and that index had
+        /// already been overwritten twice the same day.
+        ///
+        /// `fixtures/whole-corpus-survey/README.md` named the gap in its own tooling row —
+        /// *"the stream carries no tier, so it must be joined in from the index"* — which
+        /// is why `tier_split.py` needs a second input. It no longer does.
+        ///
+        /// Optional because streams frozen before 2026-08-19 do not carry it, and a
+        /// consumer must be able to tell *absent* from *`Advisory`*.
+        public let tier: String?
         public let outcome: SurveyOutcome
         public let outcomeDetail: String?
         /// V1.143 — the first failing input + shrunk minimal, for default-fail
@@ -47,6 +65,7 @@ extension SwiftInferCommand.Verify {
             templateName: String,
             primaryFunctionName: String,
             carrier: String?,
+            tier: String? = nil,
             outcome: SurveyOutcome,
             outcomeDetail: String?,
             counterexample: String? = nil,
@@ -57,6 +76,7 @@ extension SwiftInferCommand.Verify {
             self.templateName = templateName
             self.primaryFunctionName = primaryFunctionName
             self.carrier = carrier
+            self.tier = tier
             self.outcome = outcome
             self.outcomeDetail = outcomeDetail
             self.counterexample = counterexample
