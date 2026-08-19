@@ -39,16 +39,41 @@ Both SHAs are reachable in this repo, so either binary rebuilds with `swift buil
 | index | **rebuilt from scratch**, `swift-infer index --target …` over all seven library targets |
 | command | `swift-infer verify --all-from-index --max-parallel 4` (release binary) |
 | run | 2026-08-19 12:31–12:42 UTC · **11 min** |
-| result | **178 of 538 execute** — 163 held, 15 refuted, 16 errored, 344 declined |
+| result | 178 of 538 rows execute — 163 held, 15 refuted, 16 errored, 344 declined |
+| **the number that means something** | **178 of 272 RUNNABLE-tier entries = 65%**, against 139 of 279 = **50%** on 2026-08-05 |
 
-**The counts are NOT comparable to 2026-08-05's; the ratio is.** This README records the
-*verify* command the first run used and not how its index was built, so the 281-entry
-population cannot be reconstructed. What can be said is that **the executing share fell
-from 49% to 33%** while the corpus grew 281 → 538: the population nearly doubled and
-executing laws grew by 28%.
+> **CORRECTED 2026-08-19, same day, and the error is worth more than the number.** This
+> first read *"the executing share fell from 49% to 33%"*. **It rose, 50% → 65%.**
+>
+> **266 of the 538 rows are `Advisory`, and an `Advisory` row cannot execute a law by
+> construction** — `Tier.advisory`'s own doc calls it an *"informational tier for
+> stand-alone advisory findings that don't carry a runnable property"*, and all 266
+> decline `architectural-coverage-pending`. The 2026-08-05 index contained **none**; this
+> one contains 266. Dividing by a denominator that gained 266 structurally-unrunnable rows
+> manufactures a decline out of an increase.
+>
+> **The row that carries this figure in `CLAUDE.md` says "Read the tier cut, not the
+> total", and the total is what got quoted.** A rule stated in the index did not survive
+> contact with the person writing the next number into it.
+
+**The counts are NOT comparable to 2026-08-05's; the runnable-tier ratio is.** This README
+records the *verify* command the first run used and not **how its index was built**, so
+the 281-entry population cannot be reconstructed.
 
 **The 76-minute figure above no longer holds** — the re-take took 11 minutes over nearly
 twice the population. Do not budget from the older number.
+
+## Record the INDEX command, not only the verify command
+
+**Index scope is an unrecorded variable, and it produced three populations of one corpus in
+a single day**: 281 (2026-08-05, method unrecorded), **538** (`swift-infer index --target`
+over each of the seven library targets), **712** (`verify --all-from-index`'s own wholesale
+reindex of `Sources`, which fires when the index is stale).
+
+That is why the first run cannot be reproduced, and it is a provenance gap rather than a
+disagreement — the three numbers are all correct about different questions. **Any future
+run must record the index command beside the verify command**, and prefer `--index-path`
+against a frozen index so a mid-run reindex cannot move the population underneath it.
 
 ## Two caveats that matter when re-running
 
