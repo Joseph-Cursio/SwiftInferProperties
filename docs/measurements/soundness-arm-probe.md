@@ -105,6 +105,42 @@ count from 1 to 4 without changing a line of subject code.
 
 ---
 
+## Do the findings have a consumer? Measured: NO, and no victims either
+
+The Decisions stub in `open-threads.md` generalises the cluster's recurring lesson —
+*"does this have a consumer?" has to be asked of the OUTPUT VALUE, not only of the report
+that would carry it.* So it was asked here, on the day the arm produced its first output.
+
+**Measured: 0 suggestions rest on any of the four confirmed-impure subjects.**
+
+**The veto cannot catch them, structurally.** `TemplateRegistry.applyImpureSubjectVeto`
+fires on **witness-refuted** subjects; these four are `.pure`, so nothing refutes them and
+the veto never sees them. If a law did rest on one, it would ship.
+
+**None does.** The four are not template-shaped: `load(startingFrom:explicitPath:diagnostic:)`
+and `scanRestricted(under:diagnostic:)` match no template's signature. So the arm's first
+findings are real and currently **inert** — a false `.pure` with no downstream victim.
+
+**The zero has a non-vacuity control, and it needed one.** The same join, pointed at
+`directoryExists` and `fileExists` — which `docs/measurements/purity-veto-precision.md`
+measures as carrying laws — finds them. A dictionary built on the wrong key would have
+reported *"no law rests on the arm's findings"* just as convincingly as the truth does,
+which is this repo's confident zero arriving in the census whose entire output is a zero.
+
+### What this costs Family A
+
+§5.1 gates `@lint.purity refuted(_)` on *"the empirical arm discovered N false `.pure`"*.
+**N is 4, so the gate is discharged** — and the same measurement says those 4 annotations
+would move **0** suggestions.
+
+That is the **fifth** time in this line of work that the reach half came back empty
+(rows 31, 32, 33, 34, and now this). The pattern is not that the findings are wrong; it is
+that a purity fact has no path to a law unless something gates on it, and the one thing
+that does — the veto — gates on the *refuted* side, which is the side the arm is not
+about.
+
+---
+
 ## What this does NOT establish
 
 **That the five are pure.** See above — they were not exercised.

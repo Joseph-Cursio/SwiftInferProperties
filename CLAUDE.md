@@ -54,14 +54,14 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,707 tests — 5,531 fast + 176 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-18** after the soundness-arm branch —
-every stage counted from that one run: fast 5,531 · perf 8 · batches 4 · **97** · 31 · 7 · 8 · 4 ·
-9 · 8. **Only the batch half moved this time** — 172 → **176** for
-`SoundnessArmProbeMeasuredTests`, with the fast half unchanged at 5,531, which is the regex
-doing its job in the ordinary direction. The three branches before it moved both halves; the
-prior reading follows. It
-reconciles with 172 + 4 — **which is why each was re-taken rather than added**. The
+Suites green at **5,710 tests — 5,531 fast + 179 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-18** after the arm-consumer branch —
+every stage counted from that one run: fast 5,531 · perf 8 · batches 4 · **100** · 31 · 7 · 8 · 4 ·
+9 · 8. **Only the batch half moved, twice running** — 176 → **179**, and the **suite** count
+did not move at all this time: the three tests joined `SoundnessArmProbeMeasuredTests` rather
+than forming a new suite, which is why the batch line reads 100 tests in 22 suites. The prior
+reading follows. It
+reconciles with 176 + 3 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -79,7 +79,8 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 `PurityRefactoringReachMeasuredTests`, **158 → 162** for `PackagePurityJoinMeasuredTests`
 , **162 → 169** for `PurityVetoPrecisionMeasuredTests`
 , **169 → 172** for `ModifyAccessorCensusMeasuredTests`
-and **172 → 176** for `SoundnessArmProbeMeasuredTests`. The fast half has not moved for
+, **172 → 176** for `SoundnessArmProbeMeasuredTests`
+and **176 → 179** as that same suite gained the consumer question. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
 which therefore needs no batch — the regex doing its job in the other direction, as it did
@@ -192,7 +193,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **The interaction-invariant taxonomy — settled, and its last two items were DECLINED not built** | `docs/design/Interaction Invariant Taxonomy.md` | Settled; its last two items were DECLINED, not built — one on measurement, one on evidence model |
 | **Can a verify stub import a carrier its dependency declares?** | `docs/plans/dependency-carrier-imports-scope.md` | **Scoped, recommendation is DON'T** — population is 2 rows; fix the label instead. A degenerate `nil`-only domain is rejected outright |
 | **Can the soundness arm's sandbox be built from what the toolchain has?** | `docs/measurements/sandbox-detector-mechanism.md` | **The plan's cost premise is FALSE and its recommendation survives.** There is no interposition hook — and `sandbox-exec` gives report-rather-than-kill free. **Two unpriced costs:** a denied `process-exec` reports `ENOENT` not `EPERM`, so attribution needs differential profiles; and an allow-list is partial inside its own subpath, so the harness's own writes can trip it |
-| **Does the soundness-arm sandbox separate impure subjects from pure ones?** | `docs/measurements/soundness-arm-probe.md` | **YES — 4 of 9 trip, 0 of 3 controls.** `KitEvidenceStore.load` returns MORE when denied: it walks up out of its argument and reads an ancestor's `.swiftinfer/`. **The five that did not trip are NOT pure** — a degenerate argument reaches a function without exercising it |
+| **Does the soundness-arm sandbox separate impure subjects from pure ones?** | `docs/measurements/soundness-arm-probe.md` | **YES — 4 of 9 trip, 0 of 3 controls.** `KitEvidenceStore.load` returns MORE when denied: it walks up out of its argument and reads an ancestor's `.swiftinfer/`. **The five that did not trip are NOT pure** — a degenerate argument reaches a function without exercising it **And the findings have NO consumer: 0 suggestions rest on the four** — the veto gates on the *refuted* side, which is not the side the arm is about. Family A's gate is discharged at N=4 and worth 0 suggestions |
 | **Can the soundness arm reach its own frozen prediction?** | `docs/measurements/soundness-arm-reach.md` | **Measured YES — 14 of 17 callable, 9 with nothing to construct.** The trip list is nearly all `static`, which dodges the receiver problem that caps the verify arm at 139/281. Out: 2 `private`, 1 awkward type. **Reach is a precondition, not a result** — it says nothing about whether a probe would be informative. Build the 9 first |
 | **What do the backtest's blind spots cost this corpus?** | `docs/measurements/blindspot-base-rates.md` | **Bucket 1 (instance `self` writes) ZERO and reconciled** — 1,226 exist, 380/400 sampled are in `init`, out of scope by construction. **Bucket 2 (hash-order) TWO, hand-checked**: `PartitionAggregator.finalizeTwoClass` returns `winnerByPredicate.values.map(…)` — hash-seed order — and the oracle calls it `.pure`. **Measured NOT to escape**: `finalize()` sorts, and the comparator is total because `NClassPartitionKey` is `(predicateName, markerSetName)`. **A smell, not a bug** — the oracle is still wrong |
 | **Does the purity oracle flag REAL historical purity bugs?** | `docs/measurements/purity-backtest.md` | **Measured 0 HITS of 3, 0 false alarms — the only number here an outside reader can check**, since the oracle is a public fix commit predating the tools. Two blind spots: **hash-order nondeterminism** (a `Set` rendered into a returned String — the bug class this repo already paid for in `orderedSources`) and **instance `self` writes on a class** (`ReducerPurityAnalyzer` covers `Self.`, not `self.`) |
