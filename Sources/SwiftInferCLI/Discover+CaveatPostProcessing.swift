@@ -47,7 +47,8 @@ extension SwiftInferCommand.Discover {
     /// the reader cannot write.
     static func withAccessRestrictionCaveats(
         _ suggestions: [Suggestion],
-        restrictedFunctions: [RestrictedFunction]
+        restrictedFunctions: [RestrictedFunction],
+        summaries: [FunctionSummary] = []
     ) -> [Suggestion] {
         guard !restrictedFunctions.isEmpty else { return suggestions }
         let pairs = restrictedFunctions.map {
@@ -56,6 +57,10 @@ extension SwiftInferCommand.Discover {
         // First wins: the lossy join key can collide (see `SymbolJoinKey`), and two remedies for
         // one key differ only in wording — picking either beats trapping on a duplicate.
         let restrictionByKey = Dictionary(pairs) { first, _ in first }
+        // §2's remedy, now that it is computable. `calledFreeFunctionNames` landed for the
+        // one-hop purity join on 2026-08-18 and inverting it names the caller — the blocker
+        // this advice waited eleven days on was open item 38's missing call graph.
+        let lifts = LiftTargets.make(summaries: summaries, restrictedFunctions: restrictedFunctions)
         return suggestions.map { suggestion in
             let restrictions = suggestion.evidence.compactMap { row in
                 restrictionByKey[
@@ -80,16 +85,33 @@ extension SwiftInferCommand.Discover {
                     )
                 ])
             }
+            // The lift line follows the remedy and precedes everything else: it is the
+            // ACTIONABLE half, and §2 argues it is the better of the two remedies the
+            // `restriction.remedy` sentence offers. Absent when no visible caller was found,
+            // rather than hedged — a caveat naming nothing is worse than one line fewer.
+            let liftLine = Self.liftCaveat(for: suggestion, lifts: lifts)
             updated.explainability = ExplainabilityBlock(
                 whySuggested: suggestion.explainability.whySuggested,
                 whyMightBeWrong: [
                     "NO TEST CAN RUN THIS LAW AS WRITTEN: \(restriction.remedy) The law itself is "
                         + "right and the property is worth stating — but the refactor comes "
                         + "first\(Self.effortClause(for: restriction))."
-                ] + suggestion.explainability.whyMightBeWrong
+                ] + liftLine + suggestion.explainability.whyMightBeWrong
             )
             return updated
         }
+    }
+
+    /// The lift line for a suggestion, or `[]` when no evidence row has a visible caller.
+    ///
+    /// Returns an array so the caller can concatenate without an optional dance, and
+    /// returns **empty rather than a hedge** when nothing was found: a caveat naming no
+    /// caller is worse than one line fewer.
+    static func liftCaveat(for suggestion: Suggestion, lifts: LiftTargets) -> [String] {
+        for row in suggestion.evidence {
+            if let line = lifts.caveat(for: row.location) { return [line] }
+        }
+        return []
     }
 
     /// Whether the restriction puts the subject beyond EVERY test, not merely beyond an

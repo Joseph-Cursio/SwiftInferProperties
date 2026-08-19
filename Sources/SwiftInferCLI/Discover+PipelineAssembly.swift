@@ -71,7 +71,8 @@ extension SwiftInferCommand.Discover {
         PipelineResult(
             suggestions: withAccessRestrictionCaveats(
                 withResolvedConformanceCaveats(cut.visible, typeDecls: artifacts.typeDecls),
-                restrictedFunctions: artifacts.restrictedFunctions
+                restrictedFunctions: artifacts.restrictedFunctions,
+                summaries: artifacts.summaries
             ),
             packageRoot: setup.packageRoot,
             tierHiddenRefutableLaws: cut.hiddenRefutable,
