@@ -54,12 +54,12 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,729 tests — 5,548 fast + 181 across `perf` and the eight batches**
+Suites green at **5,731 tests — 5,548 fast + 183 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,548 · perf 8 · batches 4
-· **102** · 31 · 7 · 8 · 4 · 9 · 8. **Only the fast half moved**, 5,544 → **5,548** as
-`LiftTargetsTests` gained the transitive-walk cases. The prior reading follows. It
-reconciles with 5,544 + 4 — **which is why each was re-taken rather than added**. The
+· **104** · 31 · 7 · 8 · 4 · 9 · 8. **Only the batch half moved**, 181 → **183** for
+`ParameterRoleCensusMeasuredTests`. The prior reading follows. It
+reconciles with 181 + 2 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -79,7 +79,7 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 , **169 → 172** for `ModifyAccessorCensusMeasuredTests`
 , **172 → 176** for `SoundnessArmProbeMeasuredTests`
 and **176 → 179** as that same suite gained the consumer question, then **179 → 181**
-for `LiftCallerReachMeasuredTests`. The fast half moved 5,531 → 5,532 for
+for `LiftCallerReachMeasuredTests` and **181 → 183** for `ParameterRoleCensusMeasuredTests`. The fast half moved 5,531 → 5,532 for
 `ReleaseBuildabilityTests`, 5,532 → 5,534 for `VerifierWorkdirEnginePinTests` and
 5,534 → 5,540 for `LiftTargetsTests` 5,540 → 5,544 for `SurveyRecordTierTests` and 5,544 → 5,548 for the transitive-walk cases. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
@@ -185,6 +185,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **How many laws actually RUN, across all templates?** | `fixtures/whole-corpus-survey/` | **Re-taken 2026-08-19: 178 of 272 runnable-tier entries = 65%, UP from 50%.** **Quote the runnable tiers, never the total** — the total is 178/538, and 266 of those are `Advisory`, which cannot execute by construction. Quoting it manufactured a decline out of an increase, in the row that says read the tier cut. Dominant blocker is **visibility, 204 rows**. **All 15 refutations hand-checked: false laws, zero real bugs, TIER DOES NOT PREDICT** |
 | **Is a survey refutation a real bug, and does the TIER predict it?** | `docs/measurements/refutation-hand-check.md` | **Measured NO to both — 15 of 15 false laws, 3 of 3 `Likely` among them.** Neither tier nor template predicts. The mechanisms are nameable: idempotence over a **derivation** rather than a projection, and commutativity over operands with distinct **roles** |
 | **Can a `private`-subject law name the caller to lift it to?** | `docs/measurements/lift-caller-reach.md` | **Measured YES — 260 of 373 visibility declines can name a visible caller**, 534 of 561 unambiguously. Same-file is **sound**, not heuristic: `private` is file-scoped. **Moves zero rows** — it is a caveat. Auto-lifting DECLINED: the lifted law is a different law |
+| **Do commutativity/associativity fire on operands that cannot be swapped?** | `docs/measurements/parameter-role-declined.md` | **Measured and DECLINED — the signal is exact and the population is 5 rows on one corpus.** 0 held · 3 refuted where it fires; OrderedCollections has 9 binary-op suggestions and **zero** role-distinct. **The 3-of-3 that motivated it was 3 of the 5 rows that exist** |
 | **Does the TEMPLATE predict whether a refutation is a bug?** | `fixtures/planted-defect-arm/README.md` | **Measured NO.** Planted evidence has no base rate — it falsifies, it cannot estimate precision |
 | **Can a veto for the idempotence miss class be built?** | `fixtures/domain-transfer-signal/` + `DomainTransferSignalExperimentTests` | **Measured NO**: recall 4/5, precision 4/12. Score a candidate veto against the laws that HELD |
 | Superseded cycle plans | `docs/archive/v1.141 Calibration Plan.md` | Kept for the shrinking / replay-corpus rationale, not as a plan |
