@@ -258,7 +258,7 @@ public enum VerifierWorkdir {
                 // OrderedDictionary carriers. Required for the curated
                 // OC recipes in `StrategistDispatchEmitter.curatedOCRecipe`.
                 ".package(url: \"https://github.com/apple/swift-collections.git\", from: \"1.0.0\")",
-                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                swiftPropertyBasedDependencyLine,
                 swiftPropertyLawsDependencyLine
             ]
             // swift-syntax, **only when the corpus already depends on it**.
@@ -297,7 +297,7 @@ public enum VerifierWorkdir {
             // workdir's Package.swift resolves without leaning on
             // the kit's own dep graph.
             entries = [
-                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                swiftPropertyBasedDependencyLine,
                 swiftPropertyLawsDependencyLine
             ]
 
@@ -307,7 +307,7 @@ public enum VerifierWorkdir {
             // is no user-package path dependency — just CA for the macros
             // and runtime the co-compiled reducer needs.
             entries = [
-                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                swiftPropertyBasedDependencyLine,
                 swiftPropertyLawsDependencyLine,
                 ".package(url: "
                     + "\"https://github.com/pointfreeco/swift-composable-architecture.git\", "
@@ -318,7 +318,7 @@ public enum VerifierWorkdir {
             // Interaction deps + Mobius, pinned to an unreleased `master`
             // revision (the tags don't build under the current toolchain).
             entries = [
-                ".package(url: \"https://github.com/x-sheep/swift-property-based.git\", from: \"1.0.0\")",
+                swiftPropertyBasedDependencyLine,
                 swiftPropertyLawsDependencyLine,
                 ".package(url: \"https://github.com/spotify/Mobius.swift.git\", "
                     + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")"
