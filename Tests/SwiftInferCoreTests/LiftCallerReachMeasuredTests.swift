@@ -59,10 +59,19 @@ struct LiftCallerReachMeasuredTests {
           …of those, >=1 caller VISIBLE to tests: \(reading.withVisibleCaller)
           …unambiguous (one caller only):         \(reading.withSingleVisibleCaller)
           no caller found at all:                 \(reading.withoutCaller)
+          reachable ONLY transitively:            \(reading.withTransitiveCaller)
+          …chain depths:                          \(Self.renderDepths(reading.transitiveDepths))
 
         SUGGESTIONS declined for visibility:      \(reading.suggestionsOnRestricted)
           …that could name a visible caller:      \(reading.suggestionsWithVisibleCaller)
         """)
         for row in reading.samples.prefix(12) { print("    \(row)") }
+    }
+
+    /// `2:198 3:62 4:7` — how many subjects needed a chain of each length.
+    static func renderDepths(_ depths: [Int: Int]) -> String {
+        depths.sorted { $0.key < $1.key }
+            .map { "\($0.key):\($0.value)" }
+            .joined(separator: " ")
     }
 }

@@ -67,6 +67,7 @@ until measured.
 | …of those, ≥1 caller **visible to tests** | **561** |
 | …**unambiguous** — exactly one visible caller | **534** |
 | no caller found at all | 92 (10%) |
+| **reachable only by walking the chain** | **+267** — depths 2:198, 3:62, 4:7 |
 | | |
 | **suggestions declined for visibility** | **373** |
 | …**that could name a visible caller** | **260 (70%)** |
@@ -85,8 +86,20 @@ of subjects resolved a caller.
 
 ### What the gaps are
 
-**842 → 561** is subjects whose only callers are *also* private — chains of private
-helpers. Transitive lifting reaches them and is a second phase, not a blocker.
+**842 → 561 was subjects whose only callers are *also* private — chains of private
+helpers. Transitive lifting was built the same day and reaches 267 of them**, taking the
+total from 561 to **828 of 934**. The chains are shallow — 198 at depth 2, 62 at depth 3,
+7 at depth 4 — which is why a bounded walk suffices and no call graph is needed.
+
+**The whole chain stays in one file, and that is a consequence rather than a restriction.**
+Each link is a call to a `private` declaration and `private` is file-scoped, so if A is
+private and B calls it, B is in A's file; if B is private too, so is its caller. The walk
+cannot leave the file until it reaches something visible, which is exactly where it stops.
+
+**The caveat states the hop count when it is not 1.** A reader told to state the law on
+something that does not call the subject directly would look for the call, fail to find it,
+and distrust the advice. End to end this took the rendered rows on `SwiftInferCLI` from
+**102 to 120**, 29 of them indirect.
 
 **The 92 with no caller** are the genuine member-call blind spot plus helpers nothing calls
 in-file.

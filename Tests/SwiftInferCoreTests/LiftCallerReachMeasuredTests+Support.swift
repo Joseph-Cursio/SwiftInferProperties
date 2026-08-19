@@ -19,6 +19,11 @@ extension LiftCallerReachMeasuredTests {
         let suggestionsOnRestricted: Int
         /// …of those, how many could be told which visible caller to lift to.
         let suggestionsWithVisibleCaller: Int
+        /// Subjects reachable only by following the caller chain up through further
+        /// private helpers — the 842 → 561 gap the direct pass leaves.
+        let withTransitiveCaller: Int
+        /// How deep the chain had to go, for the ones the direct pass missed.
+        let transitiveDepths: [Int: Int]
 
         var withoutCaller: Int { restricted - withAnyCaller }
     }
@@ -68,6 +73,9 @@ extension LiftCallerReachMeasuredTests {
             }
         }
 
+        let transitive = transitiveArm(
+            subjects: subjects, byFile: byFile, restrictedLocations: restrictedLocations
+        )
         let arm = suggestionArm(
             scanned: scanned, subjects: subjects,
             byFile: byFile, restrictedLocations: restrictedLocations
@@ -81,8 +89,58 @@ extension LiftCallerReachMeasuredTests {
             withSingleVisibleCaller: withSingleVisible,
             samples: samples.sorted(),
             suggestionsOnRestricted: arm.onRestricted,
-            suggestionsWithVisibleCaller: arm.withCaller
+            suggestionsWithVisibleCaller: arm.withCaller,
+            withTransitiveCaller: transitive.reached,
+            transitiveDepths: transitive.depths
         )
+    }
+
+    /// Follow the caller chain up through further private helpers.
+    ///
+    /// **The whole chain stays in one file, and that is a consequence rather than a
+    /// restriction.** Each link is a call to a `private` declaration, and `private` is
+    /// file-scoped — so if A is private and B calls it, B is in A's file; if B is also
+    /// private, its caller is too. The search cannot leave the file until it reaches a
+    /// visible function, which is exactly where it stops.
+    ///
+    /// Counts **only** subjects the direct pass missed, so the two figures add rather
+    /// than overlap. Cycles terminate on the visited set — mutual recursion between two
+    /// private helpers is rare but not impossible, and an unguarded walk would hang.
+    private static func transitiveArm(
+        subjects: [FunctionSummary],
+        byFile: [String: [FunctionSummary]],
+        restrictedLocations: Set<SourceLocation>
+    ) -> (reached: Int, depths: [Int: Int]) {
+        var reached = 0
+        var depths: [Int: Int] = [:]
+        for subject in subjects {
+            let peers = byFile[subject.location.file] ?? []
+            var frontier = [subject.name]
+            var visited: Set<SourceLocation> = [subject.location]
+            var depth = 0
+            var found = false
+            while !frontier.isEmpty, depth < 8, !found {
+                depth += 1
+                var next: [String] = []
+                for caller in peers where !visited.contains(caller.location) {
+                    guard caller.calledFreeFunctionNames.contains(where: frontier.contains)
+                    else { continue }
+                    visited.insert(caller.location)
+                    if restrictedLocations.contains(caller.location) {
+                        next.append(caller.name)
+                    } else {
+                        found = true
+                    }
+                }
+                if found { break }
+                frontier = next
+            }
+            // Depth 1 is the direct pass's territory; only deeper chains are new reach.
+            guard found, depth > 1 else { continue }
+            reached += 1
+            depths[depth, default: 0] += 1
+        }
+        return (reached, depths)
     }
 
     /// The population the caveat attaches to: suggestions whose subject is one of these
