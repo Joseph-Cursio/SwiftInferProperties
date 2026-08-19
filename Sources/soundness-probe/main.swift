@@ -1,5 +1,17 @@
 import Foundation
 
+// **`#if DEBUG` wraps everything below, and it is not tidiness.** Five of the nine
+// subjects are `internal`, so the probe needs `@testable` — which requires
+// `-enable-testing`, which a RELEASE build does not have. Without this guard
+// `swift build -c release` fails outright with *"module 'SwiftInferCLI' was not compiled
+// for testing"*, and it did: the target shipped in that state because `make test` builds
+// only debug, so nothing in the suite ever release-built the package.
+//
+// The probe is a debug-only instrument by nature — it exists to be run under a sandbox by
+// a measured test — so losing it in release costs nothing. The stub keeps the target
+// linkable and says why.
+#if DEBUG
+
 @testable import SwiftInferCLI
 @testable import SwiftInferCore
 
@@ -103,3 +115,10 @@ enum SoundnessProbe {
 }
 
 SoundnessProbe.run()
+
+#else
+
+print("soundness-probe is a DEBUG-only instrument: it needs `@testable` to reach the "
+    + "internal subjects on the trip list, which a release build cannot provide.")
+
+#endif
