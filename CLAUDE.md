@@ -54,14 +54,13 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,710 tests — 5,531 fast + 179 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-18** after the arm-consumer branch —
-every stage counted from that one run: fast 5,531 · perf 8 · batches 4 · **100** · 31 · 7 · 8 · 4 ·
-9 · 8. **Only the batch half moved, twice running** — 176 → **179**, and the **suite** count
-did not move at all this time: the three tests joined `SoundnessArmProbeMeasuredTests` rather
-than forming a new suite, which is why the batch line reads 100 tests in 22 suites. The prior
-reading follows. It
-reconciles with 176 + 3 — **which is why each was re-taken rather than added**. The
+Suites green at **5,711 tests — 5,532 fast + 179 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-19** after the release-build fix and the
+survey re-take — every stage counted from that one run: fast 5,532 · perf 8 · batches 4 · **100**
+· 31 · 7 · 8 · 4 · 9 · 8. **Only the fast half moved this time**, 5,531 → **5,532** for
+`ReleaseBuildabilityTests`, which guards a break `make test` structurally cannot see: it builds
+**debug only**, so a target needing `-enable-testing` ships green. The prior reading follows. It
+reconciles with 5,531 + 1 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -80,7 +79,8 @@ joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
 , **162 → 169** for `PurityVetoPrecisionMeasuredTests`
 , **169 → 172** for `ModifyAccessorCensusMeasuredTests`
 , **172 → 176** for `SoundnessArmProbeMeasuredTests`
-and **176 → 179** as that same suite gained the consumer question. The fast half has not moved for
+and **176 → 179** as that same suite gained the consumer question. The fast half
+moved 5,531 → 5,532 for `ReleaseBuildabilityTests`. The fast half has not moved for
 any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
 `PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
 which therefore needs no batch — the regex doing its job in the other direction, as it did
@@ -181,7 +181,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **What does the toolchain reach on a subject it has NEVER met?** | `docs/measurements/exploratory-swiftformat-grdb.md` | 87/159 laws on the home corpus against 1/129 and 5/307. Five instrument defects; state gains as **rows moved**, never laws gained |
 | **What IS the measurement corpus, and can a run be reproduced?** | `fixtures/corpora/manifest.json` | 21 subjects, four kinds, six apparatuses. The pinned revision belongs to the RUN; cannot-check is a third state |
 | **Can two survey runs be compared at ROW level?** | `fixtures/verify-runs/README.md` | They can now; for four runs they could not. A change of decline **cause** is reported as loudly as a bucket change |
-| **How many laws actually RUN, across all templates?** | `fixtures/whole-corpus-survey/` | 139 of 281 execute. **Read the tier cut, not the total** — all 4 real bugs are `Likely`, all 5 `Possible` refutations are false laws |
+| **How many laws actually RUN, across all templates?** | `fixtures/whole-corpus-survey/` | **Re-taken 2026-08-19: 178 of 538 execute (33%), down from 139 of 281 (49%).** **Read the tier cut, not the total** — `Advisory` is **266 entries and 0 run**, and the dominant blocker corpus-wide is **visibility, 204 rows**, not carrier or template. 15 refutations: 3 `Likely`, 12 `Possible` |
 | **Does the TEMPLATE predict whether a refutation is a bug?** | `fixtures/planted-defect-arm/README.md` | **Measured NO.** Planted evidence has no base rate — it falsifies, it cannot estimate precision |
 | **Can a veto for the idempotence miss class be built?** | `fixtures/domain-transfer-signal/` + `DomainTransferSignalExperimentTests` | **Measured NO**: recall 4/5, precision 4/12. Score a candidate veto against the laws that HELD |
 | Superseded cycle plans | `docs/archive/v1.141 Calibration Plan.md` | Kept for the shrinking / replay-corpus rationale, not as a plan |
