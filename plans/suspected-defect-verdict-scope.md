@@ -200,7 +200,7 @@ surface discriminator to `VerifyEvidence` rather than parsing `template`.
    framing changes.~~
    **Run 2026-08-08 and MISSPECIFIED — see §9.** Three corpora produced 0 refutations,
    because a corpus at HEAD is correct code and correct code does not refute. Replace
-   with: **re-run at `<fix>^` commits**, per `docs/plans/kit-suite-backtest-plan.md`'s
+   with: **re-run at `<fix>^` commits**, per `plans/kit-suite-backtest-plan.md`'s
    own argument. It also was not "one run, no code": two defects had to be fixed first.
 2. **The classifier**, per §3 and §5. A pure function per fold plus its tests; no new
    execution machinery — the disproof, the counterexample, the shrunk counterexample, the
@@ -213,7 +213,7 @@ surface discriminator to `VerifyEvidence` rather than parsing `template`.
    deliberate false positives for the verify corpora but nothing that is a *high-confidence
    guess against genuinely broken code*. The pre-#98 merge fold is the obvious donor: it is
    a real defect, at a known SHA, with a pinned test — the same `<fix>^` construction
-   `docs/plans/kit-suite-backtest-plan.md` is built on, and for the same reason. A fixture
+   `plans/kit-suite-backtest-plan.md` is built on, and for the same reason. A fixture
    frozen at HEAD would be all-green and could not distinguish a working classifier from a
    blind one.
 
@@ -288,7 +288,7 @@ near-identical log types — so the expected yield from ~150 correct entries was
 approximately zero before the run started.
 
 This project already made this argument, in a doc this scope cites for a different
-purpose. `docs/plans/kit-suite-backtest-plan.md` is built on it:
+purpose. `plans/kit-suite-backtest-plan.md` is built on it:
 
 > These libraries are correct at HEAD, so an all-green run is indistinguishable from
 > the tool being blind; only the pre-fix commit separates those readings.

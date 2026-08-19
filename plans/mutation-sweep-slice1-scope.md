@@ -139,7 +139,7 @@ Slice 1 reports a table and a recommendation, not a tool.
 ## 7. What slice 1 deliberately does not do
 
 - **No automatic attribution** of a survivor to the generator versus the law.
-  `docs/plans/existing-property-test-audit-scope.md` names that as the unsolved part, and
+  `plans/existing-property-test-audit-scope.md` names that as the unsolved part, and
   `fixtures/leaderboard-sort`'s mutant × law matrix exists because the two are confusable.
   Slice 1 adjudicates by hand and *records how hard each call was*, which is the input a
   future automation would need.

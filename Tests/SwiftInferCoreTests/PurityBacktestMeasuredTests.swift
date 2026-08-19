@@ -6,7 +6,7 @@ import Testing
 
 @testable import SwiftInferCore
 
-/// **Phase 0.6 of `docs/plans/declaration-claims-plan.md`: does the purity oracle
+/// **Phase 0.6 of `plans/declaration-claims-plan.md`: does the purity oracle
 /// flag a real historical purity bug, and not its fix?**
 ///
 /// Every other measurement in this repo grades the tool with the tool — this corpus,

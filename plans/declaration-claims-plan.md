@@ -22,7 +22,7 @@ the empirical arm (§6) is Chapter 19's territory, not Chapter 26's.
 <!-- doc-provenance date=2026-08-17 subject=SwiftEffectInference@3ea25f29de9e0fbb86a6a8f20b2c42ead58a039e observer=SwiftInferProperties@1b2def25681ec5972c38a59eae134fca77dd3f54 -->
 
 > **`docs_drift.sh` does NOT cover this file, and the trailer above is therefore decorative.**
-> Settled rather than left open: `DOCS_DIR` defaults to `docs/design-internal`, so `docs/plans/` is
+> Settled rather than left open: `DOCS_DIR` defaults to `docs/design-internal`, so `plans/` is
 > out of scope. Open item 39 was worked and **deliberately declined to widen the glob** — measured
 > 2026-08-17, 9 of 91 docs under `docs/` are in scope and 49 of the 82 out of scope name a sibling
 > repo, but all 82 lack a trailer, so a wider glob prints 82 `?` rows and the check becomes the thing

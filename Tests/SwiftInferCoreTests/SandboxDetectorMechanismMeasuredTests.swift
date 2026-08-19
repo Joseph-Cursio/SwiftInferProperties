@@ -3,7 +3,7 @@ import Testing
 
 /// **Can §6.3's soundness arm be built from what this toolchain already has?**
 ///
-/// `docs/plans/declaration-claims-plan.md` §6.5 prices the whole empirical arm on one
+/// `plans/declaration-claims-plan.md` §6.5 prices the whole empirical arm on one
 /// sentence: *"`VerifierSubprocess` already runs each law as its own process with
 /// `DYLD_*` injection — process isolation exists and **the interposition hook is in
 /// place**, which is what makes report-rather-than-kill cheap."*
@@ -76,7 +76,7 @@ struct SandboxDetectorMechanismMeasuredTests {
         for needle in Self.hookNeedles {
             #expect(hits[needle] == 0, """
             `\(needle)` now appears in the package. If an interposition hook has landed, \
-            §6.5 of `docs/plans/declaration-claims-plan.md` has become true and \
+            §6.5 of `plans/declaration-claims-plan.md` has become true and \
             `docs/measurements/sandbox-detector-mechanism.md` must be re-read before its \
             recommendation is followed.
             """)

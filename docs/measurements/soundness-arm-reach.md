@@ -5,7 +5,7 @@
 Re-derivable at any time — `SoundnessArmReachCensusMeasuredTests` *is* the harness,
 and `make batch2` runs it.
 
-Phase 0.5, step 1 of `docs/plans/declaration-claims-plan.md`. **Measured: 14 of the 17
+Phase 0.5, step 1 of `plans/declaration-claims-plan.md`. **Measured: 14 of the 17
 frozen rows are callable, 9 of them with nothing to construct at all.** The arm can
 execute its own answer key, so the sandbox build is not blocked on reach.
 

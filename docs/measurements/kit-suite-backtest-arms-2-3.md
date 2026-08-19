@@ -7,7 +7,7 @@
 `DocStatusHeaderTests` parses it as an expiry stamp; a parenthetical there is unparseable, which
 is how this note came to be a sentence instead.
 
-Closes the open remainder of [`docs/plans/kit-suite-backtest-plan.md`](../plans/kit-suite-backtest-plan.md),
+Closes the open remainder of [`plans/kit-suite-backtest-plan.md`](../../plans/kit-suite-backtest-plan.md),
 whose Arm 1 ran 2026-08-02 and was a HIT. Read that plan first — it carries the method, the
 pre-registered predictions, and the three-readings problem this design exists to solve.
 

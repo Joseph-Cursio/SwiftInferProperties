@@ -307,6 +307,6 @@ unseeded finite path and now says so at the call site.
 | whether the veto's premise is true | `SwiftInferProperties/Sources/SwiftInferCore/ProtocolCoverageAudit.swift` |
 | whether the claims are true **law by law** | `SwiftInferProperties/docs/measurements/protocol-coverage-law-drift.md` |
 | kit verdicts feeding back into scoring | `SwiftInferProperties/Sources/SwiftInferCore/KitEvidence*.swift` |
-| does the emitted suite catch a real bug? | `SwiftInferProperties/docs/plans/kit-suite-backtest-plan.md` — Arm 1 is a measured HIT |
+| does the emitted suite catch a real bug? | `SwiftInferProperties/plans/kit-suite-backtest-plan.md` — Arm 1 is a measured HIT |
 | the sibling packages | `docs/design-internal/swiftprojectlint.md`, `swifteffectinference.md` |
 | vocabulary — *Strategist / generator recipe*, *Stub*, *Outcome* | `docs/design-internal/glossary.md` § Verify |

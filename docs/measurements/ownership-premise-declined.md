@@ -5,7 +5,7 @@
 Re-derivable at any time — `OwnershipPremiseCensusMeasuredTests` *is* the harness,
 and `make batch2` runs it.
 
-Phase 0.7 of `docs/plans/declaration-claims-plan.md`. **Measured: the premise is
+Phase 0.7 of `plans/declaration-claims-plan.md`. **Measured: the premise is
 false and the population is zero, so both rows close as
 *measured-premise-false*.** And the probe turned up a separate, larger defect the
 rows were only gesturing at.

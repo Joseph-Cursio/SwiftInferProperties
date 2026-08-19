@@ -5,7 +5,7 @@
 Re-derivable at any time — `PurityBacktestMeasuredTests` *is* the harness, and
 `make batch2` runs it.
 
-Phase 0.6 of `docs/plans/declaration-claims-plan.md`. **Measured: 0 HITS of 3, and
+Phase 0.6 of `plans/declaration-claims-plan.md`. **Measured: 0 HITS of 3, and
 0 false alarms.** The oracle sees neither of the two bug classes a public history
 actually produced.
 

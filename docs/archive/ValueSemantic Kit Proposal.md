@@ -239,7 +239,7 @@ The as-built shape went further than this sketch — a copy-mutate-compare law p
 - **kit v3.6.0** — `@ValueSemanticTests` peer macro.
 - **kit v3.7.0 / v3.8.0** — `DefensiveCopy` + `StableIdentity` (reference-type companions: distinct-copy + identity-stability laws).
 - **kit v3.9.0** — `@DefensiveCopyTests` + `@StableIdentityTests` macros (shared `LawTestPeerMacro`).
-- **Engine side** — `ValueSemanticDiscoverer` / `DefensiveCopyDiscoverer` / `StableIdentityDiscoverer` (surfaced in `discover-reducers`) + `ValueSemanticVerifier` (self-contained + package-path-dep), proven on `valuesemantic-verify-corpus` (`SafeStore` bothPass / `LeakyStore` defaultFails / `ClosureCounter`) + `valuesemantic-package-corpus`. See `docs/plans/valuesemantic-build-plan.md`.
+- **Engine side** — `ValueSemanticDiscoverer` / `DefensiveCopyDiscoverer` / `StableIdentityDiscoverer` (surfaced in `discover-reducers`) + `ValueSemanticVerifier` (self-contained + package-path-dep), proven on `valuesemantic-verify-corpus` (`SafeStore` bothPass / `LeakyStore` defaultFails / `ClosureCounter`) + `valuesemantic-package-corpus`. See `plans/valuesemantic-build-plan.md`.
 
 *(Original sketch, for the record:)*
 1. **V1.0** — Audit existing macro discovery; sketch the extension surface for mutating-method enumeration.

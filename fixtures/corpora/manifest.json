@@ -114,7 +114,7 @@
           "revision": "d6b1e6c76768646f353105d7f26584c4ba9a5c2e",
           "takenOn": "2026-08-02",
           "arm": "Arm 1 — `876177db^`, the commit before the symmetricDifference fix",
-          "record": "docs/plans/kit-suite-backtest-plan.md",
+          "record": "plans/kit-suite-backtest-plan.md",
           "frozenBecause": null,
           "expectedOutcome": "HIT. `symmetricDifferenceCommutativity` and `symmetricDifferenceDefinition` must BOTH fail at trial 1 (x=[7,5,4], y=[8,0,5] → [7,4] vs [8,0]); at the fix, 0 violations of 15. Backtest at <fix>^, never at HEAD: these libraries are correct at HEAD, so an all-green run cannot be told apart from the tool being blind.",
           "answerKey": null
@@ -444,7 +444,7 @@
           "revision": "1491c44f4161f58d61647741b4f6fb7427640172",
           "takenOn": "2026-08-01",
           "arm": "five-repo adoption loop, scored against the pbt-road-test-reference key",
-          "record": "docs/plans/PBT_TOOLCHAIN_FIX_PLAN.md",
+          "record": "plans/PBT_TOOLCHAIN_FIX_PLAN.md",
           "frozenBecause": null,
           "expectedOutcome": "The 4 interaction findings are recorded UNSCORED: the answer key predates the interaction surface, and a tool may not grade its own homework.",
           "answerKey": null

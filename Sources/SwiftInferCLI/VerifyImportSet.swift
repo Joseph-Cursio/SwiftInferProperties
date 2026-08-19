@@ -99,7 +99,7 @@ enum VerifyImportSet {
     /// `.build/checkouts/<Checkout>/Sources/<Module>/…` to `<Module>`, **and** give the stub
     /// package a `.package` + product edge, since `@testable import <Subject>` does not
     /// re-export its dependencies. Scoped in
-    /// `docs/plans/dependency-carrier-imports-scope.md`; deliberately not built here, because
+    /// `plans/dependency-carrier-imports-scope.md`; deliberately not built here, because
     /// emitting an import the manifest cannot satisfy trades one build failure for another.
     /// (falsifier: `VerifierWorkdir.dependencyProductEdge`)
     static func modules(

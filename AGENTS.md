@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-Guidance for Claude Code (claude.ai/code) working in this repository. **This file is a
+Guidance for Codex (Codex.ai/code) working in this repository. **This file is a
 pointer-only index**, and deliberately short: it loads into context every session, so it
 carries the hook and the target, never the reasoning.
 

@@ -3,7 +3,7 @@
 /// ## Why this is not called a suspected defect
 ///
 /// `docs/archive/Refuted-high-confidence-guess as candidate bug.md` proposed exactly that
-/// name. `docs/plans/suspected-defect-verdict-scope.md` §11 measured whether the tool can
+/// name. `plans/suspected-defect-verdict-scope.md` §11 measured whether the tool can
 /// earn it and the answer is no:
 ///
 /// - The **conjecture** signal fires on **14 of 14** refutations on record — 5 real
@@ -106,5 +106,5 @@ public enum RefutedExpectation {
     public static let disclaimer =
         "Nothing in the signature, the tier, or the counterexample separates these two: "
             + "the difference is whether the property was INTENDED to hold, which is not "
-            + "in the code. Measured — see docs/plans/suspected-defect-verdict-scope.md §11."
+            + "in the code. Measured — see plans/suspected-defect-verdict-scope.md §11."
 }

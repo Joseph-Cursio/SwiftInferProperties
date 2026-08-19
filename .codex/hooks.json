@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "QUIET=1 ./scripts/docs_drift.sh || true",
+            "timeout": 20,
+            "statusMessage": "Checking design-internal doc drift..."
+          }
+        ]
+      }
+    ]
+  }
+}

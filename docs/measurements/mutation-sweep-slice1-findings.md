@@ -2,7 +2,7 @@
 
 > **Status:** `measured` · **As of:** 2026-08-08
 
-Runs `docs/plans/mutation-sweep-slice1-scope.md`. The scope's question was **not** "is the
+Runs `plans/mutation-sweep-slice1-scope.md`. The scope's question was **not** "is the
 suite good" but "what fraction of survivors are actionable" — the number that decides
 whether the mutation layer is worth building.
 
