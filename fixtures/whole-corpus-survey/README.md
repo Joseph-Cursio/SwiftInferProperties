@@ -1,4 +1,4 @@
-# Whole-corpus verify survey — frozen streams (2026-08-05)
+# Whole-corpus verify survey — frozen streams (2026-08-05, 2026-08-19)
 
 The raw `verify --all-from-index` JSON streams behind the numbers in
 `docs/design-internal/open-threads.md` → *Decisions* → *The whole-corpus number*.
@@ -13,6 +13,7 @@ remembered count carries no record of the flags it was taken with.
 
 | file | what |
 |---|---|
+| `2026-08-19-whole-corpus.jsonl` | **538 records**, one per index entry, no `--template` filter — the re-take |
 | `2026-08-05-whole-corpus.jsonl` | 281 records, one per index entry, no `--template` filter |
 | `2026-08-05-predicate-ab-before.jsonl` | 129 records, the `--template predicate` A/B **before**-arm |
 | `analyse.py` | buckets a stream by template × outcome; `python3 analyse.py <file>` |
@@ -29,6 +30,25 @@ remembered count carries no record of the flags it was taken with.
 | A/B before-arm | 2026-08-05 07:58–08:32 UTC · 129 entries |
 
 Both SHAs are reachable in this repo, so either binary rebuilds with `swift build -c release`.
+
+## The 2026-08-19 re-take
+
+| | |
+|---|---|
+| subject | `SwiftInferProperties@15bb86c` |
+| index | **rebuilt from scratch**, `swift-infer index --target …` over all seven library targets |
+| command | `swift-infer verify --all-from-index --max-parallel 4` (release binary) |
+| run | 2026-08-19 12:31–12:42 UTC · **11 min** |
+| result | **178 of 538 execute** — 163 held, 15 refuted, 16 errored, 344 declined |
+
+**The counts are NOT comparable to 2026-08-05's; the ratio is.** This README records the
+*verify* command the first run used and not how its index was built, so the 281-entry
+population cannot be reconstructed. What can be said is that **the executing share fell
+from 49% to 33%** while the corpus grew 281 → 538: the population nearly doubled and
+executing laws grew by 28%.
+
+**The 76-minute figure above no longer holds** — the re-take took 11 minutes over nearly
+twice the population. Do not budget from the older number.
 
 ## Two caveats that matter when re-running
 
