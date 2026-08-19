@@ -81,11 +81,20 @@ emitters** whose parameters land in different syntactic positions:
   unused**. `f(a, b)` ignores `b` entirely, so any law relating the two operands is false
   before the body is read.
 
-**This is `docs/measurements/same-name-differential-pairing.md`'s finding reached from the
-other end** — that census measured *"the dominant FP is undeclared **role** interfaces"*
-against a ≥50% bar and declined at 40%. Here the same mechanism accounts for **3 of 3**
-`Likely` refutations. Two independent measurements, one cause: **`(T, T) -> T` is a type,
-not a semantics, and this catalog reads it as one.**
+**`(T, T) -> T` is a type, not a semantics, and this catalog reads it as one.**
+
+> **A claim made here on 2026-08-19 was too strong, and is corrected the same day.** It read:
+> *"this is `same-name-differential-pairing.md`'s finding reached from the other end … two
+> independent measurements, one cause."* **They are not one cause.** That census is about a
+> shared **function name** naming a role across types — `emit` on 16 types, where differing
+> bodies are the point — and its false positive is *pairing two functions*. This is about two
+> **parameters of one function** carrying distinct roles, and its false positive is a
+> *commutativity law over non-interchangeable operands*.
+>
+> Both are undeclared conventions the tool cannot see, and the word "role" fits both. That
+> makes them **analogous, not identical** — and calling them one cause would license
+> re-opening a recorded decline on evidence that is not about it. The overlap is real and
+> worth noticing; the identity was invented.
 
 ---
 
