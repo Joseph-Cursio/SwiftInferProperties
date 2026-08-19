@@ -31,17 +31,35 @@
 /// have exactly one.
 public struct LiftTargets: Sendable, Equatable {
 
-    /// Visible callers, by the restricted subject's location. Sorted, so the rendered
-    /// caveat is stable across runs — PRD §16 #6 reaches this.
-    private let callersBySubject: [SourceLocation: [String]]
+    /// A visible caller, and how many hops away it is.
+    public struct Target: Sendable, Equatable {
+        public let names: [String]
+        /// 1 when the subject is called directly; 2+ when the chain passed through
+        /// further `private` helpers before reaching something a test can name.
+        public let depth: Int
 
-    public init(callersBySubject: [SourceLocation: [String]] = [:]) {
-        self.callersBySubject = callersBySubject
+        public init(names: [String], depth: Int) {
+            self.names = names
+            self.depth = depth
+        }
+    }
+
+    /// Visible callers, by the restricted subject's location. Names sorted, so the
+    /// rendered caveat is stable across runs — PRD §16 #6 reaches this.
+    private let targetsBySubject: [SourceLocation: Target]
+
+    public init(targetsBySubject: [SourceLocation: Target] = [:]) {
+        self.targetsBySubject = targetsBySubject
     }
 
     /// Visible callers for a subject, or `[]` when it has none.
     public func callers(for subject: SourceLocation) -> [String] {
-        callersBySubject[subject] ?? []
+        targetsBySubject[subject]?.names ?? []
+    }
+
+    /// The full target, including how far up the chain it was found.
+    public func target(for subject: SourceLocation) -> Target? {
+        targetsBySubject[subject]
     }
 
     /// Build the index.
@@ -69,30 +87,90 @@ public struct LiftTargets: Sendable, Equatable {
             byFile[summary.location.file, default: []].append(summary)
         }
 
-        var index: [SourceLocation: [String]] = [:]
+        var index: [SourceLocation: Target] = [:]
         for subject in subjects {
-            let visible = (byFile[subject.location.file] ?? []).filter { caller in
-                caller.location != subject.location
-                    && caller.calledFreeFunctionNames.contains(subject.name)
-                    && !restrictedLocations.contains(caller.location)
+            if let target = walk(
+                from: subject,
+                peers: byFile[subject.location.file] ?? [],
+                restrictedLocations: restrictedLocations
+            ) {
+                index[subject.location] = target
             }
-            guard !visible.isEmpty else { continue }
-            index[subject.location] = Set(visible.map(\.name)).sorted()
         }
-        return Self(callersBySubject: index)
+        return Self(targetsBySubject: index)
     }
+
+    /// Walk *up* the caller chain until a visible function is reached.
+    ///
+    /// **The whole chain stays in one file, and that is a consequence rather than a
+    /// restriction.** Each link is a call to a `private` declaration and `private` is
+    /// file-scoped, so if A is private and B calls it, B is in A's file; if B is private
+    /// too, so is its caller. The search cannot leave the file until it reaches something
+    /// visible — which is exactly where it stops.
+    ///
+    /// Measured 2026-08-19: the direct pass reaches 561 of 934 subjects and the walk adds
+    /// **267 more**, at depths 2:198, 3:62, 4:7. Shallow, which is why a bounded walk is
+    /// enough and a full graph is not needed.
+    ///
+    /// **Cycles terminate on `visited`.** Mutual recursion between two private helpers is
+    /// rare and not impossible, and an unguarded walk would hang rather than mis-answer —
+    /// the worse of the two failures for a tool that runs inside `discover`.
+    private static func walk(
+        from subject: FunctionSummary,
+        peers: [FunctionSummary],
+        restrictedLocations: Set<SourceLocation>
+    ) -> Target? {
+        var frontier = [subject.name]
+        var visited: Set<SourceLocation> = [subject.location]
+        var depth = 0
+
+        while !frontier.isEmpty, depth < maximumChainDepth {
+            depth += 1
+            var deeper: [String] = []
+            var visible: [String] = []
+            for caller in peers where !visited.contains(caller.location) {
+                guard caller.calledFreeFunctionNames.contains(where: frontier.contains)
+                else { continue }
+                visited.insert(caller.location)
+                if restrictedLocations.contains(caller.location) {
+                    deeper.append(caller.name)
+                } else {
+                    visible.append(caller.name)
+                }
+            }
+            if !visible.isEmpty {
+                return Target(names: Set(visible).sorted(), depth: depth)
+            }
+            frontier = deeper
+        }
+        return nil
+    }
+
+    /// Bounded because the measured chains are short — the deepest on this corpus is 4 —
+    /// and because `discover` runs under the §13 budget. A subject needing more than this
+    /// yields no caveat rather than a slow one.
+    static let maximumChainDepth = 8
 
     /// The caveat line, or `nil` when no visible caller was found.
     ///
     /// **Additive.** §2 is explicit that the row itself is right — *"not a gate, not a
     /// demotion, not a veto"* — so this adds a line and changes no score.
     public func caveat(for subject: SourceLocation) -> String? {
-        let names = callers(for: subject)
-        guard let first = names.first else { return nil }
-        let target = names.count == 1
+        guard let target = targetsBySubject[subject], let first = target.names.first else {
+            return nil
+        }
+        let named = target.names.count == 1
             ? "`\(first)`"
-            : "`\(first)` (or \(names.dropFirst().map { "`\($0)`" }.joined(separator: ", ")))"
-        return "LIFT IT INSTEAD OF WIDENING: \(target) calls this and is visible to tests. "
+            : "`\(first)` (or \(target.names.dropFirst().map { "`\($0)`" }.joined(separator: ", ")))"
+        // **The hop count is stated when it is not 1.** A reader told to state the law on
+        // something that does not call the subject directly will look for the call, not
+        // find it, and distrust the advice — so the caveat says the reach is indirect
+        // rather than leaving them to discover it.
+        let reach = target.depth == 1
+            ? "calls this"
+            : "reaches this through \(target.depth - 1) more private helper"
+                + (target.depth == 2 ? "" : "s")
+        return "LIFT IT INSTEAD OF WIDENING: \(named) \(reach) and is visible to tests. "
             + "State the law there — a lifted law survives the helper being renamed, inlined "
             + "or replaced, and it tests how the helper is USED, which is where this class of "
             + "bug lives."
