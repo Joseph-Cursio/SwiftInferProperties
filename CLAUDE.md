@@ -54,12 +54,15 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,731 tests — 5,548 fast + 183 across `perf` and the eight batches**
+Suites green at **5,737 tests — 5,552 fast + 185 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,548 · perf 8 · batches 4
-· **104** · 31 · 7 · 8 · 4 · 9 · 8. **Only the batch half moved**, 181 → **183** for
-`ParameterRoleCensusMeasuredTests`. The prior reading follows. It
-reconciles with 181 + 2 — **which is why each was re-taken rather than added**. The
+SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
+· **106** · 31 · 7 · 8 · 4 · 9 · 8. Both halves moved: fast for `CorpusManifestTests`, batch for
+`CrossTypePairCensusMeasuredTests`. **`batch2` now costs 801s, up from ~460s**, because two
+censuses moved from three corpora to the manifest's seventeen — the price of a control that can
+discriminate, and worth knowing before it is mistaken for a regression. The prior reading
+follows. It
+reconciles with 183 + 2 and 5,548 + 4 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
