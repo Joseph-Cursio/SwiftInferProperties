@@ -54,12 +54,15 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,731 tests — 5,548 fast + 183 across `perf` and the eight batches**
+Suites green at **5,737 tests — 5,552 fast + 185 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,548 · perf 8 · batches 4
-· **104** · 31 · 7 · 8 · 4 · 9 · 8. **Only the batch half moved**, 181 → **183** for
-`ParameterRoleCensusMeasuredTests`. The prior reading follows. It
-reconciles with 181 + 2 — **which is why each was re-taken rather than added**. The
+SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
+· **106** · 31 · 7 · 8 · 4 · 9 · 8. Both halves moved: fast for `CorpusManifestTests`, batch for
+`CrossTypePairCensusMeasuredTests`. **`batch2` now costs 801s, up from ~460s**, because two
+censuses moved from three corpora to the manifest's seventeen — the price of a control that can
+discriminate, and worth knowing before it is mistaken for a regression. The prior reading
+follows. It
+reconciles with 183 + 2 and 5,548 + 4 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
 per-stage count while keeping the exit code: the run proved the branch green and proved nothing
 about the number, so the arithmetic was available and the measurement was not. Re-running cost
@@ -185,7 +188,8 @@ decline, because the hook states the verdict and the annotation states what was 
 | **How many laws actually RUN, across all templates?** | `fixtures/whole-corpus-survey/` | **Re-taken 2026-08-19: 178 of 272 runnable-tier entries = 65%, UP from 50%.** **Quote the runnable tiers, never the total** — the total is 178/538, and 266 of those are `Advisory`, which cannot execute by construction. Quoting it manufactured a decline out of an increase, in the row that says read the tier cut. Dominant blocker is **visibility, 204 rows**. **All 15 refutations hand-checked: false laws, zero real bugs, TIER DOES NOT PREDICT** |
 | **Is a survey refutation a real bug, and does the TIER predict it?** | `docs/measurements/refutation-hand-check.md` | **Measured NO to both — 15 of 15 false laws, 3 of 3 `Likely` among them.** Neither tier nor template predicts. The mechanisms are nameable: idempotence over a **derivation** rather than a projection, and commutativity over operands with distinct **roles** |
 | **Can a `private`-subject law name the caller to lift it to?** | `docs/measurements/lift-caller-reach.md` | **Measured YES — 260 of 373 visibility declines can name a visible caller**, 534 of 561 unambiguously. Same-file is **sound**, not heuristic: `private` is file-scoped. **Moves zero rows** — it is a caveat. Auto-lifting DECLINED: the lifted law is a different law |
-| **Do commutativity/associativity fire on operands that cannot be swapped?** | `docs/measurements/parameter-role-declined.md` | **Measured and DECLINED — the signal is exact and the population is 5 rows on one corpus.** 0 held · 3 refuted where it fires; OrderedCollections has 9 binary-op suggestions and **zero** role-distinct. **The 3-of-3 that motivated it was 3 of the 5 rows that exist** |
+| **Do commutativity/associativity fire on operands that cannot be swapped?** | `docs/measurements/parameter-role-declined.md` | **Measured and DECLINED — the signal is exact and the population is 5 rows on one corpus.** 0 held · 3 refuted where it fires; OrderedCollections has 9 binary-op suggestions and **zero** role-distinct. **The 3-of-3 that motivated it was 3 of the 5 rows that exist** ⚠ **RE-TAKEN 2026-08-19: the verdict stands and every reason was wrong.** The first run used 3 corpora when 17 resolve, and the signal tested only that labels *differ* — it fired on the stdlib's `*(a:b:)` and Foundation's `+(lhs:rhs:)`, 36 false positives on genuinely commutative arithmetic, so the reported 5/5 precision was an artifact of a corpus that could not exhibit the failure. Corrected: **118 binary-op suggestions across 17 corpora, 2 role-distinct** |
+| **Is cross-type round-trip pairing worth acting on?** | `docs/measurements/cross-type-roundtrip-census.md` | **Measured NO ACTION, and the control cannot discriminate.** 220 of 230 cross-type at API level but only **7 of 86** in a target's default output. OrderedCollections produces **1** round-trip suggestion — **a control with no population is not a control** ⚠ **CONTROL RE-TAKEN across 17 corpora and now DECISIVE**: 529 round-trip suggestions elsewhere, **6 cross-type (1.1%)**, against 220 of 230 (96%) here — and swift-collections is multi-module at `Sources/` with **0 of 107**, so it is not scanning breadth |
 | **Does the TEMPLATE predict whether a refutation is a bug?** | `fixtures/planted-defect-arm/README.md` | **Measured NO.** Planted evidence has no base rate — it falsifies, it cannot estimate precision |
 | **Can a veto for the idempotence miss class be built?** | `fixtures/domain-transfer-signal/` + `DomainTransferSignalExperimentTests` | **Measured NO**: recall 4/5, precision 4/12. Score a candidate veto against the laws that HELD |
 | Superseded cycle plans | `docs/archive/v1.141 Calibration Plan.md` | Kept for the shrinking / replay-corpus rationale, not as a plan |
