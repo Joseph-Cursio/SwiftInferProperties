@@ -26,8 +26,13 @@ extension CrossTypePairCensusMeasuredTests {
         ["Emitter", "Builder", "Renderer", "Generator", "Composer"].contains { name.contains($0) }
     }
 
-    static let readings: [Reading] = PartialPurityConsumerMeasuredTests.corpora.compactMap { corpus in
-        guard let scanned = try? FunctionScanner.scanCorpus(directory: corpus.root) else {
+    /// **Every corpus the manifest resolves, not item 34's trio.** The first run of this
+    /// census used three, found OrderedCollections yielding **1** round-trip suggestion,
+    /// and concluded the control was uninformative. That was true of those three — and the
+    /// parameter-role census, re-taken across the manifest the same day, had both of its
+    /// reasons refuted. A conclusion drawn from the same thin universe is not evidence.
+    static let readings: [Reading] = CorpusManifest.available.compactMap { corpus in
+        guard let scanned = try? FunctionScanner.scanCorpus(directory: corpus.primaryRoot) else {
             return nil
         }
         let suggestions = TemplateRegistry.discover(
@@ -48,7 +53,7 @@ extension CrossTypePairCensusMeasuredTests {
             if samples.count < 20 { samples.append("\(forward) -> \(reverse)") }
         }
         return Reading(
-            corpus: corpus.name,
+            corpus: "\(corpus.id) (\(corpus.swiftFileCount) files)",
             roundTrip: roundTrip,
             crossType: crossType,
             sameType: roundTrip - crossType,

@@ -5,9 +5,37 @@
 Re-derivable at any time — `CrossTypePairCensusMeasuredTests` *is* the harness, and
 `make batch2` runs it.
 
-**Measured: no action, and the control cannot discriminate.** The population is real and
-large at the API level, invisible at the user-facing one, and the two corpora that would
-say whether it generalises produce almost no round-trip suggestions at all.
+**Measured: no action — and RE-TAKEN across 17 corpora the same day, which turned an
+uninformative control into a decisive one.**
+
+> **The first version of this document said the control *"cannot discriminate"*** because
+> OrderedCollections yielded **1** round-trip suggestion. That was true of the three corpora
+> it looked at, and those three were the wrong universe — the same trio whose narrowness
+> refuted both reasons of `docs/measurements/parameter-role-declined.md` an hour earlier.
+>
+> **Re-taken over `CorpusManifest.available`: 529 round-trip suggestions across 16 other
+> corpora, 6 cross-type — 1.1%.** Against **220 of 230, 96%**, on this repository's
+> `Sources/`. The control now discriminates, and it says the shape is **specific to this
+> codebase**.
+>
+> | corpus | round-trip | cross-type |
+> |---|---|---|
+> | swiftlang-swift | 206 | **0** |
+> | swift-collections | 107 | **0** |
+> | swift-foundation | 82 | 4 |
+> | swift-package-manager | 73 | **0** |
+> | swift-syntax | 47 | **0** |
+> | **this repo, all `Sources/`** | 230 | **220** |
+>
+> **The obvious explanation is wrong, and checking it is what makes this a control.** A
+> multi-module scan might pair a forward in one module with a reverse in another — but
+> `swift-collections` is scanned at `Sources/` and spans `Collections`, `OrderedCollections`,
+> `DequeModule` and more, with **0** cross-type of 107. Same breadth, opposite result. So it
+> is not scanning breadth; it is this repository's density of `emit` / `render` / `compose` /
+> `parse` names across many types, which is what the template's forward/reverse pairing keys
+> on.
+>
+> **The verdict is unchanged and now rests on evidence rather than on an empty control.**
 
 ---
 
