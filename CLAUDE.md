@@ -54,13 +54,19 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,737 tests — 5,552 fast + 185 across `perf` and the eight batches**
+Suites green at **5,741 tests — 5,552 fast + 189 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· **106** · 31 · 7 · 8 · 4 · 9 · 8. Both halves moved: fast for `CorpusManifestTests`, batch for
-`CrossTypePairCensusMeasuredTests`. **`batch2` now costs 801s, up from ~460s**, because two
-censuses moved from three corpora to the manifest's seventeen — the price of a control that can
-discriminate, and worth knowing before it is mistaken for a regression. The prior reading
+· **110** · 31 · 7 · 8 · 4 · 9 · 8. The batch half alone moved, 185 → 189, for
+`ModuleStateCorpusCensusMeasuredTests`; the fast half stood still because the regex skips it,
+which is the routing working in both directions. **`batch2` costs 679–801s** — the two readings
+are the same suite on a busier and a quieter machine, so treat the spread as machine noise and
+not as a regression; the step up from ~460s is real and is the price of two censuses moving from
+three corpora to the manifest's seventeen. **This count was RE-TAKEN rather than derived**, and
+the arithmetic that was available and refused is 185 + 4: the prior run of this same branch was
+piped through `tail -35`, which kept the exit code and discarded every per-stage count, so it
+proved the branch green and proved nothing about the number — the standing rule below, re-earned
+the same day it was quoted. The prior reading
 follows. It
 reconciles with 183 + 2 and 5,548 + 4 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
