@@ -3,12 +3,15 @@
 > **Status:** `measured` · **As of:** 2026-08-19
 
 Re-derivable at any time — `ResultCarrierReachMeasuredTests` *is* the harness, and
-`make batch5` runs it. It costs **~21 minutes**, which is real and is the price of
+`make batch5` runs it. It costs **~28 minutes**, which is real and is the price of
 three discovery passes over 28,274 functions.
 
 **Measured NO, and the sign is negative.** The headline is **−218 suggestions
 (−3.3%)** against a ceiling of **+62 (+0.95%)**. But the headline over-states the cost
-by a factor of three, and the reason is the finding — see §4.
+by a factor of four, and the reason is the finding — see §4.
+
+**The performable refactor costs −53** (§4.1, measured 2026-08-20). Quote that figure,
+not −218 and not the −66 this document previously derived by subtraction.
 
 ---
 
@@ -111,9 +114,46 @@ So **152 of the 218 lost rows model a transform that is illegal in Swift.** The 
 applied it because the arm rewrites summaries, not source, and a summary has no idea
 its signature is load-bearing for a conformance.
 
-**Corrected reading.** For refactors that can actually be performed, the loss is
-about **−66** rather than −218, against a **+62** gain from dropping the flag — close
-to a wash, still not positive. **Quote the attribution, never the net.**
+**Corrected reading, first cut — and it was 20% wrong.** This document originally
+said the performable loss was *"about −66 rather than −218"*, reached by subtracting
+`codable-round-trip`'s 152 from the 218. §7 flagged that as arithmetic standing in for
+a measurement. It has since been measured, and the derivation was off by 13 rows.
+
+## 4.1 The measured figure: **−53**
+
+`ResultCarrierReachMeasuredTests` now carries a fourth arm that **does not perform the
+illegal transform at all**, rather than performing it and subtracting afterwards:
+
+```
+CEILING     (throws masked):            +62
+REFACTOR    (Result-wrapped):          -218
+PERFORMABLE (free signatures only):     -53
+  conformance-fixed throwing functions skipped: 466
+```
+
+**466 of the 2,830 throwing functions — one in six — cannot change their signature**
+because a protocol they conform to fixes it. That is a larger population than
+`codable-round-trip`'s rows alone, which is exactly why the subtraction under-recovered:
+it credited back only the rows of one template, while the fixed population also holds
+rows of `round-trip`, `inverse-pair` and others.
+
+**So the derived −66 over-stated the performable cost by 13 rows (~20%).** The verdict
+does not move — a performable `Result` refactor still costs suggestions rather than
+gaining them — but the figure is now measured, and the one it replaces was the kind of
+number this repo has been burned by before: right in direction, wrong in magnitude, and
+indistinguishable from a measurement once written down.
+
+**The classifier is structural, and biased against itself.** A function counts as
+conformance-fixed only when its `(name, labels)` matches a **throwing requirement** of
+some protocol **and** its containing type declares conformance to that protocol —
+requirements read both from a built-in stdlib table and from the corpus's own protocol
+declarations, whose bodies `FunctionScanner` deliberately skips. Name alone is not
+enough, and `nameAloneIsNotEnough` asserts an identically-named method on a
+non-conforming type stays free; that guard was watched failing against a deliberately
+name-only classifier before being trusted. Its blind spots — cross-module conformances,
+`typealias` conformances, `override` / `@objc` / C-interop signatures — **all err
+toward calling a function free**, so 466 is a floor and −53 is an upper bound on the
+cost. The instrument cannot manufacture the correction it exists to check.
 
 ### `encode(to:)` has now distorted three separate measurements
 
@@ -176,10 +216,11 @@ to state laws about failures, which is a claim this census does not touch.
 - **A `Result` carrier in the templates.** The entire −280 return-type cost is "the
   templates do not recognise `Result<T, E>`". Teach one to unwrap it and the arm must
   be re-taken; the answer could go either way and this document cannot predict it.
-- **Excluding protocol requirements from the transform.** §4's correction is arithmetic
-  on a template total, not a re-measurement. A harness that skipped conformance-fixed
-  signatures would give the ~−66 directly instead of by subtraction, and would be the
-  honest instrument. Not built.
+- ~~**Excluding protocol requirements from the transform.**~~ **BUILT 2026-08-20**, and
+  it moved the number: −53 measured against −66 derived. See §4.1. What remains open is
+  the classifier's stated blind spots — a conformance declared in another module, or
+  behind an arbitrary `typealias`, and the non-protocol reasons a signature is fixed
+  (`override`, `@objc`, C interop). Each would raise the 466 and shrink the 53.
 - **A corpus with a large `Result`-returning surface.** Every corpus here is
   `throws`-shaped, so the baseline arm has never seen what the tool does with a
   codebase already written the other way. That is a real blind spot in this census.
