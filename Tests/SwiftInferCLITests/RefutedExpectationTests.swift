@@ -5,7 +5,7 @@ import Testing
 
 /// The EXPECTED TO HOLD verdict — a **visibility** class, never a claim about the code.
 ///
-/// `plans/suspected-defect-verdict-scope.md` §11 measured that no static signal
+/// `docs/plans/suspected-defect-verdict-scope.md` §11 measured that no static signal
 /// separates "the guess was wrong" from "the code is wrong": the conjecture caveat fires
 /// on 14 of 14 refutations, and a body-shape reader would suppress the real defects. So
 /// the section states both readings, and these tests pin that it never states one.

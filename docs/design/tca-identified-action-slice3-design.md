@@ -26,7 +26,7 @@ Phase-B decision records.
 > the "Recommendation" section at the foot is likewise the pre-3c recommendation,
 > preserved as the record of what was recommended rather than what was done.
 > **It misfiled the doc on 2026-08-07** — read literally, "no implementation is
-> proposed as landed here" says *plan*, and the doc was moved to `plans/` on
+> proposed as landed here" says *plan*, and the doc was moved to `docs/plans/` on
 > that basis without checking the code. A stale framing sentence outranked a
 > correct banner four lines above it.
 

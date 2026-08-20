@@ -5,7 +5,7 @@
 Re-derivable at any time — `SoundnessArmProbeMeasuredTests` *is* the harness, and
 `make batch2` runs it. The probe is `Sources/soundness-probe`, built by `swift build`.
 
-`plans/declaration-claims-plan.md` §6.3 step 1, and its gate is stated as a
+`docs/plans/declaration-claims-plan.md` §6.3 step 1, and its gate is stated as a
 precondition rather than a result: *"if the sandbox cannot distinguish those nine from a
 control set of genuinely pure functions, it does not work and nothing else matters."*
 

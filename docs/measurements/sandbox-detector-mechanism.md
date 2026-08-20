@@ -5,7 +5,7 @@
 Re-derivable at any time — `SandboxDetectorMechanismMeasuredTests` *is* the harness, and
 `make batch2` runs it.
 
-Phase 0.5 of `plans/declaration-claims-plan.md`, measured **before** the arm was
+Phase 0.5 of `docs/plans/declaration-claims-plan.md`, measured **before** the arm was
 built rather than discovered inside it. **The plan's cost premise is false and its
 recommendation survives anyway** — §6.5 claims an interposition hook this package does
 not contain, and the detector turns out not to need one.

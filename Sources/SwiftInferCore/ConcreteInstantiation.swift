@@ -5,7 +5,7 @@
 /// into generated suites. Neither typechecks — `generic parameter 'Element' could not be
 /// inferred` — so *no* generic carrier could produce a compiling suite, with or without a
 /// generator. Measured on swift-collections `899809d3` and on the 2022 `876177db^` tree
-/// (`plans/kit-suite-backtest-plan.md` §3b and §Arm 1).
+/// (`docs/plans/kit-suite-backtest-plan.md` §3b and §Arm 1).
 ///
 /// **`Int` is the substitution, and it is the toolchain's existing convention rather than a
 /// new invention.** PropertyLawKit's own hand-written recipes bind element types to `Int` —

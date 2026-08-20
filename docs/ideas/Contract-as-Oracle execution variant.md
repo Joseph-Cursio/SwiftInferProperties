@@ -6,7 +6,7 @@
 ## Status
 
 **Idea only. More aggressive than, and a sibling to,
-`plans/production-assertion-discovery-signal.md`** — read that first. That note
+`docs/plans/production-assertion-discovery-signal.md`** — read that first. That note
 mines production `precondition`/`assert` *statically*, as a signal to *suggest* a
 property the user then inspects. This note records the other, more aggressive
 design it deliberately does not cover: using the contract itself as a live
@@ -69,7 +69,7 @@ all in the book's Preface "Related reading".
 
 ## Cross-references
 
-- `plans/production-assertion-discovery-signal.md` — the static sibling.
+- `docs/plans/production-assertion-discovery-signal.md` — the static sibling.
 - Book Preface §"PBT vs. Design by Contract" — the passive-vs-generative framing
   and the prior art.
 - `pbt-book/planning/workbook-continuum.md` — the assertion → contract → PBT →

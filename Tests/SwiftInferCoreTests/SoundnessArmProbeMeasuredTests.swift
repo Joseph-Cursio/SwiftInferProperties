@@ -3,7 +3,7 @@ import Testing
 
 /// **Phase 0.5, step 1 — does the sandbox distinguish the trip list from pure controls?**
 ///
-/// `plans/declaration-claims-plan.md` §6.3 puts this first and says why: *"if the
+/// `docs/plans/declaration-claims-plan.md` §6.3 puts this first and says why: *"if the
 /// sandbox cannot distinguish those nine from a control set of genuinely pure functions,
 /// it does not work and nothing else matters."*
 ///

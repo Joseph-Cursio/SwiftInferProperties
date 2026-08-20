@@ -2,7 +2,7 @@
 
 > **Status:** `measured` · **As of:** 2026-08-08
 
-The confound in `plans/suspected-defect-verdict-scope.md` §4: across the only nine
+The confound in `docs/plans/suspected-defect-verdict-scope.md` §4: across the only nine
 refutations this project has ever produced, **tier and template are perfectly aligned** —
 all four `Likely` refutations are `commutativity` (real defects, #92, fixed in #98) and all
 five `Possible` ones are `idempotence` (false laws, #93). *"The tier predicts whether a
@@ -82,7 +82,7 @@ fires on **14 of 14** refutations on record — 5 defects and 9 false laws — b
 `Decisions.merge`'s pre-fix body composed its operands positionally
 (`records + other.records`), which is the same shape as `PathSegment`'s
 `text + "/" + other.text`, so it would suppress the defect and keep the false law. See
-`plans/suspected-defect-verdict-scope.md` §11 — the conclusion there is that the fix
+`docs/plans/suspected-defect-verdict-scope.md` §11 — the conclusion there is that the fix
 is the verdict's *wording*, not a better gate.
 
 **Planted evidence cannot estimate a rate.** These three types were chosen to occupy
@@ -108,7 +108,7 @@ its answer key, in a new place.
 **The name is load-bearing, and it is not a detail.** `associativity` fires on
 `combine(_:)` and `union(_:)` and **not** on `merging(_:)` or `adding(_:)` — measured with
 a four-type probe. A fixture named the wrong way produces no rows and reads as *the tool
-cannot see this*, which is the reading `plans/kit-suite-backtest-plan.md` warns about
+cannot see this*, which is the reading `docs/plans/kit-suite-backtest-plan.md` warns about
 in a different context. The three types share one method name so that name signals are held
 constant across the comparison; that is a control, not a convenience.
 

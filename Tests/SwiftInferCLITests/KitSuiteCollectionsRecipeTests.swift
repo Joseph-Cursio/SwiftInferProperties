@@ -4,7 +4,7 @@ import PropertyLawCore
 import SwiftInferCore
 import Testing
 
-/// **Guards the §4a decision** (`plans/kit-suite-backtest-plan.md`): a blocked
+/// **Guards the §4a decision** (`docs/plans/kit-suite-backtest-plan.md`): a blocked
 /// swift-collections carrier names the kit generator that already exists, and the live path
 /// never does.
 ///

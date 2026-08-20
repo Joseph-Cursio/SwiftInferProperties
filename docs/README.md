@@ -17,7 +17,7 @@ to catch.
 | `reference/` | Command and feature docs, plus `index-annotations.md` — the long form of CLAUDE.md's index | *How does this work today?* |
 | `design/` | Design records for decisions that shipped, and spikes that deliberately did **not** ship | *Why is it built this way?* |
 | `measurements/` | Road tests, backtests, censuses, findings — anything with a score in it | *What happened when we pointed it at something?* |
-| `plans/` — **at the repository root, not under `docs/`** | Scopes, build plans, live trackers | *What are we doing next?* |
+| `plans/` | Scopes, build plans, live trackers | *What are we doing next?* |
 | `ideas/` | Unbuilt proposals | *What might we do?* |
 | `design-internal/` | One doc per sibling repo in the toolchain, plus the glossary and open threads | *What does the other side of the seam do?* |
 | `archive/` | Superseded, and shipped-then-archived design records | *What was the reasoning behind a decision we already made?* |

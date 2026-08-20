@@ -6,7 +6,7 @@ import Testing
 
 @testable import SwiftInferCore
 
-/// **Phase 0.7 of `plans/declaration-claims-plan.md`: do `consuming` and
+/// **Phase 0.7 of `docs/plans/declaration-claims-plan.md`: do `consuming` and
 /// `borrowing` carry purity evidence in this analyzer, or is the population zero?**
 ///
 /// The plan proposes two Family C edges resting on parameter ownership:

@@ -66,7 +66,7 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
     /// The law compares values with `==` and the carrier is not `Equatable`.
     ///
     /// **A third answer, because the two it replaces were both wrong** — measured on GRDB
-    /// (`plans/inverse-pair-identity-element-composers-scope.md`), where 31 rows reported
+    /// (`docs/plans/inverse-pair-identity-element-composers-scope.md`), where 31 rows reported
     /// `unsupported-template` for `inverse-pair` and `identity-element`.
     ///
     /// `unsupportedTemplate` says *a gap in swift-infer; nothing you write unblocks these*,

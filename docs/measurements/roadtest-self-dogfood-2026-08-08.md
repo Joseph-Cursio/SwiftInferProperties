@@ -1621,7 +1621,7 @@ So a green run prints:
 ```
 CLAUDE.md:75 — falsifier `Pairing.permuted` has landed
 docs/measurements/roadtest-self-dogfood-2026-08-08.md:1120 — falsifier `IndexedTypeShape.accessLevel` has landed
-plans/dependency-carrier-imports-scope.md:92 — falsifier `VerifierWorkdir.dependencyProductEdge` has landed
+docs/plans/dependency-carrier-imports-scope.md:92 — falsifier `VerifierWorkdir.dependencyProductEdge` has landed
 ```
 
 All three are **pending** — `grep -rn "accessLevel" Sources/SwiftInferCore/SemanticIndexEntry.swift`

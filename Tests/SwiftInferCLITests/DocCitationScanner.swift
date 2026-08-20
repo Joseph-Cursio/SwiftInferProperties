@@ -161,32 +161,9 @@ enum DocCitationScanner {
     /// on the same line, with the usual comment punctuation treated as a terminator
     /// so `` `docs/a.md` §6 `` and `(../../docs/a.md)` both land on the path alone.
     static func citations(in line: String, file: String, line lineNumber: Int) -> [Citation] {
-        citationRoots.flatMap { citations(in: line, root: $0, file: file, line: lineNumber) }
-    }
-
-    /// **The roots a citation can start from.**
-    ///
-    /// `docs/` was the only one until 2026-08-19, when `docs/plans/` moved to
-    /// `plans/` at the repository root. Both guards anchor on a literal root string,
-    /// so a move out of `docs/` does not break them — it makes the moved paths
-    /// **invisible** to them, and 57 citations across 34 files would have gone
-    /// unchecked while both suites stayed green. That is this repo's *confident
-    /// zero* arriving through a directory rename, and it is why the root list is a
-    /// constant rather than a literal buried in the loop.
-    ///
-    /// Adding a root is safe: the `.md` / `.json` extension anchor means prose like
-    /// *"the plans/ directory"* cannot match, only an actual file path can.
-    static let citationRoots = ["docs/", "plans/"]
-
-    private static func citations(
-        in line: String,
-        root: String,
-        file: String,
-        line lineNumber: Int
-    ) -> [Citation] {
         var found: [Citation] = []
         var searchStart = line.startIndex
-        while let marker = line.range(of: root, range: searchStart..<line.endIndex) {
+        while let marker = line.range(of: "docs/", range: searchStart..<line.endIndex) {
             searchStart = marker.upperBound
             let remainder = line[marker.upperBound...]
             // Stop before punctuation that closes a citation rather than sitting
@@ -198,7 +175,7 @@ enum DocCitationScanner {
             // `docs/*.md`". Checking one for existence asks the wrong question.
             guard !candidate.contains("*") else { continue }
             guard let end = Self.extensionEnd(of: candidate) else { continue }
-            let path = root + candidate[candidate.startIndex..<end]
+            let path = "docs/" + candidate[candidate.startIndex..<end]
             let prefix = line[line.startIndex..<marker.lowerBound]
             found.append(
                 Citation(

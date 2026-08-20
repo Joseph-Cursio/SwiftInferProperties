@@ -129,18 +129,12 @@ struct DocProseCitationTests {
 
         // Every live subdirectory should be represented; an exclusion that swallowed
         // one whole would still clear the counts above.
-        for directory in ["design", "measurements", "reference", "design-internal", "ideas"] {
+        for directory in ["design", "measurements", "plans", "reference", "design-internal", "ideas"] {
             #expect(
                 files.contains { $0.hasPrefix("docs/\(directory)/") },
                 "docs/\(directory)/ is not being scanned at all"
             )
         }
-        // `plans/` is a sibling of `docs/`, not a child, and asserting it by the same
-        // rule is the only thing standing between the move and a silently narrowed scan.
-        #expect(
-            files.contains { $0.hasPrefix("plans/") },
-            "plans/ is not being scanned at all — it moved out of docs/ on 2026-08-19"
-        )
     }
 
     /// Same argument one level up: an excluded file that no longer exists excludes
@@ -235,37 +229,27 @@ struct DocProseCitationTests {
         return found
     }
 
-    /// Every markdown file under `docs/` and `plans/`, minus the history roots, plus
-    /// `CLAUDE.md` — which is the index every session loads and cites docs more
-    /// densely than any file in the tree, so leaving it out would exempt the
-    /// highest-traffic citations in the repo.
-    ///
-    /// **`plans/` is a sibling of `docs/`, not a child**, since 2026-08-19. Walking
-    /// only `docs/` would drop 11 live planning docs out of the population without
-    /// failing anything: the scan would still find hundreds of citations, so the
-    /// floor in ``scanIsNotEmpty()`` would not notice, and the suite would stay green
-    /// while checking less. ``scanIsNotEmpty()`` asserts the `plans/` prefix for
-    /// exactly that reason.
+    /// Every markdown file under `docs/`, minus the history roots, plus `CLAUDE.md` —
+    /// which is the index every session loads and cites docs more densely than any
+    /// file in the tree, so leaving it out would exempt the highest-traffic citations
+    /// in the repo.
     static func scannedFiles() -> [String] {
         // `AGENTS.md` is the Codex-facing twin of `CLAUDE.md`, produced by a mechanical
         // Claude -> Codex rename. That rename rewrote a real filename into one that does
         // not exist (`docs/archive/Codex-md-narrative-history.md`), and nothing caught it
         // because only `CLAUDE.md` was scanned. An index that loads every session is the
-        // last place a dangling citation should be allowed to sit unchecked, and there
-        // are now two of them.
+        // last place a dangling citation should sit unchecked, and there are two of them.
         var paths: [String] = ["CLAUDE.md", "AGENTS.md"]
-        for root in ["docs", "plans"] {
-            let url = DocCitationScanner.repositoryRoot.appendingPathComponent(root)
-            let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil)
-            while let fileURL = enumerator?.nextObject() as? URL {
-                guard fileURL.pathExtension == "md" else { continue }
-                let relative = fileURL.path.replacingOccurrences(
-                    of: DocCitationScanner.repositoryRoot.path + "/", with: ""
-                )
-                guard !historyRoots.contains(where: { relative.hasPrefix($0 + "/") || relative == $0 })
-                else { continue }
-                paths.append(relative)
-            }
+        let docsRoot = DocCitationScanner.repositoryRoot.appendingPathComponent("docs")
+        let enumerator = FileManager.default.enumerator(at: docsRoot, includingPropertiesForKeys: nil)
+        while let url = enumerator?.nextObject() as? URL {
+            guard url.pathExtension == "md" else { continue }
+            let relative = url.path.replacingOccurrences(
+                of: DocCitationScanner.repositoryRoot.path + "/", with: ""
+            )
+            guard !historyRoots.contains(where: { relative.hasPrefix($0 + "/") || relative == $0 })
+            else { continue }
+            paths.append(relative)
         }
         return paths.sorted()
     }

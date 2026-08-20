@@ -5,7 +5,7 @@
 
 ## Status
 
-> **Slice 1 scoped 2026-08-08: `plans/mutation-sweep-slice1-scope.md`.** It does
+> **Slice 1 scoped 2026-08-08: `docs/plans/mutation-sweep-slice1-scope.md`.** It does
 > not build this layer — it measures the number that decides whether the layer is worth
 > building, which is the equivalent-mutant rate this doc's own argument predicts will be
 > high. Three of the costs below moved that day (#129, #130), and

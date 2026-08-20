@@ -47,7 +47,7 @@ interaction surveys already speak the same 5-outcome vocabulary.
 | **Inconclusive** | edge-case advisory / tooling error | needs a look |
 
 **Expected to hold is a VISIBILITY class, not a verdict about your code**, and the
-distinction is measured rather than cautious. `plans/suspected-defect-verdict-scope.md`
+distinction is measured rather than cautious. `docs/plans/suspected-defect-verdict-scope.md`
 §11 scored every signal that might separate *"the guess was wrong"* from *"the code is
 wrong"*: the conjecture caveat fires on **14 of 14** refutations on record, defects and
 false laws alike, and a body-shape reader would suppress the real defects while keeping the

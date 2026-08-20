@@ -8,11 +8,11 @@
 > does not claim a defect, because no static signal separates *the guess was wrong* from
 > *the code is wrong*. Archived rather than filed under `design/` for that reason — the
 > built thing differs from this proposal. The live record is
-> `plans/suspected-defect-verdict-scope.md`.
+> `docs/plans/suspected-defect-verdict-scope.md`.
 
 
 > **Scoped 2026-08-07 — the idea stands, the gate below is refuted.**
-> `plans/suspected-defect-verdict-scope.md` scores this against the nine
+> `docs/plans/suspected-defect-verdict-scope.md` scores this against the nine
 > refutations in the whole-corpus survey and carries the corrected gate. The
 > separation is better than this note assumed (**4/4** of the high-tier refutations
 > were real defects, fixed in PR #98; **0/5** of the low-tier ones were), but all

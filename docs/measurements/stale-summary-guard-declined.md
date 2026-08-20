@@ -26,7 +26,7 @@ detector look promising.
 
 ## 2. Scoring method
 
-Recall was measured the way `plans/kit-suite-backtest-plan.md` insists — **at `<fix>^`, never at
+Recall was measured the way `docs/plans/kit-suite-backtest-plan.md` insists — **at `<fix>^`, never at
 HEAD**, because every instance is corrected now and an all-quiet run at HEAD is indistinguishable
 from a detector that sees nothing. Precision was measured at HEAD, where every remaining hit is by
 definition a false positive.

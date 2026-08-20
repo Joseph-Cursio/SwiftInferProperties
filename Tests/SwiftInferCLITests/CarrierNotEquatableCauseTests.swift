@@ -8,7 +8,7 @@ import Testing
 ///
 /// ## Why a third answer
 ///
-/// Measured on GRDB (`plans/inverse-pair-identity-element-composers-scope.md`): 31 rows
+/// Measured on GRDB (`docs/plans/inverse-pair-identity-element-composers-scope.md`): 31 rows
 /// reported `unsupported-template` for `inverse-pair` and `identity-element`, and **both
 /// available labels were wrong**.
 ///
