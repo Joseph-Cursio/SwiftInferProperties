@@ -54,12 +54,15 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,741 tests — 5,552 fast + 189 across `perf` and the eight batches**
+Suites green at **5,745 tests — 5,552 fast + 193 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· **110** · 31 · 7 · 8 · 4 · 9 · 8. The batch half alone moved, 185 → 189, for
-`ModuleStateCorpusCensusMeasuredTests`; the fast half stood still because the regex skips it,
-which is the routing working in both directions. **`batch2` costs 679–801s** — the two readings
+· 110 · 31 · 7 · **12** · 4 · 9 · 8. The batch half alone moved, 189 → 193, for
+`ResultCarrierReachMeasuredTests`; the fast half stood still because the regex skips it,
+which is the routing working in both directions. **`batch5` costs 1,242s, up from 43s** — that
+one suite runs three discovery passes over 28,274 functions across the 17 corpora, and it is
+**~20 minutes added to `make test`**, deliberately paid and recorded here so it is not read later
+as a regression. The prior reading, 5,741 with `batch2` at 110, follows. **`batch2` costs 679–801s** — the two readings
 are the same suite on a busier and a quieter machine, so treat the spread as machine noise and
 not as a regression; the step up from ~460s is real and is the price of two censuses moving from
 three corpora to the manifest's seventeen. **This count was RE-TAKEN rather than derived**, and
@@ -150,6 +153,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 26 rows, base rate unmeasurable — and `3ea25f2` refuted the witness without moving the zero, because the closure oracle never reads the callee's verdict. Item 42 CLOSED there |
 | **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |
+| **Does moving from `throws` to `Result` put more code within a law's reach?** | `docs/measurements/result-carrier-reach.md` | **Measured NO — ceiling +62 of 6,508 (~1%), actual refactor −218.** ⚠ **Quote the attribution, never the net: 152 of the 218 are `codable-round-trip`, and `encode(to:)` / `init(from:)` are protocol requirements whose `throws` cannot be changed — a transform illegal in Swift.** Performable loss ≈ −66. `input-totality` **+4** is the only gain. Third time `encode(to:)` has bent a number here |
 | **Would refactoring toward purity put more code within a law's reach?** | `docs/measurements/purity-refactoring-reach.md` | **Measured NO at a ceiling — 710/160/51 suggestions, zero moved** by forcing every verdict to `.pure`. The zero is structural: purity is not one of `UnverifiableCause`'s eight causes. **The same fact read back is a soundness finding — 22 of 921 suggestions rest on a witness-refuted subject**, seven of them filesystem predicates here. The signal's use is a VETO, scoped to witness-bearing |
 | **What would a purity veto cost?** | `docs/measurements/purity-veto-precision.md` | **Measured AFFORDABLE when scoped — 0 refutations removed at either scope.** Naive `.refuted` veto: 20 removed, **10 passing laws**, 8 of them `encode(to:)` under the only 100%-yield template. Witness-scoped: 8 removed, **2 passes**, both filesystem predicates the veto exists for. Read the `refuted` column, never the total **SHIPPED 2026-08-18** as `applyImpureSubjectVeto`, witness-scoped, suppressing 8 here — and the gate that matters is `bodyFingerprint != nil`, because `.refuted` is an initialiser DEFAULT |
 | **Why was a MUTABLE property offered as a law subject?** | `docs/measurements/modify-accessor-misclassification.md` | `isReadOnlyGetter` gated on `!contains("set")` and Swift has more mutating accessors than that. **6 → 0** admitted, **8 → 0** suggestions. Now an **allowlist**. Half two closed as *no population* — 0 of 325 admitted properties declare a second accessor |
