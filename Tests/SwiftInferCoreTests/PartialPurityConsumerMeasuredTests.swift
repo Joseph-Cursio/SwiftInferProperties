@@ -105,6 +105,17 @@ struct PartialPurityConsumerMeasuredTests {
     /// carried across verbatim — a copy that quietly dropped `declaredEffect` or
     /// `bodySignals` would change the arms for reasons that have nothing to do
     /// with the gate under test.
+    ///
+    /// **That promise decayed and was repaired 2026-08-19.** `calledFreeFunctionNames`
+    /// was added to `FunctionSummary` after this comment was written, defaulted to `[]`
+    /// in the initialiser, and so was dropped here in silence — the exact failure the
+    /// comment above warns about, in the helper that warns about it. It happened to be
+    /// inert: `applyImpureSubjectVeto` reads the field only through
+    /// `!isThrows || calledFreeFunctionNames.contains(…)`, and this helper sets
+    /// `isThrows = false`, so the first disjunct already carried the gate. **Inert by
+    /// coincidence of an unrelated gate's structure is not a property to rely on**, and
+    /// a field-by-field copy in a measurement helper is a maintenance liability every
+    /// time the struct grows.
     static func withThrowsMasked(_ summary: FunctionSummary) -> FunctionSummary {
         FunctionSummary(
             name: summary.name,
@@ -129,7 +140,8 @@ struct PartialPurityConsumerMeasuredTests {
             declaredEffect: summary.declaredEffect,
             inferredEffect: summary.inferredEffect,
             purityVerdict: summary.purityVerdict,
-            bodyFingerprint: summary.bodyFingerprint
+            bodyFingerprint: summary.bodyFingerprint,
+            calledFreeFunctionNames: summary.calledFreeFunctionNames
         )
     }
 
