@@ -10,6 +10,13 @@ file-scope `var` at all.** The asymmetry is real; it has no victims here. That m
 it a **latent unsoundness**, which is item 40's result and must be reported as item
 40's was — not as a defect, and not as a clean bill of health either.
 
+> **Do not stop reading here.** This is the *home* arm — one package. Its closing
+> instruction, *"do not carry this zero to another corpus,"* was discharged on
+> 2026-08-19: see **[The cross-corpus arm](#the-cross-corpus-arm--the-standing-instruction-discharged)**
+> at the foot of this file. Across 17 corpora and 20,526 functions the base rate is
+> **5, not 0** — and the home arm's prediction about which codebases would exhibit
+> the shape is measured **wrong**.
+
 ---
 
 ## The question, and why it needed asking separately
@@ -139,3 +146,124 @@ that moment the asymmetry stops being theoretical and this census must be re-tak
   asymmetry would close from the wrong side — the two paths would agree by both being
   unsound. `OwnershipPremiseCensusMeasuredTests.closureOracleRefutesCapturedMutation`
   is the guard for that direction.
+
+---
+
+# The cross-corpus arm — the standing instruction, discharged
+
+> **Status:** `measured` · **As of:** 2026-08-19 · harness
+> `ModuleStateCorpusCensusMeasuredTests` (`…+Corpora.swift`), `make batch2`
+
+The home arm above closed with an instruction: ***"Do not carry this zero to a road
+test on someone else's corpus."*** Nobody carried it anywhere, which is the same
+thing — the zero simply sat as the only measured answer for two days. This arm runs
+the identical detector over the **17 corpora `CorpusManifest` resolves**, so the
+question moves from *does this package exhibit the shape* to *does the shape exist in
+Swift as written*.
+
+## The answer
+
+**The base rate is 5 of 20,526 functions — 0.024% — and all five are in
+`swiftlang-swift`.** Sixteen of seventeen corpora measure zero.
+
+| | |
+|---|---|
+| corpora scanned | 17 (4 absent from this machine, 1 resolved-but-empty, both listed in the run) |
+| functions | 20,526 |
+| **stored** file-scope `var`s | **17** — 15 of them in `swiftlang-swift` |
+| computed file-scope `var`s | 118 — **not module state**, see below |
+| false `.pure` (writes a global) | **5** |
+| touching a global but already refuted | 4 |
+| member-call-only surface | 0 |
+
+## The denominator was 87% wrong, and only a hand-check found it
+
+The first run of this arm reported **135 file-scope `var`s**. 86 were
+swift-foundation's, and every one is a *computed* platform shim:
+
+```swift
+internal var CLOCK_REALTIME: clockid_t { ... }
+internal var _hexCharsUpper: ClosedRange<UInt8> { UInt8(ascii: "A") ... UInt8(ascii: "F") }
+```
+
+A constant wearing `var` because Swift has no other spelling for a computed global.
+The finding count was unaffected — you cannot assign to a getter-only `var` — but a
+reader computing *"5 of 135 globals are mishandled"* off that table would have quoted
+a ratio whose denominator was overwhelmingly constants. The real figure is **5 findings
+against 17 stored globals**, and the two numbers describe different worlds.
+
+`FileScopeVarCollector` now reports `storedNames` and `computedNames` separately. The
+union is still what writes are matched against, deliberately: **a computed `var` with
+a setter is a real write target**, and one of the five findings arrives by exactly
+that route. The obvious implementation — `accessorBlock == nil` — is wrong in the
+flattering direction, because `var counter = 0 { didSet { … } }` is stored mutable
+state carrying an accessor block; `storedAndComputedAreSeparated` asserts that case
+rather than assuming it.
+
+## All five hand-checked — 5/5 true positives, two for a weaker reason than the detector gave
+
+Every census in this repo that skipped the hand-check got its first answer wrong (the
+fixpoint census: 61% false). These were read in full:
+
+| finding | write | verdict |
+|---|---|---|
+| `BridgeObjectiveC.swift:_connectOrphanedFoundationSubclassesIfNeeded` | `_orphanedFoundationSubclassesReparented = true` | **true** — direct assignment to a stored global |
+| `EmbeddedRuntime.swift:_ensureErrorMetadataInitialized` | `_errorMetadataInitialized = true`, +2 more | **true** — textbook lazy-init of module state |
+| `EmbeddedRuntime.swift:swift_allocEmptyBox` | `Builtin.addressof(&_emptyBoxStorage)`, then `swift_retain` | **true**, weaker reason — the detector fires on the `&`; the mutation is the refcount bump *through* the pointer |
+| `EmbeddedRuntime.swift:swift_allocError` | `&_errorMetadataStorage` | **true**, weaker reason — the `&` is arguably just an address-of; the function mutates because it *calls* `_ensureErrorMetadataInitialized()` |
+| `Exclusivity.swift:swift_endAccess` | `Access.remove(head: &accessHead)` | **true** — `accessHead` is a *computed* global whose setter writes exclusivity TLS |
+
+So: **precision 5/5 on the category**, but only three of the five are caught for the
+reason the instrument states. Two are true because of what happens one hop away —
+which is the `&x` rule being conservative and landing right, not the rule being
+precise. Do not read this as a validated 100% detector.
+
+## What this does to the home arm's verdict
+
+It **strengthens it, and refutes one of its predictions.**
+
+The home arm said the shape *"is a fact about this repository, not about Swift"* and
+that a codebase with *"a global cache, a shared counter, or a `nonisolated(unsafe)`
+singleton would exhibit it immediately."* The first half is now measured **too weak**
+and the second half is measured **wrong**:
+
+- Mutable file-scope state is not a swift-infer quirk. It is **near-absent from Swift
+  libraries generally** — 2 stored globals across the 16 non-stdlib corpora,
+  including swift-collections, swift-syntax, NIO, swift-format, SwiftPM and
+  ArgumentParser, none of which produced a single false `.pure`.
+- The predicted exhibits did not appear. Not one corpus outside the standard library
+  runtime has the shape at all.
+
+Where it *does* appear is `stdlib/public/core` — `@c`, `@_silgen_name`, embedded
+runtime, exclusivity TLS. Code implementing memory management, which is the one place
+mutable process-global state is the whole point.
+
+**The verdict is unchanged and now better founded: a latent unsoundness with real
+exhibits, at a rate too low to justify a refuter.** What changed is that "no exhibits"
+became "five exhibits, all in the one corpus where they are unavoidable" — which is a
+stronger statement than the zero was, not a weaker one.
+
+## What this arm does NOT claim
+
+**Base rate is not reach.** A hit here is a false `.pure` in the oracle, and that is
+checkable. It is *not* evidence that swift-infer would ever ask about these functions
+— the tool only runs the oracle over subjects it has picked, and nothing here
+establishes that a stdlib runtime entry point would be picked. Those are separate
+questions and this measures the second one only, exactly as the soundness-arm reach
+census had to say of itself.
+
+**Scope is unchanged from the home arm**, and it is narrower than "global state":
+`static`/`Self` writes are refuted elsewhere and would double-count; closures are
+skipped as already refuted by `refuteIfCaptured`; only `func` bodies are examined, so
+initializers and computed-property accessors are outside the population.
+
+## What would reopen it
+
+- **A corpus with a genuine global cache or singleton.** Sixteen libraries did not
+  supply one; an application target might, and this document cannot speak for it.
+  `populationIsNonEmpty` guards the direction where the arm goes blind rather than
+  the corpora going empty.
+- **A stored file-scope `var` landing in `Sources/`** — the home arm's
+  `corpusHasNoModuleState` still fires.
+- **`universeIsTheManifest` failing**, which means a re-take has quietly narrowed
+  back to a handful of corpora and its number means nothing.

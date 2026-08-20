@@ -234,7 +234,12 @@ struct DocProseCitationTests {
     /// file in the tree, so leaving it out would exempt the highest-traffic citations
     /// in the repo.
     static func scannedFiles() -> [String] {
-        var paths: [String] = ["CLAUDE.md"]
+        // `AGENTS.md` is the Codex-facing twin of `CLAUDE.md`, produced by a mechanical
+        // Claude -> Codex rename. That rename rewrote a real filename into one that does
+        // not exist (`docs/archive/Codex-md-narrative-history.md`), and nothing caught it
+        // because only `CLAUDE.md` was scanned. An index that loads every session is the
+        // last place a dangling citation should sit unchecked, and there are two of them.
+        var paths: [String] = ["CLAUDE.md", "AGENTS.md"]
         let docsRoot = DocCitationScanner.repositoryRoot.appendingPathComponent("docs")
         let enumerator = FileManager.default.enumerator(at: docsRoot, includingPropertiesForKeys: nil)
         while let url = enumerator?.nextObject() as? URL {

@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-Guidance for Claude Code (claude.ai/code) working in this repository. **This file is a
+Guidance for Codex (Codex.ai/code) working in this repository. **This file is a
 pointer-only index**, and deliberately short: it loads into context every session, so it
 carries the hook and the target, never the reasoning.
 
@@ -54,19 +54,13 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,741 tests — 5,552 fast + 189 across `perf` and the eight batches**
+Suites green at **5,737 tests — 5,552 fast + 185 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· **110** · 31 · 7 · 8 · 4 · 9 · 8. The batch half alone moved, 185 → 189, for
-`ModuleStateCorpusCensusMeasuredTests`; the fast half stood still because the regex skips it,
-which is the routing working in both directions. **`batch2` costs 679–801s** — the two readings
-are the same suite on a busier and a quieter machine, so treat the spread as machine noise and
-not as a regression; the step up from ~460s is real and is the price of two censuses moving from
-three corpora to the manifest's seventeen. **This count was RE-TAKEN rather than derived**, and
-the arithmetic that was available and refused is 185 + 4: the prior run of this same branch was
-piped through `tail -35`, which kept the exit code and discarded every per-stage count, so it
-proved the branch green and proved nothing about the number — the standing rule below, re-earned
-the same day it was quoted. The prior reading
+· **106** · 31 · 7 · 8 · 4 · 9 · 8. Both halves moved: fast for `CorpusManifestTests`, batch for
+`CrossTypePairCensusMeasuredTests`. **`batch2` now costs 801s, up from ~460s**, because two
+censuses moved from three corpora to the manifest's seventeen — the price of a control that can
+discriminate, and worth knowing before it is mistaken for a regression. The prior reading
 follows. It
 reconciles with 183 + 2 and 5,548 + 4 — **which is why each was re-taken rather than added**. The
 sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
@@ -214,7 +208,6 @@ decline, because the hook states the verdict and the annotation states what was 
 | **How often is a module-state mutation judged pure?** | `docs/measurements/module-state-base-rate.md` | **Home arm ZERO; cross-corpus arm 5 of 20,526 over 17 corpora — read BOTH.** The zero's own instruction (*do not carry it*) was discharged 2026-08-19. All 5 hand-checked true, all in `swiftlang-swift` runtime internals; 16 corpora measure 0, and the home arm's prediction about which codebases would exhibit it is measured WRONG. **The denominator was 87% wrong until a hand-check**: 118 of 135 "globals" are computed constants. First run of the home arm reported its 0 with a BLIND detector — `Parser.parse` yields `SequenceExprSyntax`, not `InfixOperatorExprSyntax` |
 | **Do `consuming` / `borrowing` carry purity evidence?** | `docs/measurements/ownership-premise-declined.md` | **Measured NO, twice over — premise false AND population zero.** No clause in `verdict(for:)` examines a parameter, and this corpus declares 0 `consuming` / 0 `borrowing` (52 `inout`). **The probe's real find**: a function mutating a file-scope `var` is `.pure` while `static` mutation is refuted, and a closure doing the same write IS refuted — an asymmetry in one type. Base rate unmeasured |
 | **Should the toolchain infer `final`, ownership, and a `@Pure` negation?** | `docs/plans/declaration-claims-plan.md` | **`proposed`.** Three families split by *can the tool be wrong* — the compiler enforces B's floor, so over-claim detection cannot be a false alarm. **`final` is gated on item 34**, not on itself: the blocking-callee census measured that resolving every blocking callee moves ZERO advisory rows, because `.pureButPartial` has no reader. §6.3's soundness arm has a frozen 17-row trip list; §8's gate is discharged (133 ignorance of 307) |
-| **Error laws — which ones does a LINTER owe, and which do PROPERTY TESTS owe?** | `docs/ideas/error-law-instrument-split.md` | **`proposed`, nothing built.** The split rule: *decidable from one declaration's syntax → linter; needs two declarations, a value, or an execution → property test*. **The claim that started it did not survive its own canonical case** — `Result` does not CATCH total error-swallowing, it makes it unwritable; only PARTIAL swallowing is catchable. Nine families, and they are this repo's five interaction shapes pointed at the error channel. Gated on the pending three-arm measurement |
 | Unbuilt proposals / design spikes | `docs/ideas/`, `docs/plans/*-scope.md`, `docs/plans/*-build-plan.md`, `docs/plans/production-assertion-discovery-signal.md` | The last one is an open scope the `*-scope.md` glob misses by filename |
 | **Road-testing `scaffold-kit-suites` against swift.org** | `docs/plans/kit-suite-backtest-plan.md` | Backtest at **`<fix>^`, never `HEAD`** — these libraries are correct at HEAD, so all-green cannot be told from blind |
 | **Did the emitted kit suites catch a real projection bug?** | `docs/measurements/kit-suite-backtest-arms-2-3.md` | **MISS** — but the laws are not structurally blind; it is a generator-domain failure, and this repo owns it. The baseline is not green |
