@@ -30,7 +30,7 @@ the second is a defect.
 ## 2. The result
 
 ```
-corpora: 17 · emitted 36 · catalogue 40 (derived) · total rows 6,508
+corpora: 17 · emitted 36 · catalogue 40 (derived) · total rows 5,514
 
 RESOLVED by the wider corpus list: 1
   partition                        2 rows
@@ -103,9 +103,16 @@ manifest's seventeen, one root each, taking every tier discovery produces rather
 CLI tier filter. **Do not diff counts across the two.** What carries is the *membership*
 of the zero row, which is what §10.5's finding concerned.
 
-The head is still heavy, and unchanged in character: `idempotence` (2,255) + `predicate`
-(1,839) + `round-trip` (529) = **4,623 of 6,508 rows, 71%** — the quantitative form of
+The head is still heavy, and unchanged in character: `idempotence` (1,263) + `predicate`
+(1,840) + `round-trip` (527) = **3,630 of 5,514 rows, 66%** — the quantitative form of
 *the tool says the generic thing when it has nothing specific to say.*
+
+> **These figures were re-taken 2026-08-21 and the first ones were 15% too high.** The
+> original run predates the two emitter fixes in
+> `docs/measurements/criterion-a-unmet-subject.md` §6, and **992 of the 994 rows removed
+> were `idempotence`** — one spurious law per `static var X: Self` constant, which took
+> that template from **2,255 to 1,263, a 44% overcount**. Every other template moved by
+> at most two rows. **The distribution's shape survives and one of its numbers did not.**
 
 ---
 
@@ -144,10 +151,15 @@ is 4 away and shrinks by one today.
 
 | carrier shape | rows | share |
 |---|---:|---:|
-| **userDefined** | **5,792** | **88%** |
-| absent | 369 | 5% |
-| scalar | 199 | 3% |
+| **userDefined** | **4,851** | **87%** |
+| absent | 369 | 6% |
+| scalar | 146 | 2% |
 | **collection** | **148** | **2%** |
+
+*(Re-taken 2026-08-21 after the emitter fixes; previously 5,792 / 369 / 199 / 148 of
+6,508. **The collection count is identical and the two-operand slice below is unchanged**
+— the removed rows were `idempotence` on user-defined carriers, so the conclusion this
+section draws is untouched.)*
 
 **Two-operand templates only** (`commutativity` + `associativity`), whose emitters share
 `supportedCarriers = ["Complex<Double>", "Double", "Int"]`:

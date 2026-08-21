@@ -87,6 +87,25 @@ enum MemberBlockInspector {
         var result: [InitializerSignature] = []
         for member in memberBlock.members {
             guard let initDecl = member.decl.as(InitializerDeclSyntax.self) else { continue }
+            // **A `private` initializer is not a candidate, and admitting one emits code
+            // that does not compile.** Measured 2026-08-21 on `swift-http-types`:
+            // `HTTPField.Name` declares two `public init?`s and one
+            // `private init(rawName:canonicalName:)` whose labels match the stored members
+            // exactly. The strategist preferred the memberwise-shaped one — the private
+            // one — and the emitted stub failed with `extra argument 'canonicalName' in
+            // call`, because from a test module that initializer does not exist. The
+            // cascade error (`value of optional type 'HTTPField.Name?' must be unwrapped`)
+            // is Swift resolving the call to a *different*, failable initializer, and it
+            // is the error that gets reported.
+            //
+            // 95 of 163 laws on that subject died this way. `InitializerSignature` carries
+            // no access level, so accessibility has to be decided here, at capture, rather
+            // than by the strategist — which cannot see it.
+            //
+            // `fileprivate` is excluded on the same grounds and `internal` is kept:
+            // `@testable import` reaches `internal`, which is the same line
+            // `AccessRestriction.internalOrSPI` and `SpeculativeWidening` already draw.
+            guard !Self.isTestInaccessible(initDecl) else { continue }
             let effects = initDecl.signature.effectSpecifiers
             if effects?.asyncSpecifier != nil { continue }
 
@@ -115,6 +134,21 @@ enum MemberBlockInspector {
             ))
         }
         return result
+    }
+
+    /// `private` and `fileprivate` are file-scoped, so no test file can name the
+    /// initializer — not even with `@testable import`, which promotes `internal` and
+    /// does not defeat file scope. Every other level is reachable from a test target.
+    static func isTestInaccessible(_ initDecl: InitializerDeclSyntax) -> Bool {
+        initDecl.modifiers.contains { modifier in
+            let name = modifier.name.text
+            guard name == "private" || name == "fileprivate" else { return false }
+            // `private(set)` restricts the SETTER, not the initializer, and is not a
+            // spelling that appears on an `init` — but detail-bearing modifiers are
+            // checked rather than assumed, because reading a modifier by name alone is
+            // how `isReadOnlyGetter` admitted `_modify` coroutines as read-only.
+            return modifier.detail == nil
+        }
     }
 
     /// Enum cases with their associated values for the Tier 4 `enumCases`

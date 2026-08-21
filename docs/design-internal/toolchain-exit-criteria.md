@@ -143,7 +143,7 @@ the decision this document is asking for.**
 
 | # | Proposed | Why this bar | Measured today |
 |---|---|---|---|
-| A | On a subject the toolchain has never met, ≥1 emitted law **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | unmeasured |
+| A | On a subject the toolchain has never met, ≥1 emitted law **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **MEASURED 2026-08-21 — FAILS.** `swift-http-types`: 89% of laws do not compile, 0 of 7 `Likely` ran, and the one law positioned to catch a planted defect passed on it while the package's own tests caught it. `docs/measurements/criterion-a-unmet-subject.md` |
 | B | The runnable-tier ratio holds ≥60% across the 17 corpora, not just the home corpus | generality, in a number meant to be quoted | 65% home; cross-corpus unmeasured |
 | C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-17-corpora.md` |
 | D | An app-shaped subject reaches `verified` by some route | §2.4's outcome form | not met |
@@ -151,6 +151,12 @@ the decision this document is asking for.**
 
 **A is the one that matters.** B–E are capability bars that make A possible; A is the
 only one that would tell you the toolchain is worth using.
+
+**A has since been measured, and it fails** (`docs/measurements/criterion-a-unmet-subject.md`).
+It did not need ratification to be informative — ratification decides whether A is *the*
+bar, and measuring it answered A either way. **It also found what nine reach measurements
+could not: 89% of emitted laws do not compile on an unmet subject.** That is the argument
+for an outcome bar in one line.
 
 ---
 
