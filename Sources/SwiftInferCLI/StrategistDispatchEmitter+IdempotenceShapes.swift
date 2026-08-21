@@ -134,12 +134,17 @@ extension StrategistDispatchEmitter {
     /// (`inputs.returnsSelfType`), so the second `.method()` type-checks.
     static func composeSelfReturningIdempotencePass(
         functionCall: String,
-        recipe: GeneratorRecipe
+        recipe: GeneratorRecipe,
+        isComputedProperty: Bool
     ) -> String {
         let methodName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
+        // Accessed, not called — the same bit `composeSelfReturningInvolutionPass` has always
+        // consulted, and this composer never did. `FilePath.dirname` is a `public var` and this
+        // emitted `value.dirname()`. See `docs/measurements/criterion-a-swift-system.md` §3.
+        let accessor = isComputedProperty ? "" : "()"
         return """
         // --- Pass 1: default (strategist-derived generator) ---
-        // self-returning instance-method shape: `value.\(methodName)()`
+        // self-returning instance shape: `value.\(methodName)\(accessor)`
         // chained — applying `\(methodName)` twice equals applying it once.
 
         let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
@@ -147,8 +152,8 @@ extension StrategistDispatchEmitter {
 
         for trial in 0 ..< trials {
             let value = defaultGenerator.run(using: &rng)
-            let onceResult = value.\(methodName)()
-            let twiceResult = onceResult.\(methodName)()
+            let onceResult = value.\(methodName)\(accessor)
+            let twiceResult = onceResult.\(methodName)\(accessor)
             if onceResult != twiceResult {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")

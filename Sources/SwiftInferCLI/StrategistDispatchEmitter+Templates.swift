@@ -95,7 +95,8 @@ extension StrategistDispatchEmitter {
         if inputs.isInstanceMethod, inputs.isNullary, inputs.returnsSelfType {
             return composeSelfReturningIdempotencePass(
                 functionCall: functionCall,
-                recipe: recipe
+                recipe: recipe,
+                isComputedProperty: inputs.isComputedProperty
             )
         }
         // Self-returning instance method taking one operand → idempotence IN

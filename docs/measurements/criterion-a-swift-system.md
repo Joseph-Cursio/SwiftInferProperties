@@ -49,20 +49,22 @@ wins wherever a text scan of `Package.swift` says it could disagree.
 
 Re-taken 2026-08-21 with the module fix, and with nothing else changed.
 
-| outcome | rows | what it means |
-|---|---:|---|
-| `unsupported-carrier` | **15** | a genuine carrier the tool cannot construct |
-| **generator trap (SIGTRAP)** | **9** | the law compiled and ran; a generated input killed it |
-| **`build-failed`** | **6** | the emitted stub does not compile |
-| `unsupported-template` | 4 | `inverse-pair` ×2, `input-totality` ×2 |
-| `instance-method-shape-not-supported` | 2 | |
-| **executed to a verdict** | **2** | `measured-edgeCaseAdvisory` on `dup` / `system_dup` |
-| **executed, verdict DISCARDED** | **2** | see §4 — these printed `PASS` |
-| `not-a-candidate` | 1 | `private` subject, no test can name it |
-| | **41** | |
+| outcome | after module fix | after §3's fix | what it means |
+|---|---:|---:|---|
+| `unsupported-carrier` | **15** | **15** | a genuine carrier the tool cannot construct |
+| **generator trap (SIGTRAP)** | **9** | **9** | the law compiled and ran; a generated input killed it |
+| **`build-failed`** | **6** | **2** | the emitted stub does not compile |
+| `instance-method-shape-not-supported` | 2 | **6** | |
+| `unsupported-template` | 4 | 4 | `inverse-pair` ×2, `input-totality` ×2 |
+| **executed to a verdict** | **2** | **2** | `measured-edgeCaseAdvisory` on `dup` / `system_dup` |
+| **executed, verdict DISCARDED** | **2** | **2** | see §4 — these printed `PASS` |
+| `not-a-candidate` | 1 | 1 | `private` subject, no test can name it |
+| | **41** | **41** | |
 
 **Laws that reached the build stage: 19 of 41, up from 0.**
 **Laws that ran to completion: 4 of 41 — and the parser threw two of them away.**
+**§3's emitter fix moved 4 rows and added 0 executions**; the second column is there so that
+is legible rather than inferred.
 
 Discovery is unchanged and still looks healthy: 41 suggestions across seven templates —
 `idempotence` 18, `predicate` 9, `round-trip` 5, `monotonicity` 4, `inverse-pair` 2,
@@ -87,10 +89,30 @@ Seven are on `FilePath` (`lexicallyNormalized`, `removingRoot`, `removingLastCom
 `pushing(_:)`, `starts(with:)`, `ends(with:)`, `length`), two on free functions
 (`isSeparator(_:)`, `isPrenormalSeparator(_:)`).
 
+**The mechanism is visible in the emitted stub, and it is ours, not swift-system's:**
+
+```swift
+let defaultGenerator: Generator<FilePath, some SendableSequenceType> =
+    Gen<Unicode.Scalar>.unicodeScalar().map { SystemChar(ascii: $0) }
+        .array(of: 0...8).map { SystemString($0) }.map { FilePath($0) }
+```
+
+`SystemChar(ascii:)` traps on any scalar outside ASCII, and `unicodeScalar()` draws the full
+Unicode range. **The recipe pairs a full-domain generator with an ASCII-only initialiser.**
 This is exactly the failure class `RefutationRenderer`'s own message names — *a derived
-generator wider than the code assumes*. swift-system's path internals are byte-oriented and
-assume ASCII in places; the derived generator draws the full domain. **It is evidence about
-the generator, not about the law**, and the tool says so rather than reporting a refutation.
+generator wider than the code assumes* — and the tool is right to call it evidence about the
+generator rather than about the law.
+
+**The fix is across the package seam.** The recipe is built by
+`PropertyLawCore.CompositeMemberParser` (`CompositeMemberParser.swift:204`, in
+SwiftPropertyLaws), which maps a `Unicode.Scalar` parameter to `unicodeScalar()` without
+reading the parameter's **label**. A label of `ascii` is a domain declaration, and narrowing
+on it is the same move `CollisionBias.pathShapedNames` already makes for `String` parameters
+in this repo — keyed on the parameter's name rather than only its type.
+
+Not attempted here: it is a sibling-repo change, a version bump and a pin update, and
+CLAUDE.md's pin rules apply. Recorded so it is picked up with the mechanism attached rather
+than re-derived.
 
 That makes it the single most actionable finding here, and it is the same lever
 `fixtures/branch-reaching-generator/` was built to study. **It is also the first time that
@@ -98,7 +120,7 @@ lever has been pointed at by a third-party subject rather than by a fixture.**
 
 ---
 
-## 3. Six build failures, one previously unnamed emitter defect
+## 3. Six build failures, one previously unnamed emitter defect — fixed, and it bought nothing
 
 | error | rows | subject |
 |---|---:|---|
@@ -106,22 +128,65 @@ lever has been pointed at by a third-party subject rather than by a fixture.**
 | `cannot call value of non-function type 'FilePath'` | 1 | `dirname` |
 | `binary operator '!=' cannot be applied to two '_Lexer' operands` | 1 | `_Lexer.clear` |
 
-**Five of the six are one defect: a computed property emitted as a method call.**
-`FilePath.description`, `.string`, `._portableDescription` and `.dirname` are
-`public var`s; the stub renders `value.description()`.
+**Five of the six were one defect: a computed property emitted as a method call.**
+`FilePath.description`, `.string`, `._portableDescription` and `.dirname` are `public var`s;
+the stub rendered `value.description()`.
 
 `FunctionSummary.isComputedProperty` exists and is carried all the way through
-`SemanticIndexEntry` to `StrategistDispatchEmitter.Inputs`. Exactly **one** composer reads
-it — `composeSelfReturningInvolutionPass`, which does
-`let accessor = isComputedProperty ? "" : "()"`. The idempotence and round-trip composers
-hardcode `()`. This is a fourth member of the emitter-defect family
-`criterion-a-unmet-subject.md` opened, and the cheapest one yet: the bit is already in hand
-and simply not consulted.
+`SemanticIndexEntry` to `StrategistDispatchEmitter.Inputs`. Exactly **one** consumer read it
+— `composeSelfReturningInvolutionPass`, whose `let accessor = isComputedProperty ? "" : "()"`
+is the correct handling. `receiverCallExpression` and `composeSelfReturningIdempotencePass`
+hardcoded `()`.
 
-The sixth is a missing gate: `_Lexer` is not `Equatable`, and `UnverifiableCause` already
-has `carrierNotEquatable` for precisely this. It should have declined, not emitted.
+**Fixed 2026-08-21, and the movement was measured rather than assumed.** Four rows moved,
+and **not one of them to an execution**:
 
----
+| subject | before | after |
+|---|---|---|
+| `description`, `debugDescription`, `string`, `_portableDescription` | `build-failed` | `instance-method-shape-not-supported` |
+| `dirname` | `build-failed` (call shape) | `build-failed` (**different, truthful cause** — §3.1) |
+
+The four round-trip rows now decline instead of failing to build, which is the right answer
+and not a gain: reading their original stub shows the pair was never a round trip.
+
+```swift
+let forwardResult = { $0.description() }(value)
+let inverseResult = FilePath.appending(forwardResult)
+```
+
+`description` ↔ `appending` is not an inverse pair. The shape gate was right to refuse it
+and could not, because the row died at the compiler first.
+
+**This is the third time an emitter fix has converted build failures into honest declines
+and bought zero executing laws** — `criterion-a-unmet-subject.md`'s 89%, this document's
+first pass, and now this. That is worth stating as a pattern rather than three coincidences:
+**a build failure is a decline the tool could not phrase.** The fixes are still right — a
+decline is information and a build failure is noise — but they should stop being scored as
+progress toward criterion A, because three times running they have not been.
+
+### 3.1 `dirname`'s new error is a finding of its own
+
+```
+error: 'dirname' has been renamed to 'removingLastComponent()'
+```
+
+The property access now compiles far enough to reach the real problem: **`FilePath.dirname`
+is `@available(*, unavailable, renamed:)`**. A law was proposed on an API that cannot be
+called at all.
+
+Discovery admits `@available(*, unavailable)` and `@available(*, deprecated)` declarations
+as law subjects. Nothing in the pipeline consults availability. On this subject it costs one
+row; the general cost is unmeasured, and it is the kind of thing that is cheap to gate and
+embarrassing to leave — a suggestion the reader cannot act on, offered with a score.
+
+**Do not "fix" this by widening `dirname`'s law to `removingLastComponent()`.** They are the
+same function and the corpus already carries a `removingLastComponent` row, which traps in
+§2. The gate belongs at discovery.
+
+### 3.2 The remaining build failure is a missing gate
+
+`_Lexer` is not `Equatable`, and `UnverifiableCause.carrierNotEquatable` exists for exactly
+this. It should have declined, not emitted.
 
 ## 4. Two laws passed and the result parser discarded them
 
@@ -183,14 +248,17 @@ where enough laws ran.**
 
 ## 7. What follows, in measured order
 
-1. **The generator-domain trap, 9 rows.** The largest real bucket and the one with a
-   fixture already built for it.
-2. **The computed-property emitter defect, 5 rows.** The bit is already carried; three
-   composers do not read it.
-3. **The `Equatable` gate, 1 row.** `carrierNotEquatable` exists and was not consulted.
-4. **The discarded-PASS parser gap, 2 rows.** Costs nothing to fix and currently reports a
+1. **The generator-domain trap, 9 rows.** The largest real bucket by a distance, the one
+   with a fixture already built for it, and the only one on this list that could plausibly
+   produce executing laws. §2 names the exact line to change and the repo it lives in.
+2. ~~**The computed-property emitter defect, 5 rows.**~~ **Done 2026-08-21 — 4 rows moved,
+   0 executions.** See §3.
+3. **Availability, 1 row here and an unmeasured population.** §3.1 — discovery proposes laws
+   on `@available(*, unavailable)` declarations.
+4. **The `Equatable` gate, 1 row.** `carrierNotEquatable` exists and was not consulted.
+5. **The discarded-PASS parser gap, 2 rows.** Costs nothing to fix and currently reports a
    result as an error.
-5. **The 15 remaining carrier declines** — `Range<_Index>` 3, `FileDescriptor` 3,
+6. **The 15 remaining carrier declines** — `Range<_Index>` 3, `FileDescriptor` 3,
    `CInterop.Mode` 2, and eight singletons, most of them pointers. These are the honest
    carrier gap, and they are pointer- and C-interop-shaped rather than value-type-shaped.
    Nothing cheap is on the table here.
