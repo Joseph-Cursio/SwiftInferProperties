@@ -1,13 +1,20 @@
 # The postcondition law on normalisers — right law, absent population
 
-> **Status:** `declined` · **As of:** 2026-08-21
+> **Status:** `open` · **As of:** 2026-08-21
 
 Harnesses: `fixtures/branch-reaching-generator/` (law comparison) and
 `CatalogHealthCensusMeasuredTests.normaliserPairCensus` +
 `GuardPostconditionCensusMeasuredTests` (two independent population routes).
 
-**The law is measured 4× stronger than the one the tool emits. Both routes to finding it
-are declined on population — the second on CONCENTRATION rather than precision.**
+**The law is measured 4× stronger than the one the tool emits.** Two routes that
+**discover** the predicate are declined on population. **A third route — where the
+catalogue SUPPLIES the predicate from a recognised role — has a population of 36 and is
+live.** See §4.
+
+> ⚠ **This document was first filed `declined`, and that was too broad.** Both declined
+> routes try to *find* the predicate in the subject's code. Neither is how the one
+> postcondition template that already works finds its predicate, and that route was not
+> tested before generalising from the two that failed.
 
 ---
 
@@ -100,19 +107,70 @@ Excluding `let` / `case` took 44 hits to 25 and precision from ~24% to ~52%.
 
 ---
 
-## 4. The verdict
+## 4. Route C — let the CATALOGUE supply the predicate. Population 36, and live.
 
-**Declined. The law is right, the signal is readable, and the population is not there.**
+**`measure-non-negativity` does not discover `>= 0`.** It recognises a *role* — `count` /
+`size` / `magnitude` — and the catalogue supplies the law. It has **401 rows across the 17
+corpora**, among the largest in the catalogue. The working pattern is:
 
-Route B is materially better founded than route A — 52% against ~5%, and it finds the
-motivating case, which route A's first instrument could not. It still fails on a
-population of about four distinct sites.
+> role recognised by name → predicate supplied by the catalogue → asserted on the output
 
-**What is worth keeping**: the postcondition is **4× stronger than idempotence** on
-normalisers, and the guard in the body is a real, measured signal for finding it. If a
-corpus ever exhibits the shape at volume, the route is measured and waiting.
+That sidesteps both declines: no pairing, no guard reading, and **no
+control-versus-postcondition ambiguity, because the template writes the check** rather
+than inferring intent from an expression.
 
-## 5. What would reopen it
+`RolePostconditionCensusMeasuredTests`, name-and-signature only:
+
+**62 candidate sites, of which 36 are EXACT-name matches** where the supplied law applies
+unmodified.
+
+| role | sites | exact | law the catalogue supplies |
+|---|---:|---:|---|
+| `sorted` | 12 | **8** | `isSorted(result)` |
+| `clamped` | 6 | **5** | result lies within the bound |
+| `reversed` | 5 | 5 | `result.count == input.count` — weak |
+| `lowercased` / `uppercased` | 8 | 6 | no remaining opposite case |
+| `rounded` | 3 | 3 | result is integral |
+| `trimmed` / `trimming` | 16 | **2** | no leading/trailing whitespace |
+| `normalized` | 5 | 2 | result is in normal form |
+| `escaped` / `unescaped` | 4 | 2 | no unescaped occurrence |
+| `deduplicated` | 1 | 1 | no duplicates |
+| `shuffled` | 2 | 2 | a permutation — weak |
+
+**The exact/prefix split is the finding, not a detail.** `trimmingLeadingWhitespace` leads
+with `trimming`, and the supplied law *"no leading OR trailing whitespace"* is **too
+strong for it** — the suffix narrows what was trimmed, and
+`trimmingSuperfluousNewlines` trims newlines rather than whitespace at all. **A catalogue
+that ignores the suffix supplies a FALSE postcondition, which would refute correct code —
+the worst failure this tool has.** 14 of the 16 `trimmed`/`trimming` sites are prefix
+matches, so this single distinction moves the usable population from 62 to 36.
+
+**Concentration is healthy**, which is what declined route B: hits are spread over **11
+corpora**, and the largest single container is `swift-syntax:SyntaxProtocol` at **7 of
+62 (11%)** — against route B's 9 of 13 in one file.
+
+**36 would sit mid-catalogue**, above `equivalence-relation` (29),
+`set-relation-model-law` (25), `normal-form` (17) and eight other shipping templates.
+Dropping the two weak laws — `reversed`'s count preservation and `shuffled`'s permutation
+— leaves **~29 with strong, refutable postconditions**.
+
+## 5. The verdict
+
+**Routes A and B are declined. Route C has a population and is the one to pursue.**
+
+- **Route A** (pair by name): ~1–5 genuine of 349. Declined.
+- **Route B** (read the body guard): ~13 genuine of 25, precision ≈52% which clears the
+  bar, **declined on concentration** — 9 of 13 in one stdlib file.
+- **Route C** (catalogue supplies from a role): **36 exact sites, ~29 strong, 11 corpora,
+  11% max concentration.** Live.
+
+**What is NOT measured is precision**, and that is the next question rather than the
+build. A name match is a candidate: `sorted` needs its comparator resolved, and none of
+the 36 has been filtered for test visibility. **Reading a population as a precision is
+the mistake `parameter-role` made**, and the exact/prefix split above is a warning that
+this family has real false-law hazards.
+
+## 6. What would reopen A and B
 
 - **A corpus with normalisers at volume** — a validation-heavy or parsing-heavy package
   where the guard idiom is house style rather than one file's.
