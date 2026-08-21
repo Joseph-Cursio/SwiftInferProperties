@@ -54,15 +54,20 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,745 tests — 5,552 fast + 193 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
+Suites green at **5,747 tests — 5,552 fast + 195 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-20** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· 110 · 31 · 7 · **12** · 4 · 9 · 8. The batch half alone moved, 189 → 193, for
-`ResultCarrierReachMeasuredTests`; the fast half stood still because the regex skips it,
-which is the routing working in both directions. **`batch5` costs 1,242s, up from 43s** — that
-one suite runs three discovery passes over 28,274 functions across the 17 corpora, and it is
-**~20 minutes added to `make test`**, deliberately paid and recorded here so it is not read later
-as a regression. The prior reading, 5,741 with `batch2` at 110, follows. **`batch2` costs 679–801s** — the two readings
+· 110 · 31 · 7 · **14** · 4 · 9 · 8. The batch half alone moved, 193 → 195, for the two controls
+`ResultCarrierReachMeasuredTests` gained with its conformance-fixed arm. **That run predates the
+row-8 exit-criteria commit**, which is docs only and adds no tests; `make test-fast` was re-run
+against it (5,552, 44s) so the doc guards saw the new files. **`batch5` costs 1,678s, up from 43s
+before this suite existed** — four discovery passes plus protocol parsing over 28,274 functions
+across the 17 corpora, **~28 minutes**, and `make test` is now ~57 minutes end to end. That is one
+answered census taking half the gate's wall clock; **it is a cost paid on purpose and recorded so
+it is not read later as a regression**, and whether an answered census should stay in the default
+gate at full scope is an open question — narrowing its corpus list is NOT the fix, since that is
+the habit `universeIsTheManifest` exists to prevent. The prior reading, 5,745 with `batch5` at 12,
+follows. **`batch2` costs 679–801s** — the two readings
 are the same suite on a busier and a quieter machine, so treat the spread as machine noise and
 not as a regression; the step up from ~460s is real and is the price of two censuses moving from
 three corpora to the manifest's seventeen. **This count was RE-TAKEN rather than derived**, and
