@@ -65,7 +65,11 @@ process finding is the reason this matters:
 That is the third time this exact lesson has been paid for — §10.5, then the
 three-corpus censuses re-taken 2026-08-19, then row 46's module-state zero. **Re-running
 the catalog health census over 17 corpora is the concrete action this criterion implies**
-and it has not been done.
+— **done 2026-08-20**, `docs/measurements/catalog-health-17-corpora.md`. `partition`
+resolved; three remain, plus `invariant-preservation`, which is deferred rather than
+broken. **And it returned a finding about the criterion itself**: there is no trustworthy
+runtime catalogue of templates, so a bar phrased over *all* templates cannot be
+evaluated at all. C is restated in §5 to the form that can.
 
 ### 2.3 Instrument error — closed cannot be shown, only not-yet-refuted
 
@@ -141,7 +145,7 @@ the decision this document is asking for.**
 |---|---|---|---|
 | A | On a subject the toolchain has never met, ≥1 emitted law **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | unmeasured |
 | B | The runnable-tier ratio holds ≥60% across the 17 corpora, not just the home corpus | generality, in a number meant to be quoted | 65% home; cross-corpus unmeasured |
-| C | Zero templates unwitnessed across all 17 corpora | closes §2.2 with the wider list | 4 unwitnessed at 8 corpora |
+| C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-17-corpora.md` |
 | D | An app-shaped subject reaches `verified` by some route | §2.4's outcome form | not met |
 | E | No measurement doc older than its binary — every published figure re-derivable | §2.3's positive form | unmeasured, unscoped |
 
@@ -156,9 +160,14 @@ only one that would tell you the toolchain is worth using.
    criteria are recoverable.
 2. **Retire candidates 1 and 3 as written** — one promotes a diagnostic-only figure, the
    other is satisfiable by not looking.
-3. **Take the one concrete action that already follows**: re-run the catalog health
-   census over 17 corpora (§2.2). It needs no decision, and it is the third repetition of
-   a lesson this repo has already paid for twice.
+3. ~~**Take the one concrete action that already follows**: re-run the catalog health
+   census over 17 corpora (§2.2).~~ **DONE 2026-08-20.** It resolved `partition`, left
+   three, and produced a finding that outranks its own result: **a criterion phrased over
+   "all templates" is unevaluable**, because naming a zero needs a catalogue this project
+   does not have. C is restated accordingly. The first run of that census got its own
+   denominator wrong in exactly that way and was caught by a control — which is the
+   argument for A–E being written as things that can *fail*, not as things that sound
+   strict.
 
 ## 7. What would refute this document
 

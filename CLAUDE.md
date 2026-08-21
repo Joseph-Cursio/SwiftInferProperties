@@ -54,13 +54,16 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,747 tests — 5,552 fast + 195 across `perf` and the eight batches**
+Suites green at **5,752 tests — 5,552 fast + 200 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-20** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· 110 · 31 · 7 · **14** · 4 · 9 · 8. The batch half alone moved, 193 → 195, for the two controls
-`ResultCarrierReachMeasuredTests` gained with its conformance-fixed arm. **That run predates the
-row-8 exit-criteria commit**, which is docs only and adds no tests; `make test-fast` was re-run
-against it (5,552, 44s) so the doc guards saw the new files. **`batch5` costs 1,678s, up from 43s
+· 110 · 31 · 7 · 14 · 4 · 9 · **13**. The batch half alone moved, 195 → 200, for
+`CatalogHealthCensusMeasuredTests` (4 tests) and its carrier-shape reading (1). **`batch8` costs
+462s, up from 61s**; `batch5` is 1,668s; **`make test` is ~65 minutes end to end**, and roughly
+half of that is two censuses whose questions are answered. Whether an answered census belongs in
+the default gate at full scope is open — **narrowing its corpus list is NOT the fix**, since that
+is the habit `universeIsTheManifest` exists to prevent. The prior reading, 5,747 with `batch8` at
+8, follows. **`batch5` costs 1,678s, up from 43s
 before this suite existed** — four discovery passes plus protocol parsing over 28,274 functions
 across the 17 corpora, **~28 minutes**, and `make test` is now ~57 minutes end to end. That is one
 answered census taking half the gate's wall clock; **it is a cost paid on purpose and recorded so
@@ -196,6 +199,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **A legible end-to-end example** — what does the tool actually do to a sort? | `fixtures/leaderboard-sort/README.md` | ⚠ Scorecards **WITHDRAWN** — read the header. The mutant matrix, the `next()` template defect and the comparator name gate stand |
 | **Is a weak generator worth converting?** — Q4's before/after | `fixtures/integer-division-generator/README.md` | **Yes — report it in refutation units**: 2/8 → 8/8 mutants killed, with two interior controls |
 | **Why does the `Strong` tier run nothing, and what did that cost?** | `TemplateName` + `DifferentialVerifySupportTests` | `differential-equivalence` FIXED 2026-08-08; `invariant-preservation` deferred. Five enumerations of the vocabulary must agree |
+| **Does deriving the second operand buy refutations a bigger budget cannot?** | `fixtures/collision-pairing/README.md` | ⚠ **LEVER REAL, POPULATION ABSENT — recommendation RETRACTED the day it was written.** Measured YES on a WIDE domain only — `overlapping` 3/3 vs independent 1/3 at the shipped 100-trial budget, and independent stays 1/3 even at 20,000.** On a NARROW domain a bigger budget closes it for free, so quote the key-space row. **The fixture's own first premise was FALSE** — independent draws killed 3/3 until the trial budget was set to what actually ships. `permuted` is additive not better (2/3, misses what independent catches); `identical` is tautological on commutativity |
 | **Is the hand-written `OrderedSet` generator any good?** | `fixtures/ordered-set-generator/README.md` | 101 reachable values, 3 mutants exhaustively unreachable. Widening was the wrong lever for the order projection — a pair sampler is |
 | **Should `inverse-pair` and `identity-element` get composers?** | `docs/plans/inverse-pair-identity-element-composers-scope.md` | **Measured NO, including via the projection route.** Shipped `UnverifiableCause.carrierNotEquatable` instead |
 | **What does the toolchain reach on a subject it has NEVER met?** | `docs/measurements/exploratory-swiftformat-grdb.md` | 87/159 laws on the home corpus against 1/129 and 5/307. Five instrument defects; state gains as **rows moved**, never laws gained |
@@ -209,6 +213,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does the TEMPLATE predict whether a refutation is a bug?** | `fixtures/planted-defect-arm/README.md` | **Measured NO.** Planted evidence has no base rate — it falsifies, it cannot estimate precision |
 | **Can a veto for the idempotence miss class be built?** | `fixtures/domain-transfer-signal/` + `DomainTransferSignalExperimentTests` | **Measured NO**: recall 4/5, precision 4/12. Score a candidate veto against the laws that HELD |
 | Superseded cycle plans | `docs/archive/v1.141 Calibration Plan.md` | Kept for the shrinking / replay-corpus rationale, not as a plan |
+| **Which templates fire on NOTHING — re-taken at 17 corpora? And what SHAPE are the carriers?** | `docs/measurements/catalog-health-17-corpora.md` | **`partition` RESOLVED (2 rows); 3 still unwitnessed, plus `invariant-preservation` which is deferred not broken.** **Carrier shape closes two build directions: userDefined is 88% of all 6,508 rows, collection is 2%, and the two-operand templates hold SIX collection rows.** 146 of the 148 collection rows are `BitSet`/`BitArray`. Fourth payment for *a census is only as wide as its corpus list*. **Bigger finding: there is still NO trustworthy runtime catalogue** — the first run used `TemplatePack.allTemplateNames` (10 declared vs 36 emitted) and produced a pure denominator artifact, exactly as `CensusCommand`'s header warned. The catalogue is now SUPPLIED: this can resolve a known zero, never discover a new one |
 | **Catalog health census — 15% of templates are DEAD** | `docs/measurements/swiftorg-property-test-study-findings.md` §10 | Read §10.5 before quoting the zero row: a census's zero cannot be read without its corpus list. Four remain **unwitnessed, not inert** |
 | **The `[reference]` rows are the standing catalog backlog — now 15, not 49** | `docs/measurements/swiftorg-property-test-study-findings.md` §9 + §11 | The 49 was over-reported 3×. Success is measured in carriers reached *outside* the catalog |
 | **The 9 known-properties TRAPS are a false-positive test set — run them FIRST** | `docs/measurements/swiftorg-property-test-study-findings.md` §8.9 | Executable false-law witnesses; found a real Strong-tier false positive in one run |
