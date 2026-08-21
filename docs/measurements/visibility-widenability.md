@@ -5,9 +5,13 @@
 Harness `CatalogHealthCensusMeasuredTests.visibilityCensus`, `make batch8`. A third
 reading of that suite's single scan over the 17 corpora `CorpusManifest` resolves.
 
-**Measured: 897 rows — 14% of all discovery output — would be freed by widening one
+**Measured: 883 rows — 16% of all discovery output — would be freed by widening one
 access modifier. It is the largest lever measured this cycle. And 87% of the gain lands
 in the two templates a hand-check found produce false laws.**
+
+> **Re-taken 2026-08-21.** The first pass read **897 of 6,508** and predates the emitter
+> fixes in `criterion-a-unmet-subject.md` §6, which removed 994 spurious rows — 992 of
+> them `idempotence`. **Both the lever and the 87% survived; the denominator did not.**
 
 ---
 
@@ -15,11 +19,11 @@ in the two templates a hand-check found produce false laws.**
 
 | | rows | share |
 |---|---:|---:|
-| all discovery rows | 6,508 | |
-| **restricted subject** | **2,629** | 40% |
-| — `internalOrSPI` | 1,552 | **not blocked** |
-| — **`notVisibleToTests`** | **897** | **widenable** |
-| — `enclosingTypeNotVisibleToTests` | 175 | not widenable |
+| all discovery rows | 5,514 | |
+| **restricted subject** | **2,407** | 44% |
+| — `internalOrSPI` | 1,392 | **not blocked** |
+| — **`notVisibleToTests`** | **883** | **widenable** |
+| — `enclosingTypeNotVisibleToTests` | 127 | not widenable |
 | — `nestedLocal` | 5 | not widenable |
 
 **`internalOrSPI` is 59% of the restricted set and blocks nothing.** A test target using
@@ -31,7 +35,7 @@ nothing — the enclosing type still cannot be named — which is `SpeculativeWi
 named trap, and it was live in the code until 2026-08-06 while a doc claimed otherwise.
 `nestedLocal` has no caller to widen to.
 
-So **897, not 2,629**, is what a willingness to widen is worth.
+So **883, not 2,407**, is what a willingness to widen is worth.
 
 ---
 
@@ -64,8 +68,8 @@ reason it was measured rather than believed.**
 
 | template | blocked | **widenable** | reachable today |
 |---|---:|---:|---:|
-| predicate | 818 | **403** | 1,021 |
-| idempotence | 985 | **381** | 1,270 |
+| predicate | 818 | **403** | 1,022 |
+| idempotence | 763 | **367** | 500 |
 | monotonicity | 159 | 36 | 146 |
 | **value-round-trip** | 40 | **29** | **9** |
 | input-totality | 89 | 27 | 36 |
@@ -74,8 +78,8 @@ reason it was measured rather than believed.**
 | normal-form | 4 | 3 | 13 |
 | everything else | — | ≤2 each | — |
 
-**784 of the 897 — 87% — are `predicate` and `idempotence`.** That is the generic head,
-already 71% of all output, and `docs/measurements/refutation-hand-check.md` measured its
+**770 of the 883 — 87% — are `predicate` and `idempotence`.** That is the generic head,
+already 66% of all output, and `docs/measurements/refutation-hand-check.md` measured its
 refutations at **15 of 15 false laws, zero real bugs**. Widening broadly would
 manufacture more of the output already measured as uninformative.
 
