@@ -53,9 +53,16 @@ struct ResultCarrierReachMeasuredTests {
         /// the decline-cause censuses report by cause rather than by total.
         let baselineByTemplate: [String: Int]
         let wrappedByTemplate: [String: Int]
+        /// Arm 4 — the same wrap, applied only to functions actually free to change
+        /// signature. §4's `-66` was reached by subtracting a template total; this
+        /// reaches it by not performing the illegal transform in the first place.
+        let wrappedFreeOnly: Int
+        /// Throwing functions whose signature is fixed by a protocol conformance.
+        let conformanceFixed: Int
 
         var maskedDelta: Int { throwsMasked - baseline }
         var wrappedDelta: Int { resultWrapped - baseline }
+        var freeOnlyDelta: Int { wrappedFreeOnly - baseline }
     }
 
     // MARK: - The transform
@@ -122,6 +129,23 @@ struct ResultCarrierReachMeasuredTests {
         let base = suggestions(summaries)
         let wrapped = suggestions(summaries.map { $0.isThrows ? withResultWrapped($0) : $0 })
 
+        // Arm 4. Requirements come from two places: a built-in table for the stdlib
+        // protocols a corpus conforms to without declaring, and the corpus's own
+        // protocol declarations, whose bodies `FunctionScanner` deliberately skips.
+        var requirements = ConformanceFixedSignatures.builtIn
+        for (name, declared) in ConformanceFixedSignatures.declaredRequirements(in: corpus.primaryRoot) {
+            requirements[name, default: []].formUnion(declared)
+        }
+        let conformances = ConformanceFixedSignatures.conformances(from: scanned.typeDecls)
+        func isFixed(_ summary: FunctionSummary) -> Bool {
+            ConformanceFixedSignatures.isFixed(
+                summary, conformances: conformances, requirements: requirements
+            )
+        }
+        let freeOnly = suggestions(summaries.map {
+            $0.isThrows && !isFixed($0) ? withResultWrapped($0) : $0
+        })
+
         return Arm(
             corpus: corpus.id,
             functions: summaries.count,
@@ -132,7 +156,9 @@ struct ResultCarrierReachMeasuredTests {
             }).count,
             resultWrapped: wrapped.count,
             baselineByTemplate: byTemplate(base),
-            wrappedByTemplate: byTemplate(wrapped)
+            wrappedByTemplate: byTemplate(wrapped),
+            wrappedFreeOnly: freeOnly.count,
+            conformanceFixed: summaries.filter { $0.isThrows && isFixed($0) }.count
         )
     }
 
@@ -186,6 +212,73 @@ struct ResultCarrierReachMeasuredTests {
         )
     }
 
+    /// **A name alone must not classify a signature as fixed.**
+    ///
+    /// The cheap classifier — *anything called `encode` is a `Codable` requirement* —
+    /// is the shape `purity-refuting-fixpoint-census.md` refuted: 46 of 75 cascade
+    /// rows were `classify`-style name collisions, **61% false**. This asserts both
+    /// directions on one synthetic file, because a classifier that fires on
+    /// everything and one that fires on nothing both produce a tidy number.
+    @Test("a conformance-fixed signature needs the conformance, not just the name")
+    func nameAloneIsNotEnough() throws {
+        let source = """
+        struct Conforming: Codable {
+            func encode(to encoder: any Encoder) throws {}
+        }
+        struct Unlucky {
+            func encode(to sink: Sink) throws {}
+        }
+        protocol Loader {
+            func load(from path: String) throws -> Data
+        }
+        struct Impl: Loader {
+            func load(from path: String) throws -> Data { Data() }
+        }
+        """
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("conformance-fixed-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try source.write(
+            to: directory.appendingPathComponent("Subject.swift"), atomically: true, encoding: .utf8
+        )
+
+        let scanned = try FunctionScanner.scanCorpus(directory: directory)
+        var requirements = ConformanceFixedSignatures.builtIn
+        for (name, declared) in ConformanceFixedSignatures.declaredRequirements(in: directory) {
+            requirements[name, default: []].formUnion(declared)
+        }
+        let conformances = ConformanceFixedSignatures.conformances(from: scanned.typeDecls)
+        func fixed(_ owner: String, _ name: String) throws -> Bool {
+            let match = scanned.summaries.first {
+                $0.containingTypeName == owner && $0.name == name
+            }
+            let summary = try #require(match, "no summary for \(owner).\(name)")
+            return ConformanceFixedSignatures.isFixed(
+                summary, conformances: conformances, requirements: requirements
+            )
+        }
+
+        #expect(try fixed("Conforming", "encode"), "a Codable type's encode(to:) is fixed")
+        #expect(
+            try fixed("Unlucky", "encode") == false,
+            "an identically-named method on a non-conforming type is FREE — this is the 61% case"
+        )
+        #expect(
+            try fixed("Impl", "load"),
+            "a corpus-declared protocol's throwing requirement is fixed too, not just the stdlib's"
+        )
+    }
+
+    /// **The classifier finds a population on the real corpora.** A structural rule
+    /// that silently matches nothing reports the same arm-4 number as one that has
+    /// nothing to match, and only this separates them.
+    @Test("the classifier finds conformance-fixed signatures across the corpora")
+    func classifierFindsAPopulation() {
+        let fixed = Self.arms.reduce(0) { $0 + $1.conformanceFixed }
+        #expect(fixed > 20, "only \(fixed) conformance-fixed throwing functions found")
+    }
+
     // MARK: - The census
 
     @Test("census — throws-masked and Result-wrapped reach, across the manifest corpora")
@@ -212,6 +305,11 @@ struct ResultCarrierReachMeasuredTests {
         lines.append("TOTAL  functions \(functions) · throwing \(throwing) · baseline suggestions \(baseline)")
         lines.append("CEILING  (throws masked):   \(masked >= 0 ? "+" : "")\(masked)")
         lines.append("REFACTOR (Result-wrapped):  \(wrapped >= 0 ? "+" : "")\(wrapped)")
+        let freeOnly = Self.arms.reduce(0) { $0 + $1.freeOnlyDelta }
+        let fixed = Self.arms.reduce(0) { $0 + $1.conformanceFixed }
+        lines.append("PERFORMABLE (free signatures only): \(freeOnly >= 0 ? "+" : "")\(freeOnly)")
+        lines.append("  conformance-fixed throwing functions skipped: \(fixed)")
+        lines.append("  §4 reached ~-66 by subtracting a template total; this is the measured figure")
 
         // Which laws the refactor removes. A net figure hides whether the loss is one
         // template collapsing or every template shedding a row, and those are

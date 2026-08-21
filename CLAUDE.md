@@ -54,15 +54,20 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,745 tests — 5,552 fast + 193 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-19** on **swift-property-based 2.0 /
+Suites green at **5,747 tests — 5,552 fast + 195 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-20** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· 110 · 31 · 7 · **12** · 4 · 9 · 8. The batch half alone moved, 189 → 193, for
-`ResultCarrierReachMeasuredTests`; the fast half stood still because the regex skips it,
-which is the routing working in both directions. **`batch5` costs 1,242s, up from 43s** — that
-one suite runs three discovery passes over 28,274 functions across the 17 corpora, and it is
-**~20 minutes added to `make test`**, deliberately paid and recorded here so it is not read later
-as a regression. The prior reading, 5,741 with `batch2` at 110, follows. **`batch2` costs 679–801s** — the two readings
+· 110 · 31 · 7 · **14** · 4 · 9 · 8. The batch half alone moved, 193 → 195, for the two controls
+`ResultCarrierReachMeasuredTests` gained with its conformance-fixed arm. **That run predates the
+row-8 exit-criteria commit**, which is docs only and adds no tests; `make test-fast` was re-run
+against it (5,552, 44s) so the doc guards saw the new files. **`batch5` costs 1,678s, up from 43s
+before this suite existed** — four discovery passes plus protocol parsing over 28,274 functions
+across the 17 corpora, **~28 minutes**, and `make test` is now ~57 minutes end to end. That is one
+answered census taking half the gate's wall clock; **it is a cost paid on purpose and recorded so
+it is not read later as a regression**, and whether an answered census should stay in the default
+gate at full scope is an open question — narrowing its corpus list is NOT the fix, since that is
+the habit `universeIsTheManifest` exists to prevent. The prior reading, 5,745 with `batch5` at 12,
+follows. **`batch2` costs 679–801s** — the two readings
 are the same suite on a busier and a quieter machine, so treat the spread as machine noise and
 not as a regression; the step up from ~460s is real and is the price of two censuses moving from
 three corpora to the manifest's seventeen. **This count was RE-TAKEN rather than derived**, and
@@ -135,6 +140,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **How is `docs/` organised, and what does a doc's status mean?** | `docs/README.md` | Two independent axes: directory = what a doc *is*, status header = where it is in its life |
 | **Does `make docs-drift` check what you think it checks?** | `docs/measurements/docs-drift-coverage-boundary.md` | **No — 9 of 91 docs, and 49 unchecked ones make cross-repo claims.** The summary was a count with no denominator |
 | **What does this word mean?** (template, carrier, decline, composer-supported, reach, latent, Daikon trap…) | `docs/design-internal/glossary.md` | Vocabulary keyed to the code that owns it. Read the `Daikon trap` entry before proposing a filter |
+| **What would "the toolchain is in shape" MEAN — and is it in shape?** | `docs/design-internal/toolchain-exit-criteria.md` | **`open`, and asking for a decision.** Row 8's criteria were written 2026-08-03 and never scored; scored now, **one is ill-posed** (38% is an explicitly *diagnostic-only* figure), **one is satisfiable by not looking**, one is partly met, one is not met by design. **All four are CAPABILITY bars and none is an OUTCOME bar** — which is why five straight *no movement* results cannot be read either way. Proposes A–E for ratification |
 | **Where does a decision go when it has no other home?** | `docs/design-internal/open-threads.md` | 48 numbered rows, plus *Decisions taken in conversation* and *Standing observations*. **Rows 29–48 are the purity line of work** — 43 is the only one still saying *build it*, and the linter built it first. Had no row here until 2026-08-18, which is how a merge-ready staging doc sat unmerged for a month |
 | **What does a SIBLING repo actually do, and what crosses the seam?** | `docs/design-internal/` | One doc per toolchain repo, each pinning its subject's SHA; `make docs-drift` reports which have moved |
 | **When `verify-interaction` reports a refutation, what actually trapped?** | `docs/measurements/interaction-trap-attribution-census.md` | Measured: 10 refutations, 10 invariant-check, 0 subject-code — on reducer corpora only |
@@ -153,7 +159,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through, 9 of 10 shapes `.pure`. The real gap is an over-claim, 26 rows, base rate unmeasurable — and `3ea25f2` refuted the witness without moving the zero, because the closure oracle never reads the callee's verdict. Item 42 CLOSED there |
 | **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |
-| **Does moving from `throws` to `Result` put more code within a law's reach?** | `docs/measurements/result-carrier-reach.md` | **Measured NO — ceiling +62 of 6,508 (~1%), actual refactor −218.** ⚠ **Quote the attribution, never the net: 152 of the 218 are `codable-round-trip`, and `encode(to:)` / `init(from:)` are protocol requirements whose `throws` cannot be changed — a transform illegal in Swift.** Performable loss ≈ −66. `input-totality` **+4** is the only gain. Third time `encode(to:)` has bent a number here |
+| **Does moving from `throws` to `Result` put more code within a law's reach?** | `docs/measurements/result-carrier-reach.md` | **Measured NO — ceiling +62 of 6,508 (~1%), naive refactor −218, PERFORMABLE refactor −53.** ⚠ **Quote −53; never −218, and never the −66 this doc first derived by subtraction — measured, that derivation was 20% off.** 152 of the 218 are `codable-round-trip`, whose `encode(to:)` / `init(from:)` are protocol requirements: a transform illegal in Swift. **466 of 2,830 throwing functions — one in six — cannot change signature at all.** `input-totality` **+4** is the only gain. Third time `encode(to:)` has bent a number here |
 | **Would refactoring toward purity put more code within a law's reach?** | `docs/measurements/purity-refactoring-reach.md` | **Measured NO at a ceiling — 710/160/51 suggestions, zero moved** by forcing every verdict to `.pure`. The zero is structural: purity is not one of `UnverifiableCause`'s eight causes. **The same fact read back is a soundness finding — 22 of 921 suggestions rest on a witness-refuted subject**, seven of them filesystem predicates here. The signal's use is a VETO, scoped to witness-bearing |
 | **What would a purity veto cost?** | `docs/measurements/purity-veto-precision.md` | **Measured AFFORDABLE when scoped — 0 refutations removed at either scope.** Naive `.refuted` veto: 20 removed, **10 passing laws**, 8 of them `encode(to:)` under the only 100%-yield template. Witness-scoped: 8 removed, **2 passes**, both filesystem predicates the veto exists for. Read the `refuted` column, never the total **SHIPPED 2026-08-18** as `applyImpureSubjectVeto`, witness-scoped, suppressing 8 here — and the gate that matters is `bodyFingerprint != nil`, because `.refuted` is an initialiser DEFAULT |
 | **Why was a MUTABLE property offered as a law subject?** | `docs/measurements/modify-accessor-misclassification.md` | `isReadOnlyGetter` gated on `!contains("set")` and Swift has more mutating accessors than that. **6 → 0** admitted, **8 → 0** suggestions. Now an **allowlist**. Half two closed as *no population* — 0 of 325 admitted properties declare a second accessor |
