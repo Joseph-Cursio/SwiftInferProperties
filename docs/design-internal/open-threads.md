@@ -1467,6 +1467,41 @@ command from being filed.
 Same family as the `(file, symbol)` seed key and the §8.9 regex: **the cheap capture
 answered a different question from the one being asked.**
 
+### A decline bucket's NAME is not its cause (2026-08-21)
+
+`verify --all-from-index` over swift-system reported **36 `unsupported-carrier`**, and
+grouping them by the `carrier` field gave a clean-looking table topped by **`FilePath`, 15
+rows**. That table produced a diagnosis (the tool cannot construct the subject's principal
+type), a recommendation (build an `ExpressibleByStringLiteral` generator route), and a
+committed document — `docs/measurements/criterion-a-swift-system.md` at `647fc7c0`.
+
+**Twenty-one of the 36 were a module-resolution bug**, quarantined with this reason:
+
+```
+unsupported-carrier: System is not a library product of swift-system (vended: SystemPackage)
+```
+
+A product-resolution failure, reported under the carrier label, in rows whose `carrier`
+field still said `FilePath` — because the carrier *is* `FilePath`; it simply had nothing to
+do with why the row declined. `FilePath` turned out to be constructible all along: after the
+fix, not one remaining `unsupported-carrier` row names it.
+
+**The recommendation was then built and measured, and moved zero rows** — row-for-row
+identical output across all 41 records, with and without it. So the cost of grouping by the
+wrong key was not just a wrong document; it was a feature designed against a phantom, and
+only the project's own *rows moved* rule caught it before it shipped.
+
+**Group by the reason string, not the bucket label.** A bucket is a channel that several
+causes share — the same point `The bucket is a channel, not a report` makes about
+`PurityVerdict.refuted`, arrived at independently from the other end. Two occurrences now,
+in unrelated subsystems, is enough to call it a shape rather than an incident.
+
+The narrower lesson is worth stating too: **the label was accurate and still misleading.**
+Nobody wrote anything false. `unsupported-carrier` is a defensible name for "the workdir
+cannot obtain this carrier," and product resolution is one way that happens. The defect is
+that the label describes the *consequence* and the reader needs the *cause*, and the cause
+was sitting in the reason string the whole time, unread.
+
 ### A doc that characterises a set by a property its newest member lacks
 
 It does not go out of date — it **argues against the code**. `PBTSeed.role`'s comment said *"every
