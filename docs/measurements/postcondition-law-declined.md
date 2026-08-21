@@ -176,7 +176,8 @@ random:
   tuple. **`normalized` is excluded from the role table entirely.**
 
 **BUILT 2026-08-21** as `RolePostconditionTemplate` / `RolePostcondition`, with both
-exclusions as gates and eight tests, two of which are those false positives. The weak
+exclusions as gates and eight tests, two of which are those false positives.
+**VERIFIABLE 2026-08-21** for the two roles whose check needs no unproven conformance. The weak
 roles (`reversed`, `shuffled` — they pin size and membership, not content) fire below the
 strong ones and **disclose their own weakness in a caveat** rather than being dropped.
 
@@ -193,3 +194,39 @@ this family has real false-law hazards.
   a counterexample would raise precision above 52% and shrink the false class.
 - **The `validate*` family being typical rather than idiosyncratic.** It is 9 of 13 here.
   If other stdlib-scale corpora show the same density, the concentration objection weakens.
+
+---
+
+## 7. The law RUNS, for two of ten roles
+
+Shipped discovery-only first, then wired to verify. Proven end to end on a planted
+subject — a `lowercased()` that lowercases everything **except the first character**:
+
+| subject | outcome |
+|---|---|
+| the mutant | **`measured-defaultFails`**, counterexample `Text(raw: "D")`, trial 1 |
+| the correct implementation | **`measured-bothPass`**, 100 default + 100 edge trials |
+
+Both directions checked. A pass with no failing case would be a law that cannot fail.
+
+### Two of ten, and the eight are a decision
+
+`lowercased` and `uppercased` return `String` in every Swift spelling, so their check —
+*does the result contain the opposite case?* — needs no conformance the tool must prove
+and no argument the stub does not hold.
+
+The other eight stay advisory **because emitting a check the emitter cannot justify is the
+measured failure**, not the cautious one: `criterion-a-unmet-subject.md` found **89% of
+output failing to compile** on an unmet subject, from exactly that. `sorted` needs
+`Element: Comparable`; `deduplicated` needs `Hashable`; `clamped` needs the caller's
+bounds; `reversed` and `shuffled` need the input beside the result; the escaping pair has
+no universal scheme. `composeRolePostconditionPass` returns `nil` for all of them, so
+verify records `unsupported-template` rather than a stub that will not build.
+
+### A template needs admitting in TWO places
+
+Adding `role-postcondition` to `TemplateName.verifiable` was **not enough** — the survey
+still reported `unsupported-template`. That list gates the *template check*;
+`resolveFunctionCalls` gates *call resolution*, and the survey path consults the second.
+**Missing either produces the identical error message**, which is why this was found by
+running a planted subject rather than by reading the code.

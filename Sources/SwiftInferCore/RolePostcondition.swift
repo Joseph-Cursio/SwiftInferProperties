@@ -95,6 +95,39 @@ public enum RolePostcondition: String, Sendable, Equatable, Hashable, CaseIterab
         }
     }
 
+    /// **The law as a Swift expression that is TRUE when the law is VIOLATED**, given a
+    /// binding named `result`.
+    ///
+    /// `nil` means the role is **suggested but not executable** — which is the honest
+    /// state for most of them, and the reason this is an `Optional` rather than a
+    /// `fatalError` branch:
+    ///
+    /// - **`sorted`** needs `Element: Comparable`, and **`deduplicated`** needs
+    ///   `Element: Hashable`. The tool cannot always establish either from the signature,
+    ///   and emitting a check that does not compile is the failure
+    ///   `criterion-a-unmet-subject.md` measured at **89% of output on an unmet subject**.
+    /// - **`clamped`** needs the bounds the caller passed, which the stub does not hold.
+    /// - **`escaped` / `unescaped`** are escaping-scheme specific; there is no universal
+    ///   check, only the subject's own.
+    /// - **`rounded`** needs the `FloatingPointRoundingRule`, and `rounded(.up)` of an
+    ///   already-integral value is integral for a different reason than `.towardZero`.
+    /// - **`reversed` / `shuffled`** need the input alongside the result, which this
+    ///   single-value shape does not carry.
+    ///
+    /// What is left executes unconditionally: `lowercased()` and `uppercased()` return
+    /// `String` in every Swift spelling, so the check needs no conformance the tool must
+    /// prove and no argument it does not have.
+    public var violationExpression: String? {
+        switch self {
+        case .lowercased: "result.contains(where: { $0.isUppercase })"
+        case .uppercased: "result.contains(where: { $0.isLowercase })"
+        default: nil
+        }
+    }
+
+    /// Whether the law can be executed as well as suggested.
+    public var isExecutable: Bool { violationExpression != nil }
+
     /// **Does this declaration carry the role, unmodified?**
     ///
     /// Requires an exact name — a prefix match is a different operation whose suffix

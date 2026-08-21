@@ -244,6 +244,19 @@ extension RenderShape {
         expected: { _ in "≥ 0" }
     )
 
+    /// Like `measure-non-negativity`, the law is a **predicate on the result** rather than an
+    /// equation between two expressions, so it takes the bound framing. The `expected` slot
+    /// carries the law in words because the predicate itself is supplied per role — there is no
+    /// single expression to print, and printing `≥ 0`'s equivalent for ten different roles would
+    /// be a phrasing that fits none of them.
+    static let rolePostcondition = RenderShape(
+        framing: .bound,
+        subject: { "role-postcondition on \($0.forwardName) over \($0.carrierType)" },
+        forward: { "\($0.forwardName)(input) " },
+        inverse: { _ in "(a postcondition states no second expression)" },
+        expected: { _ in "satisfies the role's guarantee" }
+    )
+
     /// Template name → phrasing. A dictionary rather than a `switch` so adding a law costs one
     /// row and no control flow; `round-trip` and `codable-round-trip` share a value on purpose.
     ///
@@ -264,6 +277,7 @@ extension RenderShape {
         "homomorphism": .homomorphism,
         "multiplicative-homomorphism": .multiplicativeHomomorphism,
         "measure-non-negativity": .measureNonNegativity,
-        "differential-equivalence": .differentialEquivalence
+        "differential-equivalence": .differentialEquivalence,
+        "role-postcondition": .rolePostcondition
     ]
 }

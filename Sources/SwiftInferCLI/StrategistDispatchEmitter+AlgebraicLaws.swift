@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCore
 
 /// Measured-verify Pass-1 composers for the three algebraic-law templates added
 /// alongside the catalogue work: involution (`f(f(x)) == x`), binary-idempotence
@@ -29,6 +30,9 @@ extension StrategistDispatchEmitter {
 
         case "measure-non-negativity":
             return composeMeasureNonNegativityPass(inputs: inputs, recipe: recipe)
+
+        case "role-postcondition":
+            return composeRolePostconditionPass(inputs: inputs, recipe: recipe)
 
         default:
             return nil
@@ -254,6 +258,64 @@ extension StrategistDispatchEmitter {
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
                 print("VERIFY_DEFAULT_FORWARD: \\(measured)")
                 print("VERIFY_DEFAULT_INVERSE: 0")
+                exit(1)
+            }
+        }
+
+        print("VERIFY_DEFAULT_RESULT: PASS")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        """
+    }
+
+    // MARK: - Role postcondition (1 value per trial; the law holds OF THE RESULT)
+
+    /// A function whose name names an operation with a known guarantee owes that guarantee
+    /// of its output. The predicate is supplied by ``RolePostcondition`` rather than found
+    /// in the subject, which is why this template exists where two discovery routes were
+    /// declined (`docs/measurements/postcondition-law-declined.md`).
+    ///
+    /// **Returns `nil` for a role whose check is not expressible here**, leaving the
+    /// suggestion advisory rather than emitting code that will not build. That is not
+    /// caution: `criterion-a-unmet-subject.md` measured **89% of output failing to compile**
+    /// on an unmet subject, from an emitter that produced a call it could not justify.
+    /// `sorted` needs `Element: Comparable`, `deduplicated` needs `Hashable`, `clamped`
+    /// needs the caller's bounds, `reversed` and `shuffled` need the input beside the
+    /// result, and the escaping pair has no universal scheme. `lowercased` and `uppercased`
+    /// return `String` in every spelling, so their check needs nothing the tool must prove.
+    static func composeRolePostconditionPass(inputs: Inputs, recipe: GeneratorRecipe) -> String? {
+        let functionCall = inputs.functionCalls.first ?? "(missing)"
+        let baseName = functionCall.split(separator: ".").last.map(String.init) ?? functionCall
+        guard let role = RolePostcondition(rawValue: baseName),
+              let violation = role.violationExpression
+        else { return nil }
+
+        // Same two call shapes `measure-non-negativity` resolves: a nullary instance
+        // method or computed property over the generated receiver, else a free or static
+        // function over the generated argument.
+        let resultExpression: String
+        if inputs.isInstanceMethod, inputs.isNullary {
+            let accessor = inputs.isComputedProperty ? "" : "()"
+            resultExpression = "value.\(baseName)\(accessor)"
+        } else {
+            resultExpression = "\(functionCall)(value)"
+        }
+
+        return """
+        // --- Pass 1: default (strategist-derived generator) ---
+        // role postcondition: `\(baseName)` owes \(role.law).
+
+        let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
+            \(recipe.expression)
+
+        for trial in 0 ..< trials {
+            let value = defaultGenerator.run(using: &rng)
+            let result = \(resultExpression)
+            if \(violation) {
+                print("VERIFY_DEFAULT_RESULT: FAIL")
+                print("VERIFY_DEFAULT_TRIAL: \\(trial)")
+                print("VERIFY_DEFAULT_INPUT: \\(value)")
+                print("VERIFY_DEFAULT_FORWARD: \\(result)")
+                print("VERIFY_DEFAULT_INVERSE: <\(role.law)>")
                 exit(1)
             }
         }

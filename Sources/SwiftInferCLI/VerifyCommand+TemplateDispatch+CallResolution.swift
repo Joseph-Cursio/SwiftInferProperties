@@ -53,6 +53,24 @@ extension SwiftInferCommand.Verify {
     /// fine). Round-trip still looks up the curated pair list to
     /// discover the inverse half — strategist routing doesn't change
     /// that piece of the design.
+    /// V1.48.B — pair of expressions: `[nonMutCall, mutMethodName]`. The resolver fires its
+    /// own validation (carrier-agnostic; curated pair-list check), and the renderer surfaces
+    /// both halves as forward / inverse names. Split out of `resolveFunctionCalls` only for
+    /// the 50-line body cap, which admitting `role-postcondition` tipped.
+    static func dualStyleCalls(entry: SemanticIndexEntry) throws -> ResolvedCalls {
+        let pair = try DualStyleConsistencyPairResolver.resolve(entry)
+        return ResolvedCalls(
+            expressions: [pair.nonMutCall, pair.mutMethodName],
+            rendererForwardName: pair.nonMutCall,
+            rendererInverseName: pair.mutMethodName
+        )
+    }
+
+    /// **A template needs admitting in TWO places, and missing either reports the same
+    /// error.** `TemplateName.verifiable` gates the template check; this switch gates call
+    /// resolution. `role-postcondition` was added to the first and still reported
+    /// `unsupported-template` from the survey path, which consults this one — measured on a
+    /// planted subject before the omission reached a corpus.
     static func resolveFunctionCalls(for entry: SemanticIndexEntry) throws -> ResolvedCalls {
         let carrier = entry.typeName ?? "(none)"
         // The name the stub must WRITE, which is not always the name the index
@@ -130,26 +148,20 @@ extension SwiftInferCommand.Verify {
                 entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: true
             )
 
-        case "involution", "homomorphism", "multiplicative-homomorphism", "measure-non-negativity":
+        case "involution", "homomorphism", "multiplicative-homomorphism", "measure-non-negativity",
+             "role-postcondition":
             // Single-function laws. Involution's self-returning instance form and
             // measure's 0-param instance form both emit the receiver shape from
             // `inputs` flags in the composer; the free/static call resolves the
             // same way idempotence's non-receiver shape does.
+            // `role-postcondition` joins them: same shape as measure — one function, one
+            // generated value, a predicate on the RESULT.
             return singleCallResolved(
                 entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
             )
 
         case "dual-style-consistency":
-            // V1.48.B — pair of expressions: [nonMutCall, mutMethodName].
-            // Resolver fires its own validation (carrier-agnostic;
-            // curated pair list check). Renderer surfaces both halves
-            // as forward / inverse names.
-            let pair = try DualStyleConsistencyPairResolver.resolve(entry)
-            return ResolvedCalls(
-                expressions: [pair.nonMutCall, pair.mutMethodName],
-                rendererForwardName: pair.nonMutCall,
-                rendererInverseName: pair.mutMethodName
-            )
+            return try dualStyleCalls(entry: entry)
 
         default:
             throw VerifyError.unsupportedTemplate(
