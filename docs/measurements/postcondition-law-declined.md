@@ -209,6 +209,33 @@ subject — a `lowercased()` that lowercases everything **except the first chara
 
 Both directions checked. A pass with no failing case would be a law that cannot fail.
 
+### `sorted` was attempted and declined — the comparator, not the schema
+
+The obvious next role is `sorted`: 8 exact sites, the largest population. It is **not
+executable**, and the reason is not the one it looks like.
+
+`SemanticIndexEntry` carries no return type, so the element type and its `Comparable`
+conformance are unknowable at emit time. **Adding that field would not help.** Walking all
+8 sites:
+
+| site | why a natural-order check fails |
+|---|---|
+| `sorted(using comparator:)` ×2, `sorted(by:)` | the ordering is the **caller's** — natural order is a **false law** |
+| `Leaderboard.sorted() -> [PlayerScore]` | sorted by score; `PlayerScore`'s natural order is a different key |
+| `Sequence.sorted() -> [Element]` | generic; `Element`'s conformance is not in the index |
+| `BitSet.sorted() -> BitSet { self }` ×2 | returns `self`, not a sequence to walk |
+| `SwiftSourceFiles.sorted(in:)` | already excluded by the parameter gate |
+
+**Not one would take a check that is both compilable and true.** The blocker is the
+missing comparator, not the missing schema field — so **the schema change would have
+bought a zero, and was not made.**
+
+**It also exposed a seam in the role gate.** `permittedLabels` admits `by` and `using`
+because they *preserve the role* — `sorted(by:)` is still sorting. That is right for
+**suggesting** the law and wrong for **executing** it. An executable `sorted` would need
+`isNullary` on top of the role gate, and even then the population is `Sequence.sorted()`
+and two self-returning `BitSet` methods.
+
 ### Two of ten, and the eight are a decision
 
 `lowercased` and `uppercased` return `String` in every Swift spelling, so their check —

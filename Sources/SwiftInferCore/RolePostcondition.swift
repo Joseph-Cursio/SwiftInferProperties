@@ -102,9 +102,24 @@ public enum RolePostcondition: String, Sendable, Equatable, Hashable, CaseIterab
     /// state for most of them, and the reason this is an `Optional` rather than a
     /// `fatalError` branch:
     ///
-    /// - **`sorted`** needs `Element: Comparable`, and **`deduplicated`** needs
-    ///   `Element: Hashable`. The tool cannot always establish either from the signature,
-    ///   and emitting a check that does not compile is the failure
+    /// - **`sorted` was attempted and declined, and the reason is not the one expected.**
+    ///   `SemanticIndexEntry` carries no return type, so the element type — and whether it
+    ///   is `Comparable` — is unknowable at emit time. But adding that field would not
+    ///   help: walking the 8 exact sites across the 17 corpora, **not one would take a
+    ///   natural-order check that is both compilable and true.** Two are
+    ///   `sorted(using comparator:)` and one is `sorted(by:)`, where the ordering is the
+    ///   **caller's** and natural order is a *false law*; `Leaderboard.sorted()` sorts by
+    ///   score, whose natural order is a different key; `Sequence.sorted()` is generic;
+    ///   and `BitSet.sorted()` returns `self`. **The blocker is the missing comparator,
+    ///   not the missing schema field.**
+    ///
+    ///   This also exposes a seam in ``permittedLabels``: `by` and `using` are admitted
+    ///   because they *preserve the role* — `sorted(by:)` is still sorting — which is
+    ///   right for SUGGESTING the law and wrong for EXECUTING it. A future executable
+    ///   `sorted` needs `isNullary` on top of the role gate.
+    ///
+    /// - **`deduplicated`** needs `Element: Hashable`, unknowable for the same reason.
+    ///   Emitting a check that does not compile is the failure
     ///   `criterion-a-unmet-subject.md` measured at **89% of output on an unmet subject**.
     /// - **`clamped`** needs the bounds the caller passed, which the stub does not hold.
     /// - **`escaped` / `unescaped`** are escaping-scheme specific; there is no universal
