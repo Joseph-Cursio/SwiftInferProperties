@@ -176,7 +176,8 @@ random:
   tuple. **`normalized` is excluded from the role table entirely.**
 
 **BUILT 2026-08-21** as `RolePostconditionTemplate` / `RolePostcondition`, with both
-exclusions as gates and eight tests, two of which are those false positives. The weak
+exclusions as gates and eight tests, two of which are those false positives.
+**VERIFIABLE 2026-08-21** for the two roles whose check needs no unproven conformance. The weak
 roles (`reversed`, `shuffled` — they pin size and membership, not content) fire below the
 strong ones and **disclose their own weakness in a caveat** rather than being dropped.
 
@@ -193,3 +194,78 @@ this family has real false-law hazards.
   a counterexample would raise precision above 52% and shrink the false class.
 - **The `validate*` family being typical rather than idiosyncratic.** It is 9 of 13 here.
   If other stdlib-scale corpora show the same density, the concentration objection weakens.
+
+---
+
+## 7. The law RUNS, for two of ten roles
+
+Shipped discovery-only first, then wired to verify. Proven end to end on a planted
+subject — a `lowercased()` that lowercases everything **except the first character**:
+
+| subject | outcome |
+|---|---|
+| the mutant | **`measured-defaultFails`**, counterexample `Text(raw: "D")`, trial 1 |
+| the correct implementation | **`measured-bothPass`**, 100 default + 100 edge trials |
+
+Both directions checked. A pass with no failing case would be a law that cannot fail.
+
+### `sorted` was attempted and declined — the comparator, not the schema
+
+The obvious next role is `sorted`: 8 exact sites, the largest population. It is **not
+executable**, and the reason is not the one it looks like.
+
+`SemanticIndexEntry` carries no return type, so the element type and its `Comparable`
+conformance are unknowable at emit time. **Adding that field would not help.** Walking all
+8 sites:
+
+| site | why a natural-order check fails |
+|---|---|
+| `sorted(using comparator:)` ×2, `sorted(by:)` | the ordering is the **caller's** — natural order is a **false law** |
+| `Leaderboard.sorted() -> [PlayerScore]` | sorted by score; `PlayerScore`'s natural order is a different key |
+| `Sequence.sorted() -> [Element]` | generic; `Element`'s conformance is not in the index |
+| `BitSet.sorted() -> BitSet { self }` ×2 | returns `self`, not a sequence to walk |
+| `SwiftSourceFiles.sorted(in:)` | already excluded by the parameter gate |
+
+**Not one would take a check that is both compilable and true.** The blocker is the
+missing comparator, not the missing schema field — so **the schema change would have
+bought a zero, and was not made.**
+
+**It also exposed a seam in the role gate.** `permittedLabels` admits `by` and `using`
+because they *preserve the role* — `sorted(by:)` is still sorting. That is right for
+**suggesting** the law and wrong for **executing** it. An executable `sorted` would need
+`isNullary` on top of the role gate, and even then the population is `Sequence.sorted()`
+and two self-returning `BitSet` methods.
+
+### Two of ten, and the eight are a decision
+
+`lowercased` and `uppercased` return `String` in every Swift spelling, so their check —
+*does the result contain the opposite case?* — needs no conformance the tool must prove
+and no argument the stub does not hold.
+
+The other eight stay advisory **because emitting a check the emitter cannot justify is the
+measured failure**, not the cautious one: `criterion-a-unmet-subject.md` found **89% of
+output failing to compile** on an unmet subject, from exactly that. `sorted` needs
+`Element: Comparable`; `deduplicated` needs `Hashable`; `clamped` needs the caller's
+bounds; `reversed` and `shuffled` need the input beside the result; the escaping pair has
+no universal scheme. `composeRolePostconditionPass` returns `nil` for all of them, so
+verify records `unsupported-template` rather than a stub that will not build.
+
+### A template needs admitting in THREE places
+
+Adding `role-postcondition` to `TemplateName.verifiable` was **not enough** — the survey
+still reported `unsupported-template`. That list gates the *template check*;
+`resolveFunctionCalls` gates *call resolution*, and the survey path consults the second.
+**Missing either produces the identical error message**, which is why this was found by
+running a planted subject rather than by reading the code.
+
+**And there is a third**: `VerifiableTemplateReachTests` — whose own comment calls them
+*"the pair of gates"* — checks that every verifiable template **composes** its law. It
+probes with a synthetic `functionCalls: ["subject", "inverse"]`, which composes nothing
+here, because **this is the first template that keys on the SUBJECT'S name rather than
+only the template's**. The role *is* the name. The gate now probes it with `lowercased`,
+so it still asks its real question — is there a composer? — instead of a question about
+its fixture.
+
+**That the guard's own doc says "pair" is the point.** A template whose composability
+depends on the subject is a category the verify path did not have, and each of the three
+gates reports the same string when it is the one that declined.

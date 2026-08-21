@@ -134,7 +134,17 @@ public extension TemplateName {
         .roundTrip, .codableRoundTrip, .idempotence, .commutativity, .associativity,
         .idempotenceLifted, .dualStyleConsistency, .monotonicity,
         .involution, .binaryIdempotence, .homomorphism, .multiplicativeHomomorphism,
-        .measureNonNegativity, .predicate, .differentialEquivalence
+        .measureNonNegativity, .predicate, .differentialEquivalence,
+        // **Verifiable for two of its ten roles, and that is the honest state.**
+        // `lowercased` / `uppercased` return `String` in every spelling, so their check
+        // needs no conformance the tool must prove. The other eight stay advisory:
+        // `sorted` needs `Element: Comparable`, `deduplicated` needs `Hashable`, `clamped`
+        // needs the caller's bounds, `reversed` / `shuffled` need the input beside the
+        // result, and the escaping pair has no universal scheme. Emitting a check the
+        // emitter cannot justify is what `criterion-a-unmet-subject.md` measured at 89%
+        // of output failing to compile, so `composeRolePostconditionPass` returns nil
+        // rather than guessing.
+        .rolePostcondition
     ]
 
     // swiftprojectlint:disable:next parallel-list-drift
