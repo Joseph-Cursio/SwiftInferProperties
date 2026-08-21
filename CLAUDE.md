@@ -54,13 +54,15 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,752 tests — 5,552 fast + 200 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-20** on **swift-property-based 2.0 /
+Suites green at **5,753 tests — 5,552 fast + 201 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-21** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· 110 · 31 · 7 · 14 · 4 · 9 · **13**. The batch half alone moved, 195 → 200, for
-`CatalogHealthCensusMeasuredTests` (4 tests) and its carrier-shape reading (1). **`batch8` costs
-462s, up from 61s**; `batch5` is 1,668s; **`make test` is ~65 minutes end to end**, and roughly
-half of that is two censuses whose questions are answered. Whether an answered census belongs in
+· 110 · 31 · 7 · 14 · 4 · 9 · **14**. The batch half alone moved, 200 → 201, for the visibility
+census `CatalogHealthCensusMeasuredTests` gained. **Quote the COUNTS from this run and the TIMINGS
+from the previous one**: this pass ran under load and every stage inflated (batch2 948s against
+649s, batch3 560s against 352s), so recording its wall clock would set a baseline that is a fact
+about the machine. The standing costs are **`batch5` ~1,670s and `batch8` ~460s**, with **`make
+test` ~65 minutes end to end**, roughly half of it two censuses whose questions are answered. Whether an answered census belongs in
 the default gate at full scope is open — **narrowing its corpus list is NOT the fix**, since that
 is the habit `universeIsTheManifest` exists to prevent. The prior reading, 5,747 with `batch8` at
 8, follows. **`batch5` costs 1,678s, up from 43s
@@ -207,6 +209,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Can two survey runs be compared at ROW level?** | `fixtures/verify-runs/README.md` | They can now; for four runs they could not. A change of decline **cause** is reported as loudly as a bucket change |
 | **How many laws actually RUN, across all templates?** | `fixtures/whole-corpus-survey/` | **Re-taken 2026-08-19: 178 of 272 runnable-tier entries = 65%, UP from 50%.** **Quote the runnable tiers, never the total** — the total is 178/538, and 266 of those are `Advisory`, which cannot execute by construction. Quoting it manufactured a decline out of an increase, in the row that says read the tier cut. Dominant blocker is **visibility, 204 rows**. **All 15 refutations hand-checked: false laws, zero real bugs, TIER DOES NOT PREDICT** |
 | **Is a survey refutation a real bug, and does the TIER predict it?** | `docs/measurements/refutation-hand-check.md` | **Measured NO to both — 15 of 15 false laws, 3 of 3 `Likely` among them.** Neither tier nor template predicts. The mechanisms are nameable: idempotence over a **derivation** rather than a projection, and commutativity over operands with distinct **roles** |
+| **What would widening access actually buy?** | `docs/measurements/visibility-widenability.md` | **897 rows (14% of output) — the largest lever measured this cycle — but 87% of it is `predicate` + `idempotence`, the head measured at 15-of-15 false laws.** ⚠ **`internalOrSPI` is 1,552 of the 2,629 restricted rows and blocks NOTHING** (`@testable import` reaches it); counting it inflates the lever 2.7×. **Refutes the home-corpus claim that five templates were trapped** — `round-trip` looked 0-ran on one corpus and runs **405** across seventeen. `value-round-trip` 9 → 38 is the one ratio worth acting on |
 | **Can a `private`-subject law name the caller to lift it to?** | `docs/measurements/lift-caller-reach.md` | **Measured YES — 260 of 373 visibility declines can name a visible caller**, 534 of 561 unambiguously. Same-file is **sound**, not heuristic: `private` is file-scoped. **Moves zero rows** — it is a caveat. Auto-lifting DECLINED: the lifted law is a different law |
 | **Do commutativity/associativity fire on operands that cannot be swapped?** | `docs/measurements/parameter-role-declined.md` | **Measured and DECLINED — the signal is exact and the population is 5 rows on one corpus.** 0 held · 3 refuted where it fires; OrderedCollections has 9 binary-op suggestions and **zero** role-distinct. **The 3-of-3 that motivated it was 3 of the 5 rows that exist** ⚠ **RE-TAKEN 2026-08-19: the verdict stands and every reason was wrong.** The first run used 3 corpora when 17 resolve, and the signal tested only that labels *differ* — it fired on the stdlib's `*(a:b:)` and Foundation's `+(lhs:rhs:)`, 36 false positives on genuinely commutative arithmetic, so the reported 5/5 precision was an artifact of a corpus that could not exhibit the failure. Corrected: **118 binary-op suggestions across 17 corpora, 2 role-distinct** |
 | **Is cross-type round-trip pairing worth acting on?** | `docs/measurements/cross-type-roundtrip-census.md` | **Measured NO ACTION, and the control cannot discriminate.** 220 of 230 cross-type at API level but only **7 of 86** in a target's default output. OrderedCollections produces **1** round-trip suggestion — **a control with no population is not a control** ⚠ **CONTROL RE-TAKEN across 17 corpora and now DECISIVE**: 529 round-trip suggestions elsewhere, **6 cross-type (1.1%)**, against 220 of 230 (96%) here — and swift-collections is multi-module at `Sources/` with **0 of 107**, so it is not scanning breadth |
