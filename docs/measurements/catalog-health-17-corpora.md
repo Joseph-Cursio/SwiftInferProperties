@@ -129,3 +129,71 @@ is 4 away and shrinks by one today.
   *template*, not the list.
 - **A new template shipping without a row here**, which would sit at zero unrecorded and
   invisible — the exact shape §10 was written to catch.
+
+---
+
+# Carrier shape — sizing the carrier build, and closing two directions
+
+> Same census, same scan. A second reading of the rows §2 already produced, kept here
+> rather than in its own suite because re-scanning seventeen corpora to re-derive
+> identical data would double a seven-minute cost against a ~65-minute gate.
+
+## The numbers
+
+**All 6,508 discovery rows across the 17 corpora:**
+
+| carrier shape | rows | share |
+|---|---:|---:|
+| **userDefined** | **5,792** | **88%** |
+| absent | 369 | 5% |
+| scalar | 199 | 3% |
+| **collection** | **148** | **2%** |
+
+**Two-operand templates only** (`commutativity` + `associativity`), whose emitters share
+`supportedCarriers = ["Complex<Double>", "Double", "Int"]`:
+
+| carrier shape | rows |
+|---|---:|
+| userDefined | 102 |
+| **collection** | **6** |
+| scalar | 6 |
+| absent | 4 |
+
+**And 146 of the 148 collection rows are three types**: `BitSet` (60),
+`BitSet.Counted` (57), `BitArray` (29) — all swift-collections' bit types, none of them
+the `[K: V]` / `Set<T>` shape a merge tie-break lives in. The remaining two are
+one-offs (`Slice<AttributedString._InternalRuns>`, `BitArray._UnsafeHandle`).
+
+## What this closes
+
+**The collision-pairing pass is dead.** `fixtures/collision-pairing/` measured the lever
+at +2 of 3 mutants on a wide domain, and the pass needs a collection carrier to have
+anything to overlap. **That carrier is worth 6 rows.** The measurement was sound and the
+lever is real; the population is not there.
+
+**The collection carrier is dead as a general build too** — 2% of all rows, and 99% of
+those are one package's bit types, which are fixed-width bit vectors rather than the
+keyed containers the pairing argument was about.
+
+## What it opens, and it is much larger
+
+**88% of every discovery row has a user-defined carrier.** That is the
+`DerivationStrategist` / memberwise-`Arbitrary` problem, and it dwarfs both the
+collection gap and the scalar one by more than an order of magnitude. Any question of
+the form *"why can so little run?"* points here and not at the carrier table.
+
+This also reconciles the home-corpus survey, whose 47 `unsupported-carrier` declines
+were **all** user-defined types and **0 of 47** collection-shaped. That zero was flagged
+as not-to-be-carried — this repo analyses syntax and its types are structs, so it is a
+poor witness for collections. **Taking the caution was still right, and the answer came
+back the same**: collections are 2% rather than 0%, and the shape of the gap is
+unchanged.
+
+## What would reopen it
+
+- **A corpus of keyed-container code.** Every collection row here is a bit vector. A
+  package built on `[K: V]` merges could change the two-operand slice, and none of the
+  seventeen is one.
+- **Two-operand templates reaching user-defined carriers.** 102 of the 118 two-operand
+  rows are user-defined. If those become runnable, the pairing question returns — but on
+  derived generators, where "overlapping" needs a definition this fixture does not give.

@@ -76,20 +76,75 @@ struct CatalogHealthCensusMeasuredTests {
         "invariant-preservation"
     ]
 
-    static let rowsByTemplate: [String: Int] = {
-        var totals: [String: Int] = [:]
+    /// **Carrier shape, for sizing a carrier build.**
+    ///
+    /// Kept in this suite rather than its own because it is a second reading of the
+    /// *same* discover pass. A separate census would re-scan seventeen corpora to
+    /// re-derive rows this one already has, doubling a seven-minute cost for identical
+    /// data — and `make test` is already ~65 minutes.
+    enum CarrierShape: String, CaseIterable {
+        /// `[T]`, `[K: V]`, `Set<…>`, `Deque<…>`, `OrderedSet<…>` and friends.
+        case collection
+        /// What the carrier-dispatched stub emitters actually support:
+        /// `Complex<Double>`, `Double`, `Int` — plus the other numeric and `String`
+        /// spellings that would be cheap to add.
+        case scalar
+        /// A user-defined `struct` / `enum` / `class`. Needs a derived generator, which
+        /// is the `DerivationStrategist` problem rather than a carrier-table problem.
+        case userDefined
+        /// No carrier recorded on the suggestion.
+        case absent
+
+        static func of(_ carrier: String?) -> Self {
+            guard let carrier, !carrier.isEmpty else { return .absent }
+            if carrier.hasPrefix("[") { return .collection }
+            let collectionHeads = [
+                "Set<", "Dictionary<", "Array<", "Deque<", "OrderedSet<",
+                "OrderedDictionary<", "Heap<", "SortedSet<", "SortedDictionary<",
+                "ArraySlice<", "Slice<", "BitArray", "BitSet", "TreeSet<", "TreeDictionary<"
+            ]
+            if collectionHeads.contains(where: carrier.hasPrefix) { return .collection }
+            let scalars: Set<String> = [
+                "Int", "Int8", "Int16", "Int32", "Int64",
+                "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
+                "Double", "Float", "Float80", "CGFloat",
+                "String", "Substring", "Character", "Bool",
+                "Complex<Double>", "Complex<Float>", "Decimal"
+            ]
+            return scalars.contains(carrier) ? .scalar : .userDefined
+        }
+    }
+
+    struct Row {
+        let template: String
+        let carrier: String?
+        var shape: CarrierShape { CarrierShape.of(carrier) }
+    }
+
+    /// Every discovery row across the manifest, scanned once.
+    static let rows: [Row] = {
+        var all: [Row] = []
         for corpus in CorpusManifest.available {
             guard let scanned = try? FunctionScanner.scanCorpus(directory: corpus.primaryRoot)
             else { continue }
-            let rows = TemplateRegistry.discover(
+            let discovered = TemplateRegistry.discover(
                 in: scanned.summaries,
                 identities: scanned.identities,
                 typeDecls: scanned.typeDecls
             )
-            for row in rows { totals[row.templateName, default: 0] += 1 }
+            all.append(contentsOf: discovered.map { Row(template: $0.templateName, carrier: $0.carrier) })
         }
-        return totals
+        return all
     }()
+
+    static let rowsByTemplate: [String: Int] = rows.reduce(into: [:]) {
+        $0[$1.template, default: 0] += 1
+    }
+
+    /// The two-operand executable templates. Their emitters share one
+    /// `supportedCarriers` list — `["Complex<Double>", "Double", "Int"]` — so a
+    /// collection-carrier build is only worth anything if these have collection rows.
+    static let twoOperandTemplates: Set<String> = ["commutativity", "associativity"]
 
     static var emitted: Set<String> { Set(rowsByTemplate.keys) }
 
@@ -150,6 +205,45 @@ struct CatalogHealthCensusMeasuredTests {
             )
         }
         #expect(!Self.knownZeroRow.isEmpty)
+    }
+
+    /// **Sizes the collection-carrier build.** `docs/measurements/result-carrier-reach.md`
+    /// and the pairing fixture both end at the same blocker: the carrier-dispatched
+    /// emitters accept only `Complex<Double>` / `Double` / `Int`. The home corpus's
+    /// survey shows **0 of 47** `unsupported-carrier` declines are collection-shaped —
+    /// but that repo analyses syntax and its types are structs, so the zero must not be
+    /// carried. This is the cross-corpus reading.
+    @Test("census — carrier shape across the manifest, and the two-operand slice")
+    func carrierShapeCensus() {
+        var lines: [String] = ["", "CARRIER SHAPE — ALL MANIFEST CORPORA", ""]
+        var byShape: [CarrierShape: Int] = [:]
+        for row in Self.rows { byShape[row.shape, default: 0] += 1 }
+        lines.append("all \(Self.rows.count) discovery rows:")
+        for shape in CarrierShape.allCases {
+            let count = byShape[shape] ?? 0
+            let percent = Self.rows.isEmpty ? 0 : count * 100 / Self.rows.count
+            let label = shape.rawValue.padding(toLength: 14, withPad: " ", startingAt: 0)
+            lines.append("  \(label)\(count) (\(percent)%)")
+        }
+
+        let twoOperand = Self.rows.filter { Self.twoOperandTemplates.contains($0.template) }
+        lines.append("")
+        lines.append("two-operand templates (commutativity + associativity): \(twoOperand.count) rows")
+        var twoByShape: [CarrierShape: Int] = [:]
+        for row in twoOperand { twoByShape[row.shape, default: 0] += 1 }
+        for shape in CarrierShape.allCases {
+            let label = shape.rawValue.padding(toLength: 14, withPad: " ", startingAt: 0)
+            lines.append("  \(label)\(twoByShape[shape] ?? 0)")
+        }
+        lines.append("")
+        lines.append("collection carriers seen, by name:")
+        let names = Self.rows.filter { $0.shape == .collection }.compactMap(\.carrier)
+        let grouped = Dictionary(grouping: names) { $0 }.mapValues(\.count)
+        let ranked = grouped.sorted { ($0.value, $0.key) > ($1.value, $1.key) }
+        for (name, count) in ranked.prefix(20) {
+            lines.append("  \(count)  \(name)")
+        }
+        print(lines.joined(separator: "\n"))
     }
 
     // MARK: - The census

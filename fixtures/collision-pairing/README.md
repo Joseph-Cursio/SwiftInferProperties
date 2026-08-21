@@ -82,12 +82,23 @@ aggression.
 
 ## The recommendation
 
-**Add an `overlapping` pass to the two-operand stub emitters** (`commutativity`, 51
-discovery rows; `associativity`, 67), as an **additional** pass beside the independent
-default — the same shape `docs/design/verify-edge-pass.md` settled for boundary values.
+~~**Add an `overlapping` pass to the two-operand stub emitters**~~ — **RETRACTED
+2026-08-20, the day it was written.** The recommendation assumed those emitters could
+receive a collection. They cannot: `CommutativityStubEmitter` and
+`AssociativityStubEmitter` both declare
+`supportedCarriers = ["Complex<Double>", "Double", "Int"]`, and a scalar has no parts to
+overlap. The scalar collision case is `identical`, measured **0/3** above.
 
-It is worth **+2 of 3 mutants at the shipped 100-trial budget on a wide domain**, which is
-the domain those emitters actually use.
+**And the population is not there either.** `docs/measurements/catalog-health-17-corpora.md`
+counted carrier shapes across all 6,508 discovery rows on seventeen corpora: the
+two-operand templates hold **6 collection rows**, against 102 user-defined. Collections
+are 2% of all rows overall, and **146 of those 148 are `BitSet` / `BitSet.Counted` /
+`BitArray`** — fixed-width bit vectors, not the keyed containers a merge tie-break lives
+in.
+
+**So the lever is real and the population is absent.** The scorecard above stands as
+measured; what it cannot support is a build. It is evidence to re-read if two-operand
+templates ever reach keyed containers, and nothing more today.
 
 **Not built here.** This fixture measures the case; the emitter change is a separate piece
 of work touching the stub emitters, the `VERIFY_*` marker vocabulary and the result parser.
