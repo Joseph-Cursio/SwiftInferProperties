@@ -54,13 +54,15 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,752 tests — 5,552 fast + 200 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-20** on **swift-property-based 2.0 /
+Suites green at **5,753 tests — 5,552 fast + 201 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-21** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast 5,552 · perf 8 · batches 4
-· 110 · 31 · 7 · 14 · 4 · 9 · **13**. The batch half alone moved, 195 → 200, for
-`CatalogHealthCensusMeasuredTests` (4 tests) and its carrier-shape reading (1). **`batch8` costs
-462s, up from 61s**; `batch5` is 1,668s; **`make test` is ~65 minutes end to end**, and roughly
-half of that is two censuses whose questions are answered. Whether an answered census belongs in
+· 110 · 31 · 7 · 14 · 4 · 9 · **14**. The batch half alone moved, 200 → 201, for the visibility
+census `CatalogHealthCensusMeasuredTests` gained. **Quote the COUNTS from this run and the TIMINGS
+from the previous one**: this pass ran under load and every stage inflated (batch2 948s against
+649s, batch3 560s against 352s), so recording its wall clock would set a baseline that is a fact
+about the machine. The standing costs are **`batch5` ~1,670s and `batch8` ~460s**, with **`make
+test` ~65 minutes end to end**, roughly half of it two censuses whose questions are answered. Whether an answered census belongs in
 the default gate at full scope is open — **narrowing its corpus list is NOT the fix**, since that
 is the habit `universeIsTheManifest` exists to prevent. The prior reading, 5,747 with `batch8` at
 8, follows. **`batch5` costs 1,678s, up from 43s
