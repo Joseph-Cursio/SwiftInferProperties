@@ -66,7 +66,7 @@ BATCH7 := DeterminismVerifyCorpusMeasuredTests|TCADeterminismCorpusMeasuredTests
 # `SubprocessBatchCoverageTests` now fails if that recurs; the Makefile comment
 # above asking for it was unenforced prose for nine suites' worth of drift.
 # Measured when first run: 8 suites, ~206s total, all green.
-BATCH8 := CatalogHealthCensusMeasuredTests|CodableRoundTripCorpusMeasuredTests|CodableRoundTripLiveSurveyMeasuredTests|InitDecodeCorpusMeasuredTests|OutputDeterminismCorpusMeasuredTests|OutputDeterminismJoinMeasuredTests|ReorderPartitionCorpusMeasuredTests|ValueSemanticVerifyMeasuredTests|ValueSemanticPackageVerifyMeasuredTests
+BATCH8 := GuardPostconditionCensusMeasuredTests|CatalogHealthCensusMeasuredTests|CodableRoundTripCorpusMeasuredTests|CodableRoundTripLiveSurveyMeasuredTests|InitDecodeCorpusMeasuredTests|OutputDeterminismCorpusMeasuredTests|OutputDeterminismJoinMeasuredTests|ReorderPartitionCorpusMeasuredTests|ValueSemanticVerifyMeasuredTests|ValueSemanticPackageVerifyMeasuredTests
 
 # Never run batches concurrently (peak-disk + perf-contention safety), even
 # under `make -j`.
