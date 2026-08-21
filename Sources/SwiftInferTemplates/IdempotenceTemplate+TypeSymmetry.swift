@@ -46,7 +46,21 @@ extension IdempotenceTemplate {
         // same way DualStylePairing / SetAlgebraShape / the binary-op type-symmetry
         // signal already do. Return-position only, and only on the NULLARY self-form,
         // so the binary `merge(_ other: Self)` x-curried-idempotence hazard is untouched.
+        // **`static` is excluded, and the omission cost 49 laws.** The paragraph above
+        // says *Instance* and says `self` is the operand — and until 2026-08-21 nothing
+        // checked it, so `public static var badGateway: Self` matched: zero parameters,
+        // container `Status`, return `Self`. A static member has no receiver, so there is
+        // no `self` to apply twice, and the emitter rendered
+        // `let applyOnce: (Status) -> Status = Status.badGateway` — a constant where a
+        // function belongs. Measured on `swift-http-types` @ `5b99e00`: 49 of 163 laws
+        // failed to build on exactly this, `cannot convert value of type
+        // 'HTTPResponse.Status' to specified type '(HTTPResponse.Status) -> …'`.
+        //
+        // `IdempotenceTemplate+ErasedSelfForm.swift` carries `!summary.isStatic` one file
+        // away. **A doc asserting a guard is not a guard** — the same finding
+        // `SpeculativeWidening`'s enclosing-type trap recorded, in a different file.
         if summary.parameters.isEmpty,
+           !summary.isStatic,
            let container = summary.containingTypeName,
            container == returnType || returnType == "Self" {
             let resolved = returnType == "Self" ? container : returnType

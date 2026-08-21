@@ -165,13 +165,56 @@ only against a bar nobody had set. One outcome measurement answered it.
 - **Nothing here says the templates are wrong.** `legalizeValue` idempotence is a true
   and worthwhile law. The generator could not reach the branch that breaks it.
 
-## 6. What follows
+## 6. The three defects, fixed 2026-08-21
 
-- **Fix the three emitter defects first.** They are ordinary bugs, not design questions,
-  and they gate 89% of output on this subject. `HTTPField.Name?` is a failable
-  initialiser — the emitter must handle optional-producing generators.
-- **Then re-take this measurement**, because until the stubs compile, A cannot be
-  evaluated on anything but the residue.
-- **The generator finding is the deeper one.** A branch-blind generator makes a true law
-  inert, and no template work changes that. `fixtures/integer-division-generator/` (2/8 →
-  8/8) remains the only measured intervention that moved refutation power.
+| defect | failures | fix |
+|---|---:|---|
+| inaccessible initializer selected | 95 | `MemberBlockInspector.initializers` no longer captures `private` / `fileprivate` inits |
+| `static` member matched the *instance* self-form | 49 | `IdempotenceTemplate+TypeSymmetry` gains `!summary.isStatic` |
+| compiler type-check timeout | 1 | a symptom of the first, not a separate defect |
+
+Re-measured on the same subject and revision:
+
+| | before | after |
+|---|---:|---:|
+| suggestions emitted | 163 | **18** |
+| **build-failed** | **145** | **0** |
+| unsupported-carrier | 5 | 8 |
+| **laws that ran** | **6** | **6** |
+
+**Read the last row before the second.** Build failures went to zero and **reach did not
+move**. The first fix converted 96 broken builds into honest `unsupported-carrier`
+declines — strictly better, because a decline is information and a build failure is
+noise — but not one additional law runs.
+
+**The second fix removed 145 suggestions that should never have existed.**
+`HTTPResponse.Status` declares roughly sixty static constants (`badGateway`, `notFound`,
+…), and the tool was emitting **one idempotence law per HTTP status code**. The gate's
+own comment said *Instance … `self` is the operand*, and nothing checked `isStatic`,
+while the sibling `IdempotenceTemplate+ErasedSelfForm.swift` carries exactly that guard.
+**A doc asserting a guard is not a guard** — the finding `SpeculativeWidening`'s
+enclosing-type trap already recorded, in a different file.
+
+Both fixes were verified by removal: the guard taken out, the regression test watched
+failing, the guard restored. The static fix ships with a companion test that the
+*instance* self-form still fires, so it cannot pass by being a blanket suppression.
+
+**Criterion A is unchanged: still 0 laws killed.** The six that run are the same six, and
+the `legalizeValue` idempotence law still passes on the planted defect its own property
+describes. **The emitter defects were real and are fixed; they were not what stood
+between this tool and criterion A.**
+
+## 7. What follows
+
+- ~~Fix the three emitter defects first.~~ **DONE — see §6. Build failures 145 → 0, and
+  reach did not move.**
+- **The generator finding is what remains, and it is the deeper one.** A branch-blind
+  generator makes a true law inert, and no emitter fix touches it: `legalizeValue`
+  returns early on valid input, the mutation lives in the `else` branch, and a realistic
+  generator never enters it. `fixtures/integer-division-generator/` (2/8 → 8/8) remains
+  the only measured intervention that moved refutation power.
+- **The 145 spurious laws are a warning about the home corpus.** They were emitted for
+  two years' worth of runs and no measurement caught them, because this repo declares few
+  `static var X: Self` constants. **Every count taken before 2026-08-21 includes them
+  wherever a corpus does** — the 6,508-row censuses of 2026-08-20 among them. Those
+  figures are upper bounds now, not measurements.
