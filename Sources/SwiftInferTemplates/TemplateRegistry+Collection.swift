@@ -282,6 +282,17 @@ extension TemplateRegistry {
                 generatorType: summary.parameters.first?.typeText ?? summary.containingTypeName
             )
         }
+        // A named role — `sorted`, `clamped`, `lowercased` — owes the guarantee its name
+        // names, OF ITS OUTPUT. Same pattern as the measure above, widened past `>= 0`:
+        // the catalogue supplies the predicate rather than discovering it, which is what
+        // `postcondition-law-declined.md` measured at ~33 sites and ~97% precision after
+        // two discovery routes were declined at ~5 and ~13.
+        if let suggestion = RolePostconditionTemplate.suggest(for: summary) {
+            collector.record(
+                suggestion,
+                generatorType: summary.parameters.first?.typeText ?? summary.containingTypeName
+            )
+        }
         if let suggestion = InvariantPreservationTemplate.suggest(for: summary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }

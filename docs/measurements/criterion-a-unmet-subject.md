@@ -7,9 +7,14 @@ Subject: **`swift-http-types` @ `5b99e00`** — genuinely unmet. Not in
 template was developed against it. Re-derivable: `swift-infer index --target HTTPTypes`
 then `verify --all-from-index`, from that revision.
 
-**Measured NO, and not for the predicted reason. Of 163 emitted laws, 6 ran. The one
-whose property directly describes a planted defect did not catch it — while the
-package's own test suite did.**
+**Of 163 emitted laws, 6 ran, and 145 did not compile. Criterion A is NOT ANSWERED on
+this subject** — see §3.1, a correction to this document's own first conclusion.
+
+> ⚠ **§3 originally read: *the law is inert on a defect its own property describes*. That
+> is WRONG and was refuted on 2026-08-21 by `fixtures/branch-reaching-generator/`.** The
+> planted defect **preserves idempotence**, so `measured-bothPass` was the *correct*
+> verdict, not a miss. The law was never given a defect it could refute. The 89%
+> compile-failure finding in §2 is unaffected and stands.
 
 ---
 
@@ -107,50 +112,90 @@ forgotten half of a two-sided operation. `_isValidValue` rejects a leading space
 `legalizeValue(" x") == " x"` is *itself invalid* and a second pass returns `"x"`.
 **Idempotence is plainly broken.**
 
-### The two arms disagree, and the tool is on the wrong side
+### The two arms, and what the disagreement actually meant
 
 | arm | result |
 |---|---|
 | `swift-http-types`' own test suite | **CAUGHT** — 2 of 20 tests fail |
-| the emitted `idempotence` law on `legalizeValue` | **MISSED** — `measured-bothPass`, 100 default + 100 edge trials |
+| the emitted `idempotence` law on `legalizeValue` | **passed** — `measured-bothPass`, 100 default + 100 edge trials |
 
-A second mutant, in `lenientLegalizeValue` (`\n` → `\r`, itself illegal, so a second pass
-changes it again), was also **caught by the package's tests**.
+## 3.1 The correction: the law was RIGHT to pass
 
-**So the law is not redundant. It is inert on a defect its own property describes.**
+This document first read that disagreement as *the law is inert on a defect its own
+property describes*. **That is wrong, and `fixtures/branch-reaching-generator/` refutes
+it.**
 
-The predicted outcome was *"laws true but redundant, already covered."* Redundant would
-have been a better result than this.
+Trimming only the trailing end leaves leading whitespace — a genuine correctness bug,
+which is why the package's tests catch it. But **the result is a fixpoint**:
+`f(" x") == " x"`, and `f(f(" x")) == " x"`. **Idempotence is preserved.** So
+`measured-bothPass` was the correct verdict. The same holds for the second mutant
+(`\n` → `\r`): mapping to a still-illegal byte maps that byte to itself on the second
+pass, so it too is a fixpoint.
 
-### The mechanism is the one this repo already names
+**Normalisers are structurally hard to break idempotently.** Mapping is a fixpoint
+operation and trimming converges, so most small mutations of a legalise-shaped function
+preserve the law. The fixture pins this: three real correctness bugs, **unrefutable by any
+idempotence law at any generator domain**, and one — trimming a single whitespace
+character per call — that is genuinely non-idempotent and refutable.
 
-`legalizeValue` returns early when the value is already valid; the mutation lives in the
-`else` branch. A generator drawing realistic `ISOLatin1String`s produces valid values, so
-the branch containing the defect **never executes**. That is the standing rule verbatim:
-***`measured-bothPass` means "no counterexample in the generated domain," not "the
-property holds."***
+**What this changes.** Criterion A is **not answered** on this subject: 6 laws ran, and
+none was given a defect its property could refute. It is not *failed*. The honest
+statement is that the attempt to answer it did not construct a valid test, and found two
+emitter defects on the way.
 
-It is also `fixtures/collision-pairing/`'s finding in another guise: the regime where the
-law can fail is a narrow subset of the domain, and a realistic generator never enters it.
-The tests catch it because a human wrote `" "` down on purpose.
+**What it does not change.** §2 stands entirely — 145 of 163 laws did not compile, and
+that was measured, hand-attributed to three defects, and checked against the shared-workdir
+artifact. **The compile finding never depended on the mutant.**
+
+### The transferable rule
+
+**A mutant is only evidence about a law if it violates that law.** Picking a defect
+because it is *realistic* is not the same as picking one the property forbids, and the
+gap between those is invisible until someone checks the algebra. This repo already had
+the general form — *score refutability, not suggestion count* — and this is the same
+error one level down: I scored a refutation that could not have happened.
+
+### The generator finding survives the correction, and was measured separately
+
+The branch-reachability problem is real even though this mutant did not demonstrate it.
+`legalizeValue` returns early when the value is already valid, so everything interesting
+is in the `else` branch — and the shipped generator for a `String`-ish carrier is
+`Gen<Character>.letterOrNumber.string(of: 0...8)`, **alphanumeric, which cannot produce an
+invalid value at all.**
+
+`fixtures/branch-reaching-generator/` measures it at the shipped 100-trial budget, against
+a mutant that genuinely violates idempotence:
+
+| domain | branch reached | mutants killed |
+|---|---:|---:|
+| `letterOrNumber` (shipped) | **0** | 0/1 |
+| + space and tab | 6 | **0/1** |
+| four-symbol alphabet with controls | 85 | **1/1** |
+
+**Reach is necessary and not sufficient.** Widening reaches the branch and still kills
+nothing; the lever is a **narrow** alphabet so the structure repeats — independently the
+same conclusion `GeneratorRecipe.collidingString` reached on the substring axis.
 
 ---
 
 ## 4. The verdict
 
-**Criterion A fails on this subject, at three independent stages:**
+**Criterion A is NOT ANSWERED on this subject. What was measured:**
 
-1. **89% of laws never compiled** — three emitter defects.
+1. **89% of laws never compiled** — three emitter defects, since fixed (§6). This is the
+   solid finding and it never depended on a mutant.
 2. **The entire `Likely` tier declined or failed** — 0 of 7 ran.
-3. **The one law positioned to catch the planted defect passed on it**, while the
-   package's existing tests caught the same defect.
+3. **6 laws ran and none was given a defect its property forbids** (§3.1). The planted
+   mutants were real bugs that preserve idempotence, so no verdict about the laws'
+   refutation power can be drawn from them.
 
-On a subject the toolchain has never met, its emitted laws are **strictly weaker than the
-tests already present**. Not one killed anything.
+**The attempt still earned its keep.** It found two emitter defects that nine reach
+measurements could not, because every one of those ran `discover`, or ran `verify` on the
+home corpus. **Whether the emitted code compiles had been measured zero times.**
 
-**This is the most useful result of the cycle**, and the capability bars could not have
-produced it. Reach was measured nine ways this week and every answer was interpretable
-only against a bar nobody had set. One outcome measurement answered it.
+**Answering A properly needs a defect chosen to violate the law**, not one chosen for
+realism — and on a normaliser those are hard to construct, which is itself a finding about
+what an idempotence law is worth on that shape of subject.
 
 ---
 

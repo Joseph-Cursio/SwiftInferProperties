@@ -105,7 +105,21 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         // bothPass stays 13, which is the part worth noticing: `Move.encode`/`Move.decode` is
         // a curated inverse-name pair and survived untouched. That is the counter-signal's
         // name exemption confirmed on a MEASURED corpus rather than on a fixture.
-        #expect(records.count == 18)
+        //
+        // 18 → 20 (2026-08-21): `role-postcondition` ships and fires on `Toggle.reversed`
+        // and `Latch.reversed`. **Both rows are `unsupported-template` — they do NOT
+        // execute**, because the template is discovery-only, like 21 of the catalogue's 36
+        // names. So the total moves and the two measured counts below do not, which is the
+        // shape worth checking rather than the total: a new template that added *executing*
+        // rows would move `bothPass` or `defaultFails` too.
+        //
+        // Worth recording against the comment above, which notes that `Latch.reversed` is a
+        // buggy reverse returning `self` unchanged: **the role law would not catch it
+        // either.** `reversed` owes only "the result has the same element count as the
+        // input", and a self-returning reverse satisfies that. It is one of the two roles
+        // marked `isStrong == false` for exactly this reason, and it is a live example of
+        // why that flag exists rather than a hypothetical one.
+        #expect(records.count == 20)
         #expect(records.filter { $0.outcome == .measuredBothPass }.count == 13)
         #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
         // The catalogue-work true positives.
