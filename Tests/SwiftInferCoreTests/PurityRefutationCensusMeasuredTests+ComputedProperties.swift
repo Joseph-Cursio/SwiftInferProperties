@@ -34,6 +34,15 @@ extension PurityRefutationCensusMeasuredTests {
     /// (`isInferredPure == (purityVerdict == .pure)`, over the real corpus), and
     /// the oracle's teeth are pinned separately by
     /// `PurityVerdictAdoptionTests.clockReadingGetterIsRefuted`.
+    /// Getters this repo's own oracle refutes for a reason that is not a defect. See the
+    /// comment at the assertion site — all three are the token `shuffled` appearing as an
+    /// enum case name rather than as a call.
+    static let knownFalseRefutations: Set<String> = [
+        "RolePostcondition.swift#law",
+        "RolePostcondition.swift#isStrong",
+        "RolePostcondition.swift#permittedLabels"
+    ]
+
     @Test("every computed property carries a verdict its Bool agrees with")
     func computedPropertiesCarryARealVerdict() throws {
         let summaries = try FunctionScanner.scan(directory: Self.packageSourcesRoot)
@@ -85,9 +94,30 @@ extension PurityRefutationCensusMeasuredTests {
                 let key = "\(file.lastPathComponent)#\(name)"
                 guard computedKeys.contains(key) else { continue }
                 matched.insert(key)
-                if !inferrer.isPure(accessor) { refutedByOracle.append(key) }
+                if !inferrer.isPure(accessor), !Self.knownFalseRefutations.contains(key) {
+                    refutedByOracle.append(key)
+                }
             }
         }
+        // **Three FALSE refutations, recorded rather than dodged.**
+        //
+        // `RolePostcondition` declares `case shuffled`, and SEI's marker set treats the
+        // token `shuffled` as a nondeterminism source — meaning `Array.shuffled()`. Every
+        // getter that mentions `.shuffled` in a `switch` therefore reads as impure:
+        //
+        //     case .shuffled: "the result is a permutation of the input"
+        //     self != .reversed && self != .shuffled
+        //
+        // **An enum case named `shuffled` is not a call to `shuffled()`.** This is the
+        // token-collision class `purity-refuting-fixpoint-census.md` already measured at
+        // **61% false** (46 of 75 cascade rows were `classify`-style name collisions),
+        // arriving inside the oracle rather than in a census built on top of it.
+        //
+        // **Why an allowlist and not a rename.** Renaming the case to dodge the marker
+        // would make this guard pass and leave the oracle's false positive unrecorded —
+        // and the `rawValue` must stay `"shuffled"` regardless, because it matches the
+        // Swift function name the role is named for. Naming the entries keeps the guard
+        // catching NEW refutations, which is what it is for.
         #expect(
             matched == computedKeys,
             "matched \(matched.count) accessors for \(computedKeys.count) computed-property summaries"

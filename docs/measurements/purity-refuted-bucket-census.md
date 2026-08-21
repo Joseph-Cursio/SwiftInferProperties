@@ -409,3 +409,32 @@ The two mechanisms that keep this document honest are therefore different in kin
 both are needed. The provenance table records *which oracle a number belongs to*; the
 replication control detects *that the oracle moved at all*. A stale pin recorded
 accurately is still a stale number.
+
+---
+
+## Three false refutations, found by shipping a template (2026-08-21)
+
+`RolePostconditionTemplate` landed with a `RolePostcondition` enum declaring
+`case shuffled`. **SEI's marker set treats the token `shuffled` as a nondeterminism
+source** — meaning `Array.shuffled()` — so all three getters that mention `.shuffled` in a
+`switch` were refuted as impure:
+
+```swift
+case .shuffled: "the result is a permutation of the input"
+self != .reversed && self != .shuffled
+```
+
+**An enum case named `shuffled` is not a call to `shuffled()`.** These are false
+refutations, and they are the token-collision class
+`purity-refuting-fixpoint-census.md` already measured at **61% false** — 46 of 75 cascade
+rows were `classify`-style name collisions. **The same class lives in the oracle itself,
+not only in censuses built on top of it.**
+
+`PurityRefutationCensusMeasuredTests+ComputedProperties` now names the three in an
+allowlist rather than renaming the case to dodge them: a rename would make the guard pass
+and leave the oracle's false positive unrecorded, and the `rawValue` must stay `"shuffled"`
+regardless, because it matches the Swift function name the role exists for.
+
+**This repo's computed-property refutation count is therefore 0 GENUINE and 3 FALSE**, not
+the flat zero recorded before. What would fix it upstream is marker matching that
+distinguishes a call from an identifier — unmeasured, and a change to SEI rather than here.
