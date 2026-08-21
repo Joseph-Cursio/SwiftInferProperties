@@ -54,11 +54,13 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,759 tests — 5,558 fast + 201 across `perf` and the eight batches**
+Suites green at **5,774 tests — 5,566 fast + 208 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-21** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast **5,558** · perf 8 ·
-batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 14. **The FAST half moved this time, 5,552 → 5,558**, for
-the two emitter-defect regression suites; the batch half stood still. **Nothing in the existing
+batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **21**. **Both halves moved**: fast 5,558 → 5,566 for the
+role-postcondition template's eight tests, and batch8 14 → 21 for the two censuses that measured
+its population first. **`role-postcondition` emits 30 rows across the 17 corpora** — mid-catalogue,
+above `equivalence-relation` (29) and `normal-form` (17) — taking the discovery total 5,514 → 5,544. **Nothing in the existing
 5,552 broke, and that was worth distrusting rather than celebrating**: the fixes removed 994
 discovery rows across the seventeen corpora, so the censuses' printed figures moved while their
 assertions — floors and memberships, not absolute counts — did not. The row totals were re-taken
