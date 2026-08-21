@@ -1,6 +1,6 @@
 # The postcondition law on normalisers — right law, absent population
 
-> **Status:** `open` · **As of:** 2026-08-21
+> **Status:** `shipped` · **As of:** 2026-08-21
 
 Harnesses: `fixtures/branch-reaching-generator/` (law comparison) and
 `CatalogHealthCensusMeasuredTests.normaliserPairCensus` +
@@ -164,8 +164,23 @@ Dropping the two weak laws — `reversed`'s count preservation and `shuffled`'s 
 - **Route C** (catalogue supplies from a role): **36 exact sites, ~29 strong, 11 corpora,
   11% max concentration.** Live.
 
-**What is NOT measured is precision**, and that is the next question rather than the
-build. A name match is a candidate: `sorted` needs its comparator resolved, and none of
+**Precision measured 2026-08-21 by hand-checking all 38 exact-name declarations across
+the corpora: ~92% raw, ~97% after two systematic exclusions.** The three failures were not
+random:
+
+- **`SyntaxProtocol.trimmed(matching filter:)`** — an exact name match that trims *trivia
+  a caller selects*, not whitespace. **The only false law in 38**, and the reason the
+  template gates on parameter labels.
+- **`normalized` × 2** — the supplied law would be *"the result is in normal form"*, which
+  **is not a checkable predicate**. One site returns a `(Set<String>, [String: String])`
+  tuple. **`normalized` is excluded from the role table entirely.**
+
+**BUILT 2026-08-21** as `RolePostconditionTemplate` / `RolePostcondition`, with both
+exclusions as gates and eight tests, two of which are those false positives. The weak
+roles (`reversed`, `shuffled` — they pin size and membership, not content) fire below the
+strong ones and **disclose their own weakness in a caveat** rather than being dropped.
+
+The remaining unmeasured question A name match is a candidate: `sorted` needs its comparator resolved, and none of
 the 36 has been filtered for test visibility. **Reading a population as a precision is
 the mistake `parameter-role` made**, and the exact/prefix split above is a warning that
 this family has real false-law hazards.

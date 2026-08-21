@@ -34,6 +34,17 @@ public enum TemplateName: String, Sendable, Equatable, Hashable, CaseIterable, C
     case multiplicativeHomomorphism = "multiplicative-homomorphism"
     case measureNonNegativity = "measure-non-negativity"
 
+    /// The **role postcondition** law — a function whose NAME names an operation with a
+    /// known guarantee owes that guarantee of its output.
+    ///
+    /// `docs/measurements/postcondition-law-declined.md` measured the postcondition at
+    /// **4 of 4 real bugs killed** on a normaliser where **idempotence killed 1 of 4**,
+    /// then declined two routes that try to *discover* the predicate and measured a third
+    /// — the catalogue supplying it from a recognised role — at **~33 sites, ~97%
+    /// precision** across the 17 corpora. `measureNonNegativity` is the same pattern
+    /// already shipping at 401 rows; this widens it past `>= 0`.
+    case rolePostcondition = "role-postcondition"
+
     /// Differential / oracle equivalence: two implementations of one
     /// specification must agree on every input — `reference(x) == variant(x)`.
     ///

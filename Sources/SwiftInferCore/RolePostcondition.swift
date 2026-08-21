@@ -1,0 +1,115 @@
+/// **Roles whose postcondition the CATALOGUE supplies, rather than discovering.**
+///
+/// A normaliser's defining law is a postcondition — the output satisfies the predicate
+/// the function exists to establish. `fixtures/branch-reaching-generator/` §4 measured
+/// that on a legalise-shaped subject the postcondition kills **4 of 4** real bugs while
+/// **idempotence — the law the tool emitted — kills 1 of 4**.
+///
+/// ## Why the predicate is supplied and not found
+///
+/// `docs/measurements/postcondition-law-declined.md` measured two routes that try to
+/// **discover** the predicate in the subject's code, and declined both: pairing it to a
+/// same-type `(T) -> Bool` by name found ~5 genuine of 349, and reading it out of a body
+/// guard found ~13 of 25 with **9 of the 13 in a single stdlib file**.
+///
+/// The route that works was already shipping. **`MeasureTemplate` does not discover
+/// `>= 0`** — it recognises the role `count` / `size` / `magnitude` and the catalogue
+/// supplies the law, at **401 rows across the 17 corpora**. This is that pattern widened:
+///
+/// > role recognised by name → predicate supplied here → asserted of the output
+///
+/// It sidesteps every failure of the discovery routes. No pairing, no guard reading, and
+/// **no control-versus-postcondition ambiguity** — `shouldFormatterIgnore(node)` is
+/// structurally identical to a validity guard and means something else entirely, which is
+/// what capped route B's precision at ~52%. Here the template writes the check.
+///
+/// ## The two exclusions are measured, not cautious
+///
+/// **`normalized` is deliberately absent.** Its law would be *"the result is in normal
+/// form"*, which is **not a checkable predicate** — there is no universal test for
+/// "normal". Both sites found on the corpora confirm it: `SubjectFingerprint.normalized`
+/// establishes a fingerprint convention, and `ParallelEnumShapeVisitor.normalized` returns
+/// a `(Set<String>, [String: String])` tuple. A role that reads like a law and supplies
+/// none is worse than an absent role, because it looks like coverage.
+///
+/// **A parameterised match is not the role** — see ``matches(name:parameterLabels:)``.
+/// `SyntaxProtocol.trimmed(matching filter:)` is an exact name match that trims *trivia
+/// selected by a filter*, not whitespace. Supplying *"no leading or trailing whitespace"*
+/// there would be a **false law refuting correct code**, which is the worst failure this
+/// tool has. It was the only false positive in a hand-check of all 38 declarations.
+public enum RolePostcondition: String, Sendable, Equatable, Hashable, CaseIterable {
+
+    case sorted
+    case clamped
+    case rounded
+    case lowercased
+    case uppercased
+    case deduplicated
+    case escaped
+    case unescaped
+    /// Weak but true: reversal preserves count. Kept because it is refutable — a
+    /// `reversed` that drops an element fails it — and marked in ``isStrong``.
+    case reversed
+    /// Weak but true: a shuffle is a permutation of its input.
+    case shuffled
+
+    /// The law, in the words a reader of the suggestion sees.
+    public var law: String {
+        switch self {
+        case .sorted: "the result is in non-decreasing order"
+        case .clamped: "the result lies within the given bounds"
+        case .rounded: "the result is integral"
+        case .lowercased: "the result contains no uppercase character"
+        case .uppercased: "the result contains no lowercase character"
+        case .deduplicated: "the result contains no duplicate element"
+        case .escaped: "the result contains no unescaped occurrence"
+        case .unescaped: "the result contains no escape sequence"
+        case .reversed: "the result has the same element count as the input"
+        case .shuffled: "the result is a permutation of the input"
+        }
+    }
+
+    /// Whether the law constrains the output beyond its size.
+    ///
+    /// ``reversed`` and ``shuffled`` are true and weak: they pin cardinality and
+    /// membership without pinning *content*, so a wrong-but-same-size result satisfies
+    /// them. Recorded rather than dropped — the distinction belongs to the reader, and
+    /// a suggestion that hides it is over-claiming.
+    public var isStrong: Bool { self != .reversed && self != .shuffled }
+
+    /// The parameter labels this role permits.
+    ///
+    /// **`nil` means "no parameters".** A role names an operation, and a parameter can
+    /// change which operation it is: `trimmed()` trims whitespace, `trimmed(matching:)`
+    /// trims trivia a caller selects. Only labels that leave the role's meaning intact
+    /// are admitted — a comparator for `sorted`, bounds for `clamped`, a rule for
+    /// `rounded`.
+    public var permittedLabels: Set<String?> {
+        switch self {
+        case .sorted: [nil, "by", "using"]
+        case .clamped: ["to", "lowerBound", "upperBound"]
+        case .rounded: [nil]
+        case .escaped: [nil, "asASCII"]
+        case .shuffled: [nil, "using"]
+        default: [nil]
+        }
+    }
+
+    /// **Does this declaration carry the role, unmodified?**
+    ///
+    /// Requires an exact name — a prefix match is a different operation whose suffix
+    /// narrows the law. Measured: `trimmingLeadingWhitespace` leads with `trimming` and
+    /// does **not** guarantee the trailing half, and `trimmingSuperfluousNewlines` does
+    /// not touch whitespace at all. **14 of the 16 trim-family sites across the 17 corpora
+    /// were prefix matches**, so this single rule moved the usable population from 62 to
+    /// 36 — and every row it removed would have carried a false or over-strong law.
+    public static func matches(name: String, parameterLabels: [String?]) -> Self? {
+        guard let role = Self(rawValue: name) else { return nil }
+        let permitted = role.permittedLabels
+        // Zero parameters is spelled `[nil]` in `permittedLabels`; an empty list matches
+        // it, which is the common `sorted()` / `lowercased()` shape.
+        guard parameterLabels.isEmpty || parameterLabels.allSatisfy({ permitted.contains($0) })
+        else { return nil }
+        return role
+    }
+}
