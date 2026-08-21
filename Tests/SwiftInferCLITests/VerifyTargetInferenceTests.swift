@@ -153,6 +153,82 @@ struct VerifyTargetInferenceTests {
 
     // MARK: - Location suffix parsing
 
+    /// **swift-system's shape: a target relocated to a directory whose name is a different,
+    /// existing-looking module.** `.target(name: "SystemPackage", path: "Sources/System")`.
+    ///
+    /// This is the case the path convention gets *confidently* wrong, and it is why the
+    /// convention can no longer go first unconditionally. GRDB's `path: "GRDB"` was already
+    /// handled, but only by accident of it sitting outside `Sources/`: the convention fails
+    /// there and falls through. Here the convention **succeeds** — `Sources/System` is a real
+    /// directory — and answers `System`, which is neither a target nor a product.
+    ///
+    /// Measured cost of the old ordering (2026-08-21): `verify --all-from-index` over
+    /// swift-system quarantined **21 of 41 picks** as
+    /// `unsupported-carrier: System is not a library product of swift-system (vended:
+    /// SystemPackage)`. That reads as a carrier-support gap and was a module-resolution bug.
+    @Test func aTargetRelocatedUnderSourcesResolvesToItsDeclaredName() throws {
+        let root = try makeManifestPackage(target: "SystemPackage", path: "Sources/System")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        #expect(
+            VerifyTargetInference.module(
+                forLocation: location(root, "Sources/System/FilePath.swift"),
+                packageRoot: root
+            ) == "SystemPackage"
+        )
+    }
+
+    /// The control that stops the arm above being satisfied by "always ask the manifest".
+    ///
+    /// A conventional package must still resolve conventionally — and must do it without
+    /// spawning SwiftPM, which is the whole reason the manifest is gated rather than consulted
+    /// first. `ManifestSpawnBudgetTests` asserts the count; this asserts the answer, on a root
+    /// that has a real manifest so the gate is genuinely exercised rather than short-circuited
+    /// by a missing file.
+    @Test func aConventionalTargetStillResolvesWhenAManifestIsPresent() throws {
+        let root = try makeManifestPackage(target: "Core", path: nil)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let before = TargetIsolation.manifestSpawnCount(forPackageRoot: root)
+
+        #expect(
+            VerifyTargetInference.module(
+                forLocation: location(root, "Sources/Core/Thing.swift"),
+                packageRoot: root
+            ) == "Core"
+        )
+        #expect(
+            TargetIsolation.manifestSpawnCount(forPackageRoot: root) == before,
+            "a manifest that relocates nothing must not be dumped"
+        )
+    }
+
+    /// A package root with a real `Package.swift`, so the relocation gate reads something.
+    private func makeManifestPackage(target: String, path: String?) throws -> URL {
+        let root = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("verify-target-manifest-\(UUID().uuidString)")
+        let clause = path.map { ",\n            path: \"\($0)\"" } ?? ""
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try """
+        // swift-tools-version: 5.9
+        import PackageDescription
+        let package = Package(
+            name: "Subject",
+            targets: [
+                .target(
+                    name: "\(target)"\(clause)
+                )
+            ]
+        )
+        """.write(
+            to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8
+        )
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent(path ?? "Sources/\(target)"),
+            withIntermediateDirectories: true
+        )
+        return root
+    }
+
     @Test func aLineSuffixIsStripped() {
         #expect(
             VerifyTargetInference.sourcePath(from: "/a/b/File.swift:124") == "/a/b/File.swift"
