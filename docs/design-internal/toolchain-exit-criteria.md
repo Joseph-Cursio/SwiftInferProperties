@@ -136,31 +136,60 @@ An outcome criterion in those units would be falsifiable, and none of the four i
 
 ---
 
-## 5. Proposed criteria — for ratification, not adoption
+## 5. The criteria — RATIFIED 2026-08-21
 
-Offered strict, per the 2026-08-03 instruction. **Reject or soften deliberately; that is
-the decision this document is asking for.**
+**A is the bar. B–E are supporting measurements and do NOT gate.**
+
+Ratified by the maintainer on 2026-08-21, which is what open item 8 had been waiting for
+since the list began. The reasoning for taking A alone: **it is the only outcome bar**,
+and this cycle demonstrated why that matters — every capability bar can pass while the
+tool emits code that does not compile. Nine reach measurements were taken and none could
+have found the 89%; one outcome attempt did, on its first subject.
+
+B–E stay in this table because they are worth measuring and worth quoting. **They are not
+conditions of being in shape**, and a future reading that treats them as gates is reading
+this document wrong.
 
 | # | Proposed | Why this bar | Measured today |
 |---|---|---|---|
-| A | On a subject the toolchain has never met, ≥1 emitted law **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **MEASURED 2026-08-21 — FAILS.** `swift-http-types`: 89% of laws do not compile, 0 of 7 `Likely` ran, and the one law positioned to catch a planted defect passed on it while the package's own tests caught it. `docs/measurements/criterion-a-unmet-subject.md` |
+| A | On a subject the toolchain has never met, ≥1 emitted law **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ATTEMPTED 2026-08-21 — NOT ANSWERED.** On `swift-http-types`, **89% of laws did not compile** (three emitter defects, since fixed) and 0 of 7 `Likely` ran. Of the 6 that ran, **none was given a defect its property forbids** — the planted mutants preserved idempotence, so the passes were correct. `docs/measurements/criterion-a-unmet-subject.md` §3.1 |
 | B | The runnable-tier ratio holds ≥60% across the 17 corpora, not just the home corpus | generality, in a number meant to be quoted | 65% home; cross-corpus unmeasured |
 | C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-17-corpora.md` |
 | D | An app-shaped subject reaches `verified` by some route | §2.4's outcome form | not met |
 | E | No measurement doc older than its binary — every published figure re-derivable | §2.3's positive form | unmeasured, unscoped |
 
-**A is the one that matters.** B–E are capability bars that make A possible; A is the
-only one that would tell you the toolchain is worth using.
+**A is the bar, and B–E are context.** They are capability bars that make A possible; A
+is the only one that says the toolchain is worth using.
 
-**A has since been measured, and it fails** (`docs/measurements/criterion-a-unmet-subject.md`).
-It did not need ratification to be informative — ratification decides whether A is *the*
-bar, and measuring it answered A either way. **It also found what nine reach measurements
-could not: 89% of emitted laws do not compile on an unmet subject.** That is the argument
-for an outcome bar in one line.
+**A was attempted, and the attempt is the argument for an outcome bar in one line.** It did
+not need ratification to be informative — and it found what **nine reach measurements could
+not**: 89% of emitted laws did not compile on an unmet subject. Three emitter defects,
+since fixed.
+
+**A itself is NOT ANSWERED**, and this document said "FAILS" until 2026-08-21. That was
+wrong: the planted mutants were real correctness bugs that **preserve idempotence**, so the
+laws' passes were correct and no verdict about their refutation power follows.
+**Answering A needs a defect chosen to violate the law**, not one chosen for realism —
+`fixtures/branch-reaching-generator/` §3 has the correction and the rule.
 
 ---
 
-## 6. What this document is asking for
+## 6. The standing question, now that A is the bar
+
+**A is NOT ANSWERED, and answering it is the open work.** What that needs, specifically:
+
+1. **A fresh unmet subject.** `swift-http-types` is spent — the tool has now been pointed
+   at it, and `swift-algorithms` was disqualified before use because the manifest records
+   it as part of the v1 algebraic corpus. GRDB is spent likewise. **Check the manifest
+   before choosing; it recorded both facts and one grep saved a contaminated result.**
+2. **A defect chosen to VIOLATE the law**, not chosen for realism. The first attempt
+   planted three real correctness bugs that all preserved idempotence, so the laws' passes
+   were correct and no verdict followed. `fixtures/branch-reaching-generator/` §3 has the
+   rule: *a mutant is evidence about a law only if it violates that law.*
+3. **A re-run now that the emitter defects are fixed.** 89% of output did not compile on
+   the first attempt; that is repaired, and A can only be evaluated on what compiles.
+
+## 7. What this document used to ask for
 
 1. **Ratify, soften or reject A–E.** Unwritten criteria are the failure mode; wrong
    criteria are recoverable.
