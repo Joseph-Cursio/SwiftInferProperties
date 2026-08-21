@@ -118,7 +118,18 @@ struct CatalogHealthCensusMeasuredTests {
     struct Row {
         let template: String
         let carrier: String?
+        /// The subject's access restriction, `nil` when the subject is reachable from a
+        /// test. Joined by the same `(file, base name)` key the shipped caveat uses.
+        let restriction: AccessRestriction?
         var shape: CarrierShape { CarrierShape.of(carrier) }
+
+        /// Whether **widening one access modifier** would make this subject reachable.
+        ///
+        /// Only `.notVisibleToTests` qualifies. `.enclosingTypeNotVisibleToTests` is the
+        /// design's named trap — widening a member of a private *type* unblocks nothing
+        /// — and `.nestedLocal` has no caller to widen to. `.internalOrSPI` is already
+        /// reachable via `@testable import`, so there is nothing to unblock.
+        var isWidenable: Bool { restriction.map(SpeculativeWidening.isWidenable) ?? false }
     }
 
     /// Every discovery row across the manifest, scanned once.
@@ -132,10 +143,33 @@ struct CatalogHealthCensusMeasuredTests {
                 identities: scanned.identities,
                 typeDecls: scanned.typeDecls
             )
-            all.append(contentsOf: discovered.map { Row(template: $0.templateName, carrier: $0.carrier) })
+            // The shipped caveat joins restrictions to suggestions on (file, base name);
+            // reproducing that key rather than inventing one keeps this census measuring
+            // what the tool actually reports.
+            var restrictionByKey: [String: AccessRestriction] = [:]
+            for entry in scanned.restricted {
+                let key = "\(entry.summary.location.file)#\(entry.summary.name)"
+                if restrictionByKey[key] == nil { restrictionByKey[key] = entry.restriction }
+            }
+            all.append(contentsOf: discovered.map { suggestion in
+                let key = suggestion.evidence.first.map {
+                    "\($0.location.file)#\(Self.baseName($0.displayName))"
+                }
+                return Row(
+                    template: suggestion.templateName,
+                    carrier: suggestion.carrier,
+                    restriction: key.flatMap { restrictionByKey[$0] }
+                )
+            })
         }
         return all
     }()
+
+    /// `displayName` carries the labelled form (`normalize(_:)`); summaries key on the
+    /// bare name. Splitting on `(` is what the shipped join does.
+    static func baseName(_ displayName: String) -> String {
+        String(displayName.prefix { $0 != "(" })
+    }
 
     static let rowsByTemplate: [String: Int] = rows.reduce(into: [:]) {
         $0[$1.template, default: 0] += 1
@@ -242,6 +276,53 @@ struct CatalogHealthCensusMeasuredTests {
         let ranked = grouped.sorted { ($0.value, $0.key) > ($1.value, $1.key) }
         for (name, count) in ranked.prefix(20) {
             lines.append("  \(count)  \(name)")
+        }
+        print(lines.joined(separator: "\n"))
+    }
+
+    /// **How many rows are blocked by visibility, and how many of those would ONE
+    /// widened access modifier free?**
+    ///
+    /// The home survey put visibility at **204 of 344 declines (59%)** and showed five
+    /// templates — `value-round-trip`, `comparator`, `round-trip`, `input-totality`,
+    /// `monotonicity` — existing *entirely* behind the wall while what ran was 87%
+    /// `predicate` + `idempotence`. That was one corpus, from a syntax tool whose small
+    /// pure functions are nearly all `private` helpers. This is the cross-corpus reading.
+    ///
+    /// **Widenable is not the same as blocked.** `SpeculativeWidening.isWidenable`
+    /// admits only `.notVisibleToTests`; a member of a private *type* cannot be freed by
+    /// widening the member, which is that design's named trap.
+    @Test("census — visibility blocking and widenability across the manifest")
+    func visibilityCensus() {
+        let blocked = Self.rows.filter { $0.restriction != nil }
+        let widenable = blocked.filter(\.isWidenable)
+        var lines: [String] = ["", "VISIBILITY — ALL MANIFEST CORPORA", ""]
+        let blockedShare = Self.rows.isEmpty ? 0 : blocked.count * 100 / Self.rows.count
+        lines.append("rows \(Self.rows.count) · restricted subject \(blocked.count) (\(blockedShare)%)")
+        let widenShare = blocked.isEmpty ? 0 : widenable.count * 100 / blocked.count
+        lines.append("of those, ONE widened modifier would free \(widenable.count) (\(widenShare)%)")
+        lines.append("")
+        lines.append("restriction reasons:")
+        var byReason: [String: Int] = [:]
+        for row in blocked { byReason[String(describing: row.restriction!), default: 0] += 1 }
+        for (reason, count) in byReason.sorted(by: { $0.value > $1.value }) {
+            lines.append("  \(count)  \(reason)")
+        }
+        lines.append("")
+        lines.append("template                        blocked  widenable  reachable")
+        var templates = Set(Self.rows.map(\.template)).sorted()
+        templates = templates.filter { name in Self.rows.contains { $0.template == name } }
+        for name in templates {
+            let rows = Self.rows.filter { $0.template == name }
+            let blockedHere = rows.filter { $0.restriction != nil }
+            guard !blockedHere.isEmpty else { continue }
+            lines.append(
+                name.padding(toLength: 32, withPad: " ", startingAt: 0)
+                    + String(blockedHere.count).padding(toLength: 9, withPad: " ", startingAt: 0)
+                    + String(blockedHere.filter(\.isWidenable).count)
+                        .padding(toLength: 11, withPad: " ", startingAt: 0)
+                    + String(rows.count - blockedHere.count)
+            )
         }
         print(lines.joined(separator: "\n"))
     }
