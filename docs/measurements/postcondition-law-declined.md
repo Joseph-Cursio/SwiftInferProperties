@@ -223,10 +223,22 @@ bounds; `reversed` and `shuffled` need the input beside the result; the escaping
 no universal scheme. `composeRolePostconditionPass` returns `nil` for all of them, so
 verify records `unsupported-template` rather than a stub that will not build.
 
-### A template needs admitting in TWO places
+### A template needs admitting in THREE places
 
 Adding `role-postcondition` to `TemplateName.verifiable` was **not enough** — the survey
 still reported `unsupported-template`. That list gates the *template check*;
 `resolveFunctionCalls` gates *call resolution*, and the survey path consults the second.
 **Missing either produces the identical error message**, which is why this was found by
 running a planted subject rather than by reading the code.
+
+**And there is a third**: `VerifiableTemplateReachTests` — whose own comment calls them
+*"the pair of gates"* — checks that every verifiable template **composes** its law. It
+probes with a synthetic `functionCalls: ["subject", "inverse"]`, which composes nothing
+here, because **this is the first template that keys on the SUBJECT'S name rather than
+only the template's**. The role *is* the name. The gate now probes it with `lowercased`,
+so it still asks its real question — is there a composer? — instead of a question about
+its fixture.
+
+**That the guard's own doc says "pair" is the point.** A template whose composability
+depends on the subject is a category the verify path did not have, and each of the three
+gates reports the same string when it is the one that declined.

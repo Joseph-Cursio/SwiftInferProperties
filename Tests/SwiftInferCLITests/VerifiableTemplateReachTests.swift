@@ -82,6 +82,12 @@ struct VerifiableTemplateReachTests {
         }
     }
 
+    /// The function names this gate probes with. Only `role-postcondition` needs a real
+    /// one, because its composer resolves the law from the name; the rest ignore it.
+    static func probeCalls(for template: TemplateName) -> [String] {
+        template == .rolePostcondition ? ["lowercased", "inverse"] : ["subject", "inverse"]
+    }
+
     /// Gate 3. Green today, and here so the pair of gates is checked as a pair — a future template
     /// added to `verifiable` and to call resolution but not to composition fails exactly the same
     /// way, one layer later.
@@ -96,7 +102,14 @@ struct VerifiableTemplateReachTests {
                 carrier: "Int",
                 typeShape: nil,
                 template: template.rawValue,
-                functionCalls: ["subject", "inverse"],
+                // **One template keys on the SUBJECT'S NAME, not only on the template
+                // name.** `role-postcondition` supplies its predicate from a recognised
+                // role — `lowercased`, `sorted`, `clamped` — so a synthetic
+                // `"subject"` composes nothing and this gate would read that as a missing
+                // composer. Feeding it a role name keeps the gate asking its real question
+                // (does a composer handle this template?) rather than a question about the
+                // fixture. Every other template composes for any name.
+                functionCalls: Self.probeCalls(for: template),
                 extraImports: [],
                 seedHex: .init(stateA: 1, stateB: 2, stateC: 3, stateD: 4),
                 trialBudget: .small,
