@@ -55,6 +55,75 @@ struct VerifyResultParserTests {
         }
     }
 
+    // MARK: - The runtime message a trap carries
+
+    /// **A precondition failure is the most informative line a trap produces, and the filter
+    /// dropped it.** It matched `Fatal error` and `Swift runtime failure` only, so
+    /// `SystemPackage/SystemString.swift:110: Precondition failed` never reached the reader —
+    /// five swift-system rows reported a trap with no runtime message at all, and finding the
+    /// cause meant rebuilding a stub by hand
+    /// (`docs/measurements/criterion-a-swift-system.md` §8.3).
+    @Test("a precondition failure reaches the reader")
+    func aPreconditionFailureIsReported() {
+        let raw = Self.output(
+            exitCode: 5,
+            stdout: "",
+            stderr: "SystemPackage/SystemString.swift:110: Precondition failed"
+        )
+        guard case .error(let detail) = VerifyResultParser.parse(raw) else {
+            Issue.record("expected .error for a trap")
+            return
+        }
+        #expect(detail.contains("Runtime said:"))
+        #expect(detail.contains("SystemString.swift:110: Precondition failed"))
+    }
+
+    @Test("an assertion failure reaches the reader too")
+    func anAssertionFailureIsReported() {
+        let raw = Self.output(
+            exitCode: 5, stdout: "", stderr: "Thing.swift:12: Assertion failed: index in bounds"
+        )
+        guard case .error(let detail) = VerifyResultParser.parse(raw) else {
+            Issue.record("expected .error for a trap")
+            return
+        }
+        #expect(detail.contains("Assertion failed: index in bounds"))
+    }
+
+    /// The control. `Fatal error` was already matched and must stay matched — a fix that
+    /// swapped one marker for another would satisfy the arms above and lose the case that
+    /// worked.
+    @Test("a fatal error still reaches the reader")
+    func aFatalErrorIsStillReported() {
+        let raw = Self.output(
+            exitCode: 5,
+            stdout: "",
+            stderr: "Swift/UnicodeScalar.swift:358: Fatal error: Code point value does not fit into ASCII"
+        )
+        guard case .error(let detail) = VerifyResultParser.parse(raw) else {
+            Issue.record("expected .error for a trap")
+            return
+        }
+        #expect(detail.contains("does not fit into ASCII"))
+    }
+
+    /// **The diagnosis names two causes, because there are two.** It used to name only a
+    /// generator wider than the code assumes, which is right for the `Int.max` overflow case
+    /// and wrong for swift-system's: there the leaf generator was correctly narrowed to ASCII
+    /// and an *intermediate* type in the composed recipe rejected the value it built. A reader
+    /// pointed at the leaf generator looks in the wrong place.
+    @Test("the diagnosis names the composed-recipe cause, not only the wide-generator one")
+    func theDiagnosisNamesBothCauses() {
+        let raw = Self.output(exitCode: 5, stdout: "", stderr: "")
+        guard case .error(let detail) = VerifyResultParser.parse(raw) else {
+            Issue.record("expected .error for a trap")
+            return
+        }
+        #expect(detail.contains("wider than the code assumes"))
+        #expect(detail.lowercased().contains("composed"))
+        #expect(detail.contains("intermediate type"))
+    }
+
     // MARK: - bothPass
 
     @Test("parser recognizes both-pass markers + exit 0 → .bothPass(...)")

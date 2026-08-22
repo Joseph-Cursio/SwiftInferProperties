@@ -273,6 +273,26 @@ public enum VerifyResultParser {
     /// nothing in the type says eight of them must sum inside an `Int`. That is
     /// the road test's recurring finding in a third costume — a generator tuned
     /// for the *type* and mistuned for the code's *domain*.
+    /// Stderr lines that carry the runtime's own account of why it trapped.
+    ///
+    /// **`Precondition failed` was missing, and its absence was measured.** The filter matched
+    /// `Fatal error` and `Swift runtime failure` only, so
+    ///
+    ///     SystemPackage/SystemString.swift:110: Precondition failed
+    ///
+    /// was dropped, and five swift-system rows reported a trap with **no runtime message at
+    /// all** — the single most informative line, discarded. Finding the cause meant rebuilding a
+    /// stub by hand (`docs/measurements/criterion-a-swift-system.md` §8.3). A trap diagnosis
+    /// whose evidence line is optional is a diagnosis that works on the cases you already
+    /// understand.
+    ///
+    /// `Assertion failed` joins them for the same reason rather than on a fresh measurement: the
+    /// generated stub is built in debug, `assert` fires there, and it is the same sentence from
+    /// the same runtime. Excluding it would be an arbitrary line through one family of messages.
+    static let runtimeFailureMarkers = [
+        "Swift runtime failure", "Fatal error", "Precondition failed", "Assertion failed"
+    ]
+
     static func trapReason(from output: VerifierSubprocess.Output) -> String? {
         let code = output.exitCode
         guard crashSignals.contains(code) || crashSignals.contains(code - 128) else { return nil }
@@ -281,13 +301,15 @@ public enum VerifyResultParser {
         var reason = "the verifier trapped (signal \(signal)) — the law was "
             + "neither confirmed nor refuted. A generated input drove the code "
             + "into a runtime trap before the property was compared, so this is "
-            + "evidence about the generator's domain, not about the law. The "
-            + "usual cause is a derived generator wider than the code assumes — "
-            + "an unbounded Int drawn for a field the code sums or multiplies."
+            + "evidence about the generator's domain, not about the law. Two "
+            + "causes, and the runtime message below tells them apart: a derived "
+            + "generator wider than the code assumes (an unbounded Int drawn for "
+            + "a field the code sums), or a COMPOSED recipe whose leaf generator "
+            + "is correct and whose intermediate type rejects the value it builds."
 
         let runtimeMessage = output.stderr
             .split(separator: "\n")
-            .first { $0.contains("Swift runtime failure") || $0.contains("Fatal error") }
+            .first { line in Self.runtimeFailureMarkers.contains { line.contains($0) } }
         if let runtimeMessage {
             reason += " Runtime said: \(runtimeMessage.trimmingCharacters(in: .whitespaces))."
         }
