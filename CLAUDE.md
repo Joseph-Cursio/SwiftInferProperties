@@ -54,10 +54,16 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,786 tests — 5,578 fast + 208 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-21** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast **5,578** · perf 8 ·
-batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **The fast half alone moved, 5,570 → 5,578** — six
+Suites green at **5,790 tests — 5,582 fast + 208 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-22** on **swift-property-based 2.0 /
+SwiftPropertyLaws 4.1.0** — every stage counted from that one run: fast **5,582** · perf 8 ·
+batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **The fast half alone moved, 5,578 → 5,582**, for the
+four `VerifyResultParserTests` arms on the trap diagnosis; the batch half stood still because
+none of them is a `*MeasuredTests` suite, which is the regex doing its job. **The KIT PIN MOVED
+in this reading — 4.0.0 → 4.1.0** — so the counts belong to that pin and not to its predecessor;
+a re-take after a kit bump is a different measurement wearing the same number. Timings are usable
+(`batch5` 1,635s against its standing ~1,670s), **~69 minutes end to end**. The prior reading,
+5,786 with fast at 5,578 on SwiftPropertyLaws 4.0.0, follows. **The fast half alone moved, 5,570 → 5,578** — six
 `ComputedPropertyCallShapeTests` and two `VerifyTargetInferenceTests`; the batch half stood still
 because neither is a `*MeasuredTests` suite, which is the regex doing its job. **This run's
 TIMINGS are usable, unlike the previous reading's**: `batch5` 1,643s against its standing ~1,670s
