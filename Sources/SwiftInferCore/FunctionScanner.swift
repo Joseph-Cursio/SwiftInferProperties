@@ -192,6 +192,18 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         // the confident zero that left the tool blind on application code, whose pure logic lives
         // almost entirely in `private` helpers. So a restricted function still records its
         // restriction (for that caveat) but is no longer withheld from the summaries.
+        // Availability, unlike visibility, is not a caveat — it is a refusal.
+        //
+        // A `private` function is withheld from tests and its law is still surfaced, carrying the
+        // one refactor that reaches it (see the comment above). There is no such refactor for
+        // `@available(*, unavailable)`: the declaration cannot be called by anyone, including its
+        // own module, so a law on it cannot be written, cannot compile, and cannot be acted on.
+        //
+        // Measured before building (`UncallableDeclaration`): 24 of 4,161 evidence-rows across
+        // the corpora, ALL of them `renamed:`, and 20 of the 24 strict duplicates of a row the
+        // tool already proposes on the live name. Dropping them costs no laws — which is the
+        // whole argument, because 0.58% of output is not one.
+        guard !UncallableDeclaration.isWithdrawn(node) else { return .skipChildren }
         let summary = makeSummary(from: node)
         if let restriction = accessRestriction(of: node) {
             restricted.append(RestrictedFunction(summary: summary, restriction: restriction))
@@ -208,6 +220,9 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         // functions: an external test can't reach them.
         // Same rule as functions above: a `private` computed property is a nullary map with a
         // real law; surface it, carrying the access caveat rather than withholding it.
+        // Same refusal as the function path above, and this is the path that matters most:
+        // swift-system's witness was `public var dirname`, a computed property.
+        guard !UncallableDeclaration.isWithdrawn(node) else { return .skipChildren }
         if let summary = makeSummary(fromComputedProperty: node) {
             if let restriction = accessRestriction(ofVariable: node) {
                 restricted.append(RestrictedFunction(summary: summary, restriction: restriction))
