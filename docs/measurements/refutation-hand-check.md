@@ -125,3 +125,30 @@ subject never owed.
    template already did not. The index row is corrected to say so.
 2. **Check `outcomeDetail` first.** Every false law here failed at `trial=0`. If that
    holds on a corpus with a real bug in it, it is a better first cut than either.
+
+---
+
+## Addendum 2026-08-22 — 15 of 15 is now 18 of 18, and the mechanism repeated
+
+Three refutations have been hand-checked since, all false laws, and **two of the three share
+one mechanism** this document named:
+
+| refutation | subject | verdict | mechanism |
+|---|---|---|---|
+| `pushing(_:)` idempotence-in-operand | `swift-system` | **false law** | takes-operand idempotence is right for *absorbing* ops (merge, union) and wrong for *accumulating* ones (push, append) — both are `(Self, T) -> Self` |
+| `removingLastComponent()` idempotence | `swift-system` | **false law** | one-shot stripper applied twice strips twice |
+| `selectionStem(_:)` idempotence | home corpus | **false law** | one-shot stripper applied twice strips twice |
+
+**The last two are the example the tool prints against itself.** `IdempotenceTemplate`'s
+*"why this might be wrong"* text reads: *a `T -> T` need not be idempotent (a one-shot suffix
+strip applied twice removes two suffixes)*. The catalogue names this failure mode in the
+caveat it ships beside the suggestion, and then emits the suggestion anyway — twice, on two
+different corpora, found only by execution.
+
+**Both were found by RAISING THE TRIAL BUDGET**, not by a new template or filter:
+`removingLastComponent` passes at 100 and fails from 250; `selectionStem` fails at trial 164.
+Neither is visible at the budget that shipped until 2026-08-22.
+
+**Still: tier does not predict.** The `selectionStem` row is `Possible`, the swift-system pair
+were `Possible` and `Likely`. Nothing in the score separated them from the 163 that held.
+

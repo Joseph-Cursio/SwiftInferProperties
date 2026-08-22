@@ -63,6 +63,66 @@ the 281-entry population cannot be reconstructed.
 **The 76-minute figure above no longer holds** — the re-take took 11 minutes over nearly
 twice the population. Do not budget from the older number.
 
+## The 2026-08-22 A/B — raising the trial budget, measured
+
+**Both arms on the same binary and the SAME FROZEN INDEX**, because the delta against
+2026-08-19 is confounded: this repo has since gained the module-resolution fix, the
+computed-property emitter fix, the availability gate, and SwiftPropertyLaws 4.1.0. Only a
+same-binary A/B attributes anything to the budget.
+
+| | |
+|---|---|
+| subject | `SwiftInferProperties@1abd772a`, SwiftPropertyLaws **4.1.0** |
+| **index command** | `swift-infer index --target T` for each of the **six** library targets — `SwiftInferCore`, `SwiftInferTemplates`, `SwiftInferTestLifter`, `SwiftInferCLI`, `SwiftInferMacro`, `SwiftInferKitEvidence` → **543 entries**, then copied aside and passed via `--index-path` so neither arm could silently reindex |
+| verify command | `swift-infer verify --all-from-index --max-parallel 4 --index-path <frozen> --budget {small,standard}` (release binary) |
+| arm A | `2026-08-22-whole-corpus-N100.jsonl` — 543 records, 23:01–23:12 UTC · 11 min |
+| arm B | `2026-08-22-whole-corpus-N1000.jsonl` — 543 records, 23:14–23:25 UTC · 11 min |
+
+*(The README elsewhere says seven library targets; the manifest declares six. Recorded as
+used, not as remembered.)*
+
+### Result — the budget moved ONE row of 543
+
+| tier | n | ran | held @100 → @1000 | refuted @100 → @1000 |
+|---|---:|---:|---|---|
+| Strong | 9 | 5 | 5 → 5 | 0 → 0 |
+| Likely | 28 | 25 | 22 → 22 | 3 → 3 |
+| Possible | 238 | 149 | **137 → 136** | **12 → 13** |
+| Advisory | 268 | 0 | — | — |
+
+**RUNNABLE: 179 of 275 = 65.1% at BOTH budgets**, against 178 of 272 = 65% on 2026-08-19.
+**A 10× trial budget and four shipped fixes moved the executing ratio by nothing.**
+
+Exactly one outcome changed, and no previously-refuting row started passing:
+
+```
+measured-bothPass → measured-defaultFails   at trial 164
+  idempotence · ViewModelRefintResolver.selectionStem(_:) · counterexample "RYFsS"
+```
+
+**Hand-checked: a false law.** `selectionStem` strips one trailing `s` / `id` / `ids`, so
+`"RYFsS" → "ryfs" → "ryf"`. A one-shot suffix stripper applied twice strips two suffixes —
+which is *verbatim* the example the tool's own **"why this might be wrong"** text gives. Same
+mechanism as `removingLastComponent()` on swift-system. **The tally is now 18 of 18
+hand-checked refutations being false laws.**
+
+### ⚠ What this does NOT settle, and it is the important part
+
+**The home corpus is the corpus the catalogue was built against.** It is the *least* likely
+place for a false law to survive, so *one new refutation in 543 rows* is close to the best
+case and must not be read as a rate.
+
+The contrast is worth keeping, with its small numbers stated:
+
+| corpus | executing rows | new refutations at N=1000 |
+|---|---:|---:|
+| home (this survey) | 179 | 1 |
+| `swift-system` (unmet) | 8 | 1 |
+
+**Suggestive and not a rate** — n=1 in each arm. But it points the catalogue-truth question
+where it belongs: at **unmet subjects**, not here. A survey of the corpus the tool was tuned
+on cannot answer whether the tool's laws are true in general.
+
 ## The stream now carries its own tier
 
 **Added 2026-08-19, because its absence inverted a headline.** The re-take was first
