@@ -1467,6 +1467,63 @@ command from being filed.
 Same family as the `(file, symbol)` seed key and the §8.9 regex: **the cheap capture
 answered a different question from the one being asked.**
 
+### The chain of blockers, and why a pre-flight check would NOT shorten it — DECLINED 2026-08-22
+
+Reaching an executing law on `swift-system` took four fixes in sequence: **module resolution →
+emitter shapes → generator domain → composition preconditions**, plus **availability** alongside.
+Each was invisible until the one before it was fixed — before the module fix the trap bucket was
+**zero**, not because the generators were fine but because nothing reached a runtime.
+
+The obvious proposal is to stop the pipeline swallowing its own information: **report every
+blocker a row has at once, rather than the first**. `resolveFunctionCalls` is a `switch` that
+throws, so today a row gets exactly one cause, and several causes are independent —
+`subjectNotVisible`, `carrierNotEquatable`, `unsupportedCarrier` and `unsupportedTemplate` can
+each be decided without the others.
+
+**Measured, and it would not have helped.** Take the one link where the counterfactual is
+observable — the 21 rows the module fix freed:
+
+| where the freed rows landed | rows |
+|---|---:|
+| runtime trap (**dynamic** — needs execution) | 9 |
+| build failure (**a bug in our own emitter**) | 6 |
+| ran to a verdict | 4 |
+| **another static decline** | **2** |
+
+**A pre-flight check can only report causes it computes statically.** Nineteen of twenty-one
+rows went straight to something no static check can see: a trap that needs the code to run, or
+a compile error in the emitter, which is a defect and not a decision. Reporting every static
+cause at once would have shortened the chain for **2 of 21**.
+
+**The deeper reason, which the table only hints at: pre-flight reports the checks you already
+have.** Of the five blockers, exactly one — availability — was a static cause a pre-flight pass
+could have surfaced early, and the reason it went unreported was not that a different cause won
+the race. It was that **nothing computed availability at all**. A check that does not exist
+cannot be reported earlier.
+
+So the chain is serial for reasons that are mostly not fixable by better reporting:
+
+| blocker | kind | could pre-flight have surfaced it? |
+|---|---|---|
+| module resolution | static decline | **it already did** — reported as `unsupported-carrier: … not a library product`, and misread |
+| emitter shapes | our own bug | no — a build failure is not a decision |
+| generator domain | dynamic | no — needs execution |
+| composition preconditions | dynamic | no — needs execution |
+| availability | static decline | no — the check did not exist |
+
+**What is left of the idea.** Multi-cause reporting may still be worth having as *diagnostics* —
+a reader told three reasons at once forms a better plan than one told them across three runs —
+but that is a different claim from *it shortens the work*, it is unmeasured, and it must not be
+sold as the second thing. The measured lever for chain length is not reporting; it is
+**subject selection** (`toolchain-exit-criteria.md` §6.1).
+
+**And one correction to how the chain was first described.** It looked like the blockers were
+hardening — three of *our* defects, then a wall at composition preconditions, where the
+constraint is not in reachable program text. **Availability refutes that ordering**: its
+attribute sits in the syntax tree and nothing read it, and it came *after* the hard one. The
+chain is ordered by **where the pipeline dies**, and difficulty is scattered along it
+independently — so *the last blocker was hard* implies nothing about what is behind it.
+
 ### A decline bucket's NAME is not its cause (2026-08-21)
 
 `verify --all-from-index` over swift-system reported **36 `unsupported-carrier`**, and
