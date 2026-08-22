@@ -1,6 +1,6 @@
 # Exit criteria for "the toolchain is in shape"
 
-> **Status:** `open` · **As of:** 2026-08-20
+> **Status:** `open` · **As of:** 2026-08-22
 
 Open item 8 has said *"exit criteria are unwritten"* since the item list began. This
 scores the criteria that **were** written — on 2026-08-03, inside a decision note, where
@@ -136,9 +136,13 @@ An outcome criterion in those units would be falsifiable, and none of the four i
 
 ---
 
-## 5. The criteria — RATIFIED 2026-08-21
+## 5. The criteria — RATIFIED 2026-08-21, A SPLIT 2026-08-22
 
 **A is the bar. B–E are supporting measurements and do NOT gate.**
+
+**A is now two bars, A-reach and A-quality.** Split by the maintainer on 2026-08-22. The
+split itself is ratified; the specific thresholds in §5.1 are a proposal, and a later reader
+should be able to tell those apart.
 
 Ratified by the maintainer on 2026-08-21, which is what open item 8 had been waiting for
 since the list began. The reasoning for taking A alone: **it is the only outcome bar**,
@@ -152,11 +156,66 @@ this document wrong.
 
 | # | Proposed | Why this bar | Measured today |
 |---|---|---|---|
-| A | On a subject the toolchain has never met, ≥1 emitted law **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ATTEMPTED 2026-08-21 — NOT ANSWERED.** On `swift-http-types`, **89% of laws did not compile** (three emitter defects, since fixed) and 0 of 7 `Likely` ran. Of the 6 that ran, **none was given a defect its property forbids** — the planted mutants preserved idempotence, so the passes were correct. `docs/measurements/criterion-a-unmet-subject.md` §3.1 |
+| **A-reach** | On a subject the toolchain has never met, **≥1 emitted law runs to a PASSING verdict** under a stressed trial budget | you cannot aim a mutant at a law that does not run | **MET 2026-08-22, for the first time** — `swift-system`, 2 laws (`isSeparator`, `isPrenormalSeparator`) hold at 5,000 trials. `docs/measurements/criterion-a-swift-system.md` §8 |
+| **A-quality** | ≥1 of those passing laws **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ANSWERABLE 2026-08-22 and NOT YET ANSWERED.** Three subjects, and this is the first time A-reach has cleared |
 | B | The runnable-tier ratio holds ≥60% across the 17 corpora, not just the home corpus | generality, in a number meant to be quoted | 65% home; cross-corpus unmeasured |
 | C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-17-corpora.md` |
 | D | An app-shaped subject reaches `verified` by some route | §2.4's outcome form | not met |
 | E | No measurement doc older than its binary — every published figure re-derivable | §2.3's positive form | unmeasured, unscoped |
+
+### 5.1 Why A splits, and where the thresholds come from
+
+**Three subjects were attempted and A was evaluable on none.** Each time the report read
+*A fails*, and each time the sentence was about the pipeline, not about the laws:
+`swift-http-types` died at 89% non-compiling output, `swift-system` at a module-resolution
+bug, and underneath that at generator domain. A bar that reports pipeline completeness while
+claiming to report law quality is the same defect §3 diagnoses in candidates 1–4, arrived at
+from the other side — **A had quietly become a capability bar too.**
+
+Split, the two failure modes read differently, which is the whole point:
+
+| A-reach | A-quality | reading |
+|---|---|---|
+| fails | — | the **pipeline** is the constraint; law quality is unmeasured and no verdict about it follows |
+| passes | fails | the **laws** are the constraint |
+| passes | passes | in shape, on that subject |
+
+**Why A-reach's threshold is a *passing* law rather than an executing one.** It follows from
+two measured facts rather than from taste:
+
+- **A trapped law yields no verdict**, so nothing can be planted against it. Nine of
+  swift-system's rows were traps.
+- **A refuted law is, on all evidence here, a false law** — 17 of 17 across this project
+  (15 in `refutation-hand-check.md`, plus `pushing(_:)` and `removingLastComponent()`).
+  Planting a violating mutant against a law that is already false says nothing.
+
+So a passing law is the *only* kind a mutant test can be aimed at, and "≥1 passing law" is
+the minimum condition for A-quality to mean anything. It is a precondition, not a
+consolation prize.
+
+**Why "under a stressed trial budget".** `removingLastComponent()` passed 100 trials and
+**failed at 2,000**. A law that passes only because the budget was small is a false law
+wearing a pass, and a mutant planted against it produces a confident answer to a question
+that was never asked. **The budget used must be recorded beside any A-reach claim.**
+
+**What A-reach deliberately does NOT require.** No ratio, no count beyond one, and no
+coverage of the catalogue. Those are B's job. A-reach exists to answer one question — *is
+there anything here to aim a mutant at* — and a threshold that also smuggled in generality
+would be unevaluable for the reason C already had to be restated.
+
+### 5.2 The confound A-quality now inherits
+
+Splitting the bar makes something visible that the joined version hid: **the evidence we
+already have about executing laws is not encouraging.** Every refutation this project has
+hand-checked is a false law, one of swift-system's three passes was false at a higher
+budget, and the two laws that survive stress are **totality predicates** — arguably the
+least discriminating family in the catalogue.
+
+That does not make A-quality unanswerable; a totality law is a perfectly good mutant target
+(make the predicate non-total and see whether the subject's tests notice). It does mean
+**A-quality should not be expected to pass merely because A-reach did**, and a failure there
+would be a finding about the catalogue rather than about the pipeline. Which is exactly the
+distinction the split was made to expose.
 
 **A is the bar, and B–E are context.** They are capability bars that make A possible; A
 is the only one that says the toolchain is worth using.
@@ -174,20 +233,40 @@ laws' passes were correct and no verdict about their refutation power follows.
 
 ---
 
-## 6. The standing question, now that A is the bar
+## 6. The standing question, now that A is two bars
 
-**A is NOT ANSWERED, and answering it is the open work.** What that needs, specifically:
+**A-reach is MET. A-quality is answerable for the first time, and answering it is the open
+work.** What that needs, specifically:
 
-1. **A fresh unmet subject.** `swift-http-types` is spent — the tool has now been pointed
-   at it, and `swift-algorithms` was disqualified before use because the manifest records
-   it as part of the v1 algebraic corpus. GRDB is spent likewise. **Check the manifest
-   before choosing; it recorded both facts and one grep saved a contaminated result.**
-2. **A defect chosen to VIOLATE the law**, not chosen for realism. The first attempt
-   planted three real correctness bugs that all preserved idempotence, so the laws' passes
-   were correct and no verdict followed. `fixtures/branch-reaching-generator/` §3 has the
-   rule: *a mutant is evidence about a law only if it violates that law.*
-3. **A re-run now that the emitter defects are fixed.** 89% of output did not compile on
-   the first attempt; that is repaired, and A can only be evaluated on what compiles.
+1. **Plant a mutant against one of the two passing laws.** `isSeparator(_:)` and
+   `isPrenormalSeparator(_:)` on `swift-system` hold at 5,000 trials. Both are totality
+   predicates, so the violating mutant is one that makes the predicate non-total — and the
+   bar requires that **swift-system's own test suite miss it**, which must be checked rather
+   than assumed.
+2. **A defect chosen to VIOLATE the law**, not chosen for realism. The first attempt planted
+   three real correctness bugs that all preserved idempotence, so the laws' passes were
+   correct and no verdict followed. `fixtures/branch-reaching-generator/` §3 has the rule:
+   *a mutant is evidence about a law only if it violates that law.*
+3. **Record the trial budget beside the result.** §5.1's second threshold exists because
+   `removingLastComponent()` passed at 100 and failed at 2,000.
+
+### 6.1 Choosing the next subject — a lesson from three of them
+
+`swift-http-types` and GRDB are spent, and `swift-algorithms` was disqualified before use
+because the manifest records it in the v1 algebraic corpus. **Check the manifest before
+choosing; it recorded both facts and one grep saved a contaminated result.**
+
+But *unmet* is not the only thing to select for, and treating it as such is what cost three
+attempts. **A-reach's length is a property of the subject.** swift-system is close to
+worst-case for it: a relocated target directory, C interop throughout, internal types whose
+invariants live in `#if DEBUG` preconditions, and byte-oriented storage. Every one of those
+became a blocker, and each was invisible until the previous was fixed.
+
+So select for **unmet AND short-chain**: public value types, memberwise or clearly-public
+initializers, no C interop. There is a cheap pre-check that costs one run — point
+`verify --all-from-index` at the candidate and read **how many rows reach the build stage**
+before committing to it. swift-system's first honest reading was **0 of 41**, and that
+number was itself the signal that the chain was long.
 
 ## 7. What this document used to ask for
 
@@ -208,6 +287,13 @@ laws' passes were correct and no verdict about their refutation power follows.
 
 - **A ratified bar that A–E do not cover.** These are proposals from the inside; the
   purpose belongs to the maintainer.
+- **A-quality passing while the toolchain is plainly not worth using**, or failing while it
+  plainly is. The split in §5 is a claim that these two questions come apart cleanly; one
+  subject where the answer is obvious and the bar disagrees would refute it.
+- **A refutation that turns out to be a REAL bug.** §5.1 rests A-reach's threshold on 17 of
+  17 hand-checked refutations being false laws. A single true one would not overturn the
+  threshold, but it would remove the reason for it, and the reasoning would have to be
+  rebuilt on something else.
 - **The catalog re-run resolving all four unwitnessed templates**, which would make C
   free and suggest B is measuring the wrong scarcity.
 - **An outcome measurement showing movement.** The §3 table is five results, not a law.
