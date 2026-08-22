@@ -49,22 +49,23 @@ wins wherever a text scan of `Package.swift` says it could disagree.
 
 Re-taken 2026-08-21 with the module fix, and with nothing else changed.
 
-| outcome | after module fix | after §3's fix | what it means |
-|---|---:|---:|---|
-| `unsupported-carrier` | **15** | **15** | a genuine carrier the tool cannot construct |
-| **generator trap (SIGTRAP)** | **9** | **9** | the law compiled and ran; a generated input killed it |
-| **`build-failed`** | **6** | **2** | the emitted stub does not compile |
-| `instance-method-shape-not-supported` | 2 | **6** | |
-| `unsupported-template` | 4 | 4 | `inverse-pair` ×2, `input-totality` ×2 |
-| **executed to a verdict** | **2** | **2** | `measured-edgeCaseAdvisory` on `dup` / `system_dup` |
-| **executed, verdict DISCARDED** | **2** | **2** | see §4 — these printed `PASS` |
-| `not-a-candidate` | 1 | 1 | `private` subject, no test can name it |
-| | **41** | **41** | |
+| outcome | after module fix | after §3's fix | at SPL **4.1.0** | what it means |
+|---|---:|---:|---:|---|
+| `unsupported-carrier` | **15** | **15** | **15** | a genuine carrier the tool cannot construct |
+| **generator trap (SIGTRAP)** | **9** | **9** | **5** | the law compiled and ran; a generated input killed it |
+| **`build-failed`** | **6** | **2** | 2 | the emitted stub does not compile |
+| `instance-method-shape-not-supported` | 2 | **6** | 6 | |
+| `unsupported-template` | 4 | 4 | 4 | `inverse-pair` ×2, `input-totality` ×2 |
+| **executed to a verdict** | **2** | **2** | **6** | 3 `bothPass`, 1 **refutation**, 2 `edgeCaseAdvisory` |
+| **executed, verdict DISCARDED** | **2** | **2** | 2 | see §4 — these printed `PASS` |
+| `not-a-candidate` | 1 | 1 | 1 | `private` subject, no test can name it |
+| | **41** | **41** | **41** | |
 
 **Laws that reached the build stage: 19 of 41, up from 0.**
 **Laws that ran to completion: 4 of 41 — and the parser threw two of them away.**
 **§3's emitter fix moved 4 rows and added 0 executions**; the second column is there so that
-is legible rather than inferred.
+is legible rather than inferred. **§8's generator fix moved 4 rows and every one of them TO an
+execution** — the first change in this whole line of work to do so.
 
 Discovery is unchanged and still looks healthy: 41 suggestions across seven templates —
 `idempotence` 18, `predicate` 9, `round-trip` 5, `monotonicity` 4, `inverse-pair` 2,
@@ -264,3 +265,119 @@ where enough laws ran.**
    Nothing cheap is on the table here.
 
 **Do not re-quote the `647fc7c0` figures.** They are superseded, not merely stale.
+
+---
+
+## 8. Re-taken at SwiftPropertyLaws 4.1.0 — the first fix that produced executing laws
+
+§2 named the mechanism and said the fix lived across the package seam. It shipped as
+SwiftPropertyLaws **v4.1.0** (`Gen<Unicode.Scalar>.asciiScalar()` plus
+`DerivationStrategist.narrowedByLabel`), and this repo picked it up on 2026-08-22. Re-run with
+nothing else changed:
+
+**Four rows moved, all four from `TRAP` to an execution.**
+
+| subject | template | before | after |
+|---|---|---|---|
+| `pushing(_:)` | idempotence | TRAP | **`measured-defaultFails`** |
+| `removingLastComponent()` | idempotence | TRAP | `measured-bothPass` |
+| `isSeparator(_:)` | predicate (totality) | TRAP | `measured-bothPass` |
+| `isPrenormalSeparator(_:)` | predicate (totality) | TRAP | `measured-bothPass` |
+
+**Criterion A is still not met** — 6 verdicts over 41 suggestions — but for the first time the
+question is answerable at all on this subject, because laws now run.
+
+### 8.1 The refutation is a false law, hand-checked. That is 16 of 16.
+
+`pushing(_:)` failed at trial 0, counterexample `value: "b"`, `operand: "d \1n*"`:
+
+```
+FilePath("b").pushing(x).pushing(x)  ==  "b/d \1n*/d \1n*"
+FilePath("b").pushing(x)             ==  "b/d \1n*"
+```
+
+Appending a component twice appends it twice. **Idempotence in the operand is simply false for
+`pushing`**, and swift-system is correct.
+
+`refutation-hand-check.md` recorded **15 of 15 refutations as false laws**; this is the
+sixteenth, and it arrives from a third-party subject rather than the survey. It also has a
+nameable mechanism, which that document asked for: the *takes-operand* idempotence shape
+(`a.merge(b).merge(b) == a.merge(b)`) is right for **absorbing** operations — merge, union,
+intersection — and wrong for **accumulating** ones — push, append, adding, inserting. Both have
+signature `(Self, T) -> Self`, and the template sees only the signature.
+
+**No filter is proposed here.** The population is one row, the discriminator is a name list, and
+this project's standing rule is to measure the population before building a filter.
+
+### 8.2 One of the three `bothPass` results is a false law the budget did not reach
+
+`removingLastComponent()` passes 100 trials. Re-run at 2,000 it **fails**:
+
+```
+input "1k/J`"  →  once "1k"  →  twice ""
+```
+
+Stripping the last component twice strips two components. The law is false; the shipped
+`small` budget (N=100) simply did not find the counterexample. **So the honest reading of the
+three `bothPass` rows is two passes and one under-budgeted false law** — 17 of 17, not 16 of 16.
+
+The two that survive are the totality predicates, and they hold at **5,000** trials:
+`isSeparator` and `isPrenormalSeparator` return for every ASCII `SystemChar`. Those are the
+only two laws on this subject that have ever both run and been true.
+
+**`measured-bothPass` means no counterexample in the generated domain at the budget used.**
+CLAUDE.md says so already; this is the first time the caveat has been paid for on a third-party
+subject, and it cost a wrong entry in the table above until the budget was raised.
+
+### 8.3 The five remaining traps have a NEW cause, and it is one this repo introduced
+
+They no longer trap on non-ASCII. They trap here:
+
+```
+SystemPackage/SystemString.swift:110: Precondition failed
+```
+
+`SystemString._invariantsSatisfied()` requires `firstIndex(of: .null) == length` — **no interior
+NUL**. `asciiScalar()` includes NUL deliberately (ASCII is `0x00 ... 0x7F`, and NUL is the input
+that finds C-string truncation bugs). So the generator now produces a legal `SystemChar` and an
+**illegal `SystemString`**.
+
+Verified rather than reasoned: re-emitting the `length()` stub with NUL excluded and nothing else
+changed makes it **pass 100 trials**.
+
+This is the same class of error the narrowing was built to fix, one level up the composition —
+and it is not fixable the same way, because the constraint lives on `SystemString.init`, which
+declares it in a precondition rather than in a label.
+
+**The split between the four that execute and the five that trap is partly structural and partly
+luck**, and both halves are worth naming:
+
+- **Structural**: the two totality predicates carry `SystemChar`, never construct a
+  `SystemString`, and so cannot trip the invariant at all.
+- **Luck**: the `FilePath` stubs that survived did so by terminating early. `pushing` refuted at
+  trial 0; `removingLastComponent` drew no NUL in 100 trials (P ≈ 0.4% per character, so ~20% of
+  100-trial runs are clean) and, at 2,000, refuted before it trapped.
+
+**A `FilePath` stub that runs long enough and states a true law will trap.**
+
+### 8.4 The open question this leaves
+
+**Should `asciiScalar()` include NUL?** The evidence, one subject wide:
+
+- **Against:** it costs 5 of 9 rows here, verified by re-running with it removed, and it bought
+  **zero** refutations — the two totality laws pass *with* NUL at 5,000 trials, so it found
+  nothing. Producing a value a type's own precondition rejects is not testing, it is the
+  `SystemChar(ascii:)` mistake wearing a different type.
+- **For:** ASCII is `0x00 ... 0x7F` and a generator named `asciiScalar()` should draw it;
+  `fixtures/branch-reaching-generator/` measured that a narrow alphabet **with controls** killed
+  a mutant where a wider alphanumeric one killed nothing; and one subject is not a rate —
+  `planted-defect-arm`'s rule applies here too.
+
+Note the asymmetry: **tab, newline, return and DEL cost nothing measurable.** Only NUL trips, and
+only because it is a *terminator* in the C-string domain these types are built on rather than a
+value they can hold. Splitting NUL out would not be narrowing-to-make-a-subject-work; it would be
+recognising that two different things were bundled into one band.
+
+**Not decided here.** It changes a public generator's behaviour in a sibling repo on the strength
+of a single subject, which is exactly the shape of decision this project takes deliberately.
+

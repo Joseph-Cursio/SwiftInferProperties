@@ -26,7 +26,14 @@ extension VerifierWorkdir {
     /// road test found it the only way it could be found — by running a survey
     /// against a corpus that is itself a SwiftPropertyLaws consumer. See
     /// `docs/measurements/roadtest-self-dogfood.md` §9.
-    static let swiftPropertyLawsRequirement = "4.0.0"
+    ///
+    /// **Raised to 4.1.0 on 2026-08-22, because the EMITTER now depends on it.**
+    /// `DerivationStrategist` narrows an `ascii:`-labelled `Unicode.Scalar` parameter to
+    /// `Gen<Unicode.Scalar>.asciiScalar()`, which does not exist in 4.0.0 — so a workdir that
+    /// resolved to 4.0.0 would emit a stub naming a symbol its own dependency does not vend.
+    /// A floor is a claim about what the generated code needs, and the generated code changed.
+    /// See `docs/measurements/criterion-a-swift-system.md` §8.
+    static let swiftPropertyLawsRequirement = "4.1.0"
 
     static var swiftPropertyLawsDependencyLine: String {
         ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", "

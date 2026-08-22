@@ -109,7 +109,7 @@ let package = Package(
         // with the discover-side composite fallback so ordinary 11–14-member
         // value types (a `Violation`, and its `[Violation]` carrier) derive
         // instead of reading "not derived" (SwiftLintRuleStudio road-test Fix 2).
-        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "4.0.0"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "4.1.0"),
         .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "602.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         // Idea #4 — the shared effect-vocabulary leaf. Owns the `Effect` lattice
