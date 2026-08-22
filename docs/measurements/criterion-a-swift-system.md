@@ -360,24 +360,96 @@ luck**, and both halves are worth naming:
 
 **A `FilePath` stub that runs long enough and states a true law will trap.**
 
-### 8.4 The open question this leaves
+### 8.4 RESOLVED — NUL stays, and the question was misframed
 
-**Should `asciiScalar()` include NUL?** The evidence, one subject wide:
+Asked as *should `asciiScalar()` include NUL*, this looked like a coverage-versus-reach
+trade-off. Two measurements say it is neither.
 
-- **Against:** it costs 5 of 9 rows here, verified by re-running with it removed, and it bought
-  **zero** refutations — the two totality laws pass *with* NUL at 5,000 trials, so it found
-  nothing. Producing a value a type's own precondition rejects is not testing, it is the
-  `SystemChar(ascii:)` mistake wearing a different type.
-- **For:** ASCII is `0x00 ... 0x7F` and a generator named `asciiScalar()` should draw it;
-  `fixtures/branch-reaching-generator/` measured that a narrow alphabet **with controls** killed
-  a mutant where a wider alphanumeric one killed nothing; and one subject is not a rate —
-  `planted-defect-arm`'s rule applies here too.
+**First, the population. The narrowing rule fires on almost nothing.** Across the 20 corpora
+that resolve locally, an `ascii:`-labelled `Unicode.Scalar` **initializer parameter** — the only
+shape `narrowedByLabel` can reach — occurs **once**:
 
-Note the asymmetry: **tab, newline, return and DEL cost nothing measurable.** Only NUL trips, and
-only because it is a *terminator* in the C-string domain these types are built on rather than a
-value they can hold. Splitting NUL out would not be narrowing-to-make-a-subject-work; it would be
-recognising that two different things were bundled into one band.
+```swift
+private extension UInt16 { init(ascii: UnicodeScalar) { self = UInt16(UInt8(ascii: ascii)) } }
+// swift-foundation, OpenStepPlist.swift:552
+```
 
-**Not decided here.** It changes a public generator's behaviour in a sibling repo on the strength
-of a single subject, which is exactly the shape of decision this project takes deliberately.
+`private`, so not a law subject, and `UInt16` holds NUL happily. Every other grep hit is one
+vendored `mutating func write(ascii:)` — a **method**, which the initializer strategy never sees
+— or a test name, or this document quoted back at itself. So *"one subject is not a rate"* was
+the right instinct pointed at the wrong thing: swift-system is not one sample of a population,
+it is very nearly the whole population.
+
+**Second, and decisively: `asciiScalar()` is not what traps.**
+
+```swift
+extension SystemChar {
+  internal init(ascii: Unicode.Scalar) {           // SystemString.swift:25 — NUL is FINE here
+    self.init(rawValue: numericCast(UInt8(ascii: ascii)))
+  }
+}
+extension SystemString {
+  internal init(nullTerminated storage: Storage) { // :83 — the funnel
+    self.nullTerminatedStorage = storage
+    _invariantCheck()                              // ← forbids an INTERIOR null
+  }
+}
+```
+
+The leaf generator produces a value the labelled initializer accepts. The rejection happens one
+link further down the composed recipe, at `.array(of: 0...8).map { SystemString($0) }`, in a
+type whose constraint is declared **nowhere in any signature** — it lives in a `fileprivate`
+method, on an `internal` type, inside `#if DEBUG`.
+
+**So dropping NUL would fix the wrong component.** It would make swift-system's five rows
+execute by coincidence, and in doing so would hide the defect that actually caused them. The
+generator would be narrower, the tool no better, and the next composed recipe through a
+precondition-bearing type would fail the same way with the evidence gone.
+
+NUL stays.
+
+### 8.5 The successor question, sized: a precondition one hop through a METHOD
+
+`InitializerPreconditionDetector` already does more than a naive body scan. It counts
+`fatalError` (swift-collections' `BitArray` literal init earned that), and it counts assertions
+behind `#if COLLECTIONS_INTERNAL_CHECKS`, on the stated grounds that the generated suite is
+itself built in debug. It also handles the precondition being **one hop away through another
+initializer** — `_HeapNode`'s `init(offset:)` delegating to a sibling that asserts — which its
+doc comment records as *recorded rather than resolved*.
+
+**The hop it does not follow is initializer → same-type helper method.** `statesPrecondition`
+walks the body for a call to `assert` / `precondition` / `fatalError`; `SystemString`'s body
+calls `_invariantCheck()`, which is not in that set. Every `SystemString` initializer therefore
+reports `assertsPrecondition == false`, and derivation composes straight through it.
+
+**Sized, as a lower bound: 61 candidate sites** across the corpora — initializers calling a
+same-file method whose own body asserts.
+
+| corpus | sites |
+|---|---:|
+| swiftlang-swift | 19 |
+| swift-nio | 10 |
+| swift-foundation | 10 |
+| swift-collections | 8 |
+| GRDB | 5 |
+| swift-syntax | 4 |
+| swift-package-manager | 4 |
+| harmonize | 1 |
+
+swift-collections' entry is `_DequeBufferHeader.swift → _checkInvariants` — **the same
+`_invariantCheck()` shape**, in a corpus this project already measures. So this is a pattern, not
+a swift-system quirk.
+
+**Read that 61 as a ceiling and expect far less.** The instrument is a regex sizing pass
+(`scripts/hop_census.py`), **file-scoped rather than type-scoped**, and it counts candidate
+sites rather than initializers the strategist would actually choose — it gates on neither
+visibility, nor derivability, nor whether that initializer wins the pick. This project's own
+measured ratio for *decline-reason count → rows freed* is about **5:1 against**, which would put
+the real figure nearer a dozen. **It is a number for deciding whether to build an instrument,
+not an answer.**
+
+Not built. The next step is a proper SwiftSyntax census in SwiftPropertyLaws, and the decision
+after it is whether following the method hop is worth its false-decline cost — because the
+conservative direction here *declines* derivable types, and `capacityHintLabels` already
+documents what that costs.
 
