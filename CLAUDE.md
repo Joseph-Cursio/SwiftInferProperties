@@ -54,10 +54,19 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,790 tests — 5,582 fast + 208 across `perf` and the eight batches**
+Suites green at **5,801 tests — 5,593 fast + 208 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-22** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.1.0** — every stage counted from that one run: fast **5,582** · perf 8 ·
-batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **The fast half alone moved, 5,578 → 5,582**, for the
+SwiftPropertyLaws 4.1.0** — every stage counted from that one run: fast **5,593** · perf 8 ·
+batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **The fast half alone moved, 5,582 → 5,593**, for the
+eleven `UncallableDeclarationTests` arms. **The batch half standing still is the load-bearing
+reading here, not a formality**: the availability gate CHANGES DISCOVERY OUTPUT, and the batches
+are where the corpus censuses live — so an unmoved 208 is the evidence that removing 19
+suggestions from swiftlang-swift and 5 from swift-system broke no census. Timings usable and
+uncontended: `batch5` 1,616s against its standing ~1,670s, `batch2` 698s inside its 679–801s
+spread, **~68 minutes end to end**. ⚠ **The FIRST attempt at this run was killed mid-`batch6` and
+leaked 4.9 GB to `$TMPDIR`** — `make clean-temp` reclaimed it to 200 MB, and the run was re-taken
+from scratch rather than resumed, because a partial run proves nothing about a number. The prior
+reading, 5,790 with fast at 5,582, follows. **The fast half alone moved, 5,578 → 5,582**, for the
 four `VerifyResultParserTests` arms on the trap diagnosis; the batch half stood still because
 none of them is a `*MeasuredTests` suite, which is the regex doing its job. **The KIT PIN MOVED
 in this reading — 4.0.0 → 4.1.0** — so the counts belong to that pin and not to its predecessor;
