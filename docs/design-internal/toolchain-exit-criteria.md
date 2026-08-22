@@ -157,7 +157,7 @@ this document wrong.
 | # | Proposed | Why this bar | Measured today |
 |---|---|---|---|
 | **A-reach** | On a subject the toolchain has never met, **≥1 emitted law runs to a PASSING verdict** under a stressed trial budget | you cannot aim a mutant at a law that does not run | **MET 2026-08-22, for the first time** — `swift-system`, 2 laws (`isSeparator`, `isPrenormalSeparator`) hold at 5,000 trials. `docs/measurements/criterion-a-swift-system.md` §8 |
-| **A-quality** | ≥1 of those passing laws **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ANSWERABLE 2026-08-22 and NOT YET ANSWERED.** Three subjects, and this is the first time A-reach has cleared |
+| **A-quality** | ≥1 of those passing laws **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ANSWERED 2026-08-22 — NO at the shipped budget, YES at N ≥ 500.** `swift-system`, `isSeparator(_:)` totality vs a NUL-guard mutant: their 78 tests miss it, the law misses it at N=100 and kills it at N=500. `docs/measurements/criterion-a-quality-swift-system.md` |
 | B | The runnable-tier ratio holds ≥60% across the 17 corpora, not just the home corpus | generality, in a number meant to be quoted | 65% home; cross-corpus unmeasured |
 | C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-17-corpora.md` |
 | D | An app-shaped subject reaches `verified` by some route | §2.4's outcome form | not met |
@@ -232,6 +232,30 @@ laws' passes were correct and no verdict about their refutation power follows.
 `fixtures/branch-reaching-generator/` §3 has the correction and the rule.
 
 ---
+
+### 5.3 A-quality answered — and the budget, not the law, is what fails
+
+**Answered 2026-08-22 on `swift-system`: NO at the shipped budget, YES at N ≥ 500.**
+`criterion-a-quality-swift-system.md` has the arms; the part that belongs in the criteria is
+what it says about the bar itself.
+
+**The bar is budget-dependent, and nothing said so.** A-reach already carries *"under a
+stressed trial budget"* because `removingLastComponent()` passed at 100 and failed at 2,000.
+A-quality now needs the same clause for the mirror-image reason: the NUL mutant passes at 100
+and is killed at 500. **Both failure modes a budget has — a false law passing, a real defect
+surviving — were measured on one subject within a day, at the same N.**
+
+So **A-quality inherits A-reach's budget clause**, and a claim on either bar that does not
+quote its N is not a claim. This document does **not** propose a new default: the right budget
+trades against wall-clock across a whole survey, and that cost is unmeasured.
+
+**A control was required and should be required again.** One mutant would have shown only
+*the law missed it*, leaving blind-law and unlucky-draw indistinguishable. A second mutant
+whose violating input is common was killed at trial 9 — establishing the law is under-budgeted
+rather than blind — **and was also caught by the subject's own tests**, which is the finding
+that gives the bar its edge: where the violating input is common the law adds nothing, and its
+whole value is on the rare input the subject's suite cannot reach. **A-quality run without a
+common-input control cannot tell those apart, and should not be reported.**
 
 ## 6. The standing question, now that A is two bars
 
