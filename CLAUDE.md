@@ -54,10 +54,15 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,778 tests — 5,570 fast + 208 across `perf` and the eight batches**
+Suites green at **5,786 tests — 5,578 fast + 208 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-21** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast **5,558** · perf 8 ·
-batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **The fast half alone moved, 5,566 → 5,570**, for the
+SwiftPropertyLaws 4.0.0** — every stage counted from that one run: fast **5,578** · perf 8 ·
+batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **The fast half alone moved, 5,570 → 5,578** — six
+`ComputedPropertyCallShapeTests` and two `VerifyTargetInferenceTests`; the batch half stood still
+because neither is a `*MeasuredTests` suite, which is the regex doing its job. **This run's
+TIMINGS are usable, unlike the previous reading's**: `batch5` 1,643s against its standing ~1,670s
+and `batch2` 717s inside its 679–801s spread, so nothing inflated — **`make test` ~69 minutes end
+to end**. The prior reading, 5,778 with fast at 5,570, follows. **The fast half alone moved, 5,566 → 5,570**, for the
 four emitter tests that made `role-postcondition` executable; the batch half stood still because
 the new tests are cheap and unbatched. The prior reading, 5,774 with fast at 5,566, follows. **`role-postcondition` emits 30 rows across the 17 corpora** — mid-catalogue,
 above `equivalence-relation` (29) and `normal-form` (17) — taking the discovery total 5,514 → 5,544. **Nothing in the existing
