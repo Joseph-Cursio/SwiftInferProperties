@@ -149,6 +149,19 @@ extension SwiftInferCommand.Verify {
         let qualifierStripped = bareFunctionName.split(separator: ".").last.map(String.init)
         let methodName = qualifierStripped ?? bareFunctionName
         let labels = argumentLabels(from: entry.primaryFunctionName)
+        // A computed property is ACCESSED, not called. `entry.isComputedProperty` has been
+        // carried from `FunctionScannerVisitor+Summary` through `SemanticIndexEntry` all along
+        // and only `composeSelfReturningInvolutionPass` ever read it, so every other shape
+        // emitted `$0.description()` for a `public var description`. Measured on swift-system
+        // (`docs/measurements/criterion-a-swift-system.md` §3): 5 of 6 build failures, all
+        // reading `cannot call value of non-function type`.
+        //
+        // Gated on having no labels as well as the flag, because the two must agree: a
+        // property takes no arguments, so a flag that says "property" beside a label list that
+        // says otherwise is a disagreement to decline on rather than to resolve silently.
+        if entry.isComputedProperty, labels.isEmpty {
+            return "{ $0.\(methodName) }"
+        }
         // Receiver is `$0`; the method's own args are `$1…`. The composers apply
         // this closure immediately (`closure(lhs, rhs)` → `lhs.method(rhs)`) with
         // CONCRETELY-typed generator values, so the `$0`/`$1` shorthand infers

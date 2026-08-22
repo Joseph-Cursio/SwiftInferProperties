@@ -40,6 +40,12 @@ enum VerifyTargetInference {
     ///   - packageRoot: the package the verifier will path-depend on.
     static func module(forLocation location: String, packageRoot: URL) -> String? {
         let path = sourcePath(from: location)
+        // The manifest wins wherever it *could* disagree, and only there. See
+        // `manifestMayRelocateTargets` for why that gate is a text scan and not the dump.
+        if manifestMayRelocateTargets(packageRoot: packageRoot),
+           let declared = manifestModule(forPath: path, packageRoot: packageRoot) {
+            return declared
+        }
         if let conventional = conventionalModule(forPath: path, packageRoot: packageRoot) {
             return conventional
         }
@@ -50,6 +56,69 @@ enum VerifyTargetInference {
         // it. Cheap structural check first, subprocess only when the convention does not
         // answer, which is the ordering `TestTargetScope` records a measured reason for.
         return manifestModule(forPath: path, packageRoot: packageRoot)
+    }
+
+    /// Could this package's manifest put a target somewhere the path convention would misread?
+    ///
+    /// **A text scan of `Package.swift`, deliberately — not the dump.** The dump is
+    /// authoritative and this is not; its only job is to decide whether paying for the
+    /// authoritative answer can change anything. A false positive costs one memoised
+    /// subprocess for that package root; a false negative cannot happen, because a target
+    /// cannot be relocated without the word `path` appearing in the manifest.
+    ///
+    /// Why a gate at all, rather than consulting the manifest first as `manifestModule`'s own
+    /// doc comment used to claim happened: the dump is memoised per package root, and the fast
+    /// suite creates many temp fixture roots, so *manifest-first* is one subprocess per package
+    /// rather than one per entry — recoverable, but paid by every conventional package for a
+    /// question only unconventional ones can answer differently.
+    ///
+    /// `.package(path:)` lines are excluded because a local dependency relocates nothing in
+    /// *this* manifest's targets, and every fixture package here declares one — admitting them
+    /// would make the gate true everywhere and cost exactly what it exists to avoid.
+    ///
+    /// ## The defect this fixes
+    ///
+    /// swift-system declares `.target(name: "SystemPackage", path: "Sources/System")`. The path
+    /// convention reads `Sources/System/FilePath.swift` back as module `System`, which is not a
+    /// target and not a product — so `verify --all-from-index` quarantined **21 of 41 picks** as
+    /// `unsupported-carrier: System is not a library product of swift-system`. That reads as a
+    /// carrier gap and was a module-resolution bug. GRDB (`path: "GRDB"`, outside `Sources/`)
+    /// was already handled, because there the convention *fails* and falls through; swift-system
+    /// is the harder case, where the convention **succeeds and is wrong**.
+    private static func manifestMayRelocateTargets(packageRoot: URL) -> Bool {
+        let key = packageRoot.standardizedFileURL.path
+        if let cached = relocationGateCache.value(forKey: key) { return cached }
+        let manifest = packageRoot.appendingPathComponent("Package.swift")
+        let text = (try? String(contentsOf: manifest, encoding: .utf8)) ?? ""
+        let answer = text.components(separatedBy: "\n").contains { line in
+            guard !line.contains(".package(") else { return false }
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            return trimmed.hasPrefix("path:") || trimmed.contains(", path:")
+        }
+        relocationGateCache.store(answer, forKey: key)
+        return answer
+    }
+
+    /// Memoised per package root, for the reason `TargetIsolation.DumpCache` records: this is
+    /// called once per index entry and a survey has hundreds. Reading one small file that many
+    /// times is cheaper than a subprocess and still not free.
+    private static let relocationGateCache = RelocationGateCache()
+
+    private final class RelocationGateCache: @unchecked Sendable {
+        private let lock = NSLock()
+        private var entries: [String: Bool] = [:]
+
+        func value(forKey key: String) -> Bool? {
+            lock.lock()
+            defer { lock.unlock() }
+            return entries[key]
+        }
+
+        func store(_ value: Bool, forKey key: String) {
+            lock.lock()
+            entries[key] = value
+            lock.unlock()
+        }
     }
 
     /// The `Sources/<module>/…` rule — the original implementation, unchanged.
@@ -79,9 +148,14 @@ enum VerifyTargetInference {
     /// The module owning `path` according to the manifest, or nil when the manifest cannot
     /// answer.
     ///
-    /// **Consulted BEFORE the path-shape rule, because the manifest is authoritative and the
-    /// path shape is a convention.** For a conventional package the two agree, so this changes
-    /// nothing; for GRDB, which declares `path: "GRDB"`, it is the only thing that can answer.
+    /// **Consulted before the path-shape rule when — and only when — `manifestMayRelocateTargets`
+    /// says the manifest could disagree with it.** The manifest is authoritative and the path
+    /// shape is a convention, so where both can answer the manifest must win; the gate exists
+    /// because paying for the authoritative answer is a subprocess and most packages cannot
+    /// disagree. For a conventional package the two agree anyway. For GRDB, which declares
+    /// `path: "GRDB"`, this is the only thing that can answer. For swift-system, which declares
+    /// `path: "Sources/System"` for target `SystemPackage`, this is the only thing that can
+    /// answer *correctly* — the convention answers `System`, confidently and wrongly.
     ///
     /// **Longest match wins.** Nothing stops one target's directory containing another's
     /// (`path: "Sources"` alongside `Sources/Core`), and the shorter prefix would otherwise
