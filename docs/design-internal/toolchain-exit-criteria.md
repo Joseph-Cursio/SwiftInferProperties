@@ -246,8 +246,14 @@ and is killed at 500. **Both failure modes a budget has — a false law passing,
 surviving — were measured on one subject within a day, at the same N.**
 
 So **A-quality inherits A-reach's budget clause**, and a claim on either bar that does not
-quote its N is not a claim. This document does **not** propose a new default: the right budget
-trades against wall-clock across a whole survey, and that cost is unmeasured.
+quote its N is not a claim.
+
+**The default was then raised, 2026-08-22: N=100 → N=1000.** This section previously declined
+to propose one because the cost was unmeasured; it was measured, and the premise behind
+`small` is false. A stub costs **3.56 s to build** and **0.022 s to run 100 trials** — verify
+is compile-bound, so the 10× budget costs **~5 ms, 0.14% of the per-row cost**. N=1000 clears
+both measured failures (the false law fails at 250, the planted defect dies at 500), checked
+rather than assumed. `small` still means N=100 and remains available.
 
 **A control was required and should be required again.** One mutant would have shown only
 *the law missed it*, leaving blind-law and unlucky-draw indistinguishable. A second mutant

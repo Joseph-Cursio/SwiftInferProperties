@@ -73,13 +73,13 @@ extension SwiftInferCommand {
             name: .long,
             help: """
             Trial budget passed to each verify re-run. Same vocabulary \
-            as `verify --budget`: `small` (N=100, the default for an \
-            opt-in gesture) or `standard` (N=1000, higher confidence \
-            at ~30-60s per call). Unknown values fall back to `small` \
-            with a diagnostic.
+            as `verify --budget`: `standard` (N=1000, the default since \
+            2026-08-22) or `small` (N=100, a deliberately cheap sweep — \
+            measured to miss real defects). Unknown values fall back to \
+            `standard` with a diagnostic.
             """
         )
-        public var budget: String = "small"
+        public var budget: String = "standard"
 
         @Option(
             name: .long,

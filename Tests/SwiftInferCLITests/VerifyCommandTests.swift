@@ -36,7 +36,7 @@ struct VerifyCommandTests {
         let command = try SwiftInferCommand.Verify.parse(["--suggestion", "abc123"])
         #expect(command.suggestion == "abc123")
         #expect(command.target == nil)
-        #expect(command.budget == "small")
+        #expect(command.budget == "standard")
         #expect(command.indexPath == nil)
     }
 

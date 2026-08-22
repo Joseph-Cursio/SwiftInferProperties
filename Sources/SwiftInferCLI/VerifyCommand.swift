@@ -116,14 +116,18 @@ extension SwiftInferCommand {
         @Option(
             name: .long,
             help: """
-            Trial budget for the property check. `small` (N=100) is the v1.42 \
-            default (~5s on round-trip-on-Complex<Double>; matches the opt-in \
-            exploration posture). `standard` (N=1000) trades ~30-60s for higher \
-            confidence (the v1.45+ accept-flow budget). Unknown values warn and \
-            fall back to `small`.
+            Trial budget for the property check. `standard` (N=1000) is the \
+            default since 2026-08-22. `small` (N=100) was, and was measured to \
+            miss real defects: it let a false law pass (`removingLastComponent` \
+            idempotence, which fails at 250) and let a planted defect through \
+            (a NUL-guard mutant, killed at 500). Raising it is close to free — \
+            a stub costs ~3.56s to BUILD and ~0.022s to run 100 trials, so N=1000 \
+            adds ~5ms, about 0.14% of the per-row cost. `small` remains available \
+            for a deliberately cheap sweep. Unknown values warn and fall back to \
+            `standard`.
             """
         )
-        public var budget: String = "small"
+        public var budget: String = "standard"
 
         @Option(
             name: .long,
