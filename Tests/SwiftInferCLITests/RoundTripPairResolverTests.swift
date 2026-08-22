@@ -243,9 +243,15 @@ struct RoundTripPairResolverTests {
         #expect(SwiftInferCommand.Verify.parseBudget("standard") == .standard)
     }
 
-    @Test("parseBudget falls back to small on unknown values")
-    func parseBudgetUnknownFallsBackToSmall() {
-        #expect(SwiftInferCommand.Verify.parseBudget("absurd") == .small)
-        #expect(SwiftInferCommand.Verify.parseBudget("") == .small)
+    /// **The fallback must be the SAFER tier, not the cheaper one.**
+    ///
+    /// Moved from `.small` to `.standard` on 2026-08-22 with the default. A typo'd
+    /// `--budget` silently landing on the tier measured to miss a real defect is the
+    /// silent-downgrade shape this project keeps paying for; falling back to the safer
+    /// tier costs ~5ms per stub and cannot hide a defect.
+    @Test("parseBudget falls back to the SAFER tier on unknown values")
+    func parseBudgetUnknownFallsBackToStandard() {
+        #expect(SwiftInferCommand.Verify.parseBudget("absurd") == .standard)
+        #expect(SwiftInferCommand.Verify.parseBudget("") == .standard)
     }
 }

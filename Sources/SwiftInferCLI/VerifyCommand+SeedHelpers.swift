@@ -30,10 +30,13 @@ extension SwiftInferCommand.Verify {
     }
 
     /// Map the user-facing `--budget` string to the emitter's
-    /// `TrialBudget` enum. Unknown values fall back to `.small`
-    /// with a diagnostic on stderr (the v1.42 default; matches
-    /// the plan's "Unknown values emit a diagnostic and fall back
-    /// to `small`" sketch).
+    /// `TrialBudget` enum. Unknown values fall back to `.standard`
+    /// with a diagnostic on stderr.
+    ///
+    /// **The fallback moved with the default on 2026-08-22**, and it has to: a typo'd
+    /// `--budget` landing on the tier that was measured to miss a real defect is the
+    /// silent-downgrade shape this project keeps paying for. Falling back to the *safer*
+    /// tier costs 5ms and cannot hide a defect.
     static func parseBudget(_ raw: String) -> RoundTripStubEmitter.TrialBudget {
         switch raw.lowercased() {
         case "small":
@@ -44,9 +47,9 @@ extension SwiftInferCommand.Verify {
 
         default:
             FileHandle.standardError.write(
-                Data("warning: unknown --budget '\(raw)'; defaulting to 'small'\n".utf8)
+                Data("warning: unknown --budget '\(raw)'; defaulting to 'standard'\n".utf8)
             )
-            return .small
+            return .standard
         }
     }
 

@@ -115,3 +115,46 @@ answering a different question — has now cost a `--target System` misconfigura
 `.build`-contaminated availability count, a default-vs-`--include-possible` join, and this.
 `open-threads.md` records it as a standing observation; four recurrences in one cycle say the
 observation is not doing its job.
+
+---
+
+## 6. The default was raised — N=100 → N=1000, on 2026-08-22
+
+§4 declined to propose a new default because *"the right budget is a cost/benefit question
+over wall-clock across a whole survey, and nothing here measures that cost."* **The cost was
+then measured, and the premise behind `small` turns out to be false.**
+
+| | |
+|---|---:|
+| per-stub **build** (fixed cost) | **3.56 s** |
+| run at N=100 | 0.022 s |
+| run at N=1,000 | **0.027 s** |
+| run at N=20,000 | 0.130 s |
+| run at N=100,000 | 0.547 s |
+
+**Raising the budget 10× costs ~5 ms against a 3,560 ms build — 0.14% of the per-row cost.**
+Verify is compile-bound, not trial-bound, and has been the whole time. The `--budget` help
+text advertised `small` as *"~5s on round-trip-on-Complex<Double>"*, which is very nearly all
+compilation.
+
+**N=1000 clears both measured failures**, which was checked rather than assumed:
+
+| case | N=100 | N=250 | N=500 | N=1,000 |
+|---|---|---|---|---|
+| `removingLastComponent` idempotence (a **false law**) | PASS | **FAIL** | FAIL | FAIL |
+| NUL-guard mutant vs `isSeparator` totality (a **real defect**) | miss | — | **KILL** | KILL |
+
+**The default moves, `small` does not.** `small` still means N=100 and remains available for a
+deliberately cheap sweep — the opt-in posture that justified it is still a real posture, it is
+just no longer the right *default*.
+
+**The unknown-value fallback moved with it**, and had to: a typo'd `--budget` silently landing
+on the tier measured to miss a real defect is precisely the silent-downgrade shape this
+project keeps paying for. Falling back to the safer tier costs 5 ms and cannot hide a defect.
+
+⚠ **The cost measurement is on a cheap-per-trial law** — a totality predicate over
+`SystemChar`. A law doing substantial work per trial costs proportionally more, and this does
+not measure that. The structural claim survives regardless: **the build cost is fixed per
+stub and dominates at any plausible per-trial cost**, and a law would have to be ~100× heavier
+per trial before N=1000 reached even 15% of its own build time.
+

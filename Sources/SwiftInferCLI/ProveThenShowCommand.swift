@@ -76,7 +76,7 @@ extension SwiftInferCommand {
         public var maxParallel: Int = 4
 
         @Option(name: .long, help: "Trial budget: small | medium | large (default small).")
-        public var budget: String = "small"
+        public var budget: String = "standard"
 
         @Option(name: .long, help: "Only verify picks from this template (e.g. 'commutativity').")
         public var template: String?
