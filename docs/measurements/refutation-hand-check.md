@@ -128,6 +128,32 @@ subject never owed.
 
 ---
 
+## Addendum 2026-08-23 — 18 of 18 becomes 1 REAL of 19, and the template is the difference
+
+**The first hand-checked refutation that is a real defect.** `codable-round-trip` on
+`CreateSamplingMessage.ToolChoice` in `mcp-swift-sdk`: `encode` omits the key for both
+`mode: nil` and `mode: .auto`, `init(from:)` maps a missing key to `.auto`, so the round trip
+does not preserve `nil` — and the synthesized `Equatable`/`Hashable` distinguishes two values
+the type's own doc comment calls the same thing. Reproduced independently against the package;
+their 551-test suite passes and never mentions the type. `criterion-a-quality-mcp.md`.
+
+**This document's headline finding was that the TEMPLATE does not predict.** That was measured
+across 15 refutations, and it should now be read with its population stated: **every one of the
+18 false laws was `idempotence` or its operand form, and there were no `codable-round-trip`
+refutations in the set at all.** A conclusion of *template does not predict*, drawn from a
+population containing one template, could not have found the distinction it was testing for.
+
+The distinction that suggests itself, on one data point and stated as a hypothesis:
+
+| | |
+|---|---|
+| `idempotence` | a **conjecture read off a shape** — the tool's own caveat says so, and `f(f(x)) == f(x)` is false for any one-shot stripper |
+| `codable-round-trip` | a law the code **owes** — the type declares `Codable` *and* `Equatable`, and those two conformances make the claim between them |
+
+**Not upgraded to a finding.** 1 of 19 is an existence proof, not a rate, and the honest next
+step is more codable-round-trip refutations from unmet subjects rather than a re-reading of
+this one.
+
 ## Addendum 2026-08-22 — 15 of 15 is now 18 of 18, and the mechanism repeated
 
 Three refutations have been hand-checked since, all false laws, and **two of the three share
