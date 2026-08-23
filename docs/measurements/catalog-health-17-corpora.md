@@ -30,7 +30,7 @@ the second is a defect.
 ## 2. The result
 
 ```
-corpora: 17 · emitted 36 · catalogue 40 (derived) · total rows 5,514
+corpora: 17 · emitted 36 · catalogue 40 (derived) · total rows 5,514 (re-taken at 20 corpora 2026-08-23: **5,892**)
 
 RESOLVED by the wider corpus list: 1
   partition                        2 rows
