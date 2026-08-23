@@ -101,7 +101,15 @@ test: lint test-fast perf batch1 batch2 batch3 batch4 batch5 batch6 batch7 batch
 # Raise it when the suite legitimately grows; do not silence it.
 FAST_BUDGET_SECONDS ?= 240
 
-test-fast: lint ## SwiftLint + every non-subprocess, non-perf test (~35s)
+measurement-selftest: ## Guard the shared measurement primitives (corpus scope, detector reach)
+# Wired into `test-fast` deliberately, which makes it the FIRST thing in `scripts/` that
+# `make test` runs. The convention until 2026-08-23 was that scripts/ is study tooling and
+# the suite does not touch it — and that convention is exactly why six measurement
+# instruments returned a wrong number in one cycle with nothing to catch them. The
+# self-test found three silently-zero corpora on its first run. It costs ~0.3s.
+	@python3 scripts/measurement.py --self-test
+
+test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \
 	$(SWIFT_TEST) --skip '$(SUBPROCESS_RE)|$(PERF_RE)'; \
 	status=$$?; \

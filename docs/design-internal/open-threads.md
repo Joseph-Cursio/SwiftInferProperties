@@ -1524,6 +1524,64 @@ attribute sits in the syntax tree and nothing read it, and it came *after* the h
 chain is ordered by **where the pipeline dies**, and difficulty is scattered along it
 independently — so *the last blocker was hard* implies nothing about what is behind it.
 
+### Six wrong instruments in one cycle, and the guard that was finally written (2026-08-23)
+
+Between 2026-08-17 and 2026-08-23, **six measurement instruments returned a wrong number**, all
+with the shape this file has recorded as a standing observation since 2026-08-05: *the cheap
+capture answered a different question from the one being asked.*
+
+| # | instrument | reported | true |
+|---|---|---|---|
+| 1 | `--target System` on swift-system | "36 unsupported-carrier" | 21 were a module bug |
+| 2 | availability count over `localPath: "."` | 31,541 `deprecated` | **1,163** — the walk entered `.build` |
+| 3 | availability join on `discover` default output | 4 rows | **24** — the question was the index |
+| 4 | swift-system baseline via `swift test \| tail -6` | 8 tests | **78** |
+| 5 | `make test \| tail -35` | exit code only | every per-stage count lost |
+| 6 | custom-`Codable` detector, 40-line window | 7 of 14 | **14 of 14** |
+
+**The standing observation did not prevent any of them**, which this file already predicted of
+itself: *restating a rule in a second prose location does not approximate a guard — it produces
+the feeling of having one.* Six recurrences is that sentence being paid for.
+
+**So the response is code**: `scripts/measurement.py`, wired into `make test-fast` via
+`make measurement-selftest`. It owns corpus-root resolution, applies `EXCLUDED_DIRS` by
+construction, brace-matches declaration blocks across the whole tree rather than a line window,
+and returns the **denominator alongside every population**. Its self-test arms are regression
+tests for specific wrong numbers above — an arm not traceable to one does not belong in it.
+
+**This breaks a convention deliberately.** `scripts/` was study tooling that `make test` did not
+run, and that separation is precisely why nothing caught six bad instruments. The self-test
+costs ~0.3s.
+
+#### It found three silently-zero corpora on its first run
+
+| corpus | declared scan path | resolved to | actually |
+|---|---|---|---|
+| `maccloud-client-ios` | `Shared` | **no such directory** | 22 files at `MacCloud_client_iOS` |
+| `grdb` | *(none)* → `Sources` | **0 .swift** | 167 files at `GRDB` |
+| `swiftlint-rule-studio` | `SwiftLintRuleStudio` | **only `Info.plist`** | 171 files |
+
+**360 Swift files that every manifest-iterating census has counted in its denominator and drawn
+nothing from.** It also explains a loose end recorded a day earlier — *three corpora returned
+zero evidence-rows entirely* — which was noted as *a scoping artifact I haven't chased*.
+
+**GRDB is the sharpest of the three**: its own manifest declares `path: "GRDB"`, so
+`Sources/GRDB` does not exist. That is the **same trap** `VerifyTargetInference.manifestModule`
+was written for — *`Sources/<target>` is a convention, not a rule* — arriving in a second
+subsystem that had not learned it. The fix follows the manifest's own documented rule, which
+was there the whole time: **target says what to BUILD, sources says what to SCAN.**
+
+#### What is NOT guarded, stated so it is not assumed
+
+**#4 and #5 are `| tail -N` in an interactive shell.** Nothing inside a Swift package can see
+them. `measurement.capture()` makes the safe capture shorter to write than the unsafe one, and
+that is a convenience, not a guard. **The recurrence risk there is unchanged.**
+
+**Affected numbers, recorded rather than silently re-taken**: `availability-gate.md`'s 24 of
+4,161 and `template-refutation-rates.md`'s per-template counts were both taken while these three
+corpora contributed nothing. Both were already labelled lower bounds for other reasons; this is
+a further, now-named reason, and neither has been re-run.
+
 ### A decline bucket's NAME is not its cause (2026-08-21)
 
 `verify --all-from-index` over swift-system reported **36 `unsupported-carrier`**, and
