@@ -4,7 +4,7 @@ import Testing
 
 @testable import SwiftInferCore
 
-/// **Which shipped templates fire on nothing — measured against SEVENTEEN corpora?**
+/// **Which shipped templates fire on nothing — measured against every manifest corpus?**
 ///
 /// §10 of `swiftorg-property-test-study-findings.md` ran this over **eight** corpora and
 /// found 6 of 39 templates at zero. §10.5 then removed `involution` from that list — its
@@ -14,7 +14,12 @@ import Testing
 /// > *a census is only as wide as its corpus list, and its zero row is the one cell that
 /// > cannot be trusted without knowing that list.*
 ///
-/// `CorpusManifest` now resolves **seventeen**. `docs/design-internal/toolchain-exit-criteria.md`
+/// `CorpusManifest` resolved **seventeen** when this was written and resolves **twenty**
+/// since 2026-08-23, when three corpora that had been silently resolving to zero `.swift`
+/// files were fixed (`docs/measurements/census-universe-17-to-20.md`). **The count is read
+/// from `CorpusManifest.available` everywhere it is printed, and written nowhere** — this
+/// census printed `at 17 corpora` while scanning 20, two lines from a derived
+/// `corpora: \(CorpusManifest.available.count)` it emitted itself. `docs/design-internal/toolchain-exit-criteria.md`
 /// names re-running this as the one action following from row 8 that needs no decision,
 /// because a template *unwitnessed on eight corpora* and one *unwitnessed anywhere* are
 /// different claims and only the second is a defect.
@@ -79,7 +84,7 @@ struct CatalogHealthCensusMeasuredTests {
     /// **Carrier shape, for sizing a carrier build.**
     ///
     /// Kept in this suite rather than its own because it is a second reading of the
-    /// *same* discover pass. A separate census would re-scan seventeen corpora to
+    /// *same* discover pass. A separate census would re-scan every manifest corpus to
     /// re-derive rows this one already has, doubling a seven-minute cost for identical
     /// data — and `make test` is already ~65 minutes.
     enum CarrierShape: String, CaseIterable {
@@ -187,7 +192,7 @@ struct CatalogHealthCensusMeasuredTests {
     /// ``knownZeroRow``.
     static var catalogue: Set<String> { emitted.union(knownZeroRow) }
 
-    /// Known zeros that are still zero across all seventeen corpora.
+    /// Known zeros that are still zero across every corpus the manifest resolves.
     static var unwitnessed: Set<String> { knownZeroRow.subtracting(emitted) }
 
     /// Known zeros that a wider corpus list has now witnessed. **This is the result
@@ -243,7 +248,7 @@ struct CatalogHealthCensusMeasuredTests {
 
     // MARK: - The census
 
-    @Test("census — catalog health at 17 corpora")
+    @Test("census — catalog health across every corpus the manifest resolves")
     func census() {
         var lines: [String] = ["", "CATALOG HEALTH — ALL MANIFEST CORPORA", ""]
         lines.append(
@@ -252,12 +257,17 @@ struct CatalogHealthCensusMeasuredTests {
         )
         lines.append("total rows: \(Self.rowsByTemplate.values.reduce(0, +))")
         lines.append("")
-        lines.append("STILL UNWITNESSED at 17 corpora: \(Self.unwitnessed.count)")
+        lines.append(
+            "STILL UNWITNESSED at \(CorpusManifest.available.count) corpora: "
+                + "\(Self.unwitnessed.count)"
+        )
         for name in Self.unwitnessed.sorted() { lines.append("  \(name)") }
         lines.append("RESOLVED by the wider corpus list: \(Self.resolved.count)")
         for name in Self.resolved.sorted() { lines.append("  \(name)") }
         lines.append("")
-        lines.append("pinned known zeros, re-checked at seventeen:")
+        lines.append(
+            "pinned known zeros, re-checked at \(CorpusManifest.available.count):"
+        )
         for name in Self.knownZeroRow.sorted() {
             let rows = Self.rowsByTemplate[name] ?? 0
             lines.append("  \(name): \(rows) row(s) — \(rows > 0 ? "RESOLVED — witnessed here" : "still unwitnessed")")

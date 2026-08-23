@@ -17,7 +17,7 @@ import Testing
 /// anywhere for two days, which is the same thing as carrying it.
 ///
 /// This arm is that instruction discharged. It runs the identical detector over the
-/// 17 corpora `CorpusManifest` resolves, so the question changes from *does this
+/// corpora `CorpusManifest` resolves, so the question changes from *does this
 /// package exhibit the shape* to *does the shape exist in Swift as written*.
 ///
 /// ## What differs from the home arm, and what deliberately does not

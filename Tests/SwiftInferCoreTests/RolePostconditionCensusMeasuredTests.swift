@@ -13,6 +13,8 @@ import Testing
 /// **`measure-non-negativity` does not discover `>= 0`.** It recognises a *role* —
 /// `count` / `size` / `magnitude` — and the catalogue supplies the law. It has **401 rows
 /// across the 17 corpora**, among the largest in the catalogue. The pattern that works is:
+/// Measured at the **17** corpora resolving then; `CorpusManifest` resolves **20** since
+/// 2026-08-23 and this has NOT been re-taken — `docs/measurements/census-universe-17-to-20.md`.
 ///
 /// > role recognised by name → predicate supplied by the catalogue → asserted on the output
 ///

@@ -15,6 +15,9 @@
 /// The route that works was already shipping. **`MeasureTemplate` does not discover
 /// `>= 0`** — it recognises the role `count` / `size` / `magnitude` and the catalogue
 /// supplies the law, at **401 rows across the 17 corpora**. This is that pattern widened:
+/// Measured at the **17** corpora resolving then; `CorpusManifest`
+/// resolves **20** since 2026-08-23 and this has NOT been re-taken —
+/// see `docs/measurements/census-universe-17-to-20.md`.
 ///
 /// > role recognised by name → predicate supplied here → asserted of the output
 ///
