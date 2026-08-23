@@ -42,6 +42,9 @@ public enum TemplateName: String, Sendable, Equatable, Hashable, CaseIterable, C
     /// then declined two routes that try to *discover* the predicate and measured a third
     /// — the catalogue supplying it from a recognised role — at **~33 sites, ~97%
     /// precision** across the 17 corpora. `measureNonNegativity` is the same pattern
+    /// Measured at the **17** corpora resolving then; `CorpusManifest`
+    /// resolves **20** since 2026-08-23 and this has NOT been re-taken —
+    /// see `docs/measurements/census-universe-17-to-20.md`.
     /// already shipping at 401 rows; this widens it past `>= 0`.
     case rolePostcondition = "role-postcondition"
 

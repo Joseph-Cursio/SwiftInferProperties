@@ -7,9 +7,9 @@ import Testing
 /// **The secondary readings of `CatalogHealthCensusMeasuredTests`' single scan.**
 ///
 /// Carrier shape, visibility/widenability and the validity-predicate pairing all read the
-/// *same* discover pass over the 17 corpora that suite already performs. They live in an
+/// *same* discover pass over every manifest corpus that suite already performs. They live in an
 /// extension rather than their own suites because a separate census would re-scan
-/// seventeen corpora to re-derive identical rows — doubling a seven-minute cost against a
+/// every manifest corpus to re-derive identical rows — doubling a seven-minute cost against a
 /// ~65-minute gate — and in their own FILE because four censuses in one file crossed
 /// SwiftLint's type-body and file-length caps.
 extension CatalogHealthCensusMeasuredTests {
