@@ -128,6 +128,15 @@ subject never owed.
 
 ---
 
+> ⚠ **This document's headline — *the template does not predict* — is annotated by
+> `docs/measurements/template-refutation-rates.md` (2026-08-23).** Over a wider pool the
+> template *does* predict for two of three arms: `predicate`/totality refutes **0 of 102**, and
+> `idempotence` refutes **~1 in 5 on two independent corpora with 18 of 18 checked false**. The
+> conclusion below was drawn from 15 refutations that were **all `idempotence` or
+> `commutativity`** — a population containing one or two templates cannot answer whether the
+> template predicts. The `codable-round-trip` arm remains unmeasured (0 of 10 here, 1 of 4 on
+> `mcp-swift-sdk`).
+
 ## Addendum 2026-08-23 — 18 of 18 becomes 1 REAL of 19, and the template is the difference
 
 **The first hand-checked refutation that is a real defect.** `codable-round-trip` on
