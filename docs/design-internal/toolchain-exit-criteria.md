@@ -157,7 +157,7 @@ this document wrong.
 | # | Proposed | Why this bar | Measured today |
 |---|---|---|---|
 | **A-reach** | On a subject the toolchain has never met, **≥1 emitted law runs to a PASSING verdict** under a stressed trial budget | you cannot aim a mutant at a law that does not run | **MET 2026-08-22, for the first time** — `swift-system`, 2 laws (`isSeparator`, `isPrenormalSeparator`) hold at 5,000 trials. `docs/measurements/criterion-a-swift-system.md` §8 |
-| **A-quality** | ≥1 of those passing laws **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ANSWERED 2026-08-22 — NO at the shipped budget, YES at N ≥ 500.** `swift-system`, `isSeparator(_:)` totality vs a NUL-guard mutant: their 78 tests miss it, the law misses it at N=100 and kills it at N=500. `docs/measurements/criterion-a-quality-swift-system.md` |
+| **A-quality** | ≥1 of those passing laws **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ANSWERED YES 2026-08-23 on `mcp-swift-sdk`, and by a REAL defect rather than a planted one** — `codable-round-trip` on `ToolChoice` refuted on the subject as shipped, and their **551-test suite misses it**. `docs/measurements/criterion-a-quality-mcp.md`. Earlier, weaker answer on `swift-system` (planted mutant): **NO at the shipped budget, YES at N ≥ 500** — `criterion-a-quality-swift-system.md` |
 | B | The runnable-tier ratio holds ≥60% across the 17 corpora, not just the home corpus | generality, in a number meant to be quoted | 65% home; cross-corpus unmeasured |
 | C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-17-corpora.md` |
 | D | An app-shaped subject reaches `verified` by some route | §2.4's outcome form | not met |
@@ -262,6 +262,33 @@ rather than blind — **and was also caught by the subject's own tests**, which 
 that gives the bar its edge: where the violating input is common the law adds nothing, and its
 whole value is on the rare input the subject's suite cannot reach. **A-quality run without a
 common-input control cannot tell those apart, and should not be reported.**
+
+### 5.4 A-quality met on a short-chain subject, without a mutant
+
+**Answered YES on `mcp-swift-sdk` @ `a0ae212`, 2026-08-23.** The law refuted on the subject as
+shipped: `CreateSamplingMessage.ToolChoice` encodes `mode: nil` and `mode: .auto` to
+byte-identical JSON while `Equatable`/`Hashable` distinguish them, so a codable round trip does
+not preserve the value. Their 551 tests pass and mention `ToolChoice` **zero** times.
+
+**No mutant was planted, and that is worth being precise about.** The bar is phrased around a
+planted defect because planted evidence is *guaranteed* to be a defect — the adjudication is
+free. A found defect moves that cost to the reader: someone must decide whether the refutation
+is real. Here it was hand-checked and independently reproduced against the package before the
+claim was made. **A found defect is stronger evidence than a planted one when the adjudication
+holds, and worthless when it does not** — so the standard for reporting one must be a repro,
+not a reading.
+
+**§6.1's short-chain rule predicted this before the run.** MCP executes **10 of 67 rows on the
+first attempt with zero fixes**, against swift-system's **0 of 41**, and the structural criteria
+(173 public value types to 2 classes, no C interop, target name matching its directory) were
+read off the package beforehand. The one-run pre-check works.
+
+**The catalogue reading changes shape, though not much.** The refuting template is
+`codable-round-trip` — a law the code *owes*, since the type declares `Codable` and `Equatable`
+and those two conformances make the claim between them. All 18 previously hand-checked
+refutations were `idempotence` or its operand form, which the tool's own caveat calls a
+conjecture. **Tally: 1 real of 19.** One data point, and the first suggesting *which template
+refutes* carries information.
 
 ## 6. The standing question, now that A is two bars
 
