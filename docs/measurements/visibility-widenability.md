@@ -5,7 +5,7 @@
 Harness `CatalogHealthCensusMeasuredTests.visibilityCensus`, `make batch8`. A third
 reading of that suite's single scan over the 17 corpora `CorpusManifest` resolves.
 
-**Measured: 883 rows — 16% of all discovery output — would be freed by widening one
+**Measured: 883 (re-taken at 20 corpora 2026-08-23: **918**) rows — 16% of all discovery output — would be freed by widening one
 access modifier. It is the largest lever measured this cycle. And 87% of the gain lands
 in the two templates a hand-check found produce false laws.**
 
