@@ -65,11 +65,13 @@
       "subject": "GRDB.swift",
       "kind": "package",
       "target": "GRDB",
-      "sources": null,
+      "sources": [
+        "GRDB"
+      ],
       "remote": "https://github.com/groue/GRDB.swift.git",
       "localPath": "~/GitHub_projects/GRDB.swift",
       "role": "unfamiliar",
-      "why": "The non-default layout: GRDB declares `path: \"GRDB\"`, so its sources sit at repo root rather than under Sources/ and the package was unreachable outright. Also the largest inverse-pair / identity-element population on record, which is what measured those composers as not worth building.",
+      "why": "The non-default layout: GRDB declares `path: \"GRDB\"`, so its sources sit at repo root rather than under Sources/ and the package was unreachable outright. Also the largest inverse-pair / identity-element population on record, which is what measured those composers as not worth building.  Scan path corrected 2026-08-23: the previous value resolved to zero .swift files, so every manifest-iterating census counted this corpus in its denominator and drew nothing from it. target says what to BUILD, sources says what to SCAN.",
       "measurements": [
         {
           "apparatus": "prove-then-show",
@@ -431,12 +433,12 @@
       "kind": "app",
       "target": null,
       "sources": [
-        "Shared"
+        "MacCloud_client_iOS"
       ],
       "remote": "https://github.com/Joseph-Cursio/MacCloud_client_iOS.git",
       "localPath": "../MacCloud_client_iOS",
       "role": "unfamiliar",
-      "why": "The only app-shaped subject, and the reason --sources exists. An Xcode project has no Sources/<target>, so five app-facing commands rejected it outright with an argument error; the same 22 files staged into a shim produced 4 findings on an @Observable view model. The gate never rejected the code.",
+      "why": "The only app-shaped subject, and the reason --sources exists. An Xcode project has no Sources/<target>, so five app-facing commands rejected it outright with an argument error; the same 22 files staged into a shim produced 4 findings on an @Observable view model. The gate never rejected the code.  Scan path corrected 2026-08-23: the previous value resolved to zero .swift files, so every manifest-iterating census counted this corpus in its denominator and drew nothing from it. target says what to BUILD, sources says what to SCAN.",
       "measurements": [
         {
           "apparatus": "road-test",
@@ -457,12 +459,13 @@
       "kind": "app",
       "target": null,
       "sources": [
-        "SwiftLintRuleStudio"
+        "SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore",
+        "UI"
       ],
       "remote": "https://github.com/Joseph-Cursio/SwiftLintRuleStudio.git",
       "localPath": "../SwiftLintRuleStudio",
       "role": "unfamiliar",
-      "why": "The out-of-catalog diagnosis, and the source of the standing rule that a refuter which fires first hides every refuter behind it — three passes each named 'the remaining blocker' for `serialize` and each was wrong. Also carries two retracted closures, which is why its numbers are read with the retraction.",
+      "why": "The out-of-catalog diagnosis, and the source of the standing rule that a refuter which fires first hides every refuter behind it — three passes each named 'the remaining blocker' for `serialize` and each was wrong. Also carries two retracted closures, which is why its numbers are read with the retraction.  Scan path corrected 2026-08-23: the previous value resolved to zero .swift files, so every manifest-iterating census counted this corpus in its denominator and drew nothing from it. target says what to BUILD, sources says what to SCAN.",
       "measurements": [
         {
           "apparatus": "road-test",
