@@ -77,13 +77,53 @@ The remaining four — `dup` / `dup2` / `dup3` → `duplicate`, and `pwrite` →
 replacement row and still lose nothing actionable: they are uncallable either way, and three
 of them have bodies that are literally `fatalError("Not implemented")`.
 
-⚠ **The 24 has NOT been re-taken, and cannot be cheaply.** The gate now suppresses exactly the
-rows the join counted, so re-running it returns ~0 — a measurement of the fix, not of the
-population. The bound available instead is the declaration count above: the three
-newly-included corpora carry **6** blocking declarations between them, all in GRDB, so the true
-row figure is a little above 24 and not materially so. Re-taking it properly would mean
-building with the gate disabled, which is not worth it for a number already labelled a lower
-bound.
+### 3.1 Re-taken properly, 2026-08-23 — with the gate disabled and by A/B
+
+The 24 was a lower bound taken with a single-line regex over a manifest that silently skipped
+four corpora. It has now been re-measured two ways, against the corrected manifest, at
+`--include-possible`, with a locally gate-disabled build (never committed).
+
+| | |
+|---|---:|
+| evidence-rows across the 20 resolving corpora | **6,344** (previously reported 4,161) |
+| **rows NAMING an uncallable subject** | **19** |
+| **rows the gate REMOVES** (A/B, parser-exact) | **35** |
+
+**Two numbers because they measure two things**, and conflating them is what made 24 look
+inconsistent with the earlier −35:
+
+- **19** is rows whose own subject is withdrawn. All in `swiftlang-swift` — 16 `round-trip`,
+  3 `predicate`.
+- **35** is what discovery actually loses, which includes the **partner** evidence row of a
+  pair whose other half was withdrawn. A `round-trip` on `byteCount()` × a withdrawn
+  `dropFirst(_:)` is one suggestion and two rows; only one names a withdrawn declaration.
+
+**The old figure reconciles exactly: 24 = 19 (manifest corpora) + 5 (`swift-system`, which is
+not in the manifest and was run as an extra target).** The A/B's 35 also reproduces the
+swiftlang-swift-only figure measured on 2026-08-22 to the row.
+
+**The A/B is the better instrument and needs no regex.** Diffing gate-on against gate-off lets
+the real parser decide, so multi-line attributes and enclosing unavailable `extension`s — both
+recorded as lower-bound caveats on the 24 — are handled by construction.
+
+**Why the population grew 52%**, decomposed rather than asserted:
+
+| corpus | before | now | cause |
+|---|---:|---:|---|
+| `grdb` | *skipped* | 740 | manifest scan path (`path: "GRDB"`) |
+| `swiftlint-rule-studio` | 0 | 100 | manifest scan path |
+| `maccloud-client-ios` | *skipped* | 3 | manifest scan path |
+| `swift-project-lint` | 9 | 396 | the earlier join read `sources[0]`, skipping `Packages` |
+| `swift-syntax` | 0 | 996 | **unexplained** |
+
+⚠ **`swift-syntax` is recorded as unexplained rather than given a cause.** Same scan path, same
+flag, same resolution in both runs, and the A/B reads **996 in both arms** — so it is not a gate
+effect. The earlier run simply returned nothing and no reason for it survives. Inventing one
+would be worse than the gap.
+
+**The three newly-included corpora contribute ~2,183 rows and ZERO removals.** GRDB carries 6
+blocking declarations and none becomes a law subject — consistent with this project's measured
+~5:1 decline-to-rows ratio, and a reminder that a declaration count is an upper bound on rows.
 
 ⚠ **Two instrument caveats on the 24.** The join inspected only a declaration's own attribute
 block, on a **single line**, so an enclosing unavailable `extension` and any multi-line
