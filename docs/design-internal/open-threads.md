@@ -1577,10 +1577,23 @@ was there the whole time: **target says what to BUILD, sources says what to SCAN
 them. `measurement.capture()` makes the safe capture shorter to write than the unsafe one, and
 that is a convenience, not a guard. **The recurrence risk there is unchanged.**
 
-**Affected numbers, recorded rather than silently re-taken**: `availability-gate.md`'s 24 of
-4,161 and `template-refutation-rates.md`'s per-template counts were both taken while these three
-corpora contributed nothing. Both were already labelled lower bounds for other reasons; this is
-a further, now-named reason, and neither has been re-run.
+**Affected numbers — and one that was wrongly listed as affected.**
+
+`availability-gate.md`'s declaration counts **were** taken while these three corpora contributed
+nothing, and are re-taken there. The manifest fix moved them by **6 and 18**; it also surfaced a
+larger, unrelated error (`obsoleted: 49+` was really **106**, from a form-census truncated to its
+top shapes). **Both original figures reproduce to the digit on their original population**, which
+cross-validates the old and new instruments against each other.
+
+⚠ **`template-refutation-rates.md` was NOT affected, and saying it was, was an error.** Its three
+streams are the home-corpus survey — which indexed *this repo's six library targets* via
+`--index-path`, not the manifest — plus `mcp-swift-sdk` and `swift-system`, each a single
+subject. **No manifest iteration touches any of them.**
+
+That mistake is worth keeping rather than quietly deleting: **over-claiming contamination is not
+the safe direction it looks like.** A number wrongly marked tainted gets discarded, and the work
+behind it is repeated for nothing. The scope of a defect has to be measured with the same care as
+the defect.
 
 ### A decline bucket's NAME is not its cause (2026-08-21)
 

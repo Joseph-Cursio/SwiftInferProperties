@@ -77,6 +77,14 @@ The remaining four — `dup` / `dup2` / `dup3` → `duplicate`, and `pwrite` →
 replacement row and still lose nothing actionable: they are uncallable either way, and three
 of them have bodies that are literally `fatalError("Not implemented")`.
 
+⚠ **The 24 has NOT been re-taken, and cannot be cheaply.** The gate now suppresses exactly the
+rows the join counted, so re-running it returns ~0 — a measurement of the fix, not of the
+population. The bound available instead is the declaration count above: the three
+newly-included corpora carry **6** blocking declarations between them, all in GRDB, so the true
+row figure is a little above 24 and not materially so. Re-taking it properly would mean
+building with the gate disabled, which is not worth it for a number already labelled a lower
+bound.
+
 ⚠ **Two instrument caveats on the 24.** The join inspected only a declaration's own attribute
 block, on a **single line**, so an enclosing unavailable `extension` and any multi-line
 `@available(…)` were invisible — §5 shows both mattered. And three corpora returned zero
@@ -92,11 +100,33 @@ the same corpora, on `public` / `package` declarations:
 
 | form | sites | callable? |
 |---|---:|---|
-| `@available(*, deprecated, …)` | **1,163** | **yes**, with a warning |
+| `@available(*, deprecated, …)` | **1,181** | **yes**, with a warning |
 | version floors — `@available(macOS 13, iOS 16, *)` | hundreds | **yes** |
-| `@available(*, noasync)` | 28 | **yes** — the emitted stub is synchronous |
-| `@available(*, unavailable, …)` | 92 | no |
-| `@available(swift, …, obsoleted: 5.0, …)` | 49+ | no — already removed |
+| `@available(*, noasync)` | 34 | **yes** — the emitted stub is synchronous |
+| `@available(*, unavailable, …)` | 98 | no |
+| `@available(swift, …, obsoleted: 5.0, …)` | **106** | no — already removed |
+
+> **Re-taken 2026-08-23 after the corpus-manifest fix, and the manifest was the SMALLER of two
+> errors.** Decomposed rather than swapped in:
+>
+> | | previously-measured 17 corpora | 3 newly-included | corrected |
+> |---|---:|---:|---:|
+> | `unavailable` | **92** — reproduces the old figure exactly | 6 | **98** |
+> | `obsoleted:` | **106** | 0 | **106** |
+> | `deprecated` | **1,163** — reproduces exactly | 18 | **1,181** |
+>
+> **Both original figures reproduce to the digit on their original population**, which
+> cross-validates the two instruments. The manifest fix moved them by **6 and 18** — the three
+> corpora that had been resolving to zero `.swift` files
+> (`open-threads.md` → *Six wrong instruments in one cycle*) carry little `@available` surface.
+>
+> **The larger error was `obsoleted: 49+`, which is really 106.** That figure came from a
+> form-census truncated to its top 18 shapes, so it undercounted by more than half — nothing to
+> do with the manifest. It is now a full count.
+>
+> **None of this changes the gate's design.** `deprecated` at 1,181 still dwarfs blocking at
+> 204, so gating on `@available` generally would still sweep an order of magnitude more than it
+> saved. If anything the case is stronger.
 
 So: block on `unavailable` and `obsoleted:`, admit everything else. **`deprecated` is the one
 that would hurt** — a deprecated API is a perfectly good law subject, and gating on it would
