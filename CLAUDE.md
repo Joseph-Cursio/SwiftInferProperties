@@ -63,7 +63,13 @@ reading here, not a formality**: the availability gate CHANGES DISCOVERY OUTPUT,
 are where the corpus censuses live — so an unmoved 208 is the evidence that removing 19
 suggestions from swiftlang-swift and 5 from swift-system broke no census. Timings usable and
 uncontended: `batch5` 1,616s against its standing ~1,670s, `batch2` 698s inside its 679–801s
-spread, **~68 minutes end to end**. **The 2026-08-22 re-run at the RAISED trial budget (N=100 → N=1000) came in at the same
+spread, **~68 minutes end to end**. **The 2026-08-23 run after the corpus-manifest fix is +9% SLOWER, and that cost is
+ATTRIBUTABLE rather than noise**: `batch2` 872s against its 679–801s spread, `batch5` 1,729s
+against ~1,670s, **~75 minutes against ~69**. Three corpora that had been resolving to ZERO
+`.swift` files now contribute **360**, roughly +14% of the scanned population, so a +9% wall
+clock is the censuses doing work they had been silently skipping. **Counts did not move** —
+the censuses assert floors and memberships, not absolute totals, which is why 360 new files
+changed their printed figures and none of their assertions. **The 2026-08-22 re-run at the RAISED trial budget (N=100 → N=1000) came in at the same
 counts and the same wall clock** — `batch5` 1,643s, `batch2` 730s, ~69 minutes — which is the
 compile-bound finding confirmed at SUITE scale rather than on one stub, and **no pinned law
 flipped**: a 10× budget turned no `bothPass` into a `defaultFails` anywhere, so
