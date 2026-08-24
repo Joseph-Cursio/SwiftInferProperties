@@ -54,10 +54,35 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,801 tests — 5,593 fast + 208 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-22** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.1.0** — every stage counted from that one run: fast **5,593** · perf 8 ·
-batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **The fast half alone moved, 5,582 → 5,593**, for the
+Suites green at **5,808 tests — 5,600 fast + 208 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-08-24** on **swift-property-based 2.0 /
+SwiftPropertyLaws 4.2.0** — every stage counted from that one run: fast **5,600** · perf 8 ·
+batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · 21. **THE KIT PIN MOVED, 4.1.0 → 4.2.0**, so these counts
+belong to that pin and not to its predecessor — a re-take after a kit bump is a different
+measurement wearing the same number, which is why it was re-taken rather than carried.
+**The fast half alone moved, 5,593 → 5,600**: +4 `AccessCaveatJoinCollisionTests` and +3
+`QualifiedSpellingDerivationTests`. (A 7-test `StdlibTypeSpellingTests` arrived and was deleted
+inside the same session when its rule moved upstream, so the net is +7 rather than +14 — the kind
+of thing arithmetic over a changelog gets wrong and a re-take does not.)
+**The batch half standing still is again the load-bearing reading**: the qualified-spelling fix
+CHANGES DERIVATION OUTPUT — it took one unmet subject from **0 to 15 executing rows** — and the
+batches are where the corpus censuses live. **Stronger than an unmoved 208 this time: every census
+FIGURE reproduces to the digit**, not merely every assertion. Functions **31,431** · rows
+**5,892** · `userDefined` **5,213 (88%)** · `collection` **151 (2%)** · restricted **2,515 (42%)**
+· `internalOrSPI` **1,392** · two-operand templates still exactly **6** collection rows. That is
+the population census confirmed at scale: the shape the fix addresses occurs **once** across the
+20 corpora, so a rule worth 15 rows on generated code is worth nothing on hand-written Swift, and
+now it is measured rather than predicted.
+⚠ **QUOTE THE COUNTS FROM THIS RUN AND THE TIMINGS FROM AN EARLIER ONE.** Every stage is above its
+standing figure, **including stages this change cannot touch** — `batch3` (`VerifyPipeline`) 477s
+against ~352s (+36%), `batch8` 592s against ~460s (+29%), `batch2` 899s **above** its 679–801s
+spread, `batch5` 1,770s against ~1,670s, wall clock **~80 minutes against ~69**. Even the fast
+suite read 56s here against 44–51s standalone the same day. **Uniform inflation across unrelated
+stages is the signature of a busy machine, not an attributable new cost**, and recording it would
+set a baseline that is a fact about the machine — the trap this file already named once. The
+prior reading — **5,801 = 5,593 fast + 208, taken 2026-08-22 on SwiftPropertyLaws 4.1.0** — and
+everything below it are SUPERSEDED HISTORY, kept because each records what its verdict was decided
+on. **The fast half alone moved, 5,582 → 5,593**, for the
 eleven `UncallableDeclarationTests` arms. **The batch half standing still is the load-bearing
 reading here, not a formality**: the availability gate CHANGES DISCOVERY OUTPUT, and the batches
 are where the corpus censuses live — so an unmoved 208 is the evidence that removing 19
