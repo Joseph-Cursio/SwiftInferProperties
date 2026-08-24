@@ -1,12 +1,22 @@
 # Exit criteria for "the toolchain is in shape"
 
-> **Status:** `open` · **As of:** 2026-08-22
+> **Status:** `open` · **As of:** 2026-08-24
 
 Open item 8 has said *"exit criteria are unwritten"* since the item list began. This
 scores the criteria that **were** written — on 2026-08-03, inside a decision note, where
 nobody looked at them again — and asks for a decision on the ones that are missing.
 
-**Nothing here is ratified.** §5 is a proposal; the choice of bar is the maintainer's.
+**A is RATIFIED and MET, both halves** — A-reach 2026-08-22 (`swift-system`), A-quality
+2026-08-23 (`mcp-swift-sdk`). B–E are supporting measurements and do **not** gate. §5 is the
+criteria and their scoring; **§6 is the current standing, and supersedes any earlier
+statement of open work in this file.**
+
+> ⚠ **This header read *"Nothing here is ratified. §5 is a proposal"* until 2026-08-24**,
+> three days after ratification and one day after the bar was met — while §5's own title said
+> RATIFIED. It is recorded rather than quietly replaced because it is this file's second
+> instance of the same defect in one pass: §6 went on prescribing work §5.4 had already
+> completed. **A document that scores staleness elsewhere is not exempt from it**, and both
+> stale claims were in the two places a reader looks first.
 
 ---
 
@@ -174,11 +184,15 @@ from the other side — **A had quietly become a capability bar too.**
 
 Split, the two failure modes read differently, which is the whole point:
 
+> ⚠ **Both this table's first row and the second bullet below were CORRECTED 2026-08-23 by the
+> route that met A-quality — see §6.2.** They hold for the **mutant route** and were mistaken
+> for general claims. Do not quote either without §6.2.
+
 | A-reach | A-quality | reading |
 |---|---|---|
-| fails | — | the **pipeline** is the constraint; law quality is unmeasured and no verdict about it follows |
+| fails | — | the **pipeline** is the constraint; law quality is unmeasured and no verdict about it follows ⚠ **too strong — a refutation on shipped code is a verdict, and needs no passing law; §6.2** |
 | passes | fails | the **laws** are the constraint |
-| passes | passes | in shape, on that subject |
+| passes | passes | in shape, on that subject ⚠ **never demonstrated on ONE subject — the two halves were met on different ones; §6.2** |
 
 **Why A-reach's threshold is a *passing* law rather than an executing one.** It follows from
 two measured facts rather than from taste:
@@ -188,6 +202,14 @@ two measured facts rather than from taste:
 - **A refuted law is, on all evidence here, a false law** — 17 of 17 across this project
   (15 in `refutation-hand-check.md`, plus `pushing(_:)` and `removingLastComponent()`).
   Planting a violating mutant against a law that is already false says nothing.
+  ⚠ **FALSIFIED 2026-08-23, by the refutation that met A-quality** — the tally is now
+  **18 FALSE of 19 hand-checked**, and the 1 real is `ToolChoice` on `mcp-swift-sdk`. The prior stays strong and
+  the decline advice is unchanged; what is gone is the *exceptionless* form this bullet used.
+
+**Both corrections run in the same direction: the thresholds were STRICTER than the purpose
+required.** A-reach remains the right precondition for planting a mutant. It is not a
+precondition for A-quality as such, and treating it as one would have sent the next attempt
+down the longer of two routes.
 
 So a passing law is the *only* kind a mutant test can be aimed at, and "≥1 passing law" is
 the minimum condition for A-quality to mean anything. It is a precondition, not a
@@ -225,11 +247,15 @@ not need ratification to be informative — and it found what **nine reach measu
 not**: 89% of emitted laws did not compile on an unmet subject. Three emitter defects,
 since fixed.
 
-**A itself is NOT ANSWERED**, and this document said "FAILS" until 2026-08-21. That was
-wrong: the planted mutants were real correctness bugs that **preserve idempotence**, so the
-laws' passes were correct and no verdict about their refutation power follows.
-**Answering A needs a defect chosen to violate the law**, not one chosen for realism —
-`fixtures/branch-reaching-generator/` §3 has the correction and the rule.
+~~**A itself is NOT ANSWERED**~~ — **SUPERSEDED 2026-08-23 by §5.3 and §5.4; both halves are
+now MET.** The paragraph is kept struck rather than deleted because the rule inside it is
+still live and cited elsewhere. As written: this document said "FAILS" until 2026-08-21, and
+that was wrong — the planted mutants were real correctness bugs that **preserve idempotence**,
+so the laws' passes were correct and no verdict about their refutation power follows.
+**A planted defect must be chosen to violate the law**, not chosen for realism —
+`fixtures/branch-reaching-generator/` §3 has the correction and the rule. That rule survives
+the supersession and applies to any future mutant; what does not survive is the *NOT ANSWERED*
+verdict attached to it.
 
 ---
 
@@ -290,22 +316,25 @@ refutations were `idempotence` or its operand form, which the tool's own caveat 
 conjecture. **Tally: 1 real of 19.** One data point, and the first suggesting *which template
 refutes* carries information.
 
-## 6. The standing question, now that A is two bars
+## 6. A is MET, both halves — and the route taken was not the one this document planned
 
-**A-reach is MET. A-quality is answerable for the first time, and answering it is the open
-work.** What that needs, specifically:
+**A-reach MET 2026-08-22 (`swift-system`). A-quality MET 2026-08-23 (`mcp-swift-sdk`).**
+The bar ratified on 2026-08-21 is cleared. §5.3 and §5.4 are the results; this section
+records what the open work *was*, what survived it, and the one thing the route falsified.
 
-1. **Plant a mutant against one of the two passing laws.** `isSeparator(_:)` and
-   `isPrenormalSeparator(_:)` on `swift-system` hold at 5,000 trials. Both are totality
-   predicates, so the violating mutant is one that makes the predicate non-total — and the
-   bar requires that **swift-system's own test suite miss it**, which must be checked rather
-   than assumed.
-2. **A defect chosen to VIOLATE the law**, not chosen for realism. The first attempt planted
-   three real correctness bugs that all preserved idempotence, so the laws' passes were
-   correct and no verdict followed. `fixtures/branch-reaching-generator/` §3 has the rule:
-   *a mutant is evidence about a law only if it violates that law.*
-3. **Record the trial budget beside the result.** §5.1's second threshold exists because
-   `removingLastComponent()` passed at 100 and failed at 2,000.
+**This section prescribed three steps until 2026-08-23 and they were never taken.** They are
+kept here because two of the three survive as standing rules, and because a plan overtaken by
+a different route is worth distinguishing from a plan that was followed:
+
+1. ~~**Plant a mutant against one of the two passing laws**~~ — `isSeparator(_:)` /
+   `isPrenormalSeparator(_:)` on `swift-system`, both holding at 5,000 trials. **Not done, and
+   no longer needed for the bar.** It remains the only route that would answer A-quality *on
+   swift-system*, which §6.2 argues is still worth having.
+2. **A planted defect must be chosen to VIOLATE the law**, not for realism. **Survives** —
+   `fixtures/branch-reaching-generator/` §3: *a mutant is evidence about a law only if it
+   violates that law.* Applies to any future mutant.
+3. **Record the trial budget beside the result.** **Survives**, and is now §5.1's second
+   threshold: `removingLastComponent()` passed at 100 and failed at 2,000.
 
 ### 6.1 Choosing the next subject — a lesson from three of them
 
@@ -325,6 +354,34 @@ initializers, no C interop. There is a cheap pre-check that costs one run — po
 before committing to it. swift-system's first honest reading was **0 of 41**, and that
 number was itself the signal that the chain was long.
 
+### 6.2 The route falsifies §5.1's precondition argument, and one of its premises
+
+**A-quality was met by a REFUTING law on unmutated code, not by a passing law killing a
+planted mutant.** `codable-round-trip` refuted `ToolChoice` on `mcp-swift-sdk` as shipped.
+Two consequences for the criteria as written, both worth stating plainly rather than quietly
+absorbing:
+
+- **A-reach is not, in general, a precondition for A-quality.** §5.1 argues it is, on the
+  ground that *a passing law is the only kind a mutant can be aimed at*. That is true of the
+  **mutant route** and says nothing about the **found-defect route**, which needs no mutant
+  and therefore needs no passing law. The argument was sound for the case it considered and
+  was mistaken for a general one. §5.1's table row *A-reach fails → no verdict about law
+  quality follows* is correspondingly too strong: a refutation on shipped code is a verdict.
+- **The premise *a refuted law is a false law* has now been falsified once — by the result
+  that met the bar.** §5.1 rested on **17 of 17**; the tally is **18 FALSE of 19 hand-checked**, and the 1 real
+  is `ToolChoice`. The decline advice does not change (18 of 19 is still a strong prior, and
+  all 18 are `idempotence`), but a premise quoted as exceptionless now has its exception, and
+  that exception is load-bearing rather than incidental.
+
+**Neither of these lowers the bar or reopens it.** A is met on the reading that was ratified.
+What they change is the *reasoning* around it, and the correction runs in the direction that
+matters here: the criteria were stricter than they needed to be, in a way that would have
+sent the next attempt down the longer route.
+
+**A-reach and A-quality were met on DIFFERENT subjects**, so §5.1's *passes / passes → in
+shape, on that subject* has not been demonstrated on any single subject. Whether that
+composite reading is what the bar meant is the maintainer's call, and it is unasked.
+
 ## 7. What this document used to ask for
 
 1. **Ratify, soften or reject A–E.** Unwritten criteria are the failure mode; wrong
@@ -340,7 +397,7 @@ number was itself the signal that the chain was long.
    argument for A–E being written as things that can *fail*, not as things that sound
    strict.
 
-## 7. What would refute this document
+## 8. What would refute this document
 
 - **A ratified bar that A–E do not cover.** These are proposals from the inside; the
   purpose belongs to the maintainer.
