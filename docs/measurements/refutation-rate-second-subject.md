@@ -8,7 +8,16 @@ defect** (`ToolChoice`, `codable-round-trip`) against 18 hand-checked false ones
 information. This is the attempt to make it a rate by running a second unmet subject.
 
 **The answer: the rate was not obtained. Zero new refutations, on two subjects.** The tally
-is unchanged at **1 real of 19**. What the attempt produced instead is a shipped bug fix, a
+is unchanged at **1 real of 19**.
+
+> ⚠ **SUPERSEDED IN PART, SAME DAY, by `module-qualified-leaf-spelling.md`.** §7 of this document
+> named *recursive generator derivation* as the blocker. **That premise is false** — recursion
+> already worked; the binding constraint was `RawType(typeName: "Swift.String")` returning nil.
+> Fixing the spelling took `MacPaw/OpenAI` from **0 to 15 of 55** executing rows and produced
+> **9 refutations**, so *zero refutations on two subjects* is no longer true of this subject.
+> **The headline verdict survives**: all 9 are one mechanism and hand-check as FALSE laws, so the
+> tally moves to **1 real of 28** and the rate question is still unanswered. Read §7 as the
+> question that was asked, and the newer doc as the answer that corrected it. What the attempt produced instead is a shipped bug fix, a
 correction to the subject-selection rule, and two decline causes named precisely.
 
 **Nothing here weakens the MCP finding and nothing strengthens it.** No refutation fired
@@ -205,10 +214,16 @@ contain a defect. That is not a finding about them — no law ran.
 1. **A subject whose Codable ∩ Equatable types have generator-derivable fields** — i.e.
    primitives and stdlib types, not nested custom types. Both subjects here failed on the
    second clause after passing the first, so the screen needs a third: *field types resolve*.
-2. **Recursive generator derivation for custom field types.** This is the single blocker
-   behind all 28 OpenAI rows, and it is the same finding `criterion-a-swift-system.md` §2
-   reached from a different direction — the generator's domain, not the carrier, is where the
-   rows die. Unscoped.
+2. ~~**Recursive generator derivation for custom field types.** This is the single blocker
+   behind all 28 OpenAI rows.~~ **WRONG, and corrected the same day** — see
+   `module-qualified-leaf-spelling.md`. Recursion was already built and working. The blocker was
+   **leaf recognition**: a member spelled `Swift.String` resolves to no generator, and generated
+   code spells every type that way. A/B: **0 of 28 → 16 of 28** member trees resolve. The
+   recursion story is true of the **12** rows that remain, whose leaves are genuinely
+   unresolvable types in a dependency (`OpenAPIRuntime.OpenAPIObjectContainer`,
+   `CopyOnWriteBox<…>`) — it was simply not true of the other 16. **Generalising from the first
+   row inspected (`Filters`, whose members really are custom types) would have aimed a build at
+   12 rows and missed the 16 that needed only a correct spelling.**
 3. **Do not re-pick these three.** `lottie-ios`, `swift-aws-lambda-events` and `MacPaw/OpenAI`
    are recorded here precisely so the *zero mentions across `docs/`* check disqualifies them
    next time, the way `swift-system` and `mcp-swift-sdk` are — neither is in the manifest
