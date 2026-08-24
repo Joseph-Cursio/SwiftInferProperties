@@ -257,19 +257,13 @@ extension IndexedTypeShape {
             inheritedTypes: inheritedTypes,
             hasUserGen: hasUserGen,
             storedMembers: storedMembers.map {
-                PropertyLawCore.StoredMember(
-                    name: $0.name,
-                    typeName: StdlibTypeSpelling.canonical($0.typeName)
-                )
+                PropertyLawCore.StoredMember(name: $0.name, typeName: $0.typeName)
             },
             hasUserInit: hasUserInit,
             initializers: initializers.map { sig in
                 PropertyLawCore.InitializerSignature(
                     parameters: sig.parameters.map {
-                        PropertyLawCore.InitializerParameter(
-                            label: $0.label,
-                            typeName: StdlibTypeSpelling.canonical($0.typeName)
-                        )
+                        PropertyLawCore.InitializerParameter(label: $0.label, typeName: $0.typeName)
                     },
                     isFailable: sig.isFailable,
                     isThrowing: sig.isThrowing
@@ -279,10 +273,7 @@ extension IndexedTypeShape {
                 PropertyLawCore.EnumCase(
                     name: enumCase.name,
                     associatedValues: enumCase.associatedValues.map {
-                        PropertyLawCore.InitializerParameter(
-                            label: $0.label,
-                            typeName: StdlibTypeSpelling.canonical($0.typeName)
-                        )
+                        PropertyLawCore.InitializerParameter(label: $0.label, typeName: $0.typeName)
                     }
                 )
             }
