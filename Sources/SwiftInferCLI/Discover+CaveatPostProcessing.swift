@@ -51,26 +51,46 @@ extension SwiftInferCommand.Discover {
         summaries: [FunctionSummary] = []
     ) -> [Suggestion] {
         guard !restrictedFunctions.isEmpty else { return suggestions }
+        // **Join on the exact coordinate, not on `(file, bare symbol)`.** Both sides of THIS join
+        // come from one scan, so the declaration's own `file:line` identifies it exactly, and the
+        // lossy key does not: it collapses every same-named function in a file to one entry, and
+        // `Dictionary(_:uniquingKeysWith:)` then binds that entry to whichever came first.
+        //
+        // Measured on `MacPaw/OpenAI` @ `a532be8`, 2026-08-24: `Components.swift` declares **72**
+        // `func encode(`, of which exactly ONE — inside a `private struct Storage` — is genuinely
+        // restricted. Under the lossy key all 72 shared `Components.swift::encode`, so that one
+        // `private` nested type carried `.enclosingTypeNotVisibleToTests` onto **26 of the 28**
+        // `codable-round-trip` suggestions in the file. `blocksEveryTest` then marked each
+        // `subjectNotVisibleToTests` and `verify` filed them `not-a-candidate` — a law suppressed
+        // by a claim about a DIFFERENT function that happened to share a name.
+        //
+        // The old comment read *"two remedies for one key differ only in wording — picking either
+        // beats trapping on a duplicate"*. That premise is what failed: the colliding remedies did
+        // not differ in wording, they differed in **truth**. `SymbolJoinKey`'s own doc calls the
+        // collision *"a known, currently-empty hazard"* — measured on seeds, across FILES. This
+        // collision is WITHIN one file, which that measurement could not have seen.
+        let byLocation = Dictionary(
+            restrictedFunctions.map { (Self.coordinate(of: $0.summary.location), $0.restriction) }
+        ) { first, _ in first }
+        // The lossy key survives for rows with no resolvable coordinate — a lifted row locates at
+        // `<test-body>:0`, so an exact join would silently drop its caveat. Narrow fallback, not a
+        // general one: a row that HAS a coordinate and misses is not restricted, and must not
+        // inherit a namesake's verdict.
         let pairs = restrictedFunctions.map {
             (SymbolJoinKey.make(for: $0.summary), $0.restriction)
         }
-        // First wins: the lossy join key can collide (see `SymbolJoinKey`), and two remedies for
-        // one key differ only in wording — picking either beats trapping on a duplicate.
         let restrictionByKey = Dictionary(pairs) { first, _ in first }
         // §2's remedy, now that it is computable. `calledFreeFunctionNames` landed for the
         // one-hop purity join on 2026-08-18 and inverting it names the caller — the blocker
         // this advice waited eleven days on was open item 38's missing call graph.
         let lifts = LiftTargets.make(summaries: summaries, restrictedFunctions: restrictedFunctions)
         return suggestions.map { suggestion in
-            let restrictions = suggestion.evidence.compactMap { row in
-                restrictionByKey[
-                    SymbolJoinKey.make(
-                        file: row.location.file,
-                        symbol: Self.functionBaseName(row.displayName)
-                    )
-                ]
-            }
-            guard let restriction = restrictions.first else { return suggestion }
+            let restriction = Self.restriction(
+                for: suggestion,
+                byLocation: byLocation,
+                byName: restrictionByKey
+            )
+            guard let restriction else { return suggestion }
             var updated = suggestion
             // The caveat below has always SAID this law cannot run. Say it as a signal too, so
             // `StructuralBlocker` can key on it and `verify` stops filing a known-unrunnable
@@ -100,6 +120,42 @@ extension SwiftInferCommand.Discover {
             )
             return updated
         }
+    }
+
+    /// The restriction binding a suggestion, found per-declaration.
+    ///
+    /// **Exact coordinate first, and a miss is an answer.** A row that carries a resolvable
+    /// `file:line` and finds nothing is *not restricted* — it must not fall through to the name
+    /// key and inherit a namesake's verdict, which is the whole defect this join was narrowed to
+    /// fix. The name key is reached only when there is no coordinate to ask with.
+    static func restriction(
+        for suggestion: Suggestion,
+        byLocation: [String: AccessRestriction],
+        byName: [String: AccessRestriction]
+    ) -> AccessRestriction? {
+        for row in suggestion.evidence {
+            guard row.location.isResolvable else {
+                let key = SymbolJoinKey.make(
+                    file: row.location.file,
+                    symbol: Self.functionBaseName(row.displayName)
+                )
+                if let found = byName[key] { return found }
+                continue
+            }
+            if let found = byLocation[Self.coordinate(of: row.location)] { return found }
+        }
+        return nil
+    }
+
+    /// `file:line` — the declaration's identity for the restriction join.
+    ///
+    /// **Line without column deliberately.** Both sides come from one scan, so the line agrees;
+    /// the column is where a producer is most likely to differ (a modifier list, an attribute, or
+    /// a leading-trivia choice moves it), and a coordinate that is exact in principle but brittle
+    /// in practice would reintroduce the miss this join exists to remove — silently, and in the
+    /// permissive direction the standing observation warns about.
+    static func coordinate(of location: SourceLocation) -> String {
+        "\(location.file)#\(location.line)"
     }
 
     /// The lift line for a suggestion, or `[]` when no evidence row has a visible caller.
