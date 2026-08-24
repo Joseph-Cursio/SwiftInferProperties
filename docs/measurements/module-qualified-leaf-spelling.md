@@ -92,10 +92,41 @@ All three positions are covered — stored members, initializer parameters and e
 Fixing only the arm that motivated the change is the mistake `EqualityBodyClassifier` already
 made once.
 
-⚠ **The kit is still blind to this on its own.** `RawType` is unchanged, so
-`PropertyLawDiscoveryTool` run directly against generated code has the same hole. Fixed here
-because this scanner produces the spelling and the cross-repo alternative is a kit release for a
-population of one. **Recorded as an open cross-repo gap, not as done.**
+### 4.1 MOVED UPSTREAM, same day — and the local copy is DELETED, not kept
+
+The first version of this fix lived here, as `StdlibTypeSpelling` applied at `toKitShape()`, and
+this section recorded the consequence as an open gap: *the kit is still blind, so
+`PropertyLawDiscoveryTool` pointed at generated code has the same hole.* **The maintainer chose
+upstream.**
+
+**SwiftPropertyLaws [#15](https://github.com/Joseph-Cursio/SwiftPropertyLaws/pull/15), released
+as `v4.2.0`.** Two seams there, because one does not cover the other:
+
+- **`RawType(typeName:)`** accepts the `Swift.`-qualified spelling — what memberwise derivation
+  and `RawRepresentable` enum derivation read.
+- **`CompositeMemberParser`** covers the Foundation half by recursing on the unqualified name,
+  the same idiom `knownTypeAlias` already used for `TimeInterval`.
+
+The kit's version is **stricter than the local one was**, in the direction that matters: the
+remainder resolves only against the known-leaf tables and **never against `resolve`**. Stripping
+first and asking the whole-module resolver second would let a source saying `Swift.Foo` bind to a
+user type called `Foo` — silently wrong rather than declined, the worst available outcome. A test
+there pins that the resolver is never offered a stripped name.
+
+**The local copy is deleted rather than kept as belt-and-braces.** Two implementations of one
+rule drift, and PRD §11 says generator inference delegates to the kit. What remains here is
+`QualifiedSpellingDerivationTests` — an assertion about the *behaviour* this package depends on,
+including that a qualified **custom** type is still declined, which is the arm that would catch a
+kit fix that made everything derive.
+
+⚠ **The deletion was A/B'd, not assumed.** Same subject, same binary otherwise, local fix versus
+kit fix: **0 of 55 rows differ at row level** — 40 pending / 9 `defaultFails` / 5 `bothPass` /
+1 trap, both ways. The kit reproduces the local result exactly, which is the evidence that
+removing the local copy costs nothing.
+
+**Pins:** `Package.swift` and `VerifierWorkdir.swiftPropertyLawsRequirement` both move to
+`4.2.0`, kept equal by `VerifierWorkdirKitPinTests`. The floor is a claim about what the
+generated code needs, and what derivation needs changed.
 
 ---
 

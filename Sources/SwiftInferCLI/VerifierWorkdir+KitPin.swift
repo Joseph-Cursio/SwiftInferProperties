@@ -33,7 +33,14 @@ extension VerifierWorkdir {
     /// resolved to 4.0.0 would emit a stub naming a symbol its own dependency does not vend.
     /// A floor is a claim about what the generated code needs, and the generated code changed.
     /// See `docs/measurements/criterion-a-swift-system.md` §8.
-    static let swiftPropertyLawsRequirement = "4.1.0"
+    /// **Raised to 4.2.0 on 2026-08-24, because DERIVATION now depends on it.**
+    /// `RawType` and `CompositeMemberParser` recognise a module-qualified leaf spelling —
+    /// `Swift.String` is `String` — which 4.1.0 does not. A workdir resolving to 4.1.0 derives
+    /// no generator for any member a code generator wrote, so every such row reports an
+    /// unsupported *carrier*: a claim that the carrier is exotic, about a `String`. Measured on
+    /// a generated client, that is the difference between 0 and 15 executing rows.
+    /// See `docs/measurements/module-qualified-leaf-spelling.md`.
+    static let swiftPropertyLawsRequirement = "4.2.0"
 
     static var swiftPropertyLawsDependencyLine: String {
         ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", "
