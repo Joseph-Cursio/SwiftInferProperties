@@ -41,7 +41,7 @@ EXIT=0, 5,801 tests). `git diff b4bf09b6..HEAD -- Sources/ Tests/ Package.swift 
   so `visibility-widenability.md`'s warning that counting it inflates the lever 2.7× stands at
   exactly the same magnitude.
 - **The two-operand templates still hold six collection rows**, which is the finding
-  `catalog-health-17-corpora.md` uses to close two build directions. Three more corpora and
+  `catalog-health-census.md` uses to close two build directions. Three more corpora and
   348 more rows did not add one.
 - **The four unwitnessed templates are the same four.** 360 additional files witnessed none of
   them, which strengthens rather than weakens the case that they are unwitnessed rather than
@@ -49,7 +49,7 @@ EXIT=0, 5,801 tests). `git diff b4bf09b6..HEAD -- Sources/ Tests/ Package.swift 
 
 ## 3. Three known-stale artifacts, not fixed here
 
-**`catalog-health-17-corpora.md`'s filename encodes the old universe**, and the census itself
+**`catalog-health-census.md`'s filename encodes the old universe**, and the census itself
 still prints `STILL UNWITNESSED at 17 corpora` and `re-checked at seventeen` while scanning
 20. Those strings are hardcoded prose inside `*MeasuredTests`, two lines from a
 `corpora: 20` the same census prints. **Renaming the doc and deriving the count are follow-up

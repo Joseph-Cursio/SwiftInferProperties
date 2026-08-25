@@ -6,16 +6,34 @@
 **Repo:** `~/xcode_projects/SwiftPropertyLaws` (`github.com/Joseph-Cursio/SwiftPropertyLaws`) ·
 **Book home:** Chapters 13–14, Appendix A; law families surface in nearly every chapter.
 
-> **As of 2026-08-12** · subject `SwiftPropertyLaws@9a73903` (`v3.28.0`, equal to this repo's pin) ·
-> observer `SwiftInferProperties@2722975`
+> **As of 2026-08-25** · subject `SwiftPropertyLaws@cd5d543` (`v4.2.0`, equal to this repo's pin) ·
+> observer `SwiftInferProperties@4477c25f`
+>
+> ⚠ **The line above read `v3.28.0`, "equal to this repo's pin", and that had become FALSE** — the
+> pin moved 3.28.0 → 4.0.0 → 4.1.0 → 4.2.0 while this doc asserted equality at the oldest of them.
+> An equality claim is the one kind of statement in a reference doc that a reader will trust
+> without checking, which is why it is the one worth re-checking first.
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
 
-<!-- doc-provenance date=2026-08-12 subject=SwiftPropertyLaws@9a73903 version=3.28.0 observer=SwiftInferProperties@21bc279 -->
+<!-- doc-provenance date=2026-08-25 subject=SwiftPropertyLaws@cd5d543 version=4.2.0 observer=SwiftInferProperties@4477c25f -->
 
-> **2026-08-12 — scope of this re-verification.** The **pin** was re-checked and moved
+> **2026-08-25 — scope of this re-verification, stated so it is not read as wider than it was.**
+> **Re-verified: the PIN and the derivation-tier table.** The pin is `v4.2.0` in `Package.swift`
+> and in `VerifierWorkdir.swiftPropertyLawsRequirement`, which agree and are guarded. The tier
+> table below is unchanged by 4.2.0 — that release altered leaf *recognition*, not the tier order:
+> `RawType(typeName:)` and `CompositeMemberParser` now accept a module-qualified spelling
+> (`Swift.String` is `String`), which is what generated code writes. Measured downstream at 0 → 15
+> executing rows on one subject and **one occurrence across the 20 measurement corpora** —
+> `docs/measurements/module-qualified-leaf-spelling.md`.
+> **NOT re-verified: every other count in this file.** 3 subject commits and three major versions
+> separate this reading from the last, and re-checking the pin is not re-checking the numbers. The
+> `1–10 member` arity note in particular predates a nesting change and is flagged rather than
+> fixed, because fixing it needs a measurement nobody has taken.
+>
+> **2026-08-12 — scope of the previous re-verification.** The **pin** was re-checked and moved
 > (`3.26.0` → `3.28.0`, resolving `14d89875` → `9a73903`), along with the guarded
 > `VerifierWorkdir.swiftPropertyLawsRequirement`, which agrees.
 >

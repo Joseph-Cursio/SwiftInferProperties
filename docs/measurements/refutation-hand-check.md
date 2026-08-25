@@ -137,6 +137,49 @@ subject never owed.
 > template predicts. The `codable-round-trip` arm remains unmeasured (0 of 10 here, 1 of 4 on
 > `mcp-swift-sdk`).
 
+## Addendum 2026-08-24 — 1 of 19 becomes 1 REAL of 28, and a FOURTH mechanism is named
+
+**Nine new refutations, all false, all one mechanism, all from one generated codebase.**
+`MacPaw/OpenAI` @ `a532be8`, after a leaf-spelling fix took it from 0 to 15 executing rows.
+`docs/measurements/module-qualified-leaf-spelling.md` §5.
+
+**The mechanism, joining the three this document already names:**
+
+> **Round-trip over a type whose optional fields carry an undeclared mutual-consistency
+> invariant.**
+
+All nine counterexamples set **both** `value1` and `value2` on `swift-openapi-generator`
+`anyOf`/`allOf` wrappers. `encode(to:)` writes only
+`encodeFirstNonNilValueToSingleValueContainer([value1, value2])`; `init(from:)` tries to decode
+both from that one value. Traced in full on `ModelIdsShared`: encode writes `"L0eZAui"`, decode
+restores `value1` and drops `value2`, and `Hashable` sees it. **The `valueN` fields are
+alternative views of ONE JSON value and must be mutually consistent — and the public memberwise
+initializer does not enforce that**, so the generator draws states the real domain excludes. One
+counterexample nests `ModelIdsShared(value1: nil, value2: nil)`, which the type's own
+`verifyAtLeastOneSchemaIsNotNil` rejects by design.
+
+**Why this does NOT weaken the 2026-08-23 hypothesis below, though it is `codable-round-trip`.**
+The distinction is between the two ways a round trip can fail:
+
+| | |
+|---|---|
+| `ToolChoice` (**real**) | a contradiction **inside the type's own stated semantics** — its doc comment says an omitted `mode` *means* `.auto`, the encoder agrees, and `Equatable` does not. Nothing outside the type is needed to see it |
+| these nine (**false**) | the law **over-quantifies** — the type never claims the fields are independent, and the invariant that says otherwise is undeclared. Same failure as `idempotence` over a derivation |
+
+So the template still separates *a law the code owes* from *a conjecture*; what this adds is that
+a law the code owes can still be **stated over the wrong domain**.
+
+⚠ **Hand-check honesty: the mechanism was traced in full on ONE of the nine and pattern-matched
+on the other eight** by their shared both-set counterexample signature and identical generated
+shape. That is weaker than nine independent hand-checks and is not equivalent to the 15 below,
+each of which was read against its own subject.
+
+⚠ **And nine instances of one pattern is not nine data points.** The tally reads **1 real of 28**,
+but the denominator is now dominated by a single generated codebase emitting one shape repeatedly.
+**No filter proposed** — the same pattern appears in every `swift-openapi-generator` client, which
+makes it a high-volume false-law source and therefore a *presentation* question (attach the
+mechanism to the refutation) long before a suppression one.
+
 ## Addendum 2026-08-23 — 18 of 18 becomes 1 REAL of 19, and the template is the difference
 
 **The first hand-checked refutation that is a real defect.** `codable-round-trip` on
