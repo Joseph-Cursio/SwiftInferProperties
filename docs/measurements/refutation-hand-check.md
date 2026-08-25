@@ -137,6 +137,35 @@ subject never owed.
 > template predicts. The `codable-round-trip` arm remains unmeasured (0 of 10 here, 1 of 4 on
 > `mcp-swift-sdk`).
 
+## Addendum 2026-08-25 — a SECOND real defect, and a third VERDICT category
+
+**`jwt-kit` @ `8189d7c`, `AppleIdentityToken.UserDetectionStatus`.** `codable-round-trip` again,
+on a second independent unmet subject, again missed by the subject's own suite (124 tests, and
+the type appears in **zero** test files). `docs/measurements/refutation-rate-third-fourth-subject.md`.
+
+**It is neither of the two verdicts this document has been using**, and forcing it into one would
+lose the finding:
+
+| axis | this refutation |
+|---|---|
+| the law's counterexample | **over-quantified** — a random `Int(6348581922313170543)`, which nobody constructs |
+| the defect it points at | **real** — `union`, `[.a, .b]` and `insert` all yield rawValue 3, and `encode(to:)` throws on all three, verified by executing against the package |
+
+The type declares `OptionSet`. Those three are its **defining operations**, so the type promises
+they produce valid values and its own encoder rejects them — a contradiction between two declared
+conformances, the `ToolChoice` shape. But the generator never found that value; it found a random
+one, and a reader had to ask *is there a meaningful value nearby*.
+
+> **The counterexample's quality and the finding's reality are INDEPENDENT AXES.** The first 28
+> hand-checks never separated them, because every real one happened to carry a meaningful
+> counterexample and every false one did not. **That coincidence, not a principle, is why this
+> document has had two verdicts.**
+
+**Tally: 29 hand-checked, 2 real, both `codable-round-trip`, both on unmet subjects.**
+`idempotence` remains **0 of 18**. ⚠ **Still not a rate** — the 11 `codable-round-trip` checks
+include nine instances of one mechanism from one generated codebase, so deduplicated by mechanism
+it is nearer **2 real of 4 distinct mechanisms**, which is far too small to quote as a precision.
+
 ## Addendum 2026-08-24 — 1 of 19 becomes 1 REAL of 28, and a FOURTH mechanism is named
 
 **Nine new refutations, all false, all one mechanism, all from one generated codebase.**
