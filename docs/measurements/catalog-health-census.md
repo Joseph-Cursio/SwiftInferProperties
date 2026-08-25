@@ -1,6 +1,15 @@
-# Catalog health, re-taken at seventeen corpora
+# Catalog health — which templates fire on nothing
 
-> **Status:** `measured` · **As of:** 2026-08-20
+> **Status:** `measured` · **As of:** 2026-08-23
+
+> **Renamed 2026-08-25, from `catalog-health-17-corpora.md`.** The filename and the title both
+> encoded the corpus universe, and the universe moved to twenty while the figures inside were
+> re-taken — so the name asserted something the contents contradicted. **A count belongs in the
+> body, where it can be dated and re-taken; a filename cannot be.** The universe each figure was
+> measured against is stated beside it below.
+
+*Figures below were re-taken at twenty corpora (2026-08-23); the original seventeen-corpus run is
+recorded inline where the two differ.*
 
 Harness `CatalogHealthCensusMeasuredTests`, `make batch8`, ~7.5 minutes.
 

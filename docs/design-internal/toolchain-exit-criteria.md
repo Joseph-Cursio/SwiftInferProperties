@@ -11,6 +11,15 @@ nobody looked at them again — and asks for a decision on the ones that are mis
 criteria and their scoring; **§6 is the current standing, and supersedes any earlier
 statement of open work in this file.**
 
+<!-- doc-provenance date=2026-08-25 subject=SwiftInferProperties@4477c25f observer=SwiftInferProperties@4477c25fe23d12e28e905e1aac6dd6e6dc120b6a -->
+
+> **Why this trailer arrived late.** `make docs-drift` reported this file as *no doc-provenance
+> trailer* — which its own header calls a **broken check, not a clean bill**: exit 1 is reserved
+> for *the check could not answer*, precisely so a missing answer never reads as "no drift". This
+> file scored staleness elsewhere while being the one doc the staleness checker could not see.
+> The SHA means **this doc was reviewed against that tree**, not that any figure in it was
+> re-measured there — the same rule `open-threads.md` states for its own trailer.
+
 > ⚠ **This header read *"Nothing here is ratified. §5 is a proposal"* until 2026-08-24**,
 > three days after ratification and one day after the bar was met — while §5's own title said
 > RATIFIED. It is recorded rather than quietly replaced because it is this file's second
@@ -75,7 +84,7 @@ process finding is the reason this matters:
 That is the third time this exact lesson has been paid for — §10.5, then the
 three-corpus censuses re-taken 2026-08-19, then row 46's module-state zero. **Re-running
 the catalog health census over 17 corpora is the concrete action this criterion implies**
-— **done 2026-08-20**, `docs/measurements/catalog-health-17-corpora.md`. `partition`
+— **done 2026-08-20**, `docs/measurements/catalog-health-census.md`. `partition`
 resolved; three remain, plus `invariant-preservation`, which is deferred rather than
 broken. **And it returned a finding about the criterion itself**: there is no trustworthy
 runtime catalogue of templates, so a bar phrased over *all* templates cannot be
@@ -169,7 +178,7 @@ this document wrong.
 | **A-reach** | On a subject the toolchain has never met, **≥1 emitted law runs to a PASSING verdict** under a stressed trial budget | you cannot aim a mutant at a law that does not run | **MET 2026-08-22, for the first time** — `swift-system`, 2 laws (`isSeparator`, `isPrenormalSeparator`) hold at 5,000 trials. `docs/measurements/criterion-a-swift-system.md` §8 |
 | **A-quality** | ≥1 of those passing laws **kills a mutant** the subject's existing tests miss | the purpose, in refutation units | **ANSWERED YES 2026-08-23 on `mcp-swift-sdk`, and by a REAL defect rather than a planted one** — `codable-round-trip` on `ToolChoice` refuted on the subject as shipped, and their **551-test suite misses it**. `docs/measurements/criterion-a-quality-mcp.md`. Earlier, weaker answer on `swift-system` (planted mutant): **NO at the shipped budget, YES at N ≥ 500** — `criterion-a-quality-swift-system.md` |
 | B | The runnable-tier ratio holds ≥60% across the 17 corpora, not just the home corpus | generality, in a number meant to be quoted | 65% home; cross-corpus unmeasured |
-| C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-17-corpora.md` |
+| C | ~~Zero templates unwitnessed across all 17 corpora~~ → **no template in the RECORDED zero row is still unwitnessed** | closes §2.2 with the wider list; **restated 2026-08-20 because the original is unevaluable** — a criterion over *all* templates needs a catalogue and there is none | **not met: 4 remain**, one deferred. `partition` resolved. `docs/measurements/catalog-health-census.md` |
 | D | An app-shaped subject reaches `verified` by some route | §2.4's outcome form | not met |
 | E | No measurement doc older than its binary — every published figure re-derivable | §2.3's positive form | unmeasured, unscoped |
 
@@ -353,6 +362,30 @@ initializers, no C interop. There is a cheap pre-check that costs one run — po
 `verify --all-from-index` at the candidate and read **how many rows reach the build stage**
 before committing to it. swift-system's first honest reading was **0 of 41**, and that
 number was itself the signal that the chain was long.
+
+⚠ **AMENDED 2026-08-24, after the rule was USED and came up short.** Two subjects were selected
+by every clause above — `swift-aws-lambda-events` and `MacPaw/OpenAI`, both public value types,
+both zero C interop, both target-directory-matching — and they executed **1 of 15** and **0 of
+55**. The clauses are about the *subject*; they say nothing about whether the **template** has a
+population there. Two further clauses, each measured:
+
+- **A template's population is an INTERSECTION, not a conformance count.** `codable-round-trip`
+  needs `Codable` ∩ `Equatable` on the *same type*, because `Codable` supplies the round trip and
+  `Equatable` supplies the `==`. `lottie-ios` declares **32** Codable types and **48**
+  Equatable ones and emits **1** row: five types are in the intersection. Counting the
+  conformances separately predicts a rich subject; the intersection predicted a poor one and was
+  right.
+- **The fields must be generator-derivable, and conformance does not imply it.** `AWSRegion`
+  declares both conformances and derives nothing, because its only initializer is *failable*.
+  `MacPaw/OpenAI` clears that clause too and still executed nothing until an unrelated
+  leaf-spelling defect was fixed.
+
+**The pre-check itself is unchanged and was never wrong** — it read 1 of 15 and 0 of 55 exactly
+as it should have. What was wrong was continuing past it. Both subjects were carried forward
+*after* the pre-check had already said stop, which is a discipline failure rather than a rule
+failure, and is recorded here because the rule will read as insufficient otherwise.
+`docs/measurements/refutation-rate-second-subject.md`,
+`docs/measurements/module-qualified-leaf-spelling.md`.
 
 ### 6.2 The route falsifies §5.1's precondition argument, and one of its premises
 

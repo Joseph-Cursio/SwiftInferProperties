@@ -89,7 +89,7 @@ receive a collection. They cannot: `CommutativityStubEmitter` and
 `supportedCarriers = ["Complex<Double>", "Double", "Int"]`, and a scalar has no parts to
 overlap. The scalar collision case is `identical`, measured **0/3** above.
 
-**And the population is not there either.** `docs/measurements/catalog-health-17-corpora.md`
+**And the population is not there either.** `docs/measurements/catalog-health-census.md`
 counted carrier shapes across all 6,508 discovery rows on seventeen corpora: the
 two-operand templates hold **6 collection rows**, against 102 user-defined. Collections
 are 2% of all rows overall, and **146 of those 148 are `BitSet` / `BitSet.Counted` /
