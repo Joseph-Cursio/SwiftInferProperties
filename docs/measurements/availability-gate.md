@@ -158,7 +158,7 @@ the same corpora, on `public` / `package` declarations:
 > **Both original figures reproduce to the digit on their original population**, which
 > cross-validates the two instruments. The manifest fix moved them by **6 and 18** — the three
 > corpora that had been resolving to zero `.swift` files
-> (`open-threads.md` → *Six wrong instruments in one cycle*) carry little `@available` surface.
+> (`open-threads.md` → *Wrong instruments in one cycle*) carry little `@available` surface.
 >
 > **The larger error was `obsoleted: 49+`, which is really 106.** That figure came from a
 > form-census truncated to its top 18 shapes, so it undercounted by more than half — nothing to
