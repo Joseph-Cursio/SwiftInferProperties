@@ -412,8 +412,32 @@ matters here: the criteria were stricter than they needed to be, in a way that w
 sent the next attempt down the longer route.
 
 **A-reach and A-quality were met on DIFFERENT subjects**, so §5.1's *passes / passes → in
-shape, on that subject* has not been demonstrated on any single subject. Whether that
-composite reading is what the bar meant is the maintainer's call, and it is unasked.
+shape, on that subject* has not been demonstrated on any single subject.
+
+### 6.3 ASKED AND ANSWERED 2026-08-27 — the composite is NOT required
+
+**The maintainer's answer is NO: A is met on the reading ratified 2026-08-21, and the
+composite is not what the bar meant.** The question sat unasked from 2026-08-23 to
+2026-08-27, was filed as `open-threads.md` row 64 on the second of those dates, and is
+recorded here — the row is deleted rather than struck, per that file's own convention that a
+closed row's answer moves to where it belongs.
+
+**Why this is the right direction and not a convenience.** §6.2 had already found the criteria
+**stricter than their purpose needed**, twice in one section: A-reach is not in general a
+precondition for A-quality, and *a refuted law is a false law* had its exception. Requiring the
+composite would move the bar in the opposite direction — **upward, after it had been cleared,
+on a reading nobody committed to in advance.** That is the failure §1 names from the other side:
+an unwritten bar is not a neutral state, and a bar re-tightened once its result is known is
+worse than one written down wrong.
+
+**What this does NOT claim.** It does not claim any single subject has been shown *in shape*.
+Nothing here has demonstrated that, and the sentence above stands as written. What is settled
+is only that **the bar never asked for it.**
+
+⚠ **The swift-system mutant (§6 step 1) remains worth having and is now OPTIONAL rather than
+gating.** It is still the only route to A-quality *on that subject*, and §6.2 argues
+independently that having both halves on one subject is worth having. It is no longer a
+precondition for anything.
 
 ## 7. What this document used to ask for
 
