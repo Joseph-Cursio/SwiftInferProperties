@@ -4,7 +4,7 @@
 
 **The corpus-manifest fix of 2026-08-23 changed the population every corpus census measures.**
 Three corpora had been resolving to zero `.swift` files
-(`open-threads.md` → *Six wrong instruments in one cycle*), so the census universe was **17**
+(`open-threads.md` → *Wrong instruments in one cycle*), so the census universe was **17**
 while the manifest declared 22 and 20 resolve. It is now **20**.
 
 Every figure below is re-taken from **one genuine `make test` run** (`b4bf09b6`, 2026-08-23,
