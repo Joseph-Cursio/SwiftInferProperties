@@ -442,6 +442,51 @@ Screened and available, with their hand-written counts: `supabase-swift` **6** �
 
 ---
 
+## 8.1 SELECTING candidates: two theories measured, both wrong, and what replaced them
+
+**Added 2026-08-28, after the local pool was exhausted and cloning became the only way forward.**
+
+The screen measures a subject once it is on disk. **Choosing what to clone is a different
+problem, and two theories about it were measured and refuted:**
+
+| theory | batch | result |
+|---|---|---|
+| *models an external wire format* | `sourcekit-lsp`, `pkl-swift`, `SwiftPackageIndex-Server`, `async-http-client`, `swift-crypto`, `fluent-kit` | **4, 2, 2, 0, 0, 0** |
+| *polymorphic domain model (sum types)* | `XcodeGen`, `XcodeProj`, `opentelemetry-swift`, `swift-configuration` | **0, 4, 0, 0** |
+
+**`sourcekit-lsp` is the informative miss**: it implements the whole Language Server Protocol —
+about as wire-format as a Swift package gets — and hand-writes **four** `Codable` ∩ `Equatable`
+types, because Swift synthesizes `Codable` for ordinary structs and most of LSP is ordinary
+structs.
+
+**What replaced both: query the population.** GitHub code search reports **136,192** Swift files
+containing a hand-written `encode(to encoder:`, and ranking repositories by how many such files
+they hold is a direct proxy for the density the screen measures locally. That ranking surfaced
+`nicklockwood/Euclid` — **15 hand-written of 15 in the intersection, in 47 source files** — which
+then produced the largest reading the toolchain has taken
+(`docs/measurements/subject-euclid.md`).
+
+⚠ **Most of that ranking is generated SDKs** (`openapi-generator` outputs, vendor API clients),
+which is the `MacPaw/OpenAI` trap: nine refutations, one mechanism, one codebase. **Filter the
+ranking for hand-written codebases before cloning**, which is a judgement the search cannot make.
+
+### 8.2 A sum-type column was added, and it is a RANKER and not a SELECTOR
+
+`scripts/screen_candidates.py` now reports `sum_types`: intersection members declared as an
+`enum` with at least one case carrying a payload, on the theory that a sum type cannot have its
+`Codable` synthesized into an external schema's shape and therefore forces a hand-written coder.
+
+**Validated against subjects whose outcomes are already published**, and it earns its place on
+**one** discriminating case: `SymbolKit` has the second-highest hand-written count (10) and
+produced **zero** refutations, and sum-types ranks it fourth. `OpenAPIKit` ranks second on both
+and placed second on refutations.
+
+⚠ **But it scored `Euclid` at ZERO**, and `Euclid` is the best subject found by any method. **And
+it cannot be computed without cloning the subject first**, so it can never answer the selection
+question at all. Reported *beside* the hand-written count, never instead of it.
+
+---
+
 ## 9. What this does NOT claim
 
 - **Not a rate.** §5.4. Three real defects across five distinct mechanisms is a stronger prior
