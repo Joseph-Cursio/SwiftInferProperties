@@ -140,10 +140,11 @@ random doubles, so the axis is essentially never Y and the law is false for almo
 `g(f(x)) == x` with no evidence that `g` inverts `f`.
 
 > ⚠ **`Rotation.angle` is LOSSY, so no one-argument constructor can invert it.** It returns a
-> scalar from a value with three degrees of freedom. **That is decidable without running
-> anything**, and it is the cheapest available gate: a getter whose return type carries fewer
-> degrees of freedom than its carrier has no single-argument inverse, whatever the signatures
-> say.
+> scalar from a value with three degrees of freedom.
+
+⚠ **A degrees-of-freedom GATE was proposed on that observation and is DECLINED on measurement —
+see §2.3.** The observation is true; the gate built from it is not sound on the data available,
+and the distinction it was trying to recover is **already encoded by the tier**.
 
 **This is row 69's defect at a different site** — nothing licenses the *pairing*, exactly as
 nothing licenses the *algebraic property*. Filed separately as row **70**, because the two need
@@ -157,12 +158,61 @@ let decoded = try JSONDecoder().decode(Rotation.self, from: encoded)
 if decoded != value { FAIL }
 ```
 
-`encode`/`decode` is a genuine inverse pair. These fail for the §2.3 reason: `Rotation.init(_:_:_:_:)`
+`encode`/`decode` is a genuine inverse pair. These fail for the §2.4 reason: `Rotation.init(_:_:_:_:)`
 calls `simd_normalize`, so a normalized quaternion is written as four `Double`s and re-normalized
 on decode, drifting in the last bits under an exact `==`. **They move from bucket F to bucket E**,
 which is what the bucket was for.
 
-### 2.3 Floating point, correctly sized
+### 2.3 The degrees-of-freedom gate — proposed, probed, DECLINED
+
+Row 70 named a *degrees-of-freedom* gate as the cheapest fix: refuse a `round-trip` pairing when
+the getter's return type carries fewer degrees of freedom than its carrier, because a lossy
+getter has no single-argument inverse. **Probing that before building it refuted it three ways.**
+
+**1. It is not computable from stored members.** `Rotation` stores exactly one thing —
+`var storage: simd_quatd` — so the shape records `storedMembers = 1`. `Angle` records **0** (its
+`radians` is computed). A stored-member comparison reads **1 against 0** and would fire the wrong
+way round. The four components that make a rotation four-dimensional are inside an opaque SIMD
+leaf the scanner never enters.
+
+**2. The computable proxy is crude and would veto legitimate laws.** Initializer arity *is*
+recorded — `Rotation` max 4, `Vector` 3, `Angle` 1 — so `Rotation -> Angle` reads as lossy. But
+arity is not dimensionality: a type with a rich convenience initializer would be judged
+high-dimensional, and the obvious casualty is the canonical round trip
+`URL(string: u.absoluteString) == u`, where a many-argument `URL` initializer sits beside a
+one-argument `String`. **A veto that removes 8 noisy rows and one canonical law is not a fix.**
+
+**3. It covers 3 of the 8 rows.** Only the `Rotation.angle` pairings cross a type boundary. The
+other five are `Vector -> Vector` on both sides — `leastParallelAxis`, `mostParallelAxis`,
+`clampedToScaleLimit()`, `_quantized()` — where **degrees of freedom are equal by construction**
+and the gate cannot fire however it is computed.
+
+#### What the gate was reaching for is already in the tier
+
+`RoundTripTemplate+InverseNames.swift` ships a **curated inverse-name vocabulary**, and
+`FunctionPairing`'s own docstring states the design: *"naming is a signal, not a pre-filter, so
+the scoring engine can still see Possible-tier pairs"*. Name evidence is what lifts a pairing
+above `Possible`.
+
+**All eight refuting rows are tier `Possible`.** The legitimate round trips observed on other
+subjects are name-linked and higher — `ContentType.rawValue(rawValue:)`,
+`CallbackURL.rawValue(rawValue:)` and `Path.rawValue(rawValue:)` on `OpenAPIKit` are `Strong`;
+`KindIdentifier.identifier(identifier:)` on `SymbolKit` likewise. **The tier already separates
+the clique from the real thing, using name evidence, which is exactly the distinction a
+degrees-of-freedom rule was trying to reconstruct from type shapes.**
+
+**So the defect is not a missing gate.** It is that **`Possible`-tier cross-function pairs enter
+the index by default** — 204 of Euclid's 293 entries are `Possible`, and 55 of its 60
+`round-trip` rows — and the index is what `verify --all-from-index` and the whole-corpus survey
+consume. The tier is computed, recorded, and then not consulted at the boundary where it would
+do the most good.
+
+⚠ **That is a bigger change than a veto and is NOT made here.** Whatever the whole-corpus survey's
+executing ratio means, it is measured over an index that includes `Possible`; changing what is
+indexed moves that denominator, and the movement has to be measured rather than assumed.
+`fixtures/whole-corpus-survey/`.
+
+### 2.4 Floating point, correctly sized
 
 `Vector.normalized()` is the clean case: normalizing a unit vector returns it, so the law is
 **mathematically true** and fails only because `Vector` is `Hashable` over three `Double`s — a
