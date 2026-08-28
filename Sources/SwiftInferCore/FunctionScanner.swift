@@ -238,7 +238,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .class,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.classKeyword,
-            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
+            modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(Self.access(of: node.modifiers))
@@ -255,7 +256,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .struct,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.structKeyword,
-            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
+            modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(Self.access(of: node.modifiers))
@@ -272,7 +274,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .enum,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.enumKeyword,
-            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
+            modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(Self.access(of: node.modifiers))
@@ -289,7 +292,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .actor,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.actorKeyword,
-            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause
+            memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
+            modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(Self.access(of: node.modifiers))
@@ -343,7 +347,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .protocol,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.protocolKeyword,
-            memberBlock: node.memberBlock
+            memberBlock: node.memberBlock,
+            modifiers: node.modifiers
         ))
         return .skipChildren
     }

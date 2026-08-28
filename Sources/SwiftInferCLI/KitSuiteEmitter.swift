@@ -66,7 +66,8 @@ public enum KitSuiteEmitter {
         shapes: [String: PropertyLawCore.TypeShape],
         moduleName: String,
         genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
-        defaultIsolation: String? = nil
+        defaultIsolation: String? = nil,
+        visibleToTestableImport: [String: Bool] = [:]
     ) -> Emission {
         // **The whole-module resolver, and leaving it out was the single biggest cost.**
         //
@@ -88,6 +89,7 @@ public enum KitSuiteEmitter {
             switch classify(
                 finding: finding, shape: shape, suites: suites, resolve: resolve,
                 genericParametersByName: genericParametersByName,
+                visibleToTestableImport: visibleToTestableImport,
                 defaultIsolation: defaultIsolation
             ) {
             case .live(let text):
@@ -190,6 +192,7 @@ public enum KitSuiteEmitter {
         suites: [String],
         resolve: (String) -> DerivationStrategist.ComposedGenerator?,
         genericParametersByName: [String: [TypeDecl.GenericParameter]],
+        visibleToTestableImport: [String: Bool] = [:],
         defaultIsolation: String? = nil
     ) -> CarrierBlock {
         if let isolation = isolationBlocked(defaultIsolation) {
@@ -209,6 +212,27 @@ public enum KitSuiteEmitter {
                     genericParametersByName: genericParametersByName
                 ) ?? "",
                 carrierName: finding.typeName
+            ))
+        }
+        // `@testable import` raises `internal` to public and leaves `private` / `fileprivate`
+        // alone, so a file-scoped carrier cannot be NAMED by the emitted suite however good its
+        // generator is. Blocked rather than omitted: the reader should still see that the type
+        // owes laws and why it cannot have them, which is what the blocked section is for.
+        //
+        // The banner has warned about this since the command shipped — *a carrier may be
+        // `private` or nested past what `@testable` reaches* — which put the check on the person
+        // pasting the file when the emitter is the one that knows. Measured on `Euclid`: its
+        // `private struct IndexPair` was worth all 40 of the subject's remaining compile errors.
+        //
+        // ABSENT means unknown, not private. A caller that passes no map — every existing one —
+        // sees exactly the previous behaviour.
+        if visibleToTestableImport[finding.typeName] == false {
+            return .blocked(blockedBlock(
+                finding, suites: suites,
+                reason: "`\(carrierName)` is `private` or `fileprivate`, so `@testable import` "
+                    + "cannot name it — `@testable` raises `internal` to public and leaves "
+                    + "file-scoped declarations alone. Widen it to `internal` to run these laws.",
+                carrierName: carrierName
             ))
         }
         let strategy = DerivationStrategist.strategy(for: shape, resolve: resolve)

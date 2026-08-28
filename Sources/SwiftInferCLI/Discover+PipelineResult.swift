@@ -80,6 +80,11 @@ extension SwiftInferCommand.Discover {
         /// concrete one at emission — which is why `scaffold-kit-suites` wrote `Deque.self`.
         public let genericParametersByName: [String: [TypeDecl.GenericParameter]]
 
+        /// Types `@testable import` cannot name, keyed by bare name. **Only `false` entries are
+        /// present** — an absent key means not known to be file-scoped, which is what every
+        /// consumer predating this map assumed for everything.
+        public let visibleToTestableImportByName: [String: Bool]
+
         /// The file each type is **declared** in, keyed by bare type name.
         ///
         /// Third sidecar map, and here for the same reason as the two above: `TypeShape` belongs
@@ -140,6 +145,7 @@ extension SwiftInferCommand.Discover {
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             inheritedTypesByName: [String: Set<String>] = [:],
             genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
+            visibleToTestableImportByName: [String: Bool] = [:],
             sourceFileByTypeName: [String: String] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
@@ -162,6 +168,7 @@ extension SwiftInferCommand.Discover {
             self.typeShapesByName = typeShapesByName
             self.inheritedTypesByName = inheritedTypesByName
             self.genericParametersByName = genericParametersByName
+            self.visibleToTestableImportByName = visibleToTestableImportByName
             self.sourceFileByTypeName = sourceFileByTypeName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries
