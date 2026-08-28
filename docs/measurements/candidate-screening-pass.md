@@ -228,6 +228,51 @@ reading is not fitted to it:
 | accepts the report, declines to fix | still a real defect; confirms the *latent* reading, and says the round trip is not a property they intend to hold |
 | says it is intended | **§10's refutation fires** — the law found a design decision, not a defect, and the tally drops to 3 real of 30 |
 
+### 5.4.1 ANSWERED 2026-08-28 — and the answer landed BETWEEN two rows of the table above
+
+The maintainer replied within hours. Quoted rather than paraphrased, because the paraphrase is
+where this would go wrong:
+
+> Thanks for the report. Let me take a look at the code before you move on this. Having encode,
+> decode round trips produce the same result is a goal of OpenAPIKit but not a mandate — I am ok
+> with opinionated decisions being made sometimes. In this case, I maybe vaguely recall the
+> decision being intentional so that the legacy structure was supported but actively discouraged
+> by promoting it to a modern alternative on decode. Equality checks don't need to be equivalency
+> checks, but again I do agree that the best ergonomics are that a value is equal to itself after
+> going through an encode and a decode.
+
+**Four things follow, and only the first is procedural.**
+
+**1. The PR is on hold at the maintainer's request** — *"let me take a look at the code before
+you move on this"* — and the branch stays unpushed. That is the whole of the required action.
+
+**2. The three-outcome table in §5.4 did not contain this outcome.** It offered *accepts a fix* /
+*accepts, declines to fix* / *says it is intended*. The actual answer is **none of them**: the
+round trip is *"a goal but not a mandate"*, the decision is *"maybe vaguely"* recalled as
+intentional, and the ergonomics of the property are **agreed**. **A pre-written outcome table is
+still worth writing** — it stopped the reply being read as whichever row suited us — but it was
+under-specified, and the missing row is the common one: **undecided, with the property conceded
+as desirable and its enforcement declined as a mandate.**
+
+**3. *Equality checks don't need to be equivalency checks* is a real objection and it is not
+answered by the measurement.** `codable-round-trip` asserts `decode(encode(x)) == x`; it takes
+`==` as the equivalence and cannot know that a type intends `==` to be *finer* than
+wire-identity. **Every one of this project's four real defects rests on that same assumption**,
+and a maintainer is entitled to reject it per type. **This is `1.3.3`'s point arriving from
+outside: the law is a microscope, not an oracle.**
+
+**4. The recalled rationale does not match the code, and that is for the reporter to raise
+human-to-human, not for this document to settle.** The stated intent is that the legacy structure
+is *"actively discouraged by promoting it to a modern alternative on decode"*. `init(from:)`
+**preserves** the legacy structure whenever either flag is set — `case (true, _, _)` and
+`case (_, true, _)` both build `.legacy(attribute:wrapped:)` — and produces `nil`, not a
+`nodeType`, when neither is. **Nothing is promoted to a modern alternative anywhere.** So the
+all-false case is the only one that behaves as the recollection describes, and it does so by
+discarding the value rather than by promoting it.
+
+⚠ **The tally status of this finding is now CONTESTED, not real-and-settled**, and §5.5 carries
+that contingency rather than absorbing it.
+
 ### 5.5 The tally
 
 **30 hand-checked · 3 real · all three `codable-round-trip`, on three independent unmet
