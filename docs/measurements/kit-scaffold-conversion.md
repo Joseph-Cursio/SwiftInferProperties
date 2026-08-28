@@ -90,6 +90,15 @@ in a way that *"reads as an architectural limitation rather than a broken manife
 | `cannot find 'IndexPair' in scope` | 20 |
 | `cannot find '__genMesh' in scope` | 20 |
 
+✅ **`__genMesh` FIXED 2026-08-28 — 240 errors became 160.** `KitSuiteEmitter` never read
+`GeneratorResolver.supportingDeclarations`, so it rendered the *call* and dropped the
+*declaration*. The verify-stub emitter never had this bug: `StrategistDispatchEmitter` carries
+the same helpers through `GeneratorRecipe.declarations`, so **the fix is a render, not a
+derivation — the helper was built all along.** Removing that one symbol took out **80 errors,
+not 20**: the 20 missing-symbol errors plus 20 `Shrinker` generic-inference failures downstream
+of an unresolved call, plus 40 of the `.strict`/`.passed` pairs. **The suite still does not
+compile** — 160 errors remain, and they are separate defects (§3.1).
+
 **The sharpest is `__genMesh`.** The emitter writes
 
 ```swift
@@ -99,7 +108,20 @@ using: __genMesh(4).array(of: 0...8).map { Mesh(submeshes: $0) }
 and **never defines `__genMesh`** — `grep -c "func __genMesh"` on the emitted file returns **0**.
 It calls a recursive-generator helper it did not emit.
 
-The 140 `.strict` / `.passed` errors are the emitted assertion
+### 3.1 What remains after the `__genMesh` fix — 160 errors, three causes
+
+| compiler error | count |
+|---|---:|
+| `cannot infer contextual base in reference to member 'strict'` | 50 |
+| `cannot infer contextual base in reference to member 'passed'` | 50 |
+| `missing argument for parameter 'position' in call` | 40 |
+| `cannot find 'IndexPair' in scope` | 20 |
+
+**None is the missing-helper shape**, so each needs its own diagnosis. `IndexPair` and
+`position` look like a missing import or a kit API the emitter has not tracked;
+`.strict`/`.passed` is the assertion below.
+
+The `.strict` / `.passed` errors are the emitted assertion
 `results.allSatisfy { $0.tier != .strict || $0.outcome == .passed }` failing to resolve its enum
 bases against the pinned kit — API drift between emitter and kit, not a user error.
 
