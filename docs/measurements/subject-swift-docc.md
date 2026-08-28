@@ -98,8 +98,27 @@ encoding discards exactly that.
 ### 2.4 What it costs today — stated, because it bounds the claim
 
 **Nothing in `SwiftDocC` encodes this type.** A grep for encode sites finds none; the type is
-decoded from catalog `Info.plist`. **So this is a real defect on PUBLIC API that the package
-itself never exercises — latent, not live.** It cannot be reported as *DocC is broken*.
+decoded from catalog `Info.plist`.
+
+⚠ **CORRECTED 2026-08-28, same day: this is INTERNAL, not public API, and the first version of
+this section said public.** `struct CatalogFeatureFlags` carries no `public`, and its enclosing
+`extension DocumentationContext.Inputs.Info` is not a `public extension`, so it defaults to
+internal — notwithstanding the `public var` on its members, which are inert. **Checked with the
+compiler rather than by reading**: a probe with a plain `import SwiftDocC` fails with
+*`'CatalogFeatureFlags' is inaccessible due to 'internal' protection level`*.
+
+**So the defect is: an INTERNAL type, whose encode path nothing calls, reachable only through
+`@testable import`** — which is how both the emitted stub and the probe reached it, and is
+exactly the `internalOrSPI` category `visibility-widenability.md` measures as blocking nothing
+*for testing* while blocking everything for consumers.
+
+**That materially weakens this finding relative to the other three real defects**, and the
+weakening is stated rather than absorbed: `ToolChoice`, `UserDetectionStatus` and `OpenAPI.XML`
+are all **public** types in libraries whose purpose is serialization. This one cannot affect any
+consumer of DocC, today or later, without a visibility change. **It is still a genuine
+inconsistency — the round trip really does fail, and not because the law over-quantified — so it
+counts as REAL in the tally, with this caveat attached to it.** It cannot be reported as *DocC
+is broken*.
 
 **Their suite misses it, and the coverage is zero rather than thin**: across 1,644 + 452 tests,
 **no test names `CatalogFeatureFlags` at all**.
@@ -202,7 +221,10 @@ resolved**.
 
 ## 6. What this does NOT claim
 
-- **Not that DocC is broken.** §2.4 — nothing in the package encodes the type.
+- **Not that DocC is broken.** §2.4 — nothing in the package encodes the type, and the type is
+  **internal**, so no consumer can reach it at all.
+- **Not that this defect is as strong as the other three.** They are public; this one is not.
+  §2.4 states the asymmetry rather than letting the tally flatten it.
 - **Not that 49 verdicts is a rate of anything.** It is one subject's reach, and it is the
   reach number, not a quality number.
 - **Not that the 28 build-stage errors are diagnosed.** They are not looked at here.

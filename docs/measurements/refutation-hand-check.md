@@ -154,7 +154,7 @@ one encoding. **`CatalogFeatureFlags` never reaches `==`: its `decode` THROWS.**
 | verified | executed against the package — `typeMismatch: Expected to decode Bool but found null` |
 | second defect, same type | `unknownFeatureFlags` is populated on decode and never encoded, so re-encoding **drops it** and yields doubly-null JSON that also fails to decode |
 | their suite | **1,644 XCTest + 452 swift-testing, green — and NO test names the type at all** |
-| ⚠ what it costs today | **nothing in `SwiftDocC` encodes this type** — a real defect on public API the package never exercises. Latent, not live |
+| ⚠ what it costs today | **nothing in `SwiftDocC` encodes this type, and the type is INTERNAL** (corrected same day — the first version said public; `struct CatalogFeatureFlags` has no `public` and its extension is not a `public extension`, confirmed by the compiler rejecting a plain `import`). Reachable only via `@testable`, which is how the stub reached it. **Latent, not live, and weaker than the other three real defects, which are all public** — stated rather than absorbed. Still counts as REAL: the round trip genuinely fails, not because the law over-quantified |
 
 **So `codable-round-trip` is not a detector for one asymmetry.** It detects *the encoder and the
 decoder disagreeing*, and they can disagree **by throwing**. That widens the template's value
