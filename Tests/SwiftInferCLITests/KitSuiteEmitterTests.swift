@@ -252,4 +252,73 @@ struct KitSuiteEmitterTests {
         #expect(!emission.source.contains("func __gen"))
         #expect(!emission.source.contains("Recursive-carrier generators"))
     }
+
+    // MARK: - Defect 4 — a `private` carrier was emitted LIVE
+
+    /// **`@testable import` raises `internal` to public and leaves `private` / `fileprivate`
+    /// alone**, so emitted code cannot NAME a file-scoped carrier however good its generator is.
+    /// The scaffold emitted one anyway: `Euclid`'s `private struct IndexPair` was worth all 40 of
+    /// that subject's remaining compile errors — 20 `cannot find … in scope` plus 20 downstream
+    /// `cannot infer contextual base` on error-typed `results`.
+    ///
+    /// The banner warned the reader instead (*a carrier may be `private` … delete what does not
+    /// fit*), which put the check on the person pasting the file when **the emitter is the one
+    /// that knows**.
+    @Test("a carrier @testable cannot name is blocked, not emitted live")
+    func privateCarrierIsBlocked() {
+        let emission = KitSuiteEmitter.emit(
+            findings: [finding("Hidden", conformances: ["Equatable"])],
+            shapes: ["Hidden": shape("Hidden")],
+            moduleName: "M",
+            visibleToTestableImport: ["Hidden": false]
+        )
+        #expect(emission.liveCarriers == 0)
+        #expect(emission.blockedCarriers == 1)
+        #expect(emission.source.contains("`private` or `fileprivate`"))
+    }
+
+    /// **Blocked, not omitted.** The reader should still see that the type owes laws and why it
+    /// cannot have them — which is what the blocked section is for, and is the difference between
+    /// a gate and a silent drop.
+    @Test("the blocked carrier still names itself and its laws")
+    func blockedCarrierStillVisible() {
+        let emission = KitSuiteEmitter.emit(
+            findings: [finding("Hidden", conformances: ["Equatable"])],
+            shapes: ["Hidden": shape("Hidden")],
+            moduleName: "M",
+            visibleToTestableImport: ["Hidden": false]
+        )
+        #expect(emission.source.contains("Hidden"))
+    }
+
+    /// **An ABSENT key means unknown, not private.** Every caller predating the map passes
+    /// nothing, and must see exactly the previous behaviour — the negative arm that keeps this a
+    /// gate rather than a blanket veto.
+    @Test("a carrier with no visibility entry is unaffected")
+    func absentVisibilityIsNotPrivate() {
+        let withMap = KitSuiteEmitter.emit(
+            findings: [finding("Money", conformances: ["Equatable"])],
+            shapes: ["Money": shape("Money")],
+            moduleName: "M",
+            visibleToTestableImport: ["SomethingElse": false]
+        )
+        let withoutMap = KitSuiteEmitter.emit(
+            findings: [finding("Money", conformances: ["Equatable"])],
+            shapes: ["Money": shape("Money")],
+            moduleName: "M"
+        )
+        #expect(withMap.liveCarriers == withoutMap.liveCarriers)
+        #expect(withMap.source == withoutMap.source)
+    }
+
+    @Test("a carrier explicitly marked visible is emitted live")
+    func explicitlyVisibleIsLive() {
+        let emission = KitSuiteEmitter.emit(
+            findings: [finding("Money", conformances: ["Equatable"])],
+            shapes: ["Money": shape("Money")],
+            moduleName: "M",
+            visibleToTestableImport: ["Money": true]
+        )
+        #expect(emission.liveCarriers == 1)
+    }
 }

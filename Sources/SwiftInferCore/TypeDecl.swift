@@ -146,6 +146,28 @@ public struct TypeDecl: Sendable, Equatable {
     /// compiled. Empty for non-generic declarations, which is the overwhelming majority.
     public let genericParameters: [GenericParameter]
 
+    /// The declaration's own access level, as `FunctionScannerVisitor.access(of:)` reads it.
+    ///
+    /// **`.notVisibleToTests` means `@testable import` cannot reach this type**, because
+    /// `@testable` raises `internal` to public and leaves `private` / `fileprivate` alone. A
+    /// consumer that emits code naming the type — `scaffold-kit-suites` does — must decline it
+    /// rather than emit a call that cannot compile.
+    ///
+    /// **The scanner already computed this and dropped it.** `enclosingTypeAccess` has tracked
+    /// the same value on a stack since the access-restriction work; it was never put on the
+    /// record the emitters read, so `scaffold-kit-suites` emitted a LIVE suite for
+    /// `Euclid`'s `private struct IndexPair` — worth all 40 of that subject's remaining compile
+    /// errors (`docs/measurements/kit-scaffold-conversion.md` §3.1).
+    ///
+    /// Defaults to `true` so every existing construction site and hand-built test fixture
+    /// compiles unchanged, and so a consumer that does not ask sees the behaviour it had before.
+    ///
+    /// **A `Bool` rather than the scanner's tri-state**, because the only question any consumer
+    /// asks of it is *can emitted code name this type*, and `EnclosingTypeAccess` is internal to
+    /// `FunctionScannerVisitor`. Widening that enum to publish a distinction nobody needs would
+    /// be the wrong half of the trade.
+    public let isVisibleToTestableImport: Bool
+
     /// `true` for an extension record written with a `where` clause
     /// (`extension Deque where Element: Hashable`). Always false for a primary declaration.
     ///
@@ -182,7 +204,8 @@ public struct TypeDecl: Sendable, Equatable {
         enumCases: [EnumCase] = [],
         qualifiedName: String? = nil,
         genericParameters: [GenericParameter] = [],
-        isConditionalExtension: Bool = false
+        isConditionalExtension: Bool = false,
+        isVisibleToTestableImport: Bool = true
     ) {
         // Defaulted to `name` so the many hand-built test fixtures — and any
         // caller that has no enclosing-type context — keep working unchanged.
@@ -199,5 +222,6 @@ public struct TypeDecl: Sendable, Equatable {
         self.enumCaseNames = enumCaseNames
         self.initializers = initializers
         self.enumCases = enumCases
+        self.isVisibleToTestableImport = isVisibleToTestableImport
     }
 }

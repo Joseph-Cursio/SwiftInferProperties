@@ -27,6 +27,28 @@ extension SwiftInferCommand.Discover {
         return index
     }
 
+    /// Whether `@testable import` can NAME each type, keyed the same way the two maps above
+    /// are keyed.
+    ///
+    /// **Only `false` entries are recorded.** An absent key means *not known to be file-scoped*,
+    /// which is what every caller predating this map assumed for everything, so a consumer that
+    /// does not find a type behaves exactly as before. Recording `true` for the majority would
+    /// make the map large and say nothing.
+    ///
+    /// **First-wins on collision, matching `genericParametersIndex`.** Two same-named types in
+    /// different namespaces are a known hazard of bare-name keying here; recording the first is
+    /// the conservative direction for THIS consumer, since the alternative — a later `public`
+    /// namesake overwriting an earlier `private` one — would re-admit the carrier this exists to
+    /// block.
+    static func visibleToTestableImportIndex(from typeDecls: [TypeDecl]) -> [String: Bool] {
+        var index: [String: Bool] = [:]
+        for decl in typeDecls where !decl.isVisibleToTestableImport {
+            let key = ProtocolCoverageMap.strippingGenericParameters(decl.name)
+            if index[key] == nil { index[key] = false }
+        }
+        return index
+    }
+
     /// Where each type is **declared**, keyed by bare name — the fact verify needs to work out
     /// which module to import, and the third sidecar map after `inheritedTypesByName` and
     /// `genericParametersByName`.
@@ -83,6 +105,7 @@ extension SwiftInferCommand.Discover {
             typeShapesByName: hints.typeShapesByName,
             inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: artifacts.typeDecls),
             genericParametersByName: genericParametersIndex(from: artifacts.typeDecls),
+            visibleToTestableImportByName: visibleToTestableImportIndex(from: artifacts.typeDecls),
             sourceFileByTypeName: sourceFileIndex(from: artifacts.typeDecls),
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,

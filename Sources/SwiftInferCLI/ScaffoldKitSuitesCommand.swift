@@ -93,7 +93,8 @@ extension SwiftInferCommand {
                 shapes: shapes,
                 moduleName: moduleName,
                 genericParametersByName: pipeline.genericParametersByName,
-                defaultIsolation: defaultIsolation
+                defaultIsolation: defaultIsolation,
+                visibleToTestableImport: pipeline.visibleToTestableImportByName
             )
 
             reportCounts(

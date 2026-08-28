@@ -136,7 +136,40 @@ read too coarsely here**, after `isReadOnlyGetter` admitted `_modify`
 (`modify-accessor-misclassification.md`), so the rule is now an **allowlist** of the kinds that
 keep a property stored.
 
-**All 40 remaining errors trace to ONE cause**: `IndexPair` is `private struct IndexPair` in
+✅ **240 → 160 → 40 → 0. THE SUITE COMPILES, AND IT RUNS.** The third fix gated the `private`
+carrier (row 71, shipped): `TypeDecl` now carries `isVisibleToTestableImport`, computed by the
+`access(of:)` the scanner **already had and dropped** — the third defect in this sequence whose
+fix was a render rather than a derivation. `IndexPair` moved from live to blocked with its reason,
+and Euclid's suite became **the first generated kit suite anyone has compiled: 13 carriers, 76
+laws, 0 errors.**
+
+### 3.2 What running it found
+
+**Two violations, and they are the SAME two this project's own pipeline found** —
+`Codable.roundTripFidelity[JSON]` on `Rotation` and `Vertex`, at `.conventional` tier, recorded
+rather than escalated because enforcement is `.default`. The counterexample is the float
+mechanism verbatim:
+
+```
+x        = Vertex(…, normal: [-0.8958982600249268, 0.43400385750347037, …])
+restored = Vertex(…, normal: [-0.8958982600249269, 0.43400385750347040, …])
+```
+
+**A last-digit difference under exact `==`.** `subject-euclid.md` §2.4 diagnosed exactly this from
+our verify stubs; the kit reached it independently, with its own law implementation and its own
+generator. **Two independent implementations, one finding** — which is the strongest form the
+floating-point result has taken.
+
+⚠ **THE RUN DOES NOT COMPLETE.** It exits on signal 5 at `Euclid/Plane.swift:230` —
+`init(unchecked normal:w:)` asserts `normal.isNormalized`, and the derived generator handed it an
+unnormalized `Vector`. **Fifth instance of the same wall**: `SystemString`'s interior NUL,
+`Bounds` with `min > max`, `Color` outside `0…1`, `Mesh` reaching only fixed points, and now this.
+**The generator builds values the type's own invariants forbid**, and here it stops the first
+compiling suite from finishing.
+
+**So the honest status is: compiles yes, runs yes, completes no.**
+
+**All 40 errors before that fix traced to ONE cause**: `IndexPair` is `private struct IndexPair` in
 `Polygon.swift`, and the emitter emits a **live** suite for it — 20 `cannot find` plus 20
 downstream `.strict`/`.passed`. `@testable import` exposes `internal`, not `private`. The
 scaffold's banner warns the reader ("*A carrier may be `private` … Delete what does not fit*"),

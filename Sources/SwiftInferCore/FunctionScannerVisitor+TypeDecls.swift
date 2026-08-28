@@ -15,7 +15,8 @@ extension FunctionScannerVisitor {
         keywordToken: TokenSyntax,
         memberBlock: MemberBlockSyntax,
         genericParameterClause: GenericParameterClauseSyntax? = nil,
-        isConditionalExtension: Bool = false
+        isConditionalExtension: Bool = false,
+        modifiers: DeclModifierListSyntax? = nil
     ) -> TypeDecl {
         let inheritedTypes = inheritanceClause?.inheritedTypes.map(\.type.trimmedDescription) ?? []
         let position = keywordToken.positionAfterSkippingLeadingTrivia
@@ -86,7 +87,13 @@ extension FunctionScannerVisitor {
             // where an extension picks up a spurious prefix.
             qualifiedName: (typeStack + [name]).joined(separator: "."),
             genericParameters: genericParameters,
-            isConditionalExtension: isConditionalExtension
+            isConditionalExtension: isConditionalExtension,
+            // Reuses `access(of:)` rather than re-reading the modifier list, so the record and
+            // the `enclosingTypeAccess` stack cannot disagree about what `private` means.
+            // `@testable` raises `internal` to public and leaves `private`/`fileprivate` alone,
+            // so only `.notVisibleToTests` answers no.
+            isVisibleToTestableImport: modifiers
+                .map { Self.access(of: $0) != .notVisibleToTests } ?? true
         )
     }
 }
