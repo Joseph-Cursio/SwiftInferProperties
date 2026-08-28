@@ -137,6 +137,53 @@ subject never owed.
 > template predicts. The `codable-round-trip` arm remains unmeasured (0 of 10 here, 1 of 4 on
 > `mcp-swift-sdk`).
 
+## Addendum 2026-08-28 (second) — a FOURTH real defect, and it BREAKS the mechanism claim
+
+**`swift-docc` @ `f160765`, `CatalogFeatureFlags`.** `docs/measurements/subject-swift-docc.md`.
+Thirteen refutations on one subject — the largest single haul — of which **10 were resolved and
+3 are recorded as open rather than guessed at**.
+
+⚠ **The addendum directly below says the first three real defects share one mechanism. At n=4
+that generalisation is FALSE, and it was worth writing down before it hardened.** `ToolChoice`,
+`UserDetectionStatus` and `OpenAPI.XML` are all *`Equatable` finer than `Codable`* — two values,
+one encoding. **`CatalogFeatureFlags` never reaches `==`: its `decode` THROWS.**
+
+| | |
+|---|---|
+| what breaks | `encode` uses `container.encode` on `Bool?`, writing JSON `null`; `init(from:)` sees the key PRESENT and calls `decode(Bool.self)` on it |
+| verified | executed against the package — `typeMismatch: Expected to decode Bool but found null` |
+| second defect, same type | `unknownFeatureFlags` is populated on decode and never encoded, so re-encoding **drops it** and yields doubly-null JSON that also fails to decode |
+| their suite | **1,644 XCTest + 452 swift-testing, green — and NO test names the type at all** |
+| ⚠ what it costs today | **nothing in `SwiftDocC` encodes this type** — a real defect on public API the package never exercises. Latent, not live |
+
+**So `codable-round-trip` is not a detector for one asymmetry.** It detects *the encoder and the
+decoder disagreeing*, and they can disagree **by throwing**. That widens the template's value
+rather than narrowing it.
+
+**A FIFTH false-law mechanism is named here too** — *round trip over a type whose fields are
+DERIVED from a canonical table, so only canonical values are constructible*. `PlatformName`
+encodes `displayName` alone and decodes via `init(operatingSystemName:)`, which rebuilds
+`rawValue` and `aliases` from a lookup; the generator invented a value no caller can construct.
+`DefaultAvailability` and `ModuleAvailability` **embed** `PlatformName`, so those three
+refutations are one mechanism, not three data points. Distinct from the undeclared cross-field
+invariant shape: there the invariant is unstated, here the canonical form is stated by an
+initializer the generator does not use.
+
+**Five `idempotence` refutations landed and all five are already-named mechanisms** —
+`appendingHashedIdentifier` (accumulating operand), `removingFirstPathComponent` = `dropFirst()`
+(the `removingLastComponent` shape), and `stableHashString` / `hash(uniqueSymbolID:)` /
+`mimeType(for:)` (idempotence over a **derivation**).
+
+**Tally: 40 hand-checked, 4 real. `idempotence` 0 of 23; `codable-round-trip` 4 of 17.** All four
+real defects are `codable-round-trip`, on four independent unmet subjects, each missed by the
+subject's own suite. ⚠ **Still not a rate** — deduplicated by mechanism it is nearer **4 real of
+7 distinct mechanisms**, the largest denominator yet and still too small to quote as a precision.
+
+⚠ **Three refutations are UNRESOLVED, not counted as false**:
+`String.replacingWhitespaceAndPunctuation(with:)`, `JSONPointer.encode(to:)` and
+`DownloadReference.encode(to:)`. Resolving the first as real would end the `idempotence`
+comparison outright.
+
 ## Addendum 2026-08-28 — a THIRD real defect, and the mechanism is the same one
 
 **`OpenAPIKit` @ `651cc55`, `OpenAPI.XML`.** `codable-round-trip` for the third time, on a third
