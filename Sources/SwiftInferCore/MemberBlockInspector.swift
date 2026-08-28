@@ -11,16 +11,33 @@ enum MemberBlockInspector {
 
     /// Stored properties declared in `memberBlock`, in source order.
     /// Returns only `let` / `var` declarations with explicit type
-    /// annotations and no accessor block (computed properties skipped).
-    /// `static` / `class` properties are also filtered. Multi-binding
-    /// lines (`let x: Int, y: Int`) produce one entry per binding.
+    /// annotations that are not computed. `static` / `class` properties are also
+    /// filtered. Multi-binding lines (`let x: Int, y: Int`) produce one entry per binding.
+    ///
+    /// **An accessor block does not make a property computed** — `willSet` / `didSet`
+    /// observers leave it stored, and Swift includes it in the synthesized memberwise
+    /// initializer. This rule was `accessorBlock != nil` until 2026-08-28, which dropped
+    /// every observed property from the shape.
+    ///
+    /// **Measured**: `Euclid.PathPoint` declares `public var position: Vector { didSet { … } }`
+    /// beside three plain stored properties, so the emitted generator called
+    /// `PathPoint(texcoord:color:isCurved:)` — a three-argument call against a four-argument
+    /// initializer, worth 40 of the kit scaffold's compile errors
+    /// (`docs/measurements/kit-scaffold-conversion.md` §3.1).
+    ///
+    /// **Second time an accessor list has been read too coarsely.** `isReadOnlyGetter` gated on
+    /// `!contains("set")` and admitted `_modify` coroutines, offering a MUTABLE property as a law
+    /// subject (`docs/measurements/modify-accessor-misclassification.md`). Both are the same
+    /// mistake: Swift has more accessor kinds than the two a quick check imagines, so the rule is
+    /// an ALLOWLIST of the kinds that keep a property stored, never a denylist of the rest.
     static func storedMembers(in memberBlock: MemberBlockSyntax) -> [StoredMember] {
         var result: [StoredMember] = []
         for member in memberBlock.members {
             guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
             guard !isStaticOrClass(varDecl.modifiers) else { continue }
             for binding in varDecl.bindings {
-                if binding.accessorBlock != nil { continue }
+                if let accessorBlock = binding.accessorBlock,
+                   !isObserverOnly(accessorBlock) { continue }
                 guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else {
                     continue
                 }
@@ -32,6 +49,24 @@ enum MemberBlockInspector {
             }
         }
         return result
+    }
+
+    /// `true` when an accessor block contains ONLY `willSet` / `didSet` observers, which
+    /// leave the property stored.
+    ///
+    /// **Conservative by construction, and the direction is deliberate.** The `.getter` case —
+    /// `var x: Int { 42 }` — returns `false`, and so does any list containing `get`, `set`,
+    /// `_read` or `_modify`. Anything this cannot positively identify as observer-only stays
+    /// classified as computed, which is the behaviour that existed before. **An allowlist, per
+    /// the rule above**: naming the kinds that keep a property stored is stable against Swift
+    /// growing new accessor kinds, while naming the kinds that make it computed is not.
+    static func isObserverOnly(_ accessorBlock: AccessorBlockSyntax) -> Bool {
+        guard case .accessors(let accessors) = accessorBlock.accessors else { return false }
+        guard !accessors.isEmpty else { return false }
+        return accessors.allSatisfy { accessor in
+            let specifier = accessor.accessorSpecifier.text
+            return specifier == "willSet" || specifier == "didSet"
+        }
     }
 
     /// `true` when `memberBlock` declares any `init(...)`. Used by the

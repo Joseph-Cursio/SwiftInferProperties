@@ -108,18 +108,41 @@ using: __genMesh(4).array(of: 0...8).map { Mesh(submeshes: $0) }
 and **never defines `__genMesh`** — `grep -c "func __genMesh"` on the emitted file returns **0**.
 It calls a recursive-generator helper it did not emit.
 
-### 3.1 What remains after the `__genMesh` fix — 160 errors, three causes
+### 3.1 240 → 160 → 40, and `.strict` / `.passed` were never a defect at all
 
-| compiler error | count |
-|---|---:|
-| `cannot infer contextual base in reference to member 'strict'` | 50 |
-| `cannot infer contextual base in reference to member 'passed'` | 50 |
-| `missing argument for parameter 'position' in call` | 40 |
-| `cannot find 'IndexPair' in scope` | 20 |
+| after | errors | what was fixed |
+|---|---:|---|
+| (original) | **240** | — |
+| `__genMesh` | 160 | the scaffold called a helper it never declared |
+| observed properties | **40** | `willSet`/`didSet` do not make a property computed |
 
-**None is the missing-helper shape**, so each needs its own diagnosis. `IndexPair` and
-`position` look like a missing import or a kit API the emitter has not tracked;
-`.strict`/`.passed` is the assertion below.
+⚠ **`.strict` / `.passed` — 100 of the original 240 — were NEVER A DEFECT.** They are
+`cannot infer contextual base`, which is what the compiler says when `results` is error-typed
+because the `check…` call above it failed to type-check. **Both enum cases exist in the pinned
+kit** — `StrictnessTier.strict` and `CheckResult.Outcome.passed`, verified in the v4.2.0 source.
+**Chasing them directly would have been chasing a symptom of two unrelated bugs**, and the
+original triage in this document listed them first because they were the largest count.
+
+> **A compile-error histogram is not a defect list.** 240 errors were 3 defects; the largest two
+> buckets were downstream of the smallest. The `__genMesh` fix removed **80** errors for **20**
+> missing symbols, and the observed-property fix removed **120** for **40** wrong call sites.
+
+**The observed-property defect**: `MemberBlockInspector.storedMembers` skipped every binding with
+an accessor block, so `Euclid.PathPoint`'s `public var position: Vector { didSet { … } }`
+vanished from the shape and the emitter derived
+`PathPoint(texcoord:color:isCurved:)` — three arguments against a four-argument initializer. It
+now emits `PathPoint(position:texcoord:color:isCurved:)`. **Second time an accessor list has been
+read too coarsely here**, after `isReadOnlyGetter` admitted `_modify`
+(`modify-accessor-misclassification.md`), so the rule is now an **allowlist** of the kinds that
+keep a property stored.
+
+**All 40 remaining errors trace to ONE cause**: `IndexPair` is `private struct IndexPair` in
+`Polygon.swift`, and the emitter emits a **live** suite for it — 20 `cannot find` plus 20
+downstream `.strict`/`.passed`. `@testable import` exposes `internal`, not `private`. The
+scaffold's banner warns the reader ("*A carrier may be `private` … Delete what does not fit*"),
+which puts the check on the person pasting the file. ⚠ **Not fixed here**: `TypeDecl` carries no
+access level and the scanner captures none, so this needs a field added across scanner, shape and
+emitter rather than a rule change. `open-threads.md` row **71**.
 
 The `.strict` / `.passed` errors are the emitted assertion
 `results.allSatisfy { $0.tier != .strict || $0.outcome == .passed }` failing to resolve its enum
