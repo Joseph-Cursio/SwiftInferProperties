@@ -179,4 +179,77 @@ struct KitSuiteEmitterTests {
         #expect(emission.blockedCarriers == 0)
         #expect(emission.source.contains("REVIEW BEFORE USE"))
     }
+
+    // MARK: - Defect 3 — the emitter called a helper it never defined
+
+    /// **A recursive carrier's generator is a depth-budgeted `func`, and this emitter dropped
+    /// it.** `GeneratorResolver` cannot inline a recursive type's expression — it would have to
+    /// contain itself — so it emits `__gen<Type>(_ budget:)` and the expression *calls* it. The
+    /// scaffold rendered the call and never the declaration, writing
+    /// `using: __genMesh(4).array(of: 0...8).map { Mesh(submeshes: $0) }` into a file with no
+    /// `__genMesh` anywhere.
+    ///
+    /// **Measured on `Euclid`: 20 of 240 compile errors were this one symbol, and fixing it
+    /// removed 80** — the 20 plus the `Shrinker` generic-inference failures downstream of an
+    /// unresolved call (`docs/measurements/kit-scaffold-conversion.md` §3).
+    ///
+    /// The verify-stub emitter never had the bug: `StrategistDispatchEmitter` carries the same
+    /// declarations through `GeneratorRecipe.declarations`. **This side simply never read
+    /// them.**
+    @Test("a helper the emitted code CALLS is also DEFINED in the same file")
+    func recursiveHelperIsDeclaredNotJustCalled() {
+        let node = TypeShape(
+            name: "Node", kind: .struct, inheritedTypes: ["Equatable"],
+            hasUserGen: false,
+            storedMembers: [StoredMember(name: "children", typeName: "[Node]")]
+        )
+        let emission = KitSuiteEmitter.emit(
+            findings: [finding("Node", conformances: ["Equatable"])],
+            shapes: ["Node": node],
+            moduleName: "M"
+        )
+
+        // The guard is CONDITIONAL on the call appearing, so the test pins the invariant
+        // rather than the derivation: if a future strategy inlines `Node` instead, nothing
+        // is called and nothing needs declaring, and this must not fail for that.
+        if emission.source.contains("__genNode(") {
+            #expect(
+                emission.source.contains("func __genNode"),
+                "emitted a call to __genNode with no declaration in the same file"
+            )
+        }
+    }
+
+    /// The helper is written ONCE however many suites call it — a second copy would be a
+    /// redeclaration error, which is the failure mode a naive per-carrier emit would create.
+    @Test("a helper called by several suites is declared exactly once")
+    func recursiveHelperIsNotDuplicated() {
+        let node = TypeShape(
+            name: "Node", kind: .struct, inheritedTypes: ["Equatable", "Hashable"],
+            hasUserGen: false,
+            storedMembers: [StoredMember(name: "children", typeName: "[Node]")]
+        )
+        let emission = KitSuiteEmitter.emit(
+            findings: [finding("Node", conformances: ["Equatable", "Hashable"])],
+            shapes: ["Node": node],
+            moduleName: "M"
+        )
+        let declarations = emission.source.components(separatedBy: "func __genNode").count - 1
+        #expect(declarations <= 1, "declared \(declarations) times — a redeclaration error")
+    }
+
+    /// **Nothing is emitted for a carrier that produced no call**, so a file the reader is
+    /// asked to paste carries no unused generator. The negative arm matters as much as the
+    /// positive one: emitting every helper the resolver ever built would compile and would
+    /// put dead code in someone else's test target.
+    @Test("no helper is emitted when nothing calls one")
+    func noHelperWithoutACall() {
+        let emission = KitSuiteEmitter.emit(
+            findings: [finding("Money", conformances: ["Equatable"])],
+            shapes: ["Money": shape("Money")],
+            moduleName: "M"
+        )
+        #expect(!emission.source.contains("func __gen"))
+        #expect(!emission.source.contains("Recursive-carrier generators"))
+    }
 }

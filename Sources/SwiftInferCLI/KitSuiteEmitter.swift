@@ -110,7 +110,17 @@ public enum KitSuiteEmitter {
                 counts: Counts(
                     liveCarriers: liveCarriers, blockedCarriers: blockedCarriers,
                     liveLaws: liveLaws, blockedLaws: blockedLaws
-                )
+                ),
+                // Asked AFTER the loop, because the resolver accumulates a helper the
+                // first time any carrier needs one and the expressions that call them
+                // are produced during `classify`. Reading it earlier returns nothing.
+                //
+                // Emitted only when a live block references the helper's name: a blocked
+                // carrier's expression is inside a comment, and a `func` emitted for it
+                // alone would be unused code in a file the reader is asked to paste.
+                supportingDeclarations: resolver.supportingDeclarations.filter { declaration in
+                    live.contains { $0.contains(helperName(in: declaration)) }
+                }
             ),
             liveCarriers: liveCarriers,
             blockedCarriers: blockedCarriers,
@@ -223,6 +233,21 @@ public enum KitSuiteEmitter {
             finding, suites: suites, generator: generator,
             isCaseIterable: strategy == .caseIterable, carrierName: carrierName
         ))
+    }
+
+    /// The `__genX` identifier a supporting declaration defines.
+    ///
+    /// Read off the declaration's own `func` line rather than reconstructed from a carrier
+    /// name, because the two can disagree: `RecursiveGeneratorEmitter.helperName(for:)` owns
+    /// the spelling and this emitter should not restate it. Returns a sentinel that matches
+    /// nothing when the shape is unrecognised, so an unparseable declaration is DROPPED rather
+    /// than emitted with a wrong guess — the failure then looks like today's missing symbol
+    /// instead of a silently wrong generator.
+    static func helperName(in declaration: String) -> String {
+        guard let range = declaration.range(of: "func __gen") else { return "\u{0}" }
+        let rest = declaration[range.lowerBound...].dropFirst("func ".count)
+        let name = rest.prefix { $0.isLetter || $0.isNumber || $0 == "_" }
+        return name.isEmpty ? "\u{0}" : String(name)
     }
 
     // MARK: - Blocks
