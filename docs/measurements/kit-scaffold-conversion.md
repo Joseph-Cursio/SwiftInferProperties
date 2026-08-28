@@ -169,6 +169,56 @@ compiling suite from finishing.
 
 **So the honest status is: compiles yes, runs yes, completes no.**
 
+### 3.3 The trap has a root cause, and it is a dropped field rather than a missing analysis
+
+**`Plane`'s picked initializer does not assert — it DELEGATES to the one that does.**
+
+```swift
+init(unchecked normal: Vector, pointOnPlane: Vector) {
+    self.init(unchecked: normal, w: normal.dot(pointOnPlane))   // line 229 asserts isNormalized
+}
+```
+
+That is exactly the case `InitializerPreconditionDetector.delegatesToSelf` exists for, and whose
+doc pairs it with *"does any initializer on this type assert"* — **conservative in the right
+direction: it can decline a delegation to a clean sibling, and cannot admit one to a dirty
+sibling.** `Plane` would be declined by that pairing.
+
+⚠ **The kit's `MemberBlockInspector` computes both flags. Ours computes only
+`assertsPrecondition`** (`SwiftInferCore/MemberBlockInspector.swift:167`), so the delegation
+pairing cannot fire on this side however good the detector is.
+
+⚠ **A second, latent copy of the same drop.** `TypeShapeBuilder.swift:236` carries
+`assertsPrecondition` through, with a comment warning that *any field added to
+`InitializerSignature` has to be carried through this map* — and naming `_DequeSlot`, `_HeapNode`
+and `_HashTable.Bucket` as the symptom of failing to, *"kept deriving and kept aborting"*, **which
+is the `Plane` symptom verbatim**. The INDEX round-trip at `IndexedTypeShape.swift:264` builds
+`PropertyLawCore.InitializerSignature` from `parameters` / `isFailable` / `isThrowing` alone and
+drops both flags.
+
+**So this is the fourth "computed upstream, dropped on our side" finding of the day**, after
+`__genMesh`'s declarations, `access(of:)`'s visibility, and the observed-property rule. The
+scoped fix is to compute `delegatesToSelf` here, add both flags to
+`IndexedTypeShape.InitializerSignature`, and carry them both ways. `open-threads.md` row **72**.
+
+### 3.4 The cheaper signal was measured and has no population
+
+The live exhibit suggested a simpler gate than any of that: the strategist picked
+`Plane(unchecked: … )`, and an argument label of `unchecked` is the author saying the
+precondition is the caller's problem. **Measured over 12 manifest corpora through the real
+parser — the index's `typeShapes`, never a regex:**
+
+| | count | share |
+|---|---:|---:|
+| types with initializers | 1,251 | — |
+| initializers | 3,035 | — |
+| types with an `unchecked` label | **1** | **0.1%** |
+| such initializers | **1** | **0.0%** |
+
+**`unchecked` is `Euclid`'s local convention, and `Euclid` is not a manifest corpus.** Third
+signal this session that was exact on one subject and had no population, after the monotonicity
+blocklist and `parameter-role`. **Declined.**
+
 **All 40 errors before that fix traced to ONE cause**: `IndexPair` is `private struct IndexPair` in
 `Polygon.swift`, and the emitter emits a **live** suite for it — 20 `cannot find` plus 20
 downstream `.strict`/`.passed`. `@testable import` exposes `internal`, not `private`. The
