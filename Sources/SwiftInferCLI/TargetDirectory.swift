@@ -55,6 +55,23 @@ enum TargetDirectory {
         }
 
         guard isDirectory(directory) else {
+            // `Sources/<target>/` is a CONVENTION, not a rule — a manifest may put a target
+            // anywhere via `path:`. Ask the manifest before concluding the target is absent.
+            //
+            // Third recurrence of this trap in a third subsystem, which is why the fallback is
+            // here rather than at the call sites: `scripts/measurement.py` paid for it when GRDB
+            // (`path: "GRDB"`) resolved to zero files, and `VerifyTargetInference.manifestModule`
+            // paid for it when swift-system (`path: "Sources/System"` for target `SystemPackage`)
+            // reported 21 module-resolution failures under a carrier label. `index --target` never
+            // learned it, so `Euclid` — whose manifest says `path: "Sources"` — was unreachable.
+            //
+            // The convention is tried FIRST and this only runs when it misses, so no package that
+            // resolved before resolves differently now. Confirmed on disk before being returned,
+            // for `manifestModule`'s stated reason: a name taken from a manifest is a guess until
+            // something on disk agrees with it.
+            if let declared = manifestDirectory(for: target, packageRoot: root) {
+                return declared
+            }
             throw ValidationError(
                 "no target `\(target)` — nothing at "
                     + "\(directory.absoluteURL.standardizedFileURL.path).\(availableTargetsClause(in: sources))"
@@ -62,6 +79,23 @@ enum TargetDirectory {
         }
 
         return directory
+    }
+
+    /// The directory a manifest declares for `target` via `path:`, when it exists on disk.
+    ///
+    /// Nil — never a guess — when the manifest cannot be read, names no such target, or names a
+    /// directory that is not there. Each of those leaves the caller reporting the same
+    /// target-not-found error it reported before, which is the behaviour this fallback extends
+    /// rather than replaces.
+    static func manifestDirectory(for target: String, packageRoot: URL) -> URL? {
+        for declared in TargetIsolation.declaredTargetDirectories(packageRoot: packageRoot)
+        where declared.name == target {
+            let directory = packageRoot
+                .appendingPathComponent(declared.path)
+                .standardizedFileURL
+            if isDirectory(directory) { return directory }
+        }
+        return nil
     }
 
     /// Resolves an explicit `--sources <dir>`: the directory is scanned **as given**, with no
