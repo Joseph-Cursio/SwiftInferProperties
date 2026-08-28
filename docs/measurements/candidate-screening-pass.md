@@ -190,7 +190,45 @@ about identity, which is now observed on three codebases.
 flags true and empty via the other initializer; the one combination that breaks — legacy with
 both flags false — is the gap between the two tests they wrote.**
 
-### 5.4 The tally
+### 5.4 REPORTED UPSTREAM 2026-08-28 — and the report is the falsifier, not the confirmation
+
+**[mattpolzin/OpenAPIKit#509](https://github.com/mattpolzin/OpenAPIKit/issues/509).** The first
+finding from this toolchain to leave the repository.
+
+**Its status is UNANSWERED, and that is the whole point of recording it.** §10 already names
+*`OpenAPI.XML` being intended behaviour* as the thing that would refute this finding, and the
+maintainer is the only person who can settle that. **The issue is that falsifier being run**, not
+a lap of honour — an upstream report is a claim submitted for adjudication, and until it is
+adjudicated the finding stands exactly where it stood before it was filed.
+
+**What was proposed, and what was deliberately left open**: the legacy initializer should build
+`nil` when neither flag is set, since both fields default to `false` in the specification and
+both the encoder and the decoder already treat that case as "no structure fields". The
+alternative — having the decoder reconstruct `.legacy(false, false)` — is named in the issue as
+a live option that merely moves the asymmetry onto the `nodeType: nil` spelling. **The direction
+is asked, not asserted**, per that project's guidance to seek conversation before committing to
+a strategy.
+
+A branch (fix plus two regression tests, both watched failing against the unfixed source) is
+prepared and **NOT pushed**, pending the maintainer's steer.
+
+⚠ **Their `CONTRIBUTING.md` carries an explicit AI policy** — contributors must own the PR, hand
+write descriptions, and handle review human-to-human — and the HEAD commit at the time of
+reporting (`651cc55`) was *"update contributing guidelines to add specific examples of
+undesirable aspects of PR descriptions"*. **The report discloses AI assistance and was written
+short and by hand.** Anything further on that thread is human-to-human by their rules, which is
+a constraint on how this evidence can be pursued, not just on how it was filed.
+
+**Three outcomes and what each would mean here**, written before the answer is known so the
+reading is not fitted to it:
+
+| maintainer's response | what it means for this finding |
+|---|---|
+| accepts a fix | the defect is real **and** it mattered to someone other than us — the strongest external evidence this line of work has produced |
+| accepts the report, declines to fix | still a real defect; confirms the *latent* reading, and says the round trip is not a property they intend to hold |
+| says it is intended | **§10's refutation fires** — the law found a design decision, not a defect, and the tally drops to 3 real of 30 |
+
+### 5.5 The tally
 
 **30 hand-checked · 3 real · all three `codable-round-trip`, on three independent unmet
 subjects, each missed by the subject's own suite.** `idempotence` remains **0 real of 18**.

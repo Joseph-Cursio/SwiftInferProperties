@@ -202,6 +202,8 @@ wrapped:false)` and `XML(name:"x", nodeType:nil)` encode to **byte-identical JSO
 Two distinct values, one encoding, `Equatable` finer than `Codable`. That mechanism has now
 produced **all three** real defects, on three codebases that share no code.
 
+⚠ **REPORTED UPSTREAM 2026-08-28 — [OpenAPIKit#509](https://github.com/mattpolzin/OpenAPIKit/issues/509), UNANSWERED.** The first finding from this toolchain to leave the repository, and it is filed as a **falsifier rather than a victory lap**: *this being intended behaviour* is the recorded refutation condition for the finding, and the maintainer is the only one who can settle it. If they call it intended, this drops out of the tally and it becomes **3 real of 30**. AI assistance is disclosed in the report, per that project's explicit policy.
+
 **The near-miss in their suite is the part worth keeping.** `test_empty_decode` asserts
 `decoded == OpenAPI.XML()` and **passes**, because bare `XML()` resolves to the `nodeType:`
 overload. Their legacy coverage uses `attribute: true, wrapped: true`. **The one combination that
