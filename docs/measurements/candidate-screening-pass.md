@@ -237,6 +237,68 @@ is being freed.
 
 ⚠ **Not fixed here.** Filed as `open-threads.md` row 67 with the fix named.
 
+#### The one-line fix is REFUTED — measured 2026-08-28, and not shipped
+
+**Adding `"codable-round-trip"` to `equalityShapedTemplates` and stopping there would wrongly
+decline 20% of the template's carriers.**
+
+`TypeShapeBuilder.swift:170` merges conformances from **same-file extensions only**, so
+`extension Foo: Equatable` in a separate `Foo+Equatable.swift` never reaches
+`shape.inheritedTypes`. The gate fires on *absence of an equality token in the shape*, which
+for those types is absence of evidence rather than evidence of absence.
+
+**Measured across the 20 manifest corpora plus both subjects — 136 hand-written `Codable` ∩
+`Equatable` types, and 27 (20%) get their equality ONLY from a cross-file extension:**
+
+| corpus | cross-file | named |
+|---|---:|---|
+| `swiftlang-swift` | 11 | `Array`, `Optional`, `Dictionary`, `String`, `Set`, `UInt128`, … |
+| `swift-collections` | 9 | `OrderedSet`, `OrderedDictionary`, `Deque`, `BitSet`, `BitArray`, `TreeSet`, … |
+| `swift-package-manager` | 3 | `Triple`, `State`, `PackageReference` |
+| `swift-foundation` | 2 | `Expression`, `Argument` |
+| `swift-nio` | 1 | `ByteBuffer` |
+| `OpenAPIKit` | 1 | `Either` |
+| **total** | **27 of 136** | |
+
+**Those are the prime carriers.** The naive fix would suppress the only template that has ever
+found a real defect, on the collection types most likely to carry one. **A fix that costs 27
+rows to correct 6 is not a fix.**
+
+⚠ **The gate is SOUND where it fires today, checked rather than assumed.** OpenAPIKit's two live
+`carrier-not-equatable` declines are on `EitherDecodeNoTypesMatchedError.IndividualFailure`,
+which is declared `: Swift.Error` with no equality conformance anywhere in the package. **This
+is a finding about EXTENDING the gate, not about the gate.**
+
+#### What a correct fix needs, and why `EquatableResolver` is not quite it
+
+`TypeShapeBuilder`'s own docstring names the missing piece: *"The M3.3 `EquatableResolver`
+reaches into raw `TypeDecl`s for cross-file conformance evidence; the strategist's shape doesn't
+need it."* That resolver **exists**, is built from all `TypeDecl`s, explicitly handles
+`extension Foo: Equatable` *"declared in a separate file"*, and carries the three-state
+`.equatable / .notEquatable / .unknown` model the gate's docstring claims to want.
+
+**It has ZERO consumers in `Sources/`** — one doc-comment reference in `ProtocolCoverageMap` and
+nothing else. Another instance of the shape row 28 named: a component that answers the question,
+consumed by nobody.
+
+**But its tri-state cannot carry this gate either, and the reason is specific.** A plain struct
+with no equality conformance classifies `.unknown`, not `.notEquatable` — `isProvablyNonEquatable`
+covers function types, `Any`, `AnyObject` and existentials, not "nothing declared it". Firing
+only on `.notEquatable` would leave all 6 SymbolKit rows exactly where they are.
+
+So the negative half has to be *`the type is corpus-local, every declaration and extension of it
+was scanned, and none declares equality`* — decidable, and **needing one thing the resolver does
+not do: transitive closure through corpus protocols.** SymbolKit's carriers conform to
+`public protocol Mixin: Codable`; had it been `Mixin: Hashable`, every one of them would be
+`Equatable` with no equality token on the type itself. A negative that skips that step trades
+this false-decline class for another.
+
+**Estimated shape of the real fix**, recorded so the next attempt does not restart from the
+one-line version: a tri-state computed at INDEX time (where all `TypeDecl`s are in hand),
+carried on `IndexedTypeShape` as an additive `decodeIfPresent` field like `enumCases` before it,
+consumed by the gate, with the positive side from `EquatableResolver` and the negative side
+requiring protocol-chain closure. **Not one line, and not attempted here.**
+
 ### 6.2 The other shapes
 
 | subject | compiler error | rows |
