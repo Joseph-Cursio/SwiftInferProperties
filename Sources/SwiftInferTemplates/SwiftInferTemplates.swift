@@ -138,8 +138,13 @@ public enum TemplateRegistry {
         // evidenced, so it must see the suggestion every earlier pass produced rather
         // than a partly-scored one.
         let vetoed = applyImpureSubjectVeto(to: withCodableFallback, summaries: summaries)
+        // Runs after the purity veto and before finalisation, for the same reason that veto
+        // gives: it decides which law SURVIVES, so it must see every proposal the content
+        // passes produced. Unlike the purity veto it REMOVES, because the law it drops is
+        // false whenever its sibling is true — see `TemplateRegistry+InvolutionExclusion`.
+        let withoutContradictedIdempotence = applyInvolutionIdempotenceExclusion(to: vetoed)
         return finalizeSuggestions(
-            vetoed,
+            withoutContradictedIdempotence,
             crossValidation: crossValidationFromTestLifter,
             crossValidationOrigins: crossValidationOriginsFromTestLifter,
             counterSignals: counterSignalsFromTestLifter,

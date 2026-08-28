@@ -95,6 +95,8 @@ the *proposal* is the defect.
 - **`commutativity` on `Rotation.*` — 1 row.** **3D rotation composition is non-commutative**,
   which is among the most textbook facts in the subject area.
 
+✅ **THE INVOLUTION HALF WAS BUILT AND A/B'd THE SAME DAY** — `TemplateRegistry.applyInvolutionIdempotenceExclusion`, `open-threads.md` row 69. **The contradiction is already in the tool's own output**, so the rule needs no new analysis: two mutually exclusive templates proposed for one `(file, line)`. **Same-binary A/B over `make batch8`, both arms green at 21 tests: `idempotence` 794 → 789, exactly −5 across the 20 corpora, with `involution` unchanged at 5 and `binary-idempotence` unchanged.** ⚠ **CO-OCCURRENCE IS 100%** — 5 involution rows, 5 removed idempotence rows, so every declaration where `involution` fires also carried the contradicting proposal, in the manifest and here. **The other two shapes are NOT reachable by it**: `monotonicity` on trig and `commutativity` on `Rotation.*` have no sibling proposal to contradict them.
+
 > **The three are one defect asked three ways: NOTHING LICENSES THE PROPOSAL.** The algebraic
 > templates fire on shape — a binary operator, a self-returning unary function — with no evidence
 > that the operation has the property the law asserts. This subject is the first to exercise them
