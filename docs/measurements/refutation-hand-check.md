@@ -137,6 +137,35 @@ subject never owed.
 > template predicts. The `codable-round-trip` arm remains unmeasured (0 of 10 here, 1 of 4 on
 > `mcp-swift-sdk`).
 
+## Addendum 2026-08-28 — a THIRD real defect, and the mechanism is the same one
+
+**`OpenAPIKit` @ `651cc55`, `OpenAPI.XML`.** `codable-round-trip` for the third time, on a third
+independent unmet subject, again missed by the subject's own suite — **2,147 tests, 0 failures**.
+`docs/measurements/candidate-screening-pass.md` §5.
+
+**Both axes land on the good side this time**, which is why it is the cleanest of the three:
+
+| axis | this refutation |
+|---|---|
+| the law's counterexample | **well-quantified** — `XML(name: "", …, structure: .legacy(false, false))`, a value the type's own legacy initializer produces for its DEFAULT arguments |
+| the defect it points at | **real** — `{"name":"x"}` decodes back with `structure = nil`, so `decode(encode(x)) != x`, reproduced by executing against the package |
+
+**The mechanism is `ToolChoice`'s, not a fifth one.** `XML(name:"x", attribute:false,
+wrapped:false)` and `XML(name:"x", nodeType:nil)` encode to **byte-identical JSON** and are `!=`.
+Two distinct values, one encoding, `Equatable` finer than `Codable`. That mechanism has now
+produced **all three** real defects, on three codebases that share no code.
+
+**The near-miss in their suite is the part worth keeping.** `test_empty_decode` asserts
+`decoded == OpenAPI.XML()` and **passes**, because bare `XML()` resolves to the `nodeType:`
+overload. Their legacy coverage uses `attribute: true, wrapped: true`. **The one combination that
+breaks is the gap between the two tests they already wrote** — which is a sharper argument for a
+generated law than a codebase with no tests at all would be.
+
+**Tally: 30 hand-checked, 3 real, all three `codable-round-trip`, all on unmet subjects.**
+`idempotence` remains **0 of 18**. ⚠ **Still not a rate** — nine of the twelve
+`codable-round-trip` checks remain one mechanism from one generated codebase, so deduplicated it
+is nearer **3 real of 5 distinct mechanisms**. Stronger than last pass, still not a precision.
+
 ## Addendum 2026-08-25 — a SECOND real defect, and a third VERDICT category
 
 **`jwt-kit` @ `8189d7c`, `AppleIdentityToken.UserDetectionStatus`.** `codable-round-trip` again,
