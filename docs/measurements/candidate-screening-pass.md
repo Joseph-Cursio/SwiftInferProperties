@@ -342,9 +342,12 @@ Each was paid for in this pass rather than reasoned to.
 
 ## 8. What is left, and how to read it
 
-**`swift-docc` @ `f160765` is the richest unrun candidate found: 46 hand-written, 552 source
-files, 0 C files, 0 mentions on five independent tokens, macOS `.v13`.** Unrun here only
-because recording this pass was worth more than a third subject.
+**`swift-docc` @ `f160765` was the richest candidate found — 46 hand-written, 552 source files,
+0 C files, 0 mentions on five independent tokens, macOS `.v13` — and it has since been RUN.**
+`docs/measurements/subject-swift-docc.md`: **267 rows, 49 verdicts, 13 refutations**, ten times
+any previous subject's verdict count, and **a fourth real defect that breaks the
+one-mechanism generalisation** — `CatalogFeatureFlags`'s decode THROWS on its own encoder's
+output, so `==` is never reached. The screen's ranking was borne out.
 
 **`algoliasearch-client-swift` scores 757 hand-written and should be screened LAST.** It is
 generated code, and the tally already carries what that produces: nine refutations, **one**
