@@ -137,6 +137,58 @@ subject never owed.
 > template predicts. The `codable-round-trip` arm remains unmeasured (0 of 10 here, 1 of 4 on
 > `mcp-swift-sdk`).
 
+## Addendum 2026-08-28 (third) — the tier question RE-ASKED on four unmet subjects, and the answer is still NO
+
+**This document's headline verdict — *the tier does not predict* — was measured on 15 refutations
+from the home corpus, all `idempotence` or `commutativity`.** That population could not answer
+the question, and the four unmet subjects run since then offer a better one: **45 refutations,
+eight templates, four codebases.** Re-asked properly, **the verdict survives.**
+
+### The refutation RATE does not predict, and the two informative subjects DISAGREE IN DIRECTION
+
+| subject | verdicts | `Likely` refutation rate | `Possible` refutation rate |
+|---|---:|---:|---:|
+| `Euclid` | 84 | 17% (4/24) | **44%** (26/59) |
+| `swift-docc` | 49 | **39%** (7/18) | 19% (6/31) |
+| `OpenAPIKit` | 5 | 20% (1/5) | — |
+| `SymbolKit` | 5 | 0% (0/4) | 0% (0/1) |
+
+**Euclid says `Possible` is the noisy tier; `swift-docc` says `Likely` is.** Those are the only
+two subjects carrying enough of both tiers to speak, and they point opposite ways.
+
+⚠ **POOLED, THE NUMBERS READ `Likely` 24% AND `Possible` 35% — AND POOLING IS WHAT HIDES THE
+DISAGREEMENT.** `Euclid` contributes 84 of the 143 verdicts, so the pooled figure is close to
+Euclid's figure wearing a four-subject label. **The pooled reading is the one to distrust.**
+
+### The weaker claim that DOES survive, and why it is not enough
+
+**Both real defects are `Likely`** — `CatalogFeatureFlags` (`swift-docc`) and `OpenAPI.XML`
+(`OpenAPIKit`, contested) — and **no `Possible` refutation has turned out real across 32 of
+them.**
+
+⚠ **That is n = 2, and the 32 are not comparable evidence.** Euclid's 26 `Possible` refutations
+were **triaged by mechanism, not hand-checked one at a time**, so *"none was real"* is a weaker
+statement there than the same words in this document's earlier addenda, where each refutation was
+adjudicated individually. **Merging the two silently would inflate a hand-check count with triage,
+which is the arithmetic this project refuses elsewhere.**
+
+### What this kills
+
+**It kills using the tier as the licensing signal `open-threads.md` row 70 needs.** The appealing
+story after row 70 — *the distinction is already computed, `Possible` is where the unlicensed
+proposals land, so stop indexing that tier* — **is not supported.** `swift-docc` refutes it
+directly: its `Likely` rows refute at twice the rate of its `Possible` ones.
+
+**Row 70's finding stands** (a `round-trip` inverse chosen on type signature alone is a real
+defect, read out of the emitted stub). **What does not stand is the shortcut**: excluding
+`Possible` from the index would not have removed those eight pairings on the evidence here, and
+would have removed rows that refute at 19% on another subject.
+
+**Method note.** The rate needs its denominator per tier, and the first version of this analysis
+counted only refutations — 32 of 45 are `Possible`, which looks decisive until you notice
+`Possible` is also 91 of the 143 verdicts. **A tier that produces most of the verdicts produces
+most of the refutations without predicting anything.**
+
 ## Addendum 2026-08-28 (second) — a FOURTH real defect, and it BREAKS the mechanism claim
 
 **`swift-docc` @ `f160765`, `CatalogFeatureFlags`.** `docs/measurements/subject-swift-docc.md`.
