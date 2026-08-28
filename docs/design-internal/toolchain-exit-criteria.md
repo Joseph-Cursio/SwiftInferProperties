@@ -387,6 +387,39 @@ failure, and is recorded here because the rule will read as insufficient otherwi
 `docs/measurements/refutation-rate-second-subject.md`,
 `docs/measurements/module-qualified-leaf-spelling.md`.
 
+⚠ **AMENDED AGAIN 2026-08-28, with three clauses paid for rather than reasoned to.** A
+screening pass over **63 subjects** ran the amended rule end to end and found three things it
+does not say. `docs/measurements/candidate-screening-pass.md`.
+
+- **The subject must build for the HOST.** Every clause above is about the subject's *types*;
+  none asks whether `swift build` succeeds on macOS, because every prior subject was a
+  cross-platform library. `IceCubesApp/Packages/Models` had the best on-disk hand-written count
+  (**9**) and declares no macOS platform, so it defaults to 10.13 against `SwiftSoup`'s 10.15
+  and fails outright — **every row would have read `build-failed`**, which CLAUDE.md warns reads
+  as an architectural limitation rather than a broken manifest. App-local packages are where
+  hand-written wire types are richest, so this class is both attractive and unreachable. **The
+  cheap check is reading `platforms:`; only an actual build settles it**, since a dependency can
+  out-require a declared floor — which is precisely how this one failed.
+- **Point the index at a VENDED LIBRARY PRODUCT, not an internal target.** Indexing
+  `--target OpenAPIKitCore` gave **33 rows, 0 verdicts, and 13 declines reading
+  `unsupported-carrier: OpenAPIKitCore is not a library product`**. The vended product gave 97
+  rows and 5 verdicts. Fifth instance of *a decline bucket's NAME is not its cause*, and the
+  same shape as swift-system's 21-of-36.
+- **The spent-subject check must key on MEASURED, not on MENTIONED**, for two independent
+  reasons. It greps the directory basename, so `~/GitHub_projects/swift-sdk` — which **is**
+  `mcp-swift-sdk`, already spent, and scored the highest hand-written count in the sweep — was
+  caught only because one name is a substring of the other; a directory named `mcp` would have
+  passed and the contaminated result would have looked like the pass's best find. And
+  **publishing a screen spends every candidate it names**, so the letter of the rule now
+  disqualifies subjects for having been *screened*. Read a screening doc's candidate list as
+  available.
+
+⚠ **The pre-check's own reading is ambiguous and this is not resolved.** *Rows reaching a
+verdict* and *rows reaching the build stage* are different numbers — a `build-failed` row
+reaches the build stage and yields no verdict — and they differ by 3× on `OpenAPIKit` (15
+against 5). Which of the two the published `jwt-kit` figure of **17 of 35** counted is not
+recoverable from its table. **A threshold is only as meaningful as the reading it names.**
+
 ### 6.2 The route falsifies §5.1's precondition argument, and one of its premises
 
 **A-quality was met by a REFUTING law on unmutated code, not by a passing law killing a
