@@ -14,8 +14,11 @@ one exercised the same three — `codable-round-trip`, `idempotence`, `predicate
 `catalog-health-census.md` has measured four templates firing on nothing across twenty corpora;
 this is the first subject that exercises the algebraic half of the catalogue at all.
 
-⚠ **The 31 refutations are ~zero real defects — and the dominant mechanism is NOT what the first
-version of this document said.** It attributed the bulk to floating-point precision. Re-checked
+⚠ **The 31 refutations are ~zero real defects, and 17 of them — 55% — are the tool proposing a
+law with NO EVIDENCE**: 9 algebraically false laws (§2.1) and 8 `round-trip` laws whose "inverse"
+was paired **on type signature alone** (§2.2). Floating point is 4 confirmed and 1 probable.
+
+⚠ **The dominant mechanism is NOT what the first version of this document said.** It attributed the bulk to floating-point precision. Re-checked
 row by row, **precision accounts for one confirmed case and one probable one. NINE are
 algebraically false laws** the catalogue should never have proposed: idempotence for an
 **involution** (5), monotonicity for `sin`/`cos`/`tan` (3), and commutativity for **3D rotation
@@ -75,8 +78,8 @@ survives unchanged; the attribution does not.
 | B. Accumulating operand *(named mechanism)* | 4 | `Vector.translated(by:)`, `Vector.scaled(by:)`, `Bounds.minkowskiSum(with:)`, `Transform.transformed(by:)` |
 | C. Idempotence over a **derivation** *(named mechanism)* | 3 | `deterministicHash(_:)`, `Vector.leastParallelAxis()`, `Vector.cross(_:)` |
 | D. Undeclared invariant *(named mechanism)* | 2 | `Bounds.union(_:)` commutativity (`min > max`), `Color.*` associativity (components at ±5e5 in a 0…1 type) |
-| E. **Floating-point precision** | **1 confirmed, 1 probable** | `Vector.normalized()` confirmed; `Rotation.*` associativity probable |
-| F. **NOT ADJUDICABLE from the record** | **11** | §2.2 |
+| E. **Floating-point precision** | **4 confirmed, 1 probable** | `Vector.normalized()`; the 3 `codable-round-trip` rows (§2.2); `Rotation.*` associativity probable |
+| **A′. WRONG PAIRING — `round-trip` composed on type signature alone** | **8** | §2.2 — settled by reading the emitted stubs |
 
 ### 2.1 Bucket A — nine laws that are false before any value is generated
 
@@ -104,22 +107,60 @@ The catalogue got the harder half right: composition *is* associative and *is no
 and the two templates split correctly on one operator. **The gap is not that the catalogue knows
 nothing; it is that nothing gates the half it gets wrong.**
 
-### 2.2 Bucket F — eleven that the record cannot settle
+### 2.2 Bucket F — SETTLED 2026-08-28 by reading the emitted stubs
 
-Eight `round-trip` rows (`Rotation.angle()` ×3, `Vector.clampedToScaleLimit()` ×3,
-`Vector.leastParallelAxis()`, `Vector.mostParallelAxis()`) and three `codable-round-trip` rows
-carry **no `secondaryFunctionName`**, so the stream does not record what the getter was paired
-against.
+**Re-emitted with `verify --all-from-index --template round-trip`, which leaves the generated
+`main.swift` in `.swiftinfer/verify-workdir/shared-survey/Sources/V<identityHash>/`.** All three
+`Rotation.angle()` rows reproduced, so the stubs are the ones that refuted.
 
-**`Rotation` has an `angle` property, and the only `init(angle:)` in the package is on
-`MiterLimit` — a different type.** Either the pairing is a bare-name cross-type collision, or it
-resolved something not located here; **the record cannot distinguish those**, and guessing would
-be inventing a mechanism.
+**The eight `round-trip` rows are a WRONG PAIRING — and it is the worst defect this subject
+found.** The emitted law for `Rotation.angle()`:
 
-⚠ **That is the same gap `SurveyRecord` closed once for `tier`** — *a survey stream cannot be
-read without its index* (`open-threads.md` row 60). It is closed for tier and open for the
-round-trip pairing. **The cheap next step is to re-emit one stub and read the generated law**,
-which would settle all eleven and may name a fifth mechanism.
+```swift
+let forwardResult = { $0.angle }(value)
+let inverseResult = Rotation.yaw(forwardResult)
+if inverseResult != value { FAIL }
+```
+
+It asserts **`Rotation.yaw(r.angle) == r`**. `Rotation.yaw(_:)` is documented *"Creates a
+rotation around the Y axis"* — it is not the inverse of `angle`, it is one of three
+axis-specific constructors beside `pitch` and `roll`. The generator builds rotations from four
+random doubles, so the axis is essentially never Y and the law is false for almost every value.
+
+**The other three pairings show the mechanism plainly:**
+
+| forward | "inverse" it was paired with |
+|---|---|
+| `Vector.leastParallelAxis` | `clampedToScaleLimit()` |
+| `Vector.mostParallelAxis` | `clampedToScaleLimit()` |
+| `Vector.clampedToScaleLimit()` | `_quantized()` |
+
+**These functions are unrelated. The template is pairing on TYPE SIGNATURE alone** — any
+`Vector -> Vector` is treated as any other `Vector -> Vector`'s inverse — and asserting
+`g(f(x)) == x` with no evidence that `g` inverts `f`.
+
+> ⚠ **`Rotation.angle` is LOSSY, so no one-argument constructor can invert it.** It returns a
+> scalar from a value with three degrees of freedom. **That is decidable without running
+> anything**, and it is the cheapest available gate: a getter whose return type carries fewer
+> degrees of freedom than its carrier has no single-argument inverse, whatever the signatures
+> say.
+
+**This is row 69's defect at a different site** — nothing licenses the *pairing*, exactly as
+nothing licenses the *algebraic property*. Filed separately as row **70**, because the two need
+different gates. **Together they are 17 of 31 refutations — 55%.**
+
+**The three `codable-round-trip` rows are NOT a pairing defect.** Their law is correctly formed:
+
+```swift
+let encoded = try JSONEncoder().encode(value)
+let decoded = try JSONDecoder().decode(Rotation.self, from: encoded)
+if decoded != value { FAIL }
+```
+
+`encode`/`decode` is a genuine inverse pair. These fail for the §2.3 reason: `Rotation.init(_:_:_:_:)`
+calls `simd_normalize`, so a normalized quaternion is written as four `Double`s and re-normalized
+on decode, drifting in the last bits under an exact `==`. **They move from bucket F to bucket E**,
+which is what the bucket was for.
 
 ### 2.3 Floating point, correctly sized
 
