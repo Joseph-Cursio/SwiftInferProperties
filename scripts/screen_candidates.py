@@ -38,6 +38,13 @@ EQUATABLE = {"Equatable", "Hashable"}
 
 C_SUFFIXES = (".c", ".h", ".m", ".mm", ".cc", ".cpp", ".hpp")
 
+# Type names declared as `enum` per corpus root, filled in by `conformance_index`.
+# Module-level because the index is built once per root and read by `sum_types`.
+KINDS: dict = {}
+
+# `case foo(Bar)` — an enum case carrying associated values.
+PAYLOAD_CASE = re.compile(r"^\s*(?:indirect\s+)?case\s+\w+\s*\(", re.MULTILINE)
+
 DECL = re.compile(
     r"^\s*(?:public\s+|internal\s+|package\s+|open\s+|final\s+|private\s+|fileprivate\s+)*"
     r"(?:struct|enum|class|actor)\s+([A-Z_]\w*)\s*(<[^{]*?>)?\s*:\s*([^{]+)\{",
@@ -70,6 +77,8 @@ def conformance_index(base):
             continue
         for match in DECL.finditer(text):
             index.setdefault(match.group(1), set()).update(_conformances(match.group(3)))
+            if match.group(0).lstrip().split()[0] in ("enum",) or " enum " in match.group(0):
+                KINDS.setdefault(base, set()).add(match.group(1))
         for match in EXT.finditer(text):
             name = match.group(1).split(".")[-1]
             index.setdefault(name, set()).update(_conformances(match.group(2)))
@@ -99,6 +108,30 @@ def host_platform(base):
     return "NOT DECLARED" if "platforms" in text else "no platforms block"
 
 
+def sum_types(base, names):
+    """Of `names`, those declared as an `enum` with at least one case carrying a payload.
+
+    **Why this is the column worth having.** Swift synthesizes `Codable` for ordinary structs,
+    so a library that merely models a wire format hand-writes almost nothing —
+    `sourcekit-lsp` implements the whole Language Server Protocol and has FOUR hand-written
+    `Codable` ∩ `Equatable` types. What forces a hand-written coder is a **sum type**: an enum
+    with associated values cannot be synthesized into an external schema's shape, so the author
+    must write `init(from:)` / `encode(to:)` by hand — and a hand-written coder is where the
+    encoder and the decoder get the chance to disagree.
+
+    Reported beside the hand-written count rather than instead of it: this is a HYPOTHESIS about
+    which subjects will be rich, and the hand-written count is the thing it is trying to predict.
+    """
+    enums = KINDS.get(base, set())
+    found = []
+    for name in names:
+        if name not in enums:
+            continue
+        if any(PAYLOAD_CASE.search(block) for block in measurement.declaration_blocks(base, name)):
+            found.append(name)
+    return found
+
+
 def screen(base):
     files = list(measurement.swift_files(base))
     # Two file counts, because they answer different questions and the published tables use
@@ -118,6 +151,7 @@ def screen(base):
     equatable = {n for n, c in index.items() if c & EQUATABLE}
     both = sorted(codable & equatable)
     handwritten = [n for n in both if measurement.declares_custom_codable(base, n)]
+    sums = sum_types(base, both)
 
     return {
         "macos": host_platform(base),
@@ -130,6 +164,8 @@ def screen(base):
         "intersection": len(both),
         "handwritten": len(handwritten),
         "handwritten_names": handwritten,
+        "sum_types": len(sums),
+        "sum_type_names": sums,
     }
 
 

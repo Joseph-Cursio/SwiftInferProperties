@@ -174,7 +174,7 @@ initializer the generator does not use.
 (the `removingLastComponent` shape), and `stableHashString` / `hash(uniqueSymbolID:)` /
 `mimeType(for:)` (idempotence over a **derivation**).
 
-**Tally: 40 hand-checked, 4 real. `idempotence` 0 of 23; `codable-round-trip` 4 of 17.** All four
+**Tally: 40 hand-checked, 3 real + 1 CONTESTED. `idempotence` 0 of 23; `codable-round-trip` 3 real + 1 contested of 17.** ⚠ **The contested one is `OpenAPI.XML`** — see the 2026-08-28 addendum above; if the maintainer settles it as intended, the tally is **3 real of 40** and the *four independent subjects* claim becomes three. All four
 real defects are `codable-round-trip`, on four independent unmet subjects, each missed by the
 subject's own suite. ⚠ **Still not a rate** — deduplicated by mechanism it is nearer **4 real of
 7 distinct mechanisms**, the largest denominator yet and still too small to quote as a precision.
@@ -202,7 +202,7 @@ wrapped:false)` and `XML(name:"x", nodeType:nil)` encode to **byte-identical JSO
 Two distinct values, one encoding, `Equatable` finer than `Codable`. That mechanism has now
 produced **all three** real defects, on three codebases that share no code.
 
-⚠ **REPORTED UPSTREAM 2026-08-28 — [OpenAPIKit#509](https://github.com/mattpolzin/OpenAPIKit/issues/509), UNANSWERED.** The first finding from this toolchain to leave the repository, and it is filed as a **falsifier rather than a victory lap**: *this being intended behaviour* is the recorded refutation condition for the finding, and the maintainer is the only one who can settle it. If they call it intended, this drops out of the tally and it becomes **3 real of 30**. AI assistance is disclosed in the report, per that project's explicit policy.
+⚠ **REPORTED UPSTREAM AND ANSWERED 2026-08-28 — [OpenAPIKit#509](https://github.com/mattpolzin/OpenAPIKit/issues/509). STATUS: CONTESTED.** The maintainer replied that the round trip is *"a goal of OpenAPIKit but not a mandate"*, that he *"maybe vaguely"* recalls the decision being intentional, and that *"equality checks don't need to be equivalency checks"* — while agreeing that *"the best ergonomics are that a value is equal to itself after going through an encode and a decode"*. He asked for the PR to be held. **So this is neither confirmed nor refuted, and it is counted as CONTESTED rather than as a fourth real defect.** ⚠ **The objection generalises**: `codable-round-trip` takes `==` as the equivalence and cannot know a type intends `==` to be FINER than wire-identity — **all four of this project's real defects rest on that same assumption**, and a maintainer may reject it per type. The first finding from this toolchain to leave the repository, and it is filed as a **falsifier rather than a victory lap**: *this being intended behaviour* is the recorded refutation condition for the finding, and the maintainer is the only one who can settle it. If they call it intended, this drops out of the tally and it becomes **3 real of 30**. AI assistance is disclosed in the report, per that project's explicit policy.
 
 **The near-miss in their suite is the part worth keeping.** `test_empty_decode` asserts
 `decoded == OpenAPI.XML()` and **passes**, because bare `XML()` resolves to the `nodeType:`
