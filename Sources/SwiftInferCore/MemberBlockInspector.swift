@@ -133,9 +133,12 @@ enum MemberBlockInspector {
             // is Swift resolving the call to a *different*, failable initializer, and it
             // is the error that gets reported.
             //
-            // 95 of 163 laws on that subject died this way. `InitializerSignature` carries
-            // no access level, so accessibility has to be decided here, at capture, rather
-            // than by the strategist — which cannot see it.
+            // 95 of 163 laws on that subject died this way. The kit's
+            // `InitializerSignature` has since grown an `accessLevel` field, so the
+            // strategist *could* decide this; the filter stays at capture because it is the
+            // stricter of the two and an uncaptured initializer cannot be chosen by any
+            // later stage. The field is deliberately not carried — see
+            // `IndexedTypeShape.InitializerSignature`.
             //
             // `fileprivate` is excluded on the same grounds and `internal` is kept:
             // `@testable import` reaches `internal`, which is the same line
@@ -165,7 +168,24 @@ enum MemberBlockInspector {
                 isFailable: initDecl.optionalMark != nil,
                 isThrowing: effects?.throwsClause != nil,
                 assertsPrecondition: InitializerPreconditionDetector
-                    .statesPrecondition(initDecl)
+                    .statesPrecondition(initDecl),
+                // **A precondition one hop away is still a precondition, and this flag was
+                // never computed here until 2026-08-28.** `statesPrecondition` reads the body
+                // it is given; `delegatesToSelf` is what lets the strategist pair "this init
+                // forwards" with "some init on this type asserts", which is the only way a
+                // clean-looking delegating initializer gets declined.
+                //
+                // **Measured on `Euclid.Plane`**: the strategist picked
+                // `init(unchecked normal:pointOnPlane:)`, whose body is a bare
+                // `self.init(unchecked: normal, w: normal.dot(pointOnPlane))` — it asserts
+                // nothing itself and forwards to the sibling holding
+                // `assert(normal.isNormalized)`. Without this flag the pairing in
+                // `InitializerBasedDerivation.isDeclined` can never fire, so the first kit
+                // suite that ever compiled trapped at `Plane.swift:230`
+                // (`docs/measurements/kit-scaffold-conversion.md` §3.2). The kit's own
+                // `MemberBlockInspector` has computed both flags all along; this port
+                // computed one.
+                delegatesToSelf: InitializerPreconditionDetector.delegatesToSelf(initDecl)
             ))
         }
         return result
