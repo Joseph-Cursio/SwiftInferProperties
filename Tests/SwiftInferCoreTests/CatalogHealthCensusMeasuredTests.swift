@@ -123,6 +123,14 @@ struct CatalogHealthCensusMeasuredTests {
     struct Row {
         let template: String
         let carrier: String?
+        /// The subject's labelled display name (`index(after:)`), from the first evidence
+        /// entry. Added 2026-08-29 for the monotonicity reading, which asks what the
+        /// subjects of a template ARE rather than how many there are.
+        let subject: String
+        /// The manifest id of the corpus this row came from, so a reading can report a
+        /// per-corpus denominator instead of one pooled number — the failure
+        /// `refutation-hand-check.md` names, where pooling hid two subjects disagreeing.
+        let corpus: String
         /// The subject's access restriction, `nil` when the subject is reachable from a
         /// test. Joined by the same `(file, base name)` key the shipped caveat uses.
         let restriction: AccessRestriction?
@@ -163,6 +171,8 @@ struct CatalogHealthCensusMeasuredTests {
                 return Row(
                     template: suggestion.templateName,
                     carrier: suggestion.carrier,
+                    subject: suggestion.evidence.first?.displayName ?? "",
+                    corpus: corpus.id,
                     restriction: key.flatMap { restrictionByKey[$0] }
                 )
             })
