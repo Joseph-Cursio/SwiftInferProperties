@@ -113,9 +113,19 @@ counterexample was a random `Int` against an `OptionSet`.
 `f(forScale: x)`.
 
 **This is recorded once, as a one-row curiosity**, in `candidate-screening-pass.md`'s OpenAPIKit
-error table. At 11% of one template on one corpus it is not a curiosity, and **it is
-template-independent** — it is how a single-argument labelled call is rendered, so it blocks every
-template equally. `open-threads.md` row **73**.
+error table. At 11% of one template on one corpus it is not a curiosity. `open-threads.md` row
+**73**.
+
+⚠ **AND THE CLAIM MADE HERE — *it is template-independent, so it blocks every template equally* —
+IS WRONG, corrected 2026-08-29 by reading the code.** `labeledCallExpression` has existed since
+V1.149 and `singleCallResolved` routes every other template through it.
+**`liftedOrMonotonicityCalls` is the ONE arm that never did**: it rendered the bare reference with
+`CallExpressionShape.render` and handed it to a composer that applies positionally. The blast
+radius is **two templates — `monotonicity` and `idempotence-lifted` — not the catalogue.**
+
+**The census this section called for was the wrong first step.** Reading the resolver answered the
+scope question in minutes, and a census would have measured a population only two templates can
+draw from. §7 is the fix and its A/B.
 
 Two further emitter errors in the same run, not sized: `cannot find 'UniqueSet' / 'RigidSet' in
 scope` (2 rows — the hash arm, §1) and `binary operator '>' cannot be applied to two '@Sendable
@@ -132,3 +142,68 @@ scope` (2 rows — the hash arm, §1) and `binary operator '>' cannot be applied
   testable and the pre-registered rule can be applied as written, which is the outcome to prefer.
 - **A reading showing `discover` output is not consumed by a human for these tiers.** That would
   restore the third branch's premise and the decline with it.
+
+---
+
+## 7. The fix, and what it bought — 7 build failures, 0 real findings
+
+**Fixed 2026-08-29.** `liftedOrMonotonicityCalls` now wraps through `labeledCallExpression`.
+Two consequences had to be handled, and the code said so before the compiler did:
+
+- **The OC/instance composer reads a method name off `functionCalls.first` with
+  `split(".").last`**, which a closure literal (`{ Deque.index(after: $0) }`) answers nonsense
+  for. Monotonicity now carries three elements — labelled call, un-stripped
+  `primaryFunctionName`, raw call — and that composer takes the raw one, with a two-element
+  fallback so a labelless subject is byte-identical.
+- **`idempotence-lifted`'s composer already documents the other trap**: a closure literal applied
+  inline leaves `$0` with nothing to infer from, which is why it binds to an explicitly typed
+  local. The monotonicity value path applies to a value whose type is fixed by an explicitly
+  typed generator, so it needed no annotation — **checked by running it, not by arguing it.**
+
+**Same-subject A/B, `swift-collections` @ `899809d3`, same command:**
+
+| outcome | before | after |
+|---|---:|---:|
+| `architectural-coverage-pending` | 52 | 53 |
+| `measured-error` | 10 | **6** |
+| `measured-defaultFails` | 2 | **5** |
+| **`missing argument label` rows** | **7** | **0** |
+
+**The 7 freed rows became 3 verdicts, 3 runtime traps and 1 build failure** — the standing ~5:1
+decline-to-rows ratio landing at about 2:1, the best it has read in this line of work.
+
+⚠ **AND THEY BOUGHT ZERO REAL FINDINGS.** All three new refutations are **false laws by
+over-quantified domain**, the same mechanism as §4:
+
+| subject | counterexample | why false |
+|---|---|---|
+| `wordCount(forScale:)` | `(-2144079696337046920, …)` | negative scale |
+| `wordCount(forScale:)` | **`(81, 140)`** | see below |
+| `minimumCapacity(forScale:)` | `(5256116255943241006, …)` | `1 &<< scale` masks the shift, wraps |
+
+✅ **`(81, 140)` is the most instructive counterexample this family has produced, because it looks
+PLAUSIBLE.** `wordCount(forScale scale: Int) -> Int { ((scale &<< scale) + 63) / 64 }` — `&<<`
+masks the shift amount to 6 bits, so `81 &<< 81` is `81 << 17` and `140 &<< 140` is `140 << 12`,
+and the larger input yields the smaller result. Two small positive integers, and a reader does not
+see out-of-domain at a glance. **The counterexample's plausibility and the finding's reality are
+independent axes** — `refutation-rate-third-fourth-subject.md` named that, and this is the
+cleanest exhibit of it: every earlier false law in this doc announced itself with an absurd value.
+
+⚠ **AND THE DOMAIN BOUND IS WRITTEN DOWN — ON A DIFFERENT FUNCTION.** `scale(forCapacity:)`, in
+the same file, ends with `assert(scale >= minimumScale && scale < Int.bitWidth)`. So the legal
+domain of every `…(forScale:)` function is stated in an assertion **on the producer, never on the
+consumers**. That is a new wrinkle on row 72's generator-fidelity family: not *the invariant is
+undeclared* (`Bounds`, `Color`) and not *it is one hop away through `self.init`* (`Plane`), but
+**it is declared on the function that MAKES the value, and the tool is generating inputs to the
+functions that CONSUME it.**
+
+**The 3 new traps are the same cause.** `maximumCapacity(forScale:)` ×2 and `level(forOffset:)`
+exit on signal 5: `1 &<< scale` masks and wraps, then `bucketCount * maximumLoadFactor.0` is an
+ordinary multiply that **traps on overflow**. Out-of-domain input, one line later.
+
+**The 1 remaining build failure is an availability floor** — `desiredNextChunkSize(remaining:)`
+fails with `'BigString' is only available in macOS 26.0 or newer`. `availability-gate.md` covers
+`unavailable` + `obsoleted:` **only**, and deliberately not version floors (gating on those would
+sweep 1,163 `deprecated` rows). So this is known, deliberate non-coverage rather than a new defect.
+
+**Tally: `monotonicity` 0 real of 5.**

@@ -11,7 +11,7 @@
 | `codable-round-trip` | 14 | 1 | 7.1% | **1 of 1: REAL** |
 | `associativity` | 6 | 2 | 33.3% | unchecked |
 | `commutativity` | 5 | 1 | 20.0% | earlier ones checked: false |
-| `monotonicity` | **2** | **2** | — | **2 of 2: FALSE LAWS** — and the denominator is the point, see below |
+| `monotonicity` | **5** | **5** | — | **5 of 5: FALSE LAWS**, one mechanism — and the denominator is the point, see below |
 
 Pooled over three streams — the home corpus at N=1000, `mcp-swift-sdk`, and `swift-system` —
 counting only rows that reached a verdict (build failures, traps and parse errors excluded).
@@ -62,10 +62,23 @@ says *nothing will fire* and `idempotence`'s 21.5% says *this is where the noise
 says **almost nothing gets far enough to say anything** — a statement about reach, not about
 truth.
 
-Both refutations are one mechanism: `_growUniqueArrayCapacity(_:)` / `_growUniqueDequeCapacity(_:)`,
-`internal` capacity-growth functions using deliberate wrapping arithmetic, refuted by a large
-negative `Int` they are never called with. **Over-quantified domain** — the `UserDetectionStatus`
-mechanism.
+All five refutations are one mechanism. Two are `_growUniqueArrayCapacity(_:)` /
+`_growUniqueDequeCapacity(_:)`, `internal` capacity-growth functions using deliberate wrapping
+arithmetic, refuted by a large negative `Int` they are never called with. Three more arrived when
+row 73's argument-label fix freed 7 build failures — `wordCount(forScale:)` twice and
+`minimumCapacity(forScale:)`, hash-table sizing functions whose `scale` domain is bounded by an
+`assert` on a **different** function. **Over-quantified domain** throughout — the
+`UserDetectionStatus` mechanism.
+
+✅ **`wordCount(forScale:)` refuted at `(81, 140)` is worth reading even if you skip the rest.**
+`((scale &<< scale) + 63) / 64` masks the shift to 6 bits, so the larger input yields the smaller
+result. **Two small positive integers** — the first false law in this family that does not
+announce itself with an absurd value, and the cleanest evidence that a counterexample's
+plausibility says nothing about whether the finding is real.
+
+⚠ **The 5-of-5 also moved because the pipeline got BETTER, which is the reading to keep**: the
+fix took `missing argument label` from 7 to 0 and converted 7 dead rows into 3 verdicts, 3 traps
+and 1 build failure. **More reach bought more false laws and no real ones.**
 
 ## 2. What is NOT strong, and must not be quoted as a rate
 
