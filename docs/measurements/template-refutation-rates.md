@@ -11,6 +11,7 @@
 | `codable-round-trip` | 14 | 1 | 7.1% | **1 of 1: REAL** |
 | `associativity` | 6 | 2 | 33.3% | unchecked |
 | `commutativity` | 5 | 1 | 20.0% | earlier ones checked: false |
+| `monotonicity` | **2** | **2** | — | **2 of 2: FALSE LAWS** — and the denominator is the point, see below |
 
 Pooled over three streams — the home corpus at N=1000, `mcp-swift-sdk`, and `swift-system` —
 counting only rows that reached a verdict (build failures, traps and parse errors excluded).
@@ -42,6 +43,29 @@ The mechanism is named and repeats: a one-shot stripper applied twice strips twi
 caveat states this failure mode**, and the template emits the suggestion anyway.
 
 ---
+
+## 1a. `monotonicity` — a rate cannot be quoted, and the reason is new
+
+**2 ran, 2 refuted, both false.** `swift-collections` @ `899809d3`
+(`monotonicity-verify-reach.md`). ⚠ **Do NOT read 100%.** The denominator is 2 out of **64 rows
+attempted**, and it is small for a reason no other arm in this table has: the template's rows do
+not reach the verifier.
+
+| outcome | rows |
+|---|---:|
+| `architectural-coverage-pending` | 52 |
+| `measured-error` — build failed in OUR stub | 10 |
+| verdicts | **2** |
+
+`instance-method-shape-not-supported` alone takes **30 of 64**. So where `predicate`'s 0-of-102
+says *nothing will fire* and `idempotence`'s 21.5% says *this is where the noise lives*, this arm
+says **almost nothing gets far enough to say anything** — a statement about reach, not about
+truth.
+
+Both refutations are one mechanism: `_growUniqueArrayCapacity(_:)` / `_growUniqueDequeCapacity(_:)`,
+`internal` capacity-growth functions using deliberate wrapping arithmetic, refuted by a large
+negative `Int` they are never called with. **Over-quantified domain** — the `UserDetectionStatus`
+mechanism.
 
 ## 2. What is NOT strong, and must not be quoted as a rate
 
