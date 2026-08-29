@@ -90,6 +90,56 @@ ones and leaves those 8 untouched, so it is not a blunt *stop proposing this on 
 
 **No gate is proposed here.** The row asked for the census; this is the census.
 
+✅ **BUILT 2026-08-29, after `monotonicity-verify-reach.md` settled what it buys.**
+`TemplateRegistry.applyNonMonotonicSubjectExclusion`, beside the involution exclusion.
+
+**Same-condition A/B over `make batch8`, both arms green at 22 tests:**
+
+| | without the gate | with it |
+|---|---:|---:|
+| `monotonicity` rows | 339 | **313** |
+| all discovery rows | 5,884 | **5,858** |
+
+**Exactly −26 in both columns**, matching this census's figure to the row. **0 laws gained** —
+a withdrawal, like the involution gate.
+
+⚠ **The first comparison I made was against a DIFFERENT run's total and appeared to leave a
+row unaccounted for.** An earlier census read **5,883** where the no-gate arm here reads
+**5,884**, so −26 in `monotonicity` looked like −25 overall and I went looking for the missing
+row. There is none: **the total is not stable run to run.** Nothing in discovery changed between
+those two readings — the intervening commit was an emitter fix and a doc — so this is a ±1
+wobble in the census total itself, recorded here rather than explained away. It is a small
+instance of the rule this file already carries: **an A/B is only an A/B when both arms come from
+the same conditions.**
+
+**The gate's set is `NonMonotonicSubjects`, and it is narrower than the obvious one.**
+`MathForwardFunctions.curated` already lists the elementary functions and **cannot be reused**:
+it holds `exp`, `log`, `log2`, `log10`, `sqrt`, `cbrt` — every one monotonic and correctly
+proposed. The cut runs through the trigonometric family too: `sin` / `cos` / `tan` / `cosh` are
+excluded, and `acos` because it *decreases* while the emitted law checks non-decreasing — but
+`sinh`, `tanh`, `asin`, `atan`, `asinh`, `atanh`, `acosh` are strictly increasing and survive.
+**That the wide set would have cost nothing on today's corpora is not a reason to ship it.**
+
+⚠ **This gate rests on a NAME, which is the weaker basis, and the difference from its
+neighbours is stated in its own docstring.** `applyInvolutionIdempotenceExclusion` needs no new
+analysis — the contradiction is already in the tool's output. The availability gate reads an
+attribute out of the syntax tree. This one reads a name and reasons about what the function must
+be, so it can be wrong in a way neither of those can.
+
+⚠ **Keyed on the NAME, not on `(file, line)` — inverting the involution gate's rule.** There the
+join was between two suggestions, and a name key would have collided same-named declarations on
+different types. Here there is no join: the name IS the evidence, so a location key would buy
+nothing and cost the generality that makes the rule worth having.
+
+⚠ **This census can no longer see its own subject**, which is why the population is recorded
+above rather than only in the assertion. The suite now asserts the gate's post-condition — that
+no `monotonicity` row is definitionally false — and separately reports the classifier's hits
+across **every** template, so the declarations stay visible: **28 across the corpora, in
+`idempotence` (25), `inverse-pair` (2) and `input-totality` (1)**, with `monotonicity` at 0
+because it is gated. ⚠ **Those 28 are NOT a backlog** — nothing here says `idempotence` on a hash
+is false, and `_rawHashValue` being non-monotonic implies nothing about it being non-idempotent.
+Sizing that is a different question.
+
 ## 4. The instrument, and two ways it was wrong first
 
 **In process, no teardown.** This is a second reading of the scan

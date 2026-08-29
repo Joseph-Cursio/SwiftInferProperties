@@ -128,18 +128,35 @@ extension CatalogHealthCensusMeasuredTests {
         // distribution is read, not asserted. These two are the falsifiable half: row 69
         // declined the trig/hash gate because a 32% sample held none of either, and the
         // population it actually has is what reopened that decline.
-        let trig = subject.filter { !Self.nameTokens($0.subject).isDisjoint(with: Self.trigNames) }
-        let hash = subject.filter { !Self.nameTokens($0.subject).isDisjoint(with: Self.hashNames) }
-        #expect(trig.count == 4, """
-        The trigonometric population read \(trig.count), not the 4 measured 2026-08-29 \
-        (`_cos(_:)` and `_sin(_:)`, twice each). Re-take the figure and the doc rather than \
-        adjusting this number: row 69 declined this gate for having NO population, and the \
-        size of the one it has is the whole question.
+        // **These read 26 until the gate shipped, and they read ZERO now — that is the
+        // gate's post-condition, not a change in the corpus.** The population measured
+        // 2026-08-29 was trigonometric 4 (`_cos(_:)`, `_sin(_:)`, twice each) and hash 22
+        // (`_rawHashValue` 14, `_hashValue`/`hashValue` 7, `Hashable_hashValue_indirect` 1),
+        // all of it in `swiftlang-swift` and `swift-collections`. It is recorded in
+        // `monotonicity-subject-census.md` because a census that can no longer see its own
+        // subject cannot report it.
+        let stillProposed = subject.filter {
+            NonMonotonicSubjects.isDefinitionallyNonMonotonic($0.subject)
+        }
+        #expect(stillProposed.isEmpty, """
+        `applyNonMonotonicSubjectExclusion` let \(stillProposed.count) definitionally-false \
+        row(s) through: \(stillProposed.map(\.subject)). A hash that preserves order is a \
+        broken hash, so these are laws that cannot hold — the gate regressed, or a spelling \
+        the tokenizer does not reach has appeared.
         """)
-        #expect(hash.count == 22, """
-        The hash population read \(hash.count), not the 22 measured 2026-08-29. Same \
-        reading as the trigonometric arm above — this number is the reason the decline \
-        reopened, so a change to it is a result, not a test to fix.
+
+        // **The census must not go blind on the population just because the gate removes
+        // it.** Counting the classifier's hits across EVERY template keeps the subject
+        // visible: the declarations are still in the corpora, and a future reader can see
+        // that the zero above is a gate rather than an absence.
+        let acrossAllTemplates = Self.rows.filter {
+            NonMonotonicSubjects.isDefinitionallyNonMonotonic($0.subject)
+        }
+        print("""
+
+        NON-MONOTONIC SUBJECTS STILL IN THE CORPORA (all templates): \(acrossAllTemplates.count)
+          by template: \(Dictionary(grouping: acrossAllTemplates) { $0.template }.mapValues(\.count))
+          monotonicity rows among them: \(stillProposed.count) — gated
         """)
 
         // The positive control must not be empty, or the probes above are measuring a
