@@ -203,9 +203,16 @@ extension StrategistDispatchEmitter {
         functionCalls: [String],
         recipe: GeneratorRecipe
     ) -> String {
-        let renderedCall = functionCalls.first ?? "(missing)"
-        let methodName = renderedCall.split(separator: ".").last.map(String.init) ?? renderedCall
-        let primaryName = functionCalls.count >= 2 ? functionCalls[1] : renderedCall
+        let primaryName = functionCalls.count >= 2 ? functionCalls[1] : (functionCalls.first ?? "(missing)")
+        // **Read the method name off the RAW call, never off `functionCalls.first`.** Since
+        // the labelled-call fix, element 0 is the labelled form and may be a closure literal
+        // (`{ Deque.index(after: $0) }`), which `split(".").last` answers nonsense for. The
+        // raw reference is element 2; falling back to element 0 keeps a two-element caller
+        // (a labelless subject, where the two forms are identical) working unchanged.
+        let rawCall = functionCalls.count >= 3
+            ? functionCalls[2]
+            : (functionCalls.first ?? "(missing)")
+        let methodName = rawCall.split(separator: ".").last.map(String.init) ?? rawCall
         // `index(before:)` requires an input index strictly greater than
         // `startIndex`; `index(after:)` one strictly less than
         // `endIndex`. Both domains are `ClosedRange<Int>` so the single
