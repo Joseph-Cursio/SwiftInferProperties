@@ -237,7 +237,15 @@ public enum TypeShapeBuilder {
                     // `_DequeSlot`, `_HeapNode` and `_HashTable.Bucket` kept deriving and
                     // kept aborting. Any field added to `InitializerSignature` has to be
                     // carried through this map.
-                    assertsPrecondition: signature.assertsPrecondition
+                    //
+                    // **The warning above was accurate and did not prevent the recurrence.**
+                    // `delegatesToSelf` was added to the kit's signature and dropped here
+                    // and in `IndexedTypeShape`, with the identical symptom on
+                    // `Euclid.Plane` — a delegating initializer deriving and trapping. The
+                    // guard is now `InitializerSignatureTransportTests`, which reflects over
+                    // the kit type rather than trusting this comment.
+                    assertsPrecondition: signature.assertsPrecondition,
+                    delegatesToSelf: signature.delegatesToSelf
                 )
             },
             enumCases: mergedEnumCases

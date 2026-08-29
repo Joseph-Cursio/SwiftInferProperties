@@ -68,10 +68,57 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         public let isFailable: Bool
         public let isThrowing: Bool
 
-        public init(parameters: [InitializerParameter], isFailable: Bool = false, isThrowing: Bool = false) {
+        /// `true` when the body calls `assert` / `precondition` — see
+        /// `PropertyLawSyntaxSupport.InitializerPreconditionDetector`.
+        ///
+        /// **This flag was computed at scan time and dropped on the way into
+        /// `index.json` from the day it was added until 2026-08-28.**
+        /// `TypeShapeBuilder` carries it into the in-memory `TypeShape`, so a
+        /// same-process derivation saw it and the *indexed* path — which is what
+        /// `verify --all-from-index`, the whole-corpus survey and
+        /// `scaffold-kit-suites` all consume — did not.
+        public let assertsPrecondition: Bool
+
+        /// `true` when the body delegates with `self.init(…)`, so any precondition on
+        /// the target applies here too.
+        ///
+        /// **`Euclid.Plane` is why this exists on this side.** Its
+        /// `init(unchecked normal:pointOnPlane:)` asserts nothing and forwards to the
+        /// sibling that holds `assert(normal.isNormalized)`. The kit declines exactly
+        /// this shape — *delegates AND some initializer on this type asserts* — and
+        /// could not, because neither flag survived the index. The first generated kit
+        /// suite that ever compiled trapped there
+        /// (`docs/measurements/kit-scaffold-conversion.md` §3.2).
+        public let delegatesToSelf: Bool
+
+        public init(
+            parameters: [InitializerParameter],
+            isFailable: Bool = false,
+            isThrowing: Bool = false,
+            assertsPrecondition: Bool = false,
+            delegatesToSelf: Bool = false
+        ) {
             self.parameters = parameters
             self.isFailable = isFailable
             self.isThrowing = isThrowing
+            self.assertsPrecondition = assertsPrecondition
+            self.delegatesToSelf = delegatesToSelf
+        }
+
+        /// Additive decode: an index written before these fields existed reads them as
+        /// `false`, which is exactly the pre-change behaviour — the same treatment
+        /// `enumCases` gets on the enclosing type, and the reason no schema bump is
+        /// needed. Swift's synthesized decoder does *not* fall back to a property's
+        /// default value for a missing key, so this has to be written out.
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.parameters = try container.decode([InitializerParameter].self, forKey: .parameters)
+            self.isFailable = try container.decode(Bool.self, forKey: .isFailable)
+            self.isThrowing = try container.decode(Bool.self, forKey: .isThrowing)
+            self.assertsPrecondition = try container
+                .decodeIfPresent(Bool.self, forKey: .assertsPrecondition) ?? false
+            self.delegatesToSelf = try container
+                .decodeIfPresent(Bool.self, forKey: .delegatesToSelf) ?? false
         }
     }
 
@@ -234,7 +281,9 @@ extension IndexedTypeShape {
                         InitializerParameter(label: $0.label, typeName: $0.typeName)
                     },
                     isFailable: sig.isFailable,
-                    isThrowing: sig.isThrowing
+                    isThrowing: sig.isThrowing,
+                    assertsPrecondition: sig.assertsPrecondition,
+                    delegatesToSelf: sig.delegatesToSelf
                 )
             },
             enumCases: kitShape.enumCases.map { enumCase in
@@ -266,7 +315,9 @@ extension IndexedTypeShape {
                         PropertyLawCore.InitializerParameter(label: $0.label, typeName: $0.typeName)
                     },
                     isFailable: sig.isFailable,
-                    isThrowing: sig.isThrowing
+                    isThrowing: sig.isThrowing,
+                    assertsPrecondition: sig.assertsPrecondition,
+                    delegatesToSelf: sig.delegatesToSelf
                 )
             },
             enumCases: enumCases.map { enumCase in

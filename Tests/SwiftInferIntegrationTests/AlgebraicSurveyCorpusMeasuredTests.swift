@@ -35,7 +35,7 @@ import Testing
 @Suite("Algebraic survey corpus — measured baseline", .tags(.subprocess))
 struct AlgebraicSurveyCorpusMeasuredTests {
 
-    @Test("curated corpus verifies six measured families (12 bothPass + 5 defaultFails)")
+    @Test("curated corpus verifies six measured families (12 bothPass + 4 defaultFails)")
     func measuredAlgebraicSplits() async throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-survey-corpus")
@@ -119,9 +119,31 @@ struct AlgebraicSurveyCorpusMeasuredTests {
         // input", and a self-returning reverse satisfies that. It is one of the two roles
         // marked `isStrong == false` for exactly this reason, and it is a live example of
         // why that flag exists rather than a hypothetical one.
-        #expect(records.count == 20)
-        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 13)
-        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 5)
+        // 20 → 18 (2026-08-28): `applyInvolutionIdempotenceExclusion` (row 69) drops
+        // `idempotence` where `involution` names the same `(file, line)`. This corpus has
+        // TWO involution rows and the gate fired on both, removing exactly:
+        //
+        //     Latch.reversed()   idempotence   measured-bothPass
+        //     Toggle.reversed()  idempotence   measured-defaultFails
+        //
+        // one of each outcome, which is why all three counts below move by one.
+        //
+        // **Both removals are correct, and the bothPass one is the better argument for the
+        // gate.** `Latch.reversed()` is the deliberately buggy reverse that returns `self`
+        // unchanged (see the comment above), so idempotence HELD — a false law that was
+        // being believed rather than refuted. `Toggle.reversed()` was a false law costing a
+        // verify cycle. Both keep their `involution` row, which is the law those
+        // declarations actually owe.
+        //
+        // ⚠ **THIS BASELINE WENT RED ON `main` AND WAS FOUND FOUR COMMITS LATER.** The gate
+        // was A/B'd over `make batch8` only, and its finding recorded that the home corpus
+        // has no involution rows — true of the manifest corpus and NOT of this fixture,
+        // which carries two. A discovery-output change has to re-take every `*MeasuredTests`
+        // baseline that surveys a corpus, not just the census batch: `batch4` is where the
+        // curated algebraic corpus lives and it is the one that could exhibit the change.
+        #expect(records.count == 18)
+        #expect(records.filter { $0.outcome == .measuredBothPass }.count == 12)
+        #expect(records.filter { $0.outcome == .measuredDefaultFails }.count == 4)
         // The catalogue-work true positives.
         #expect(hasRecord(records, "involution", .measuredBothPass))
         #expect(hasRecord(records, "binary-idempotence", .measuredBothPass))

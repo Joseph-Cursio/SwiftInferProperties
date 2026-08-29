@@ -169,6 +169,98 @@ compiling suite from finishing.
 
 **So the honest status is: compiles yes, runs yes, completes no.**
 
+✅ **AND IT NOW COMPLETES, 2026-08-28** — row 72's scoped fix shipped (§3.3), and the run was
+re-taken as a same-command, same-subject A/B on `Euclid` @ `0b00927`.
+
+| | carriers live | laws live | carriers blocked | laws blocked | the run |
+|---|---:|---:|---:|---:|---|
+| before | 13 | 76 | 4 | 15 | **aborts**, `Euclid/Plane.swift:230: Assertion failed` |
+| after | **10** | **59** | **7** | **32** | **25 tests, 17 pass, 8 issues, no abort** |
+
+**Three carriers moved live → blocked: `Plane` (6 laws), `Path` (5), `LineSegment` (6) — 17 laws
+removed, 0 gained.** Stated as laws REMOVED, per the standing rule: this withdraws proposals
+rather than freeing them, the same currency the involution gate was reported in.
+
+⚠ **THE THREE ARE NOT THE SAME QUALITY OF DECLINE, and collapsing them would over-claim.**
+Hand-checked against the subject:
+
+- **`Plane`** — the trap itself. Correct, and measured: the abort disappears.
+- **`Path`** — `init(unchecked storage:plane:)` asserts `sanitizePoints(points) == points` and,
+  when a plane is present, that every point lies on it; `init(_ points:plane:)` delegates straight
+  to it. ⚠ **I PREDICTED THIS WOULD HAVE TRAPPED AND THE PROBE REFUTED IT** — see §3.5.
+- **`LineSegment`** — `init(unchecked start:_ end:)` asserts `start != end`, which two
+  independently drawn `Vector`s essentially never violate. **A conservative decline**, exactly as
+  the kit documents: overload resolution is out of scope, so the test is *delegates AND some
+  initializer on this type asserts*, which "can decline a delegation to a clean sibling, and
+  cannot admit one to a dirty sibling".
+
+⚠ **THE TRAP WAS HIDING REFUTATIONS, which is this repo's own standing rule arriving on the kit
+surface** — *a refuter that fires first hides every refuter behind it*. The pre-fix run reported
+**2** violations; the completing run reports **8 issues across 7 carriers**:
+
+| carrier | law | tier | status before |
+|---|---|---|---|
+| `Rotation` | `Codable.roundTripFidelity[JSON]` | Conventional | reported |
+| `Vertex` | `Codable.roundTripFidelity[JSON]` | Conventional | reported |
+| `PathPoint` | `Codable.roundTripFidelity[JSON]` | Conventional | started, cut off |
+| `Transform` | `Codable.roundTripFidelity[JSON]` | Conventional | **unreached** |
+| `MiterLimit` | `Hashable` | Heuristic | **unreached** |
+| `Mesh` | `Hashable.distribution` | Heuristic | **unreached** |
+| `Angle` | `AdditiveArithmetic.additionAssociativity` | **Strict** | **unreached** |
+| `Vector` | `AdditiveArithmetic.additionAssociativity` | **Strict** | **unreached** |
+
+⚠ **Do NOT read six new findings as six new defects.** The four `Codable` rows are the
+last-digit float mechanism `subject-euclid.md` §2.4 already diagnosed, arriving on more carriers;
+the two `additionAssociativity` rows are floating-point associativity, which is false for
+`Double` and therefore a **false law** of the same family — notable only because they are the
+first **Strict**-tier escalations this surface has produced, and a Strict law fails the test
+rather than recording a note.
+
+✅ **The `Mesh` row is the one that is independently informative.**
+`Hashable.distribution` reports *1000 samples produced only 1 unique hashValue (ratio 0.001);
+last sample: `Mesh.empty`*. That is **`open-threads.md` row 72's own fourth item — `Mesh`
+reaching only FIXED POINTS — measured by the kit's own law, with its own generator and its own
+implementation.** The same finding this project reached by reading a passing `idempotence` law
+and distrusting it. **Two independent implementations, one finding**, for the second time on this
+subject after the float mechanism.
+
+**Method**: a throwaway harness in a scratch directory with path dependencies on `Euclid`,
+`SwiftPropertyLaws` v4.2.0 and this package (for `SwiftInferKitEvidence`). **The subject checkout
+was left clean** — verified with `git status` after both runs.
+
+### 3.5 The collateral was measured, and it is larger than the trap
+
+**The prediction in §3.2 — that `Path` would have trapped too — is REFUTED.** Probe: take the
+**pre-fix** scaffold, delete only its three `Plane` law functions, and run it. If `Path` or
+`LineSegment` trapped, the run would still abort.
+
+**It completes: 30 tests, 9 issues, no `Assertion failed`.** `Path — Hashable`, `LineSegment —
+Codable`, `LineSegment — Comparable` and `LineSegment — Hashable` all **pass**; `Path — Codable`
+**refutes**, on the same last-digit float mechanism as the rest.
+
+| | tests | issues |
+|---|---:|---:|
+| pre-fix, `Plane` laws deleted | 30 | 9 |
+| post-fix (the shipped gate) | 25 | 8 |
+
+⚠ **So the honest accounting is: the gate withdrew 17 laws to remove ONE trap, and 11 of the 17
+were running to verdicts.** Five law-suites and **one refutation** are the measured collateral on
+this subject. Only `Plane` of the three was trapping.
+
+**That is not an argument against the fix** — a trap costs every law behind it in the same
+process, which is why the pre-fix run reported 2 violations where the completing run reports 8 —
+and the rule is the kit's documented, deliberately conservative one. **It IS an argument against
+quoting "3 carriers declined" as if all three were traps**, which is what §3.2 said before this
+probe.
+
+⚠ **The reading is n=1 at the shipped budget.** `Path`'s derived generator ran 100 trials without
+reaching `sanitizePoints(points) == points`; that is *did not trap here*, not *cannot trap*.
+
+**The open follow-up**: the gate is type-wide because *delegates AND some initializer on this type
+asserts* avoids overload resolution. Resolving the delegation to its actual target would keep
+`Path` and `LineSegment` live. On this one subject that is 2 carriers of 3 and 11 laws of 17 —
+enough to be worth sizing, not enough to justify building on. `open-threads.md` row **72**.
+
 ### 3.3 The trap has a root cause, and it is a dropped field rather than a missing analysis
 
 **`Plane`'s picked initializer does not assert — it DELEGATES to the one that does.**
@@ -200,6 +292,40 @@ drops both flags.
 `__genMesh`'s declarations, `access(of:)`'s visibility, and the observed-property rule. The
 scoped fix is to compute `delegatesToSelf` here, add both flags to
 `IndexedTypeShape.InitializerSignature`, and carry them both ways. `open-threads.md` row **72**.
+
+✅ **SHIPPED 2026-08-28, exactly as scoped — three sites, and each one falsified before it was
+believed.** `MemberBlockInspector` now computes `delegatesToSelf`; `TypeShapeBuilder` carries it
+beside `assertsPrecondition`; `IndexedTypeShape.InitializerSignature` gains both fields with a
+hand-written `init(from:)` so an index written before them decodes them as `false`.
+
+⚠ **THE PARITY GUARD FOR THIS EXISTED, WAS CORRECT, AND COULD NOT SEE IT — the generator was the
+blind spot.** `IndexedTypeShapeParityPropertyTests` opens by naming this exact failure mode (*"the
+kit reasons over a projection this repo controls, so every field the projection omits silently
+disables whichever kit tier depends on it"*) and states the law
+`restored.initializers == shape.initializers`. Its `shapeGen` drew **`initializers: []` on every
+draw**, so that line compared `[] == []` forever, and `mirrorPreservesTheDerivedStrategy` could
+not have caught it either — Tier 6 declines a non-struct outright and the generator produced only
+enums.
+
+**That is this project's own standing finding landing inside its own guard**: *reach is necessary
+and not sufficient* (`fixtures/branch-reaching-generator/README.md`), and *a control with no
+population is not a control* (`cross-type-roundtrip-census.md`). **The fix is the GENERATOR, not
+another assertion** — `structShapeGen` now draws structs whose initializers carry both flags, and
+the three new laws were each confirmed red against the unfixed code before being kept:
+
+| guard | states | red without |
+|---|---|---|
+| `mirrorRoundTripsInitializers` | the flags survive the projection | both flags |
+| `mirrorPreservesTheDerivedStrategyForStructs` | the derivation TIER does not change | `.todo` became `.initializerBased` |
+| `delegatingInitializerIsDeclinedThroughTheMirror` | the `Plane` shape, reduced | both flags |
+| `DelegatingInitializerCaptureTests` (3 arms) | the flags are computed from SOURCE | `TypeShapeBuilder`'s carry |
+
+**`accessLevel` is dropped too, and that is now a STATED choice rather than the next silent one.**
+`MemberBlockInspector` excludes `private` / `fileprivate` initializers at capture, which is
+strictly stronger than the kit's `isCallable(from: .separateFile)` would be — every level that
+survives capture is callable from both sites, so the `.implicit` default is behaviourally
+identical for anything this scanner can produce. `initializerAccessLevelIsKnowinglyNotCarried`
+asserts it, so the day capture stops filtering, the drop is visible.
 
 ### 3.4 The cheaper signal was measured and has no population
 
