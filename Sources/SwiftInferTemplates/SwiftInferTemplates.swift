@@ -143,8 +143,13 @@ public enum TemplateRegistry {
         // passes produced. Unlike the purity veto it REMOVES, because the law it drops is
         // false whenever its sibling is true — see `TemplateRegistry+InvolutionExclusion`.
         let withoutContradictedIdempotence = applyInvolutionIdempotenceExclusion(to: vetoed)
+        // Beside the involution exclusion and for the same structural reason — it decides
+        // which law SURVIVES — but on a weaker basis: that one reads the tool's own
+        // contradictory output, this one reads a name. See
+        // `TemplateRegistry+NonMonotonicExclusion`.
+        let withoutNonMonotonic = applyNonMonotonicSubjectExclusion(to: withoutContradictedIdempotence)
         return finalizeSuggestions(
-            withoutContradictedIdempotence,
+            withoutNonMonotonic,
             crossValidation: crossValidationFromTestLifter,
             crossValidationOrigins: crossValidationOriginsFromTestLifter,
             counterSignals: counterSignalsFromTestLifter,
