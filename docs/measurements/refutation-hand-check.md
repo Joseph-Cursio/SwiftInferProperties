@@ -277,10 +277,29 @@ that value-identity is the wrong thing to demand. That objection applies to any 
 `Equatable` is deliberately finer than its wire form — which is **`ToolChoice`'s exact shape**
 (two distinct values encoding to byte-identical JSON) and arguably `UserDetectionStatus`'s.
 
-**So of the 3 surviving real defects, 2 rest on the assumption the only external adjudication
-rejected.** The one it does **not** reach is `CatalogFeatureFlags`, whose `init(from:)` **throws**
-— a decoder that fails is not two equivalent documents, and no argument about equivalence relations
-rescues it. ⚠ **That one is LATENT**: nothing in `SwiftDocC` encodes the type.
+**So of the 3 surviving real defects, 1 rests on the assumption the only external adjudication
+rejected.**
+
+⚠ **This first read *2 of 3*, counting `UserDetectionStatus`, and that was wrong — corrected the
+same hour.** Its `encode(to:)` **THROWS** an `EncodingError` on a value reachable three ways
+through its own declared `OptionSet` API, and `CatalogFeatureFlags`'s `init(from:)` throws
+likewise. **A throw is not two equivalent documents — there is no document at all.** The
+value-promotion shape and the throwing shape are different defects, and collapsing them into one
+word is what produced the wrong count.
+
+✅ **AND THE MAINTAINER IS RIGHT ON THE MERITS, ON OUR OWN RECORDED EVIDENCE.**
+`candidate-screening-pass.md` §5.2's probe printed **`bytes-identical: true`** beside
+`equatable-says-equal: false`. `.legacy(attribute: false, wrapped: false)` and `nil` both mean
+*no attribute, not wrapped* — semantically identical, byte-identical on the wire, which is a
+**stronger** statement than the equivalence he claimed.
+
+⚠ **The refutation was in our own document before he wrote it.** §5.2 names the mechanism as
+*two distinct values encode identically while `Equatable` distinguishes them* — that IS his
+argument — and the section drew a defect from it anyway. **The mechanism was described correctly
+and the conclusion drawn from it was wrong.** That, not the missing adjudication, is the
+transferable failure: the adjudication only told us what our own probe output already said.
+
+⚠ **`CatalogFeatureFlags` is LATENT**: nothing in `SwiftDocC` encodes the type.
 
 ⚠ **1 of 1 findings ever put to a maintainer came back rejected.** That is a sample of one and it
 is the only external evidence this line of work has; *3 real of 42* should be read beside it, not
