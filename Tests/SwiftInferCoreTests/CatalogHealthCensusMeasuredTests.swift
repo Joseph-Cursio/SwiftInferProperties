@@ -131,6 +131,10 @@ struct CatalogHealthCensusMeasuredTests {
         /// per-corpus denominator instead of one pooled number — the failure
         /// `refutation-hand-check.md` names, where pooling hid two subjects disagreeing.
         let corpus: String
+        /// The subject's source file, from the first evidence entry. Added 2026-08-30 for
+        /// the inactive-`#if` reading (row 74), which asks whether the declaration is in
+        /// the build at all — a question about the FILE, not the declaration.
+        let file: String
         /// The subject's access restriction, `nil` when the subject is reachable from a
         /// test. Joined by the same `(file, base name)` key the shipped caveat uses.
         let restriction: AccessRestriction?
@@ -173,6 +177,7 @@ struct CatalogHealthCensusMeasuredTests {
                     carrier: suggestion.carrier,
                     subject: suggestion.evidence.first?.displayName ?? "",
                     corpus: corpus.id,
+                    file: suggestion.evidence.first?.location.file ?? "",
                     restriction: key.flatMap { restrictionByKey[$0] }
                 )
             })
