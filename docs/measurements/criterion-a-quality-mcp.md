@@ -14,6 +14,60 @@ on the subject as shipped, and the adjudication is *is the refutation real*, ans
 
 ---
 
+## 0. ⚠ ADDENDUM 2026-08-30 — this finding is the shape OpenAPIKit's maintainer ruled INTENDED
+
+**Checked because `OpenAPIKit#509` came back *intended*** and its reasoning was general:
+*"the OpenAPI documents are equivalent, the in-code constructions just aren't identical."*
+`ToolChoice` was then examined against that same standard, reading the source at `a0ae212`
+rather than our summary of it. **It fails the test the same way:**
+
+| | `OpenAPI.XML` (ruled INTENDED) | `ToolChoice` |
+|---|---|---|
+| non-canonical in-code state | `.legacy(false, false)` | `mode: nil` |
+| canonical state | `nil` | `.auto` |
+| documents | **byte-identical** | **byte-identical** (`{}`) |
+| decode canonicalises | yes | yes (`decodeIfPresent(…) ?? .auto`) |
+| the two mean the same thing | yes — *no attribute, not wrapped* | **yes, and the type SAYS SO** |
+
+The decisive line is `ToolChoice`'s own doc comment, and it is on the **Swift property**, not on
+the JSON field:
+
+```swift
+/// The tool choice mode. If omitted, defaults to `.auto`.
+public let mode: Mode?
+```
+
+**So the type documents `nil` and `.auto` as the same thing**, and the finding rests on demanding
+value-identity where the type itself asserts value-equivalence. That is precisely the demand the
+one maintainer who has ruled on it rejected.
+
+⚠ **STATUS: CONTESTED, not withdrawn** — and the distinction is deliberate. **MCP's maintainers
+have not been asked**, and *over-claiming contamination is not the safe direction*: a finding
+wrongly marked false gets discarded and its work repeated. One project's ruling is evidence about
+the *reasoning*, not authority over another project's type.
+
+⚠ **And MCP's case differs in a way that arguably makes it MORE defensible as a defect than
+OpenAPIKit's.** OpenAPIKit's maintainer had a stated policy reason for the non-canonical state —
+*"I want to support explicitly representing the legacy combinations of properties."* **MCP claims
+no such purpose for `nil`**; its doc says `nil` *means* `.auto`. So this is an unnormalised
+initialiser (`init(mode: Mode? = .auto)` with no `?? .auto`) rather than a deliberate legacy
+form, and the one-line lossless fix — `self.mode = mode ?? .auto` — takes nothing away. **That is
+an argument, not a verdict.**
+
+⚠ **CONSEQUENCE FOR CRITERION A-quality, which this document is the sole evidence for.** The bar
+is *≥1 passing law kills a mutant the subject's existing tests miss*, and it was answered **yes**
+here **by a real defect standing in for a planted mutant**. If this finding is not a defect, the
+substitution fails and **A-quality reverts to its earlier, weaker basis**: the `swift-system`
+planted NUL-guard mutant, *NO at the shipped budget, YES at N ≥ 500*. **The default budget is now
+N=1000**, so that route plausibly still meets the bar — but the basis changes from *a real defect
+on shipped code* to *a planted mutant at the shipped budget*, and `toolchain-exit-criteria.md`'s
+headline claim of *by a REAL defect and NO planted mutant* does not survive as written.
+
+**§1 onward is the original analysis. It describes the behaviour accurately; what is in question
+is the verdict drawn from it.**
+
+---
+
 ## 1. The finding
 
 `CreateSamplingMessage.ToolChoice` (`Sources/MCP/Client/Sampling.swift:465`):
