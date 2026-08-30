@@ -111,3 +111,78 @@ repeatedly this cycle.
   end to end; the other 30 are classified by the same label, and §1 shows that label is broad.
 - **The `compile command failed due to signal` arm firing on this corpus**, which would mean some
   of the 31 are compiler crashes wearing an instance-method label.
+
+---
+
+## 7. The fix, scoped — and the finding is bigger than §4
+
+§4 said the recipe is derived for the parameter type. That is true and it is only half of it.
+**Fixing it alone would still not work**, and the reason is a key-space mismatch that makes the
+whole V1.69 ordered-collection path unreachable.
+
+### 7.1 The carrier rule, and the precedent already in the file
+
+`strategistBundle` chooses the generator carrier as:
+
+```swift
+roundTripDomainCarrier(entry: entry) ?? entry.carrierTypeName ?? entry.typeName
+```
+
+`carrierTypeName` is the **parameter** `T`; `typeName` is the **call-site owner**. For
+`OrderedSet.index(before:)` that is `Int` and `OrderedSet` respectively, and monotonicity takes
+the first.
+
+⚠ **The rule that fixes this is already written down, one function up, and applied to a different
+template.** `roundTripDomainCarrier` anchors `round-trip` at the parameter and guards it with
+`!entry.isInstanceMethod`, documented as:
+
+> *instance-method forward — the value IS the receiver, so the declaring type is already right*
+
+**That is exactly the missing clause for monotonicity.** The codebase knows the rule; it is
+applied to one template and not the other.
+
+### 7.2 And fixing that alone still fails, because the key space does not meet production
+
+With the carrier corrected, `recipe.carrierTypeName` becomes **`OrderedSet`** — and everything
+downstream is keyed on **`OrderedSet<Int>`**:
+
+| keyed on a fully-specialised spelling | entries |
+|---|---|
+| `monotonicityInstanceCarriers` | 5 |
+| curated OC `GeneratorRecipe`s | `OrderedSet<Int>`, `OrderedSet<Int>.SubSequence`, `OrderedDictionary<Int, Int>`, `.Elements`, `.Values`, `.Elements.SubSequence`, `Deque<Int>`, … |
+
+**Measured against production output: of 34 distinct carriers in the `swift-collections`
+monotonicity rows, ZERO contain `<`.** Discovery records the declaring type's name, unspecialised,
+always.
+
+✅ **So the V1.69 ordered-collection monotonicity path — carrier list, curated recipes, and the
+composer they feed — has never fired on a real row.** Its emitter tests pass because they
+construct `Inputs(carrier: "OrderedSet<Int>", …)` directly, supplying the one spelling production
+cannot produce. **A shipped feature, green tests, unreachable in production.**
+
+⚠ **This is why §3's spelling normalisation measured ZERO and was right to revert**: it is the
+*second* half of a two-part fix and inert without the first. Reverting it was correct; it should
+come back **with** §7.1, not before.
+
+### 7.3 What the fix requires, and why it is not made here
+
+1. **Anchor instance-method monotonicity at the receiver** — the `roundTripDomainCarrier` clause,
+   inverted, for this template.
+2. **Make the OC key space meet production's spelling.** Either normalise both sides — recipes
+   keyed unspecialised, each choosing its own element type — or specialise the carrier, which
+   needs an element type **discovery does not record**.
+
+**(2) is a design decision, not a rename**, and it is the reason this is scoped rather than
+shipped. Doing half of it is what §3 already measured at zero.
+
+⚠ **`Deque<Int>` HAS a curated recipe and is NOT in `monotonicityInstanceCarriers`**, so even a
+perfect key-space fix leaves the list narrower than the recipes it draws on. The 19 rows §3 could
+not reach (`Deque`, `BitArray`, `UniqueDeque`, `RigidDeque`, `UniqueArray`, …) need that list
+widened as well as re-keyed — behind the empty-collection guard §5 put in for exactly that moment.
+
+### 7.4 What would refute this
+
+- **A production discovery row whose carrier is spelled with generic arguments**, which would mean
+  the key space is reachable after all and something else blocks it.
+- **A monotonicity row anywhere that took the OC composer path**, which would falsify *never fired
+  on a real row* outright.
