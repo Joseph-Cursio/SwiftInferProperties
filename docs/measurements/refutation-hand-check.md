@@ -226,7 +226,7 @@ initializer the generator does not use.
 (the `removingLastComponent` shape), and `stableHashString` / `hash(uniqueSymbolID:)` /
 `mimeType(for:)` (idempotence over a **derivation**).
 
-**Tally: 42 hand-checked, 3 real + 1 CONTESTED. `idempotence` 0 of 23; `codable-round-trip` 3 real + 1 contested of 17; `monotonicity` 0 of 5.** ⚠ **`monotonicity` enters the tally 2026-08-29** (`monotonicity-verify-reach.md`) with both of its first two verdicts FALSE: `_growUniqueArrayCapacity(_:)` and `_growUniqueDequeCapacity(_:)` on `swift-collections`, `internal` capacity-growth functions using deliberate wrapping arithmetic and refuted by a large negative `Int` they are never called with — **over-quantified domain**, the `UserDetectionStatus` mechanism. **Its denominator is the finding, not its rate**: 2 verdicts out of 64 rows attempted, with 30 blocked by `instance-method-shape-not-supported` and 10 failing to build in our own emitter. ⚠ **Three more landed 2026-08-29 when row 73's argument-label fix freed 7 build failures**, and all three are the SAME mechanism — `wordCount(forScale:)` twice and `minimumCapacity(forScale:)`, `internal` hash-table sizing functions whose `scale` domain is bounded by an `assert` on a DIFFERENT function (`scale(forCapacity:)`). ✅ **`wordCount(forScale:)` at `(81, 140)` is the cleanest exhibit yet that a counterexample's PLAUSIBILITY and a finding's REALITY are independent axes**: `&<<` masks the shift to 6 bits, so the larger input yields the smaller result, and two small positive integers look nothing like the absurd values every earlier false law in this family carried. ⚠ **The contested one is `OpenAPI.XML`** — see the 2026-08-28 addendum above; if the maintainer settles it as intended, the tally is **3 real of 40** and the *four independent subjects* claim becomes three. All four
+**Tally: 42 hand-checked, 3 real. `idempotence` 0 of 23; `codable-round-trip` 3 real of 17; `monotonicity` 0 of 5.** ⚠ **SETTLED 2026-08-30: the contested `OpenAPI.XML` finding is INTENDED and drops out** — see the addendum below, which fires the refutation condition written before the issue was filed. **The three surviving are `ToolChoice` (mcp-swift-sdk), `UserDetectionStatus` (jwt-kit) and `CatalogFeatureFlags` (swift-docc)**, and the *four independent subjects* claim is now three. ⚠ **Read the 3 beside this: 1 of 1 findings ever adjudicated by a maintainer was REJECTED**, and the reasoning — *the documents are equivalent, the in-code constructions just aren't identical* — reaches 2 of the 3 that remain. ⚠ **`monotonicity` enters the tally 2026-08-29** (`monotonicity-verify-reach.md`) with both of its first two verdicts FALSE: `_growUniqueArrayCapacity(_:)` and `_growUniqueDequeCapacity(_:)` on `swift-collections`, `internal` capacity-growth functions using deliberate wrapping arithmetic and refuted by a large negative `Int` they are never called with — **over-quantified domain**, the `UserDetectionStatus` mechanism. **Its denominator is the finding, not its rate**: 2 verdicts out of 64 rows attempted, with 30 blocked by `instance-method-shape-not-supported` and 10 failing to build in our own emitter. ⚠ **Three more landed 2026-08-29 when row 73's argument-label fix freed 7 build failures**, and all three are the SAME mechanism — `wordCount(forScale:)` twice and `minimumCapacity(forScale:)`, `internal` hash-table sizing functions whose `scale` domain is bounded by an `assert` on a DIFFERENT function (`scale(forCapacity:)`). ✅ **`wordCount(forScale:)` at `(81, 140)` is the cleanest exhibit yet that a counterexample's PLAUSIBILITY and a finding's REALITY are independent axes**: `&<<` masks the shift to 6 bits, so the larger input yields the smaller result, and two small positive integers look nothing like the absurd values every earlier false law in this family carried. ⚠ **The contested one WAS `OpenAPI.XML`, and it is settled INTENDED as of 2026-08-30** — see the addendum below. All four
 real defects are `codable-round-trip`, on four independent unmet subjects, each missed by the
 subject's own suite. ⚠ **Still not a rate** — deduplicated by mechanism it is nearer **4 real of
 7 distinct mechanisms**, the largest denominator yet and still too small to quote as a precision.
@@ -254,7 +254,39 @@ wrapped:false)` and `XML(name:"x", nodeType:nil)` encode to **byte-identical JSO
 Two distinct values, one encoding, `Equatable` finer than `Codable`. That mechanism has now
 produced **all three** real defects, on three codebases that share no code.
 
-⚠ **REPORTED UPSTREAM AND ANSWERED 2026-08-28 — [OpenAPIKit#509](https://github.com/mattpolzin/OpenAPIKit/issues/509). STATUS: CONTESTED.** The maintainer replied that the round trip is *"a goal of OpenAPIKit but not a mandate"*, that he *"maybe vaguely"* recalls the decision being intentional, and that *"equality checks don't need to be equivalency checks"* — while agreeing that *"the best ergonomics are that a value is equal to itself after going through an encode and a decode"*. He asked for the PR to be held. **So this is neither confirmed nor refuted, and it is counted as CONTESTED rather than as a fourth real defect.** ⚠ **The objection generalises**: `codable-round-trip` takes `==` as the equivalence and cannot know a type intends `==` to be FINER than wire-identity — **all four of this project's real defects rest on that same assumption**, and a maintainer may reject it per type. The first finding from this toolchain to leave the repository, and it is filed as a **falsifier rather than a victory lap**: *this being intended behaviour* is the recorded refutation condition for the finding, and the maintainer is the only one who can settle it. If they call it intended, this drops out of the tally and it becomes **3 real of 30**. AI assistance is disclosed in the report, per that project's explicit policy.
+✅ **SETTLED 2026-08-30 — [OpenAPIKit#509](https://github.com/mattpolzin/OpenAPIKit/issues/509). STATUS: INTENDED. THE FINDING IS NOT A DEFECT.**
+
+The maintainer revisited the code and answered without hedging: *"The behavior as it stands is
+intended."* Four justifications, all deliberate design choices rather than oversights — support
+representing legacy property combinations without encouraging them; decode as non-legacy where
+that is representable; be opinionated about preferring non-legacy combinations; and encode both
+forms omitting defaulted values. His conclusion is the part that matters here:
+
+> *"you do end up with some situations where an explicitly legacy representation in-code may be
+> promoted to a modern representation through encode/decode but this is favorable nonetheless
+> because **the OpenAPI documents are equivalent, the in-code constructions just aren't
+> identical**."*
+
+**This fires §10 exactly as pre-registered.** *`OpenAPI.XML` being intended behaviour* was written
+down as the finding's refutation condition **before** the issue was filed, and it is now met. The
+prepared branch — fix plus two watched-failing regression tests — is **dropped, not held**.
+
+⚠ **AND THE REASONING REACHES FURTHER THAN THE ONE FINDING.** `codable-round-trip` takes `==` as
+its equivalence. The maintainer's answer says the right relation is **document equivalence**, and
+that value-identity is the wrong thing to demand. That objection applies to any type whose
+`Equatable` is deliberately finer than its wire form — which is **`ToolChoice`'s exact shape**
+(two distinct values encoding to byte-identical JSON) and arguably `UserDetectionStatus`'s.
+
+**So of the 3 surviving real defects, 2 rest on the assumption the only external adjudication
+rejected.** The one it does **not** reach is `CatalogFeatureFlags`, whose `init(from:)` **throws**
+— a decoder that fails is not two equivalent documents, and no argument about equivalence relations
+rescues it. ⚠ **That one is LATENT**: nothing in `SwiftDocC` encodes the type.
+
+⚠ **1 of 1 findings ever put to a maintainer came back rejected.** That is a sample of one and it
+is the only external evidence this line of work has; *3 real of 42* should be read beside it, not
+instead of it.
+
+**Superseded status line follows.** ⚠ **WAS: REPORTED UPSTREAM AND ANSWERED 2026-08-28. STATUS: CONTESTED.** The maintainer replied that the round trip is *"a goal of OpenAPIKit but not a mandate"*, that he *"maybe vaguely"* recalls the decision being intentional, and that *"equality checks don't need to be equivalency checks"* — while agreeing that *"the best ergonomics are that a value is equal to itself after going through an encode and a decode"*. He asked for the PR to be held. **So this is neither confirmed nor refuted, and it is counted as CONTESTED rather than as a fourth real defect.** ⚠ **The objection generalises**: `codable-round-trip` takes `==` as the equivalence and cannot know a type intends `==` to be FINER than wire-identity — **all four of this project's real defects rest on that same assumption**, and a maintainer may reject it per type. The first finding from this toolchain to leave the repository, and it is filed as a **falsifier rather than a victory lap**: *this being intended behaviour* is the recorded refutation condition for the finding, and the maintainer is the only one who can settle it. If they call it intended, this drops out of the tally and it becomes **3 real of 30**. AI assistance is disclosed in the report, per that project's explicit policy.
 
 **The near-miss in their suite is the part worth keeping.** `test_empty_decode` asserts
 `decoded == OpenAPI.XML()` and **passes**, because bare `XML()` resolves to the `nodeType:`
