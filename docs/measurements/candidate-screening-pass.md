@@ -9,7 +9,8 @@ types and 275 C files**.
 
 Two cloned subjects cleared every clause and were run:
 
-- **`OpenAPIKit` refutes on shipped code.** `OpenAPI.XML` fails `codable-round-trip`, the
+- **`OpenAPIKit` refutes on shipped code** — ⚠ **and the maintainer settled it as INTENDED on
+  2026-08-30, so this is a refutation and NOT a defect; see §5.** `OpenAPI.XML` fails `codable-round-trip`, the
   defect is **real**, reproduced by execution, and their **2,147 tests pass** without it. That
   is a **third real defect, on a third independent codebase, and all three are
   `codable-round-trip`**.
@@ -139,7 +140,23 @@ vended `OpenAPIKit` product gave the 97-row reading above.
 
 ---
 
-## 5. The third real defect — `OpenAPI.XML`
+## 5. ~~The third real defect~~ — `OpenAPI.XML`, SETTLED AS INTENDED 2026-08-30
+
+> ⚠ **THIS SECTION'S HEADLINE CLAIM IS WITHDRAWN.** [OpenAPIKit#509](https://github.com/mattpolzin/OpenAPIKit/issues/509)
+> was answered by the maintainer after he revisited the code: *"The behavior as it stands is
+> intended."* The promotion of a legacy representation to a modern one through encode/decode is a
+> deliberate design choice, *"favorable nonetheless because the OpenAPI documents are equivalent,
+> the in-code constructions just aren't identical."*
+>
+> **This fires the refutation condition §10 recorded before the issue was filed.** The finding is
+> **not a defect**, the tally is **3 real of 42**, and the analysis below stands as an accurate
+> description of the BEHAVIOUR while its verdict on that behaviour does not.
+>
+> ⚠ **The reasoning generalises to `ToolChoice` and arguably `UserDetectionStatus`** — both are
+> types whose `Equatable` is deliberately finer than their wire form, which is exactly what the
+> maintainer rejected as a defect. See `refutation-hand-check.md`.
+
+### The original analysis, kept for the mechanism
 
 **Row:** `codable-round-trip` · `OpenAPI.XML.encode(to:)` · `measured-defaultFails` at
 **trial 5** · tier `Likely`.
