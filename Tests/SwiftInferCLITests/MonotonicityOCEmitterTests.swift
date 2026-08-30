@@ -48,6 +48,19 @@ struct MonotonicityOCEmitterTests {
         )
         // Receiver drawn from the curated OC generator.
         #expect(source.contains("let receiver = defaultGenerator.run(using: &rng)"))
+        // **The empty-collection guard, which is a soundness assertion rather than a shape
+        // one.** The index domain below is `receiver.startIndex ... (receiver.endIndex - 1)`,
+        // which on an EMPTY receiver is `0 ... -1` — an invalid `ClosedRange` that TRAPS at
+        // run time instead of failing a law. There was no guard until 2026-08-30, only a
+        // comment reasoning that the five curated OC recipes could not produce an empty
+        // collection. **That reasoning expires the moment the carrier list widens**, which is
+        // the first thing any fix to `instance-method-shape-not-supported` will do
+        // (`docs/measurements/instance-method-shape-census.md` §5). Asserted here so the
+        // guard cannot be quietly dropped by whoever widens it.
+        #expect(
+            source.contains("guard !receiver.isEmpty else { continue }"),
+            "the emitted loop must skip an empty receiver — `0 ... -1` traps rather than failing"
+        )
         // Indices drawn from the receiver's own index range.
         #expect(source.contains(
             "Gen<Int>.int(in: receiver.startIndex ... (receiver.endIndex - 1))"

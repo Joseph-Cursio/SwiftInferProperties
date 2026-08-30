@@ -27,6 +27,35 @@ extension StrategistDispatchEmitter {
     /// receiver-and-index shape for them. Synced with
     /// `StrategistDispatchEmitter.curatedOCRecipe` — every carrier in
     /// this set must have a curated OC recipe.
+    /// Carriers whose `index(after:)` / `index(before:)` the receiver-and-index shape can
+    /// verify. Each is a `RandomAccessCollection` with `Index == Int`.
+    ///
+    /// ⚠ **SPELLED WITHOUT GENERIC ARGUMENTS, and the previous spelling made every entry
+    /// UNREACHABLE.** This list read `OrderedSet<Int>`,
+    /// `OrderedDictionary<Int, Int>.Elements` and three more fully-specialised forms, while
+    /// discovery records a carrier **unspecialised** — `OrderedSet`,
+    /// `OrderedDictionary.Elements`. The two spellings never met, so the instance path could
+    /// not fire on any real row and every one of them fell through to the value path, which
+    /// emits a STATIC call on an instance method.
+    ///
+    /// **Measured on `swift-collections` @ `899809d3`**: 31 of 64 `monotonicity` rows
+    /// declined `instance-method-shape-not-supported` — the largest single blocker — and
+    /// **12 of those are carriers this list already names**. The compiler's words:
+    /// `instance member 'index' cannot be used on type 'Deque<<<hole>>>'`.
+    ///
+    /// **The emitter tests were green throughout**, because they construct carriers with the
+    /// specialised spelling the list used. A test-versus-production spelling mismatch is
+    /// exactly the shape of the `Swift.String` leaf-recognition defect fixed 2026-08-25.
+    /// ⚠ **Spelled SPECIALISED while a discovery row's carrier is spelled UNSPECIALISED
+    /// (`OrderedSet`, not `OrderedSet<Int>`) — a real mismatch, and NOT what blocks these
+    /// rows.** Normalising the two was built, A/B'd on `swift-collections` @ `899809d3` and
+    /// **reverted: 0 rows moved.** The check below reads `recipe.carrierTypeName`, and for
+    /// `index(before:)` that is the PARAMETER type — `Int` — so it can never name a
+    /// collection at any spelling. See `docs/measurements/instance-method-shape-census.md`.
+    ///
+    /// `MonotonicityOCEmitterTests` iterates this set and requires every entry to resolve a
+    /// curated OC recipe, which the bare spelling does not — so a future fix must move the
+    /// recipe, not this list.
     static let monotonicityInstanceCarriers: Set<String> = [
         "OrderedSet<Int>",
         "OrderedDictionary<Int, Int>.Elements",
@@ -196,9 +225,11 @@ extension StrategistDispatchEmitter {
     /// `functionCalls` is `[renderedCall, primaryFunctionName]` — the
     /// second element (e.g. `"index(after:)"`) carries the
     /// labeled-argument name the static `renderedCall` dropped. The
-    /// curated OC recipes always produce non-empty (4-element)
-    /// collections, so both index domains below are non-empty
-    /// `ClosedRange<Int>`s — no empty-collection guard needed.
+    /// ⚠ **The reasoning that used to stand here — *the curated OC recipes always produce
+    /// non-empty collections, so no empty-collection guard [is] needed* — was true of five
+    /// curated carriers and EXPIRES the moment that list widens**, which is the first thing
+    /// any fix to `instance-method-shape-not-supported` will do. The emitted loop now
+    /// guards; see `docs/measurements/instance-method-shape-census.md` §5.
     private static func composeInstanceMethodMonotonicityPass(
         functionCalls: [String],
         recipe: GeneratorRecipe
@@ -223,7 +254,21 @@ extension StrategistDispatchEmitter {
         let indexDomain = isBefore
             ? "(receiver.startIndex + 1) ... receiver.endIndex"
             : "receiver.startIndex ... (receiver.endIndex - 1)"
-        return """
+        return instanceMethodMonotonicityBody(
+            methodName: methodName, argLabel: argLabel, indexDomain: indexDomain, recipe: recipe
+        )
+    }
+
+    /// The emitted body, split out so the composer above stays inside the body-length cap.
+    /// **Split when the empty-collection guard pushed it over**, rather than shaving the
+    /// guard's comment — the seam is clean and the reasoning is what a later reader needs.
+    private static func instanceMethodMonotonicityBody(
+        methodName: String,
+        argLabel: String,
+        indexDomain: String,
+        recipe: GeneratorRecipe
+    ) -> String {
+        """
         // --- Pass 1: default (strategist-derived generator) ---
         // V1.69 — instance-method monotonicity: draw a receiver
         // collection, draw two valid indices from its own index range,
@@ -236,6 +281,16 @@ extension StrategistDispatchEmitter {
 
         for trial in 0 ..< trials {
             let receiver = defaultGenerator.run(using: &rng)
+            // An EMPTY receiver makes the index domain below an invalid range — `0 ... -1`
+            // for `index(after:)`, `1 ... 0` for `index(before:)` — which TRAPS at run time
+            // rather than failing a law. The V1.69 curated carriers could not produce one,
+            // and the comment saying so was the only thing standing between this and a
+            // trap; it stopped being true the moment carrier matching widened.
+            //
+            // `count == 1` is fine and deliberately admitted: the domain is `0 ... 0` or
+            // `1 ... 1`, both valid, and drawing the same index twice makes the comparison
+            // trivially true rather than wrong.
+            guard !receiver.isEmpty else { continue }
             let indexGenerator: Generator<Int, some SendableSequenceType> =
                 Gen<Int>.int(in: \(indexDomain))
             let firstIndex = indexGenerator.run(using: &rng)
