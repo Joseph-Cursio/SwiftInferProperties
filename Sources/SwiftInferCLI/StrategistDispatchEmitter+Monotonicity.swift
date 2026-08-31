@@ -56,6 +56,19 @@ extension StrategistDispatchEmitter {
     /// `MonotonicityOCEmitterTests` iterates this set and requires every entry to resolve a
     /// curated OC recipe, which the bare spelling does not — so a future fix must move the
     /// recipe, not this list.
+    /// The same carriers keyed by their bare, unspecialised names — what a discovery row's
+    /// carrier looks like. **Derived, never written out**, so the two cannot drift.
+    static let monotonicityInstanceCarrierKeys: Set<String> =
+        Set(monotonicityInstanceCarriers.map(unspecialised))
+
+    /// Whether the receiver-and-index shape applies, on either spelling. **Exact membership is
+    /// what the emitter tests exercise (they supply `OrderedSet<Int>`); the bare form is what
+    /// production supplies.** Both must match, which is the whole of the V1.69 path's
+    /// unreachability — see `instance-method-shape-census.md` §7.
+    static func isMonotonicityInstanceCarrier(_ carrier: String) -> Bool {
+        monotonicityInstanceCarrierKeys.contains(unspecialised(carrier))
+    }
+
     static let monotonicityInstanceCarriers: Set<String> = [
         "OrderedSet<Int>",
         "OrderedDictionary<Int, Int>.Elements",
@@ -105,7 +118,7 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) throws {
         let domain = recipe.carrierTypeName
-        guard !monotonicityInstanceCarriers.contains(domain) else { return }
+        guard !isMonotonicityInstanceCarrier(domain) else { return }
         guard isComparableMonotonicityDomain(domain, inputs: inputs) else {
             throw VerifyError.monotonicityDomainNotComparable(domain: domain)
         }
@@ -129,7 +142,7 @@ extension StrategistDispatchEmitter {
         recipe: GeneratorRecipe
     ) -> String {
         let functionCall = inputs.functionCalls.first ?? "(missing)"
-        if monotonicityInstanceCarriers.contains(recipe.carrierTypeName) {
+        if isMonotonicityInstanceCarrier(recipe.carrierTypeName) {
             return composeInstanceMethodMonotonicityPass(
                 functionCalls: inputs.functionCalls,
                 recipe: recipe
