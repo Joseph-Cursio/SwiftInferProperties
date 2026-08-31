@@ -186,3 +186,53 @@ widened as well as re-keyed — behind the empty-collection guard §5 put in for
   the key space is reachable after all and something else blocks it.
 - **A monotonicity row anywhere that took the OC composer path**, which would falsify *never fired
   on a real row* outright.
+
+---
+
+## 8. Part 1 BUILT — 12 rows moved, 10 to `measured-bothPass`
+
+**Both halves of §7.3 shipped together**, because §3 already measured what shipping one of them
+buys: nothing.
+
+- **The carrier rule** — instance-method `monotonicity` anchors at the receiver
+  (`monotonicityReceiverCarrier`), the clause `roundTripDomainCarrier` already carries for
+  `round-trip`.
+- **The key space** — `curatedOCRecipe` and `monotonicityInstanceCarriers` now match on the
+  **bare** name as well as the specialised one. Both bare tables are **derived, never written
+  out**, so they cannot drift; exact lookup is tried first, so a caller supplying
+  `OrderedSet<Int>` is bit-identical to before.
+
+**Same-subject A/B, `swift-collections` @ `899809d3`, same command:**
+
+| outcome | before | after |
+|---|---:|---:|
+| `instance-method-shape-not-supported` | 31 | **19** |
+| **`measured-bothPass`** | **0** | **10** |
+| `architectural-coverage-pending` | 52 | 42 |
+| `measured-defaultFails` | 5 | 5 |
+| `measured-error` | 4 | 4 |
+
+**All 12 predicted rows moved, and none other did.** Ten reached `measured-bothPass` at
+N=1000 — `OrderedSet`, `OrderedSet.SubSequence`, `OrderedDictionary.Elements`, `.Values` and
+`.Elements.SubSequence`, each for `index(after:)` and `index(before:)`. **These are the first
+`monotonicity` verdicts of any kind on this subject**, and the first time the V1.69
+ordered-collection path has run on a row discovery produced.
+
+✅ **The other two are the more interesting move.** `Deque.index(after:)` / `index(before:)` went
+from a **build failure** to a clean pre-flight decline — `monotonicity-domain-not-comparable:
+Deque<Int>` — because `Deque<Int>` **has a curated recipe** and is **not** in
+`monotonicityInstanceCarriers`, so it reaches the value composer and is refused before a stub is
+built. **A decline that costs no build and names its reason is strictly better than a compile
+error**, and it exposes exactly the gap §7.3 predicted.
+
+⚠ **TEN PASSING LAWS ARE NOT TEN FINDINGS.** `index(after:)` is monotonic over the indices of a
+`RandomAccessCollection` — these are **true laws that now execute**, not defects discovered. The
+value is precisely what §2 framed: the template's false laws were executing and its true ones
+were failing to compile. Now both run. **A `bothPass` is weaker evidence than a refutation**, and
+nothing here changes the refutation tally.
+
+⚠ **Deliberately NOT done: widening `monotonicityInstanceCarriers`.** The A/B prices it exactly —
+adding `Deque` would take those 2 rows from decline to a likely `bothPass`, and the other 17
+(`BitArray`, `UniqueDeque`, `RigidDeque`, `UniqueArray`, `RigidArray`, …) need a curated recipe
+each plus a check that `Index == Int`. **Measured and ready, not taken**, because it is a
+different change with a different risk.

@@ -201,6 +201,7 @@ extension SwiftInferCommand.Verify {
         // type; `Self.Index` / `Self.Element` keep their curated bindings.
         let boundCarrier = GenericBindingResolver.bound(
             roundTripDomainCarrier(entry: entry)
+                ?? monotonicityReceiverCarrier(entry: entry)
                 ?? entry.carrierTypeName ?? entry.typeName ?? "(none)",
             selfType: entry.typeName
         )

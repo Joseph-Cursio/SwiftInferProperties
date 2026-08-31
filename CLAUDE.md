@@ -54,10 +54,16 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,851 tests — 5,641 fast + 210 across `perf` and the eight batches**
+Suites green at **5,857 tests — 5,647 fast + 210 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-08-29** on **swift-property-based 2.0 /
 SwiftPropertyLaws 4.2.0** — every stage counted from that one run, and the run was UNPIPED:
-fast **5,641** · perf 8 · batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **23**.
+fast **5,647** · perf 8 · batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **23**.
+**The batch half stood still at 210 and that is the load-bearing reading**: row 75's carrier fix
+changes VERIFY output — it took `monotonicity` from 0 to 10 `measured-bothPass` on
+`swift-collections` — and **no measured baseline in this repo moved**, `batch3` (`VerifyPipeline`)
+included. The fast half moved **5,641 → 5,647** for `MonotonicityReceiverCarrierTests`. Timings
+usable: `batch2` 805s just above its 679–801s spread, `batch5` 1,708s against ~1,670s, **~70
+minutes end to end**.
 **The batch half moved 209 → 210 and the fast half did NOT, which is the regex doing its job in
 both directions**: `InactiveIfConfigCensusMeasuredTests` takes ~9 minutes, so it is named
 `*MeasuredTests` and **added to `BATCH8` by hand** — the step CLAUDE.md warns has been missed four

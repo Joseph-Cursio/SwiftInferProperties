@@ -50,7 +50,43 @@ extension StrategistDispatchEmitter {
     /// element generator (falsifier: `Pairing.permuted` reaching an emitted
     /// stub).
     static func curatedOCRecipe(carrier: String) -> GeneratorRecipe? {
-        curatedOCRecipes[carrier]
+        curatedOCRecipes[carrier] ?? curatedOCRecipesByBareName[unspecialised(carrier)]
+    }
+
+    /// The same table keyed by the carrier's name with generic arguments stripped —
+    /// `OrderedDictionary<Int, Int>.Elements` → `OrderedDictionary.Elements`.
+    ///
+    /// ⚠ **THE TABLE IS KEYED ON A SPELLING PRODUCTION NEVER PRODUCES, AND THAT MADE IT
+    /// UNREACHABLE.** Discovery records a carrier as its declaring type's name, unspecialised.
+    /// **Measured 2026-08-30 on `swift-collections`: of 34 distinct carriers in the
+    /// `monotonicity` rows, ZERO contain `<`** — so every entry above could only ever be found
+    /// by a caller that already knew the element type, which is what the emitter tests do and
+    /// what discovery cannot. `docs/measurements/instance-method-shape-census.md` §7.
+    ///
+    /// The evidence was in the table's own comments before it was measured: the
+    /// `OrderedDictionary<Int, Int>` entry was added because picks *"stalled at
+    /// `unsupported-carrier: OrderedDictionary`"* — **the unspecialised spelling, named in the
+    /// decline it was meant to fix** — and adding a specialised key could not answer an
+    /// unspecialised lookup.
+    ///
+    /// **DERIVED, never written out.** Writing the bare forms by hand would let the two drift,
+    /// which is the defect in mirror image. **Exact lookup is tried first**, so a caller that
+    /// does supply `OrderedSet<Int>` is bit-identical to before.
+    ///
+    /// **Checked for collisions**: the 8 entries produce 8 distinct bare names.
+    private static let curatedOCRecipesByBareName: [String: GeneratorRecipe] =
+        Dictionary(curatedOCRecipes.map { (unspecialised($0.key), $0.value) }) { first, _ in first }
+
+    /// A type name with its generic arguments removed, at any nesting depth.
+    static func unspecialised(_ carrier: String) -> String {
+        var result = ""
+        var depth = 0
+        for character in carrier {
+            if character == "<" { depth += 1; continue }
+            if character == ">" { depth = max(0, depth - 1); continue }
+            if depth == 0 { result.append(character) }
+        }
+        return result
     }
 
     /// The carriers this table answers for, sorted.
