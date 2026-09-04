@@ -32,14 +32,24 @@ public enum Tier: String, Sendable, Equatable, Comparable, CaseIterable, Codable
     /// Score < 20 or any veto fired. Never shown.
     case suppressed
 
-    /// TestLifter M11.0 — informational tier for stand-alone advisory
-    /// findings that don't carry a runnable property (today: equivalence-
-    /// class detection per §7.8 third example). Never returned by
-    /// `Tier(score:)` — set explicitly by the surfacing pipeline. Shown by
-    /// default so users see the documentation surface in the discover
-    /// stream; CLI rendering distinguishes `[Advisory]` from
-    /// `[Strong]`/`[Likely]`/`[Possible]` so consumers don't conflate it
-    /// with a runnable suggestion.
+    /// TestLifter M11.0 — informational tier for findings the score ladder
+    /// cannot rank, because a score answers "how likely is this law true?"
+    /// and these are not offering one.
+    ///
+    /// Three paths set it, and they are not all the same kind of thing:
+    /// - `equivalence-class` (§7.8 third example) and `consumer-producer-chain`
+    ///   — comment-only writeouts carrying no runnable property.
+    /// - the synthesized `determinism` law from `Discover+GenericLaws`, for a
+    ///   seeded pure function that matched no template. That one *is* runnable,
+    ///   and it is advisory for a different reason: it is lint-backed rather
+    ///   than score-graded, and `Refutability` lists it as the catalogue's one
+    ///   tautology — "I have nothing to offer here," dressed as a finding.
+    ///
+    /// Never returned by `Tier(score:)` — set explicitly by the surfacing
+    /// pipeline. Shown by default so users see the documentation surface in the
+    /// discover stream; CLI rendering distinguishes `[Advisory]` from
+    /// `[Strong]`/`[Likely]`/`[Possible]` so consumers don't conflate it with a
+    /// scored suggestion.
     case advisory
 
     /// Tier mapping per PRD §4.2. Never produces `.verified` or
