@@ -62,24 +62,24 @@ Lookup-style documentation for the SwiftInferProperties tool. Every CLI flag, ev
 
 ## Command-line interface
 
-`swift-infer` exposes 28 subcommands, `discover` being the default. Run any subcommand with `--help` to see locally rendered usage; the entries below mirror that output. The four oldest entries carry explicit Type and Default columns; the rest state defaults inline, as `--help` does.
+`swift-infer` exposes 28 subcommands, `discover` being the default. Run any subcommand with `--help` to see locally rendered usage; the entries below mirror that output, and every flag table has the same two columns. Types are visible in each flag's own value placeholder, and defaults are stated in the description where they matter, which is how `--help` reports both.
 
 ### `discover`
 
 Scan a target for inferred property candidates. Read-only by default; `--interactive` and `--update-baseline` are the only flags that write to disk.
 
-| Flag | Type | Default | Description |
-|---|---|---|---|
-| `--target <name>` | String | *required* | SwiftPM target name. Resolved to `Sources/<target>/` relative to the working directory. |
-| `--include-possible` / `--no-include-possible` | Bool | `false` | Show Possible-tier suggestions (score 20–39). Hidden by default per PRD §4.2. |
-| `--vocabulary <path>` | Path | walk-up | Vocabulary file. When omitted, falls back to `[discover].vocabularyPath` in `config.toml`, then to `<package-root>/.swiftinfer/vocabulary.json`. |
-| `--config <path>` | Path | walk-up | Config file. When omitted, walks up from `--target` directory to `<package-root>/.swiftinfer/config.toml`. |
-| `--test-dir <path>` | Path | `<package-root>/Tests/` | Directory the TestLifter pass scans. Missing path warns on stderr and falls back to walk-up resolver. |
-| `--stats-only` | Bool | `false` | Render per-template / per-tier counts instead of full explainability blocks. |
-| `--interactive` | Bool | `false` | Walk surviving suggestions one at a time with Accept / Skip / Reject / B / B' prompts. Mutually exclusive with `--update-baseline`. |
-| `--update-baseline` | Bool | `false` | Snapshot visible suggestion identities to `<package-root>/.swiftinfer/baseline.json` for `swift-infer drift`. |
-| `--dry-run` | Bool | `false` | With `--interactive`, suppress writes (file stub + `decisions.json` update) but still print would-be paths. No-op without `--interactive`. |
-| `--seeds <path>` | Path | none | JSON seed manifest (`swiftprojectlint … --format pbt-seeds`). Discovery still scans the whole target, but surfaced suggestions are focused to functions the manifest names — the consumer side of the `lint → infer` pipeline. A seeded pure function no template matched still earns the generic determinism law. Focusing is deliberately not total (see `SeedFocus`), and an **empty** manifest does not focus at all. Missing or malformed file is an error. |
+| Flag | Description |
+|---|---|
+| `--target <name>` | **Required.** SwiftPM target name. Resolved to `Sources/<target>/` relative to the working directory. |
+| `--include-possible` / `--no-include-possible` | Show Possible-tier suggestions (score 20–39). Hidden by default per PRD §4.2. |
+| `--vocabulary <path>` | Vocabulary file. When omitted, falls back to `[discover].vocabularyPath` in `config.toml`, then to `<package-root>/.swiftinfer/vocabulary.json`. |
+| `--config <path>` | Config file. When omitted, walks up from `--target` directory to `<package-root>/.swiftinfer/config.toml`. |
+| `--test-dir <path>` | Directory the TestLifter pass scans; defaults to `<package-root>/Tests/`. Missing path warns on stderr and falls back to walk-up resolver. |
+| `--stats-only` | Render per-template / per-tier counts instead of full explainability blocks. |
+| `--interactive` | Walk surviving suggestions one at a time with Accept / Skip / Reject / B / B' prompts. Mutually exclusive with `--update-baseline`. |
+| `--update-baseline` | Snapshot visible suggestion identities to `<package-root>/.swiftinfer/baseline.json` for `swift-infer drift`. |
+| `--dry-run` | With `--interactive`, suppress writes (file stub + `decisions.json` update) but still print would-be paths. No-op without `--interactive`. |
+| `--seeds <path>` | JSON seed manifest (`swiftprojectlint … --format pbt-seeds`). Discovery still scans the whole target, but surfaced suggestions are focused to functions the manifest names — the consumer side of the `lint → infer` pipeline. A seeded pure function no template matched still earns the generic determinism law. Focusing is deliberately not total (see `SeedFocus`), and an **empty** manifest does not focus at all. Missing or malformed file is an error. |
 
 **Walk-up resolution.** The `--vocabulary`, `--config`, and `--test-dir` defaults all walk up from `Sources/<target>/` until they find `Package.swift`, then look for the conventional location relative to the package root.
 
@@ -91,12 +91,12 @@ Scan a target for inferred property candidates. Read-only by default; `--interac
 
 Diff current discovery output against `<package-root>/.swiftinfer/baseline.json`; emit non-fatal warnings for new Strong-tier suggestions that lack a recorded decision.
 
-| Flag | Type | Default | Description |
-|---|---|---|---|
-| `--target <name>` | String | *required* | Same shape as `discover`. |
-| `--baseline <path>` | Path | walk-up | Explicit baseline file. Default: `<package-root>/.swiftinfer/baseline.json`. |
-| `--vocabulary <path>` | Path | walk-up | Same shape as `discover`. |
-| `--config <path>` | Path | walk-up | Same shape as `discover`. |
+| Flag | Description |
+|---|---|
+| `--target <name>` | **Required.** Same shape as `discover`. |
+| `--baseline <path>` | Explicit baseline file. Default: `<package-root>/.swiftinfer/baseline.json`. |
+| `--vocabulary <path>` | Same shape as `discover`. |
+| `--config <path>` | Same shape as `discover`. |
 
 **Detection rule.** A suggestion triggers a drift warning iff:
 
@@ -112,18 +112,18 @@ Likely / Possible / Advisory tiers never trigger drift, even when new.
 
 Pin a counterexample input as a regression test. Useful when a generated property test fails and you want the failing input committed as a permanent test case before fixing the underlying bug.
 
-| Flag | Type | Required for | Description |
-|---|---|---|---|
-| `--template <name>` | String | all | Template name. See valid values below. |
-| `--callee <name>` | String | all | Function being tested. |
-| `--type <name>` | String | all | Type of the counterexample value. |
-| `--counterexample <source>` | String | all | Swift expression source for the failing input. Quoted as a single argument. |
-| `--reverse-callee <name>` | String | round-trip, inverse-pair | Inverse function. |
-| `--identity-element <source>` | String | identity-element | Swift expression for the identity value. |
-| `--seed-source <source>` | String | reduce-equivalence | Swift expression for the reducer's seed value. |
-| `--reduce-element-type <name>` | String | reduce-equivalence, count-invariance | Element type of the collection being reduced. |
-| `--invariant-keypath <keypath>` | String | invariant-preservation | KeyPath expression naming the preserved invariant. |
-| `--package-root <path>` | Path | optional | Override the default walk-up to find `Package.swift`. |
+| Flag | Description |
+|---|---|
+| `--template <name>` | **Required.** Template name. See valid values below. |
+| `--callee <name>` | **Required.** Function being tested. |
+| `--type <name>` | **Required.** Type of the counterexample value. |
+| `--counterexample <source>` | **Required.** Swift expression source for the failing input. Quoted as a single argument. |
+| `--reverse-callee <name>` | **Required for round-trip and inverse-pair.** Inverse function. |
+| `--identity-element <source>` | **Required for identity-element.** Swift expression for the identity value. |
+| `--seed-source <source>` | **Required for reduce-equivalence.** Swift expression for the reducer's seed value. |
+| `--reduce-element-type <name>` | **Required for reduce-equivalence and count-invariance.** Element type of the collection being reduced. |
+| `--invariant-keypath <keypath>` | **Required for invariant-preservation.** KeyPath expression naming the preserved invariant. |
+| `--package-root <path>` | Override the default walk-up to find `Package.swift`. |
 
 **Valid `--template` values:** `idempotence`, `round-trip`, `monotonicity`, `invariant-preservation`, `commutativity`, `associativity`, `identity-element`, `inverse-pair`, `count-invariance`, `reduce-equivalence`.
 
@@ -135,10 +135,10 @@ Re-running the command with the same `--counterexample` value is idempotent — 
 
 Aggregate one or more `decisions.json` files into per-template acceptance / rejection / suppression rates plus a tier-mix breakdown. Closes PRD §17.2's deferred surface (v1.4).
 
-| Flag | Type | Default | Description |
-|---|---|---|---|
-| `--directory <path>` | Path | CWD | Override the package-root for default-mode walk-up. Ignored when `--decisions` is passed. |
-| `--decisions <path>` | Path (repeatable) | none | Explicit decisions.json file. Repeat for multi-corpus aggregation. |
+| Flag | Description |
+|---|---|
+| `--directory <path>` | Override the package-root for default-mode walk-up; defaults to the current directory. Ignored when `--decisions` is passed. |
+| `--decisions <path>` | Explicit decisions.json file. Repeatable, for multi-corpus aggregation. |
 
 **Default mode** (no `--decisions`): walk up from `--directory` (or CWD) to find `Package.swift`, then read `<package-root>/.swiftinfer/decisions.json`.
 
@@ -241,7 +241,7 @@ Verify every pick (incl. Possible-tier) and show what survives: Proven / Disprov
 | `--corpus <corpus>` | Survey a registered corpus by id (see `swift-infer corpus`), resolving the tree, the target and the run label out of fixtures/corpora/manifest.json instead of the prompt. Mutually exclusive with --target and --directory: two sources of truth for which tree was surveyed is the defect this flag exists to remove. Warns, loudly and in the retained label, when the checkout has moved off the revision its baseline was measured at. |
 | `--corpus-module <corpus-module>` | CURATED-CORPUS module name: a separate package consumed as a library, imported plainly. Omit when proving the package you are standing in — the survey then derives the module per entry and imports it `@testable`, which is what reaches `internal` symbols. |
 | `--max-parallel <max-parallel>` | Max concurrent verifier builds (default 4). (default: 4) |
-| `--budget <budget>` | Trial budget: small | medium | large (default small). (default: standard) |
+| `--budget <budget>` | large (default small). (default: standard) |
 | `--template <template>` | Only verify picks from this template (e.g. 'commutativity'). |
 | `--surface <surface>` | Which surface to prove: algebraic (default) or interaction (reducer/MVVM invariants). (default: algebraic) |
 | `--family <family>` | Interaction only: restrict to one invariant family (e.g. 'idempotence'). |
@@ -435,7 +435,7 @@ Aggregate `.swiftinfer/interaction-decisions.json` into per-family acceptance ra
 |---|---|
 | `--directory <directory> Override the package root for default-mode walk-up.` |  |
 | `--decisions <decisions> Path to a `.swiftinfer/interaction-decisions.json`` | file. Repeatable; multiple paths are merged. |
-| `--format <format>` | Output format: markdown (default) | plain. (default: markdown) |
+| `--format <format>` | Output format: markdown (default) \| plain. (default: markdown) |
 
 ### `accept-bridge`
 
