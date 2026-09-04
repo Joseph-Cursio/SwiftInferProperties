@@ -55,6 +55,7 @@ Scan a target for inferred property candidates. Read-only by default; `--interac
 | `--interactive` | Bool | `false` | Walk surviving suggestions one at a time with Accept / Skip / Reject / B / B' prompts. Mutually exclusive with `--update-baseline`. |
 | `--update-baseline` | Bool | `false` | Snapshot visible suggestion identities to `<package-root>/.swiftinfer/baseline.json` for `swift-infer drift`. |
 | `--dry-run` | Bool | `false` | With `--interactive`, suppress writes (file stub + `decisions.json` update) but still print would-be paths. No-op without `--interactive`. |
+| `--seeds <path>` | Path | none | JSON seed manifest (`swiftprojectlint … --format pbt-seeds`). Discovery still scans the whole target, but surfaced suggestions are focused to functions the manifest names — the consumer side of the `lint → infer` pipeline. A seeded pure function no template matched still earns the generic determinism law. Focusing is deliberately not total (see `SeedFocus`), and an **empty** manifest does not focus at all. Missing or malformed file is an error. |
 
 **Walk-up resolution.** The `--vocabulary`, `--config`, and `--test-dir` defaults all walk up from `Sources/<target>/` until they find `Package.swift`, then look for the conventional location relative to the package root.
 

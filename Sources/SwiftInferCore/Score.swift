@@ -32,13 +32,17 @@ public struct Score: Sendable, Equatable {
     }
 
     /// TestLifter M11.2 — construct a Score with explicit `.advisory`
-    /// tier, bypassing the score-to-tier mapping. Used by the
-    /// equivalence-class suggestion path (PRD §7.8 third example) where
-    /// the suggestion is a documentation surface rather than a runnable
-    /// property — the tier signals to the renderer / accept-flow that
-    /// this is informational, not graded by score thresholds. Vetoed
-    /// signals are not allowed (advisory + veto would be contradictory);
-    /// callers ensure no `.isVeto` signals reach this path.
+    /// tier, bypassing the score-to-tier mapping. The tier signals to the
+    /// renderer / accept-flow that this is informational, not graded by score
+    /// thresholds. Vetoed signals are not allowed (advisory + veto would be
+    /// contradictory); callers ensure no `.isVeto` signals reach this path.
+    ///
+    /// Callers, which are not all alike — see `Tier.advisory`:
+    /// - the equivalence-class and consumer-producer-chain paths (PRD §7.8
+    ///   third example), where the suggestion is a documentation surface
+    ///   rather than a runnable property;
+    /// - `Discover+GenericLaws`, for the synthesized determinism law, which is
+    ///   runnable but lint-backed rather than score-graded.
     public init(advisorySignals: [Signal]) {
         self.signals = advisorySignals
         let total = advisorySignals.map(\.weight).reduce(0, +)
