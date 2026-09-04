@@ -11,7 +11,7 @@ recorded here because the corrections are the useful part.
 
 ## Setup
 
-SwiftPM package (Vapor/Fluent). The pure kernel is **`SyncCore.SyncEngine`** — a
+SwiftPM package (Vapor/Fluent). The total kernel is **`SyncCore.SyncEngine`** — a
 `reduce(_ state: SyncState, _ action: SyncAction) async -> SyncState` state machine
 marked `@lint.determinism clock_deterministic`, already partially PBT-adopted (its
 tests depend on `PropertyLawKit`, and it ships hand-written invariant tests). The

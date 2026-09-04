@@ -15,7 +15,7 @@ The re-run is the acceptance test, so pin it now.
 | | |
 |---|---|
 | **Fixture** | `MacCloud_client_iOS` @ `main` (`f3dbb6f`) — the app *before* any PBT work. Bugs present, no property tests, no SPM deps. |
-| **Answer key** | branch `pbt-road-test-reference` (`f3575b7`) — the pure kernels, the 4 property suites, the 3 bug fixes. |
+| **Answer key** | branch `pbt-road-test-reference` (`f3575b7`) — the total kernels, the 4 property suites, the 3 bug fixes. |
 | **Question** | Starting from the fixture, does the toolchain lead a competent reader to the answer key? |
 
 Today's score, measured this session:
@@ -25,7 +25,7 @@ Today's score, measured this session:
 | `swiftprojectlint . --format pbt-seeds` | **2 seeds**, both `static func ==` | **9 seeds** (v2) — 7 analysable + 2 kernels |
 | `swift-infer discover --seeds <manifest>` | **0** — `kept 0 of 6` | **7 suggestions + 2 kernels named** |
 | **proposed laws that could ever fail** *(default flags)* | **0** | **1 of 7** (phase 1) · **3 of 9** (phase 2) |
-| pure kernels suggested | **0** of 2 | **2 of 2** — `FileListing` via B1, `ChunkPlan` via B2 |
+| total kernels suggested | **0** of 2 | **2 of 2** — `FileListing` via B1, `ChunkPlan` via B2 |
 | bug *sites* pointed at | **0** of 3 | **3 of 3** — grandchild via B1; resume-counter and empty-file via B2 |
 | **row 9 — cold readers reach the bug, from default output** | **0/3** | **walk 9 (measured): 3/3** — grandchild **3/3** · empty-file **3/3** · resume-counter **3/3** (↑ from 2/3 once B19 stopped the reader clamping the shipped generator); **all 3 readers reach all three**. Upper bound — same fixture, eight walks (B8, B20). See B17–B20 |
 
@@ -44,7 +44,7 @@ the only one that counts:
 > B16/B18 → B19 did, and pulling any link drops it. See B17 (walk 7), B19 (walk 8), B20 (walk 9).
 > **The one caveat that outranks the number: 3/3 is the loop on bugs in its sweet spot. Measured on
 > tool-blind bugs it is 1 of 4 on the same app (B21) and 4 of 4 on a different app (B22) — and the
-> spread is the finding: the loop reaches a bug when the code offers a pure kernel AND a stated intent
+> spread is the finding: the loop reaches a bug when the code offers a total kernel AND a stated intent
 > (SplitKit's documented pure API), and is nearly blind when either is missing (B21's impure or
 > undocumented bugs). Yield is a property of the codebase, not the tools. Quote all three (B8, B20–B22).**
 > **The walk history below runs 1 → 5; B15 carries walk 6, B17 walk 7, B19 walk 8, B20 walk 9.**
@@ -556,7 +556,7 @@ High precision, cheap to detect, immediately actionable.
 
 </details>
 
-### B2. ~~"Extractable pure kernel"~~ — **DONE** — the flagship
+### B2. ~~"Extractable total kernel"~~ — **DONE** — the flagship
 
 > **Closed.** SwiftProjectLint `4cbeb64` (the rule) + `aed7fd6` (seed emission);
 > SwiftInferProperties `b410a35` (the consumer). SPL 2,791 tests green; SIP 3,838 tests green.
@@ -602,7 +602,7 @@ High precision, cheap to detect, immediately actionable.
 
 <details><summary>Original entry</summary>
 
-### B2. "Extractable pure kernel" — `SwiftProjectLint` · L · **the flagship**
+### B2. "Extractable total kernel" — `SwiftProjectLint` · L · **the flagship**
 
 The single rule that would have led a reader to `ChunkPlan`. The chunking arithmetic is the most
 valuable property in the app and guarded a real bug — and it is invisible to every tool in the set,
@@ -1311,7 +1311,7 @@ resume-counter's 1/3 and 3/3.
 
 ### B16. ~~The kernel advisory names the location but not the tiler shape~~ — **DONE** (nudge; unmeasured)
 
-> **Fixed.** SwiftProjectLint `21f0f5d`. The `ExtractablePureKernel` advisory now **branches on
+> **Fixed.** SwiftProjectLint `21f0f5d`. The `ExtractableTotalKernel` advisory now **branches on
 > whether the kernel slices**, the same way its law text already did.
 
 Walk 6 isolated the last lever on resume-counter to a single sentence in the linter. *"Extract the
@@ -1443,7 +1443,7 @@ bound until a second fixture exists.
 
 ### B18. ~~The tiler advisory names the slice shape but not the resume index~~ — **DONE** (nudge; **measured, walk 8: closed the scalar miss, did not reach 3/3**)
 
-> **Fixed.** SwiftProjectLint `70ff2f7`. The `ExtractablePureKernel` tiler advisory now also
+> **Fixed.** SwiftProjectLint `70ff2f7`. The `ExtractableTotalKernel` tiler advisory now also
 > names the **resume index** when the kernel has one, and warns the reader off lifting it as a
 > separate scalar — the shape that held resume-counter at 2/3 in walk 7.
 
@@ -1612,7 +1612,7 @@ loop catches unseen instances of the shape it is built for.
 - **B1 — a pure function whose bug needs a bound no template supplies.** `getStoragePercentage` is
   seeded, but swift-infer offers only the determinism law `f(x)==f(x)`, which passes. "Result must be
   0…1" is domain knowledge; nothing proposes it.
-- **B3 — a domain spec fact in an impure switch.** "409 → syncConflict" has no pure kernel and no
+- **B3 — a domain spec fact in an impure switch.** "409 → syncConflict" has no total kernel and no
   template.
 
 **The sharpest caveat, which softens even the win.** B4 sits at the one method the B16/B18 advisory is
@@ -1667,7 +1667,7 @@ came from three other places, and naming them is the whole result:
 | **P1** `.bankers` → `.plain` rounding | the **code's own docstring** ("banker's rounding") | reader, from the comments — 1/3 (only the reader who wrote a half-cent law) |
 | **P3** settlement transactions reversed (`from`/`to` swapped) | the reader's **domain reasoning** ("applying the settlement should zero every balance") | reader, from knowing what settlement *means* — 2/3 |
 
-So "the loop works on SplitKit" means, precisely: **the linter points at the pure kernels, and a
+So "the loop works on SplitKit" means, precisely: **the linter points at the total kernels, and a
 competent reader turns advisories, docstrings, and domain knowledge into the laws.** The property-
 inference engine was a bystander for bug-finding. That is not a dig at a bad tool — it is the same
 lesson row 4a and B3 have carried all along (*purity is a licence, not a hypothesis; laws come from
@@ -1684,15 +1684,15 @@ impure methods (unrunnable) or undocumented domain facts (no reference to refute
 **The unifying finding — the one to put in the book.** The loop's yield is governed by two questions,
 not by whether "it works":
 
-1. **Is the buggy logic a cleanly-testable pure kernel** — or is it trapped in impure, stateful,
-   effectful code the pure-kernel lab cannot drive?
+1. **Is the buggy logic a cleanly-testable total kernel** — or is it trapped in impure, stateful,
+   effectful code the total-kernel lab cannot drive?
 2. **Is a reference definition available** — from a template's role, a linter advisory, a docstring, or
    the reader's own domain knowledge — or must one be invented from nothing?
 
 Where **both** hold, cold readers reach the bug reliably (SplitKit, 4/4). Where **either** fails, they
 miss (B21's impure/undocumented bugs, 1/4). The 3/3, the 1/4, and the 4/4 are the same loop measured at
 three points on those two axes. The honest one-liner: **the loop reliably finds a bug when the code
-offers it a pure kernel and a stated intent, and it is nearly blind otherwise — and how often those two
+offers it a total kernel and a stated intent, and it is nearly blind otherwise — and how often those two
 conditions hold is a property of the *codebase*, not of the tools.**
 
 > **Author's-side corollary, now in the book — Chapter 15 §15.3.3 ("What the refactor is — and what it
@@ -2045,10 +2045,10 @@ never seeded, though all are documented.
 
 **The reason is structural — the extraction lottery (B21) at scale.** swift-algorithms implements its
 logic as **lazy `Collection` wrappers**: `uniqued()` returns a `UniquedSequence`, `chunked` a
-`ChunkedCollection`. The linter's pure-kernel detector wants a standalone pure function returning a
+`ChunkedCollection`. The linter's total-kernel detector wants a standalone pure function returning a
 **value type**; a lazy wrapper is not one, so the algorithm functions are invisible to it, and what
 *does* get seeded is the wrappers' `index(after:)` / `distance` / `==` — the conformance boilerplate.
-So **both B21/B22 axes miss at once, and neither for the reason the axes name**: the pure kernel is
+So **both B21/B22 axes miss at once, and neither for the reason the axes name**: the total kernel is
 real (`uniqued` genuinely is a pure function) but not in the extractable *form*; the docstrings are
 rich but sit on functions that never enter the seed set.
 
@@ -2059,7 +2059,7 @@ docstrings state and exactly what the loop never asks for — a linter reach ext
 public function returning a lazy `Sequence`/`Collection` wrapper as a candidate) plus a discover
 template family over the produced sequence. Until then, an algorithm library structured this way is
 **out of the toolchain's reach**, and saying so plainly is the finding: the loop is strong on
-value-returning pure kernels and silent on the lazy-wrapper idiom that dominates real Swift collection
+value-returning total kernels and silent on the lazy-wrapper idiom that dominates real Swift collection
 code. Next contrast to run: **swift-collections**, whose data structures expose value-semantic
 operations (`insert` / `union` / `subtracting`) the linter *can* seed — a prediction that it reaches
 materially more.
@@ -2107,7 +2107,7 @@ type-symmetry check never matches to the containing type.
 |---|---|---|---|
 | lazy-wrapper return | `uniqued()` → `UniquedSequence` | return type isn't a value | seed on contract / test the result |
 | **`Self`-typed operand** | `union(_ other: Self) -> Self` | `Self` not resolved to the type | **resolve `Self` at scan time** |
-| mutating primitive | `formUnion` | `mutating` ≠ pure kernel | seed on contract (mutation property) |
+| mutating primitive | `formUnion` | `mutating` ≠ total kernel | seed on contract (mutation property) |
 
 `func f(_ other: Self) -> Self` is *the* idiomatic shape for value-semantic operations across all of
 Swift (`SetAlgebra`, `AdditiveArithmetic`, `Numeric`, every protocol-oriented value API), so one
@@ -2609,7 +2609,7 @@ Waves 4 and 5 have no dependency on 1–3 and can be done at any time; they are 
 because they are lower-leverage for the benchmark.
 
 **If you only do four things:** A1, A3, **B2, B3**. Those four take the benchmark from *"0 suggestions,
-exit 0"* to *"here is the pure kernel inside your upload method, and here is the law it should obey."*
+exit 0"* to *"here is the total kernel inside your upload method, and here is the law it should obey."*
 That is the entire difference between the loop working and not.
 
 **This list used to read A1, A3, A4, B2, and that was wrong — B2 alone cannot deliver the second half
@@ -2626,7 +2626,7 @@ and is now closed anyway, but it was never what stood between the loop and a fou
 ```bash
 git -C MacCloud_client_iOS checkout main        # the pristine fixture, f3dbb6f
 
-# Phase 1 — the linter names the pure kernels.
+# Phase 1 — the linter names the total kernels.
 swiftprojectlint . --format pbt-seeds > seeds.json
 swiftprojectlint . --format text --categories testability   # the extract-this-kernel advisories, WITHOUT the style-lint noise (W2)
 
@@ -2727,7 +2727,7 @@ the working tree is untouched) — 4 suggestions, all on `MacCloudViewModel`, al
 **All four are recorded UNSCORED, per the standing rule that a tool may not grade its own
 homework.** The answer key froze four property suites — `FileListingPropertyTests`,
 `ChunkPlanPropertyTests`, `ChunkUploadIdempotencyTests`, `FileResponseCodableLawTests` — every one
-of them over a pure kernel or a Codable DTO, and **none over view-model state**. The four subjects
+of them over a total kernel or a Codable DTO, and **none over view-model state**. The four subjects
 above do appear in the key's *example-based* tests (`MacCloudViewModelOperationsTests`,
 `MacCloud_client_iOSTests`), which is the distinction that matters: the key asserts specific
 transitions on them, it states no law over them. So these are findings the key missed, not findings
