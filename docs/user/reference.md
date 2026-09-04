@@ -14,6 +14,30 @@ Lookup-style documentation for the SwiftInferProperties tool. Every CLI flag, ev
   - [`drift`](#drift)
   - [`convert-counterexample`](#convert-counterexample)
   - [`metrics`](#metrics)
+  - [`scaffold`](#scaffold)
+  - [`scaffold-kit-suites`](#scaffold-kit-suites)
+  - [`index`](#index)
+  - [`query`](#query)
+  - [`docc`](#docc)
+  - [`insights`](#insights)
+  - [`prove-then-show`](#prove-then-show)
+  - [`survey-diff`](#survey-diff)
+  - [`corpus`](#corpus)
+  - [`census`](#census)
+  - [`known-properties`](#known-properties)
+  - [`report`](#report)
+  - [`suggest-refactors`](#suggest-refactors)
+  - [`verify`](#verify)
+  - [`accept-check`](#accept-check)
+  - [`discover-reducers`](#discover-reducers)
+  - [`verify-value-semantics`](#verify-value-semantics)
+  - [`verify-interaction`](#verify-interaction)
+  - [`discover-interaction`](#discover-interaction)
+  - [`drift-interaction`](#drift-interaction)
+  - [`accept-interaction`](#accept-interaction)
+  - [`accept-check-interaction`](#accept-check-interaction)
+  - [`metrics-interaction`](#metrics-interaction)
+  - [`accept-bridge`](#accept-bridge)
   - [Exit codes](#exit-codes)
 - [Templates](#templates)
 - [TestLifter detectors](#testlifter-detectors)
@@ -38,7 +62,7 @@ Lookup-style documentation for the SwiftInferProperties tool. Every CLI flag, ev
 
 ## Command-line interface
 
-`swift-infer` exposes four subcommands: `discover` (default), `drift`, `convert-counterexample`, `metrics`. Run any subcommand with `--help` to see locally rendered usage.
+`swift-infer` exposes 28 subcommands, `discover` being the default. Run any subcommand with `--help` to see locally rendered usage; the entries below mirror that output. The four oldest entries carry explicit Type and Default columns; the rest state defaults inline, as `--help` does.
 
 ### `discover`
 
@@ -127,6 +151,303 @@ Aggregate one or more `decisions.json` files into per-template acceptance / reje
 - Post-acceptance failure rate (requires `firstCommitPasses: Bool?` field + CI hook)
 
 JSON output mode and per-corpus breakdowns are also deferred (table-only, single combined view in v1.4).
+
+### `scaffold`
+
+Emit best-effort gen() stubs (with <#...#> placeholders) for types that can't be fully auto-derived.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target to scan (Sources/<target>/). |
+| `--sources <sources>` | Path to a source directory to scan directly, bypassing the Sources/<target>/ convention. The Xcode escape hatch: an app has no SwiftPM target, so point this at the folder your .swift files live in. Mutually exclusive with --target; pass exactly one. |
+| `--test-dir <test-dir>` | Override the test directory TestLifter scans. |
+| `--output <output>` | Output path for the scaffold file. Defaults to Tests/Generated/SwiftInfer/Scaffolds.generated.swift. |
+
+### `scaffold-kit-suites`
+
+Emit the PropertyLawKit conformance-law tests your types already owe.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target to scan (Sources/<target>/). |
+| `--sources <sources>` | Path to a source directory to scan directly, bypassing the Sources/<target>/ convention. The Xcode escape hatch. Mutually exclusive with --target; pass exactly one. |
+| `--module <module>` | Module name for the emitted `@testable import`. Defaults to --target's value; required when scanning with --sources, since a directory does not name a module. |
+| `--output <output>` | Write to this path instead of stdout. |
+
+### `index`
+
+Build or update the SemanticIndex at `.swiftinfer/index.json` (PRD §20.1). Joins discover output with the recorded decisions.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target to scan. Resolved to Sources/<target>/ relative to the working directory. |
+| `--seeds <seeds>` | Path to a `.pbt/seeds.json`. Filters the index to what the seeds point at — the same focusing `discover --seeds` applies — and writes `.swiftinfer/seed-index.json`, NEVER the conventional index. Consume it with `verify --all-from-index --index-path`. |
+| `--include-possible/--no-include-possible` | Include `Possible` tier suggestions (score 20–39). When building an index, this defaults ON via the Index pipeline (the index is a recall surface; users filter via `swift-infer query --min-score`). Pass --no-include-possible to force Possible-tier suppression. |
+| `--vocabulary <vocabulary>` | Path to a vocabulary file. When omitted, swift-infer falls back to the path in .swiftinfer/config.toml's [discover].vocabularyPath, then to the conventional .swiftinfer/vocabulary.json next to Package.swift. |
+| `--config <config>` | Path to a config file. When omitted, swift-infer walks up from the target directory to the package root and looks for .swiftinfer/config.toml. |
+| `--packs <packs>` | Comma-separated list of template packs to enable: numeric, serialization, collections, algebraic, concurrency (PRD §20.3). When omitted, all packs are enabled. |
+| `--test-dir <test-dir>` | Path to the directory TestLifter scans for tests. When omitted, swift-infer walks up from the --target directory to find Package.swift, then scans <package-root>/Tests/ if it exists. |
+| `--dry-run` | Report counts without writing the index. Useful for CI dashboards that summarize "what would the index update do" without mutating the persisted state. |
+| `--scan-dependencies` | Also record type shapes for types declared in resolved dependencies (.build/checkouts). Off by default: it takes this package's typeShapes from 283 to 2,313 and the index to 3.4 MB, and the index keys on the BARE type name, so a wider population is where a name collision starts to matter. Turn it on when a law's carrier is declared in a dependency — it is what unblocks those declines. |
+
+### `query`
+
+Query the SemanticIndex at `.swiftinfer/index.json` (PRD §20.1). Filter by template, type, tier, decision, or score; sorted by score descending.
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Override the package root for default-mode walk-up.` |  |
+| `--index-path <index-path>` | Path to a specific index file. When omitted, swift-infer walks up from the working directory to find Package.swift, then reads `<package-root>/.swiftinfer/index.json`. |
+| `--template <template>` | Filter by template name (e.g. 'round-trip', 'idempotence'). |
+| `--type <type>` | Filter by carrier type name. Pass 'none' to match free functions (typeName == nil). |
+| `--tier <tier>` | Filter by tier: Strong, Likely, Possible, Suppressed, or Advisory. |
+| `--decision <decision>` | Filter by recorded decision: accepted, rejected, skipped, acceptedAsConformance, or 'untriaged' (no decision yet). |
+| `--min-score <min-score> Filter by score lower bound (inclusive). Entries with` | score < N are excluded. |
+| `--family <family>` | Interaction-only: filter by invariant family (e.g. 'idempotence', 'referential-integrity', 'cardinality', 'biconditional', 'conservation'). Setting it excludes algebraic rows. |
+| `--surface <surface>` | Which index surface to query: algebraic (pure-function laws), interaction (reducer / MVVM invariants), or all (default). |
+| `--limit <limit>` | Cap output to the first N entries (after score-descending sort). |
+
+### `docc`
+
+Generate DocC docs for VERIFIED properties only (measured `bothPass` in verify-evidence). Inferred-but-unverified properties are never documented.
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Override the package root for the index / evidence` | walk-up. |
+| `--index-path <index-path>` | Path to a specific index file (default: <package-root>/.swiftinfer/index.json). |
+| `--evidence-path <evidence-path>` | Path to a specific verify-evidence file (default: <package-root>/.swiftinfer/verify-evidence.json). |
+| `--output <output>` | Output directory for the generated `.md` pages (default: <package-root>/.swiftinfer/docc). Point at a `<Target>.docc/Extensions` dir to feed a DocC catalog directly. |
+| `--dry-run` | List what would be written without creating files. |
+
+### `insights`
+
+Cross-type design suggestions from the SemanticIndex (e.g. types sharing a monoid/semigroup shape). Read-only, author-facing.
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Override the package root for the index walk-up.` |  |
+| `--index-path <index-path>` | Path to a specific index file (default: <package-root>/.swiftinfer/index.json). |
+| `--min-types <min-types> Minimum number of types sharing a structure before` | it's reported (default: 2). (default: 2) |
+| `--include-possible` | Also consider Possible-tier rows (noisier; off by default — a shared shape at Possible is often coincidence). |
+
+### `prove-then-show`
+
+Verify every pick (incl. Possible-tier) and show what survives: Proven / Disproven / Unverifiable. The test-then-surface inversion of the hide-Possible default.
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Override the working directory (defaults to the` | current dir). |
+| `--target <target>` | SwiftPM target to index + verify (resolved to Sources/<target>). |
+| `--corpus <corpus>` | Survey a registered corpus by id (see `swift-infer corpus`), resolving the tree, the target and the run label out of fixtures/corpora/manifest.json instead of the prompt. Mutually exclusive with --target and --directory: two sources of truth for which tree was surveyed is the defect this flag exists to remove. Warns, loudly and in the retained label, when the checkout has moved off the revision its baseline was measured at. |
+| `--corpus-module <corpus-module>` | CURATED-CORPUS module name: a separate package consumed as a library, imported plainly. Omit when proving the package you are standing in — the survey then derives the module per entry and imports it `@testable`, which is what reaches `internal` symbols. |
+| `--max-parallel <max-parallel>` | Max concurrent verifier builds (default 4). (default: 4) |
+| `--budget <budget>` | Trial budget: small | medium | large (default small). (default: standard) |
+| `--template <template>` | Only verify picks from this template (e.g. 'commutativity'). |
+| `--surface <surface>` | Which surface to prove: algebraic (default) or interaction (reducer/MVVM invariants). (default: algebraic) |
+| `--family <family>` | Interaction only: restrict to one invariant family (e.g. 'idempotence'). |
+| `--retain-run <retain-run>` | Retain this run's per-pick records to a JSON file so a later run can be diffed against it with `swift-infer survey-diff`. Write it somewhere COMMITTED — `fixtures/verify-runs/` — because `.swiftinfer/` is swept by `make clean-temp` and that is how the last four surveys were lost. |
+| `--retain-label <retain-label>` | Human-readable name for the retained run, recorded in the file. Defaults to '<target> @ <revision>'. Names the ARM, not the file — a reader comparing two runs months apart needs to know what differed. |
+| `--scan-dependencies` | Record type shapes for types declared in a DEPENDENCY, not just this package. Off by default for the reason `IndexCommand` gives: it took this repo's index from 283 shapes to 2,313 and 3.4 MB, and the index keys on the BARE type name, so a wider population is where a name collision starts to matter. Turn it on when a survey declines `unsupported-carrier` for a type the package does not declare. |
+
+### `survey-diff`
+
+Compare two retained prove-then-show runs row by row: which picks changed bucket, which changed only their decline cause, which came and went.
+
+| Flag | Description |
+|---|---|
+| `--before <before>` | Path to the earlier retained run (JSON). |
+| `--after <after>` | Path to the later retained run (JSON). |
+
+### `corpus`
+
+Show the subject codebases the toolchain is measured against, and whether each checkout still stands at the revision its baseline was taken at.
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Repository root holding` | fixtures/corpora/manifest.json. |
+| `--apparatus <apparatus> Show only corpora measured by one apparatus —` | prove-then-show, census, kit-suite-backtest, swiftorg-study, road-test, planted-defect. This is the question each of those used to answer from its own private list, which is why "the corpus" meant something different depending on which tool you had run. An unknown name is an error listing the known ones, not an empty report. |
+| `--strict` | Exit non-zero when a corpus has moved off its pin or its tree is dirty — either makes a survey taken there incomparable with the retained baseline. A corpus that could NOT be checked does not fail the gate, because a clone absent on this machine is the ordinary case; it is reported, and the summary states how many of how many were actually read. |
+
+### `census`
+
+Count rows per template across registered corpora, recording which ones. Surveys each corpus named by --corpus, resolving its tree and target out of fixtures/corpora/manifest.json, and writes a run that records the corpus list by id alongside the counts. A census conclusion is only as wide as its corpus list, and this makes the list a fact of the run rather than prose written afterwards. It does not report which templates never fired: that needs a catalog of every template that could have fired, and no trustworthy runtime source for one exists. The counts are recorded so a reader can take that step against the catalog they mean.
+
+| Flag | Description |
+|---|---|
+| `--corpus <corpus>` | Registry id to survey; repeat for several. See `swift-infer corpus`. |
+| `--label <label>` | What this census is for, in a line. Recorded verbatim. (default: catalog health census) |
+| `--out <out>` | Write the run here as JSON. Omit to print the table only. |
+| `--include-possible/--no-include-possible` | Include below-cut conjectures. On by default: the standing census did. (default: --include-possible) |
+| `--directory <directory> Override the working directory (defaults to the` | current one). |
+
+### `known-properties`
+
+List (and optionally verify) known algebraic properties on standard-library types — a provable seed of ground-truth.
+
+| Flag | Description |
+|---|---|
+| `--type <type>` | Only show properties for this type (e.g. 'Set', 'Array'). |
+| `--target <target>` | Scope to the standard-library types the target's source actually uses (scans Sources/<target>; a best-effort heuristic). |
+| `--directory <directory> Override the working directory for the --target scan.` |  |
+| `--verify` | Property-test each law live (generates + runs a stdlib-only Swift script). |
+
+### `report`
+
+One-glance overview of what SwiftInfer knows about this project (index + verify evidence + cross-type insights). Read-only.
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Override the package root for the index walk-up.` |  |
+| `--index-path <index-path>` | Path to a specific index file (default: <package-root>/.swiftinfer/index.json). |
+
+### `suggest-refactors`
+
+Surface carrier-aware refactor suggestions from `.swiftinfer/index.json` (PRD §20.1 use case). Read-only; never modifies source.
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Override the package root for default-mode walk-up.` |  |
+| `--index-path <index-path>` | Path to a specific index file. When omitted, swift-infer walks up from the working directory to find Package.swift, then reads `<package-root>/.swiftinfer/index.json`. |
+| `--min-suggestions <min-suggestions>` | Filter clusters below this size (default 3). (default: 3) |
+| `--shape <shape>` | Filter by cluster shape: algebraicStructure, idempotenceCluster, dualStyleCluster, roundTripCluster, generalCluster. |
+| `--limit <limit>` | Cap output to the first N clusters. |
+| `--speculative` | SPECULATIVE: copy the package, widen one `private`/`fileprivate` declaration, and report the laws that become visible WITH their verdicts. Emits a patch, not advice. Never modifies your tree. Expensive — one package snapshot and one verify workdir per candidate. |
+| `--max-candidates <max-candidates>` | Cap speculative candidates. Each one costs a snapshot + a verify build. (default: 5) |
+
+### `verify`
+
+Compile and run a candidate property test (PRD §20.2 follow-up). Opt-in; nothing in discover/drift/accept changes. v1.42 supports round-trip suggestions on Complex<Double> carriers.
+
+| Flag | Description |
+|---|---|
+| `--suggestion <suggestion>` | Hash prefix of the suggestion to verify. Matches the prefix of `SuggestionIdentity.hash` shown in the `discover` explainability block. If the prefix matches multiple suggestions an ambiguity error names the candidates; if it matches none an error names the closest few. **V1.50.B**: mutually exclusive with `--all-from-index`; exactly one of the two must be provided. |
+| `--all-from-index` | Survey mode: load the SemanticIndex (default path or via --index-path) and run verify against every entry, emitting one JSON record per entry to stdout. Mutually exclusive with --suggestion. Parallelism controlled via --max-parallel. |
+| `--max-parallel <max-parallel>` | Maximum concurrent verify subprocesses in --all-from-index survey mode. Each subprocess runs a fresh `swift build` + verifier-binary invocation; high parallelism saturates disk + file descriptors. Default 4. (default: 4) |
+| `--template <template>` | Optional template-name filter for --all-from-index. Entries whose `templateName` doesn't match are skipped silently. Examples: round-trip, idempotence, commutativity, associativity, idempotence-lifted, dual-style-consistency, monotonicity. |
+| `--target <target>` | SwiftPM target containing the suggestion's source. The verifier path-depends on that package and @testable-imports the module, which is what lets a law reach carriers and functions you defined. When omitted, it is derived from the entry's own source path (Sources/<target>/…). Pass it explicitly for a layout that derivation declines — a module inside a nested package, or sources outside Sources/. |
+| `--budget <budget>` | Trial budget for the property check. `standard` (N=1000) is the default since 2026-08-22. `small` (N=100) was, and was measured to miss real defects: it let a false law pass (`removingLastComponent` idempotence, which fails at 250) and let a planted defect through (a NUL-guard mutant, killed at 500). Raising it is close to free — a stub costs ~3.56s to BUILD and ~0.022s to run 100 trials, so N=1000 adds ~5ms, about 0.14% of the per-row cost. `small` remains available for a deliberately cheap sweep. Unknown values warn and fall back to `standard`. (default: standard) |
+| `--index-path <index-path>` | Path to a specific index file. When omitted, swift-infer walks up to find Package.swift and reads `<package-root>/.swiftinfer/index.json` — reindexing it on demand from a whole-`Sources/` discover pass if it's missing or stale (V1.42.C.5). An explicit `--index-path` is used as-is and never auto-rebuilt. |
+| `--corpus-module <corpus-module>` | For `--all-from-index` over a CURATED corpus: the corpus's module name — the verifier path-depends on the working-dir package + imports it so the corpus's own types resolve as carriers. Omit for library-carrier surveys (e.g. cycle27-surface). |
+| `--emit-regression/--no-emit-regression` | Auto-generate a focused regression test from the minimal counterexample when verify finds one. Written to Tests/Generated/SwiftInfer/<template>/. Default: on for --suggestion, off for --all-from-index. |
+| `--replay-only` | Re-check every recorded counterexample in .swiftinfer/verify-corpus.json (regression gate). Exits non-zero if any still fail. |
+| `--persist-evidence/--no-persist-evidence` | Persist this run's verdicts to .swiftinfer/verify-evidence.json (and the replay corpus). On by default. Pass --no-persist-evidence when the run is being COMPARED against that file: persisting first makes the comparison a comparison against this run's own output, which has silently produced a false "0 drift" twice. (default: --persist-evidence) |
+| `--scan-dependencies` | When verify reindexes on demand, also record shapes for types declared in resolved dependencies. Off by default — see `index --scan-dependencies`. Without it, a law whose carrier is declared in a dependency keeps declining as `unsupported-carrier`. |
+
+### `accept-check`
+
+Re-run the verify gesture for each accepted suggestion in `.swiftinfer/decisions.json` and report which previously-accepted properties still hold (PRD §17.2 5th metric — regression detection). Opt-in / human-driven; mirrors the `verify` posture.
+
+| Flag | Description |
+|---|---|
+| `--decisions <decisions> Path to `.swiftinfer/decisions.json`. When omitted,` | swift-infer walks up from the working directory to find Package.swift, then reads <package-root>/.swiftinfer/decisions.json (mirrors `metrics` / `discover` / `drift`). |
+| `--template <template>` | Optional template-name filter. Only re-check accepted decisions whose `template` matches. Useful for cycling through one template at a time without re-running the full accepted-decision walk. |
+| `--budget <budget>` | Trial budget passed to each verify re-run. Same vocabulary as `verify --budget`: `standard` (N=1000, the default since 2026-08-22) or `small` (N=100, a deliberately cheap sweep — measured to miss real defects). Unknown values fall back to `standard` with a diagnostic. (default: standard) |
+| `--index-path <index-path>` | Path to a specific SemanticIndex file, forwarded to each verify call. When omitted, verify resolves the conventional <package-root>/.swiftinfer/index.json (reindexing on demand if missing / stale, V1.42.C.5). |
+
+### `discover-reducers`
+
+List functions matching the three canonical reducer signatures (PRD v2.0 §6.2) under Sources/<target>/. Opt-in / human-driven; foundation for v2.0 M2+ interaction-invariant inference.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target to scan. Resolved to Sources/<target>/ relative to the working directory — mirrors `swift-infer discover --target`. |
+| `--sources <sources>` | Path to a source directory to scan directly, bypassing the Sources/<target>/ convention. The Xcode escape hatch: an app has no SwiftPM target, so point this at the folder your .swift files live in. Mutually exclusive with --target; pass exactly one. |
+| `--reducer <reducer>` | Optional `--reducer <typeName>.<funcName>` (or just `<funcName>` for free functions) pin. When present, the output is filtered to the single matching candidate; zero or multiple matches are an error (PRD §6.5 — never silently pick one). Module-prefixed pins (e.g. `MyModule.Inbox.body`) defer to v2.0 M2+ when multi-module plumbing lands. |
+
+### `verify-value-semantics`
+
+Verify value-semantics candidates under Sources/<target>/ and report confirmed leaks (copy-mutate-compare). Opt-in; spawns real builds, so it is slower than static discovery.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target to verify. Resolved to Sources/<target>/ relative to the working directory — mirrors `swift-infer discover --target`. |
+| `--sources <sources>` | Path to a source directory to scan directly, bypassing the Sources/<target>/ convention. The Xcode escape hatch: an app has no SwiftPM target, so point this at the folder your .swift files live in. Mutually exclusive with --target; pass exactly one. |
+| `--fail-on-leak` | Exit non-zero when any leak is confirmed (CI gate). Off by default — the tool's advisory, human-reviewed posture. |
+| `--self-contained` | Package the target's sources as a standalone module instead of path-depending the working-directory package. Use for an isolated source dir with no external dependencies; the default reaches `internal` types + real dependencies in a proper SwiftPM package. |
+
+### `verify-interaction`
+
+Build + run a verifier executable against a discovered reducer to check it doesn't trap under random action sequences (PRD v2.0 §7.2). Opt-in / human-driven; the in-process verify counterpart to v1.42's algebraic-property `verify`.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target containing the reducer. Resolved to Sources/<target>/ relative to the working directory — mirrors `swift-infer discover-reducers`. Repeatable: with --all (M3), pass --target more than once to survey reducers across several modules in one run, each verified against its own library product. |
+| `--reducer <reducer>` | Optional `<typeName>.<funcName>` (or just `<funcName>` for free functions) pin selecting which reducer to verify. Required when ≥ 2 reducer-shaped functions are detected; zero / multiple matches are an error. Module-prefixed pins (`MyModule.Inbox.body`) disambiguate across modules (M3); the single-reducer path verifies within the first --target. |
+| `--user-module <user-module>` | Override the user module name imported by the synthesized verifier stub. Defaults to the target name. Set this when the SwiftPM target name doesn't match the actual module name (rare). |
+| `--sequence-count <sequence-count>` | Number of action sequences the synthesized verifier runs in one invocation. Default 1024 matches PRD §15's "1k action sequences" perf-budget target. Tighten for faster smoke tests, widen for longer fuzzing campaigns. (default: 1024) |
+| `--all` | Survey mode (cycle 114): discover every interaction-invariant identity in --target, run measured verify against each, record evidence to .swiftinfer/verify-evidence.json, and print a per-identity outcome summary. The campaign harvest step — one command instead of N hand-pinned runs. Ignores --reducer; narrow with --family. Bounded-parallel (see --max-parallel). |
+| `--max-parallel <max-parallel>` | With --all, the maximum number of identities verified concurrently. Each is a real `swift build`, so concurrent builds contend for cores; default 4 (matches the algebraic `verify --all-from-index` survey). No-op without --all. (default: 4) |
+| `--family <family>` | With --all, restrict the survey to one interaction-invariant family (e.g. `idempotence`). Unknown values are an error. No-op without --all. |
+| `--trace-prefix-bias` | TestStore Trace Mining (Slice 3d) — also run each mined developer-authored ordering as a *prefix* extended by a random tail (mode (b) prefix-biased generation): reach the state the test set up, then explore outward. Off by default. |
+| `--trace-markov` | TestStore Trace Mining (Slice 3e) — synthesize extra orderings from a first-order Markov model of the mined action transitions (mode (c)). Novel recombinations of observed steps; overfitting risk (§21 #4), so off by default. |
+
+### `discover-interaction`
+
+Surface candidate interaction invariants on reducer-shaped functions (PRD v2.0 §3.6 step 2). Conservation + Idempotence at M4.0 ship — both at default Possible visibility pending calibration (see PRD §3.5).
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of a SwiftPM target containing reducer-shaped functions. Resolved to Sources/<target>/ relative to the working directory — mirrors `swift-infer discover-reducers` and `verify-interaction`. Pass more than once for multi-module discovery: candidates are tagged by their module and a module-qualified pin (`Bar.Counter.reduce`) disambiguates same-named reducers. |
+| `--sources <sources>` | Path to a source directory to scan directly, bypassing the Sources/<target>/ convention. The Xcode escape hatch: an app has no SwiftPM target, so point this at the folder your .swift files live in. Repeatable, and mixable with --target — a workspace can hold a package and an app, and a survey should not have to choose. |
+| `--reducer <reducer>` | Optional `<typeName>.<funcName>` (or `<funcName>`) pin selecting which reducer to analyze. When omitted, the engine runs against every detected reducer in the target. Module-prefixed pins (`MyModule.Inbox.body`) defer to M2+ when multi-module plumbing lands. |
+| `--include-possible/--no-include-possible` | Surface .possible-tier suggestions in the output stream. PRD §3.5 corollary: every new family ships at default Possible visibility through three calibration cycles — pass --include-possible to see them before calibration promotes them to .likely / .strong. (default: --no-include-possible) |
+| `--update-baseline` | Snapshot the current run's Strong-tier-or-Verified interaction-invariant suggestions to .swiftinfer/interaction-baseline.json. Used by `swift-infer drift-interaction` to compute "what's new since the last snapshot" — only Strong-tier-or-Verified suggestions added after this snapshot (and lacking a recorded decision) earn a drift warning. Filter is symmetric with InteractionDriftDetector + InteractionInvariantBridge — Possible / Likely / Suppressed are deliberately excluded so baseline + drift stay aligned. Honors --dry-run by skipping the write. Additive: the suggestion stream is still rendered. |
+| `--interactive` | Walk surviving suggestions one at a time, prompting [A/C/s/n/?]: Accept records `accepted` in .swiftinfer/interaction-decisions.json; Conformance records `accepted-as-conformance` (signals the invariant should be expressed as a SwiftPropertyLaws-side protocol); Skip / Reject behave as in v1 (skip re-surfaces, reject hides from future drift warnings). Mutually exclusive with --update-baseline; honors --dry-run by skipping the decisions write. (V1.98 cycle-95, PRD §9.4 per-suggestion form.) |
+| `--interactive-bridges` | Run the M9 bridge-level N-arm interactive triage loop. Groups Strong-tier suggestions per reducer via InteractionInvariantBridge, then walks each bridge with a `[A/1/2/.../s/n/?]` prompt: A=accept all peers as kit-side conformance; numeric arms accept individual peers; n rejects all; s skips. Records decisions to .swiftinfer/interaction-decisions.json per-invariant. Mutually exclusive with --interactive and --update-baseline; warns + falls back to per-suggestion triage if --interactive is also set. Bridges only fire at Strong tier (calibration-gated), so the loop is a no-op until calibration promotes a family. (V1.109 cycle-103c, PRD §9.4 full N-arm form.) |
+| `--dry-run` | Suppress writes during --update-baseline, --interactive, or --interactive-bridges. For --update-baseline the would-be file path is reported on stdout; for the interactive triages the loop runs but the decisions JSON write is skipped. No-op without one of those flags. |
+
+### `drift-interaction`
+
+Diff current interaction-invariant suggestions against an interaction-baseline; warn (non-fatally) on new Strong-tier candidates.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target containing reducer-shaped functions. Resolved to Sources/<target>/ relative to the working directory — mirrors `swift-infer discover-interaction` and `verify-interaction`. |
+| `--baseline <baseline>` | Path to the interaction-baseline file. When omitted, drift walks up from the target directory to the package root and looks for .swiftinfer/interaction-baseline.json. |
+| `--reducer <reducer>` | Optional `<typeName>.<funcName>` (or `<funcName>`) pin selecting which reducer to diff. When omitted, drift runs against every detected reducer in the target. |
+
+### `accept-interaction`
+
+Record a decision against an interaction-invariant suggestion identity (`.swiftinfer/interaction-decisions.json`). Minimal recorder — the interactive triage UI is a separate follow-up.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target. Mirrors `discover-interaction`. |
+| `--identity <identity>` | 16-char uppercase hex identity hash of the suggestion to record a decision against. Find this via `discover-interaction`. |
+| `--decision <decision>` | Decision to record: `accepted`, `accepted-as-conformance`, `rejected`, or `skipped`. Matches `InteractionDecision`'s rawValues. |
+| `--decisions <decisions> Optional path to` | `.swiftinfer/interaction-decisions.json`. When omitted, walks up from the target directory to find Package.swift. |
+
+### `accept-check-interaction`
+
+Re-run verify-interaction for each accepted decision in .swiftinfer/interaction-decisions.json and report which previously-accepted invariants still hold (PRD §17.2 5th metric — interaction analog). Opt-in / human-driven.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target. Mirrors `discover-interaction`. |
+| `--family <family>` | Optional family-name filter (`conservation`, `idempotence`, `cardinality`, `referential-integrity`, `biconditional`). Restricts the rerun to one family at a time. |
+| `--decisions <decisions> Path to `.swiftinfer/interaction-decisions.json`.` | When omitted, walks up from the target directory to find Package.swift. |
+
+### `metrics-interaction`
+
+Aggregate `.swiftinfer/interaction-decisions.json` into per-family acceptance rates (PRD §19).
+
+| Flag | Description |
+|---|---|
+| `--directory <directory> Override the package root for default-mode walk-up.` |  |
+| `--decisions <decisions> Path to a `.swiftinfer/interaction-decisions.json`` | file. Repeatable; multiple paths are merged. |
+| `--format <format>` | Output format: markdown (default) | plain. (default: markdown) |
+
+### `accept-bridge`
+
+Record a decision against a BridgeSuggestion identity (`.swiftinfer/interaction-decisions.json`). Scripted analog of the `--interactive-bridges` triage loop.
+
+| Flag | Description |
+|---|---|
+| `--target <target>` | Name of the SwiftPM target. Mirrors `discover-interaction`. |
+| `--identity <identity>` | 16-char uppercase hex identity hash of the BridgeSuggestion. Find via `discover-interaction --interactive-bridges`. |
+| `--decision <decision>` | Decision to record: `accepted-as-conformance` or `rejected`. Plain `accepted` / `skipped` are NOT valid for bridges (bridges imply protocol conformance commitment per PRD §9.4). |
+| `--peer <peer>` | Optional 1-based peer index. When present, scopes the decision to that peer's invariants only. When omitted, applies the decision to every peer's invariants in the bridge. |
+| `--decisions <decisions> Optional path to` | `.swiftinfer/interaction-decisions.json`. When omitted, walks up from the target directory to find Package.swift. |
 
 ### Exit codes
 
