@@ -28,7 +28,7 @@ struct SeedRoleContractTests {
     private static let producerVocabulary: [String] = [
         // PureClosureCandidateVisitor.Kind — one per case.
         "comparator", "predicate", "transform", "reducer",
-        // ExtractablePureKernelVisitor — the two kernel shapes.
+        // ExtractableTotalKernelVisitor — the two kernel shapes.
         "partition", "normalizer"
     ]
 

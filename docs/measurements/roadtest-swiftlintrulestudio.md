@@ -8,7 +8,7 @@ subject — **SwiftLintRuleStudio**, a macOS SwiftUI app with a SwiftPM Core
 package (`SwiftLintRuleStudioCore`). Unlike the MacCloud road-tests, the driving
 question here was **not** "find bugs" but **"why did the pipeline recommend so
 little?"** — the owner ran the loop, got a handful of suggestions for a Core
-package full of pure kernels, and wanted the *confident-zero* diagnosed rather
+package full of total kernels, and wanted the *confident-zero* diagnosed rather
 than worked around.
 
 The verdict: **the tool is not broken, it is out-of-catalog.** The subject's
