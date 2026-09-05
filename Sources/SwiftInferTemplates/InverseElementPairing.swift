@@ -152,15 +152,9 @@ public enum InverseElementPairing {
         _ lhs: InverseElementPair,
         _ rhs: InverseElementPair
     ) -> Bool {
-        if lhs.operation.location.file != rhs.operation.location.file {
-            return lhs.operation.location.file < rhs.operation.location.file
+        if lhs.operation.location != rhs.operation.location {
+            return lhs.operation.location < rhs.operation.location
         }
-        if lhs.operation.location.line != rhs.operation.location.line {
-            return lhs.operation.location.line < rhs.operation.location.line
-        }
-        if lhs.inverse.location.file != rhs.inverse.location.file {
-            return lhs.inverse.location.file < rhs.inverse.location.file
-        }
-        return lhs.inverse.location.line < rhs.inverse.location.line
+        return lhs.inverse.location < rhs.inverse.location
     }
 }

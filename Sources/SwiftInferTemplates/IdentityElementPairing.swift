@@ -176,15 +176,9 @@ public enum IdentityElementPairing {
         _ lhs: IdentityElementPair,
         _ rhs: IdentityElementPair
     ) -> Bool {
-        if lhs.operation.location.file != rhs.operation.location.file {
-            return lhs.operation.location.file < rhs.operation.location.file
+        if lhs.operation.location != rhs.operation.location {
+            return lhs.operation.location < rhs.operation.location
         }
-        if lhs.operation.location.line != rhs.operation.location.line {
-            return lhs.operation.location.line < rhs.operation.location.line
-        }
-        if lhs.identity.location.file != rhs.identity.location.file {
-            return lhs.identity.location.file < rhs.identity.location.file
-        }
-        return lhs.identity.location.line < rhs.identity.location.line
+        return lhs.identity.location < rhs.identity.location
     }
 }

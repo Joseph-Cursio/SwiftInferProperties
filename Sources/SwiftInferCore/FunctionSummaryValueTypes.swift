@@ -7,7 +7,7 @@ import Foundation
 
 /// File-relative source location. `file` is the path passed to
 /// `FunctionScanner.scan(source:file:)`; `line` and `column` are 1-based.
-public struct SourceLocation: Sendable, Equatable, Hashable {
+public struct SourceLocation: Sendable, Equatable, Hashable, Comparable {
 
     public let file: String
     public let line: Int
@@ -17,6 +17,23 @@ public struct SourceLocation: Sendable, Equatable, Hashable {
         self.file = file
         self.line = line
         self.column = column
+    }
+
+    /// Source order: by file, then line, then column.
+    ///
+    /// Five comparators across the template pairings spelled this out by hand, each as a ladder of
+    /// `if lhs.x.location.file != rhs.x.location.file { … }`. Beyond being the chain the Law of
+    /// Demeter rule names, every one of them stopped at `line` and ignored `column` — so two
+    /// declarations on the same line compared *equal*, and their relative order in the generated
+    /// output fell to `sorted(by:)`. Swift does not guarantee that sort is stable, so nothing
+    /// pinned the order of a tie in a file people read as a diff.
+    ///
+    /// Including `column` makes the order total over distinct locations, which is what the callers
+    /// were reaching for. It is stated once here rather than five times, and
+    /// `SourceLocationOrderingTests` holds it to the strict-weak-ordering laws a comparator handed
+    /// to `sorted(by:)` has to satisfy.
+    public static func < (lhs: Self, rhs: Self) -> Bool {
+        (lhs.file, lhs.line, lhs.column) < (rhs.file, rhs.line, rhs.column)
     }
 
     /// The location `Slicer` emits when it has no `SourceLocationConverter` —
