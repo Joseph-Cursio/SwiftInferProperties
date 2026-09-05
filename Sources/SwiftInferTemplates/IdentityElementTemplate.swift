@@ -350,11 +350,11 @@ extension IdentityElementTemplate {
         let identityEvidence = makeEvidence(identity: pair.identity)
         whySuggested.append(
             "\(opEvidence.displayName) \(opEvidence.signature) — "
-                + "\(opEvidence.location.file):\(opEvidence.location.line)"
+                + "\(opEvidence.location)"
         )
         whySuggested.append(
             "\(identityEvidence.displayName)\(identityEvidence.signature) — "
-                + "\(identityEvidence.location.file):\(identityEvidence.location.line)"
+                + "\(identityEvidence.location)"
         )
         for signal in signals {
             whySuggested.append(signal.formattedLine)

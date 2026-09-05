@@ -183,11 +183,11 @@ extension InversePairTemplate {
         let reverseEvidence = makeLiftedEvidence(pair.reverse, role: "reverse")
         whySuggested.append(
             "\(forwardEvidence.displayName) \(forwardEvidence.signature)"
-                + " — \(forwardEvidence.location.file):\(forwardEvidence.location.line)"
+                + " — \(forwardEvidence.location)"
         )
         whySuggested.append(
             "\(reverseEvidence.displayName) \(reverseEvidence.signature)"
-                + " — \(reverseEvidence.location.file):\(reverseEvidence.location.line)"
+                + " — \(reverseEvidence.location)"
         )
         whySuggested.append(pair.forward.rationale)
         for signal in signals {

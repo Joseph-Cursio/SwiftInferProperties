@@ -174,11 +174,11 @@ public enum DualStyleConsistencyTemplate {
         let nonMutEvidence = pair.nonMutatingMember.inferenceEvidence
         whySuggested.append(
             "\(mutEvidence.displayName) \(mutEvidence.signature)"
-                + " — \(mutEvidence.location.file):\(mutEvidence.location.line)"
+                + " — \(mutEvidence.location)"
         )
         whySuggested.append(
             "\(nonMutEvidence.displayName) \(nonMutEvidence.signature)"
-                + " — \(nonMutEvidence.location.file):\(nonMutEvidence.location.line)"
+                + " — \(nonMutEvidence.location)"
         )
         for signal in signals {
             whySuggested.append(signal.formattedLine)

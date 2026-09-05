@@ -26,7 +26,7 @@ enum DocstringAdvisoryRenderer {
         for item in items {
             lines.append("")
             lines.append("  • \(item.displayName)  \(item.signature)")
-            lines.append("    \(item.location.file):\(item.location.line)")
+            lines.append("    \(item.location)")
             for line in body(for: item.advisory) {
                 lines.append("    \(line)")
             }

@@ -22,7 +22,7 @@ public enum EffectAnnotationRenderer {
         for item in advice {
             lines.append("")
             lines.append("  • \(item.displayName)  \(item.signature)")
-            lines.append("    \(item.location.file):\(item.location.line)")
+            lines.append("    \(item.location)")
             lines.append("    add: \(item.recommendedAnnotation)")
             lines.append("    why: \(item.rationale)")
         }

@@ -94,7 +94,7 @@ public enum ModelLawTemplate {
     static func makeWhySuggested(for shape: ModelLawPairing.MembershipModelShape) -> [String] {
         [
             "Abstraction function: \(shape.typeName).contains(_:) -> Bool at "
-                + "\(shape.membership.location.file):\(shape.membership.location.line) — a set IS "
+                + "\(shape.membership.location) — a set IS "
                 + "its characteristic function, so no conversion to `Set` is needed to state the law"
         ]
     }

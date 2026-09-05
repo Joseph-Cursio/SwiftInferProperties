@@ -94,7 +94,7 @@ extension SwiftInferCommand.Discover {
         // anything.
         for seed in unknown {
             diagnostics.writeDiagnostic(
-                "warning: seed `\(seed.symbol)` (\(seed.file):\(seed.line)), from rule "
+                "warning: seed `\(seed.symbol)` (\(seed)), from rule "
                     + "`\(seed.rule)`, has kind '\(seed.kind.rawValue)', which this build does not "
                     + "recognise. It was NOT focused on: narrowing to a symbol whose meaning is "
                     + "unknown is how a tool ends up reporting a confident zero. Upgrade "
@@ -128,7 +128,7 @@ extension SwiftInferCommand.Discover {
     /// exist, and "entailed" is precisely the claim that a correct implementation cannot fail the
     /// law they propose. Saying it for a conjectured role would be selling a maybe as a guarantee.
     static func listing(_ seed: SeedManifest.Seed) -> String {
-        var line = "  \(seed.file):\(seed.line): inside `\(seed.symbol)` — extract it into a "
+        var line = "  \(seed): inside `\(seed.symbol)` — extract it into a "
             + "named value type, then re-run the linter to seed it properly."
         if let law = seed.role?.lawSentence {
             line += " It is \(law)."

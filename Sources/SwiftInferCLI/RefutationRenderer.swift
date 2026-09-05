@@ -76,7 +76,7 @@ enum RefutationRenderer {
             "\($0.displayName)  \($0.signature)"
         } ?? (suggestion.carrierTypeName ?? "(subject not recorded)")
         let location = suggestion.evidence.first.map {
-            "\n    \($0.location.file):\($0.location.line)"
+            "\n    \($0.location)"
         } ?? ""
         let detail = suggestion.score.signals
             .first { $0.kind == .verifyDisproven }?

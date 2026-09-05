@@ -101,7 +101,7 @@ public enum ContradictionDetector {
     /// without needing a structural change to the diagnostic protocol.
     private static func makeReason(suggestion: Suggestion, offendingType: String) -> String {
         let displayName = suggestion.evidence.first?.displayName ?? "<unknown>"
-        let location = suggestion.evidence.first.map { "\($0.location.file):\($0.location.line)" } ?? "<unknown>"
+        let location = suggestion.evidence.first.map { "\($0.location)" } ?? "<unknown>"
         return "dropped \(suggestion.templateName) suggestion for \(displayName) at \(location)"
             + " — type '\(offendingType)' is not Equatable\(prdReference(for: suggestion.templateName))"
     }

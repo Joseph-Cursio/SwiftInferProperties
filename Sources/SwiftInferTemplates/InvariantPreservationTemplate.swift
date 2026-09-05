@@ -140,7 +140,7 @@ public enum InvariantPreservationTemplate {
         var whySuggested: [String] = []
         let evidence = makeEvidence(summary, keyPath: keyPath)
         whySuggested.append(
-            "\(evidence.displayName) \(evidence.signature) — \(evidence.location.file):\(evidence.location.line)"
+            "\(evidence.displayName) \(evidence.signature) — \(evidence.location)"
         )
         for signal in signals {
             whySuggested.append(signal.formattedLine)

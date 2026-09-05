@@ -347,7 +347,7 @@ extension AssociativityTemplate {
         var whySuggested: [String] = []
         let evidence = summary.inferenceEvidence
         whySuggested.append(
-            "\(evidence.displayName) \(evidence.signature) — \(evidence.location.file):\(evidence.location.line)"
+            "\(evidence.displayName) \(evidence.signature) — \(evidence.location)"
         )
         for signal in signals {
             whySuggested.append(signal.formattedLine)
