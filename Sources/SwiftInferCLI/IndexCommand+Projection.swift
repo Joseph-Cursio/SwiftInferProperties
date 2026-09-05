@@ -104,7 +104,7 @@ extension SwiftInferCommand.Index {
         let primaryName = evidence?.displayName ?? "(unknown)"
         let location: String
         if let loc = evidence?.location {
-            location = "\(loc.file):\(loc.line)"
+            location = "\(loc)"
         } else {
             location = "(unknown)"
         }

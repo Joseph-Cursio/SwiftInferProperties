@@ -104,6 +104,6 @@ public enum ValueSemanticVerifyReport {
     }
 
     private static func origin(_ result: ValueSemanticVerifyResult) -> String {
-        "\(result.location.file):\(result.location.line)"
+        "\(result.location)"
     }
 }

@@ -66,7 +66,7 @@ extension SwiftInferCommand.Discover {
             )
             diagnostics.writeDiagnostic(
                 "note: seeded function `\(summary.name)` "
-                    + "(\(summary.location.file):\(summary.location.line)) is not reachable from a "
+                    + "(\(summary.location)) is not reachable from a "
                     + "test as written — \(restricted.restriction.remedy)"
             )
         }

@@ -44,7 +44,7 @@ extension LiftedSuggestion {
     func provenanceLine() -> String {
         let assertion = assertionLocation()
         if assertion.isResolvable {
-            return "Lifted from \(assertion.file):\(assertion.line)"
+            return "Lifted from \(assertion)"
         }
         if let origin, origin.sourceLocation.isResolvable {
             return "Lifted from \(origin.sourceLocation.file):"

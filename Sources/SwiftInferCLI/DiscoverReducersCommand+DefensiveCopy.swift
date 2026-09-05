@@ -28,7 +28,7 @@ extension SwiftInferCommand.DiscoverReducers {
     private static func renderDefensiveCopy(_ candidate: DefensiveCopyCandidate) -> [String] {
         let note = candidate.equatability == .equatable
             ? "" : "  [not verify-ready: \(candidate.equatability)]"
-        let origin = "\(candidate.location.file):\(candidate.location.line)"
+        let origin = "\(candidate.location)"
         let surface = candidate.mutationSurface.map(\.name).joined(separator: ", ")
         return [
             "  \(origin)  \(candidate.typeName)\(note)",

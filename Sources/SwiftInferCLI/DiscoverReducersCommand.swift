@@ -335,7 +335,7 @@ extension SwiftInferCommand {
             let surface = candidate.mutationSurface
                 .map { $0.isMutating ? $0.name : "\($0.name) (non-mutating)" }
                 .joined(separator: ", ")
-            let origin = "\(candidate.location.file):\(candidate.location.line)"
+            let origin = "\(candidate.location)"
             return [
                 "  \(origin)  \(candidate.typeName)\(note)",
                 "    reference-backed members "

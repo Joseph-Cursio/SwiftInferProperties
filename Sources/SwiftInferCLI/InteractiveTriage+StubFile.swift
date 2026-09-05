@@ -13,7 +13,7 @@ extension InteractiveTriage {
         suggestion: Suggestion
     ) -> String {
         let location = suggestion.evidence.first?.location
-        let sourceLine = location.map { loc in "// Source: \(loc.file):\(loc.line)" } ?? ""
+        let sourceLine = location.map { loc in "// Source: \(loc)" } ?? ""
         // Import the module under test so the generated file compiles drop-in.
         // `@testable` reaches internal functions (the common case for the free /
         // internal helpers seeds point at). Derived from the SPM source layout;
@@ -22,7 +22,7 @@ extension InteractiveTriage {
             .flatMap { Self.moduleName(fromSourceFile: $0.file) }
             .map { "@testable import \($0)\n" } ?? ""
         let liftedLine = suggestion.liftedOrigin.map { origin in
-            "// Lifted from \(origin.sourceLocation.file):\(origin.sourceLocation.line)"
+            "// Lifted from \(origin.sourceLocation)"
                 + " \(origin.testMethodName)()"
         } ?? ""
         // TestLifter M4.4 — mock-inferred suggestions get a provenance

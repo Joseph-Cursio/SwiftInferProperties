@@ -7,7 +7,7 @@ import Foundation
 
 /// File-relative source location. `file` is the path passed to
 /// `FunctionScanner.scan(source:file:)`; `line` and `column` are 1-based.
-public struct SourceLocation: Sendable, Equatable, Hashable, Comparable {
+public struct SourceLocation: Sendable, Equatable, Hashable, Comparable, CustomStringConvertible {
 
     public let file: String
     public let line: Int
@@ -56,6 +56,20 @@ public struct SourceLocation: Sendable, Equatable, Hashable, Comparable {
     public var isResolvable: Bool {
         line > 0 && !file.hasPrefix("<")
     }
+
+    /// `file:line` — the provenance string a reader sees.
+    ///
+    /// Forty-one call sites built this by hand as `"\(x.location)"`, which
+    /// is both the chain the Law of Demeter rule names and a format this type already treats as
+    /// load-bearing: the `testBodyPlaceholder` doc above records a real defect where lifted rows
+    /// rendered `<test-body>:0` while source-derived rows carried `file.swift:line`, and the
+    /// mismatch is what let a package-wide bug hide.
+    ///
+    /// A format that matters that much belongs on the type rather than at forty-one call sites.
+    ///
+    /// **Not the same thing as a join key.** `Discover+CaveatPostProcessing.coordinate(of:)` builds
+    /// `file#line` deliberately, for matching rather than display, and is left alone.
+    public var description: String { "\(file):\(line)" }
 }
 
 /// Type-flow-lite signals computed from a function's body. Empty / all-false

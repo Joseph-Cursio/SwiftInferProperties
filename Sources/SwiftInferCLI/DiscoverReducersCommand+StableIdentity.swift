@@ -26,7 +26,7 @@ extension SwiftInferCommand.DiscoverReducers {
     }
 
     private static func renderStableIdentity(_ candidate: StableIdentityCandidate) -> [String] {
-        let origin = "\(candidate.location.file):\(candidate.location.line)"
+        let origin = "\(candidate.location)"
         let surface = candidate.mutationSurface.map(\.name).joined(separator: ", ")
         return [
             "  \(origin)  \(candidate.typeName)",

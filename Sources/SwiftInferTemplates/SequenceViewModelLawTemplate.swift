@@ -138,7 +138,7 @@ public enum SequenceViewModelLawTemplate {
     private static func bodyShapeSignal(
         for shape: SequenceViewModelPairing.SequenceViewModelShape
     ) -> Signal {
-        let location = "\(shape.equals.location.file):\(shape.equals.location.line)"
+        let location = "\(shape.equals.location)"
         switch shape.bodyShape {
         case .storedFieldProjection(let members):
             return Signal(

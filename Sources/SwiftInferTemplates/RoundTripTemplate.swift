@@ -351,11 +351,11 @@ extension RoundTripTemplate {
         let reverseEvidence = pair.reverse.inferenceEvidence
         whySuggested.append(
             "\(forwardEvidence.displayName) \(forwardEvidence.signature)"
-                + " — \(forwardEvidence.location.file):\(forwardEvidence.location.line)"
+                + " — \(forwardEvidence.location)"
         )
         whySuggested.append(
             "\(reverseEvidence.displayName) \(reverseEvidence.signature)"
-                + " — \(reverseEvidence.location.file):\(reverseEvidence.location.line)"
+                + " — \(reverseEvidence.location)"
         )
         for signal in signals {
             whySuggested.append(signal.formattedLine)

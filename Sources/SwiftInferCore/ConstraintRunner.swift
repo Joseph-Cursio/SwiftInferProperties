@@ -83,7 +83,7 @@ public enum ConstraintRunner {
         for row in evidence {
             whySuggested.append(
                 "\(row.displayName) \(row.signature) — "
-                    + "\(row.location.file):\(row.location.line)"
+                    + "\(row.location)"
             )
         }
         whySuggested.append(contentsOf: additionalWhySuggested)

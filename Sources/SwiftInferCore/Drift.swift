@@ -77,7 +77,7 @@ public struct DriftWarning: Sendable, Equatable {
     /// the format across SwiftInferProperties versions.
     public func renderedLine() -> String {
         "warning: drift: new Strong suggestion 0x\(identityHash) for "
-            + "\(displayName) at \(location.file):\(location.line) — "
+            + "\(displayName) at \(location) — "
             + "\(template) (no recorded decision)"
     }
 }

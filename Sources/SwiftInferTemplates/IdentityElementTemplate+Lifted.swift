@@ -304,11 +304,11 @@ extension IdentityElementTemplate {
         let identityEvidence = makeLiftedIdentityEvidence(pair)
         whySuggested.append(
             "\(opEvidence.displayName) \(opEvidence.signature) — "
-                + "\(opEvidence.location.file):\(opEvidence.location.line)"
+                + "\(opEvidence.location)"
         )
         whySuggested.append(
             "\(identityEvidence.displayName)\(identityEvidence.signature) — "
-                + "\(identityEvidence.location.file):\(identityEvidence.location.line)"
+                + "\(identityEvidence.location)"
         )
         whySuggested.append(pair.operation.rationale)
         for signal in signals {

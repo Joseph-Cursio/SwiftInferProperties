@@ -73,7 +73,7 @@ public enum SetRelationModelLawTemplate {
     ) -> [String] {
         [
             "Abstraction function: \(shape.typeName).contains(_:) -> Bool at "
-                + "\(shape.membership.location.file):\(shape.membership.location.line) — the "
+                + "\(shape.membership.location) — the "
                 + "relation claims something about membership, so membership is what can check it"
         ]
     }

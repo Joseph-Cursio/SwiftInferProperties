@@ -322,7 +322,7 @@ public enum CompositionTemplate {
         let evidence = makeEvidence(lifted)
         whySuggested.append(
             "\(evidence.displayName) \(evidence.signature) — "
-                + "\(evidence.location.file):\(evidence.location.line)"
+                + "\(evidence.location)"
         )
         whySuggested.append(lifted.rationale)
         for signal in signals {

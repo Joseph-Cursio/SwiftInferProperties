@@ -92,7 +92,7 @@ public enum SubjectFingerprint {
     }
 
     static func locationKey(_ location: SourceLocation) -> String {
-        "\(location.file):\(location.line)"
+        "\(location)"
     }
 
     /// Collapse every run of whitespace to one space, and trim the ends.

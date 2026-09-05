@@ -147,7 +147,11 @@ extension SwiftInferCommand.Discover {
         return nil
     }
 
-    /// `file:line` — the declaration's identity for the restriction join.
+    /// `file#line` — the declaration's identity for the restriction join.
+    ///
+    /// **A key, not the display string.** `SourceLocation.description` renders `file:line` for
+    /// readers; this is a join coordinate, and the separator differs so the two cannot be confused
+    /// at a glance when one turns up where the other was meant.
     ///
     /// **Line without column deliberately.** Both sides come from one scan, so the line agrees;
     /// the column is where a producer is most likely to differ (a modifier list, an attribute, or
