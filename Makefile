@@ -15,7 +15,17 @@
 # cost more than they catch — every one has to be re-run by hand to find out it
 # was noise. They now run alone, in their own serial target.
 
-SWIFT_TEST := swift test
+# This package does not build under Xcode's bundled toolchain: every source file compiles, then
+# the post-build plugin stage ("Applying swift-infer", "Applying soundness-probe") fails with
+# `Internal Error: DecodingError.dataCorrupted ... Corrupted JSON` and `error: fatalError`. The
+# swift.org toolchain builds it in ~55s. See CLAUDE.md for the full comparison.
+#
+# So `swift` is not assumed: SWIFT defaults to the swift.org toolchain when one is installed and
+# falls back to whatever is on PATH otherwise. Override with `make test SWIFT=/path/to/swift`.
+SWIFT_ORG := $(HOME)/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift
+SWIFT ?= $(if $(wildcard $(SWIFT_ORG)),$(SWIFT_ORG),swift)
+
+SWIFT_TEST := $(SWIFT) test
 
 # Every `.subprocess` suite matches this regex: the `*MeasuredTests` family,
 # `InteractionVerifyMeasuredExecutionTests`, and the 6 `VerifyPipeline*`.

@@ -213,15 +213,9 @@ public enum DualStylePairing {
     // MARK: - Sorting
 
     private static func lessThan(_ lhs: DualStylePair, _ rhs: DualStylePair) -> Bool {
-        if lhs.mutatingMember.location.file != rhs.mutatingMember.location.file {
-            return lhs.mutatingMember.location.file < rhs.mutatingMember.location.file
+        if lhs.mutatingMember.location != rhs.mutatingMember.location {
+            return lhs.mutatingMember.location < rhs.mutatingMember.location
         }
-        if lhs.mutatingMember.location.line != rhs.mutatingMember.location.line {
-            return lhs.mutatingMember.location.line < rhs.mutatingMember.location.line
-        }
-        if lhs.nonMutatingMember.location.file != rhs.nonMutatingMember.location.file {
-            return lhs.nonMutatingMember.location.file < rhs.nonMutatingMember.location.file
-        }
-        return lhs.nonMutatingMember.location.line < rhs.nonMutatingMember.location.line
+        return lhs.nonMutatingMember.location < rhs.nonMutatingMember.location
     }
 }

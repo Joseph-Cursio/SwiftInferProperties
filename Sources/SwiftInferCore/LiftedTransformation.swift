@@ -142,11 +142,6 @@ public struct LiftedTransformation: Sendable, Equatable {
         _ lhs: Self,
         _ rhs: Self
     ) -> Bool {
-        let lhsLoc = lhs.originalSummary.location
-        let rhsLoc = rhs.originalSummary.location
-        if lhsLoc.file != rhsLoc.file {
-            return lhsLoc.file < rhsLoc.file
-        }
-        return lhsLoc.line < rhsLoc.line
+        lhs.originalSummary.location < rhs.originalSummary.location
     }
 }

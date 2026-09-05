@@ -93,16 +93,10 @@ public enum LiftedIdentityElementPairing {
     ) -> Bool {
         let lhsLoc = lhs.operation.originalSummary.location
         let rhsLoc = rhs.operation.originalSummary.location
-        if lhsLoc.file != rhsLoc.file {
-            return lhsLoc.file < rhsLoc.file
+        if lhsLoc != rhsLoc {
+            return lhsLoc < rhsLoc
         }
-        if lhsLoc.line != rhsLoc.line {
-            return lhsLoc.line < rhsLoc.line
-        }
-        if lhs.identity.location.file != rhs.identity.location.file {
-            return lhs.identity.location.file < rhs.identity.location.file
-        }
-        return lhs.identity.location.line < rhs.identity.location.line
+        return lhs.identity.location < rhs.identity.location
     }
 }
 
