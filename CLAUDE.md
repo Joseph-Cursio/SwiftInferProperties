@@ -396,7 +396,21 @@ it, and `make test` does not run it.
 
 ## Build & test
 
-- `swift package clean && swift test` on session start.
+- **This package needs the swift.org toolchain, not Xcode's.** Under Xcode's
+  (`swiftlang-6.3.3.1.3`) every source file compiles and then the post-build plugin stage —
+  `Applying swift-infer`, `Applying soundness-probe` — fails with
+  `Internal Error: DecodingError.dataCorrupted … Corrupted JSON` followed by `error: fatalError`.
+  Under swift.org's `swift-6.3.3-RELEASE` it builds in ~55s. The two report the same version
+  number; `swiftlang-` in `swift --version` is the tell.
+
+  The Makefile handles this: `SWIFT` defaults to
+  `~/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift` when present, so
+  `make test` works regardless of what `swift` resolves to. Override with `make test SWIFT=…`.
+  A bare `swift test` will fail if your `swift` is Xcode's.
+
+  This is the opposite constraint to SwiftMarkdownWiki, which needs Xcode's toolchain because the
+  swift.org one cannot see SwiftUI cross-import overlay types. No single toolchain builds both.
+- `swift package clean && swift test` on session start — with the toolchain caveat above.
 - **Use the Makefile** — `make test-fast` (regex-skip fast path, ~6s) · `make test` (fast suite + sequential subprocess batches, fail-fast) · `make batch1`…`batch8` · `make perf` · `make clean-temp` · `make help`. Prefer `make test` over a bare `swift test`: the batches bound peak temp-disk and avoid §13 perf-budget contention flakes.
 - A killed-mid-run subprocess suite skips its cleanup `defer` and can leak tens of GB to `$TMPDIR` — that is what `make clean-temp` is for. It also sweeps `.swiftinfer/verify-workdir/`, which is gitignored and accumulates silently.
 - Fast path is `swift test --skip 'MeasuredTests|MeasuredExecutionTests|VerifyPipeline'` — a **regex against the test ID**, so it is self-maintaining. **Don't enumerate suite names**; the old per-name list missed four suites and the "fast" command ran ~90 min.
