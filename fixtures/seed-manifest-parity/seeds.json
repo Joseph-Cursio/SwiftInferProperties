@@ -4,7 +4,7 @@
       "file": "SwiftInferCLI/VerifyInteractionSurvey.swift",
       "kind": "extractable-kernel",
       "line": 203,
-      "rule": "Extractable Pure Kernel",
+      "rule": "Extractable Total Kernel",
       "symbol": "groupByReducer"
     },
     {

@@ -633,7 +633,7 @@ What was there, on the run I did not read: 2,313 issues, 1,677 of them `testabil
 | Pure Closure Property-Test Candidate | 199 | refactor: extract the closure |
 | **Non-Injected Nondeterminism** | **18** | **refactor: inject the clock / RNG / UUID** |
 | **Global Mutable State** | **1** | **refactor: instance-scope it** |
-| **Extractable Pure Kernel** | **1** | **refactor: lift the kernel out** |
+| **Extractable Total Kernel** | **1** | **refactor: lift the kernel out** |
 
 **Refactorings proposed: 20 concrete, plus 199 closure extractions. Refactorings made: zero.**
 
@@ -1165,7 +1165,7 @@ Per the freeze rule §2 is **not edited**. This is a fresh measurement against
 |---|---|---|---|
 | Pure Function Property-Test Candidate | 1,458 | 1,559 | |
 | Pure Closure Property-Test Candidate | 199 | 208 | |
-| Extractable Pure Kernel | 1 | **9** | the path-derivation shape |
+| Extractable Total Kernel | 1 | **9** | the path-derivation shape |
 | Non-Injected Nondeterminism | 6 *(after §12's fix)* | **10** | see below |
 | Thread Sleep | — | **2** | *new rule* |
 | **Total issues** | 2,313 | 2,441 | |
