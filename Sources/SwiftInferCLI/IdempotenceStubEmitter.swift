@@ -30,35 +30,10 @@ public enum IdempotenceStubEmitter: SeededStubEmitter {
     /// Trial budget shared with `RoundTripStubEmitter`.
     public typealias TrialBudget = RoundTripStubEmitter.TrialBudget
 
-    /// Inputs to the emitter. Mirrors `RoundTripStubEmitter.Inputs` but
-    /// carries a single `functionCall` (idempotence is single-function).
-    public struct Inputs: Equatable, Sendable, CarrierStubInputs {
-        public let functionCall: String
-        public let extraImports: [String]
-        public let carrierType: String
-        public let seedHex: SeedHex
-        public let trialBudget: TrialBudget
-        /// V1.49.A — verbatim Swift source rendered between the
-        /// imports + the `var rng = ...` line. See `RoundTripStubEmitter.Inputs.preamble`
-        /// for the load-bearing docstring.
-        public let preamble: String
-
-        public init(
-            functionCall: String,
-            extraImports: [String],
-            carrierType: String,
-            seedHex: SeedHex,
-            trialBudget: TrialBudget,
-            preamble: String = ""
-        ) {
-            self.functionCall = functionCall
-            self.extraImports = extraImports
-            self.carrierType = carrierType
-            self.seedHex = seedHex
-            self.trialBudget = trialBudget
-            self.preamble = preamble
-        }
-    }
+    /// Inputs to the emitter — shared with the other seeded algebraic
+    /// emitters; see ``SeededCarrierStubInputs``. This emitter's rendering of
+    /// `functionCall` is described in the type documentation above.
+    public typealias Inputs = SeededCarrierStubInputs
 
     /// V1.44.C's supported carrier set — mirrors `RoundTripStubEmitter`.
     public static let supportedCarriers: [String] = ["Complex<Double>", "Double", "Int"]
