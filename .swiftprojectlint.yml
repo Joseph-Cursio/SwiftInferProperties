@@ -5,5 +5,17 @@
 # `Tests/` also holds unit-test helpers. Neither is the tool's shippable source. Duplication among
 # these is expected and not actionable — e.g. two fixture TCA features each own an `Action` enum
 # (the canonical per-feature pattern), and a fixture's `Confidence` mirrors a real model on purpose.
+#
+# `fixtures/` is excluded for the same reason. Each subdirectory is a standalone SPM package
+# written to answer one measured question and left in place as the record of the answer — its
+# README opens with the question and a `Status: measured` date. The code is a subject, not a
+# product: `SeededGenerator(seed: seed)` inside a law checker is the *point* of the fixture,
+# and "prefer dependency injection" is advice about shippable architecture aimed at a
+# hand-rolled PRNG whose seed is already a defaulted parameter of the enclosing function.
+#
+# Measured before excluding: 39 findings live under `fixtures/`, 32 of them property-test
+# candidates that were never going to be tested, plus the 4 `SeededGenerator` constructions
+# and one extractable kernel. The repository total goes 2,357 -> 2,318.
 excluded_paths:
   - "Tests/"
+  - "fixtures/"
