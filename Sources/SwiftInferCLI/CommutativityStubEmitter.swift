@@ -34,47 +34,10 @@ public enum CommutativityStubEmitter: SeededStubEmitter {
     /// Trial budget shared with `RoundTripStubEmitter`.
     public typealias TrialBudget = RoundTripStubEmitter.TrialBudget
 
-    /// Inputs to the emitter — single binary `functionCall` plus the
-    /// usual surrounding metadata.
-    public struct Inputs: Equatable, Sendable, CarrierStubInputs {
-        /// The function under test, written as a call expression
-        /// (e.g. `"Int.binomial"` or
-        /// `"{ (a: Int, b: Int) in a + b }"`). The emitter renders
-        /// `\(functionCall)(lhs, rhs)` and `\(functionCall)(rhs, lhs)`.
-        public let functionCall: String
-
-        /// User modules to import beyond the carrier-specific
-        /// mandatory set. Empty entries and duplicates are filtered.
-        public let extraImports: [String]
-
-        /// Carrier type. Must be in `supportedCarriers`.
-        public let carrierType: String
-
-        public let seedHex: SeedHex
-
-        public let trialBudget: TrialBudget
-
-        /// V1.49.A — verbatim Swift source rendered between the
-        /// imports + the `var rng = ...` line. See
-        /// `RoundTripStubEmitter.Inputs.preamble` for the load-bearing docstring.
-        public let preamble: String
-
-        public init(
-            functionCall: String,
-            extraImports: [String],
-            carrierType: String,
-            seedHex: SeedHex,
-            trialBudget: TrialBudget,
-            preamble: String = ""
-        ) {
-            self.functionCall = functionCall
-            self.extraImports = extraImports
-            self.carrierType = carrierType
-            self.seedHex = seedHex
-            self.trialBudget = trialBudget
-            self.preamble = preamble
-        }
-    }
+    /// Inputs to the emitter — shared with the other seeded algebraic
+    /// emitters; see ``SeededCarrierStubInputs``. This emitter's rendering of
+    /// `functionCall` is described in the type documentation above.
+    public typealias Inputs = SeededCarrierStubInputs
 
     /// V1.45.A's supported carrier set — mirrors V1.44 emitters.
     public static let supportedCarriers: [String] = ["Complex<Double>", "Double", "Int"]
