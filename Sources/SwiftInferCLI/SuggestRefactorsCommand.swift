@@ -233,11 +233,22 @@ extension SwiftInferCommand {
                 """
 
             case .dualStyleCluster:
+                // The kit's SetAlgebra suite covers the algebraic laws over the
+                // NON-mutating operations only — there is no `formUnion`/`union`
+                // agreement law in `PropertyLawKit/Public/`. Do not restore a claim
+                // that conformance gets the paired-mutation laws checked without
+                // first adding them to the kit; `dualStyleTextDoesNotOverclaimKitCoverage`
+                // in SuggestRefactorsCommandTests pins this against the kit sources.
+                // Same failure shape as the 2026-08-02 `setUnionAssociative` veto —
+                // see `docs/measurements/protocol-coverage-law-drift.md` §3.
                 return """
                 This type has several form/non-form mutating-pair APIs. The pattern \
-                suggests a SetAlgebra-shape abstraction; formal SetAlgebra \
-                conformance (or a custom protocol) lets the kit verify the \
-                paired-mutation laws on every CI run.
+                suggests a SetAlgebra-shape abstraction, and formal SetAlgebra \
+                conformance gets the kit's algebraic laws (commutativity, \
+                absorption, distributivity, De Morgan) verified on every CI run. \
+                It does NOT cover the paired-mutation laws that produced this \
+                cluster: `formUnion` agreeing with `union` is not a law the kit \
+                ships, so that pairing still needs a hand-written property.
                 """
 
             case .roundTripCluster:
