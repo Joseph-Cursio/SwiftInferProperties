@@ -179,6 +179,81 @@ struct SuggestRefactorsCommandTests {
         #expect(text.contains("form/non-form"))
     }
 
+    /// The string-presence assertions above cannot see whether the claim *between*
+    /// the pinned strings is true. Until 2026-09-07 the text said conformance "lets
+    /// the kit verify the paired-mutation laws on every CI run" — and the kit ships
+    /// no such law, so a reader who accepted the suggestion got zero coverage of the
+    /// property that produced it. Same shape as the `setUnionAssociative` veto defect
+    /// in `docs/measurements/protocol-coverage-law-drift.md` §3: a claim about what
+    /// another tool checks, pinned by a test that only reads the claim's spelling.
+    ///
+    /// This one reads the kit instead. If someone adds a paired-mutation law to
+    /// `PropertyLawKit`, this fails and tells you to update the curated text.
+    @Test("dual-style curated text does not overclaim kit coverage")
+    func dualStyleTextDoesNotOverclaimKitCoverage() {
+        guard let setAlgebraLaws = Self.kitLawIdentifiers()?["SetAlgebra"] else {
+            // No kit checkout to read; nothing to compare against.
+            return
+        }
+
+        // A paired-mutation law would have to name a mutating member.
+        let mutatingMembers = ["formUnion", "formIntersection", "subtract",
+                               "formSymmetricDifference"]
+        let kitHasPairedMutationLaw = setAlgebraLaws.contains { law in
+            mutatingMembers.contains { law.localizedCaseInsensitiveContains($0) }
+        }
+
+        let text = SwiftInferCommand.SuggestRefactors.suggestionText(for: .dualStyleCluster)
+        let textClaimsKitCoversThem =
+            !text.contains("does NOT cover the paired-mutation laws")
+
+        #expect(
+            kitHasPairedMutationLaw == textClaimsKitCoversThem,
+            Comment(rawValue: kitHasPairedMutationLaw
+                ? "The kit now ships a paired-mutation SetAlgebra law "
+                  + "(\(setAlgebraLaws.sorted().joined(separator: ", "))). The curated "
+                  + "dual-style text still disclaims that coverage — update it."
+                : "The curated dual-style text claims the kit verifies the "
+                  + "paired-mutation laws, but the kit's SetAlgebra suite ships none. "
+                  + "Add the law to PropertyLawKit before making the claim.")
+        )
+    }
+
+    /// Mirrors `KitCoverageLawLevelTests.kitLawIdentifiers`. Duplicated rather than
+    /// shared because that helper lives in SwiftInferCoreTests and there is no test
+    /// support target; the scan is path-based, so it needs no module dependency.
+    static func kitLawIdentifiers(file: String = #filePath) -> [String: Set<String>]? {
+        var directory = URL(fileURLWithPath: file).deletingLastPathComponent()
+        var sources: URL?
+        while directory.path != "/" {
+            let checkout = directory
+                .appendingPathComponent(".build/checkouts/SwiftPropertyLaws/Sources")
+            if FileManager.default.fileExists(atPath: checkout.path) {
+                sources = checkout
+                break
+            }
+            directory = directory.deletingLastPathComponent()
+        }
+        guard let sources,
+              let pattern = try? NSRegularExpression(pattern: #""([A-Z][A-Za-z]*)\.([a-zA-Z]+)"#),
+              let enumerator = FileManager.default.enumerator(
+                at: sources, includingPropertiesForKeys: nil)
+        else { return nil }
+
+        var laws: [String: Set<String>] = [:]
+        for case let url as URL in enumerator where url.pathExtension == "swift" {
+            guard let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
+            pattern.enumerateMatches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                match, _, _ in
+                guard let match,
+                      let suite = Range(match.range(at: 1), in: text),
+                      let law = Range(match.range(at: 2), in: text) else { return }
+                laws[String(text[suite]), default: []].insert(String(text[law]))
+            }
+        }
+        return laws.isEmpty ? nil : laws
+    }
+
     @Test("V1.35.B — roundTripCluster suggestion mentions Codec")
     func roundTripSuggestionTextStable() {
         let text = SwiftInferCommand.SuggestRefactors.suggestionText(for: .roundTripCluster)
