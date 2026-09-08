@@ -130,10 +130,7 @@ extension MetricsRenderer {
                     error: counts.error
                 )
             }
-            .sorted { lhs, rhs in
-                if lhs.total != rhs.total { return lhs.total > rhs.total }
-                return lhs.template < rhs.template
-            }
+            .sorted(by: MetricsRowOrdering.byCountDescendingThenTemplate)
     }
 
     /// V1.72.C — post-acceptance failure-rate section. Two sentinels:
