@@ -233,22 +233,22 @@ extension SwiftInferCommand {
                 """
 
             case .dualStyleCluster:
-                // The kit's SetAlgebra suite covers the algebraic laws over the
-                // NON-mutating operations only — there is no `formUnion`/`union`
-                // agreement law in `PropertyLawKit/Public/`. Do not restore a claim
-                // that conformance gets the paired-mutation laws checked without
-                // first adding them to the kit; `dualStyleTextDoesNotOverclaimKitCoverage`
-                // in SuggestRefactorsCommandTests pins this against the kit sources.
-                // Same failure shape as the 2026-08-02 `setUnionAssociative` veto —
-                // see `docs/measurements/protocol-coverage-law-drift.md` §3.
+                // True as of kit 4.3.0, which added the four paired-mutation
+                // SetAlgebra laws (SwiftPropertyLaws#19). Between 2026-09-07 and
+                // that release this text disclaimed the coverage, because the kit's
+                // fifteen SetAlgebra laws were all stated over the non-mutating
+                // operations and `formUnion` agreeing with `union` was not among
+                // them. `dualStyleTextDoesNotOverclaimKitCoverage` in
+                // SuggestRefactorsCommandTests pins the claim against the kit's
+                // own law names in both directions — drop the laws and it fails,
+                // reword the claim away and it fails. Do not edit this text
+                // without reading that test.
                 return """
                 This type has several form/non-form mutating-pair APIs. The pattern \
                 suggests a SetAlgebra-shape abstraction, and formal SetAlgebra \
-                conformance gets the kit's algebraic laws (commutativity, \
-                absorption, distributivity, De Morgan) verified on every CI run. \
-                It does NOT cover the paired-mutation laws that produced this \
-                cluster: `formUnion` agreeing with `union` is not a law the kit \
-                ships, so that pairing still needs a hand-written property.
+                conformance gets the kit's laws verified on every CI run — \
+                including the paired-mutation laws that produced this cluster: \
+                `formUnion` agreeing with `union`, and its three siblings.
                 """
 
             case .roundTripCluster:
