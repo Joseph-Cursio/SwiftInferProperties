@@ -110,10 +110,7 @@ public enum ViewModelDiscoverer {
                 )
             )
         }
-        return candidates.sorted { lhs, rhs in
-            if lhs.location != rhs.location { return lhs.location < rhs.location }
-            return lhs.typeName < rhs.typeName
-        }
+        return candidates.sorted(by: byLocationThenTypeName)
     }
 
     /// Classify a stored field as a non-State exclusion, or `nil` if it is
@@ -203,6 +200,18 @@ public enum ViewModelDiscoverer {
             }
             .sorted { $0.name < $1.name }
     }
+
+    /// Source order, with `typeName` breaking ties.
+    ///
+    /// Named because the name says what the closure did not: there is a tiebreak,
+    /// and two candidates sharing a location are ordered by it. Two sharing both are
+    /// incomparable, and `sorted` is not stable in Swift, so the law worth holding
+    /// this to is a strict weak ordering rather than a total one.
+    static func byLocationThenTypeName(_ lhs: ViewModelCandidate, _ rhs: ViewModelCandidate) -> Bool {
+        if lhs.location != rhs.location { return lhs.location < rhs.location }
+        return lhs.typeName < rhs.typeName
+    }
+
 }
 
 // MARK: - Per-type accumulator

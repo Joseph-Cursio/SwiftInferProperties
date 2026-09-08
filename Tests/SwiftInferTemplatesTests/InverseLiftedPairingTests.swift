@@ -25,6 +25,7 @@ struct InverseLiftedPairingTests {
         paramType: String = "Int",
         carrier: String = "Bag",
         line: Int = 1,
+        column: Int = 1,
         bodySignals: BodySignals = .empty
     ) -> FunctionSummary {
         FunctionSummary(
@@ -37,7 +38,7 @@ struct InverseLiftedPairingTests {
             isAsync: false,
             isMutating: true,
             isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: line, column: 1),
+            location: SourceLocation(file: "Test.swift", line: line, column: column),
             containingTypeName: carrier,
             bodySignals: bodySignals
         )
@@ -48,10 +49,14 @@ struct InverseLiftedPairingTests {
         paramType: String = "Int",
         carrier: String = "Bag",
         line: Int = 1,
+        column: Int = 1,
         bodySignals: BodySignals = .empty
     ) -> LiftedTransformation {
         LiftedTransformation.lift(
-            mutator(name, paramType: paramType, carrier: carrier, line: line, bodySignals: bodySignals),
+            mutator(
+                name, paramType: paramType, carrier: carrier,
+                line: line, column: column, bodySignals: bodySignals
+            ),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
         )!
     }

@@ -97,8 +97,10 @@ public enum InverseLiftedPairing {
     ///     lexicographically (canonical orientation; pair is unordered
     ///     so `(add, remove)` and `(remove, add)` both yield the same
     ///     `(add, remove)` orientation in output).
-    /// Pairs are returned sorted by `(forward.original.file, line,
-    /// reverse.original.file, line)` for byte-stable output.
+    /// Pairs are returned sorted by the forward half's declaration and then the reverse half's,
+    /// each compared through `SourceLocation`'s `(file, line, column)` order, for byte-stable
+    /// output. It used to stop at `line`, which is not byte-stable at all when two mutating
+    /// methods share one.
     public static func candidates(
         in lifts: [LiftedTransformation],
         vocabulary: Vocabulary = .empty
@@ -166,20 +168,23 @@ public enum InverseLiftedPairing {
         return lhsParam.typeText == rhsParam.typeText
     }
 
-    private static func lessThan(_ lhs: LiftedInversePair, _ rhs: LiftedInversePair) -> Bool {
-        let lhsLoc = lhs.forward.originalSummary.location
-        let rhsLoc = rhs.forward.originalSummary.location
-        if lhsLoc.file != rhsLoc.file {
-            return lhsLoc.file < rhsLoc.file
+    /// Order by the forward half's declaration, then the reverse half's.
+    ///
+    /// This was the sixth hand-rolled `(file, line)` ladder, and the pass that made
+    /// `SourceLocation` `Comparable` over `(file, line, column)` reached the other five. It had the
+    /// same defect they did: two mutating methods declared on one line compared **equal**, and
+    /// their order in `candidates(…)`'s output fell to `sorted(by:)`, which Swift does not promise
+    /// is stable. `sorted(by:)` requires a strict weak ordering, and a comparator that calls
+    /// distinct elements equivalent is not one.
+    ///
+    /// Not `private`, so `LiftedInversePairOrderingTests` can hold it to those laws the way
+    /// `SourceLocationOrderingTests` holds the conformance it now defers to.
+    static func lessThan(_ lhs: LiftedInversePair, _ rhs: LiftedInversePair) -> Bool {
+        let lhsForward = lhs.forward.originalSummary.location
+        let rhsForward = rhs.forward.originalSummary.location
+        if lhsForward != rhsForward {
+            return lhsForward < rhsForward
         }
-        if lhsLoc.line != rhsLoc.line {
-            return lhsLoc.line < rhsLoc.line
-        }
-        let lhsRev = lhs.reverse.originalSummary.location
-        let rhsRev = rhs.reverse.originalSummary.location
-        if lhsRev.file != rhsRev.file {
-            return lhsRev.file < rhsRev.file
-        }
-        return lhsRev.line < rhsRev.line
+        return lhs.reverse.originalSummary.location < rhs.reverse.originalSummary.location
     }
 }

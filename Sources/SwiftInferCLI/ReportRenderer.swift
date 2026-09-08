@@ -113,9 +113,7 @@ enum ReportRenderer {
     private static func countBreakdown(_ names: [String], limit: Int = 8) -> String {
         var counts: [String: Int] = [:]
         for name in names { counts[name, default: 0] += 1 }
-        let ordered = counts.sorted { left, right in
-            left.value != right.value ? left.value > right.value : left.key < right.key
-        }
+        let ordered = counts.sorted(by: CountOrdering.byCountDescendingThenName)
         let shown = ordered.prefix(limit).map { "\($0.key) \($0.value)" }
         let extra = ordered.count > limit ? ", +\(ordered.count - limit) more" : ""
         return shown.joined(separator: ", ") + extra
