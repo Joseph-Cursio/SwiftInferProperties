@@ -71,12 +71,25 @@ extension PurityRefutationCensusMeasuredTests {
         /// only ever covered *throwing* functions, and
         /// `FileHandle.standardError.write(_:)` does not throw. `String` and
         /// `Data` are deliberately still absent — matched by bare identifier they
-        /// would refute nearly everything, and `String(contentsOf:)` /
-        /// `Data(contentsOf:)` throw, so the `try` gate already reaches them.
+        /// would refute nearly everything.
+        ///
+        /// **The file-system read members joined at SEI `fff33cf`**, which closed
+        /// the case the sentence above used to end with: `String(contentsOf:)`
+        /// and `Data(contentsOf:)` throw, so the `try` gate was said to reach
+        /// them — true only while the throw propagates, and `try?` swallows it.
+        ///
+        /// **`contentsOf` is deliberately not here, and must not be added.** SEI
+        /// carried it as a bare token from `fff33cf` to `23d1dab`, where it also
+        /// matched `append(contentsOf:)` and refuted every function that appends
+        /// one collection to another — 43 of this corpus's functions. It is
+        /// matched on the callee instead; see `CensusFileReadChecker`.
         static let sideEffectMarkers: Set<String> = [
             "print", "NSLog", "FileManager", "URLSession", "UserDefaults",
             "NotificationCenter", "DispatchQueue",
-            "FileHandle", "Process", "Pipe"
+            "FileHandle", "Process", "Pipe",
+            "resourceValues", "checkResourceIsReachable", "checkPromisedItemIsReachable",
+            "startAccessingSecurityScopedResource", "stopAccessingSecurityScopedResource",
+            "contentsOfFile", "contentsOfDirectory"
         ]
 
         /// `PurityInferrer.nondeterministicMarkers`.
@@ -166,6 +179,9 @@ extension PurityRefutationCensusMeasuredTests {
             let tokenHit = syntax.tokens(viewMode: .sourceAccurate)
                 .contains { markers.contains($0.text) }
             if tokenHit { return true }
+            let fileRead = CensusFileReadChecker(viewMode: .sourceAccurate)
+            fileRead.walk(syntax)
+            if fileRead.sawFileRead { return true }
             let checker = CensusNondeterminismChecker(viewMode: .sourceAccurate)
             checker.walk(syntax)
             return checker.sawSource
@@ -290,5 +306,30 @@ final class CensusFunctionCollector: SyntaxVisitor {
 
     override func visit(_: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
         .skipChildren
+    }
+}
+
+/// `PurityInferrer.FileReadChecker`, re-derived — a file read spelled
+/// `SomeType(contentsOf:)`.
+///
+/// Shape-aware rather than a token, and that is the whole point of it. SEI
+/// carried `contentsOf` in `sideEffectMarkers` between `fff33cf` and `23d1dab`,
+/// where the bare token also matched `append(contentsOf:)`; matching the callee
+/// separates `String(contentsOf: url)` from `array.append(contentsOf: other)`.
+final class CensusFileReadChecker: SyntaxVisitor {
+
+    private static let fileReadingTypes: Set<String> = [
+        "String", "Data", "NSString", "NSData", "NSDictionary", "NSArray"
+    ]
+
+    private(set) var sawFileRead = false
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        guard let callee = node.calledExpression.as(DeclReferenceExprSyntax.self),
+              Self.fileReadingTypes.contains(callee.baseName.text),
+              node.arguments.contains(where: { $0.label?.text == "contentsOf" })
+        else { return .visitChildren }
+        sawFileRead = true
+        return .visitChildren
     }
 }
