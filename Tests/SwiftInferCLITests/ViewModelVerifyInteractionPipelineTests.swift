@@ -34,7 +34,7 @@ struct ViewModelVerifyInteractionPipelineTests {
         constructibility: ViewModelConstructibility = .zeroArgument
     ) -> ViewModelCandidate {
         ViewModelCandidate(
-            location: "\(typeName).swift:1",
+            location: SourceLocation(file: "\(typeName).swift", line: 1, column: 1),
             typeName: typeName,
             observability: .observableMacro,
             stateFields: [.init(name: "selectedIDs", typeText: "Set<UUID>", isMutable: true)],

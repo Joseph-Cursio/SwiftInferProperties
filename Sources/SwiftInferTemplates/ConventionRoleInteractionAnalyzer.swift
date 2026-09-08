@@ -52,7 +52,7 @@ public enum ConventionRoleInteractionAnalyzer {
             identity: identity,
             family: .outputDeterminism,
             reducerQualifiedName: role.typeName,
-            reducerLocation: role.location,
+            reducerLocation: role.location.description,
             stateTypeName: role.typeName,
             actionTypeName: role.typeName,
             predicate: rationale,

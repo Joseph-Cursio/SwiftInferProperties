@@ -24,7 +24,7 @@ public struct StatefulRole: Sendable, Equatable {
 
     /// `<path>:<line>` of the declaration — same click-target UX as
     /// `ReducerCandidate.location` / `ViewModelCandidate.location`.
-    public let location: String
+    public let location: SourceLocation
 
     /// The role's type name (or, for a free-function reducer, its function
     /// name).
@@ -63,7 +63,7 @@ public struct StatefulRole: Sendable, Equatable {
     public let effect: Effect?
 
     public init(
-        location: String,
+        location: SourceLocation,
         typeName: String,
         paradigm: Paradigm,
         recognizedBy: RecognitionKind,

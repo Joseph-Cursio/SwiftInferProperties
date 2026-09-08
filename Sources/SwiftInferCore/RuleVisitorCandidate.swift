@@ -27,7 +27,7 @@ public struct RuleVisitorCandidate: Sendable, Equatable {
 
     /// `<path>:<line>` of the class declaration — same click-target UX as
     /// `ReducerCandidate.location` / `ViewModelCandidate.location`.
-    public let location: String
+    public let location: SourceLocation
 
     /// The visitor class name (`"ForceUnwrapVisitor"`).
     public let typeName: String
@@ -50,7 +50,7 @@ public struct RuleVisitorCandidate: Sendable, Equatable {
     public let emittedRuleNames: [String]
 
     public init(
-        location: String,
+        location: SourceLocation,
         typeName: String,
         inheritedTypes: [String],
         visitedNodeTypes: [String],

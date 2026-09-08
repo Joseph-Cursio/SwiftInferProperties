@@ -11,7 +11,7 @@ struct ViewModelDependencyConstructorTests {
         constructibility: ViewModelConstructibility
     ) -> ViewModelCandidate {
         ViewModelCandidate(
-            location: "VM.swift:1",
+            location: SourceLocation(file: "VM.swift", line: 1, column: 1),
             typeName: "VM",
             observability: .observableObject,
             stateFields: [],
