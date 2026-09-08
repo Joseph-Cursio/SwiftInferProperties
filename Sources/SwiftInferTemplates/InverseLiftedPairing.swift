@@ -42,6 +42,16 @@ public struct LiftedInversePair: Sendable, Equatable {
         self.pairName = pairName
     }
 
+    /// The mutating method each half was lifted from.
+    ///
+    /// Scorers want the summary far more often than the lift itself — its name, its location, its
+    /// parameters, its body signals — and every one of those was reached as
+    /// `pair.forwardSummary.name`, which says that a pair holds lifts and that a lift
+    /// holds the summary it came from, for a value the pair can hand over. `forward` and `reverse`
+    /// stay available for `carrier` and the lifted shape.
+    public var forwardSummary: FunctionSummary { forward.originalSummary }
+    public var reverseSummary: FunctionSummary { reverse.originalSummary }
+
     public struct NamePair: Sendable, Equatable {
         public let lhs: String
         public let rhs: String
@@ -180,11 +190,11 @@ public enum InverseLiftedPairing {
     /// Not `private`, so `LiftedInversePairOrderingTests` can hold it to those laws the way
     /// `SourceLocationOrderingTests` holds the conformance it now defers to.
     static func lessThan(_ lhs: LiftedInversePair, _ rhs: LiftedInversePair) -> Bool {
-        let lhsForward = lhs.forward.originalSummary.location
-        let rhsForward = rhs.forward.originalSummary.location
+        let lhsForward = lhs.forwardSummary.location
+        let rhsForward = rhs.forwardSummary.location
         if lhsForward != rhsForward {
             return lhsForward < rhsForward
         }
-        return lhs.reverse.originalSummary.location < rhs.reverse.originalSummary.location
+        return lhs.reverseSummary.location < rhs.reverseSummary.location
     }
 }
