@@ -146,7 +146,15 @@ public enum ProtocolCoverageMap {
             .setSymmetricDifferenceCommutative,
             .setUnionEmptyIdentity,
             .setUnionIdempotent,
-            .setIntersectionIdempotent
+            .setIntersectionIdempotent,
+            // Claimed 2026-09-08 against kit 4.4.0. This is the first entry
+            // added here WITH its template rather than ahead of one: the four
+            // laws exist in the kit and `DualStyleConsistencyTemplate` proposes
+            // the property, which is the condition the note above sets.
+            .setUnionPairedMutation,
+            .setIntersectionPairedMutation,
+            .setSubtractionPairedMutation,
+            .setSymmetricDifferencePairedMutation
         ],
 
         // — stdlib codable —

@@ -65,6 +65,27 @@ public enum KnownProperty: String, Sendable, Hashable, CaseIterable {
     /// `a ∩ a == a` — kit `SetAlgebra.intersectionIdempotence`
     case setIntersectionIdempotent
 
+    // — Set algebra, paired mutation —
+    //
+    // Added 2026-09-08 with kit 4.4.0, which is the first release to ship laws
+    // relating a mutating `form*` method to its non-mutating original. Every
+    // SetAlgebra law before those was stated over the non-mutating operations
+    // alone, so `DualStyleConsistencyTemplate` had nothing to be vetoed against
+    // and proposed these on SetAlgebra conformers as well as everywhere else.
+    //
+    // These four are exactly what the kit runs. Do not extend the set to other
+    // form/non-form pairs — `insert`/`inserting`, `sort`/`sorted` — without a
+    // kit law for each; that is the `setUnionAssociative` mistake above.
+    /// `var c = x; c.formUnion(y)` leaves `c == x.union(y)`
+    /// — kit `SetAlgebra.formUnionMatchesUnion`
+    case setUnionPairedMutation
+    /// — kit `SetAlgebra.formIntersectionMatchesIntersection`
+    case setIntersectionPairedMutation
+    /// — kit `SetAlgebra.subtractMatchesSubtracting`
+    case setSubtractionPairedMutation
+    /// — kit `SetAlgebra.formSymmetricDifferenceMatchesSymmetricDifference`
+    case setSymmetricDifferencePairedMutation
+
     // — Equatable / Comparable / Hashable —
     /// `a == a`
     case equatableReflexive

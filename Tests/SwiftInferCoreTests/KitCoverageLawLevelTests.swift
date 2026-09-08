@@ -49,6 +49,11 @@ extension KitCoverageDriftTests {
         .setSymmetricDifferenceCommutative: ["SetAlgebra.symmetricDifferenceCommutativity"],
         .setUnionEmptyIdentity: ["SetAlgebra.emptyIdentity"],
         .setUnionIdempotent: ["SetAlgebra.unionIdempotence"],
+        .setUnionPairedMutation: ["SetAlgebra.formUnionMatchesUnion"],
+        .setIntersectionPairedMutation: ["SetAlgebra.formIntersectionMatchesIntersection"],
+        .setSubtractionPairedMutation: ["SetAlgebra.subtractMatchesSubtracting"],
+        .setSymmetricDifferencePairedMutation:
+            ["SetAlgebra.formSymmetricDifferenceMatchesSymmetricDifference"],
         .setIntersectionIdempotent: ["SetAlgebra.intersectionIdempotence"],
         .equatableReflexive: ["Equatable.reflexivity"],
         .equatableSymmetric: ["Equatable.symmetry"],

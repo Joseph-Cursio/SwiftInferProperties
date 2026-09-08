@@ -161,7 +161,8 @@ extension TemplateRegistry {
         for pair in DualStylePairing.candidates(in: summaries, vocabulary: context.vocabulary) {
             if let suggestion = DualStyleConsistencyTemplate.suggest(
                 for: pair,
-                carrierKindResolver: context.carrierKindResolver
+                carrierKindResolver: context.carrierKindResolver,
+                inheritedTypesByName: context.inheritedTypesByName
             ) {
                 collector.record(
                     suggestion,
