@@ -149,7 +149,7 @@ enum SurveyRunDiff {
             .map(\.value)
 
         return Result(
-            changed: changed.sorted { ($0.subject, $0.template) < ($1.subject, $1.template) },
+            changed: changed.sorted(by: bySubjectThenTemplate),
             added: added.sorted { $0.primaryFunctionName < $1.primaryFunctionName },
             removed: removed.sorted { $0.primaryFunctionName < $1.primaryFunctionName },
             beforeCounts: counts(before.records),
@@ -256,5 +256,15 @@ enum SurveyRunDiff {
         var tally: [Bucket: Int] = [:]
         for record in records { tally[Bucket.of(record.outcome), default: 0] += 1 }
         return tally
+    }
+}
+
+extension SurveyRunDiff {
+
+    /// Subject ascending, template ascending as the tiebreak — one subject can
+    /// change under several templates, and a diff that reorders them between
+    /// runs reads as churn that did not happen.
+    static func bySubjectThenTemplate(_ lhs: ChangedRow, _ rhs: ChangedRow) -> Bool {
+        (lhs.subject, lhs.template) < (rhs.subject, rhs.template)
     }
 }

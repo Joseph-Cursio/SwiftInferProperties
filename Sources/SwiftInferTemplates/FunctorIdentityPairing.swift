@@ -94,7 +94,7 @@ public enum FunctorIdentityPairing {
                 typeName: bare, mapper: summary, returnTypeText: returnType
             ))
         }
-        return result.sorted { ($0.typeName, $0.mapper.name) < ($1.typeName, $1.mapper.name) }
+        return result.sorted(by: byTypeNameThenMapperName)
     }
 
     /// A non-mutating, single-closure-argument method.
@@ -147,5 +147,14 @@ public enum FunctorIdentityPairing {
         }
         guard let angle = text.firstIndex(of: "<") else { return text }
         return String(text[text.startIndex..<angle])
+    }
+}
+
+extension FunctorIdentityPairing {
+
+    /// Type name ascending, mapper name ascending as the tiebreak — one type
+    /// commonly offers several map-shaped methods.
+    static func byTypeNameThenMapperName(_ lhs: FunctorShape, _ rhs: FunctorShape) -> Bool {
+        (lhs.typeName, lhs.mapper.name) < (rhs.typeName, rhs.mapper.name)
     }
 }

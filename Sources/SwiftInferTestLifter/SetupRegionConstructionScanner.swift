@@ -55,12 +55,7 @@ public enum SetupRegionConstructionScanner {
                     observedLiterals: bucket.sites
                 )
             }
-            .sorted { lhs, rhs in
-                if lhs.typeName != rhs.typeName {
-                    return lhs.typeName < rhs.typeName
-                }
-                return lhs.shape.canonicalLabelKey < rhs.shape.canonicalLabelKey
-            }
+            .sorted(by: byTypeNameThenShapeLabel)
         return ConstructionRecord(entries: entries)
     }
 
@@ -285,5 +280,20 @@ private extension ParameterizedValue.Kind {
         case .integer: return 2
         case .string:  return 3
         }
+    }
+}
+
+extension SetupRegionConstructionScanner {
+
+    /// Type name ascending, canonical label key ascending as the tiebreak.
+    ///
+    /// The tiebreak is the whole point here: entries are keyed on
+    /// `(typeName, shape)`, so every type with more than one construction shape
+    /// produces a tie on the first key by construction.
+    static func byTypeNameThenShapeLabel(
+        _ lhs: ConstructionRecordEntry, _ rhs: ConstructionRecordEntry
+    ) -> Bool {
+        (lhs.typeName, lhs.shape.canonicalLabelKey)
+            < (rhs.typeName, rhs.shape.canonicalLabelKey)
     }
 }

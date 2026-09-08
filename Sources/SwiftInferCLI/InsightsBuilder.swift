@@ -113,11 +113,7 @@ public enum InsightsBuilder {
         return membersByStructure
             .filter { $0.value.count >= minTypes }
             .map { InsightsGroup(structure: $0.key, members: $0.value.sorted { $0.typeName < $1.typeName }) }
-            .sorted { lhs, rhs in
-                lhs.members.count != rhs.members.count
-                    ? lhs.members.count > rhs.members.count
-                    : lhs.structure < rhs.structure
-            }
+            .sorted(by: byMemberCountDescendingThenStructure)
     }
 
     // MARK: - Rendering
@@ -207,5 +203,17 @@ public enum InsightsBuilder {
         }
         let fallback = associative.first ?? rows.first { $0.templateName == "commutativity" }
         return fallback?.primaryFunctionName ?? "(operation)"
+    }
+}
+
+extension InsightsBuilder {
+
+    /// Largest group first, structure label ascending as the tiebreak.
+    static func byMemberCountDescendingThenStructure(
+        _ lhs: InsightsGroup, _ rhs: InsightsGroup
+    ) -> Bool {
+        lhs.members.count != rhs.members.count
+            ? lhs.members.count > rhs.members.count
+            : lhs.structure < rhs.structure
     }
 }

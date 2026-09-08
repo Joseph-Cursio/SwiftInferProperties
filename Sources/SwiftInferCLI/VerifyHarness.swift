@@ -169,12 +169,7 @@ public enum VerifyHarness {
             let normalized = normalize(hash: entry.identityHash)
             return (entry, sharedPrefixLength(normalized, normalizedPrefix))
         }
-        let sorted = scored.sorted { lhs, rhs in
-            if lhs.distance != rhs.distance {
-                return lhs.distance > rhs.distance
-            }
-            return lhs.entry.identityHash < rhs.entry.identityHash
-        }
+        let sorted = scored.sorted(by: byDistanceDescendingThenIdentityHash)
         return sorted.prefix(limit).map(\.entry)
     }
 
@@ -288,5 +283,23 @@ public enum VerifyHarness {
             return nil
         }
         return enumerator
+    }
+}
+
+extension VerifyHarness {
+
+    /// Longest shared prefix first, identity hash ascending as the tiebreak.
+    ///
+    /// Prefix lengths are small integers over a candidate set that is usually
+    /// short, so ties are the common case rather than the exception. Without
+    /// the hash underneath, the entries a user is shown as "nearest" would be
+    /// ordered by whatever `sorted(by:)` did with an incomparable pair.
+    static func byDistanceDescendingThenIdentityHash(
+        _ lhs: (entry: SemanticIndexEntry, distance: Int),
+        _ rhs: (entry: SemanticIndexEntry, distance: Int)
+    ) -> Bool {
+        lhs.distance != rhs.distance
+            ? lhs.distance > rhs.distance
+            : lhs.entry.identityHash < rhs.entry.identityHash
     }
 }
