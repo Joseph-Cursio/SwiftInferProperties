@@ -8,16 +8,14 @@ extension FunctionSummary {
     /// Previously copy-pasted as `nonDeterministicVeto(for summary:)` across
     /// five templates (and delegated to by the IdentityElement and Composition
     /// single-member forms).
+    ///
+    /// It used to gate on `bodySignals.hasNonDeterministicCall` while the pair forms gated on the
+    /// list behind it; `NonDeterministicVeto.swift` records why that mattered and why every reader
+    /// now goes through the list.
     var nonDeterministicVetoSignal: Signal? {
-        guard bodySignals.hasNonDeterministicCall else {
-            return nil
+        Signal.nonDeterministicVeto(acrossBodiesOf: [self]) {
+            "Non-deterministic API in body: \($0)"
         }
-        let calls = bodySignals.nonDeterministicAPIsDetected.joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
-        )
     }
 
     /// `+30` signal when the function is a binary operator over one type — either

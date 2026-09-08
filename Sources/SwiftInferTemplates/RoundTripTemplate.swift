@@ -151,7 +151,7 @@ public enum RoundTripTemplate {
         ) {
             signals.append(carrier)
         }
-        if let veto = nonDeterministicVeto(for: pair) {
+        if let veto = pair.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         if let assumedCoverage = assumedKitCoverage(
@@ -312,32 +312,6 @@ extension RoundTripTemplate {
             weight: 35,
             detail: "Both halves carry @Discoverable(group: \"\(group)\")"
         )
-    }
-
-    private static func nonDeterministicVeto(for pair: FunctionPair) -> Signal? {
-        let forwardCalls = pair.forward.bodySignals.nonDeterministicAPIsDetected
-        let reverseCalls = pair.reverse.bodySignals.nonDeterministicAPIsDetected
-        let both = Array(Set(forwardCalls).union(reverseCalls)).sorted()
-        guard !both.isEmpty else {
-            return nil
-        }
-        let side = describeAffectedSide(pair: pair)
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in \(side): \(both.joined(separator: ", "))"
-        )
-    }
-
-    private static func describeAffectedSide(pair: FunctionPair) -> String {
-        let forwardHas = pair.forward.bodySignals.hasNonDeterministicCall
-        let reverseHas = pair.reverse.bodySignals.hasNonDeterministicCall
-        switch (forwardHas, reverseHas) {
-        case (true, true): return "both bodies"
-        case (true, false): return "\(pair.forward.name) body"
-        case (false, true): return "\(pair.reverse.name) body"
-        case (false, false): return "neither body"
-        }
     }
 
     // MARK: - Suggestion construction

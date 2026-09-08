@@ -201,16 +201,9 @@ public enum DualStyleConsistencyTemplate {
     }
 
     private static func nonDeterministicVeto(for pair: DualStylePair) -> Signal? {
-        let mutCalls = pair.mutatingMember.bodySignals.nonDeterministicAPIsDetected
-        let nonMutCalls = pair.nonMutatingMember.bodySignals.nonDeterministicAPIsDetected
-        let both = Array(Set(mutCalls).union(nonMutCalls)).sorted()
-        guard !both.isEmpty else { return nil }
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in dual-style pair body: "
-                + "\(both.joined(separator: ", "))"
-        )
+        Signal.nonDeterministicVeto(
+            acrossBodiesOf: [pair.mutatingMember, pair.nonMutatingMember]
+        ) { "Non-deterministic API in dual-style pair body: \($0)" }
     }
 
     // MARK: - Suggestion construction

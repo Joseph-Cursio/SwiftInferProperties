@@ -134,16 +134,9 @@ extension InversePairTemplate {
     }
 
     private static func liftedNonDeterministicVeto(for pair: LiftedInversePair) -> Signal? {
-        let forwardCalls = pair.forwardSummary.bodySignals.nonDeterministicAPIsDetected
-        let reverseCalls = pair.reverseSummary.bodySignals.nonDeterministicAPIsDetected
-        let union = Array(Set(forwardCalls).union(reverseCalls)).sorted()
-        guard !union.isEmpty else { return nil }
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in lifted inverse-pair body: "
-                + union.joined(separator: ", ")
-        )
+        Signal.nonDeterministicVeto(
+            acrossBodiesOf: [pair.forwardSummary, pair.reverseSummary]
+        ) { "Non-deterministic API in lifted inverse-pair body: \($0)" }
     }
 
     // MARK: - Identity + evidence

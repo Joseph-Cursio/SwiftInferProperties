@@ -183,7 +183,7 @@ extension IdentityElementTemplate {
             signals.append(carrier)
         }
         signals.append(liftedFromMutationSignal(for: pair))
-        if let veto = liftedNonDeterministicVeto(for: pair) {
+        if let veto = pair.operationSummary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         return signals
@@ -211,22 +211,6 @@ extension IdentityElementTemplate {
             weight: 40,
             detail: "Curated identity-element constant: '\(displayedIdentity(for: pair))' "
                 + "of type \(pair.identity.typeText)"
-        )
-    }
-
-    private static func liftedNonDeterministicVeto(
-        for pair: LiftedIdentityElementPair
-    ) -> Signal? {
-        guard pair.operationSummary.bodySignals.hasNonDeterministicCall else {
-            return nil
-        }
-        let calls = pair.operationSummary.bodySignals
-            .nonDeterministicAPIsDetected
-            .joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
         )
     }
 
