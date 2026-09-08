@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawKit
 @testable import SwiftInferCore
 import Testing
 
@@ -172,13 +173,21 @@ extension KitCoverageDriftTests {
 
     @Test("every mapped kit law identifier actually exists in the kit")
     func mappedLawsExist() {
-        guard let laws = Self.kitLawIdentifiers() else { return }
+        // Asks the kit, rather than scanning its sources. Until kit 4.3.0 this
+        // regexed `.build/checkouts/SwiftPropertyLaws/Sources` — which reads
+        // whatever is checked out rather than what is linked, cannot work
+        // against a binary dependency, and matches string literals wherever
+        // they appear, doc comments included. `LawIdentifier.allLawNames` is
+        // built from the kit's own law enums, so this now fails exactly when
+        // the linked kit stops shipping a mapped law.
+        #expect(
+            !LawIdentifier.allLawNames.isEmpty,
+            "the kit's exported vocabulary is empty; the checks below would pass vacuously"
+        )
         for (property, identifiers) in Self.kitLawsByProperty {
             for identifier in identifiers {
-                let parts = identifier.split(separator: ".", maxSplits: 1).map(String.init)
-                let exists = laws[parts[0]]?.contains(parts[1]) ?? false
                 #expect(
-                    exists,
+                    LawIdentifier.isKnownLawName(identifier),
                     Comment(rawValue: "`\(property.rawValue)` maps to `\(identifier)`, which "
                         + "the kit does not ship. Either the kit dropped the law or the "
                         + "mapping was wrong from the start.")
