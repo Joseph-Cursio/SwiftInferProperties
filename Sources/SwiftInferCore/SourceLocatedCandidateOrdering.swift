@@ -16,17 +16,21 @@
 /// `column` to the ordering, so two candidates declared on one line are
 /// separated by position rather than by name.
 ///
-/// This is deliberately *not* unified with the identically-named comparators in
-/// `RuleVisitorDiscoverer`, `ConventionRoleDiscoverer` and
-/// `ViewModelDiscoverer`. Those types spell `location` as a `String` built as
-/// `"\(file):\(line)"`, and a protocol spanning both families would hide that
-/// difference behind one name — see the note in this commit's message.
+/// `RuleVisitorCandidate`, `StatefulRole` and `ViewModelCandidate` join them
+/// here. Those three used to spell `location` as a `String` built as
+/// `"\(file):\(line)"` and therefore sorted *lexicographically* — line 10 before
+/// line 2 — so unifying them would once have put one name over two different
+/// orderings. They carry a `SourceLocation` now, which is what makes the six a
+/// single comparator rather than a resemblance.
 protocol SourceLocatedCandidate {
     var typeName: String { get }
     var location: SourceLocation { get }
 }
 
 extension DefensiveCopyCandidate: SourceLocatedCandidate {}
+extension RuleVisitorCandidate: SourceLocatedCandidate {}
+extension StatefulRole: SourceLocatedCandidate {}
+extension ViewModelCandidate: SourceLocatedCandidate {}
 extension StableIdentityCandidate: SourceLocatedCandidate {}
 extension ValueSemanticCandidate: SourceLocatedCandidate {}
 
