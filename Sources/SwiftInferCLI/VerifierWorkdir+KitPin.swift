@@ -40,7 +40,15 @@ extension VerifierWorkdir {
     /// unsupported *carrier*: a claim that the carrier is exotic, about a `String`. Measured on
     /// a generated client, that is the difference between 0 and 15 executing rows.
     /// See `docs/measurements/module-qualified-leaf-spelling.md`.
-    static let swiftPropertyLawsRequirement = "4.2.0"
+    /// **Raised to 4.4.0 on 2026-09-08, and this raise is different in kind.**
+    /// Neither the emitter nor derivation needs anything 4.3.0 added — the two
+    /// raises above were feature dependencies and this one is not. It is
+    /// lockstep: this package moved to 4.3.0 for the SetAlgebra
+    /// paired-mutation laws, `VerifierWorkdirKitPinTests` requires the emitted
+    /// floor to equal the declared one, and a survey resolving both in one
+    /// graph is the reason that test exists. Do not read this line as a claim
+    /// that generated code calls a 4.3.0 symbol; it does not.
+    static let swiftPropertyLawsRequirement = "4.4.0"
 
     static var swiftPropertyLawsDependencyLine: String {
         ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", "

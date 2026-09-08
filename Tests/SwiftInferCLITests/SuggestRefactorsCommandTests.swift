@@ -204,8 +204,21 @@ struct SuggestRefactorsCommandTests {
         }
 
         let text = SwiftInferCommand.SuggestRefactors.suggestionText(for: .dualStyleCluster)
-        let textClaimsKitCoversThem =
-            !text.contains("does NOT cover the paired-mutation laws")
+
+        // Two explicit markers rather than the negation of one. A reworded text
+        // that carries neither is a third state — the claim became unreadable —
+        // and that should fail here rather than silently pick a side.
+        let claims = text.contains("including the paired-mutation laws")
+        let disclaims = text.contains("does NOT cover the paired-mutation laws")
+        #expect(
+            claims != disclaims,
+            """
+            The dual-style text no longer states its kit-coverage position in a \
+            form this test can read. Say either "including the paired-mutation \
+            laws" or "does NOT cover the paired-mutation laws", or update this test.
+            """
+        )
+        let textClaimsKitCoversThem = claims
 
         #expect(
             kitHasPairedMutationLaw == textClaimsKitCoversThem,
