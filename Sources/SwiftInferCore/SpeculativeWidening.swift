@@ -94,10 +94,7 @@ public enum SpeculativeWidening {
     ) -> [Candidate] {
         restricted
             .filter { isWidenable($0.restriction) }
-            .sorted {
-                ($0.summary.location.file, $0.summary.location.line)
-                    < ($1.summary.location.file, $1.summary.location.line)
-            }
+            .sorted { $0.summary.location < $1.summary.location }
             .compactMap { candidate(for: $0.summary, source: sourcesByFile[$0.summary.location.file]) }
     }
 

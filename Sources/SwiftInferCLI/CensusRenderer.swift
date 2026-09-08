@@ -25,7 +25,7 @@ enum CensusRenderer {
         let rows = run.rowsByTemplate
         lines.append("  Rows per template, \(rows.count) fired, \(run.total) total:")
         let width = rows.keys.map(\.count).max() ?? 0
-        for (template, count) in rows.sorted(by: { ($0.value, $1.key) > ($1.value, $0.key) }) {
+        for (template, count) in rows.sorted(by: CountOrdering.byCountDescendingThenName) {
             let padded = template.padding(
                 toLength: max(width, template.count), withPad: " ", startingAt: 0
             )

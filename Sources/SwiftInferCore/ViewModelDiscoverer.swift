@@ -110,7 +110,7 @@ public enum ViewModelDiscoverer {
                 )
             )
         }
-        return candidates.sorted(by: byLocationThenTypeName)
+        return candidates.sorted(by: SourceLocatedCandidateOrdering.byLocationThenTypeName)
     }
 
     /// Classify a stored field as a non-State exclusion, or `nil` if it is
@@ -201,16 +201,6 @@ public enum ViewModelDiscoverer {
             .sorted { $0.name < $1.name }
     }
 
-    /// Source order, with `typeName` breaking ties.
-    ///
-    /// Named because the name says what the closure did not: there is a tiebreak,
-    /// and two candidates sharing a location are ordered by it. Two sharing both are
-    /// incomparable, and `sorted` is not stable in Swift, so the law worth holding
-    /// this to is a strict weak ordering rather than a total one.
-    static func byLocationThenTypeName(_ lhs: ViewModelCandidate, _ rhs: ViewModelCandidate) -> Bool {
-        if lhs.location != rhs.location { return lhs.location < rhs.location }
-        return lhs.typeName < rhs.typeName
-    }
 
 }
 
@@ -221,7 +211,7 @@ public enum ViewModelDiscoverer {
 /// class decl; methods + stored fields merge from every source.
 struct RawTypeInfo {
     var observability: ViewModelObservability?
-    var declLocation: String?
+    var declLocation: SourceLocation?
     var rawFields: [RawStoredField] = []
     var methods: [RawMethod] = []
     /// Parameters of each declared initializer — drives the zero-arg
@@ -232,7 +222,7 @@ struct RawTypeInfo {
     /// class (not gated on observability). Non-`nil` iff the type is a class —
     /// the recognition signal `ConventionRoleDiscoverer` uses (presenters /
     /// interactors are reference types).
-    var classLocation: String?
+    var classLocation: SourceLocation?
     /// Inherited-type names from the class declaration + any extensions —
     /// the conformance signal for convention recognition (VIPER
     /// `FooInteractor: FooInteractorInput`). Not used by MVVM assembly.

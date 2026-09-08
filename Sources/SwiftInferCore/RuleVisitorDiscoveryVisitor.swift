@@ -25,10 +25,12 @@ final class RuleVisitorDiscoveryVisitor: SyntaxVisitor {
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
         let name = node.name.text
         typeStack.append(name)
-        let line = converter.location(
+        let position = converter.location(
             for: node.name.positionAfterSkippingLeadingTrivia
-        ).line
-        collected[name, default: RawVisitorInfo()].declLocation = "\(file):\(line)"
+        )
+        collected[name, default: RawVisitorInfo()].declLocation = SourceLocation(
+            file: file, line: position.line, column: position.column
+        )
         if let inherited = node.inheritanceClause?.inheritedTypes {
             collected[name, default: RawVisitorInfo()].inheritedTypes =
                 inherited.map(\.type.trimmedDescription)
@@ -97,7 +99,7 @@ final class RuleVisitorDiscoveryVisitor: SyntaxVisitor {
 /// A type is a candidate iff it has a `declLocation` (it's a class) AND a
 /// non-empty `visitedNodeTypes` (it overrides ≥1 `visit(_:)`).
 struct RawVisitorInfo {
-    var declLocation: String?
+    var declLocation: SourceLocation?
     var inheritedTypes: [String] = []
     var visitedNodeTypes: Set<String> = []
     var emittedRuleNames: Set<String> = []

@@ -88,10 +88,7 @@ extension MetricsRenderer {
                     maxSeconds: sorted.last ?? 0
                 )
             }
-            .sorted { lhs, rhs in
-                if lhs.count != rhs.count { return lhs.count > rhs.count }
-                return lhs.template < rhs.template
-            }
+            .sorted(by: MetricsRowOrdering.byCountDescendingThenTemplate)
     }
 
     /// Median of a pre-sorted `[TimeInterval]`. Even count → mean of the

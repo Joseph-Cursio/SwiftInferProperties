@@ -22,7 +22,7 @@ public struct ViewModelCandidate: Sendable, Equatable {
 
     /// `<path>:<line>` of the type declaration — same click-target UX as
     /// `ReducerCandidate.location`.
-    public let location: String
+    public let location: SourceLocation
 
     /// The view model type name (`"ViolationInspectorViewModel"`).
     public let typeName: String
@@ -65,7 +65,7 @@ public struct ViewModelCandidate: Sendable, Equatable {
     public let initParameters: [ViewModelInitParameter]
 
     public init(
-        location: String,
+        location: SourceLocation,
         typeName: String,
         observability: ViewModelObservability,
         stateFields: [ViewModelStateField],

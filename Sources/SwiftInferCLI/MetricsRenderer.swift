@@ -160,10 +160,7 @@ public enum MetricsRenderer {
                     skipped: counts.skipped
                 )
             }
-            .sorted { lhs, rhs in
-                if lhs.total != rhs.total { return lhs.total > rhs.total }
-                return lhs.template < rhs.template
-            }
+            .sorted(by: MetricsRowOrdering.byCountDescendingThenTemplate)
     }
 
     /// V1.64.D — join `decisions` against `evidence` by `identityHash`

@@ -59,10 +59,7 @@ public enum ValueSemanticDiscoverer {
                 equatability: equatable.classify(typeText: decl.name)
             ))
         }
-        return candidates.sorted { lhs, rhs in
-            (lhs.location.file, lhs.location.line, lhs.typeName)
-                < (rhs.location.file, rhs.location.line, rhs.typeName)
-        }
+        return candidates.sorted(by: SourceLocatedCandidateOrdering.byLocationThenTypeName)
     }
 
     /// Convenience: scan a source directory and discover candidates. Mirrors
@@ -117,7 +114,7 @@ public enum ValueSemanticDiscoverer {
                     parameterCount: summary.parameters.count
                 )
             }
-            .sorted { ($0.name, $0.parameterCount) < ($1.name, $1.parameterCount) }
+            .sorted(by: MutationMethodOrdering.byNameThenParameterCount)
     }
 
     // MARK: - Text helpers

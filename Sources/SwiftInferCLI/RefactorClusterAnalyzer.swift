@@ -178,11 +178,7 @@ public enum RefactorClusterAnalyzer {
             Candidate(shape: .roundTripCluster, count: perTemplateCounts["round-trip"] ?? 0, tieBreakerIndex: 2)
         ]
         let firing = candidates.filter { $0.count >= 3 }
-        if let winner = firing.max(by: { lhs, rhs in
-            // Higher count wins; on ties, lower tieBreakerIndex wins.
-            if lhs.count != rhs.count { return lhs.count < rhs.count }
-            return lhs.tieBreakerIndex > rhs.tieBreakerIndex
-        }) {
+        if let winner = firing.max(by: byCountThenTieBreakerIndexDescending) {
             return winner.shape
         }
         // Layer 3: general (≥4 total).
@@ -198,5 +194,22 @@ public enum RefactorClusterAnalyzer {
             counts[entry.templateName, default: 0] += 1
         }
         return counts
+    }
+}
+
+extension RefactorClusterAnalyzer {
+
+    /// Count ascending, tie-breaker index descending — written for `max(by:)`,
+    /// which takes the **greatest** element under this ordering, so the winner
+    /// is the highest count and, among ties, the lowest tie-breaker index.
+    ///
+    /// The direction reads backwards for that reason, and the name states the
+    /// ordering rather than the selection because that is what the laws are
+    /// about: it must still be irreflexive, asymmetric and transitive, and
+    /// `max(by:)` is undefined if it is not.
+    private static func byCountThenTieBreakerIndexDescending(_ lhs: Candidate, _ rhs: Candidate) -> Bool {
+        lhs.count != rhs.count
+            ? lhs.count < rhs.count
+            : lhs.tieBreakerIndex > rhs.tieBreakerIndex
     }
 }

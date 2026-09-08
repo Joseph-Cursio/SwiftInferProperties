@@ -25,12 +25,15 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
         let name = node.name.text
         typeStack.append(name)
-        let line = converter.location(
+        let position = converter.location(
             for: node.name.positionAfterSkippingLeadingTrivia
-        ).line
+        )
+        let declaredAt = SourceLocation(
+            file: file, line: position.line, column: position.column
+        )
         // Recorded for *every* class (not gated on observability) — the
         // class-ness signal + conformance list convention recognition needs.
-        collected[name, default: RawTypeInfo()].classLocation = "\(file):\(line)"
+        collected[name, default: RawTypeInfo()].classLocation = declaredAt
         if let inherited = node.inheritanceClause?.inheritedTypes {
             collected[name, default: RawTypeInfo()].inheritedTypeNames
                 .append(contentsOf: inherited.map(\.type.trimmedDescription))
@@ -40,7 +43,7 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
             inheritanceClause: node.inheritanceClause
         ) {
             collected[name, default: RawTypeInfo()].observability = observability
-            collected[name, default: RawTypeInfo()].declLocation = "\(file):\(line)"
+            collected[name, default: RawTypeInfo()].declLocation = declaredAt
         }
         return .visitChildren
     }

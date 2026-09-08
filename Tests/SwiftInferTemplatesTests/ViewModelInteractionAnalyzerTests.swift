@@ -17,7 +17,7 @@ struct ViewModelInteractionAnalyzerTests {
         actions: [String] = []
     ) -> ViewModelCandidate {
         ViewModelCandidate(
-            location: "VM.swift:1",
+            location: SourceLocation(file: "VM.swift", line: 1, column: 1),
             typeName: type,
             observability: .observableMacro,
             stateFields: state.map { ViewModelStateField(name: $0.0, typeText: $0.1, isMutable: true) },

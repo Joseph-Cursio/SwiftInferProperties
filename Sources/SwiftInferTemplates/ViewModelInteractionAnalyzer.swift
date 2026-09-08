@@ -66,7 +66,7 @@ public enum ViewModelInteractionAnalyzer {
             identity: identity,
             family: invariant.family,
             reducerQualifiedName: candidate.typeName,
-            reducerLocation: candidate.location,
+            reducerLocation: candidate.location.description,
             stateTypeName: candidate.typeName,
             actionTypeName: candidate.typeName,
             predicate: invariant.rationale,

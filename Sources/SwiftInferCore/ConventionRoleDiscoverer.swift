@@ -110,7 +110,7 @@ public enum ConventionRoleDiscoverer {
                 )
             )
         }
-        return roles.sorted(by: byLocationThenTypeName)
+        return roles.sorted(by: SourceLocatedCandidateOrdering.byLocationThenTypeName)
     }
 
     /// Split stored fields into genuine mutable State vs collaborators (protocol
@@ -147,15 +147,5 @@ public enum ConventionRoleDiscoverer {
         return (state, collaborators.sorted { $0.propertyName < $1.propertyName })
     }
 
-    /// Source order, with `typeName` breaking ties.
-    ///
-    /// Named because the name says what the closure did not: there is a tiebreak,
-    /// and two roles sharing a location are ordered by it. Two sharing both are
-    /// incomparable, and `sorted` is not stable in Swift, so the law worth holding
-    /// this to is a strict weak ordering rather than a total one.
-    static func byLocationThenTypeName(_ lhs: StatefulRole, _ rhs: StatefulRole) -> Bool {
-        if lhs.location != rhs.location { return lhs.location < rhs.location }
-        return lhs.typeName < rhs.typeName
-    }
 
 }
