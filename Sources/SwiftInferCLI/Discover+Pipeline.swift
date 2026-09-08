@@ -283,7 +283,7 @@ extension SwiftInferCommand.Discover {
     /// `--require-corroboration`.
     private static func isVisible(_ candidate: Suggestion, setup: PipelineSetup) -> Bool {
         if setup.includePossible { return true }
-        if candidate.score.tier.isVisibleByDefault,
+        if candidate.score.isVisibleByDefault,
            !setup.requireCorroboration || CorroborationRule.isCorroborated(candidate.score) {
             return true
         }

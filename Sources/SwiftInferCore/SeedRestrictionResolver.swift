@@ -36,7 +36,7 @@ public enum SeedRestrictionResolver {
         var corrected = 0
         var disagreements: [String] = []
         let updated = restricted.map { entry -> RestrictedFunction in
-            let key = joinKey(file: entry.summary.location.file, symbol: entry.summary.name)
+            let key = joinKey(file: entry.summary.declaringFile, symbol: entry.summary.name)
             guard let claimed = seeded[key] else { return entry }
             if entry.restriction.disagrees(with: claimed) {
                 disagreements.append(entry.summary.name)

@@ -40,6 +40,14 @@ public struct FunctionSummary: Sendable, Equatable {
     /// File-relative source location of the function's `func` keyword.
     public let location: SourceLocation
 
+    /// The file this function is declared in.
+    ///
+    /// `entry.summary.location.file` and `candidate.summary.location.file` were reaching two
+    /// levels past the summary for one string. `location` stays available for the callers that
+    /// want the whole coordinate — it is `Comparable` over `(file, line, column)` and renders
+    /// itself as `file:line`.
+    public var declaringFile: String { location.file }
+
     /// Name of the innermost containing type, or `nil` for top-level
     /// functions. Extension declarations contribute the `extendedType`
     /// (e.g. `"Array"` for `extension Array`); nested types stack so the
