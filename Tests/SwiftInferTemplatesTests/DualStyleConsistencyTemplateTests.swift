@@ -212,4 +212,51 @@ struct DualStyleConsistencyTemplateTests {
         #expect(suggestion.evidence[0].displayName == "add(_:)")
         #expect(suggestion.evidence[1].displayName == "adding(_:)")
     }
+
+    // MARK: - Kit-coverage veto (kit 4.4.0)
+
+    private func setAlgebraPair(_ mutating: String, _ nonMutating: String) -> DualStylePair {
+        makePair(mutating: mutating, nonMutating: nonMutating, rule: .formPrefixToBare)
+    }
+
+    /// The four operations kit 4.4.0 runs paired-mutation laws for, on a carrier
+    /// that declares SetAlgebra, are suppressed.
+    @Test("a SetAlgebra conformer's four set pairs are vetoed")
+    func setAlgebraConformerIsVetoed() {
+        let inherited = ["Bag": Set(["SetAlgebra"])]
+        for (m, n) in [("formUnion", "union"), ("formIntersection", "intersection"),
+                       ("subtract", "subtracting"),
+                       ("formSymmetricDifference", "symmetricDifference")] {
+            let signal = DualStyleConsistencyTemplate.assumedKitCoverage(
+                for: setAlgebraPair(m, n), inheritedTypesByName: inherited)
+            #expect(signal != nil, "\(m)/\(n) on a SetAlgebra conformer should be vetoed")
+        }
+    }
+
+    /// **OrderedSet is the case this scoping exists for.** It has the four pairs and
+    /// deliberately does not conform to SetAlgebra — its equality is order-sensitive,
+    /// and `unordered` is provided for the generic cases. The kit therefore runs no
+    /// paired-mutation law for it, so suppressing its suggestions would be a false
+    /// claim of coverage. This is the half of the veto that must NOT fire.
+    @Test("a non-conformer with the same pairs is not vetoed")
+    func nonConformerIsNotVetoed() {
+        let inherited = ["Bag": Set(["Hashable", "Sequence"])]
+        let signal = DualStyleConsistencyTemplate.assumedKitCoverage(
+            for: setAlgebraPair("formUnion", "union"), inheritedTypesByName: inherited)
+        #expect(signal == nil, "a type not declaring SetAlgebra must keep its suggestion")
+    }
+
+    /// A pair outside the four has no kit law, so conformance alone must not suppress
+    /// it. Guards against widening the candidate table without adding a law — the
+    /// `setUnionAssociative` mistake of 2026-08-02.
+    @Test("an unrelated pair on a conformer is not vetoed")
+    func unrelatedPairOnConformerIsNotVetoed() {
+        let inherited = ["Bag": Set(["SetAlgebra"])]
+        for (m, n) in [("sort", "sorted"), ("insert", "inserting"),
+                       ("normalize", "normalized")] {
+            let signal = DualStyleConsistencyTemplate.assumedKitCoverage(
+                for: setAlgebraPair(m, n), inheritedTypesByName: inherited)
+            #expect(signal == nil, "\(m)/\(n) has no kit law and must not be vetoed")
+        }
+    }
 }

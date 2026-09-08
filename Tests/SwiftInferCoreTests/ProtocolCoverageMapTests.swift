@@ -293,7 +293,26 @@ struct ProtocolCoverageMapTests {
         //
         // The guard did its job again: 25 → 27 is a net +2 hiding a −1, and a bare count
         // would have read as two additions. Say which way each case moved.
-        #expect(KnownProperty.allCases.count == 27)
+        //
+        // 27 → 31 on 2026-09-08, four additions and no removal:
+        //
+        //   +4  `setUnionPairedMutation`, `setIntersectionPairedMutation`,
+        //       `setSubtractionPairedMutation`,
+        //       `setSymmetricDifferencePairedMutation`. Kit 4.4.0 is the first release
+        //       to ship laws relating a mutating `form*` method to its non-mutating
+        //       original — SwiftPropertyLaws#19. Every SetAlgebra law before those was
+        //       stated over the non-mutating operations, so
+        //       `DualStyleConsistencyTemplate` had nothing to be vetoed against and
+        //       proposed the property on SetAlgebra conformers as well as everywhere
+        //       else.
+        //
+        // Unlike the 2026-08-02 additions, these are claimed WITH their template rather
+        // than ahead of it: the laws exist in the kit AND a template proposes the
+        // property, which is the condition `ProtocolCoverageMap`'s own note sets. The
+        // suppression is scoped to the four operations the kit runs — `OrderedSet` does
+        // not conform to `SetAlgebra`, so its dual-style suggestions are untouched,
+        // which is right, because the kit checks nothing for it.
+        #expect(KnownProperty.allCases.count == 31)
     }
 
     @Test("Every covered property name is a valid KnownProperty case")

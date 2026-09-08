@@ -34,18 +34,61 @@ public enum DualStyleConsistencyTemplate {
     /// Behavior preserved bit-for-bit.
     public static func suggest(
         for pair: DualStylePair,
-        carrierKindResolver: CarrierKindResolver? = nil
+        carrierKindResolver: CarrierKindResolver? = nil,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         ConstraintRunner.suggest(
-            constraint: makeConstraint(carrierKindResolver: carrierKindResolver),
+            constraint: makeConstraint(
+                carrierKindResolver: carrierKindResolver,
+                inheritedTypesByName: inheritedTypesByName
+            ),
             subject: pair
+        )
+    }
+
+    /// Pair → `KnownProperty` candidates for the kit-coverage veto.
+    ///
+    /// Keyed on the non-mutating member, mirroring
+    /// `CommutativityTemplate.commutativityCoverageCandidates(forOp:)`. Only the
+    /// four operations kit 4.4.0 ships paired-mutation laws for appear here; a
+    /// pair outside them returns no candidate and is proposed as before.
+    static func pairedMutationCoverageCandidates(
+        forNonMutating name: String
+    ) -> [KnownProperty] {
+        switch name {
+        case "union": return [.setUnionPairedMutation]
+        case "intersection": return [.setIntersectionPairedMutation]
+        case "subtracting": return [.setSubtractionPairedMutation]
+        case "symmetricDifference": return [.setSymmetricDifferencePairedMutation]
+        default: return []
+        }
+    }
+
+    /// The veto itself. Suppresses only where the kit demonstrably runs the law:
+    /// the carrier must declare `SetAlgebra` and the pair must be one of the
+    /// four. `OrderedSet` does not conform — deliberately, for order-sensitive
+    /// equality — so its dual-style suggestions are untouched by this, which is
+    /// correct, because the kit checks nothing for it.
+    static func assumedKitCoverage(
+        for pair: DualStylePair,
+        inheritedTypesByName: [String: Set<String>]
+    ) -> Signal? {
+        let candidates = pairedMutationCoverageCandidates(
+            forNonMutating: pair.nonMutatingMember.name
+        )
+        guard !candidates.isEmpty else { return nil }
+        return ProtocolCoverageMap.assumedCoverageSignal(
+            forTypeText: pair.mutatingMember.containingTypeName,
+            inheritedTypesByName: inheritedTypesByName,
+            candidateProperties: candidates
         )
     }
 
     /// V1.38.C — Constraint factory. Captures the optional
     /// `carrierKindResolver` into the constraint's @Sendable closures.
     public static func makeConstraint(
-        carrierKindResolver: CarrierKindResolver?
+        carrierKindResolver: CarrierKindResolver?,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Constraint<DualStylePair> {
         Constraint<DualStylePair>(
             templateName: "dual-style-consistency",
@@ -53,7 +96,8 @@ public enum DualStyleConsistencyTemplate {
             signals: { pair in
                 Self.accumulatedSignals(
                     for: pair,
-                    carrierKindResolver: carrierKindResolver
+                    carrierKindResolver: carrierKindResolver,
+                    inheritedTypesByName: inheritedTypesByName
                 )
             },
             evidence: { pair in
@@ -71,12 +115,18 @@ public enum DualStyleConsistencyTemplate {
     /// V1.38.C — preserves the pre-migration signal-accumulation order.
     static func accumulatedSignals(
         for pair: DualStylePair,
-        carrierKindResolver: CarrierKindResolver?
+        carrierKindResolver: CarrierKindResolver?,
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> [Signal] {
         var signals: [Signal] = [
             typeShapeSignal(for: pair),
             namingPairSignal(for: pair)
         ]
+        if let covered = assumedKitCoverage(
+            for: pair, inheritedTypesByName: inheritedTypesByName
+        ) {
+            signals.append(covered)
+        }
         if let carrier = carrierKindResolver?.carrierKindSignal(
             forContainingTypeName: pair.mutatingMember.containingTypeName
         ) {
