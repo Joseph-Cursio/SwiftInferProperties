@@ -162,10 +162,7 @@ extension SwiftInferCommand {
             if candidates.isEmpty {
                 return "swift-infer discover-reducers: no reducer-shaped functions detected.\n"
             }
-            let sorted = candidates.sorted { lhs, rhs in
-                if lhs.location != rhs.location { return lhs.location < rhs.location }
-                return lhs.functionName < rhs.functionName
-            }
+            let sorted = candidates.sorted(by: byLocationThenFunctionName)
             var lines: [String] = []
             let suffix = sorted.count == 1 ? "" : "s"
             lines.append(
@@ -365,6 +362,13 @@ extension SwiftInferCommand {
             }
             return lines
         }
+
+    /// Source order, with `functionName` breaking ties. Two candidates sharing
+    /// both are incomparable — a strict weak ordering, not a total one.
+    static func byLocationThenFunctionName(_ lhs: ReducerCandidate, _ rhs: ReducerCandidate) -> Bool {
+        if lhs.location != rhs.location { return lhs.location < rhs.location }
+        return lhs.functionName < rhs.functionName
+    }
     }
 }
 

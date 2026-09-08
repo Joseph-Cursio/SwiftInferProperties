@@ -284,10 +284,7 @@ extension SwiftInferCommand {
         /// stability across runs.
         private static func formatTemplateCounts(_ counts: [String: Int]) -> String {
             counts
-                .sorted { lhs, rhs in
-                    if lhs.value != rhs.value { return lhs.value > rhs.value }
-                    return lhs.key < rhs.key
-                }
+                .sorted(by: CountOrdering.byCountDescendingThenName)
                 .map { "\($0.key) ×\($0.value)" }
                 .joined(separator: ", ")
         }

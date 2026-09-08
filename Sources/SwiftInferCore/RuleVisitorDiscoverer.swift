@@ -94,9 +94,18 @@ public enum RuleVisitorDiscoverer {
                 )
             )
         }
-        return candidates.sorted { lhs, rhs in
-            if lhs.location != rhs.location { return lhs.location < rhs.location }
-            return lhs.typeName < rhs.typeName
-        }
+        return candidates.sorted(by: byLocationThenTypeName)
     }
+
+    /// Source order, with `typeName` breaking ties.
+    ///
+    /// Named because the name says what the closure did not: there is a tiebreak,
+    /// and two candidates sharing a location are ordered by it. Two sharing both are
+    /// incomparable, and `sorted` is not stable in Swift, so the law worth holding
+    /// this to is a strict weak ordering rather than a total one.
+    static func byLocationThenTypeName(_ lhs: RuleVisitorCandidate, _ rhs: RuleVisitorCandidate) -> Bool {
+        if lhs.location != rhs.location { return lhs.location < rhs.location }
+        return lhs.typeName < rhs.typeName
+    }
+
 }
