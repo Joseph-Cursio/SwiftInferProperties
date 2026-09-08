@@ -105,7 +105,7 @@ extension InversePairTemplate {
     // MARK: - Signals
 
     private static func liftedTypeShapeSignal(for pair: LiftedInversePair) -> Signal {
-        let paramType = pair.forward.originalSummary.parameters[0].typeText
+        let paramType = pair.forwardSummary.parameters[0].typeText
         return Signal(
             kind: .typeSymmetrySignature,
             weight: 25,
@@ -128,29 +128,22 @@ extension InversePairTemplate {
             kind: .liftedFromMutation,
             weight: 10,
             detail: "Lifted from mutating pair `\(pair.forward.carrier)."
-                + "\(pair.forward.originalSummary.name)` ↔ `\(pair.forward.carrier)."
-                + "\(pair.reverse.originalSummary.name)`"
+                + "\(pair.forwardSummary.name)` ↔ `\(pair.forward.carrier)."
+                + "\(pair.reverseSummary.name)`"
         )
     }
 
     private static func liftedNonDeterministicVeto(for pair: LiftedInversePair) -> Signal? {
-        let forwardCalls = pair.forward.originalSummary.bodySignals.nonDeterministicAPIsDetected
-        let reverseCalls = pair.reverse.originalSummary.bodySignals.nonDeterministicAPIsDetected
-        let union = Array(Set(forwardCalls).union(reverseCalls)).sorted()
-        guard !union.isEmpty else { return nil }
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in lifted inverse-pair body: "
-                + union.joined(separator: ", ")
-        )
+        Signal.nonDeterministicVeto(
+            acrossBodiesOf: [pair.forwardSummary, pair.reverseSummary]
+        ) { "Non-deterministic API in lifted inverse-pair body: \($0)" }
     }
 
     // MARK: - Identity + evidence
 
     private static func makeLiftedIdentity(for pair: LiftedInversePair) -> SuggestionIdentity {
-        let forwardSig = IdempotenceTemplate.canonicalSignature(of: pair.forward.originalSummary)
-        let reverseSig = IdempotenceTemplate.canonicalSignature(of: pair.reverse.originalSummary)
+        let forwardSig = IdempotenceTemplate.canonicalSignature(of: pair.forwardSummary)
+        let reverseSig = IdempotenceTemplate.canonicalSignature(of: pair.reverseSummary)
         let sorted = [forwardSig, reverseSig].sorted()
         return SuggestionIdentity(
             canonicalInput: "inverse-pair-lifted|" + sorted.joined(separator: "|")

@@ -75,7 +75,7 @@ enum SpeculativeRefactorRunner {
         sourcesByFile: [String: String],
         diagnostics: any DiagnosticOutput
     ) -> SpeculativeProposal? {
-        let path = candidate.summary.location.file
+        let path = candidate.summary.declaringFile
         guard let original = sourcesByFile[path],
               let widened = SpeculativeWidening.widened(source: original, candidate: candidate)
         else { return nil }

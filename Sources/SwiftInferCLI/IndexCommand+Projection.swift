@@ -136,7 +136,7 @@ extension SwiftInferCommand.Index {
             templateName: suggestion.templateName,
             typeName: carrierType(for: suggestion),
             score: suggestion.score.total,
-            tier: suggestion.score.tier.label,
+            tier: suggestion.score.tierLabel,
             primaryFunctionName: primaryName,
             location: location,
             decision: decisionString,

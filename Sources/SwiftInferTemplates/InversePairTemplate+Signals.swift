@@ -39,7 +39,7 @@ extension InversePairTemplate {
         ) {
             signals.append(carrier)
         }
-        if let veto = nonDeterministicVeto(for: pair) {
+        if let veto = pair.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         if let assumedCoverage = assumedKitCoverage(

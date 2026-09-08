@@ -50,4 +50,14 @@ public struct Score: Sendable, Equatable {
         self.isVetoed = false
         self.tier = .advisory
     }
+
+    /// Whether a suggestion at this score is shown without an opt-in flag.
+    ///
+    /// `candidate.score.tier.isVisibleByDefault` says that a suggestion has a score and a score
+    /// has a tier, for a question the score can answer. `tier` stays available for the callers
+    /// that render it or switch on it.
+    public var isVisibleByDefault: Bool { tier.isVisibleByDefault }
+
+    /// The tier's human-facing label, as the explainability header and the semantic index write it.
+    public var tierLabel: String { tier.label }
 }

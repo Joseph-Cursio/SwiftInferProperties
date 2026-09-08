@@ -74,7 +74,7 @@ struct IdentityElementTemplateLiftedTests {
             identities: [zeroIdentity()]
         )
         #expect(pairs.count == 1)
-        #expect(pairs.first?.operation.originalSummary.name == "increment")
+        #expect(pairs.first?.operationSummary.name == "increment")
         #expect(pairs.first?.identity.name == "zero")
     }
 
@@ -157,8 +157,8 @@ struct IdentityElementTemplateLiftedTests {
             in: [mutatorLate, mutatorEarly],
             identities: [zeroIdentity()]
         )
-        #expect(pairs[0].operation.originalSummary.location.file == "A.swift")
-        #expect(pairs[1].operation.originalSummary.location.file == "Z.swift")
+        #expect(pairs[0].operationSummary.location.file == "A.swift")
+        #expect(pairs[1].operationSummary.location.file == "Z.swift")
     }
 
     // MARK: - Template scoring

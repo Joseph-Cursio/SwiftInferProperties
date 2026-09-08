@@ -70,8 +70,8 @@ struct InverseLiftedPairingTests {
             lifted("remove")
         ])
         #expect(pairs.count == 1)
-        #expect(pairs.first?.forward.originalSummary.name == "add")
-        #expect(pairs.first?.reverse.originalSummary.name == "remove")
+        #expect(pairs.first?.forwardSummary.name == "add")
+        #expect(pairs.first?.reverseSummary.name == "remove")
     }
 
     @Test("Pair is canonical-orientation-stable (lex-smaller name is forward)")
@@ -85,8 +85,8 @@ struct InverseLiftedPairingTests {
             lifted("remove"),
             lifted("add")
         ])
-        #expect(pairsA.first?.forward.originalSummary.name == "add")
-        #expect(pairsB.first?.forward.originalSummary.name == "add")
+        #expect(pairsA.first?.forwardSummary.name == "add")
+        #expect(pairsB.first?.forwardSummary.name == "add")
     }
 
     @Test("All curated pair names produce a pair when both halves exist")

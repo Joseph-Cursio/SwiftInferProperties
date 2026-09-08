@@ -17,6 +17,12 @@ public struct LiftedIdentityElementPair: Sendable, Equatable {
         self.operation = operation
         self.identity = identity
     }
+
+    /// The mutating method the operation was lifted from — its name, location, parameters and
+    /// body signals are what the scorer actually reads, and reaching them as
+    /// `pair.operationSummary.name` says that a pair holds a lift and a lift holds the
+    /// summary it came from. `operation` stays available for `carrier` and the lifted shape.
+    public var operationSummary: FunctionSummary { operation.originalSummary }
 }
 
 /// V1.19.C — pair finder for the lifted identity-element template.
@@ -91,8 +97,8 @@ public enum LiftedIdentityElementPairing {
         _ lhs: LiftedIdentityElementPair,
         _ rhs: LiftedIdentityElementPair
     ) -> Bool {
-        let lhsLoc = lhs.operation.originalSummary.location
-        let rhsLoc = rhs.operation.originalSummary.location
+        let lhsLoc = lhs.operationSummary.location
+        let rhsLoc = rhs.operationSummary.location
         if lhsLoc != rhsLoc {
             return lhsLoc < rhsLoc
         }
@@ -177,7 +183,7 @@ extension IdentityElementTemplate {
             signals.append(carrier)
         }
         signals.append(liftedFromMutationSignal(for: pair))
-        if let veto = liftedNonDeterministicVeto(for: pair) {
+        if let veto = pair.operationSummary.nonDeterministicVetoSignal {
             signals.append(veto)
         }
         return signals
@@ -188,7 +194,7 @@ extension IdentityElementTemplate {
     private static func liftedTypeShapeSignal(
         for pair: LiftedIdentityElementPair
     ) -> Signal {
-        let paramType = pair.operation.originalSummary.parameters[0].typeText
+        let paramType = pair.operationSummary.parameters[0].typeText
         return Signal(
             kind: .typeSymmetrySignature,
             weight: 30,
@@ -211,30 +217,14 @@ extension IdentityElementTemplate {
     private static func liftedFromMutationSignal(
         for pair: LiftedIdentityElementPair
     ) -> Signal {
-        let labels = pair.operation.originalSummary.parameters
+        let labels = pair.operationSummary.parameters
             .map { ($0.label ?? "_") + ":" }
             .joined()
         return Signal(
             kind: .liftedFromMutation,
             weight: 10,
             detail: "Lifted from `mutating func \(pair.operation.carrier)."
-                + "\(pair.operation.originalSummary.name)(\(labels))`"
-        )
-    }
-
-    private static func liftedNonDeterministicVeto(
-        for pair: LiftedIdentityElementPair
-    ) -> Signal? {
-        guard pair.operation.originalSummary.bodySignals.hasNonDeterministicCall else {
-            return nil
-        }
-        let calls = pair.operation.originalSummary.bodySignals
-            .nonDeterministicAPIsDetected
-            .joined(separator: ", ")
-        return Signal(
-            kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
-            detail: "Non-deterministic API in body: \(calls)"
+                + "\(pair.operationSummary.name)(\(labels))`"
         )
     }
 
@@ -252,7 +242,7 @@ extension IdentityElementTemplate {
     private static func makeLiftedIdentity(
         for pair: LiftedIdentityElementPair
     ) -> SuggestionIdentity {
-        let opSig = IdempotenceTemplate.canonicalSignature(of: pair.operation.originalSummary)
+        let opSig = IdempotenceTemplate.canonicalSignature(of: pair.operationSummary)
         let identityKey: String
         if let containing = pair.identity.containingTypeName {
             identityKey = "\(containing).\(pair.identity.name):\(pair.identity.typeText)"
@@ -269,19 +259,19 @@ extension IdentityElementTemplate {
     private static func makeLiftedOperationEvidence(
         _ pair: LiftedIdentityElementPair
     ) -> Evidence {
-        let labels = pair.operation.originalSummary.parameters
+        let labels = pair.operationSummary.parameters
             .map { ($0.label ?? "_") + ":" }
             .joined()
         let displayName = "\(pair.operation.carrier)."
-            + "\(pair.operation.originalSummary.name)(\(labels))"
-        let paramTypes = pair.operation.originalSummary.parameters
+            + "\(pair.operationSummary.name)(\(labels))"
+        let paramTypes = pair.operationSummary.parameters
             .map(\.typeText).joined(separator: ", ")
         let signature = "mutating (\(paramTypes)) -> Void  // op'(s, e) == s where e = "
             + displayedIdentity(for: pair)
         return Evidence(
             displayName: displayName,
             signature: signature,
-            location: pair.operation.originalSummary.location
+            location: pair.operationSummary.location
         )
     }
 
@@ -322,7 +312,7 @@ extension IdentityElementTemplate {
                 + "time.",
             "Property holds iff `\(pair.operation.carrier)` has value "
                 + "semantics — the lift's `var copy = original; copy."
-                + "\(pair.operation.originalSummary.name)(...)` does not "
+                + "\(pair.operationSummary.name)(...)` does not "
                 + "alias original's state."
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
