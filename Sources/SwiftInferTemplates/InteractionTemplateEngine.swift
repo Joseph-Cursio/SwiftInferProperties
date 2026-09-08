@@ -51,10 +51,7 @@ public enum InteractionTemplateEngine {
                 firstSeenAt: firstSeenAt
             ))
         }
-        return emitted.sorted { lhs, rhs in
-            if lhs.score != rhs.score { return lhs.score > rhs.score }
-            return lhs.identity.normalized < rhs.identity.normalized
-        }
+        return emitted.sorted(by: InteractionSuggestionOrdering.byScoreDescendingThenIdentity)
     }
 
     /// V2.0 M4.B/C — per-candidate dispatcher. Routes through every

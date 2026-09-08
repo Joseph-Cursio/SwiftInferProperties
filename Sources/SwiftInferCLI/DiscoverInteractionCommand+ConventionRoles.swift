@@ -21,9 +21,6 @@ extension SwiftInferCommand.DiscoverInteraction {
         let roleSuggestions = roles.flatMap {
             ConventionRoleInteractionAnalyzer.suggestions(for: $0, firstSeenAt: firstSeenAt)
         }
-        return (existing + roleSuggestions).sorted { lhs, rhs in
-            if lhs.score != rhs.score { return lhs.score > rhs.score }
-            return lhs.identity.normalized < rhs.identity.normalized
-        }
+        return (existing + roleSuggestions).sorted(by: InteractionSuggestionOrdering.byScoreDescendingThenIdentity)
     }
 }

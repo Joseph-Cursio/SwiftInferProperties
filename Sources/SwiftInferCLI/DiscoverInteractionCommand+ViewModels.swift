@@ -22,9 +22,6 @@ extension SwiftInferCommand.DiscoverInteraction {
         let viewModelSuggestions = viewModels.flatMap {
             ViewModelInteractionAnalyzer.suggestions(for: $0, firstSeenAt: firstSeenAt)
         }
-        return (reducerSuggestions + viewModelSuggestions).sorted { lhs, rhs in
-            if lhs.score != rhs.score { return lhs.score > rhs.score }
-            return lhs.identity.normalized < rhs.identity.normalized
-        }
+        return (reducerSuggestions + viewModelSuggestions).sorted(by: InteractionSuggestionOrdering.byScoreDescendingThenIdentity)
     }
 }
