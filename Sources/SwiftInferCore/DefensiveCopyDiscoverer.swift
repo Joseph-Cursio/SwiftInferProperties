@@ -38,10 +38,7 @@ public enum DefensiveCopyDiscoverer {
                 equatability: equatable.classify(typeText: decl.name)
             ))
         }
-        return candidates.sorted { lhs, rhs in
-            (lhs.location.file, lhs.location.line, lhs.typeName)
-                < (rhs.location.file, rhs.location.line, rhs.typeName)
-        }
+        return candidates.sorted(by: SourceLocatedCandidateOrdering.byLocationThenTypeName)
     }
 
     /// Convenience: scan a source directory and discover candidates.
@@ -83,7 +80,7 @@ public enum DefensiveCopyDiscoverer {
             .map { summary in
                 MutationMethod(name: summary.name, isMutating: false, parameterCount: summary.parameters.count)
             }
-            .sorted { ($0.name, $0.parameterCount) < ($1.name, $1.parameterCount) }
+            .sorted(by: MutationMethodOrdering.byNameThenParameterCount)
     }
 
     // MARK: - Text helpers
