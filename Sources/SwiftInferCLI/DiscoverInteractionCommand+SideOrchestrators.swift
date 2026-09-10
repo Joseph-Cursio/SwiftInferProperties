@@ -260,23 +260,17 @@ extension SwiftInferCommand.DiscoverInteraction {
 
     /// Walk up from `directory` looking for `Package.swift`. Same
     /// shape as `InteractionBaselineLoader.findPackageRoot` (kept
-    /// private there); inlined here to keep the side-orchestrator
-    /// helpers self-contained without widening the loader's API.
+    /// private there); kept here to keep the side-orchestrator helpers
+    /// self-contained without widening the loader's API. The *walk* is
+    /// `DirectoryAncestors`, shared with every other caller.
     /// Internal access (vs private) so both
     /// `runUpdateBaseline` and `runInteractiveBranch` reach it from
     /// the same extension file.
     static func findPackageRoot(startingFrom directory: URL) -> URL? {
-        var current = directory.standardizedFileURL
-        while true {
-            let manifest = current.appendingPathComponent("Package.swift")
-            if FileManager.default.fileExists(atPath: manifest.path) {
-                return current
-            }
-            let parent = current.deletingLastPathComponent().standardizedFileURL
-            if parent == current {
-                return nil
-            }
-            current = parent
+        DirectoryAncestors.nearest(from: directory) { candidate in
+            FileManager.default.fileExists(
+                atPath: candidate.appendingPathComponent("Package.swift").path
+            )
         }
     }
 }

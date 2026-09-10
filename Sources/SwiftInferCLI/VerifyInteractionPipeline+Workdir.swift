@@ -97,21 +97,16 @@ extension VerifyInteractionPipeline {
         }
     }
 
-    /// Walk up from `directory` looking for `Package.swift`. Same shape as
-    /// v1.42 verify's package-root resolution + every other loader in the
-    /// project — kept inlined here for the same independent-loader posture.
+    /// Walk up from `directory` looking for `Package.swift`.
+    ///
+    /// Shares `DirectoryAncestors` with every other loader rather than the walk itself. The
+    /// independent-loader posture the previous comment described is about API coupling; it was
+    /// never an argument for seven copies of an untestable loop.
     static func findPackageRoot(startingFrom directory: URL) -> URL? {
-        var current = directory.standardizedFileURL
-        while true {
-            let manifest = current.appendingPathComponent("Package.swift")
-            if FileManager.default.fileExists(atPath: manifest.path) {
-                return current
-            }
-            let parent = current.deletingLastPathComponent().standardizedFileURL
-            if parent == current {
-                return nil
-            }
-            current = parent
+        DirectoryAncestors.nearest(from: directory) { candidate in
+            FileManager.default.fileExists(
+                atPath: candidate.appendingPathComponent("Package.swift").path
+            )
         }
     }
 

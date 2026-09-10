@@ -1,4 +1,5 @@
 import Foundation
+import SwiftInferCore
 
 /// V1.89 lint pass — utility helpers extracted from
 /// `VerifyCommand.swift`'s `Verify` struct body so the main file
@@ -10,22 +11,16 @@ import Foundation
 extension SwiftInferCommand.Verify {
 
     /// Walk up parent directories looking for `Package.swift`.
-    /// Mirrors `BaselineLoader.findPackageRoot` / `DecisionsLoader.
-    /// findPackageRoot` / `VocabularyLoader.findPackageRoot` —
-    /// inlined here rather than extracted because each loader's
-    /// posture is to stay independent.
+    ///
+    /// The walk itself is `DirectoryAncestors.chain(from:)` now — one total function with laws
+    /// over it, rather than the sixth of seven hand-rolled copies. The *loader* stays
+    /// independent, which is what the previous comment here was protecting; what it was not
+    /// protecting, and what the copies cost, is that none of them could be tested.
     static func findPackageRoot(startingFrom directory: URL) -> URL? {
-        var current = directory.standardizedFileURL
-        while true {
-            let manifest = current.appendingPathComponent("Package.swift")
-            if FileManager.default.fileExists(atPath: manifest.path) {
-                return current
-            }
-            let parent = current.deletingLastPathComponent().standardizedFileURL
-            if parent == current {
-                return nil
-            }
-            current = parent
+        DirectoryAncestors.nearest(from: directory) { candidate in
+            FileManager.default.fileExists(
+                atPath: candidate.appendingPathComponent("Package.swift").path
+            )
         }
     }
 

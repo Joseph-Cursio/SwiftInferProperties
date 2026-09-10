@@ -79,18 +79,10 @@ public enum ConvertCounterexampleEngine {
     }
 
     private static func walkUpForPackageManifest(startingFrom directory: URL) -> URL? {
-        let fileManager = FileManager.default
-        var current = directory.standardizedFileURL
-        while true {
-            let manifest = current.appendingPathComponent("Package.swift")
-            if fileManager.fileExists(atPath: manifest.path) {
-                return current
-            }
-            let parent = current.deletingLastPathComponent().standardizedFileURL
-            if parent == current {
-                return nil
-            }
-            current = parent
+        DirectoryAncestors.nearest(from: directory) { candidate in
+            FileManager.default.fileExists(
+                atPath: candidate.appendingPathComponent("Package.swift").path
+            )
         }
     }
 
