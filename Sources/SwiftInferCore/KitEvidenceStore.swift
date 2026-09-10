@@ -89,17 +89,12 @@ public enum KitEvidenceStore {
     /// Nearest ancestor holding a `Package.swift`, or the first holding a `.swiftinfer/` —
     /// the second clause so an Xcode project, which has no manifest, is still reachable.
     static func packageRoot(startingFrom directory: URL) -> URL? {
-        var candidate = directory.standardizedFileURL
-        while true {
-            let manifest = candidate.appendingPathComponent("Package.swift")
-            let store = candidate.appendingPathComponent(".swiftinfer")
-            if FileManager.default.fileExists(atPath: manifest.path)
-                || FileManager.default.fileExists(atPath: store.path) {
-                return candidate
-            }
-            let parent = candidate.deletingLastPathComponent().standardizedFileURL
-            if parent == candidate { return nil }
-            candidate = parent
+        DirectoryAncestors.nearest(from: directory) { candidate in
+            FileManager.default.fileExists(
+                atPath: candidate.appendingPathComponent("Package.swift").path
+            ) || FileManager.default.fileExists(
+                atPath: candidate.appendingPathComponent(".swiftinfer").path
+            )
         }
     }
 
