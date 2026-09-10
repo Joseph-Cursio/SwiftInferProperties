@@ -9,6 +9,37 @@ import Testing
 /// (three real projection bugs that pass 4/4 Equatable laws and die at trial ≤3 against a
 /// model) and the swift.org `loops` population (`RangeSet` states five of these by hand, the
 /// largest single `gap-with-witness` cluster in the study).
+/// `ModelLawPairing.SetOperation` and `SetAlgebraShape.binaryOps` hold the same four names in
+/// two modules, and the enum cannot derive its cases from the `Set`. Nothing caught that: the
+/// two agree *exactly*, and no rule in the lint suite reports an enum and an array literal that
+/// agree — `parallel-list-drift` fires on a near match and reported this enum against
+/// `CommutativityTemplate.setCombinationVerbs`, the one list it deliberately differs from,
+/// while the exact duplication sat beside it unremarked.
+///
+/// So the agreement is pinned here. If a fifth operation is added to either side, this fails and
+/// the decision about the other side gets made rather than deferred.
+@Suite("The set-operation roster exists in two places and they must agree")
+struct SetOperationRosterTests {
+
+    @Test("SetOperation's cases are SetAlgebraShape.binaryOps")
+    func setOperationRosterMatchesSetAlgebraShape() {
+        let fromEnum = Set(ModelLawPairing.SetOperation.allCases.map(\.rawValue))
+        #expect(fromEnum == SetAlgebraShape.binaryOps)
+    }
+
+    /// The list it is *not*. `subtracting` is absent there because `a - b != b - a`, and
+    /// `intersect` is present because user code writes that spelling although stdlib
+    /// `SetAlgebra` does not declare it. Both differences are semantic, and pinning them keeps
+    /// a future reader from "reconciling" the two into one list.
+    @Test("SetOperation differs from the commutative verbs in exactly two places")
+    func setOperationDiffersFromCommutativeVerbs() {
+        let fromEnum = Set(ModelLawPairing.SetOperation.allCases.map(\.rawValue))
+        let verbs = CommutativityTemplate.setCombinationVerbs
+        #expect(fromEnum.subtracting(verbs) == ["subtracting"])
+        #expect(verbs.subtracting(fromEnum) == ["intersect"])
+    }
+}
+
 @Suite("Model law — membership homomorphism through `contains`")
 struct ModelLawTemplateTests {
 

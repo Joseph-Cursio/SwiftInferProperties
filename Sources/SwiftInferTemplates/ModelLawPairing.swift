@@ -37,6 +37,15 @@ import SwiftInferCore
 /// `[1,5)` can still be commutative, idempotent and absorptive — and still wrong at `x == 3`.
 public enum ModelLawPairing {
 
+    // Holds the same four names as `SetAlgebraShape.binaryOps` and is *not* the same list as
+    // `CommutativityTemplate.setCombinationVerbs`, which drops the non-commutative
+    // `subtracting` and adds the informal `intersect`. Both of those already say so at their
+    // own declarations; this one did not, which is why the drift rule reported here and not
+    // there. `setOperationRosterMatchesSetAlgebraShape` pins the agreement with `binaryOps`,
+    // since an enum cannot derive its cases from a `Set` and nothing else would catch the two
+    // falling apart — no rule in the suite reports an enum and an array literal that agree
+    // exactly.
+    // swiftprojectlint:disable:next parallel-list-drift
     /// The set operations this template knows how to state pointwise, with the Boolean
     /// combinator each one owes.
     ///
