@@ -1180,3 +1180,126 @@ shadow an existing *local*.
 | S6 | 2 | actor isolation; `import Foundation` under `MemberImportVisibility` |
 | S7 | 2 | P3 passes over a live defect; the emitted idempotence test is vacuous on 3 907/3 907 |
 | S2, S8 | 0 | S8 unreachable — no emitted test can run |
+
+---
+
+## Subject 5 — `NSRange.clamped(to:)`
+
+`SwiftMarkdownWiki/Editor/NSRange+Clamp.swift:7`
+
+```swift
+/// Clamps the receiver so its location and length stay within `[0, length]`.
+/// Used when mapping styling ranges onto a text storage that may have changed
+/// length since the ranges were computed.
+func clamped(to length: Int) -> NSRange {
+    let location = max(0, min(self.location, length))
+    let clampedLength = max(0, min(self.length, length - location))
+    return NSRange(location: location, length: clampedLength)
+}
+```
+
+**Chosen to answer the question four subjects have left open: does the loop ever
+propose a law that is true, refutable and non-trivial?** So far it has offered a
+near-vacuous totality claim, a conjecture the code fails, and an owed reference
+definition the reader must supply. `role-postcondition` is the one template that
+supplies the law itself, **from a catalogue** — *"'clamped' names an operation
+whose guarantee is known, so it owes it of its output — the result lies within the
+given bounds"*. If the loop delivers anywhere, it delivers here.
+
+It also sits on two earlier findings at once: it is in a foreign extension, so
+[#214](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/214) means it is
+**absent from the seed manifest**, and Finding 2 recorded it as one of the two
+real losses when the run was focused through that manifest.
+
+> **Declared contamination.** I read the `role-postcondition` block before
+> predicting — it is what selected the subject. So T3 below is not an independent
+> prediction; it is the tool's claim, which I am about to test. T1, T2, T4, T5 and
+> the failure prediction are mine.
+
+### Prediction — written 2026-09-11
+
+| # | Predicted law | Refutable? | Rejects |
+|---|---|---|---|
+| **T1** | `result.location >= 0` | yes | dropping the outer `max(0, …)` on location |
+| **T2** | `result.length >= 0` | yes | dropping the outer `max(0, …)` on length |
+| **T3** | **the tool's law** — `result.location + result.length <= bound` | yes | `min(self.length, length)` instead of `length - location`, the classic off-by-a-location |
+| **T4** | **idempotence** — clamping twice to the same bound equals clamping once | yes | any implementation whose output is not already in range |
+| **T5** | **fixpoint** — a range already inside `[0, bound]` is returned unchanged | yes | an implementation that always rewrites, e.g. zeroing the length |
+
+**And a failure predicted in advance: T3 is false for a negative bound.** With
+`bound = -1` the body gives `location = max(0, min(loc, -1)) = 0` and
+`clampedLength = max(0, min(len, -1)) = 0`, so the result is `(0, 0)` and
+`0 + 0 <= -1` is **false**. The catalogue's law cannot hold there, because no
+range fits inside `[0, -1]` — the interval is empty.
+
+So the interesting question is not *does the loop propose a good law* — it does —
+but **what the loop does with a catalogue law whose precondition it never states.**
+A negative bound is unreachable from this call site (`clamped(to:)` is handed an
+`NSTextStorage` length), which is exactly the condition under which a false law
+sits unnoticed.
+
+### Result — the loop delivers, and the law it delivers is false as stated
+
+**T3 was proposed, and it is the first genuinely good law the loop has produced in
+five subjects.** No reference definition required of the reader, no conjecture off
+a name's shape — the catalogue knows what `clamped` means and asserts it of the
+output. And it earns its keep: of four planted violators, the one that swaps
+`min(self.length, length - location)` for `min(self.length, length)` — the
+off-by-a-location that lets a clamped range run past the end of the storage it was
+clamped to, which is the bug this function exists to prevent — **is caught by T3
+and by nothing else.**
+
+T1, T2, T4, T5 were not proposed. Four of four violators die; the full matrix is
+in [SwiftMarkdownWiki#29](https://github.com/Joseph-Cursio/SwiftMarkdownWiki/pull/29).
+
+**And the failure predicted in advance holds: T3 is false for a negative bound.**
+All **242** negative-bound cases in the 1 089-case space refute it, pinned by
+`theCataloguesLawIsFalseForANegativeBound`. `[0, -1]` is the empty interval, so no
+range fits inside it — the law is *unsatisfiable* there rather than violated.
+
+**The catalogue supplies a law and not its domain, and that is the finding.** This
+is not a defect in `clamped(to:)`: every call site hands it an `NSTextStorage`
+length, so the region where the contract fails is unreachable — which is exactly
+the condition under which an unstated precondition survives indefinitely. Nor is
+it quite a defect in the tool, which never claimed to state preconditions. It is
+the seam between them, and it has a shape worth naming:
+
+> **A catalogue law is a law plus a domain, and only the law is shipped.**
+> `role-postcondition`'s message — *"'clamped' names an operation whose guarantee
+> is known, so it owes it of its output"* — is true on the domain the verb
+> presupposes, and silent about what that domain is. A reader who encodes the
+> sentence as given gets a test that is red on inputs the function was never asked
+> about.
+
+Which is the same defect this walk found in the *generator* (#416), arriving from
+the opposite direction. There, the law was right and the inputs could not reach it.
+Here the inputs reach further than the law, and the law is what gives way. **Both
+are the gap between a law and the domain it is quantified over, and neither the
+suggestion nor the emitted stub carries a domain at all.**
+
+**An incidental, recorded because it landed in the instrument rather than the
+subject.** T5's guard was first written `range.location + range.length <= bound`,
+which traps on `NSNotFound + Int.max` and took the whole test process down with
+SIGTRAP — no failure message, exit signal 5. That is precisely the hazard
+`input-totality`'s warning describes (*"A VIOLATION CRASHES THE TEST PROCESS
+instead of shrinking to a tidy counterexample"*), except the trap was in the law,
+not in the code under test. A walked space that deliberately includes `Int.max`
+will find the harness's own arithmetic before it finds the subject's.
+
+### Running tally, after five subjects
+
+| stage | rows | note |
+|---|---|---|
+| S0 | 3 | foreign extensions (#214, 0 of 88); shorthand binding (#215, 12 of 3 280) |
+| S1 | 0 | `SeedFocus` kept an owed law the manifest never named |
+| S3 | 19 | T1, T2, T4, T5 join R1–R4, Q2–Q5, P1–P4, L1–L4 |
+| S4 | 2 | narrowed and filed (#420) |
+| S5 | 3 | path, imports, generator (#414 / #415 / #416) |
+| S6 | 2 | actor isolation; `import Foundation` under `MemberImportVisibility` |
+| S7 | 3 | P3 over a live defect; the vacuous emitted idempotence test; **a catalogue law shipped without its domain** |
+| S2, S8 | 0 | S8 unreachable — no emitted test can run |
+
+**The answer to "does the loop ever deliver" is yes, once in five subjects, and
+the delivery is 80% of a law.** T3 is correct, catalogue-supplied, needs nothing
+from the reader, and catches the real bug. It is also stated over a domain that
+does not exist.
