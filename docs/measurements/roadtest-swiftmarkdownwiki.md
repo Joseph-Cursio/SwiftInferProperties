@@ -183,7 +183,9 @@ trap" does not serve a parser. **Owed is not the same as informative**, and
 to make — it exists to keep a *conjecture* from crying wolf, and here it is
 gating a *strictly stronger owed law* out of the report.
 
-Filed against SwiftInferProperties.
+Filed as
+[#420](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/420), after
+Subject 4 supplied the positive control that narrowed it.
 
 ---
 
@@ -1019,3 +1021,162 @@ property-test subject — which is why the verdict stays *documented limitation*
 not depend on the census; the census only ever sized the consequence. The final
 size is **0 of 88 parameterless members, ~12 of which are candidates anyone
 would want.**
+
+---
+
+## Subject 4 — `GraphViewModel.matchesSearch(_:)`
+
+`SwiftMarkdownWiki/Graph/GraphViewModel.swift:102` · `(GraphNode) -> Bool` on a
+`@Observable @MainActor final class`.
+
+```swift
+/// Returns true when the node matches the current search query (or no query is set).
+func matchesSearch(_ node: GraphNode) -> Bool {
+    let trimmed = searchQuery.trimmingCharacters(in: .whitespaces)
+    if trimmed.isEmpty { return true }
+    return node.title.localizedCaseInsensitiveContains(trimmed)
+}
+```
+
+**Chosen for three reasons, and the third is the strongest.** It is the first
+`predicate`-role subject, after two parse-family and one normalizer. `predicate`
+is one of the two entries in `referenceDefinitionHungryTemplates`, so Finding 1's
+**branch 1** should fire and the docstring advisory should *appear* — testing the
+positive side of that finding rather than the negative. And it is exactly the
+shape Appendix C names as the road test's unscored find: the locale-dependent
+search predicate the hand-written answer key walked past, which the appendix says
+carries four refutable laws.
+
+> **Declared contamination.** I knew this function received exactly one
+> suggestion, from the whole-run subject list. I had not read which template.
+
+### Prediction — written 2026-09-11
+
+Appendix C lists four laws for this shape. **Two of them do not survive contact
+with this codebase, and saying why is half the prediction.**
+
+| # | Predicted law | Refutable here? | Notes |
+|---|---|---|---|
+| **R1** | **An empty or whitespace-only query matches every node.** | **yes** | Appendix C's first. Rejects an implementation that forgets to trim, or that returns `false` on an empty query. |
+| **R2** | **The query is whitespace-insensitive.** Padding `searchQuery` with spaces changes no verdict. | **yes** | Not in Appendix C's list; it is what the `trimmingCharacters` line buys, and deleting that line is the mutant it kills. |
+| **R3** | **A match implies a case-insensitive substring.** | **yes, and it is the interesting one** | Appendix C's second. `localizedCaseInsensitiveContains` is **locale-dependent**, so stated against locale-independent `lowercased().contains` it is a latent flake — Turkish dotless `ı` is the classic divergence. Predicting it **holds under `en_US` and is not safe to state unconditionally.** |
+| — | *the result is a subset of the input* | **no — not about this function** | Appendix C's third. Here the filtering is stdlib `.filter`, which guarantees it. The law is about `filter`, not about the predicate. |
+| — | *filtering twice changes nothing* | **no — same reason** | Appendix C's fourth. `filter` is idempotent by construction for a pure predicate; the law cannot fail whatever this function does. |
+
+**That is a correction to a published list, not a complaint about it.** Appendix C
+states those four for an *extracted kernel* of the form
+`search(_ nodes: [Node], query: String) -> [Node]`, where subset and idempotence
+are real claims about the kernel's own filtering. Point them at a `(Node) -> Bool`
+predicate consumed by stdlib `filter` and two of the four become tautologies. The
+refutable count for this shape is **a property of how the kernel is carved**, not
+of the domain — which is the same lesson as the `f(x) == f(x)` fallback, arriving
+from a direction the scope doc did not anticipate.
+
+**Also predicted, before running anything:** this function is **not in the seed
+manifest**, while `isVisible` twelve lines above it is. Both read a mutable
+stored `var`. That discrepancy is what led to
+[SwiftProjectLint#215](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/215),
+recorded below — and `matchesSearch` being absent is the **correct** half of it.
+
+### Result — the loop's best showing, and the positive control Finding 1 needed
+
+| template | score | tier |
+|---|---|---|
+| `predicate` | 20 | Possible (role-entailed) |
+
+*"`matchesSearch` classifies its inputs — it must be TOTAL over them, and it must
+agree with a reference definition only you can state."*
+
+R1–R4 were not proposed. **But the docstring advisory fired**, which is the first
+time in four subjects:
+
+```
+• matchesSearch(_:)  (GraphNode) -> Bool
+  the `predicate` law openly owes a reference definition — your docstring states one:
+    "Returns true when the node matches the current search query (or no query is set)."
+  encode THAT sentence as the property; the law checks the code against it.
+```
+
+— followed by a `matchesSearch_reference(_:)` scaffold. `DocstringAdvisor` branch
+**1** took it, because `predicate` is in `referenceDefinitionHungryTemplates`.
+
+**This is the positive control Finding 1 was missing, and it narrows that finding
+rather than confirming it.** The advisory machinery is not broken; it works
+exactly as designed, and what it produces here is useful. Finding 1 is
+specifically that `input-totality` is *role-entailed but weak*, so it takes
+branch **4** — "a self-contained role-entailed law already serves the function" —
+and suppresses this same output for every parser. Subjects 1 and 2 were denied
+precisely what Subject 4 was handed.
+
+`matchesSearch` also **survives seed focusing despite being absent from the
+manifest**, because `predicate` is role-entailed and `SeedFocus` keeps a law the
+code owes. The documented seam works.
+
+### The laws, and two violators that survived first
+
+Six laws over 110 cases, in
+`SwiftMarkdownWikiTests/GraphSearchPropertyLawTests.swift` (shipped as
+SwiftMarkdownWiki#28). R1–R4 as predicted; R3 confirmed locale-dependent, pinned
+by a test asserting `en_US` and `tr_TR` **disagree** — searching `i` finds a note
+titled `I` in English and does not in Turkish.
+
+| # | mutant | first run | after |
+|---|---|---|---|
+| 1 | query not trimmed | R1, R2 | R1, R2, R4 |
+| 2 | case-**sensitive** `contains` | **survived** | R4 |
+| 3 | blank query matches nothing | R1 | R1 |
+| 4 | matches `node.id.path`, not `node.title` | **survived** | R3, R4 |
+
+**Mutant 2 was predicted to survive** — R3 is one-directional, and a
+case-sensitive implementation satisfies it because every match it reports is
+still a substring. R4 is its converse and exists for it.
+
+**Mutant 4 was not predicted, and the fault was in the fixture.** Node ids were
+built as `/tmp/<title>.md`, so the path always contained the title and "matches
+the title" was indistinguishable from "matches the path". Ids are now opaque. **An
+id derived from the data under test cannot witness a claim about that data** —
+recorded at the fixture, because the next person to write a `GraphNode` helper
+will reach for the readable spelling.
+
+### And the anomaly that started the subject: SwiftProjectLint#215
+
+`matchesSearch` is **not** in the seed manifest; `isVisible`, twelve lines above,
+**is**. Both read a mutable stored `var`. The difference is one line:
+
+```swift
+if let tagFilter, !node.tags.contains(tagFilter) { return false }   // shorthand
+```
+
+Swift 5.7 shorthand optional binding is collected as a fresh local by
+`SelfAccessAnalyzer.LocalBindingCollector`, so the implicit `self.tagFilter` read
+is never classified. A three-arm fixture settles it: the same logic is **seeded**
+as `if let tagFilter`, and **dropped** as `if let filter = self.tagFilter` or
+`guard let value = tagFilter`.
+
+Measured corpus-wide: **12 of 3,280** seeded pure/restricted functions
+shorthand-bind a mutable stored `var` — including `EditorFormatter.selectedText`,
+which binds `weak var textView: NSTextView?`, a live view object seeded as a
+pure-function candidate. A first pass counted **118** by flagging any stored
+property; spot-checks killed it, because binding a `let` (`CappedList.wasTruncated`)
+or a computed property over `let`s (`OptionSweep.currentImpact`) is harmless — the
+blind spot is the same, but the seed is correct anyway.
+
+**This is the mirror of #214.** That one is over-conservative and misses ~12
+candidates; this one is under-conservative and admits 12. Same rule, same order of
+magnitude, opposite signs. Both filed;
+[#215](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/215) carries the
+note that the fix is not a one-liner, because a shorthand binding may legitimately
+shadow an existing *local*.
+
+### Running tally, after four subjects
+
+| stage | rows | note |
+|---|---|---|
+| S0 | 3 | foreign extensions (**#214**, 0 of 88); **shorthand binding admits mutable state (#215, 12 of 3,280)** |
+| S1 | 0 | `SeedFocus` kept an owed law the manifest never named — the seam working |
+| S3 | 15 | R1–R4 join L1–L4, P1–P4, Q2–Q5: no template names an output-to-input relation or a docstring clause |
+| S4 | 2 | **narrowed and filed — [#420](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/420)**; the advisory works for `predicate`, the defect is `input-totality` taking branch 4 |
+| S5 | 3 | path, imports, generator (#414 / #415 / #416) |
+| S6 | 2 | actor isolation; `import Foundation` under `MemberImportVisibility` |
+| S7 | 2 | P3 passes over a live defect; the emitted idempotence test is vacuous on 3 907/3 907 |
+| S2, S8 | 0 | S8 unreachable — no emitted test can run |
