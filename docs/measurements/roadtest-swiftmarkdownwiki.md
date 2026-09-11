@@ -809,10 +809,147 @@ all places where something already known failed to reach the code that needed it
 
 | stage | rows | note |
 |---|---|---|
-| S0 | 2 | extensions on non-project types never seeded |
+| S0 | 2 | extensions on non-project types never seeded — **measured corpus-wide, 0 of 73; documented limitation, SwiftProjectLint#214** |
 | S3 | 12 | docstring clauses and output-to-input relations, none signature-shaped |
 | S4 | 2 | docstring advisory suppressed on both parse-family subjects |
 | **S5** | **3** | **wrong output path (silent), no module import (0/19), generator cannot reach the law (11/19)** |
 | S6 | 2 | actor isolation unmentioned; `import Foundation` under `MemberImportVisibility` |
 | S7 | 2 | P3 passes over a live defect; the emitted idempotence test is vacuous on 3 907/3 907 inputs |
 | S1, S2, S8 | 0 | S8 unreachable — no emitted test can run |
+
+
+---
+
+## Finding 3, measured across the corpus — and the first claim was wrong
+
+Subject 1 recorded that `String.htmlEscaped` and `NSRange.clamped` are absent
+from a 101-seed manifest, read the cause out of
+`PropertyTestCandidacy.enclosingTypeContainer`, and said the claim rested on the
+mechanism rather than on n = 2 — but that it predicted "the same silence in all 26
+repositories" and was **worth measuring before filing**. It was measured. The
+prediction about the mechanism survives; the prediction about the scale does not.
+
+### Method
+
+A **foreign extension** is an `extension X { … }` where `X` is a type no file in
+the repository declares. Members are attributed to the extension block that
+lexically contains them, and a seed is attributed to a block when its line falls
+inside that block's line range.
+
+The control is the same construct with one variable changed: an extension on a
+type the repository **does** declare.
+
+**Two bugs in the instrument, both caught by a result that looked odd rather than
+by a test, and both recorded because the corrected numbers are the finding.**
+
+1. **v1 attributed every member of a file to that file's extensions.**
+   `pbt-workbook/main.swift` holds a top-level `func indent` *and* an
+   `extension Grade`; v1 credited `indent` to the extension and reported it as a
+   seeded foreign member. It is not in the extension at all.
+2. **v2 matched seeds to members by symbol name within a file.**
+   `TeamStandard.swift` declares both `RuleSeverity.strength` and
+   `Optional<RuleSeverity>.strength`; v2 credited the seed for the first to the
+   foreign extension holding the second. Seeds carry a line number, so v3 matches
+   on line range, which is exact.
+
+Both errors inflated the *seeded* count — i.e. both pushed **against** the
+finding — which is why they surfaced as "why is this one seeded?" rather than
+staying invisible.
+
+### The result: 21 of 23 repositories, 1 646 non-test files
+
+| | foreign extensions | members | seeded |
+|---|---|---|---|
+| **extension on a type the repo does not declare** | 57 | **112** | **5** |
+| control — extension on a type the repo declares | 225 | 1 095 | **369** |
+
+4.5% against 33.7%. And splitting the foreign members by whether they take a
+parameter turns that into a clean rule:
+
+| foreign-extension members | seeded | dropped |
+|---|---|---|
+| takes at least one parameter | 3 | 36 |
+| **takes none** | **0** | **73** |
+
+**Zero of 73.** A computed property or nullary method on `String`, `URL`,
+`NSRange` or `Array` is never a seed, corpus-wide.
+
+*(`SwiftProjectLint` and `SwiftInferProperties`, the two largest, were still
+running when this was written and are excluded from the table. Both are
+appended below when they land; neither can change the mechanism, only the
+denominator.)*
+
+### The mechanism, read from source rather than inferred
+
+Three separate pieces of state are empty for a type the project does not declare,
+and any one of them is enough:
+
+1. `enclosingTypeContainer(of:knownValueTypes:)` sets
+   `isValueType: knownValueTypes.contains(extendedBase)`, and `knownValueTypes`
+   is *"project types declared as `struct` or `enum`"*. So `String` is **not** a
+   value type as far as the analyzer is concerned, and `SelfAccessAnalyzer`'s
+   bare-`self` branch reads
+   `enclosingIsValueType ? .immutableSelf : .disqualifying`.
+2. `TypeStoredPropertyCollector` finds no declaration, so `storedProperties` is
+   empty and `self.x` resolves to nothing.
+3. `CleanInstanceMethodCatalog` has no entry for the type, so a call to one of its
+   own methods — `replacingOccurrences(of:with:)`, the normal way to write such an
+   extension — is a bare lowercase callee that is not local, not a stored
+   property, not in `pureStdlibFunctions` and not a cleared sibling. It falls
+   through to the conservative branch and disqualifies the member.
+
+So a member whose body touches `self` **at all** — explicitly, through a stored
+property, or through an implicit-`self` method call — is refused. Only a member
+that ignores `self` survives, and ignoring `self` usefully requires parameters.
+That is exactly the 0-of-73 boundary.
+
+### An A/B/C experiment, because a census is a correlation
+
+The census cannot separate "foreign" from "these functions differ somehow". A
+three-arm fixture with the **same body** does:
+
+| arm | carrier | reads `self`? | result |
+|---|---|---|---|
+| **A** | `extension String` (foreign) | yes | **dropped** |
+| **B** | `struct Markup` (declared here) | yes | **seeded** |
+| **C** | `extension String` (foreign) | no — `static`, takes the input as a parameter | **seeded** |
+
+A and B are the same escaping logic; only the carrier differs. A and C are the
+same carrier; only the relationship to `self` differs. The mechanism is causal.
+
+### Verdict: documented limitation, not a filing
+
+**The population is the reason.** 112 foreign-extension members across 1 646
+files, and most are not property-test subjects at all:
+
+| extended type | members | what they are |
+|---|---|---|
+| `Gen` | 23 | swift-property-based generator definitions |
+| swift-syntax node types | ~37 | mostly `PropertyLawSyntax`'s own `gen()` factories |
+| SwiftUI `View` / `Binding` | several | view modifiers returning `some View` |
+| **the rest** | **~12** | the genuinely missed candidates |
+
+Those twelve are the whole cost: `String.htmlEscaped`, `NSRange.clamped`,
+`unichar.isASCIIDigit`, `Duration.seconds` (two repos), `URL.fileSize`,
+`Collection.bindingInitializers`, and SwiftUMLStudio's `String+Extensions.swift`
+— which holds `globPatternToRegex`, the best missed candidate in the set.
+
+**The bias still runs the wrong way**, and that is worth writing down: an
+extension on `String`, `Array` or `NSRange` is the *easiest* possible property
+subject — the carrier is a value type, a generator is trivially derivable, and
+the function is pure by construction because there is nowhere impure to reach.
+The gate that cannot see them is the one that asks whether the project declared
+the carrier.
+
+But twelve candidates corpus-wide does not justify teaching the scanner about
+stdlib types, and the conservative posture that produces the silence is the same
+one that keeps its false-positive rate low everywhere else. **Filed as a
+documented limitation rather than a defect** —
+[SwiftProjectLint#214](https://github.com/Joseph-Cursio/SwiftProjectLint/issues/214)
+— which is the outcome the "measure before filing" note in Subject 1 was holding
+the question open for.
+
+**What the exercise actually bought**: the first write-up would have said "the
+linter is blind to extensions on stdlib types" and implied a systemic gap. The
+true statement is narrower in scope, sharper in mechanism, and smaller in
+consequence — and only one of those three was knowable from n = 2.
