@@ -874,10 +874,10 @@ parameter turns that into a clean rule:
 **Zero of 73.** A computed property or nullary method on `String`, `URL`,
 `NSRange` or `Array` is never a seed, corpus-wide.
 
-*(`SwiftProjectLint` and `SwiftInferProperties`, the two largest, were still
-running when this was written and are excluded from the table. Both are
-appended below when they land; neither can change the mechanism, only the
-denominator.)*
+*(The table above is **21 of 23 repositories** — `SwiftProjectLint` and
+`SwiftInferProperties` were still generating. Superseded by the complete run
+below, which also carries a third instrument bug the last two repositories
+exposed.)*
 
 ### The mechanism, read from source rather than inferred
 
@@ -953,3 +953,69 @@ the question open for.
 linter is blind to extensions on stdlib types" and implied a systemic gap. The
 true statement is narrower in scope, sharper in mechanism, and smaller in
 consequence — and only one of those three was knowable from n = 2.
+
+
+### Completed — all 23 repositories, and a third instrument bug
+
+The two largest landed (`SwiftProjectLint` 249s, `SwiftInferProperties` 252s;
+23 of 23, no failures). They exposed one more defect in the measurement, found
+the same way as the first two — by a number that did not reconcile.
+
+**Eight seeds fell inside foreign-extension blocks, but only four aligned with a
+member.** Four of the eight were `kind: extractable-kernel` — *closure* seeds
+pointing inside a member's body, not member declarations — which reconciles the
+count. But two of those named `extension SharedVerifierPackage`, and
+`SharedVerifierPackage` **is declared in the repository**, at
+`Sources/SwiftInferCLI/SharedVerifierPackage.swift:58`. It should never have been
+classified foreign.
+
+The cause was in my exclusion filter:
+
+```python
+if '/.build/' in low or low.endswith('package.swift'): return True
+```
+
+`"SharedVerifierPackage.swift".lower()` ends with `package.swift`. The filter
+meant to skip the SwiftPM manifest, and it also skipped every file whose name
+merely *ends* in `Package.swift` — so the type declared there was missing from
+`declared`, and its own extensions were counted as extensions on a foreign type.
+Fixed to match the basename exactly.
+
+**Three instrument bugs now, and the pattern is worth naming.** All three were in
+**attribution** — which member belongs to which extension, which seed belongs to
+which member, which file counts as declaring a type. None was caught by a test.
+Each surfaced as a row that read wrong on inspection, and each had been silently
+shifting the totals until then. Two inflated the seeded count and one inflated
+the foreign population; all three therefore flattered the finding's *size*
+while leaving its *direction* intact.
+
+### The final numbers
+
+23 repositories · 2 822 non-test files · 5 629 seeds
+
+| | extension blocks | members | member seeds |
+|---|---|---|---|
+| **carrier the repo does not declare** | 71 | **134** | **3** |
+| control — carrier the repo declares | 507 | 2 179 | **1 119** |
+
+2.2% against 51.4% — a 23× gap, wider than the 21-repo figure because the two
+large repositories are extension-heavy on their *own* types.
+
+| foreign-extension members | seeded | dropped |
+|---|---|---|
+| takes at least one parameter | 3 | 43 |
+| **takes none** | **0** | **88** |
+
+**Zero of 88**, corpus-wide, with no exceptions to chase. The three seeded
+members all take a parameter and ignore `self`, exactly as arm C of the A/B/C
+fixture predicts.
+
+The extended carriers, for scale: `Gen` (32 members), `String` (16), SwiftUI
+`View` (10), `Array` (8), `ExprSyntax` (6), `Optional` (6), `Int` (5). The two
+largest groups remain generator definitions and SwiftUI modifiers — neither a
+property-test subject — which is why the verdict stays *documented limitation*.
+
+**Nothing in the mechanism moved.** The A/B/C fixture settles causation and did
+not depend on the census; the census only ever sized the consequence. The final
+size is **0 of 88 parameterless members, ~12 of which are candidates anyone
+would want.**
