@@ -143,7 +143,7 @@ public enum InteractiveTriage {
         /// there with no diagnostic: 0 of 19 emitted stubs named the module under test (#415).
         ///
         /// `nil` for a caller with no manifest to read, which is every unit fixture. The stub
-        /// then carries a `// TODO:` naming what is missing rather than silently omitting it.
+        /// then carries a to-do line naming what is missing rather than silently omitting it.
         public let moduleUnderTest: String?
 
         public init(

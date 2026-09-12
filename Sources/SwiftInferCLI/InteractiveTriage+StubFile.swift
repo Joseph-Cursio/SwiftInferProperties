@@ -25,9 +25,10 @@ extension InteractiveTriage {
         // component — and that is the layout `--sources` exists to serve, not a synthetic
         // fixture. The run's manifest-resolved module is consulted next.
         //
-        // When neither answers, the file says so. Emitting nothing was the defect: 0 of 19
-        // stubs named the module under test and nothing reported it, so the failure arrived
-        // as an unresolved-symbol error in code the reader did not write (#415).
+        // When neither answers, the file says so on the line that will fail. Emitting nothing
+        // was the defect: 0 of 19 stubs named the module under test and nothing reported it, so
+        // the failure arrived as an unresolved-symbol error in code the reader did not write
+        // (#415).
         let resolvedModule = location.flatMap { Self.moduleName(fromSourceFile: $0.file) }
             ?? moduleUnderTest
         let moduleImport = resolvedModule

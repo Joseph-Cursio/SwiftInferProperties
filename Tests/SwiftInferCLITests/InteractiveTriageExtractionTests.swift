@@ -108,8 +108,8 @@ struct InteractiveTriageModuleImportTests {
     @Test func wrappedFileSaysSoWhenNoModuleCanBeResolved() {
         let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String", file: "Source.swift")
         let wrapped = InteractiveTriage.wrappedFileContents(stub: "\n@Test func x() async {}", suggestion: suggestion)
-        // Asserted per line, not on the whole file: the TODO text *names* `@testable import`,
-        // which is the point of it — a substring check would pass on the advice.
+        // Asserted per line, not on the whole file: the emitted advice *names* `@testable
+        // import`, which is the point of it — a substring check would pass on the advice itself.
         let importLines = wrapped.split(separator: "\n").filter { $0.hasPrefix("@testable import") }
         #expect(importLines.isEmpty)
         #expect(wrapped.contains("TODO: no module resolved"))
