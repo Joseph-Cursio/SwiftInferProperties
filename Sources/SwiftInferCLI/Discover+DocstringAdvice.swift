@@ -120,9 +120,11 @@ extension SwiftInferCommand.Discover {
             returnTypeText = "Bool"
             sourceSuggestion = suggestions.first { $0.templateName == reference.template }
 
-        case .fallbackContract:
-            // The docstring is the only contract the templates could name. Make it
-            // runnable as a from-the-spec reference implementation — needs a
+        case .fallbackContract, .complementaryContract:
+            // The docstring is the contract the templates could not name — either because
+            // nothing role-entailed fired at all, or because what fired is unreachable by
+            // realistic input and so checks something else. Both want the same scaffold: make
+            // the sentence runnable as a from-the-spec reference implementation, which needs a
             // concrete, non-Void return to compare against.
             guard let returned = summary.returnTypeText, returned != "Void", returned != "()" else {
                 return nil

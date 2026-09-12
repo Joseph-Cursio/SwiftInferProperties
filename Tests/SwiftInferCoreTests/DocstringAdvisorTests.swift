@@ -151,6 +151,68 @@ struct DocstringAdvisorTests {
         #expect(advisory == nil)
     }
 
+    // MARK: - Path 4: owed, but unreachable by realistic input
+
+    /// **`input-totality` fires on every interpretation verb — that is its trigger — so the whole
+    /// parse / decode / read family used to reach the "already served, say nothing" arm**
+    /// (SwiftInferProperties#420). Its law is *does not trap*, and its own caveats say a realistic
+    /// generator will never find a counterexample; that discharges nothing a docstring claims.
+    ///
+    /// Measured over SwiftMarkdownWiki: three subjects with contract-cue docstrings, all three
+    /// suppressed, and one of the suppressed sentences became a law that found a live bug.
+    @Test("an input-totality law does not discharge the docstring — the sentence rides alongside")
+    func inputTotalityYieldsAComplementaryContract() {
+        let advisory = DocstringAdvisor.advisory(
+            forFunctionWith: "Parses all wikilink references from raw Markdown source, in document order.",
+            suggestions: [suggestion(template: "input-totality")]
+        )
+        guard case let .complementaryContract(contract) = advisory else {
+            Issue.record("expected .complementaryContract, got \(String(describing: advisory))")
+            return
+        }
+        #expect(contract.servedBy == ["input-totality"])
+        #expect(contract.docComment.contains("document order"))
+    }
+
+    /// **The arm is about what the reader was handed, not about the docstring.** A function that
+    /// also gets a self-contained role-entailed law HAS been served, so the sentence stays out —
+    /// which is arm 5's original premise, still correct where it applies.
+    @Test("a self-contained law alongside input-totality still suppresses the docstring")
+    func aReachableRoleEntailedLawStillSuppresses() {
+        let advisory = DocstringAdvisor.advisory(
+            forFunctionWith: "Parses all wikilink references from raw Markdown source, in document order.",
+            suggestions: [suggestion(template: "input-totality"), suggestion(template: "partition")]
+        )
+        #expect(advisory == nil)
+    }
+
+    /// `normal-form` is the neighbouring candidate and is deliberately NOT treated as unreachable:
+    /// `print(parse(print(parse(s)))) == print(parse(s))` is checked by ordinary input and does
+    /// constrain what the parse means. Widening the set on no evidence is the mistake this file
+    /// keeps recording.
+    @Test("normal-form is reachable, so it still serves the function on its own")
+    func normalFormIsNotTreatedAsUnreachable() {
+        let advisory = DocstringAdvisor.advisory(
+            forFunctionWith: "Parses the document and returns the fields it declares.",
+            suggestions: [suggestion(template: "normal-form")]
+        )
+        #expect(advisory == nil)
+    }
+
+    /// Arm 3 still wins when nothing role-entailed fired at all — the empty-`serving` case must
+    /// not fall through to the new arm, which would call an unserved function served.
+    @Test("no role-entailed law at all is still the fallback contract, not the complementary one")
+    func nothingRoleEntailedStillFallsBack() {
+        let advisory = DocstringAdvisor.advisory(
+            forFunctionWith: "Returns the nearest multiple of 5; ties round upward.",
+            suggestions: [suggestion(template: "monotonicity")]
+        )
+        guard case .fallbackContract = advisory else {
+            Issue.record("expected .fallbackContract, got \(String(describing: advisory))")
+            return
+        }
+    }
+
     // MARK: - Fixtures
 
     private func suggestion(template: String, canonical: String = "x") -> Suggestion {

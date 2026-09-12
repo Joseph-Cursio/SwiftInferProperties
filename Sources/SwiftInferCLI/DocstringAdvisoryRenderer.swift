@@ -61,6 +61,17 @@ enum DocstringAdvisoryRenderer {
                 "encode THAT sentence as the property; the law checks the code against it."
             ]
 
+        case let .complementaryContract(contract):
+            let served = contract.servedBy.joined(separator: ", ")
+            return [
+                "the \(served) law IS owed here — and its counterexamples live in malformed "
+                    + "input a realistic generator never produces, so it says nothing about "
+                    + "whether the result is RIGHT. Your docstring states a contract that does:",
+                "  \"\(contract.docComment)\"",
+                "encode THAT sentence as a second property, beside the totality law rather than "
+                    + "instead of it."
+            ]
+
         case let .fallbackContract(contract):
             let preamble: String
             if contract.redHerrings.isEmpty {
