@@ -95,7 +95,7 @@ public enum PackageProductResolver {
         // swift-collections), and the wait-then-read shape deadlocked on it
         // outright — see #170 and that type's doc comment.
         guard let data = DrainedProcess.standardOutputViaEnv(
-            ["swift", "package", "dump-package", "--package-path", packageRoot.path]
+            ManifestDumpCommand.argv(packageRoot: packageRoot)
         ) else { return nil }
         return try? JSONDecoder().decode(DumpedPackage.self, from: data)
     }

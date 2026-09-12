@@ -288,6 +288,21 @@ extension SwiftInferCommand {
         )
         public var seeds: String?
 
+        @Option(
+            name: .long,
+            help: """
+            Directory that receives accepted `--interactive` writeouts — the one holding \
+            the `SwiftInfer/` and `SwiftInferRefactors/` trees. When omitted, swift-infer \
+            reads Package.swift and picks a declared TEST TARGET's directory, because \
+            `Tests/Generated/` is inside no SwiftPM target on any package and a file \
+            written there is compiled by nothing, silently (#414). Pass this when the \
+            manifest cannot decide — a package with several test targets reaching the \
+            scanned module, or an Xcode-layout project with no test target at all. The run \
+            always prints the destination it chose and whether anything builds it.
+            """
+        )
+        public var outputDir: String?
+
         public init() { /* no-op */ }
     }
 }

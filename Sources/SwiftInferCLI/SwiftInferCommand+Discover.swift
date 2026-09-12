@@ -44,6 +44,7 @@ extension SwiftInferCommand.Discover {
             explicitVocabularyPath: explicitVocabularyPath,
             explicitConfigPath: explicitConfigPath,
             explicitTestDirectory: explicitTestDirPath,
+            explicitOutputDirectory: outputDir.map { URL(fileURLWithPath: $0) },
             packsOverride: packs,
             statsOnly: statsOnly,
             effectAnnotations: effectAnnotations,
@@ -74,6 +75,7 @@ extension SwiftInferCommand.Discover {
         explicitVocabularyPath: URL? = nil,
         explicitConfigPath: URL? = nil,
         explicitTestDirectory: URL? = nil,
+        explicitOutputDirectory: URL? = nil,
         packsOverride: String? = nil,
         statsOnly: Bool = false,
         effectAnnotations: Bool = false,
@@ -108,16 +110,15 @@ extension SwiftInferCommand.Discover {
         )
         let visible = focus(pipeline, with: seedManifest, diagnostics: diagnostics)
 
-        warnIfConflictingModes(
-            interactive: interactive, updateBaseline: updateBaseline, diagnostics: diagnostics
-        )
+        warnIfConflictingModes(interactive: interactive, updateBaseline: updateBaseline, diagnostics: diagnostics)
         if interactive {
             try runInteractiveBranch(
                 visible: visible,
                 pipeline: pipeline,
                 directory: directory,
                 triageIO: interactiveIO(
-                    prompt: promptInput, output: output, dryRun: dryRun, diagnostics: diagnostics
+                    prompt: promptInput, output: output, dryRun: dryRun,
+                    diagnostics: diagnostics, outputDirectoryOverride: explicitOutputDirectory
                 ),
                 evidenceByIdentity: evidence.verifyByIdentity
             )
@@ -227,13 +228,15 @@ extension SwiftInferCommand.Discover {
         prompt: any PromptInput,
         output: any DiscoverOutput,
         dryRun: Bool,
-        diagnostics: any DiagnosticOutput
+        diagnostics: any DiagnosticOutput,
+        outputDirectoryOverride: URL?
     ) -> DiscoverInteractiveIO {
         DiscoverInteractiveIO(
             prompt: prompt,
             output: output,
             diagnostics: diagnostics,
-            dryRun: dryRun
+            dryRun: dryRun,
+            outputDirectoryOverride: outputDirectoryOverride
         )
     }
 
@@ -248,11 +251,22 @@ extension SwiftInferCommand.Discover {
         evidenceByIdentity: [String: VerifyEvidence]
     ) throws {
         let packageRoot = pipeline.packageRoot ?? directory
+        // #414 — resolved ONCE per run, not per accept: the destination is a property of
+        // the package, and a note repeated nineteen times is a note nobody reads. Emitted
+        // whether or not anything is accepted, because the reader deciding whether to accept
+        // is exactly who needs to know where it would land.
+        let destination = GeneratedStubDestination.resolve(
+            packageRoot: packageRoot,
+            scanDirectory: directory,
+            outputDirectoryOverride: triageIO.outputDirectoryOverride
+        )
+        triageIO.diagnostics.writeDiagnostic("note: \(destination.note)")
         let context = InteractiveTriage.Context(
             prompt: triageIO.prompt,
             output: triageIO.output,
             diagnostics: triageIO.diagnostics,
             outputDirectory: packageRoot,
+            generatedRoot: destination.generatedRoot,
             dryRun: triageIO.dryRun,
             proposalsByType: RefactorBridgeOrchestrator.proposals(
                 from: visible,
@@ -277,4 +291,10 @@ struct DiscoverInteractiveIO {
     let output: any DiscoverOutput
     let diagnostics: any DiagnosticOutput
     let dryRun: Bool
+
+    /// `--output-dir`, when the caller passed one. Rides here rather than as a sixth
+    /// `runInteractiveBranch` parameter — the bundle exists for exactly that cap, and a
+    /// destination the user named at the command line is of a piece with the rest of the
+    /// interactive path's IO.
+    let outputDirectoryOverride: URL?
 }

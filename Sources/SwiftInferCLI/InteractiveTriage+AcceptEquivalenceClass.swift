@@ -17,8 +17,8 @@ extension InteractiveTriage {
         context: Context
     ) throws -> URL? {
         let fileName = "EquivalenceClasses_\(hint.predicateName).swift"
-        let path = context.outputDirectory
-            .appendingPathComponent("Tests/Generated/SwiftInfer/equivalence-class/\(fileName)")
+        let path = context.generatedRoot
+            .appendingPathComponent("SwiftInfer/equivalence-class/\(fileName)")
         if context.dryRun {
             context.output.write("[dry-run] would write \(path.path)")
             return nil
@@ -88,8 +88,8 @@ extension InteractiveTriage {
     ) throws -> URL? {
         let suffix = hint.markerSetName.lowercased()
         let fileName = "EquivalenceClasses_\(hint.predicateName)_\(suffix).swift"
-        let path = context.outputDirectory
-            .appendingPathComponent("Tests/Generated/SwiftInfer/equivalence-class/\(fileName)")
+        let path = context.generatedRoot
+            .appendingPathComponent("SwiftInfer/equivalence-class/\(fileName)")
         if context.dryRun {
             context.output.write("[dry-run] would write \(path.path)")
             return nil

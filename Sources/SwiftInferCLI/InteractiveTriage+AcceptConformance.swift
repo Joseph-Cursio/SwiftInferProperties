@@ -16,8 +16,8 @@ extension InteractiveTriage {
         context: Context
     ) throws -> URL? {
         let extensionSource = liftedConformanceSource(for: proposal)
-        let path = context.outputDirectory
-            .appendingPathComponent(LiftedConformanceEmitter.relativePath(
+        let path = context.generatedRoot
+            .appendingPathComponent(LiftedConformanceEmitter.pathUnderGeneratedRoot(
                 typeName: proposal.typeName,
                 protocolName: proposal.protocolName
             ))

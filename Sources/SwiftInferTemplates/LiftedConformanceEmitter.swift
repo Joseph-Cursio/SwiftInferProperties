@@ -202,8 +202,21 @@ public enum LiftedConformanceEmitter {
 
     /// Compose the relative path a writeout for `(typeName, protocolName)`
     /// should land at, under the `writeoutPathPrefix`.
+    ///
+    /// Relative to the **package root**, and therefore carrying the `Tests/Generated`
+    /// assumption #414 removed. Kept, unchanged, because the M7.6 hard-guarantee tests and
+    /// PRD §16 #1 both name this prefix; the accept path composes from
+    /// `pathUnderGeneratedRoot` instead, so the destination can move without the allowlist
+    /// vocabulary moving with it.
     public static func relativePath(typeName: String, protocolName: String) -> String {
-        "\(writeoutPathPrefix)/\(typeName)/\(protocolName).swift"
+        "Tests/Generated/\(pathUnderGeneratedRoot(typeName: typeName, protocolName: protocolName))"
+    }
+
+    /// The same path, relative to whatever directory holds `SwiftInfer/` and
+    /// `SwiftInferRefactors/` — which is a resolved test target's `Generated/` on a package
+    /// whose manifest can say, and `<packageRoot>/Tests/Generated` when it cannot.
+    public static func pathUnderGeneratedRoot(typeName: String, protocolName: String) -> String {
+        "SwiftInferRefactors/\(typeName)/\(protocolName).swift"
     }
 
     /// Shared body composition for Monoid / CommutativeMonoid /

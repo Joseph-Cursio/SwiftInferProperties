@@ -118,7 +118,7 @@ The four primary gestures:
 
 | Key | Action | Persisted |
 |---|---|---|
-| `a` | **Accept.** Writes a property-test stub to `Tests/Generated/SwiftInfer/<template>/<func>.swift` and records `.accepted` in `.swiftinfer/decisions.json`. | Yes |
+| `a` | **Accept.** Writes a property-test stub to `<test-target>/Generated/SwiftInfer/<template>/<func>.swift` (the test target is resolved from `Package.swift` and printed on stderr; `--output-dir` overrides) and records `.accepted` in `.swiftinfer/decisions.json`. | Yes |
 | `s` (or Enter) | **Skip.** Re-surfaces on future runs. Records `.skipped` so metrics can track suppression rates. | Yes (advisory) |
 | `n` | **Reject.** Hides the suggestion from future runs. | Yes |
 | `?`, `h`, `help` | Show the full help block and re-prompt. | No |
@@ -129,7 +129,7 @@ When the suggestion belongs to a type that has accumulated enough algebraic evid
 [3/12] Accept (A) / B (Equatable) / B' (SetAlgebra) / Skip (s) / Reject (n) / Help (?)
 ```
 
-- `b` — accept the **primary** RefactorBridge conformance proposal. Writes `Tests/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`. Once chosen for a type, subsequent suggestions on that type collapse back to `[A/s/n/?]` — you only get one conformance choice per type per run.
+- `b` — accept the **primary** RefactorBridge conformance proposal. Writes `<test-target>/Generated/SwiftInferRefactors/<TypeName>/<ProtocolName>.swift`. Once chosen for a type, subsequent suggestions on that type collapse back to `[A/s/n/?]` — you only get one conformance choice per type per run.
 - `b'` (alias `c`) — accept the **secondary** conformance proposal (used when the primary and secondary are incomparable, e.g. `Equatable` vs. `SetAlgebra` on a set-like type, or when the kit-defined `Semigroup` and the stdlib `AdditiveArithmetic` both apply).
 
 Input is case-insensitive; an empty line is treated as `s`.
@@ -367,7 +367,7 @@ swift run swift-infer convert-counterexample \
     --counterexample 'Document(text: "")'
 ```
 
-This writes `Tests/Generated/SwiftInfer/round-trip/encode_decode_regression_<hash>.swift` — a self-contained `@Test` function that runs exactly one trial against the counterexample input, with the seed pinned so re-runs are byte-stable.
+This writes `Tests/Generated/SwiftInfer/round-trip/encode_decode_regression_<hash>.swift` (`convert-counterexample` still writes to the package-root path, and stamps a NOT COMPILED WHERE IT SITS banner into the file; only `discover --interactive` resolves a test target so far) — a self-contained `@Test` function that runs exactly one trial against the counterexample input, with the seed pinned so re-runs are byte-stable.
 
 The `<hash>` is the first 8 characters of `SHA256(counterexample-source)`, so re-running the same conversion is idempotent. Two different counterexamples for the same callee land in two different files.
 
@@ -401,8 +401,8 @@ The arms map to:
 
 | Arm | Writes |
 |---|---|
-| `a` | Property-test stub at `Tests/Generated/SwiftInfer/associativity/<func>.swift` (proves *this specific law* on this specific function). |
-| `b` | Conformance extension at `Tests/Generated/SwiftInferRefactors/<TypeName>/Semigroup.swift`. The extension declares `extension Counter: Semigroup {}` and re-uses `PropertyLawKit`'s law machinery, which exercises **all** of Semigroup's laws on every CI run thereafter. |
+| `a` | Property-test stub at `<test-target>/Generated/SwiftInfer/associativity/<func>.swift` (proves *this specific law* on this specific function). |
+| `b` | Conformance extension at `<test-target>/Generated/SwiftInferRefactors/<TypeName>/Semigroup.swift`. The extension declares `extension Counter: Semigroup {}` and re-uses `PropertyLawKit`'s law machinery, which exercises **all** of Semigroup's laws on every CI run thereafter. |
 
 Why two arms:
 
@@ -427,13 +427,13 @@ Some suggestions ship as **advisory** rather than testable property suggestions.
 
 ### Predicate equivalence-class advisories
 
-Surface when your test suite partitions inputs into named buckets like `[Valid/Invalid]` or `[Success/Failure]` and exercises the same predicate on both. Example: `XCTAssertTrue(isValid(x))` for one set of inputs and `XCTAssertFalse(isValid(y))` for another. The advisory is "your inputs naturally form a 2-class equivalence class on `isValid`," and on accept the tool writes a comment-only document at `Tests/Generated/SwiftInfer/equivalence-class/EquivalenceClasses_<predicate>.swift` summarizing the partition.
+Surface when your test suite partitions inputs into named buckets like `[Valid/Invalid]` or `[Success/Failure]` and exercises the same predicate on both. Example: `XCTAssertTrue(isValid(x))` for one set of inputs and `XCTAssertFalse(isValid(y))` for another. The advisory is "your inputs naturally form a 2-class equivalence class on `isValid`," and on accept the tool writes a comment-only document at `<test-target>/Generated/SwiftInfer/equivalence-class/EquivalenceClasses_<predicate>.swift` summarizing the partition.
 
 The advisory carries a `coversDomain` annotation when the partition exhaustively covers the domain — for two-class partitions, when both `XCTAssertTrue` and `XCTAssertFalse` cases exist; for N-class enum-typed predicates, when every enum case is covered by a marker.
 
 ### Consumer-producer chain advisories
 
-Surface when discover detects a function whose input is reliably the output of another function, but the chain doesn't form a round-trip. Example: `validate(format(t))` appears in many tests with no inverse `unformat`. The advisory is "`validate` likely consumes `format`'s output; here's a comment-only proposal for an inferred input domain via `Gen<T>.map(format)`." Writeouts land at `Tests/Generated/SwiftInfer/consumer-producer-chain/<consumer>_<producer>.swift`.
+Surface when discover detects a function whose input is reliably the output of another function, but the chain doesn't form a round-trip. Example: `validate(format(t))` appears in many tests with no inverse `unformat`. The advisory is "`validate` likely consumes `format`'s output; here's a comment-only proposal for an inferred input domain via `Gen<T>.map(format)`." Writeouts land at `<test-target>/Generated/SwiftInfer/consumer-producer-chain/<consumer>_<producer>.swift`.
 
 Why advisories are comment-only: PRD §13 row 4 caps the memory ceiling on the side-map carriers that propagate these hints through the pipeline, and PRD §3.5's conservative-bias posture prefers a documented hint over a wrong test stub. The advisory tells you what the tool *thinks* the property is, without committing you to a specific generator.
 

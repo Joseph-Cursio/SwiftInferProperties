@@ -142,6 +142,60 @@ public enum TestTargetScope {
             .sorted { $0.path < $1.path }
     }
 
+    /// One test target the manifest declares: its name, the directory it occupies, and
+    /// whether it could be exercising a given module.
+    ///
+    /// Distinct from `testDirectories` above, which answers the *scanning* question and
+    /// therefore returns only the reaching targets. A writeout destination needs the
+    /// non-reaching ones too: a package whose test targets declare no dependency on the
+    /// scanned module still has somewhere a generated file can legally live, and
+    /// `Tests/Generated/` is not it.
+    public struct TestTargetLocation: Equatable, Sendable {
+        public let name: String
+        public let directory: URL
+        /// `false` when no module was supplied, so a caller must not read this as
+        /// *cannot be testing it* — only as *not established*.
+        public let reachesModule: Bool
+
+        public init(name: String, directory: URL, reachesModule: Bool) {
+            self.name = name
+            self.directory = directory
+            self.reachesModule = reachesModule
+        }
+    }
+
+    /// Every test target this package declares whose directory exists, each tagged with
+    /// whether it can reach `module` over the in-package dependency graph.
+    ///
+    /// Empty — not nil — when the manifest cannot be read, because the one caller treats
+    /// *no answer* and *no test target* the same way: both mean nothing here can be
+    /// trusted to compile a generated file, which is the thing worth saying out loud.
+    /// `testDirectories` keeps its nil/empty distinction because its caller genuinely
+    /// needs it.
+    ///
+    /// Sorted by path so a package with several candidates picks the same one every run.
+    public static func testTargetLocations(
+        exercising module: String?,
+        packageRoot: URL
+    ) -> [TestTargetLocation] {
+        guard let dumped = dump(packageRoot: packageRoot) else { return [] }
+        let targetsByName = Dictionary(dumped.targets.map { ($0.name, $0) }) { first, _ in first }
+        let fileManager = FileManager.default
+        return dumped.targets
+            .filter(\.isTest)
+            .map { target in
+                TestTargetLocation(
+                    name: target.name,
+                    directory: directory(of: target, packageRoot: packageRoot),
+                    reachesModule: module.map {
+                        Self.reaches($0, from: target.name, in: targetsByName)
+                    } ?? false
+                )
+            }
+            .filter { fileManager.fileExists(atPath: $0.directory.path) }
+            .sorted { $0.directory.path < $1.directory.path }
+    }
+
     /// Transitive reachability from `origin` to `module` over in-package target
     /// dependency edges. Iterative with an explicit visited set: a manifest is
     /// user-authored input, and a dependency cycle must not become a stack
@@ -190,7 +244,7 @@ public enum TestTargetScope {
         // Via `DrainedProcess`, matching `PackageProductResolver`: the wait-then-read
         // shape deadlocks on a large manifest dump (see #170).
         guard let data = DrainedProcess.standardOutputViaEnv(
-            ["swift", "package", "dump-package", "--package-path", packageRoot.path]
+            ManifestDumpCommand.argv(packageRoot: packageRoot)
         ) else { return nil }
         return try? JSONDecoder().decode(DumpedPackage.self, from: data)
     }

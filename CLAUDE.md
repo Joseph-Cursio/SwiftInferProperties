@@ -275,7 +275,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` | The rest of `docs/archive/` is shipped-then-archived design records. Archived ≠ superseded — read for reasoning, never for counts |
 | Per-cycle change story | `git log` | The per-cycle findings docs were folded into the archive above |
 | Road tests (third-party subjects) | `docs/measurements/roadtest-*.md` | SwiftProjectLint (first scored, frozen key), SwiftLintRuleStudio, MacCloud server / client, SwiftMarkdownWiki |
-| **Corpus pipeline walk** — where does a predicted property test fail to arrive, and at which stage? | `docs/plans/corpus-pipeline-walk-scope.md`, `docs/measurements/roadtest-swiftmarkdownwiki.md` | **Method + first subject.** Stage taxonomy S0–S8 with an owner per stage; the prediction is written before the tool runs. Three subjects: 0 of 12 predicted laws proposed. Issues #414 / #415 / #416 came out of the S5 emission run |
+| **Corpus pipeline walk** — where does a predicted property test fail to arrive, and at which stage? | `docs/plans/corpus-pipeline-walk-scope.md`, `docs/measurements/roadtest-swiftmarkdownwiki.md` | **Method + first subject.** Stage taxonomy S0–S8 with an owner per stage; the prediction is written before the tool runs. Three subjects: 0 of 12 predicted laws proposed. Issues #414 / #415 / #416 came out of the S5 emission run. **#414 FIXED 2026-09-12** — emitted files now land in a manifest-named test target and REACH a compiler; the defect was never Xcode-specific (`Tests/Generated/` is inside no target on any package, measured on a conventional control) and the fix bought **0 running laws**, which is #415 / #416 |
 | **Does `scaffold-kit-suites`' live/commented count mean the file COMPILES?** | `docs/measurements/exploratory-swiftformatrulestudio.md` | **Measured NO — FIXED 2026-08-13** (`TargetIsolation`): a package's `defaultIsolation` blocks every conformance |
 | **Why did a rule-name predicate get a PATH generator?** | `CollisionBias.collidingString` / `pathShapedNames` | One recipe served every `String` parameter; path-prose 110 → 3 on this repo, rows unchanged |
 | **Why does TestLifter miss a round-trip test a human wrote?** | `FunctionCallExprSyntax.consumedValueExpression` + `ExprSyntax.stableValueReferenceText` | Two independent causes, both blind to *house style*: value through the receiver, and `Self.sample` |
@@ -397,7 +397,9 @@ it, and `make test` does not run it.
 
 ## Build & test
 
-- **This package needs the swift.org toolchain, not Xcode's.** Under Xcode's
+- **This package needs the swift.org Swift compiler toolchain, not Xcode's.**
+  (*Toolchain* elsewhere in this file means the five-package PBT toolchain — every use in
+  this section means the Swift compiler.) Under Xcode's
   (`swiftlang-6.3.3.1.3`) every source file compiles and then the post-build plugin stage —
   `Applying swift-infer`, `Applying soundness-probe` — fails with
   `Internal Error: DecodingError.dataCorrupted … Corrupted JSON` followed by `error: fatalError`.
