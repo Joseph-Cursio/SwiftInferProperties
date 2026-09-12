@@ -62,6 +62,24 @@ extension InteractiveTriage {
                 + " (replace the fixture inside the generator body before this"
                 + " property exercises real values)"
         }()
+        // The access caveat the reader was shown at triage, carried into the file that cannot
+        // compile without it.
+        //
+        // A `private` subject surfaces ON PURPOSE — `SeededPrivateFunctionTests` records the
+        // decision and the reasoning: *"purity, shape and role decide whether a law is worth
+        // proposing; access level decides what must happen before it can be verified. Access
+        // belongs in the advice, never in the gate."* The advice was shown, was correct, and was
+        // then dropped at exactly the moment it became actionable — accept wrote a file whose
+        // only diagnostic is `'trimmed' is inaccessible due to 'private' protection level`, in
+        // code the reader did not write (#428).
+        //
+        // Read from the `.subjectNotVisibleToTests` signal rather than re-derived, so the remedy
+        // has one author: `AccessRestriction.remedy`, the same sentence triage printed.
+        let accessLine = suggestion.score.signals
+            .first { $0.kind == .subjectNotVisibleToTests }
+            .map { "// Access: \($0.detail)\n// This file will not compile until that is done.\n" }
+            ?? ""
+
         // Foundation, unconditionally. It used to be added only for the Codable round-trip
         // generator scaffold, which needs `JSONEncoder`. That is not the only thing that
         // needs it: a package enabling the `MemberImportVisibility` upcoming feature — this
@@ -77,7 +95,7 @@ extension InteractiveTriage {
         \(codableLine)
         // Suggestion identity: \(suggestion.identity.display)
         // Template: \(suggestion.templateName)
-
+        \(accessLine)
         \(foundationImport)import Testing
         import PropertyBased
         import PropertyLawKit

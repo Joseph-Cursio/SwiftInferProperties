@@ -148,6 +148,34 @@ struct InteractiveTriageModuleImportTests {
         #expect(wrapped.contains("@testable import Demo"))
     }
 
+    /// **The access caveat is shown at triage and used to be dropped at emission** (#428). A
+    /// `private` subject surfaces on purpose — `SeededPrivateFunctionTests` records why — and the
+    /// accepted file then compiled into `'trimmed' is inaccessible due to 'private' protection
+    /// level`, with nothing in it saying which refactor fixes that.
+    ///
+    /// Measured over `PropertyLawCore`: 2 of 5 emitted stubs are `private static func` subjects.
+    @Test func anAccessRestrictedSubjectCarriesItsCaveat() {
+        var suggestion = makeIdempotentSuggestion(funcName: "trimmed", typeName: "String")
+        suggestion.score = Score(advisorySignals: suggestion.score.signals + [
+            Signal(
+                kind: .subjectNotVisibleToTests,
+                weight: 0,
+                detail: "no test can name the subject: it is `private` or `fileprivate`"
+            )
+        ])
+        let wrapped = InteractiveTriage.wrappedFileContents(stub: "\n@Test func x() async {}", suggestion: suggestion)
+        #expect(wrapped.contains("// Access: no test can name the subject"))
+        #expect(wrapped.contains("will not compile until"))
+    }
+
+    /// The line is absent for a reachable subject — an unconditional caveat would be noise on
+    /// every file and would stop meaning anything on the two that need it.
+    @Test func areachableSubjectCarriesNoAccessCaveat() {
+        let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
+        let wrapped = InteractiveTriage.wrappedFileContents(stub: "\n@Test func x() async {}", suggestion: suggestion)
+        #expect(wrapped.contains("// Access:") == false)
+    }
+
     /// Foundation is imported unconditionally. It used to ride only on the Codable round-trip
     /// generator, and a package enabling `MemberImportVisibility` — this one does — fails to
     /// build a generated file that touches any Foundation member without it.
