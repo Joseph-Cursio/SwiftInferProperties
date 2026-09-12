@@ -5,10 +5,23 @@ import SwiftInferTemplates
 import Testing
 
 /// PRD §16 #1 allowlist hard-guarantees — M6 / M7 / M8 writeout paths
-/// must never escape `Tests/Generated/SwiftInfer*/` or
+/// must never escape the run's generated root or
 /// `.swiftinfer/decisions.json`. Adjacent suite to
 /// `HardGuaranteeTests` which covers the §16 #6 reproducibility +
 /// §14 telemetry pieces.
+///
+/// **These fixtures write a manifest SwiftPM cannot parse** (a bare
+/// `// swift-tools-version:` line), so since #414 they exercise the
+/// *fallback* arm: no derivable test target, generated root stays at
+/// `<packageRoot>/Tests/Generated`. That is deliberate — it keeps the
+/// allowlist paths below literal, and it pins the arm that must not
+/// change behaviour. The derived arm is covered by
+/// `GeneratedStubDestinationTests`, which builds real manifests.
+///
+/// This suite is also what caught `dump-package` writing `.build/`
+/// into the package it reads, in three arms at once — the allowlist
+/// is about every new file, not only the ones the tool meant to
+/// write. See `ManifestDumpCommand`.
 @Suite("Hard guarantees — PRD §16 #1 writeout allowlist (M6/M7/M8)")
 struct HardGuaranteeAllowlistTests {
 

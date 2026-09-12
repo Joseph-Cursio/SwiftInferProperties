@@ -151,11 +151,16 @@ After accepting, the tool prints the path it wrote and exits.
 Two files are new:
 
 ```sh
-ls Tests/Generated/SwiftInfer/round-trip/
+ls Tests/SlugTests/Generated/SwiftInfer/round-trip/
 ls .swiftinfer/
 ```
 
-`Tests/Generated/SwiftInfer/round-trip/encode_decode.swift`:
+The run printed that directory on stderr when it started — swift-infer reads `Package.swift` and
+writes into a declared **test target**, so the file is inside something SwiftPM compiles. If your
+package has several test targets, or none, read that note: it says which one was chosen and, when
+nothing will build the file, says so outright.
+
+`Tests/SlugTests/Generated/SwiftInfer/round-trip/encode_decode.swift`:
 
 ```swift
 @Test func encode_decode_roundTrip() async {
@@ -183,13 +188,11 @@ ls .swiftinfer/
 
 The seed numbers are derived from the suggestion's stable identity hash (PRD §16 #6), so re-runs of `swift test` exercise the same input sequence and produce the same pass/fail outcome.
 
-You'll need to add the missing `import` lines and target prefix at the top of the file before it compiles in your test target:
-
-```swift
-import Testing
-import PropertyLawKit
-@testable import Slug
-```
+The emitter writes the imports for you — `Testing`, `PropertyBased`, `PropertyLawKit`, and
+`@testable import Slug`. Two things it does **not** do yet, both of which you may have to fix by
+hand before the file compiles: a call to a type's member is emitted unqualified (`encode(…)`
+rather than `Slug.encode(…)`, #415), and your test target must actually depend on `PropertyBased`
+and `PropertyLawKit` for those imports to resolve.
 
 `.swiftinfer/decisions.json` is a small JSON record:
 
@@ -223,7 +226,16 @@ Both files are intended to be committed. The decisions.json is your project's au
 swift test
 ```
 
-You should see the new `encode_decode_roundTrip()` test pass. The backend ran 100 trials with the seeded random generator and the property held on every input.
+You should see the new `encode_decode_roundTrip()` test pass — 100 trials with the seeded random
+generator, the property holding on every input.
+
+> **Check that it ran.** A property test that was never compiled cannot fail, and a suite that
+> never grew is not evidence of anything. Confirm the test count went up, or that
+> `encode_decode_roundTrip` appears by name in the output. Until #414 this mattered a great deal:
+> stubs went to `Tests/Generated/`, which is inside no SwiftPM target on any package, so the file
+> was compiled by nothing and `swift test` reported the same green suite as before. Now the
+> destination comes from the manifest and the run prints it — but "the suite is green" still is
+> not the same claim as "the law held".
 
 > **What if it had failed?** The `Issue.record(...)` call would print the offending input. The user guide covers feeding such a counterexample back into the loop with `swift-infer convert-counterexample`, which writes a regression-test stub pinned to that exact input.
 
@@ -244,7 +256,7 @@ The decisions.json suppresses already-accepted suggestions, so re-running discov
 ## What you've seen
 
 - `swift-infer discover --target T` is read-only; it surfaces ranked suggestions with two-sided explainability.
-- `--interactive` walks suggestions one at a time. Acceptance writes a stub to `Tests/Generated/SwiftInfer/<template>/` and records the decision.
+- `--interactive` walks suggestions one at a time. Acceptance writes a stub into a declared test target's `Generated/SwiftInfer/<template>/` — resolved from `Package.swift`, printed on stderr, overridable with `--output-dir` — and records the decision.
 - `.swiftinfer/decisions.json` is the persistence layer — committed, hand-editable, the input to drift + metrics.
 - Generated tests use a deterministic seed derived from the suggestion's identity, so reproducibility is byte-stable.
 - All output is opt-in. The tool never edits your source, never auto-commits, never auto-runs the tests it generates.

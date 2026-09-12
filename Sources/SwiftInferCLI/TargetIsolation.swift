@@ -291,9 +291,9 @@ public enum TargetIsolation {
     private static func uncachedDump(packageRoot: URL) -> DumpedPackage? {
         let manifest = packageRoot.appendingPathComponent("Package.swift")
         guard FileManager.default.fileExists(atPath: manifest.path) else { return nil }
-        guard let data = DrainedProcess.standardOutputViaEnv([
-            "swift", "package", "dump-package", "--package-path", packageRoot.path
-        ]) else { return nil }
+        guard let data = DrainedProcess.standardOutputViaEnv(
+            ManifestDumpCommand.argv(packageRoot: packageRoot)
+        ) else { return nil }
         return try? JSONDecoder().decode(DumpedPackage.self, from: data)
     }
 }

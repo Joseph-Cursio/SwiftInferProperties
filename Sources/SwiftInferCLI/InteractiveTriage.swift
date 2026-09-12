@@ -61,6 +61,16 @@ public enum InteractiveTriage {
         public let output: any DiscoverOutput
         public let diagnostics: any DiagnosticOutput
         public let outputDirectory: URL
+
+        /// The directory holding `SwiftInfer/` and `SwiftInferRefactors/`.
+        ///
+        /// Was `outputDirectory/Tests/Generated` at every accept site, hard-coded — a path
+        /// **no SwiftPM target builds on any package** (#414). `GeneratedStubDestination`
+        /// resolves it from the manifest; this defaults to the old value so callers that
+        /// cannot resolve one (unit fixtures with no `Package.swift`) behave exactly as
+        /// before.
+        public let generatedRoot: URL
+
         public let dryRun: Bool
         public let clock: @Sendable () -> Date
         /// Per-type RefactorBridge proposals keyed by type name, built
@@ -128,6 +138,7 @@ public enum InteractiveTriage {
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput,
             outputDirectory: URL,
+            generatedRoot: URL? = nil,
             dryRun: Bool,
             clock: @escaping @Sendable () -> Date = { Date() },
             proposalsByType: [String: [RefactorBridgeProposal]] = [:],
@@ -140,6 +151,8 @@ public enum InteractiveTriage {
             self.output = output
             self.diagnostics = diagnostics
             self.outputDirectory = outputDirectory
+            self.generatedRoot = generatedRoot
+                ?? GeneratedStubDestination.legacyRoot(packageRoot: outputDirectory)
             self.dryRun = dryRun
             self.clock = clock
             self.proposalsByType = proposalsByType

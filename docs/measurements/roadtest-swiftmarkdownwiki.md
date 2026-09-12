@@ -685,6 +685,43 @@ reader who accepted nineteen suggestions and ran `swift test` would conclude the
 laws pass.** That is the confident-zero shape of §1.1.3 on the emit side: not a
 wrong answer, a silent one.
 
+✅ **FIXED 2026-09-12 (#414), and the diagnosis above was NARROWER THAN THE DEFECT.**
+The Xcode layout is where this was noticed, not where it lives: a control on a
+minimal **conventional** package (`Sources/Demo` + `Tests/DemoTests`) with a file of
+deliberate garbage at `Tests/Generated/SwiftInfer/idempotence/f.swift` builds clean —
+`swift build --build-tests` → `Build complete! (5.06 sec)`, exit 0, no diagnostic.
+**A SwiftPM target is `Tests/<Name>/`, so `Tests/Generated/` is inside no target on
+any package** and this repo has no such target either. The population was every
+accept, not the Xcode subset, and `--sources` did not guarantee the bad outcome so
+much as make it visible.
+
+`GeneratedStubDestination` now reads the manifest and writes into a declared test
+target's `Generated/`, with `--output-dir` to override and a stderr note naming the
+destination on every run — including an explicit *no SwiftPM target builds this* when
+it cannot derive one. Verified end to end on the conventional fixture: the same stub
+that used to produce `Build complete!` now produces
+`unable to resolve module dependency: 'PropertyBased'` **naming the generated file by
+path**. The silence is gone; the file still does not compile, which is (b) and (c)
+below and is issues #415 / #416.
+
+⚠ **The proposed fix's part 1 was under-specified on this very subject.** *Take the
+first `test` target's path* does not decide: SwiftMarkdownWiki declares **two** test
+targets and **both** declare `dependencies: ["SwiftMarkdownWiki"]`, so the dependency
+graph narrows to two and stops. The `<Module>Tests` tie-break picks
+`SwiftMarkdownWikiTests`; **sorting by path alone would have picked
+`SwiftMarkdownWikiIntegrationTests`**, which is the wrong one. That is why the note
+names the alternatives rather than presenting the choice as forced.
+
+⚠ **And the fix exposed a side effect of its own instrument**: `swift package
+dump-package` drops `.build/CACHEDIR.TAG`, `.build/.lock` and
+`.build/.buildSystem_debug` into the package it is pointed at. Consulting the manifest
+from the accept path therefore wrote three files outside the PRD §16 #1 allowlist —
+caught immediately by `HardGuaranteeAllowlistTests` in three arms. Fixed with
+`--scratch-path` on every `dump-package` call site. **It was already happening before
+this change on another path**: `LiftedDecisionsHardGuaranteeTests` had been red on
+`.build/CACHEDIR.TAG`, and that was read as an environment artifact when the guard was
+in fact reporting a live side effect.
+
 ### (b) Not one of the 19 can compile
 
 | | |

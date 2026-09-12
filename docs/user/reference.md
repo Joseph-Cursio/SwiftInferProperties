@@ -79,6 +79,7 @@ Scan a target for inferred property candidates. Read-only by default; `--interac
 | `--interactive` | Walk surviving suggestions one at a time with Accept / Skip / Reject / B / B' prompts. Mutually exclusive with `--update-baseline`. |
 | `--update-baseline` | Snapshot visible suggestion identities to `<package-root>/.swiftinfer/baseline.json` for `swift-infer drift`. |
 | `--dry-run` | With `--interactive`, suppress writes (file stub + `decisions.json` update) but still print would-be paths. No-op without `--interactive`. |
+| `--output-dir <path>` | Directory that receives accepted `--interactive` writeouts — the one holding the `SwiftInfer/` and `SwiftInferRefactors/` trees. When omitted, swift-infer reads `Package.swift` and picks a declared **test target**'s directory. The run always prints the destination and whether anything builds it. |
 | `--seeds <path>` | JSON seed manifest (`swiftprojectlint … --format pbt-seeds`). Discovery still scans the whole target, but surfaced suggestions are focused to functions the manifest names — the consumer side of the `lint → infer` pipeline. A seeded pure function no template matched still earns the generic determinism law. Focusing is deliberately not total (see `SeedFocus`), and an **empty** manifest does not focus at all. Missing or malformed file is an error. |
 
 **Walk-up resolution.** The `--vocabulary`, `--config`, and `--test-dir` defaults all walk up from `Sources/<target>/` until they find `Package.swift`, then look for the conventional location relative to the package root.
@@ -951,11 +952,30 @@ Unknown sections and keys are silently ignored.
 
 ## Generated output layout
 
-All generated files land under `<package-root>/Tests/Generated/`. The tool never edits an existing file — accepting a duplicate suggestion overwrites only files the tool itself wrote (PRD §16 #1).
+Generated files land under a **declared test target's** `Generated/` directory, resolved from
+`Package.swift` — `Tests/DemoTests/Generated/` on a conventional package, `DemoTests/Generated/`
+on one whose manifest relocates the target with `path:`. The tool never edits an existing file —
+accepting a duplicate suggestion overwrites only files the tool itself wrote (PRD §16 #1).
+
+**Why not `Tests/Generated/`, which is where these used to go:** a SwiftPM target is
+`Tests/<Name>/`, so `Tests/Generated/` is inside no target on *any* package. A file written
+there compiles on nothing, and neither `swift build --build-tests` nor `swift test` says a word
+about it — so a reader who accepted nineteen suggestions and saw a green suite would conclude
+the laws passed when nothing had built them (#414).
+
+**When the manifest cannot decide.** Several test targets may depend on the scanned module —
+that is the common case, not an exotic one — and the manifest narrows the candidates without
+picking one. swift-infer takes `<Module>Tests` when it exists, and **always prints the
+destination it chose plus any alternatives**. Pass `--output-dir` to decide explicitly. A
+package with no test target, or no manifest at all, keeps the old `Tests/Generated/` path and
+says on stderr that nothing will build it.
+
+The tree below shows the conventional case; substitute your own test target's directory for
+`Tests/DemoTests/`.
 
 ```
 <package-root>/
-├── Tests/Generated/SwiftInfer/
+├── Tests/DemoTests/Generated/SwiftInfer/
 │   ├── idempotence/                  ← --interactive Accept (A)
 │   │   └── normalize.swift
 │   ├── round-trip/
@@ -981,7 +1001,7 @@ All generated files land under `<package-root>/Tests/Generated/`. The tool never
 │   │   └── EquivalenceClasses_classify_tristate.swift
 │   └── consumer-producer-chain/       ← M16 advisory
 │       └── validate_format.swift
-└── Tests/Generated/SwiftInferRefactors/
+└── Tests/DemoTests/Generated/SwiftInferRefactors/
     ├── Counter/
     │   ├── Semigroup.swift
     │   └── Monoid.swift

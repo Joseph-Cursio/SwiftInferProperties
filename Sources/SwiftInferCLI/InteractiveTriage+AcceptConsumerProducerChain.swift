@@ -19,8 +19,8 @@ extension InteractiveTriage {
         context: Context
     ) throws -> URL? {
         let fileName = "\(hint.reverseName)_\(hint.producerName).swift"
-        let path = context.outputDirectory
-            .appendingPathComponent("Tests/Generated/SwiftInfer/consumer-producer/\(fileName)")
+        let path = context.generatedRoot
+            .appendingPathComponent("SwiftInfer/consumer-producer/\(fileName)")
         if context.dryRun {
             context.output.write("[dry-run] would write \(path.path)")
             return nil

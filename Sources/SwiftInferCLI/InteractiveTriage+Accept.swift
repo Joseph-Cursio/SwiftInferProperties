@@ -48,8 +48,8 @@ extension InteractiveTriage {
             return nil
         }
         let fileName = stubFileName(for: suggestion) ?? "\(suggestion.identity.normalized).swift"
-        let path = context.outputDirectory
-            .appendingPathComponent("Tests/Generated/SwiftInfer/\(suggestion.templateName)/\(fileName)")
+        let path = context.generatedRoot
+            .appendingPathComponent("SwiftInfer/\(suggestion.templateName)/\(fileName)")
         if context.dryRun {
             context.output.write("[dry-run] would write \(path.path)")
             return nil
