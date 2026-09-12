@@ -37,19 +37,19 @@ public enum LiftedTestEmitter {
     /// when `equalityKind == .approximate`, the assertion becomes
     /// `f(f(value)).isApproximatelyEqual(to: f(value))`.
     public static func idempotent(
-        funcName: String,
+        callee: CalleeReference,
         typeName _: String,
         seed: SamplingSeed.Value,
         generator: String,
         equalityKind: EqualityKind = .strict
     ) -> String {
-        let testFunctionName = "\(funcName)_isIdempotent"
+        let testFunctionName = "\(callee.bareName)_isIdempotent"
         let property = equalityExpression(
-            lhs: "\(funcName)(\(funcName)(value))",
-            rhs: "\(funcName)(value)",
+            lhs: callee.call(callee.call("value")),
+            rhs: callee.call("value"),
             kind: equalityKind
         )
-        let failureLabel = "\(funcName)(_:) failed idempotence"
+        let failureLabel = "\(callee.bareName)(_:) failed idempotence"
         return makeTestStub(
             testFunctionName: testFunctionName,
             seed: seed,
@@ -69,19 +69,19 @@ public enum LiftedTestEmitter {
     /// `inverse(forward(value)).isApproximatelyEqual(to: value)` to
     /// support FP type round-trips (`exp/log`, `cos/acos`, etc.).
     public static func roundTrip(
-        forwardName: String,
-        inverseName: String,
+        forward: CalleeReference,
+        inverse: CalleeReference,
         seed: SamplingSeed.Value,
         generator: String,
         equalityKind: EqualityKind = .strict
     ) -> String {
-        let testFunctionName = "\(forwardName)_\(inverseName)_roundTrip"
+        let testFunctionName = "\(forward.bareName)_\(inverse.bareName)_roundTrip"
         let property = equalityExpression(
-            lhs: "\(inverseName)(\(forwardName)(value))",
+            lhs: inverse.call(forward.call("value")),
             rhs: "value",
             kind: equalityKind
         )
-        let failureLabel = "\(forwardName)/\(inverseName) round-trip failed"
+        let failureLabel = "\(forward.bareName)/\(inverse.bareName) round-trip failed"
         return makeTestStub(
             testFunctionName: testFunctionName,
             seed: seed,
@@ -96,14 +96,14 @@ public enum LiftedTestEmitter {
     /// `returnType` is reserved for future failure-message hints — Swift's
     /// `<=` already infers from the function's declared return type.
     public static func monotonic(
-        funcName: String,
+        callee: CalleeReference,
         typeName: String,
         returnType: String,
         seed: SamplingSeed.Value,
         generator: String
     ) -> String {
         _ = (typeName, returnType)
-        let testFunctionName = "\(funcName)_isMonotonic"
+        let testFunctionName = "\(callee.bareName)_isMonotonic"
         // T must conform to Comparable for this sample to typecheck.
         let sample = [
             "{ rng in",
@@ -112,8 +112,8 @@ public enum LiftedTestEmitter {
             "                    return lhs < rhs ? (lhs, rhs) : (rhs, lhs)",
             "                }"
         ].joined(separator: "\n")
-        let property = "{ pair in \(funcName)(pair.0) <= \(funcName)(pair.1) }"
-        let failureLabel = "\(funcName)(_:) failed monotonicity"
+        let property = "{ pair in \(callee.call("pair.0")) <= \(callee.call("pair.1")) }"
+        let failureLabel = "\(callee.bareName)(_:) failed monotonicity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
             seed: seed,
@@ -130,13 +130,13 @@ public enum LiftedTestEmitter {
     /// "no stub writeout available for template 'commutativity' in v1"
     /// diagnostic from M6.4's `liftedTestStub(for:)` default branch.
     public static func commutative(
-        funcName: String,
+        callee: CalleeReference,
         typeName: String,
         seed: SamplingSeed.Value,
         generator: String
     ) -> String {
         _ = typeName
-        let testFunctionName = "\(funcName)_isCommutative"
+        let testFunctionName = "\(callee.bareName)_isCommutative"
         // Same multi-line sample shape as `monotonic`'s pair draw —
         // mirrors the column convention so the existing tests/goldens
         // share the same indentation envelope. Two values, no sort.
@@ -147,8 +147,9 @@ public enum LiftedTestEmitter {
             "                    return (lhs, rhs)",
             "                }"
         ].joined(separator: "\n")
-        let property = "{ pair in \(funcName)(pair.0, pair.1) == \(funcName)(pair.1, pair.0) }"
-        let failureLabel = "\(funcName)(_:_:) failed commutativity"
+        let property = "{ pair in \(callee.call("pair.0", "pair.1")) "
+            + "== \(callee.call("pair.1", "pair.0")) }"
+        let failureLabel = "\(callee.bareName)(_:_:) failed commutativity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
             seed: seed,
@@ -165,13 +166,13 @@ public enum LiftedTestEmitter {
     /// retires the "no stub writeout available for template
     /// 'associativity' in v1" diagnostic.
     public static func associative(
-        funcName: String,
+        callee: CalleeReference,
         typeName: String,
         seed: SamplingSeed.Value,
         generator: String
     ) -> String {
         _ = typeName
-        let testFunctionName = "\(funcName)_isAssociative"
+        let testFunctionName = "\(callee.bareName)_isAssociative"
         // Three-value tuple sample — same multi-line style as monotonic /
         // commutative for visual consistency across the binary-op arms.
         let sample = [
@@ -187,11 +188,11 @@ public enum LiftedTestEmitter {
         // template's 8-space strip.
         let property = [
             "{ triple in",
-            "            \(funcName)(\(funcName)(triple.0, triple.1), triple.2)",
-            "                == \(funcName)(triple.0, \(funcName)(triple.1, triple.2))",
+            "            " + callee.call(callee.call("triple.0", "triple.1"), "triple.2"),
+            "                == " + callee.call("triple.0", callee.call("triple.1", "triple.2")),
             "        }"
         ].joined(separator: "\n")
-        let failureLabel = "\(funcName)(_:_:) failed associativity"
+        let failureLabel = "\(callee.bareName)(_:_:) failed associativity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
             seed: seed,
@@ -211,19 +212,20 @@ public enum LiftedTestEmitter {
     /// at dispatch time. M8.2 — retires the "no stub writeout available
     /// for template 'identity-element' in v1" diagnostic.
     public static func identityElement(
-        funcName: String,
+        callee: CalleeReference,
         typeName: String,
         identityName: String,
         seed: SamplingSeed.Value,
         generator: String
     ) -> String {
-        let testFunctionName = "\(funcName)_hasIdentity_\(identityName)"
+        let testFunctionName = "\(callee.bareName)_hasIdentity_\(identityName)"
         // Single-value sample — the identity is constant in the body
         // (referenced via `\(typeName).\(identityName)`), so the
         // canonical `{ rng in (generator).run(using: &rng) }` shape applies.
-        let property = "\(funcName)(value, \(typeName).\(identityName)) == value"
-            + " && \(funcName)(\(typeName).\(identityName), value) == value"
-        let failureLabel = "\(funcName)(_:_:) failed identity-element \(typeName).\(identityName)"
+        let identity = "\(typeName).\(identityName)"
+        let property = "\(callee.call("value", identity)) == value"
+            + " && \(callee.call(identity, "value")) == value"
+        let failureLabel = "\(callee.bareName)(_:_:) failed identity-element \(identity)"
         return makeTestStub(
             testFunctionName: testFunctionName,
             seed: seed,
@@ -239,21 +241,21 @@ public enum LiftedTestEmitter {
     /// runner output. The non-Equatable caveat lives in the §4.5
     /// explainability block surfaced before accept.
     public static func inversePair(
-        forwardName: String,
-        inverseName: String,
+        forward: CalleeReference,
+        inverse: CalleeReference,
         typeName: String,
         seed: SamplingSeed.Value,
         generator: String,
         equalityKind: EqualityKind = .strict
     ) -> String {
         _ = typeName
-        let testFunctionName = "\(forwardName)_\(inverseName)_inversePair"
+        let testFunctionName = "\(forward.bareName)_\(inverse.bareName)_inversePair"
         let property = equalityExpression(
-            lhs: "\(inverseName)(\(forwardName)(value))",
+            lhs: inverse.call(forward.call("value")),
             rhs: "value",
             kind: equalityKind
         )
-        let failureLabel = "\(forwardName)/\(inverseName) inverse-pair failed"
+        let failureLabel = "\(forward.bareName)/\(inverse.bareName) inverse-pair failed"
         return makeTestStub(
             testFunctionName: testFunctionName,
             seed: seed,
@@ -276,7 +278,7 @@ public enum LiftedTestEmitter {
     /// the user's test target produces a compile error. SemanticIndex
     /// (PRD §20.1) lifts that check to scan time in v1.1+.
     public static func invariantPreserving(
-        funcName: String,
+        callee: CalleeReference,
         typeName: String,
         invariantName: String,
         seed: SamplingSeed.Value,
@@ -284,11 +286,11 @@ public enum LiftedTestEmitter {
     ) -> String {
         _ = typeName
         let suffix = sanitizeKeyPathForIdentifier(invariantName)
-        let testFunctionName = "\(funcName)_preservesInvariant_\(suffix)"
+        let testFunctionName = "\(callee.bareName)_preservesInvariant_\(suffix)"
         let sample = "{ rng in (\(generator)).run(using: &rng) }"
         let property = "{ value in !value[keyPath: \(invariantName)] || "
-            + "\(funcName)(value)[keyPath: \(invariantName)] }"
-        let failureLabel = "\(funcName)(_:) failed invariant preservation \(invariantName)"
+            + "\(callee.call("value"))[keyPath: \(invariantName)] }"
+        let failureLabel = "\(callee.bareName)(_:) failed invariant preservation \(invariantName)"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
             seed: seed,

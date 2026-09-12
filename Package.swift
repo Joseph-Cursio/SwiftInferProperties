@@ -119,7 +119,7 @@ let package = Package(
         // swift-syntax at exactly 602.0.0, so there is no version conflict.
         .package(
             url: "https://github.com/Joseph-Cursio/SwiftEffectInference.git",
-            revision: "23d1dabe7501d267af5aeea26ac4a6a318083fc2"
+            revision: "1b62e764bca74e727b0080f8aeaf85663877648b"
         )
     ],
     targets: [
@@ -256,6 +256,13 @@ let package = Package(
             name: "SwiftInferCoreTests",
             dependencies: [
                 "SwiftInferCore",
+                // Ten of this target's files `import SwiftInferTemplates` and the target never
+                // declared it. That built anyway on every incremental run — SwiftPM leaves
+                // `SwiftInferTemplates.swiftmodule` in the build directory and the implicit
+                // search path finds it — and failed on a clean one, where this target can be
+                // compiled before Templates exists. A dependency that resolves by build order
+                // is not a dependency; `swift package clean && swift test` is what surfaced it.
+                "SwiftInferTemplates",
                 // V1.47.G.1 — tests of IndexedTypeShape ↔ TypeShape
                 // conversion need PropertyLawCore symbols visible.
                 .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),

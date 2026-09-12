@@ -25,8 +25,8 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — round-trip with .strict emits canonical `lhs == rhs`")
     func roundTripStrictPreservesCurrentEmit() {
         let source = LiftedTestEmitter.roundTrip(
-            forwardName: "encode",
-            inverseName: "decode",
+            forward: "encode",
+            inverse: "decode",
             seed: Self.dummySeed,
             generator: "IntGenerator"
         )
@@ -37,8 +37,8 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — round-trip with .approximate emits `lhs.isApproximatelyEqual(to: rhs)`")
     func roundTripApproximateEmitsApproximateEquality() {
         let source = LiftedTestEmitter.roundTrip(
-            forwardName: "exp",
-            inverseName: "log",
+            forward: "exp",
+            inverse: "log",
             seed: Self.dummySeed,
             generator: "ComplexGenerator",
             equalityKind: .approximate
@@ -50,14 +50,14 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — round-trip default is .strict (backward compatibility)")
     func roundTripDefaultIsStrict() {
         let withDefault = LiftedTestEmitter.roundTrip(
-            forwardName: "encode",
-            inverseName: "decode",
+            forward: "encode",
+            inverse: "decode",
             seed: Self.dummySeed,
             generator: "IntGenerator"
         )
         let withStrict = LiftedTestEmitter.roundTrip(
-            forwardName: "encode",
-            inverseName: "decode",
+            forward: "encode",
+            inverse: "decode",
             seed: Self.dummySeed,
             generator: "IntGenerator",
             equalityKind: .strict
@@ -70,7 +70,7 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — idempotent with .strict emits `f(f(value)) == f(value)`")
     func idempotentStrictPreservesCurrentEmit() {
         let source = LiftedTestEmitter.idempotent(
-            funcName: "normalize",
+            callee: "normalize",
             typeName: "String",
             seed: Self.dummySeed,
             generator: "StringGenerator"
@@ -82,7 +82,7 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — idempotent with .approximate emits approximate equality")
     func idempotentApproximateEmitsApproximateEquality() {
         let source = LiftedTestEmitter.idempotent(
-            funcName: "clamp",
+            callee: "clamp",
             typeName: "Double",
             seed: Self.dummySeed,
             generator: "DoubleGenerator",
@@ -95,13 +95,13 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — idempotent default is .strict (backward compatibility)")
     func idempotentDefaultIsStrict() {
         let withDefault = LiftedTestEmitter.idempotent(
-            funcName: "sort",
+            callee: "sort",
             typeName: "Array",
             seed: Self.dummySeed,
             generator: "ArrayGenerator"
         )
         let withStrict = LiftedTestEmitter.idempotent(
-            funcName: "sort",
+            callee: "sort",
             typeName: "Array",
             seed: Self.dummySeed,
             generator: "ArrayGenerator",
@@ -115,8 +115,8 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — inverse-pair with .strict emits canonical `lhs == rhs`")
     func inversePairStrictPreservesCurrentEmit() {
         let source = LiftedTestEmitter.inversePair(
-            forwardName: "transform",
-            inverseName: "untransform",
+            forward: "transform",
+            inverse: "untransform",
             typeName: "MyToken",
             seed: Self.dummySeed,
             generator: "TokenGenerator"
@@ -128,8 +128,8 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — inverse-pair with .approximate emits approximate equality")
     func inversePairApproximateEmitsApproximateEquality() {
         let source = LiftedTestEmitter.inversePair(
-            forwardName: "sinh",
-            inverseName: "asinh",
+            forward: "sinh",
+            inverse: "asinh",
             typeName: "Complex",
             seed: Self.dummySeed,
             generator: "ComplexGenerator",
@@ -142,15 +142,15 @@ struct LiftedTestEmitterApproxEqualityTests {
     @Test("V1.31.B — inverse-pair default is .strict (backward compatibility)")
     func inversePairDefaultIsStrict() {
         let withDefault = LiftedTestEmitter.inversePair(
-            forwardName: "transform",
-            inverseName: "untransform",
+            forward: "transform",
+            inverse: "untransform",
             typeName: "MyToken",
             seed: Self.dummySeed,
             generator: "TokenGenerator"
         )
         let withStrict = LiftedTestEmitter.inversePair(
-            forwardName: "transform",
-            inverseName: "untransform",
+            forward: "transform",
+            inverse: "untransform",
             typeName: "MyToken",
             seed: Self.dummySeed,
             generator: "TokenGenerator",

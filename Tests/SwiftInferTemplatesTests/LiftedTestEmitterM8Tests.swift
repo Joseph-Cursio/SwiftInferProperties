@@ -16,7 +16,7 @@ struct LiftedTestEmitterM8Tests {
             stateD: 0xDDDD_EEEE_FFFF_0000
         )
         let source = LiftedTestEmitter.commutative(
-            funcName: "merge",
+            callee: "merge",
             typeName: "IntSet",
             seed: seed,
             generator: "IntSet.gen()"
@@ -62,7 +62,7 @@ struct LiftedTestEmitterM8Tests {
             stateD: 0xDDDD_EEEE_FFFF_0000
         )
         let source = LiftedTestEmitter.associative(
-            funcName: "merge",
+            callee: "merge",
             typeName: "IntSet",
             seed: seed,
             generator: "IntSet.gen()"
@@ -112,7 +112,7 @@ struct LiftedTestEmitterM8Tests {
             stateD: 0xDDDD_EEEE_FFFF_0000
         )
         let source = LiftedTestEmitter.identityElement(
-            funcName: "merge",
+            callee: "merge",
             typeName: "IntSet",
             identityName: "empty",
             seed: seed,
@@ -155,8 +155,8 @@ struct LiftedTestEmitterM8Tests {
             stateD: 0xDDDD_EEEE_FFFF_0000
         )
         let source = LiftedTestEmitter.inversePair(
-            forwardName: "encode",
-            inverseName: "decode",
+            forward: "encode",
+            inverse: "decode",
             typeName: "MyType",
             seed: seed,
             generator: "MyType.gen()"
@@ -196,14 +196,14 @@ struct LiftedTestEmitterM8Tests {
         // pairs in the same project.
         let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
         let roundTripSource = LiftedTestEmitter.roundTrip(
-            forwardName: "encode",
-            inverseName: "decode",
+            forward: "encode",
+            inverse: "decode",
             seed: seed,
             generator: "MyType.gen()"
         )
         let inversePairSource = LiftedTestEmitter.inversePair(
-            forwardName: "encode",
-            inverseName: "decode",
+            forward: "encode",
+            inverse: "decode",
             typeName: "MyType",
             seed: seed,
             generator: "MyType.gen()"
@@ -219,13 +219,13 @@ struct LiftedTestEmitterM8Tests {
     func commutativeAndAssociativeProduceDistinctSource() {
         let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
         let commutativeSource = LiftedTestEmitter.commutative(
-            funcName: "merge",
+            callee: "merge",
             typeName: "IntSet",
             seed: seed,
             generator: "IntSet.gen()"
         )
         let associativeSource = LiftedTestEmitter.associative(
-            funcName: "merge",
+            callee: "merge",
             typeName: "IntSet",
             seed: seed,
             generator: "IntSet.gen()"

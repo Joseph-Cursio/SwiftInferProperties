@@ -10,19 +10,63 @@ import SwiftInferCore
 /// `mockGenerator` presence.
 public extension LiftedTestEmitter {
 
-    /// Pick the canonical generator expression for `typeName`. If it
-    /// matches a `PropertyLawCore.RawType` (stdlib `Int`, `String`,
-    /// `Bool`, etc.), emit the kit's `RawType.generatorExpression` so
-    /// the M4.2 generator-selection convention holds. Otherwise emit
-    /// `\(typeName).gen()` — same fallback the
-    /// `DerivationStrategist` produces for non-derivable types,
-    /// requiring the user to provide `static func gen() -> Gen<T>`
-    /// or take the missing-symbol compile error.
+    /// Pick the canonical generator expression for the **top-level carrier** `typeName`.
+    ///
+    /// ## The String arm is edge-biased, and the plain one false-passes
+    ///
+    /// `RawType.generatorExpression`'s String arm is
+    /// `Gen<Character>.letterOrNumber.string(of: 0...8)` — alphanumerics and nothing else. No
+    /// `#`, no space, no tab, no quote or bracket. Point that at a function whose job is
+    /// recognising markup and the law it checks is vacuous rather than false:
+    ///
+    /// **Measured on SwiftMarkdownWiki (#416): 11 of 19 emitted stubs drew from it, and every
+    /// one of the eleven subjects parses delimiters** — `strippingHeadingMarkers`,
+    /// `replaceWikilinks`, `sanitizeFTSQuery`, `highlightCode`, `mimeType`. Replicating the
+    /// generated domain exactly for `strippingHeadingMarkers` — every alphanumeric string of
+    /// length 0–2, 3 907 of them — the function is a **no-op on all 3 907**. So its idempotence
+    /// law passes at every budget forever, while being false of the correct implementation: the
+    /// strip is `^`-anchored, so `"# ## Title"` loses one marker run per application.
+    ///
+    /// ## The fix already existed, in the other consumer
+    ///
+    /// `StrategistDispatchEmitter` — the `verify` path — reaches for
+    /// `RawType.edgeBiasedGeneratorExpression` for exactly this reason, and says so in a comment
+    /// that is this issue stated in advance. The stub emitter is a different path and had never
+    /// been told. One vocabulary, two consumers, and the fix landed in one of them.
+    ///
+    /// Scoped to the top-level carrier, which is the kit's own stated intent for the biased
+    /// expression: struct **members** keep the plain form, so memberwise derivation and its
+    /// goldens are unaffected (see `generatorExpression(forSwiftTypeName:)` below, which is the
+    /// member path and deliberately unchanged).
+    ///
+    /// Non-`RawType` names fall through to `\(typeName).gen()`, the same convention the
+    /// `DerivationStrategist` uses — the user supplies `static func gen() -> Gen<T>` or takes the
+    /// missing-symbol error. That arm now carries the marker `todoGeneratorMarker` so a reader
+    /// and a `grep` can tell a working generator from a deliberate compile error; four of the
+    /// nineteen were this arm (`CGFloat`, `URL`, `Date?`, `[PluginLogEntry]`) and nothing said so.
     static func defaultGenerator(for typeName: String) -> String {
         if let rawType = RawType(typeName: typeName) {
-            return rawType.generatorExpression
+            return rawType.edgeBiasedGeneratorExpression ?? rawType.generatorExpression
         }
-        return "\(typeName).gen()"
+        return "\(typeName).gen()\(todoGeneratorMarker)"
+    }
+
+    /// Appended to the "you supply it" generator arm so an emitted file that cannot compile says
+    /// so on the line that cannot compile.
+    ///
+    /// Borrowed from SwiftPropertyLaws, which added the same marker in August for the same
+    /// reason: `.userGen` and `.todo` rendered identically as `Foo.gen()`, so neither a reader
+    /// nor a survey could tell a resolved generator from an unresolved one — a survey in that
+    /// repo had already miscounted because of it.
+    ///
+    /// **A block comment, not a line comment, and that is not cosmetic.** SwiftPropertyLaws
+    /// could use `//` because its `.todo` reaches the emitter from two callers that both put the
+    /// expression last on its line, and its own header says so. Here the generator is spliced
+    /// *into* an expression — `{ rng in (\(generator)).run(using: &rng) }` — so a line comment
+    /// would swallow `.run(using: &rng) }` and break the file in a way that has nothing to do
+    /// with the missing generator. The first draft of this marker did exactly that.
+    static var todoGeneratorMarker: String {
+        " /* TODO: no generator derived — supply `static func gen()`; this will not compile */"
     }
 
     /// TestLifter M4.4 — emit a `Gen<T>` expression for a mock-inferred

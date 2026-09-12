@@ -36,11 +36,7 @@ public struct CheckPropertyMacro: PeerMacro {
             return expandIdempotent(function: function, in: context)
 
         case .roundTrip(let inverseName):
-            return expandRoundTrip(
-                function: function,
-                inverseName: inverseName,
-                in: context
-            )
+            return expandRoundTrip(function: function, inverseName: inverseName, in: context)
 
         case .preservesInvariant(let keyPath):
             return expandPreservesInvariant(
@@ -151,7 +147,7 @@ public struct CheckPropertyMacro: PeerMacro {
         let canonicalSignature = "checkProperty.idempotent|\(funcName)|(\(paramTypeText))->\(returnTypeText)"
         let seed = SamplingSeed.derive(fromIdentityHash: canonicalSignature)
         let source = LiftedTestEmitter.idempotent(
-            funcName: funcName,
+            callee: CalleeReference(bareName: funcName),
             typeName: paramTypeText,
             seed: seed,
             generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText),
@@ -198,8 +194,8 @@ public struct CheckPropertyMacro: PeerMacro {
             forwardReturn: returnTypeText
         )
         let source = LiftedTestEmitter.roundTrip(
-            forwardName: forwardName,
-            inverseName: inverseName,
+            forward: CalleeReference(bareName: forwardName),
+            inverse: CalleeReference(bareName: inverseName),
             seed: SamplingSeed.derive(fromIdentityHash: canonicalSignature),
             generator: LiftedTestEmitter.defaultGenerator(for: paramTypeText),
             equalityKind: FloatingPointEquatableTypes.isFloatingPointEquatable(typeText: paramTypeText)
@@ -261,7 +257,7 @@ public struct CheckPropertyMacro: PeerMacro {
             returnType: returnTypeText
         )
         let source = LiftedTestEmitter.invariantPreserving(
-            funcName: funcName,
+            callee: CalleeReference(bareName: funcName),
             typeName: paramTypeText,
             invariantName: keyPath,
             seed: SamplingSeed.derive(fromIdentityHash: canonicalSignature),

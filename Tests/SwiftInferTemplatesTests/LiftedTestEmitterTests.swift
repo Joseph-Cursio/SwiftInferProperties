@@ -12,18 +12,48 @@ struct LiftedTestEmitterTests {
         #expect(LiftedTestEmitter.defaultGenerator(for: "Int") == "Gen<Int>.int()")
     }
 
+    /// **This test used to pin the defect** (#416). It asserted the plain
+    /// `Gen<Character>.letterOrNumber.string(of: 0...8)` — alphanumerics and nothing else — for
+    /// the top-level String carrier. 11 of the 19 stubs emitted for SwiftMarkdownWiki drew from
+    /// it, and every one of those eleven subjects parses delimiters, so their laws were vacuous:
+    /// `strippingHeadingMarkers` is a no-op on all 3 907 alphanumeric strings of length 0–2.
+    ///
+    /// The `verify` path had already reached for the edge-biased expression and said why in a
+    /// comment. This path had not been told.
     @Test
-    func defaultGeneratorForStringPicksRawTypeStringGenerator() {
-        #expect(LiftedTestEmitter.defaultGenerator(for: "String")
-            == "Gen<Character>.letterOrNumber.string(of: 0...8)")
+    func defaultGeneratorForStringIsEdgeBiased() {
+        let generator = LiftedTestEmitter.defaultGenerator(for: "String")
+        // The alphanumeric baseline is kept — the bias mixes, it does not replace.
+        #expect(generator.contains("Gen<Character>.letterOrNumber.string(of: 0...8)"))
+        #expect(generator.hasPrefix("Gen.frequency("))
+        // The characters whose absence made the eleven laws vacuous.
+        #expect(generator.contains("\"#\""))
+        #expect(generator.contains("\" \""))
+        #expect(generator.contains("\"\\n\""))
     }
 
+    /// Every non-`RawType` carrier is the "you supply it" arm, and it now says so. Four of the
+    /// nineteen emitted stubs were this arm — `CGFloat`, `URL`, `Date?`, `[PluginLogEntry]` —
+    /// emitted with nothing to distinguish them from a resolved generator.
     @Test
-    func defaultGeneratorForCustomTypeFallsBackToUserGen() {
-        // Same `.userGen` fallback `DerivationStrategist` produces —
-        // requires the user to provide `static func gen() -> Gen<T>`
-        // on the type or take the resulting compile error.
-        #expect(LiftedTestEmitter.defaultGenerator(for: "MyType") == "MyType.gen()")
+    func defaultGeneratorForCustomTypeFallsBackToUserGenAndSaysSo() {
+        let generator = LiftedTestEmitter.defaultGenerator(for: "MyType")
+        #expect(generator.hasPrefix("MyType.gen()"))
+        #expect(generator.contains("no generator derived"))
+    }
+
+    /// **A block comment, because the generator is spliced into an expression.** The emitters
+    /// wrap it as `{ rng in (<generator>).run(using: &rng) }`, so a `//` marker would swallow
+    /// `.run(using: &rng) }` — breaking the file for a reason unrelated to the missing generator.
+    /// The first draft of the marker did exactly that.
+    @Test
+    func theTodoMarkerIsSafeToSpliceIntoAnExpression() {
+        let generator = LiftedTestEmitter.defaultGenerator(for: "MyType")
+        #expect(generator.contains("//") == false)
+        #expect(generator.hasSuffix("*/"))
+        // The shape the emitters actually build, with the marker inside the parentheses.
+        let spliced = "{ rng in (\(generator)).run(using: &rng) }"
+        #expect(spliced.hasSuffix(".run(using: &rng) }"))
     }
 
     // MARK: - idempotent(...) byte-stable golden
@@ -37,7 +67,7 @@ struct LiftedTestEmitterTests {
             stateD: 0x2222222222222222
         )
         let source = LiftedTestEmitter.idempotent(
-            funcName: "normalize",
+            callee: "normalize",
             typeName: "String",
             seed: seed,
             generator: "Gen<Character>.letterOrNumber.string(of: 0...8)"
@@ -142,8 +172,8 @@ struct LiftedTestEmitterTests {
             stateD: 0xDDDDDDDDDDDDDDDD
         )
         let source = LiftedTestEmitter.roundTrip(
-            forwardName: "encode",
-            inverseName: "decode",
+            forward: "encode",
+            inverse: "decode",
             seed: seed,
             generator: "MyType.gen()"
         )
@@ -181,13 +211,13 @@ struct LiftedTestEmitterTests {
             fromIdentityHash: "checkProperty.idempotent|normalize|(String)->String"
         )
         let first = LiftedTestEmitter.idempotent(
-            funcName: "normalize",
+            callee: "normalize",
             typeName: "String",
             seed: seed,
             generator: LiftedTestEmitter.defaultGenerator(for: "String")
         )
         let second = LiftedTestEmitter.idempotent(
-            funcName: "normalize",
+            callee: "normalize",
             typeName: "String",
             seed: seed,
             generator: LiftedTestEmitter.defaultGenerator(for: "String")
@@ -204,14 +234,14 @@ struct LiftedTestEmitterTests {
         // property assertions).
         let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
         let idempotentSource = LiftedTestEmitter.idempotent(
-            funcName: "transform",
+            callee: "transform",
             typeName: "Int",
             seed: seed,
             generator: "Gen<Int>.int()"
         )
         let roundTripSource = LiftedTestEmitter.roundTrip(
-            forwardName: "transform",
-            inverseName: "untransform",
+            forward: "transform",
+            inverse: "untransform",
             seed: seed,
             generator: "Gen<Int>.int()"
         )
@@ -235,7 +265,7 @@ struct LiftedTestEmitterM7Tests {
             stateD: 0x6666_7777_8888_9999
         )
         let source = LiftedTestEmitter.monotonic(
-            funcName: "length",
+            callee: "length",
             typeName: "String",
             returnType: "Int",
             seed: seed,
@@ -286,7 +316,7 @@ struct LiftedTestEmitterM7Tests {
             stateD: 0x4040_4040_4040_4040
         )
         let source = LiftedTestEmitter.invariantPreserving(
-            funcName: "adjust",
+            callee: "adjust",
             typeName: "Widget",
             invariantName: "\\.isValid",
             seed: seed,
@@ -323,7 +353,7 @@ struct LiftedTestEmitterM7Tests {
     func invariantPreservingSanitizesNestedKeypathInTestName() {
         let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
         let source = LiftedTestEmitter.invariantPreserving(
-            funcName: "transfer",
+            callee: "transfer",
             typeName: "User",
             invariantName: "\\.account.balance",
             seed: seed,
@@ -340,14 +370,14 @@ struct LiftedTestEmitterM7Tests {
     func monotonicAndInvariantPreservingProduceDistinctSource() {
         let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
         let monotonicSource = LiftedTestEmitter.monotonic(
-            funcName: "score",
+            callee: "score",
             typeName: "Widget",
             returnType: "Int",
             seed: seed,
             generator: "Widget.gen()"
         )
         let invariantSource = LiftedTestEmitter.invariantPreserving(
-            funcName: "score",
+            callee: "score",
             typeName: "Widget",
             invariantName: "\\.isValid",
             seed: seed,

@@ -10,13 +10,13 @@ extension InteractiveTriage {
 
     static func commutativeStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let funcName = functionName(from: evidence.displayName),
+              let callee = CalleeReference(evidence: evidence),
               let typeName = paramType(from: evidence.signature) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.commutative(
-            funcName: funcName,
+            callee: callee,
             typeName: typeName,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: typeName)
@@ -25,13 +25,13 @@ extension InteractiveTriage {
 
     static func associativeStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let funcName = functionName(from: evidence.displayName),
+              let callee = CalleeReference(evidence: evidence),
               let typeName = paramType(from: evidence.signature) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.associative(
-            funcName: funcName,
+            callee: callee,
             typeName: typeName,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: typeName)
@@ -48,7 +48,7 @@ extension InteractiveTriage {
         guard suggestion.evidence.count >= 2,
               let opEvidence = suggestion.evidence.first,
               let identityEvidence = suggestion.evidence.dropFirst().first,
-              let funcName = functionName(from: opEvidence.displayName),
+              let callee = CalleeReference(evidence: opEvidence),
               let typeName = paramType(from: opEvidence.signature) else {
             return nil
         }
@@ -58,7 +58,7 @@ extension InteractiveTriage {
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.identityElement(
-            funcName: funcName,
+            callee: callee,
             typeName: typeName,
             identityName: identityName,
             seed: seed,
@@ -70,15 +70,15 @@ extension InteractiveTriage {
         guard suggestion.evidence.count >= 2,
               let forwardEvidence = suggestion.evidence.first,
               let reverseEvidence = suggestion.evidence.dropFirst().first,
-              let forwardName = functionName(from: forwardEvidence.displayName),
-              let inverseName = functionName(from: reverseEvidence.displayName),
+              let forward = CalleeReference(evidence: forwardEvidence),
+              let inverse = CalleeReference(evidence: reverseEvidence),
               let forwardParam = paramType(from: forwardEvidence.signature) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.inversePair(
-            forwardName: forwardName,
-            inverseName: inverseName,
+            forward: forward,
+            inverse: inverse,
             typeName: forwardParam,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: forwardParam),

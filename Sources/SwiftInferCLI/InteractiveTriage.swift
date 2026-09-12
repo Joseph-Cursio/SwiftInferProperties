@@ -133,6 +133,19 @@ public enum InteractiveTriage {
         /// (generators then fall back to `Type.gen()`).
         public let typeShapesByName: [String: TypeShape]
 
+        /// The module an emitted stub must `@testable import` to name its subject, resolved
+        /// once per run from the manifest.
+        ///
+        /// The per-file `Sources/<Module>/` heuristic is tried first and answers for a
+        /// conventional package. It cannot answer for an Xcode-originated layout —
+        /// `SwiftMarkdownWiki/Editor/EditorFormatter.swift` has no `Sources/` component — which
+        /// is precisely the case `--sources` exists to serve, and the import was being dropped
+        /// there with no diagnostic: 0 of 19 emitted stubs named the module under test (#415).
+        ///
+        /// `nil` for a caller with no manifest to read, which is every unit fixture. The stub
+        /// then carries a to-do line naming what is missing rather than silently omitting it.
+        public let moduleUnderTest: String?
+
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -145,7 +158,8 @@ public enum InteractiveTriage {
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
-            typeShapesByName: [String: TypeShape] = [:]
+            typeShapesByName: [String: TypeShape] = [:],
+            moduleUnderTest: String? = nil
         ) {
             self.prompt = prompt
             self.output = output
@@ -160,6 +174,7 @@ public enum InteractiveTriage {
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.verifyEvidenceByIdentity = verifyEvidenceByIdentity
             self.typeShapesByName = typeShapesByName
+            self.moduleUnderTest = moduleUnderTest
         }
     }
 
