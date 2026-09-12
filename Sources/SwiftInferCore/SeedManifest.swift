@@ -43,9 +43,61 @@ public struct SeedManifest: Codable, Sendable, Equatable {
     public let version: Int
     public let seeds: [Seed]
 
-    public init(version: Int = Self.supportedVersion, seeds: [Seed]) {
+    /// First-party packages the producer did **not** analyse, so this manifest is short by whatever
+    /// they hold.
+    ///
+    /// Empty when the producer analysed everything, and empty for a manifest written before the
+    /// field existed — the two are indistinguishable here on purpose, because the honest reading of
+    /// an older manifest is "this producer never told us", and inventing a warning out of silence
+    /// would report every pre-existing file as suspect.
+    ///
+    /// Decoded leniently for that reason, so no version bump accompanies it: a manifest without the
+    /// key stays byte-compatible, which is the same contract `role`, `restriction` and `effect`
+    /// were added under.
+    public let skippedPackages: [String]
+
+    public init(
+        version: Int = Self.supportedVersion,
+        seeds: [Seed],
+        skippedPackages: [String] = []
+    ) {
         self.version = version
         self.seeds = seeds
+        self.skippedPackages = skippedPackages
+    }
+
+    /// Written out rather than synthesised, for the reason `SeedField` records: a synthesised
+    /// `CodingKeys` is private and not enumerable, so the parity guard could not read it and would
+    /// have to hand-list the fields — a copy that only ever proves it agrees with itself.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: ManifestField.self)
+        self.version = try container.decode(Int.self, forKey: .version)
+        self.seeds = try container.decode([Seed].self, forKey: .seeds)
+        self.skippedPackages = try container.decodeIfPresent([String].self, forKey: .skippedPackages) ?? []
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: ManifestField.self)
+        try container.encode(version, forKey: .version)
+        try container.encode(seeds, forKey: .seeds)
+        if !skippedPackages.isEmpty {
+            try container.encode(skippedPackages, forKey: .skippedPackages)
+        }
+    }
+
+    /// The warning a consumer owes its reader when the manifest is admittedly partial, or `nil`
+    /// when it is not.
+    public var partialScopeWarning: String? {
+        guard !skippedPackages.isEmpty else { return nil }
+        let single = skippedPackages.count == 1
+        let noun = single ? "package" : "packages"
+        let pronoun = single ? "it" : "them"
+        return """
+            the seed manifest was produced without analysing nested \(noun) \
+            \(skippedPackages.sorted().joined(separator: ", ")), so it names no candidate from \
+            \(pronoun) and focusing on it will not reach that code. Re-run the producer with \
+            --include-nested-packages to seed \(pronoun) too.
+            """
     }
 
     /// Seeds this tool may narrow discovery to.
