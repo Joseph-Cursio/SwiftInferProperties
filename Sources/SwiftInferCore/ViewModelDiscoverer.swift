@@ -200,8 +200,6 @@ public enum ViewModelDiscoverer {
             }
             .sorted { $0.name < $1.name }
     }
-
-
 }
 
 // MARK: - Per-type accumulator

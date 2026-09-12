@@ -42,7 +42,7 @@ extension Signal {
         guard !apis.isEmpty else { return nil }
         return Signal(
             kind: .nonDeterministicBody,
-            weight: Signal.vetoWeight,
+            weight: Self.vetoWeight,
             detail: detail(apis.joined(separator: ", "))
         )
     }

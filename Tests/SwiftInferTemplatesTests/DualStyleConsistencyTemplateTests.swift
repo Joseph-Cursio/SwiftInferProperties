@@ -224,12 +224,21 @@ struct DualStyleConsistencyTemplateTests {
     @Test("a SetAlgebra conformer's four set pairs are vetoed")
     func setAlgebraConformerIsVetoed() {
         let inherited = ["Bag": Set(["SetAlgebra"])]
-        for (m, n) in [("formUnion", "union"), ("formIntersection", "intersection"),
-                       ("subtract", "subtracting"),
-                       ("formSymmetricDifference", "symmetricDifference")] {
+        let pairs = [
+            ("formUnion", "union"),
+            ("formIntersection", "intersection"),
+            ("subtract", "subtracting"),
+            ("formSymmetricDifference", "symmetricDifference")
+        ]
+        for (mutating, nonMutating) in pairs {
             let signal = DualStyleConsistencyTemplate.assumedKitCoverage(
-                for: setAlgebraPair(m, n), inheritedTypesByName: inherited)
-            #expect(signal != nil, "\(m)/\(n) on a SetAlgebra conformer should be vetoed")
+                for: setAlgebraPair(mutating, nonMutating),
+                inheritedTypesByName: inherited
+            )
+            #expect(
+                signal != nil,
+                "\(mutating)/\(nonMutating) on a SetAlgebra conformer should be vetoed"
+            )
         }
     }
 
@@ -242,7 +251,9 @@ struct DualStyleConsistencyTemplateTests {
     func nonConformerIsNotVetoed() {
         let inherited = ["Bag": Set(["Hashable", "Sequence"])]
         let signal = DualStyleConsistencyTemplate.assumedKitCoverage(
-            for: setAlgebraPair("formUnion", "union"), inheritedTypesByName: inherited)
+            for: setAlgebraPair("formUnion", "union"),
+            inheritedTypesByName: inherited
+        )
         #expect(signal == nil, "a type not declaring SetAlgebra must keep its suggestion")
     }
 
@@ -252,11 +263,16 @@ struct DualStyleConsistencyTemplateTests {
     @Test("an unrelated pair on a conformer is not vetoed")
     func unrelatedPairOnConformerIsNotVetoed() {
         let inherited = ["Bag": Set(["SetAlgebra"])]
-        for (m, n) in [("sort", "sorted"), ("insert", "inserting"),
-                       ("normalize", "normalized")] {
+        let pairs = [("sort", "sorted"), ("insert", "inserting"), ("normalize", "normalized")]
+        for (mutating, nonMutating) in pairs {
             let signal = DualStyleConsistencyTemplate.assumedKitCoverage(
-                for: setAlgebraPair(m, n), inheritedTypesByName: inherited)
-            #expect(signal == nil, "\(m)/\(n) has no kit law and must not be vetoed")
+                for: setAlgebraPair(mutating, nonMutating),
+                inheritedTypesByName: inherited
+            )
+            #expect(
+                signal == nil,
+                "\(mutating)/\(nonMutating) has no kit law and must not be vetoed"
+            )
         }
     }
 }

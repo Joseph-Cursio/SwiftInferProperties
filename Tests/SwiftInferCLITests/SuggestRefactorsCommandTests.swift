@@ -1,6 +1,6 @@
 import Foundation
-@testable import SwiftInferCLI
 import PropertyLawKit
+@testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
 
@@ -202,8 +202,9 @@ struct SuggestRefactorsCommandTests {
         #expect(!setAlgebraLaws.isEmpty, "no SetAlgebra laws in the kit's vocabulary")
 
         // A paired-mutation law would have to name a mutating member.
-        let mutatingMembers = ["formUnion", "formIntersection", "subtract",
-                               "formSymmetricDifference"]
+        let mutatingMembers = [
+            "formUnion", "formIntersection", "subtract", "formSymmetricDifference"
+        ]
         let kitHasPairedMutationLaw = setAlgebraLaws.contains { law in
             mutatingMembers.contains { law.localizedCaseInsensitiveContains($0) }
         }
@@ -236,7 +237,6 @@ struct SuggestRefactorsCommandTests {
                   + "Add the law to PropertyLawKit before making the claim.")
         )
     }
-
 
     @Test("V1.35.B — roundTripCluster suggestion mentions Codec")
     func roundTripSuggestionTextStable() {

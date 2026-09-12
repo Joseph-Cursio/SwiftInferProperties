@@ -146,6 +146,4 @@ public enum ConventionRoleDiscoverer {
         }
         return (state, collaborators.sorted { $0.propertyName < $1.propertyName })
     }
-
-
 }
