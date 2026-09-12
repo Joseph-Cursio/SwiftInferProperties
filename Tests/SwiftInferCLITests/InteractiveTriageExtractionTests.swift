@@ -99,10 +99,62 @@ struct InteractiveTriageModuleImportTests {
         #expect(wrapped.contains("import PropertyLawKit\n@testable import Demo"))
     }
 
-    @Test func wrappedFileOmitsImportForNonSpmPath() {
+    /// **This test used to pin the defect it was named for** (#415). Omitting the import for a
+    /// non-`Sources/` path was described as leaving "synthetic fixtures" alone; it also silently
+    /// dropped the import for every Xcode-originated layout, which is the case `--sources` exists
+    /// to serve. 0 of 19 stubs emitted for SwiftMarkdownWiki named the module under test.
+    ///
+    /// A path the per-file heuristic cannot read now says so on the line that will fail.
+    @Test func wrappedFileSaysSoWhenNoModuleCanBeResolved() {
         let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String", file: "Source.swift")
         let wrapped = InteractiveTriage.wrappedFileContents(stub: "\n@Test func x() async {}", suggestion: suggestion)
-        #expect(wrapped.contains("@testable import") == false)
+        // Asserted per line, not on the whole file: the TODO text *names* `@testable import`,
+        // which is the point of it — a substring check would pass on the advice.
+        let importLines = wrapped.split(separator: "\n").filter { $0.hasPrefix("@testable import") }
+        #expect(importLines.isEmpty)
+        #expect(wrapped.contains("TODO: no module resolved"))
+    }
+
+    /// The run's manifest-resolved module answers where the path cannot — the Xcode layout that
+    /// produced #415, with target sources rooted at `SwiftMarkdownWiki/` and no `Sources/`.
+    @Test func wrappedFileFallsBackToTheRunsResolvedModule() {
+        let suggestion = makeIdempotentSuggestion(
+            funcName: "normalize",
+            typeName: "String",
+            file: "/repo/SwiftMarkdownWiki/Editor/EditorFormatter.swift"
+        )
+        let wrapped = InteractiveTriage.wrappedFileContents(
+            stub: "\n@Test func x() async {}",
+            suggestion: suggestion,
+            moduleUnderTest: "SwiftMarkdownWiki"
+        )
+        #expect(wrapped.contains("@testable import SwiftMarkdownWiki"))
+        #expect(wrapped.contains("TODO: no module resolved") == false)
+    }
+
+    /// The per-file layout wins over the run's module: a run may scan a directory containing more
+    /// than one target, and the file's own path is the more specific answer.
+    @Test func theFilesOwnLayoutOutranksTheRunsModule() {
+        let suggestion = makeIdempotentSuggestion(
+            funcName: "normalize",
+            typeName: "String",
+            file: "/repo/Sources/Demo/Calc.swift"
+        )
+        let wrapped = InteractiveTriage.wrappedFileContents(
+            stub: "\n@Test func x() async {}",
+            suggestion: suggestion,
+            moduleUnderTest: "SomethingElse"
+        )
+        #expect(wrapped.contains("@testable import Demo"))
+    }
+
+    /// Foundation is imported unconditionally. It used to ride only on the Codable round-trip
+    /// generator, and a package enabling `MemberImportVisibility` — this one does — fails to
+    /// build a generated file that touches any Foundation member without it.
+    @Test func foundationIsAlwaysImported() {
+        let suggestion = makeIdempotentSuggestion(funcName: "normalize", typeName: "String")
+        let wrapped = InteractiveTriage.wrappedFileContents(stub: "\n@Test func x() async {}", suggestion: suggestion)
+        #expect(wrapped.contains("import Foundation"))
     }
 }
 
@@ -130,8 +182,12 @@ struct InteractiveTriageChooseGeneratorTests {
 
     @Test func fallsBackToGenForCustomTypeWithoutAResolver() {
         let suggestion = makeIdempotentSuggestion(funcName: "f", typeName: "Widget")
-        // No resolver supplied → the existing `Type.gen()` fallback.
-        #expect(InteractiveTriage.chooseGenerator(for: suggestion, typeName: "Widget") == "Widget.gen()")
+        // No resolver supplied → the `Type.gen()` fallback, which now carries the marker saying
+        // it is the fallback (#416): four of nineteen emitted stubs were this arm and nothing
+        // distinguished them from a resolved generator.
+        let generator = InteractiveTriage.chooseGenerator(for: suggestion, typeName: "Widget")
+        #expect(generator.hasPrefix("Widget.gen()"))
+        #expect(generator.contains("no generator derived"))
     }
 }
 

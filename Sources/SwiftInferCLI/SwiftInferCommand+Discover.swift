@@ -275,7 +275,14 @@ extension SwiftInferCommand.Discover {
             equivalenceClassHintsByIdentity: pipeline.equivalenceClassHintsByIdentity,
             consumerProducerChainHintsByIdentity: pipeline.consumerProducerChainHintsByIdentity,
             verifyEvidenceByIdentity: evidenceByIdentity,
-            typeShapesByName: pipeline.typeShapesByName
+            typeShapesByName: pipeline.typeShapesByName,
+            // #415 — the same manifest lookup `GeneratedStubDestination` already makes to rank
+            // test targets. A stub has to name its subject, and for a target rooted anywhere but
+            // `Sources/<Module>/` the per-file heuristic cannot say what to import.
+            moduleUnderTest: GeneratedStubDestination.module(
+                forScanDirectory: directory,
+                packageRoot: packageRoot
+            )
         )
         try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
     }
