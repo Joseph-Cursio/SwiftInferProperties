@@ -47,6 +47,18 @@ extension SwiftInferCommand.Discover {
             )
         }
 
+        // A manifest can be honestly produced and still be short of the repository, because the
+        // producer skips nested SwiftPM packages unless asked not to. Measured on
+        // SwiftFormatRuleStudio: 46 seeds by default against 149 with `--include-nested-packages`,
+        // so 103 candidates and 100% of the library's are absent from a file that looks complete.
+        //
+        // This belongs beside the version warning because it is the same failure: the manifest is
+        // not what the reader thinks it is, and focusing on it narrows the run to a subset of a
+        // subset. The producer discloses it on ITS stderr, which no consumer can read.
+        if let warning = seedManifest.partialScopeWarning {
+            diagnostics.writeDiagnostic("warning: \(warning)")
+        }
+
         // Files this run actually READ — which is not the same as files with an analysable summary.
         //
         // `summaries` excludes access-restricted functions, so a file whose only candidates are

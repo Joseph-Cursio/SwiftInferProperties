@@ -43,6 +43,106 @@ struct SeedFieldParityTests {
             .deletingLastPathComponent()  // repo root
     }
 
+    // MARK: - The manifest arm
+
+    /// **The same question one level UP, and the level both existing guards missed.**
+    ///
+    /// `fixtureFieldsAreAllKnown` reads `["seeds"]` and checks the keys of each *seed*;
+    /// `nestedFieldsAreAllKnown` checks the keys inside `effect`. A document shaped
+    /// `{version, seeds, …}` was therefore guarded in its middle and at its bottom and never at its
+    /// top. Verified 2026-09-11 by handing `discover --seeds` a manifest carrying two invented
+    /// top-level keys: both were dropped in silence — the `restriction` incident this suite was
+    /// built for, one level up from where the suite was looking.
+    @Test("no top-level manifest field goes unread")
+    func manifestFieldsAreAllKnown() throws {
+        let url = repoRoot.appendingPathComponent("fixtures/seed-manifest-parity/seeds.json")
+        let object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
+        let document = try #require(object as? [String: Any])
+
+        let unread = Set(document.keys).subtracting(SeedFieldParity.knownManifestFields)
+        #expect(
+            unread.isEmpty,
+            """
+            the producer emits manifest-level field(s) this build does not decode: \
+            \(unread.sorted()). They are being silently dropped. Add them to ManifestField and \
+            SeedManifest, or record here why they are deliberately ignored.
+            """
+        )
+    }
+
+    /// The producer-source half, for the same reason the seed-level guard has one: the fixture can
+    /// only report a field that existed when it was captured.
+    @Test("this build decodes every stored property of the producer's PBTSeedManifest")
+    func producerManifestSourceFieldsAreAllKnown() {
+        let source = repoRoot
+            .deletingLastPathComponent()
+            .appendingPathComponent("SwiftProjectLint/Sources/Core/Export/PBTSeedsFormatter.swift")
+        guard let text = try? String(contentsOf: source, encoding: .utf8) else { return }
+
+        let fields = Self.storedProperties(ofStruct: "PBTSeedManifest", in: text)
+        #expect(
+            !fields.isEmpty,
+            """
+            the producer's source was found but no stored properties were parsed out of \
+            `struct PBTSeedManifest` — the declaration moved or was reshaped, so this arm is now \
+            checking nothing. Fix the parse rather than deleting the test.
+            """
+        )
+
+        let unread = fields.subtracting(SeedFieldParity.knownManifestFields)
+        #expect(
+            unread.isEmpty,
+            """
+            the producer's PBTSeedManifest declares field(s) this build does not decode: \
+            \(unread.sorted()). Add them to ManifestField and SeedManifest.
+            """
+        )
+    }
+
+    /// A manifest without the key and a manifest with an empty one mean the same thing here, and
+    /// the warning must stay silent for both — otherwise every manifest written before the field
+    /// existed reads as suspect.
+    @Test("a partial-scope warning is owed only when the producer says so")
+    func partialScopeWarningIsSilentUnlessSkipped() throws {
+        let seed = SeedManifest.Seed(
+            file: "A.swift", line: 1, symbol: "f", rule: "r", kind: .pureFunction,
+            role: nil, restriction: nil, effect: nil
+        )
+        #expect(SeedManifest(seeds: [seed]).partialScopeWarning == nil)
+        #expect(SeedManifest(seeds: [seed], skippedPackages: []).partialScopeWarning == nil)
+
+        let one = try #require(SeedManifest(seeds: [seed], skippedPackages: ["Core"]).partialScopeWarning)
+        #expect(one.contains("nested package Core"))
+        // The flag name contains "packages", so the plural must be ruled out as a NOUN PHRASE.
+        // The first spelling of this assertion was `!one.contains("packages")` and failed on
+        // `--include-nested-packages` in the advice sentence.
+        #expect(!one.contains("nested packages"), "one package must not be described in the plural")
+
+        let two = try #require(
+            SeedManifest(seeds: [seed], skippedPackages: ["Beta", "Alpha"]).partialScopeWarning
+        )
+        #expect(two.contains("nested packages Alpha, Beta"), "named, and sorted for a stable message")
+    }
+
+    /// A manifest written by this build round-trips, and one *without* the key still decodes —
+    /// the compatibility claim that lets the field ship without a version bump.
+    @Test("the manifest round-trips, and a manifest without the key still decodes")
+    func manifestRoundTripsAndStaysBackwardsCompatible() throws {
+        let seed = SeedManifest.Seed(
+            file: "A.swift", line: 1, symbol: "f", rule: "r", kind: .pureFunction,
+            role: nil, restriction: nil, effect: nil
+        )
+        let encoded = try JSONEncoder().encode(SeedManifest(seeds: [seed], skippedPackages: ["Core"]))
+        let decoded = try JSONDecoder().decode(SeedManifest.self, from: encoded)
+        #expect(decoded.skippedPackages == ["Core"])
+
+        // Byte-compatible with a manifest written before the field existed: absent, not empty.
+        let withoutKey = try JSONEncoder().encode(SeedManifest(seeds: [seed]))
+        let text = try #require(String(data: withoutKey, encoding: .utf8))
+        #expect(!text.contains("skippedPackages"), "an empty list must not be written out")
+        #expect(try JSONDecoder().decode(SeedManifest.self, from: withoutKey).skippedPackages.isEmpty)
+    }
+
     // MARK: - The fixture arm
 
     /// Every key in a real manifest is one this build decodes.

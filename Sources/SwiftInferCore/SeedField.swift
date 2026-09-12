@@ -13,6 +13,24 @@ import Foundation
 /// Because the keys are explicit, `Seed` provides **both** `init(from:)` and `encode(to:)`. Leaving
 /// the encoder synthesised would give it a second, private, invisible set of keys, so the two
 /// halves of the round trip could disagree without anything saying so.
+/// Every key the **manifest document itself** carries — the level above `SeedField`.
+///
+/// It exists because the guard below stopped one level too high. `SeedFieldParity` enumerates the
+/// keys of a *seed*, and `knownNestedFields` enumerates the keys inside `effect`, so a document
+/// shaped `{version, seeds, …}` was checked in its middle and at its bottom and never at its top.
+/// Verified 2026-09-11 by handing `discover --seeds` a manifest carrying two invented top-level
+/// keys: both were dropped in silence, which is the `restriction` incident exactly, one level up.
+///
+/// `skippedPackages` is the field that made it matter. SwiftProjectLint skips nested SwiftPM
+/// packages by default, and on one subject that is 103 of 149 candidates — so a manifest can be
+/// 69% short while looking complete, and until this field the only disclosure was on the
+/// producer's stderr, where no consumer can read it.
+public enum ManifestField: String, CodingKey, CaseIterable {
+    case version
+    case seeds
+    case skippedPackages
+}
+
 public enum SeedField: String, CodingKey, CaseIterable {
     case file
     case line
@@ -58,6 +76,11 @@ public enum SeedFieldParity {
     /// Every key `SeedManifest.Seed` decodes, at the top level of a seed.
     public static var knownFields: Set<String> {
         Set(SeedField.allCases.map(\.stringValue))
+    }
+
+    /// Every key this build decodes on the **manifest document**, above the seed array.
+    public static var knownManifestFields: Set<String> {
+        Set(ManifestField.allCases.map(\.stringValue))
     }
 
     /// Every key this build decodes inside a **nested** object, keyed by the field that holds it.
