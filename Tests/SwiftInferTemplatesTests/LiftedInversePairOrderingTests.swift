@@ -51,8 +51,10 @@ struct LiftedInversePairOrderingTests {
     }
 
     private func pair(
-        forwardLine: Int, forwardColumn: Int = 1,
-        reverseLine: Int, reverseColumn: Int = 1
+        forwardLine: Int,
+        forwardColumn: Int = 1,
+        reverseLine: Int,
+        reverseColumn: Int = 1
     ) -> LiftedInversePair {
         LiftedInversePair(
             forward: lift("add", line: forwardLine, column: forwardColumn),

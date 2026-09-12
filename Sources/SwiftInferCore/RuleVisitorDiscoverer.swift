@@ -96,6 +96,4 @@ public enum RuleVisitorDiscoverer {
         }
         return candidates.sorted(by: SourceLocatedCandidateOrdering.byLocationThenTypeName)
     }
-
-
 }

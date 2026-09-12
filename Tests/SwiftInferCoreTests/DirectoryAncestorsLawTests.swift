@@ -165,7 +165,7 @@ struct DirectoryAncestorsLawTests {
             let chain = DirectoryAncestors.chain(from: url)
             // A predicate with a deterministic, generated-input-dependent answer: match any
             // ancestor whose component count is even.
-            let predicate: (URL) -> Bool = { $0.pathComponents.count % 2 == 0 }
+            let predicate: (URL) -> Bool = { $0.pathComponents.count.isMultiple(of: 2) }
             let found = DirectoryAncestors.nearest(from: url, where: predicate)
             if let found {
                 let index = try #require(chain.firstIndex(of: found))
