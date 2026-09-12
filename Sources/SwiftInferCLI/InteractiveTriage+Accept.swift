@@ -54,7 +54,11 @@ extension InteractiveTriage {
             context.output.write("[dry-run] would write \(path.path)")
             return nil
         }
-        let contents = wrappedFileContents(stub: stub, suggestion: suggestion)
+        let contents = wrappedFileContents(
+            stub: stub,
+            suggestion: suggestion,
+            moduleUnderTest: context.moduleUnderTest
+        )
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -200,13 +204,13 @@ extension InteractiveTriage {
 
     private static func idempotentStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let funcName = functionName(from: evidence.displayName),
+              let callee = CalleeReference(evidence: evidence),
               let typeName = paramType(from: evidence.signature) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.idempotent(
-            funcName: funcName,
+            callee: callee,
             typeName: typeName,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: typeName),
@@ -259,15 +263,15 @@ extension InteractiveTriage {
         guard suggestion.evidence.count >= 2,
               let forwardEvidence = suggestion.evidence.first,
               let reverseEvidence = suggestion.evidence.dropFirst().first,
-              let forwardName = functionName(from: forwardEvidence.displayName),
-              let inverseName = functionName(from: reverseEvidence.displayName),
+              let forward = CalleeReference(evidence: forwardEvidence),
+              let inverse = CalleeReference(evidence: reverseEvidence),
               let forwardParam = paramType(from: forwardEvidence.signature) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.roundTrip(
-            forwardName: forwardName,
-            inverseName: inverseName,
+            forward: forward,
+            inverse: inverse,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: forwardParam),
             equalityKind: equalityKind(forTypeText: forwardParam)
@@ -276,14 +280,14 @@ extension InteractiveTriage {
 
     private static func monotonicStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let funcName = functionName(from: evidence.displayName),
+              let callee = CalleeReference(evidence: evidence),
               let typeName = paramType(from: evidence.signature),
               let returnType = returnType(from: evidence.signature) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.monotonic(
-            funcName: funcName,
+            callee: callee,
             typeName: typeName,
             returnType: returnType,
             seed: seed,
@@ -293,14 +297,14 @@ extension InteractiveTriage {
 
     private static func invariantPreservingStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let funcName = functionName(from: evidence.displayName),
+              let callee = CalleeReference(evidence: evidence),
               let typeName = paramType(from: evidence.signature),
               let invariantName = invariantKeypath(from: evidence.signature) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.invariantPreserving(
-            funcName: funcName,
+            callee: callee,
             typeName: typeName,
             invariantName: invariantName,
             seed: seed,
