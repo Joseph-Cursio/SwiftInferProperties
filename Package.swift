@@ -256,6 +256,13 @@ let package = Package(
             name: "SwiftInferCoreTests",
             dependencies: [
                 "SwiftInferCore",
+                // Ten of this target's files `import SwiftInferTemplates` and the target never
+                // declared it. That built anyway on every incremental run — SwiftPM leaves
+                // `SwiftInferTemplates.swiftmodule` in the build directory and the implicit
+                // search path finds it — and failed on a clean one, where this target can be
+                // compiled before Templates exists. A dependency that resolves by build order
+                // is not a dependency; `swift package clean && swift test` is what surfaced it.
+                "SwiftInferTemplates",
                 // V1.47.G.1 — tests of IndexedTypeShape ↔ TypeShape
                 // conversion need PropertyLawCore symbols visible.
                 .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),
