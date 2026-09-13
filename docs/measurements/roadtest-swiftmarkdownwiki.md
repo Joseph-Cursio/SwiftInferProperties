@@ -1725,3 +1725,103 @@ shape of what remains is now legible: L1–L4 and P2–P4 want a relation betwee
 an output and the input it was built from; Q2–Q5 and R1–R2 want a docstring
 clause or an invariance; T1/T2 want a predicate over a *field* of a returned
 type, which the scan cannot see at all. None of those is one template.
+
+---
+
+# S8 — an emitted test runs, and catches a planted bug (2026-09-13)
+
+S8 has read **0** since the walk began. Three passes established that the loop
+could suggest, then that it could emit, then that what it emitted could
+compile. It had never been shown to *run*.
+
+## What was run
+
+`WikilinkParser.parse(_:)` — `internal static func parse(_ source: String) ->
+[WikilinkRef]`, chosen because it is the only subject that clears every gate at
+once: visible to `@testable import`, static (so no receiver), one parameter of
+a type the generator covers, and a return type nothing has to compare.
+
+The stub is the one the tool wrote, **copied in verbatim**. No hand-edit, which
+is the whole claim — a stub that needs fixing before it runs has not
+demonstrated anything about the emitter.
+
+```swift
+@Test func parse_isTotal() async {
+    let backend = SwiftPropertyBasedBackend()
+    let seed = Seed(stateA: 0x6F813295B63C451F, …)
+    let result = await backend.check(
+        trials: 100, seed: seed,
+        sample: { rng in (Gen.frequency(…)).run(using: &rng) },
+        property: { value in _ = WikilinkParser.parse(value); return true }
+    )
+    …
+}
+```
+
+Harness: a local branch of SwiftMarkdownWiki `46cb4a9` with
+`.package(path: "../SwiftPropertyLaws")` and `swift-property-based` added to
+the test target. The branch is deleted and the repository restored to
+`46cb4a9` with a clean tree; nothing was merged or pushed.
+
+## Result
+
+| | |
+|---|---|
+| clean code | `✔ Test parse_isTotal() passed` |
+| **planted violator** | **process crashes, exit 1** |
+
+The violator is a real totality bug rather than a synthetic one —
+`precondition(!source.isEmpty)` at the top of `parse`, a parser that traps on
+empty input. The generator reaches `""` because it is in
+`RawType.stringEdgeCases`, and the run dies with:
+
+```
+SwiftMarkdownWiki/WikilinkParser.swift:7: Precondition failed: planted: parse traps on empty input
+```
+
+**A pass alone would have proved nothing**, and this is the failure mode this
+document keeps recording: 100 trials completing in 1 ms is exactly the shape of
+a vacuous test. The planted violator is what separates "the test ran" from "the
+test can fail", and only the second is worth anything.
+
+**The crash IS the reported failure, and that is by design.** A trap is not an
+error value — there is nothing for `Issue.record` to catch. `InputTotalityTemplate`
+says so at the code (*"a violation crashes the test process rather than
+shrinking to a tidy counterexample… it is what a trap is, and it is why fuzzers
+exist"*), and the emitted comment repeats it so a reader does not diagnose a
+broken harness. The message still names the file and line, which is the part a
+reader acts on.
+
+## What this does and does not establish
+
+**Does:** the emitter produces a file that compiles unedited against a real
+package, links the kit, drives the backend, executes the subject 100 times, and
+fails loudly on a genuine defect in it.
+
+**Does not:** say anything about the other 20 stubs. This one clears every gate;
+6 are blocked by `private`, 4 by a missing generator, and 8 subjects declined
+because they are instance methods needing a receiver. Nor does it make the
+*law* interesting — totality is the weakest law in the catalogue, and
+`PredicateTemplate`'s own header says the interesting law is a hole only the
+author can fill.
+
+## Running tally
+
+| stage | rows | note |
+|---|---|---|
+| S0 | 3 | 1 partially closed (#214) |
+| S1, S2 | 0 | |
+| S3 | 17 | 2 closed; dominant by 4× |
+| S4 | 2 | closed (#420) |
+| S5 | 5 | closed |
+| S6 | 4 | closed |
+| S7 | 4 | 3 open |
+| **S8** | **0** | **reached — an emitted test runs and discriminates** |
+
+**The loop is closed end to end for the first time**: signature → suggestion →
+stub → compiled → executed → caught a planted bug. Every stage has now been
+demonstrated at least once on a subject nobody wrote the tool for.
+
+What remains is not plumbing. S3 at seventeen rows is the catalogue's reach,
+S7's open rows are about whether the laws delivered are worth keeping, and the
+`private` blocker is the subject's code rather than ours.
