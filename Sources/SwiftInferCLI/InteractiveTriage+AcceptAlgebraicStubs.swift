@@ -11,6 +11,8 @@ extension InteractiveTriage {
     static func commutativeStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              callee.accepts(applicationArity: arity),
               let typeName = paramType(from: evidence.signature) else {
             return nil
         }
@@ -26,6 +28,8 @@ extension InteractiveTriage {
     static func associativeStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              callee.accepts(applicationArity: arity),
               let typeName = paramType(from: evidence.signature) else {
             return nil
         }
@@ -49,6 +53,8 @@ extension InteractiveTriage {
               let opEvidence = suggestion.evidence.first,
               let identityEvidence = suggestion.evidence.dropFirst().first,
               let callee = CalleeReference(evidence: opEvidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              callee.accepts(applicationArity: arity),
               let typeName = paramType(from: opEvidence.signature) else {
             return nil
         }
@@ -72,6 +78,9 @@ extension InteractiveTriage {
               let reverseEvidence = suggestion.evidence.dropFirst().first,
               let forward = CalleeReference(evidence: forwardEvidence),
               let inverse = CalleeReference(evidence: reverseEvidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              forward.accepts(applicationArity: arity),
+              inverse.accepts(applicationArity: arity),
               let forwardParam = paramType(from: forwardEvidence.signature) else {
             return nil
         }

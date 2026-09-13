@@ -41,10 +41,19 @@ extension InteractiveTriage {
             resolver.customTypeGenerator(forTypeName: typeName)?.expression
         }
         guard let stub = liftedTestStub(for: suggestion, customGenerator: customGenerator) else {
-            context.diagnostics.writeDiagnostic(
-                "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
-                    + "decision recorded without writing a file"
-            )
+            // Two unlike causes used to share one sentence, and the shared one named the
+            // template — so a subject that simply could not be called was reported as a gap in
+            // the tool. `StubApplicationArity` answers first when it has something to say.
+            if let reason = StubApplicationArity.declineReason(for: suggestion) {
+                context.diagnostics.writeDiagnostic(
+                    "note: no stub written — \(reason); decision recorded without writing a file"
+                )
+            } else {
+                context.diagnostics.writeDiagnostic(
+                    "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
+                        + "decision recorded without writing a file"
+                )
+            }
             return nil
         }
         let fileName = stubFileName(for: suggestion) ?? "\(suggestion.identity.normalized).swift"
@@ -205,6 +214,8 @@ extension InteractiveTriage {
     private static func idempotentStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              callee.accepts(applicationArity: arity),
               let typeName = paramType(from: evidence.signature) else {
             return nil
         }
@@ -265,6 +276,9 @@ extension InteractiveTriage {
               let reverseEvidence = suggestion.evidence.dropFirst().first,
               let forward = CalleeReference(evidence: forwardEvidence),
               let inverse = CalleeReference(evidence: reverseEvidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              forward.accepts(applicationArity: arity),
+              inverse.accepts(applicationArity: arity),
               let forwardParam = paramType(from: forwardEvidence.signature) else {
             return nil
         }
@@ -281,6 +295,8 @@ extension InteractiveTriage {
     private static func monotonicStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              callee.accepts(applicationArity: arity),
               let typeName = paramType(from: evidence.signature),
               let returnType = returnType(from: evidence.signature) else {
             return nil
@@ -298,6 +314,8 @@ extension InteractiveTriage {
     private static func invariantPreservingStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
+              let arity = StubApplicationArity.forTemplate(suggestion.templateName),
+              callee.accepts(applicationArity: arity),
               let typeName = paramType(from: evidence.signature),
               let invariantName = invariantKeypath(from: evidence.signature) else {
             return nil
