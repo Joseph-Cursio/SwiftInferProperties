@@ -72,6 +72,33 @@ extension TemplateRegistry {
             )
         ),
         SingleFunctionAppShape(
+            name: "guard-domain",
+            suggest: GuardDomainTemplate.suggest(for:),
+            generatorType: { $0.parameters.first?.typeText },
+            exclusionGroup: nil,
+            referenceFixture: appShapeFixture(
+                "parse",
+                params: [.init(label: "from", internalName: "source", typeText: "String", isInout: false)],
+                returns: "String",
+                on: "FrontMatter",
+                // The only fixture in this registry that needs a BODY: this is the first
+                // body-derived template, so a signature alone cannot trigger it — which is
+                // exactly the property `ApplicationShapeRegistryTests` exists to check, and it
+                // caught this fixture built without one.
+                bodySignals: BodySignals(
+                    guardDomain: GuardDomain(
+                        condition: #"source.hasPrefix("---")"#,
+                        returnedExpression: "source",
+                        parameterName: "source",
+                        firesWhenConditionHolds: false
+                    ),
+                    hasNonDeterministicCall: false,
+                    hasSelfComposition: false,
+                    nonDeterministicAPIsDetected: []
+                )
+            )
+        ),
+        SingleFunctionAppShape(
             name: "filter-subset",
             suggest: FilterSubsetTemplate.suggest(for:),
             generatorType: { FilterSubsetTemplate.haystackType(of: $0) },
@@ -176,7 +203,8 @@ extension TemplateRegistry {
         params: [Parameter],
         returns: String,
         mutating: Bool = false,
-        on containingType: String? = nil
+        on containingType: String? = nil,
+        bodySignals: BodySignals = .empty
     ) -> FunctionSummary {
         FunctionSummary(
             name: name,
@@ -188,7 +216,7 @@ extension TemplateRegistry {
             isStatic: false,
             location: SourceLocation(file: "AppShapeFixtures.swift", line: 1, column: 1),
             containingTypeName: containingType,
-            bodySignals: .empty
+            bodySignals: bodySignals
         )
     }
 }
