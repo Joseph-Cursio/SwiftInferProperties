@@ -71,8 +71,12 @@ struct S3ShapeCensusMeasuredTests {
         var closedRole = Shape(key: "D  · role whose postcondition is CLOSED", rows: "T4 + T5")
         var anyRole = Shape(key: "—  reference: any RolePostcondition match", rows: "role-postcondition")
         var unary = Shape(key: "—  control: unary (T) -> T, what idempotence reaches", rows: "—")
+        var closedRoleGap = Shape(key: "D' · closed role that idempotence CANNOT reach", rows: "T4 + T5")
+        var closedRoleOverlap = Shape(key: "D\" · closed role idempotence ALREADY reaches", rows: "duplicate risk")
 
-        var all: [Shape] { [parameterised, gatedA, removal, measure, closedRole, anyRole, unary] }
+        var all: [Shape] {
+            [parameterised, gatedA, removal, measure, closedRole, closedRoleGap, closedRoleOverlap, anyRole, unary]
+        }
     }
 
     static func isExcluded(_ url: URL) -> Bool {
@@ -133,6 +137,16 @@ struct S3ShapeCensusMeasuredTests {
             tally.anyRole.record("\(corpus): \(summary.name)")
             if closedRoles.contains(role) {
                 tally.closedRole.record("\(corpus): \(summary.name) [\(role.rawValue)]")
+                // Does the existing `idempotence` template already reach this site? It fires on
+                // a unary `(T) -> T` carrying a curated verb. Where both would fire, a second
+                // suggestion is duplication, not coverage — so the gap is what this measures.
+                let unaryShape = params.count == 1 && bare(params[0].typeText) == ret
+                let reachedByIdempotence = unaryShape && IdempotenceTemplate.curatedVerbs.contains(summary.name)
+                if reachedByIdempotence {
+                    tally.closedRoleOverlap.record("\(corpus): \(summary.name)")
+                } else {
+                    tally.closedRoleGap.record("\(corpus): \(summary.name) [\(role.rawValue)]")
+                }
             }
         }
     }

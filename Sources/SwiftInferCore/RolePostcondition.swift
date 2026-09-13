@@ -80,6 +80,32 @@ public enum RolePostcondition: String, Sendable, Equatable, Hashable, CaseIterab
     /// a suggestion that hides it is over-claiming.
     public var isStrong: Bool { self != .reversed && self != .shuffled }
 
+    /// Whether the postcondition is **closed under reapplication**: the output satisfies it, and
+    /// applying the operation again changes nothing.
+    ///
+    /// This is a second fact about the role, not a consequence of the first. A postcondition
+    /// alone does not give it — a `clamped` could satisfy its bounds and still rewrite every
+    /// in-bounds value, and nothing in *"the result lies within the given bounds"* forbids that.
+    /// What rules it out is the same thing that gives the postcondition: the name. Sorting an
+    /// ordered sequence returns it; lowercasing lowercase returns it. So this sits at exactly
+    /// the confidence of ``law`` and is **not** entailment.
+    ///
+    /// **`escaped` and `unescaped` are the sharp exclusions.** Escaping is the classic
+    /// non-closed operation: `\` becomes `\\` becomes `\\\\`, and each pass satisfies
+    /// *"contains no unescaped occurrence"* while changing the value. A template that assumed
+    /// closure from the postcondition alone would state a law that is false of correct code —
+    /// this project's worst failure mode — on the one role where it is most obviously false.
+    ///
+    /// **`reversed` and `shuffled`** are excluded for the other reason: reversing twice is the
+    /// identity rather than a fixpoint (it is an involution, which `InvolutionTemplate` states),
+    /// and a shuffle is not deterministic at all.
+    public var isClosedUnderReapplication: Bool {
+        switch self {
+        case .sorted, .clamped, .rounded, .lowercased, .uppercased, .deduplicated: true
+        case .escaped, .unescaped, .reversed, .shuffled: false
+        }
+    }
+
     /// The parameter labels this role permits.
     ///
     /// **`nil` means "no parameters".** A role names an operation, and a parameter can
