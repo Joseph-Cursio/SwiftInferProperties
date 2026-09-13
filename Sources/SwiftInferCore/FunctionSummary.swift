@@ -238,6 +238,17 @@ public struct FunctionSummary: Sendable, Equatable {
     /// Carried so `PackagePurityJoin` can consult the verdict this analyzer already
     /// computed for a callee, which is the fact open item 31 found the producer knows
     /// and the consumer structurally cannot recompute.
+    /// The global actor isolating this function — `"MainActor"` — or `nil`.
+    ///
+    /// Taken from the declaration's own attributes, else the innermost enclosing type or
+    /// extension that carries one. It is **not** a purity fact: a `@MainActor static func` can be
+    /// a perfect function of its inputs, and this one is. It is a fact about where a caller may
+    /// stand, which is what an emitted test has to satisfy to compile at all.
+    ///
+    /// `nil` for the overwhelming majority, and defaulted so every hand-built summary keeps
+    /// compiling.
+    public let globalActor: String?
+
     public let calledFreeFunctionNames: [String]
 
     public let purityVerdict: PurityVerdict
@@ -274,6 +285,7 @@ public struct FunctionSummary: Sendable, Equatable {
         inferredEffect: Effect? = nil,
         purityVerdict: PurityVerdict = .refuted,
         bodyFingerprint: String? = nil,
+        globalActor: String? = nil,
         calledFreeFunctionNames: [String] = []
     ) {
         self.name = name
@@ -299,6 +311,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.inferredEffect = inferredEffect
         self.purityVerdict = purityVerdict
         self.bodyFingerprint = bodyFingerprint
+        self.globalActor = globalActor
         self.calledFreeFunctionNames = calledFreeFunctionNames
     }
 }

@@ -220,6 +220,14 @@ public struct Evidence: Sendable, Equatable {
     /// the carrier name.
     public let qualifiedTypeName: String?
 
+    /// The global actor isolating the subject — `"MainActor"` — or `nil`.
+    ///
+    /// An emitted test calling an isolated function from a nonisolated closure does not compile,
+    /// and the diagnostic (`expression is 'async' but is not marked with 'await'`) names neither
+    /// the actor nor the subject. Carried so the emitter can hop rather than the reader guess.
+    /// `nil` means *not recorded*, which is the behaviour every call site had before this.
+    public let globalActor: String?
+
     public init(
         displayName: String,
         signature: String,
@@ -230,7 +238,8 @@ public struct Evidence: Sendable, Equatable {
         returnsSelfType: Bool = false,
         isComputedProperty: Bool = false,
         parameterTypeNames: [String] = [],
-        qualifiedTypeName: String? = nil
+        qualifiedTypeName: String? = nil,
+        globalActor: String? = nil
     ) {
         self.displayName = displayName
         self.signature = signature
@@ -242,6 +251,7 @@ public struct Evidence: Sendable, Equatable {
         self.isComputedProperty = isComputedProperty
         self.parameterTypeNames = parameterTypeNames
         self.qualifiedTypeName = qualifiedTypeName
+        self.globalActor = globalActor
     }
 }
 

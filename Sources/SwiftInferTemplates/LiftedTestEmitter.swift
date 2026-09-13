@@ -44,11 +44,11 @@ public enum LiftedTestEmitter {
         equalityKind: EqualityKind = .strict
     ) -> String {
         let testFunctionName = "\(callee.bareName)_isIdempotent"
-        let property = equalityExpression(
+        let property = callee.isolated(equalityExpression(
             lhs: callee.call(callee.call("value")),
             rhs: callee.call("value"),
             kind: equalityKind
-        )
+        ))
         let failureLabel = "\(callee.bareName)(_:) failed idempotence"
         return makeTestStub(
             testFunctionName: testFunctionName,
@@ -76,11 +76,11 @@ public enum LiftedTestEmitter {
         equalityKind: EqualityKind = .strict
     ) -> String {
         let testFunctionName = "\(forward.bareName)_\(inverse.bareName)_roundTrip"
-        let property = equalityExpression(
+        let property = inverse.isolated(equalityExpression(
             lhs: inverse.call(forward.call("value")),
             rhs: "value",
             kind: equalityKind
-        )
+        ))
         let failureLabel = "\(forward.bareName)/\(inverse.bareName) round-trip failed"
         return makeTestStub(
             testFunctionName: testFunctionName,
@@ -112,7 +112,7 @@ public enum LiftedTestEmitter {
             "                    return lhs < rhs ? (lhs, rhs) : (rhs, lhs)",
             "                }"
         ].joined(separator: "\n")
-        let property = "{ pair in \(callee.call("pair.0")) <= \(callee.call("pair.1")) }"
+        let property = "{ pair in \(callee.isolated("\(callee.call("pair.0")) <= \(callee.call("pair.1"))")) }"
         let failureLabel = "\(callee.bareName)(_:) failed monotonicity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
@@ -147,8 +147,8 @@ public enum LiftedTestEmitter {
             "                    return (lhs, rhs)",
             "                }"
         ].joined(separator: "\n")
-        let property = "{ pair in \(callee.call("pair.0", "pair.1")) "
-            + "== \(callee.call("pair.1", "pair.0")) }"
+        let sides = "\(callee.call("pair.0", "pair.1")) == \(callee.call("pair.1", "pair.0"))"
+        let property = "{ pair in \(callee.isolated(sides)) }"
         let failureLabel = "\(callee.bareName)(_:_:) failed commutativity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,

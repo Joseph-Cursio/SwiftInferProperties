@@ -1,4 +1,7 @@
-# Pipeline walk — subject 2: SwiftUMLStudio
+# Pipeline walk — subject 2: SwiftUMLStudio (2026-09-13)
+
+> **Status:** `measured` · **As of:** 2026-09-13
+> **Method:** [`docs/plans/corpus-pipeline-walk-scope.md`](../plans/corpus-pipeline-walk-scope.md)
 
 Second subject of the corpus pipeline walk (`docs/plans/corpus-pipeline-walk-scope.md`).
 The first, SwiftMarkdownWiki, ran twice and produced eleven filings across
