@@ -1,5 +1,7 @@
 # Can the totality test reach the bugs totality is about? (2026-09-13)
 
+> **Status:** `measured` · **As of:** 2026-09-13
+
 `input-totality` and `predicate` state that a subject returns or throws for every
 input its parameter type admits, and never traps. The emitter for that law shipped
 today (#447), and S8 demonstrated one running and catching a planted trap.
@@ -87,3 +89,35 @@ show the gap exists and that a hostile draw closes it; it is not a rate. The `[[
 generalises least — it is specific to what this subject parses — and generalises most as
 an argument, because *every* parser has delimiters and no curated list will contain all
 of them.
+
+---
+
+## Shipped, and re-measured against the shipped code (2026-09-13)
+
+The 6-of-6 above was a spike: a generator pasted into the stub by hand. This is
+the same sweep against `RawType.hostileGeneratorExpression` as released in kit
+**v4.6.1**, with the stub as the tool emitted it and no hand-editing.
+
+| trap fires on | edge-biased | hostile (shipped) |
+|---|---|---|
+| empty input | caught | **caught** |
+| a newline | caught | **caught** |
+| a tab | caught | **caught** |
+| any non-ASCII scalar | missed | **caught** |
+| a `[[` delimiter | missed | **caught** |
+| length > 64 | missed | **caught** |
+| **score** | **3 of 6** | **6 of 6** |
+| correct code | passes | **passes** |
+
+⚠ **v4.6.0 shipped the generator with a bug, and the sweep is why v4.6.1 exists.**
+`hostileTokens` carries `\u{0}` and `\u{7F}` — a parser trapping on NUL is exactly
+what a totality law is for — and `swiftStringLiteral` escaped only `\`, `"`, `\n`
+and `\t`, so those went into the generated `.swift` file as **raw bytes**. Every
+test on that function compared strings, and a NUL inside a Swift string compares
+equal to itself; it was found by reading the emitted file's bytes. The guard now
+asserts on the emitted expression's *scalars*, the only form in which it is visible.
+
+**Only totality stubs changed.** The idempotence and monotonicity arms keep
+`edgeBiasedGeneratorExpression`, verified by re-emitting: the non-totality files are
+byte-identical across the change. That was the point of a sibling rather than a
+wider `stringEdgeCases`.
