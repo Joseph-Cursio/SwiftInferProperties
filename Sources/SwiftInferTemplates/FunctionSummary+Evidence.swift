@@ -42,7 +42,8 @@ extension FunctionSummary {
             returnsSelfType: inferenceReturnsSelfType,
             isComputedProperty: isComputedProperty,
             parameterTypeNames: parameters.map(\.typeText),
-            qualifiedTypeName: qualifiedContainingTypeName
+            qualifiedTypeName: qualifiedContainingTypeName,
+            globalActor: globalActor
         )
     }
 

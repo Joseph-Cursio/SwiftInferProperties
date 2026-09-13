@@ -42,10 +42,19 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
     /// One entry per parameter, in order. `nil` is an unlabelled parameter (`_:`).
     public let argumentLabels: [String?]
 
-    public init(bareName: String, qualifier: String? = nil, argumentLabels: [String?] = []) {
+    /// The global actor the callee is isolated to, or `nil`.
+    public let isolation: String?
+
+    public init(
+        bareName: String,
+        qualifier: String? = nil,
+        argumentLabels: [String?] = [],
+        isolation: String? = nil
+    ) {
         self.bareName = bareName
         self.qualifier = qualifier
         self.argumentLabels = argumentLabels
+        self.isolation = isolation
     }
 
     /// A bare free-function name, which is what every emitter spliced before this type existed.
@@ -71,6 +80,26 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
         self.bareName = name
         self.qualifier = evidence.isInstanceMethod ? nil : evidence.qualifiedTypeName
         self.argumentLabels = Self.labels(inDisplayName: evidence.displayName, after: parenIndex)
+        self.isolation = evidence.globalActor
+    }
+
+    /// `expression`, hopped onto the callee's actor when it has one.
+    ///
+    /// **The hop belongs around the whole property, not around each call.** `MainActor.run`
+    /// takes a *synchronous* `@MainActor` closure, so `await` cannot appear inside one — and
+    /// wrapping each call individually would produce
+    /// `await MainActor.run { f(await MainActor.run { f(x) }) }`, which does not compile. One
+    /// hop, around the expression the law states.
+    ///
+    /// **And it has to be the property closure, not the test function.** Annotating the emitted
+    /// `@Test` with `@MainActor` was the obvious fix and was measured first: it does not help,
+    /// because the property is a `@Sendable` closure handed to a nonisolated `async` function and
+    /// does not inherit the test's isolation. `PropertyBackend`'s `property` is
+    /// `@Sendable (Input) async throws -> Bool` — already `async`, so the `await` needs no API
+    /// change.
+    public func isolated(_ expression: String) -> String {
+        guard let isolation else { return expression }
+        return "await \(isolation).run { \(expression) }"
     }
 
     /// The parameter labels inside a display name's parentheses — `(from:)` is `["from"]`,

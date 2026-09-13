@@ -121,6 +121,7 @@ extension FunctionScannerVisitor {
             declaredEffect: declaredEffect,
             purityVerdict: purityVerdict,
             bodyFingerprint: bodyFingerprint,
+            globalActor: resolvedGlobalActor(of: node),
             calledFreeFunctionNames: calleeCollector.names
         )
     }
@@ -339,5 +340,24 @@ extension FunctionScannerVisitor {
     static func couldCarryDedupGate(_ node: FunctionDeclSyntax) -> Bool {
         let effects = node.signature.effectSpecifiers
         return effects?.throwsClause != nil || effects?.asyncSpecifier != nil
+    }
+}
+
+extension FunctionScannerVisitor {
+
+    /// The global actor isolating `node` — its own annotation, else the innermost enclosing type
+    /// or extension that carries one.
+    ///
+    /// **The declaration's own annotation wins.** A `@MainActor` member of a nonisolated type and
+    /// a nonisolated member of a `@MainActor` type are different facts, and only the innermost
+    /// one that speaks is the answer.
+    ///
+    /// `nonisolated` is deliberately not modelled. Missing it makes an emitted test hop onto an
+    /// actor it did not need, which compiles and costs a context switch per trial; reading it
+    /// wrongly would omit a hop the test does need, which does not compile. The asymmetry decides
+    /// the direction, and no corpus subject spells it on a candidate.
+    func resolvedGlobalActor(of node: FunctionDeclSyntax) -> String? {
+        Self.globalActor(of: node.attributes)
+            ?? enclosingTypeAccess.reversed().compactMap(\.globalActor).first
     }
 }

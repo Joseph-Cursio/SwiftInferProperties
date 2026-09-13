@@ -39,6 +39,46 @@ extension FunctionScannerVisitor {
         return .unmarked
     }
 
+    /// What one enclosing type or extension contributes to a function nested inside it.
+    ///
+    /// **One stack, not two.** `enclosingTypeAccess` carries a warning that it must be
+    /// pushed and popped in lockstep with `typeStack`, and that *"two stacks needing the same
+    /// discipline is how the pairing drifts"*. Global-actor isolation is a third fact about the
+    /// same enclosing declarations, so it joins the existing payload rather than arriving as a
+    /// third stack the note would have predicted the drift of.
+    struct EnclosingTypeContext {
+        let access: EnclosingTypeAccess
+
+        /// The global actor the type is annotated with — `"MainActor"` — or `nil`.
+        let globalActor: String?
+
+        init(modifiers: DeclModifierListSyntax, attributes: AttributeListSyntax) {
+            self.access = FunctionScannerVisitor.access(of: modifiers)
+            self.globalActor = FunctionScannerVisitor.globalActor(of: attributes)
+        }
+    }
+
+    /// The global actor an attribute list applies, or `nil`.
+    ///
+    /// **Syntactic and deliberately narrow: an `@`-attribute whose name ends in `Actor`.** That
+    /// admits `@MainActor` and any user-declared `@globalActor` following the convention, and
+    /// refuses everything else. A custom global actor named without the suffix is missed, which
+    /// costs one emitted stub that does not compile — the behaviour before this existed — while
+    /// a false positive would emit `await NotAnActor.run { … }` and turn a working stub into a
+    /// broken one. The asymmetry is why the test is a suffix rather than a guess.
+    ///
+    /// `@preconcurrency` and `@retroactive` spellings are handled by reading the attribute's
+    /// *name* rather than its whole text.
+    static func globalActor(of attributes: AttributeListSyntax) -> String? {
+        for attribute in attributes {
+            guard let named = attribute.as(AttributeSyntax.self),
+                  let identifier = named.attributeName.as(IdentifierTypeSyntax.self) else { continue }
+            let name = identifier.name.text
+            if name.hasSuffix("Actor") { return name }
+        }
+        return nil
+    }
+
     /// Why an external test could not call `node`, or `nil` when it could.
     ///
     /// **The order is the answer, not an implementation detail.** Several reasons can hold at once,
@@ -59,7 +99,7 @@ extension FunctionScannerVisitor {
         if isNestedLocalFunction(node) {
             return .nestedLocal
         }
-        if enclosingTypeAccess.contains(.notVisibleToTests) {
+        if enclosingTypeAccess.contains(where: { $0.access == .notVisibleToTests }) {
             return .enclosingTypeNotVisibleToTests
         }
         if modifiers.contains("private") || modifiers.contains("fileprivate") {
@@ -68,7 +108,7 @@ extension FunctionScannerVisitor {
         if modifiers.contains("internal")
             || hasSPIAttribute(node)
             || typeStack.contains(where: { $0.hasPrefix("_") })
-            || enclosingTypeAccess.contains(where: { $0 != .unmarked }) {
+            || enclosingTypeAccess.contains(where: { $0.access != .unmarked }) {
             return .internalOrSPI
         }
         return nil
@@ -86,7 +126,7 @@ extension FunctionScannerVisitor {
     /// motivating row silently removed a different one.
     func accessRestriction(ofVariable node: VariableDeclSyntax) -> AccessRestriction? {
         let modifiers = node.modifiers.map(\.name.text)
-        if enclosingTypeAccess.contains(.notVisibleToTests) {
+        if enclosingTypeAccess.contains(where: { $0.access == .notVisibleToTests }) {
             return .enclosingTypeNotVisibleToTests
         }
         if modifiers.contains("private") || modifiers.contains("fileprivate") {
@@ -101,7 +141,7 @@ extension FunctionScannerVisitor {
         if modifiers.contains("internal")
             || hasSPI
             || typeStack.contains(where: { $0.hasPrefix("_") })
-            || enclosingTypeAccess.contains(where: { $0 != .unmarked }) {
+            || enclosingTypeAccess.contains(where: { $0.access != .unmarked }) {
             return .internalOrSPI
         }
         return nil

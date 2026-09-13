@@ -12,14 +12,16 @@ struct CalleeReferenceTests {
     private func evidence(
         _ displayName: String,
         qualifiedTypeName: String? = nil,
-        isInstanceMethod: Bool = false
+        isInstanceMethod: Bool = false,
+        globalActor: String? = nil
     ) -> Evidence {
         Evidence(
             displayName: displayName,
             signature: "(String) -> String",
             location: SourceLocation(file: "F.swift", line: 1, column: 1),
             isInstanceMethod: isInstanceMethod,
-            qualifiedTypeName: qualifiedTypeName
+            qualifiedTypeName: qualifiedTypeName,
+            globalActor: globalActor
         )
     }
 
@@ -83,6 +85,33 @@ struct CalleeReferenceTests {
     @Test func argumentsBeyondTheRecordedLabelsAreUnlabelled() {
         let callee = CalleeReference(evidence: evidence("combine(of:)"))
         #expect(callee?.call("a", "b") == "combine(of: a, b)")
+    }
+
+    // MARK: - Actor isolation
+
+    /// **The hop goes around the whole property, not around each call.** `MainActor.run` takes a
+    /// *synchronous* `@MainActor` closure, so `await` cannot appear inside one — wrapping each
+    /// call individually would emit `await MainActor.run { f(await MainActor.run { f(x) }) }`,
+    /// which does not compile.
+    @Test func anIsolatedCalleeWrapsTheWholeExpression() {
+        let callee = CalleeReference(evidence: evidence(
+            "strippingHeadingMarkers(from:)", qualifiedTypeName: "EditorFormatter", globalActor: "MainActor"
+        ))
+        let inner = callee!.call(callee!.call("value"))
+        #expect(callee?.isolated("\(inner) == x") == "await MainActor.run { \(inner) == x }")
+        // The calls themselves are untouched — one hop, not three.
+        #expect(inner.contains("MainActor") == false)
+    }
+
+    @Test func aNonisolatedCalleeIsNotWrapped() {
+        let callee = CalleeReference(evidence: evidence("normalize(_:)"))
+        #expect(callee?.isolated("a == b") == "a == b")
+    }
+
+    /// Any global actor, not just `MainActor` — the scanner reads the attribute name.
+    @Test func aCustomGlobalActorIsCarried() {
+        let callee = CalleeReference(evidence: evidence("f(_:)", globalActor: "DatabaseActor"))
+        #expect(callee?.isolated("a == b") == "await DatabaseActor.run { a == b }")
     }
 
     @Test func aDisplayNameWithNoParenthesesIsNotACallee() {

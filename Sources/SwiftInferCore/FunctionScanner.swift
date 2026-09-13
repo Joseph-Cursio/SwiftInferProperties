@@ -128,7 +128,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     /// to the template catalogue. A second parallel `[Bool]` would have worked and was rejected:
     /// this one already carries a "pushed/popped in lockstep" warning, and two stacks needing the
     /// same discipline is how the pairing drifts.
-    var enclosingTypeAccess: [EnclosingTypeAccess] = []
+    var enclosingTypeAccess: [EnclosingTypeContext] = []
 
     init(file: String, converter: SourceLocationConverter) {
         self.file = file
@@ -242,7 +242,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
-        enclosingTypeAccess.append(Self.access(of: node.modifiers))
+        enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
         return .visitChildren
     }
     override func visitPost(_: ClassDeclSyntax) {
@@ -260,7 +260,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
-        enclosingTypeAccess.append(Self.access(of: node.modifiers))
+        enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
         return .visitChildren
     }
     override func visitPost(_: StructDeclSyntax) {
@@ -278,7 +278,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
-        enclosingTypeAccess.append(Self.access(of: node.modifiers))
+        enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
         return .visitChildren
     }
     override func visitPost(_: EnumDeclSyntax) {
@@ -296,7 +296,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             modifiers: node.modifiers
         ))
         typeStack.append(node.name.text)
-        enclosingTypeAccess.append(Self.access(of: node.modifiers))
+        enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
         return .visitChildren
     }
     override func visitPost(_: ActorDeclSyntax) {
@@ -314,7 +314,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             memberBlock: node.memberBlock, isConditionalExtension: node.genericWhereClause != nil
         ))
         typeStack.append(extendedTypeText)
-        enclosingTypeAccess.append(Self.access(of: node.modifiers))
+        enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
         return .visitChildren
     }
     override func visitPost(_: ExtensionDeclSyntax) {
