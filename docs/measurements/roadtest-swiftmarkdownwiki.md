@@ -1472,3 +1472,154 @@ Nineteen emissions produced one runnable test and that test is wrong.
 The stage that decides this subject is **S3**, at nineteen rows and not addressed
 by a single one of the nine filings. Every fix so far has been plumbing between
 the catalog and the compiler; none has widened what the catalog can name.
+
+---
+
+# Third pass — 2026-09-13, and a correction to the second
+
+The second pass closed S5 and said so. This pass reopens it, because the
+closure was verified on the wrong axis — and the reopening is the finding, not
+the fix that follows it.
+
+## Instrument
+
+| | |
+|---|---|
+| SwiftProjectLint | `770ac211` (clean) |
+| SwiftInferProperties | `5ee051c1` (clean) |
+| SwiftPropertyLaws | `3e26278` (clean) |
+| SwiftEffectInference | `1b62e76` (clean) |
+| **Subject** | SwiftMarkdownWiki `46cb4a9` (clean) |
+
+Same subject, same commit, so every delta below is the instrument.
+
+## The correction: S5 was closed on "qualified", not on "callable"
+
+The second pass recorded:
+
+> **S5** — destination, imports, generator (#414/#415/#416) … **closed.** 19 of
+> 19 stubs carry `@testable import SwiftMarkdownWiki`; calls are qualified and
+> labelled
+
+Both halves of that sentence are true and the conclusion does not follow.
+`EditorFormatter.strippingHeadingMarkers(from:)` is qualified and labelled
+because it is **static**. Seven of the nineteen subjects are *instance* methods,
+and for an instance method qualification is not the repair — `Doc.merge(a, b)`
+is the curried `(Doc) -> (Doc) -> Doc` and does not type-check. #415 knew this
+and left those spelled bare, as a documented deferral: *"an instance method
+keeps the previous spelling until a template exists that can name its
+receiver."*
+
+So the emitted text for those seven read:
+
+```swift
+property: { value in sanitizeFTSQuery(sanitizeFTSQuery(value)) == sanitizeFTSQuery(value) }
+```
+
+A receiverless call to an instance method, from a free-standing test function.
+It cannot compile under any template, any generator, or any import.
+
+**The check that would have caught it is the one the pass did not run.** "Are
+the calls qualified?" was measured. "Can the calls be made?" was inferred from
+it. A census over a *rendering* property cannot answer a *callability* question,
+and the two coincide only for static members — which is the majority of this
+subject and therefore looked like agreement.
+
+**The deferral was also wrong on its own terms**, which is what makes this a
+correction rather than a scheduling note. It said a template that can name a
+receiver does not yet exist. `commutativity` and `associativity` apply two
+arguments and have always been able to name one. And a bare spelling is not a
+deferred repair — it is an emitted file that cannot build, which costs the
+reader more than a suggestion they never saw.
+
+## The fix, and why the number goes down
+
+An instance method takes its receiver as the first argument the template
+applies, so `CalleeReference.applicationArity` counts one more than the method
+declares. A template whose arity does not match declines rather than emitting.
+
+| | needs | idempotence (1) | commutativity (2) |
+|---|---|---|---|
+| `static f(_:)` | 1 | ✅ | ✗ |
+| instance `f()` | 1 (receiver) | ✅ | ✗ |
+| instance `f(_:)` | 2 | ✗ | ✅ |
+| instance `f(_:_:)` | 3 | ✗ | ✗ |
+
+| | second pass | third pass |
+|---|---|---|
+| stubs emitted | 19 | **12** |
+| **compile** | **2** | **2** |
+| blocked by `private` | 11 | 6 |
+| blocked by missing generator | 3 | 4 |
+| blocked by inherited isolation | 1 | **0** (#440) |
+| **uncallable spelling** | **7, uncounted** | **0** |
+
+**Seven withdrawn, zero compiling stubs lost** — verified per subject rather
+than inferred from the total: `sanitizeFTSQuery`, `render`, `replaceWikilinks`,
+`bucketURL`, `filtered` (each `private func`, one parameter, needing two), and
+`union` twice (two parameters, needing three, under commutativity and
+associativity). Every one was previously emitted bare.
+
+Precision moves 2/19 → 2/12 **without gaining a single runnable test**. That is
+the honest shape of this pass: the denominator fell because seven files stopped
+being written, not because anything new works.
+
+## S6 — isolation inherited through a conformance (#440)
+
+`mimeType` was the last stub blocked by isolation the per-file scan could not
+see. `#432` read global-actor *attributes*; `KaTeXSchemeHandler` carries none —
+it conforms to `WKURLSchemeHandler`, and WebKit is where the `@MainActor`
+lives. Stubs carrying an actor hop went 3 → 6, then 6 → 4 when the withdrawal
+removed two hopped stubs that were never callable. **Both movements are
+correct, and the second is a repair**: #440 had wrapped `union` and `filtered`
+in `await MainActor.run { … }`, a correct hop around a call that could not be
+made.
+
+⚠ **#440's own issue body named the wrong carrier** and drew a backwards
+conclusion from it — it proposed a fixed point over project protocols as the
+thing that closes the case, when the curated framework seed is what closed it.
+Recorded at the issue; the fixed point shipped anyway, labelled as insurance
+with zero corpus evidence.
+
+## A second defect, found only because the first was fixed
+
+Every un-emitted suggestion reported *"no stub writeout available for template
+'idempotence' in v1"*. For a declined subject that is false — the template has
+a writeout. After the withdrawal, **7 of 7 declines were subjects rather than
+templates**, so the message was wrong every time it fired. It now names the
+subject and the shortfall:
+
+```
+note: no stub written — union(_:_:) needs 3 arguments (a receiver plus 2),
+      but 'commutativity' applies 2
+```
+
+This is the fourth time in this walk that closing one gate exposed the next.
+
+## Running tally, after the third pass
+
+| stage | rows | note |
+|---|---|---|
+| S0 | 3 | 1 partially closed (#214); `NSRange.clamped` still silent |
+| S1 | 0 | unchanged |
+| S2 | 0 | unchanged |
+| S3 | **19** | unchanged — **still dominant, still untouched by any of eleven filings** |
+| S4 | 2 | closed (#420) |
+| S5 | **5** | **3 reopened and re-closed** (#415 half-closed; see the correction); +1 uncallable spelling, +1 decline named the wrong cause |
+| S6 | 4 | closed (#431/#432/**#440**) |
+| S7 | 4 | 3 open; unchanged by this pass |
+| S8 | 0 | 2 stubs compile; none demonstrated running |
+
+**What changed:** emission stopped writing files that cannot build, and the
+tool now says which subject it could not call.
+**What did not:** not one additional law runs. S3 is still nineteen rows, and
+eleven filings have now gone by without touching it.
+
+**The lesson this pass adds to the walk** is about the ledger rather than the
+tool. A stage was marked closed on a measurement that was real, precise, and
+about the wrong property. The failure mode is not a missing census — it is a
+census whose subject silently differs from the claim it is quoted to support,
+and the two agree on the majority of rows, which is what makes it survive
+review. The second-pass entry stays in this document unedited, with this
+section as its correction, because a ledger that quietly revises its own closed
+rows is not a ledger.
