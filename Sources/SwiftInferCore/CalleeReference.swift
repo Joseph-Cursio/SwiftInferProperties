@@ -45,16 +45,45 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
     /// The global actor the callee is isolated to, or `nil`.
     public let isolation: String?
 
+    /// `true` when the call needs a **receiver** rather than a type qualifier.
+    ///
+    /// `Doc.merge(lhs, rhs)` does not type-check for `func merge(_:)` — `Doc.merge` is the
+    /// curried `(Doc) -> (Doc) -> Doc`. The receiver is therefore the first argument a caller
+    /// supplies, which is why it costs one more than the method declares.
+    public let isInstanceMethod: Bool
+
+    /// `true` when the callee is a computed property, which is **accessed** rather than called.
+    /// Emitting `value.count()` for `var count: Int` is a different error from the one
+    /// qualification fixes; it cost swift-system 5 of 6 build failures on the verify side.
+    public let isComputedProperty: Bool
+
     public init(
         bareName: String,
         qualifier: String? = nil,
         argumentLabels: [String?] = [],
-        isolation: String? = nil
+        isolation: String? = nil,
+        isInstanceMethod: Bool = false,
+        isComputedProperty: Bool = false
     ) {
         self.bareName = bareName
         self.qualifier = qualifier
         self.argumentLabels = argumentLabels
         self.isolation = isolation
+        self.isInstanceMethod = isInstanceMethod
+        self.isComputedProperty = isComputedProperty
+    }
+
+    /// Operators are never qualified and never take labels: `Money.+` is not a spelling, while
+    /// `+(lhs, rhs)` is. Kept as its own question rather than folded into the qualifier rule,
+    /// because the two have different reasons.
+    static func isOperatorName(_ name: String) -> Bool {
+        let operatorCharacters: Set<Character> = [
+            "+", "-", "*", "/", "%",
+            "<", ">", "=", "!",
+            "&", "|", "^", "~", "?"
+        ]
+        guard !name.isEmpty else { return false }
+        return name.allSatisfy(operatorCharacters.contains)
     }
 
     /// A bare free-function name, which is what every emitter spliced before this type existed.
@@ -66,21 +95,57 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
 
     /// Read a callee out of one evidence row.
     ///
-    /// **Instance methods are deliberately unqualified.** A static or free function is called
-    /// through its type; an instance method needs a *receiver*, which these value-law templates
-    /// do not generate — their shape is `f(f(x)) == f(x)` over a value of the parameter type.
-    /// Prefixing an instance method with its type name would emit
-    /// `EditorFormatter.selectedText(value)`, which is a different error from the one it fixes.
-    /// So the qualifier is taken only when the row is not an instance method, and an instance
-    /// method keeps the previous spelling until a template exists that can name its receiver.
+    /// **An instance method takes a receiver, not a qualifier.** `EditorFormatter.selectedText(x)`
+    /// is a different error from the one qualification fixes — it is the curried
+    /// `(EditorFormatter) -> (X) -> R`. So `qualifier` stays `nil` and the receiver arrives as
+    /// the first argument the template applies, which is what makes `applicationArity` one more
+    /// than the method declares.
+    ///
+    /// An earlier version of this type left instance methods spelled bare, "until a template
+    /// exists that can name its receiver". That was wrong twice over: the templates that apply
+    /// two arguments could always name one, and a bare spelling is not a deferral but an
+    /// uncompilable stub. Measured on SwiftMarkdownWiki, it emitted
+    /// `filtered(filtered(value))` and `union(pair.0, pair.1)` for two `private func`s — one of
+    /// which #440 then wrapped in an actor hop, correctly, around a call that was never
+    /// callable. `PR #441` reached the same conclusion independently from a 21-corpus sweep.
     public init?(evidence: Evidence) {
         guard let parenIndex = evidence.displayName.firstIndex(of: "(") else { return nil }
         let name = String(evidence.displayName[..<parenIndex])
         guard !name.isEmpty else { return nil }
+        // A mutating method returns `Void` and edits in place, so it is not the value-returning
+        // shape any of these laws states. Declining is the whole point: the alternative is a
+        // stub that reads `value.normalize() == value.normalize()` over two `()`s.
+        guard !evidence.isMutatingMethod else { return nil }
         self.bareName = name
-        self.qualifier = evidence.isInstanceMethod ? nil : evidence.qualifiedTypeName
+        self.isInstanceMethod = evidence.isInstanceMethod
+        self.isComputedProperty = evidence.isComputedProperty
+        if Self.isOperatorName(name) {
+            self.qualifier = nil
+        } else {
+            self.qualifier = evidence.isInstanceMethod ? nil : evidence.qualifiedTypeName
+        }
         self.argumentLabels = Self.labels(inDisplayName: evidence.displayName, after: parenIndex)
         self.isolation = evidence.globalActor
+    }
+
+    /// How many arguments a caller must supply to spell one call — the declared parameters,
+    /// plus the receiver when there is one, and zero for a static computed property.
+    public var applicationArity: Int {
+        if isComputedProperty { return isInstanceMethod ? 1 : 0 }
+        return argumentLabels.count + (isInstanceMethod ? 1 : 0)
+    }
+
+    /// Whether a template that applies `count` arguments can call this subject at all.
+    ///
+    /// **The reason this is a question and not an assertion.** A template's shape is fixed:
+    /// `idempotence` applies one argument (`f(f(x))`), `commutativity` two (`f(a, b)`). A
+    /// one-parameter *instance* method needs two — receiver plus argument — so it fits
+    /// commutativity and cannot fit idempotence. Where it does not fit, the caller emits
+    /// nothing. A stub that does not build costs the reader more than a suggestion they never
+    /// saw, which is the measured lesson of the 89%-fails-to-compile result in
+    /// `criterion-a-unmet-subject.md`.
+    public func accepts(applicationArity count: Int) -> Bool {
+        applicationArity == count
     }
 
     /// `expression`, hopped onto the callee's actor when it has one.
@@ -125,17 +190,32 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
     public func call(_ arguments: String...) -> String { call(arguments) }
 
     public func call(_ arguments: [String]) -> String {
-        let rendered = arguments.enumerated().map { index, argument -> String in
+        guard isInstanceMethod else {
+            if isComputedProperty { return "\(callPrefix)\(bareName)" }
+            return "\(callPrefix)\(bareName)(\(labelled(arguments).joined(separator: ", ")))"
+        }
+        // The receiver is the first argument the template supplied; the rest are the method's
+        // own. A caller that has checked `accepts(applicationArity:)` always has at least one.
+        guard let receiver = arguments.first else { return bareName }
+        let rest = Array(arguments.dropFirst())
+        if isComputedProperty { return "\(receiver).\(bareName)" }
+        return "\(receiver).\(bareName)(\(labelled(rest).joined(separator: ", ")))"
+    }
+
+    /// `arguments` with each recorded label applied, positionally where none was recorded — so
+    /// a row whose `displayName` lost its labels renders positionally rather than wrongly.
+    private func labelled(_ arguments: [String]) -> [String] {
+        arguments.enumerated().map { index, argument in
             guard index < argumentLabels.count, let label = argumentLabels[index] else { return argument }
             return "\(label): \(argument)"
         }
-        return "\(callPrefix)\(bareName)(\(rendered.joined(separator: ", ")))"
     }
 
     /// How the function is named in a failure message — qualified, with its labels, the way a
     /// reader would grep for it.
     public var displaySignature: String {
         let labels = argumentLabels.map { $0.map { "\($0):" } ?? "_:" }.joined()
+        if isComputedProperty { return "\(callPrefix)\(bareName)" }
         return "\(callPrefix)\(bareName)(\(labels))"
     }
 }
