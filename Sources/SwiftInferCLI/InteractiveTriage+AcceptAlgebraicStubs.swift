@@ -8,6 +8,30 @@ import SwiftInferTemplates
 /// no behavior change from the move.
 extension InteractiveTriage {
 
+    /// Dispatch for the four algebraic templates, beside the builders it routes to.
+    ///
+    /// It lived in `templateStub(for:)` until the totality arm pushed that switch past
+    /// SwiftLint's cyclomatic ceiling. Moving the dispatch to sit with its builders is the fix
+    /// the split of this file already implied — the arms were here and the routing was not.
+    static func algebraicTemplateStub(for suggestion: Suggestion) -> String? {
+        switch suggestion.templateName {
+        case "commutativity":
+            return commutativeStub(for: suggestion)
+
+        case "associativity":
+            return associativeStub(for: suggestion)
+
+        case "identity-element":
+            return identityElementStub(for: suggestion)
+
+        case "inverse-pair":
+            return inversePairStub(for: suggestion)
+
+        default:
+            return nil
+        }
+    }
+
     static func commutativeStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
