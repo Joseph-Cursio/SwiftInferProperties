@@ -33,6 +33,46 @@ struct DocstringAdvisorTests {
         #expect(!DocstringAdvisor.isContract("Convenience wrapper. See also the sync path."))
     }
 
+    /// **The gate matched inside words**, so `"reaches"` was read as the quantifier `each` and
+    /// `"whenever"` as `never`. Measured over 2 856 documented functions: 110 admitted on a
+    /// match like that (SwiftInferProperties#437).
+    @Test("a cue inside a longer word is not a cue", arguments: [
+        "The shortest hop distance, or nil when it reaches none.",
+        "Shown whenever the message is set.",
+        "It swaps the selected element, which reorders the tail."
+    ])
+    func aSubstringMatchIsNotAContract(doc: String) {
+        #expect(DocstringAdvisor.isContract(doc) == false)
+    }
+
+    /// Code spans are identifiers the docstring is **citing**, not verbs it is using — and
+    /// dropping them is what makes the transformation family usable: `resolve` appears in
+    /// `GeneratorResolver` far more often than as a claim.
+    @Test func aCueInsideACodeSpanIsNotACue() {
+        #expect(DocstringAdvisor.isContract("Lint pass — pulled out of `resolveFunctionCalls`.") == false)
+        #expect(DocstringAdvisor.isContract("Resolve one generator per parameter type.") == true)
+    }
+
+    /// The family the list was missing. `globPatternToRegex` states its contract in its first
+    /// sentence and matched none of the previous 59 cues.
+    @Test("the transformation family is recognised", arguments: [
+        "Translate this glob pattern into an anchored regular-expression string.",
+        "Extracts the base type name from a call expression.",
+        "Strip a single generic-parameter list from a textual type name.",
+        "Splits a camelCase name into its constituent words.",
+        "Escape a string for safe inclusion as a Swift string literal.",
+        "Render SVG from a pre-computed sequence layout."
+    ])
+    func transformationVerbsAreContracts(doc: String) {
+        #expect(DocstringAdvisor.isContract(doc))
+    }
+
+    /// `wrap` is deliberately absent from the family: it would match `"Convenience wrapper"`,
+    /// which the narration test above requires this gate to reject.
+    @Test func wrapIsNotInTheFamily() {
+        #expect(DocstringAdvisor.isContract("Convenience wrapper. See also the sync path.") == false)
+    }
+
     // MARK: - Path 1: a predicate law owes a reference definition
 
     @Test("a predicate law pulls the docstring in as its reference definition")

@@ -211,12 +211,54 @@ public enum DocstringAdvisor {
     /// not. False negatives (a real contract phrased unusually) cost a missed
     /// advisory; false positives cost a reader's trust, so the gate leans strict.
     static func isContract(_ doc: String) -> Bool {
-        let lower = doc.lowercased()
-        return contractCues.contains { lower.contains($0) }
+        let prose = doc
+            .replacingOccurrences(of: "`[^`]*`", with: " ", options: .regularExpression)
+            .lowercased()
+        return contractCues.contains { cue in
+            prose.range(
+                of: "\\b" + NSRegularExpression.escapedPattern(for: cue),
+                options: .regularExpression
+            ) != nil
+        }
     }
 
     /// Phrases that signal a checkable claim about the output relative to the
     /// input: result verbs, quantifiers and bounds, and relational guarantees.
+    ///
+    /// ## Matched at a word boundary, over prose with code spans removed
+    ///
+    /// `lower.contains(cue)` was the original test and it matched inside words: `"reaches"`
+    /// carries `each`, `"whenever"` carries `never`, `"reorders"` carries `orders`. Measured over
+    /// 2 856 documented functions in four repositories, **110 docstrings were admitted on a
+    /// match like that** — a gate reading `reaches` as the quantifier `each` is not measuring
+    /// anything, even when the docstring it admits happens to be a contract.
+    ///
+    /// Code spans are dropped for the same reason and it is what makes the transformation verbs
+    /// below usable at all: `resolve` appears in `GeneratorResolver`, `render` in
+    /// `MetricsRenderer.swift`, far more often than either appears as a claim. Those are
+    /// identifiers a docstring is *citing*, not verbs it is using.
+    ///
+    /// ## The transformation family, and why it is an extension rather than an inversion
+    ///
+    /// The list carried nine verbs for "turns one thing into another" — `converts`, `maps`,
+    /// `encodes`, `decodes`, `parses`, `normalizes`, `produces`, `yields`, `computes` — and not
+    /// `translate`, `render`, `extract`, `strip`, `expand`, `format`, `escape`, `split`,
+    /// `derive` or `resolve`. `SwiftUMLStudio`'s `globPatternToRegex` states its contract in its
+    /// first sentence — *"Translate this glob pattern into an anchored regular-expression
+    /// string"* — and matched none of the 59 (SwiftInferProperties#437).
+    ///
+    /// **The alternative was measured and rejected.** #437 proposed inverting the default:
+    /// accept unless the docstring is only narration, via a short stop-list. Run over the same
+    /// 2 856 docstrings that admits **2 630 (92%) against this list's 1 591 (55%)** — 1 173 newly
+    /// admitted, of which a random sample of twenty read as roughly five contracts and fifteen
+    /// field descriptions and narration. That is the flood the issue said would settle it.
+    ///
+    /// The family adds **279** instead, and at *parity*: a random sample of what it admits reads
+    /// about half contracts, which is the same fraction a random sample of what this list
+    /// already admits reads. It does not raise the gate's precision and it does not lower it.
+    ///
+    /// `wrap` is deliberately absent. It would match `"Convenience wrapper"`, which an existing
+    /// negative test requires this gate to reject.
     private static let contractCues: [String] = [
         // Result verbs — the doc says what the function DOES to produce its value.
         "returns", "return the", "return a", "computes", "produces", "yields",
@@ -230,6 +272,11 @@ public enum DocstringAdvisor {
         "monotonic", "idempotent",
         // Relational guarantees — the value equals / matches / inverts something.
         "inverse", "round-trip", "round trip", "roundtrip", "preserves", "the same",
-        "equal to", "equals", "matches", "must ", "is valid when", "if and only if"
+        "equal to", "equals", "matches", "must ", "is valid when", "if and only if",
+        // The transformation family — same claim shape as `converts` / `maps` / `encodes`,
+        // different word. See the note above for the measurement that chose these and rejected
+        // inverting the gate instead.
+        "translate", "render", "extract", "strip", "expand", "format", "escape",
+        "split", "derive", "resolve"
     ]
 }
