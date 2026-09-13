@@ -144,27 +144,46 @@ extension InteractiveTriage {
               let funcName = functionName(from: evidence.displayName) else {
             return nil
         }
+        // **The template belongs in the file NAME, not only in the directory.**
+        //
+        // The writeout is `<root>/SwiftInfer/<template>/<name>.swift`, which is unique by path
+        // and not by basename — and SwiftPM names object files per basename within a module, so
+        // two same-named sources in one test target collide:
+        //
+        //     error: couldn't build …/union.swift.o because of multiple producers
+        //
+        // A function that matches two templates produces exactly that. Measured on
+        // SwiftMarkdownWiki: 19 stubs, two collisions — `union` (associativity + commutativity)
+        // and `modificationDate` (idempotence + monotonicity) — and the target does not build at
+        // all, so the other seventeen are lost with them.
+        //
+        // Invisible until #414 and #415, because before those the files went somewhere nothing
+        // compiled and could not have named the module anyway. The lifted-origin arm above has
+        // carried the template since M3.3 for the neighbouring reason (disambiguating from
+        // TemplateEngine writeouts *in the same directory*); this applies the same convention to
+        // the arm that reaches a build.
+        let template = sanitizeForFileName(suggestion.templateName)
         switch suggestion.templateName {
         case "round-trip":
             guard let reverse = suggestion.evidence.dropFirst().first,
                   let reverseName = functionName(from: reverse.displayName) else {
-                return "\(funcName).swift"
+                return "\(funcName)_\(template).swift"
             }
-            return "\(funcName)_\(reverseName).swift"
+            return "\(funcName)_\(reverseName)_\(template).swift"
 
         case "invariant-preservation":
             // File name carries the keypath suffix so distinct invariants
             // on the same function don't overwrite each other.
             guard let keyPath = invariantKeypath(from: evidence.signature) else {
-                return "\(funcName).swift"
+                return "\(funcName)_\(template).swift"
             }
             let suffix = keyPath
                 .replacingOccurrences(of: "\\.", with: "")
                 .replacingOccurrences(of: ".", with: "_")
-            return "\(funcName)_\(suffix).swift"
+            return "\(funcName)_\(suffix)_\(template).swift"
 
         default:
-            return "\(funcName).swift"
+            return "\(funcName)_\(template).swift"
         }
     }
 
