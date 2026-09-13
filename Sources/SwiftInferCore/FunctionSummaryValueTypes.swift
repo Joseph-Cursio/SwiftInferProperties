@@ -74,7 +74,55 @@ public struct SourceLocation: Sendable, Equatable, Hashable, Comparable, CustomS
 
 /// Type-flow-lite signals computed from a function's body. Empty / all-false
 /// when the function declaration has no body (e.g. protocol requirements).
+/// A sub-domain the body carves out with an early return, read as a law.
+///
+/// `guard source.hasPrefix("---") else { return (Self(), source) }` is a claim:
+/// **when the condition fails, the answer is this expression.** It is the only law shape this
+/// walk found that is written *in the code* rather than guessed from a signature — see
+/// `docs/measurements/s3-characterisation.md`, where 15 of 21 missing laws turned out to be
+/// facts about bodies and 2 about signatures, which is all any template reads.
+///
+/// **It is a characterisation law and cannot find a bug that exists today.** The guard satisfies
+/// it by construction. What it catches is an edit: a later refactor that drops the guard,
+/// reorders it after a mutation, or normalises the value it used to return untouched.
+///
+/// That also makes it **role-entailed in a way `idempotence` is not.** A naming conjecture can
+/// be false of correct code — `get(key) -> key.count` is not monotone and no bug is involved —
+/// which is why those sit below the cut. This cannot be false of the code, because the code is
+/// its source rather than its name.
+public struct GuardDomain: Sendable, Equatable {
+
+    /// The condition as written — `source.hasPrefix("---")`.
+    public let condition: String
+
+    /// What the early return yields — `(Self(), source)`.
+    public let returnedExpression: String
+
+    /// The parameter the condition tests. The law quantifies over this one, and the emitter
+    /// substitutes it in both `condition` and `returnedExpression`.
+    public let parameterName: String
+
+    /// `true` for `if cond { return r }`, `false` for `guard cond else { return r }` — they
+    /// state the *opposite* sub-domain and getting it backwards inverts the law.
+    public let firesWhenConditionHolds: Bool
+
+    public init(
+        condition: String,
+        returnedExpression: String,
+        parameterName: String,
+        firesWhenConditionHolds: Bool
+    ) {
+        self.condition = condition
+        self.returnedExpression = returnedExpression
+        self.parameterName = parameterName
+        self.firesWhenConditionHolds = firesWhenConditionHolds
+    }
+}
+
 public struct BodySignals: Sendable, Equatable {
+
+    /// The sub-domain the body's first statement carves out, or `nil`. See `GuardDomain`.
+    public let guardDomain: GuardDomain?
 
     /// `true` when the body invokes any API in the curated
     /// non-deterministic list (PRD §4.1's -∞ counter-signal). Drives
@@ -149,6 +197,7 @@ public struct BodySignals: Sendable, Equatable {
     public let callsIdempotentWrite: Bool
 
     public init(
+        guardDomain: GuardDomain? = nil,
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
         nonDeterministicAPIsDetected: [String],
@@ -160,6 +209,7 @@ public struct BodySignals: Sendable, Equatable {
         buildsIdempotencyKey: Bool = false,
         callsIdempotentWrite: Bool = false
     ) {
+        self.guardDomain = guardDomain
         self.equalityBodyShape = equalityBodyShape
         self.idempotenceReturnShape = idempotenceReturnShape
         self.dedupGateShape = dedupGateShape

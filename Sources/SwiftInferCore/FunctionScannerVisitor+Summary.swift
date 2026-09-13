@@ -300,6 +300,7 @@ extension FunctionScannerVisitor {
         let scanner = BodySignalVisitor(funcName: node.name.text)
         scanner.walk(body)
         return BodySignals(
+            guardDomain: GuardDomainReader.read(node),
             hasNonDeterministicCall: !scanner.detectedAPIs.isEmpty,
             hasSelfComposition: scanner.foundSelfComposition,
             nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),

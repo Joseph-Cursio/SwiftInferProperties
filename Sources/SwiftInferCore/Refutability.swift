@@ -76,6 +76,12 @@ public enum Refutability {
         // `select` / `layer` that returns a non-member, or a `diff` whose added and
         // removed overlap, is either a bug or a lie about what the name promises —
         // both worth a red test even below the confidence cut.
+        // `guard-domain`: the law is READ FROM the body, not inferred from a name, so a correct
+        // implementation cannot fail it — the opposite end of the axis `idempotence` sits on.
+        // It is role-entailed for a different reason from every other member of this set: the
+        // others are owed by virtue of a role, this one because the code is its source. See
+        // `GuardDomainTemplate` for why it still cannot find a bug that exists today.
+        "guard-domain",
         "filter-subset",     // result ⊆ the collection it selects from
         "selection-subset",  // result ⊆ container.<collection>
         "diff-disjointness", // added ∩ removed = ∅
