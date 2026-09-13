@@ -253,6 +253,24 @@ public struct Evidence: Sendable, Equatable {
         self.qualifiedTypeName = qualifiedTypeName
         self.globalActor = globalActor
     }
+
+    /// This row with its global actor filled in — used by the post-pass that resolves isolation
+    /// inherited through a protocol, which the per-file scan cannot see.
+    public func withGlobalActor(_ actor: String) -> Self {
+        Self(
+            displayName: displayName,
+            signature: signature,
+            location: location,
+            isInstanceMethod: isInstanceMethod,
+            isMutatingMethod: isMutatingMethod,
+            isNullary: isNullary,
+            returnsSelfType: returnsSelfType,
+            isComputedProperty: isComputedProperty,
+            parameterTypeNames: parameterTypeNames,
+            qualifiedTypeName: qualifiedTypeName,
+            globalActor: actor
+        )
+    }
 }
 
 /// Generator selection + sampling state for a suggestion. PRD §4.3 requires

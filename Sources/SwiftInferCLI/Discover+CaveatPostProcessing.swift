@@ -215,6 +215,54 @@ extension SwiftInferCommand.Discover {
     /// `LiftedSuggestionPipeline`, which is the LIFTED path only and early-returns on a corpus with
     /// no test-lifted artifacts. That mistake cost a debugging round: the filter was wired
     /// somewhere every ordinary suggestion bypasses.
+    /// Fill in the global actor a subject inherits from a protocol it conforms to.
+    ///
+    /// **The scanner reads attributes and this reads conformances**, because they are different
+    /// facts and only one of them is visible per-file. `@MainActor final class EditorFormatter`
+    /// says so on its own declaration; `struct MarkdownPreviewView: PreviewViewRepresentable`
+    /// says so three protocols away, and resolving that needs the whole corpus at once — which
+    /// is why it is a post-pass here rather than a branch in `FunctionScannerVisitor`
+    /// (SwiftInferProperties#440).
+    ///
+    /// Only fills a `nil`. A declaration that annotates itself has already answered, and its own
+    /// annotation is the more specific fact — a `@MainActor` member of a nonisolated type and a
+    /// nonisolated member of a `@MainActor` type are different, and the innermost one that speaks
+    /// wins.
+    static func withInheritedIsolation(
+        _ suggestions: [Suggestion],
+        typeDecls: [TypeDecl]
+    ) -> [Suggestion] {
+        let conferring = MainActorProtocols.conferring(in: typeDecls)
+        var isolationByType: [String: String?] = [:]
+        return suggestions.map { suggestion in
+            var updated = suggestion
+            updated.evidence = suggestion.evidence.map { row in
+                guard row.globalActor == nil, let carrier = row.qualifiedTypeName
+                else { return row }
+                let resolved: String?
+                if let cached = isolationByType[carrier] {
+                    resolved = cached
+                } else {
+                    resolved = MainActorProtocols.isolation(
+                        ofTypeNamed: Self.leafName(of: carrier),
+                        conferring: conferring,
+                        in: typeDecls
+                    )
+                    isolationByType[carrier] = resolved
+                }
+                guard let resolved else { return row }
+                return row.withGlobalActor(resolved)
+            }
+            return updated
+        }
+    }
+
+    /// `Scaffold` from `SwiftInferCommand.Scaffold` — `TypeDecl` records the declaration's own
+    /// name, while evidence carries the full lexical path.
+    static func leafName(of qualified: String) -> String {
+        qualified.split(separator: ".").last.map(String.init) ?? qualified
+    }
+
     static func withResolvedConformanceCaveats(
         _ suggestions: [Suggestion],
         typeDecls: [TypeDecl]
