@@ -168,6 +168,80 @@ struct InteractiveTriageModuleImportTests {
         #expect(wrapped.contains("will not compile until"))
     }
 
+    /// **The caveat names the exact edit, not a paraphrase of it.** 11 of the 19 stubs emitted
+    /// for SwiftMarkdownWiki are access-blocked — 58% — so the difference between "widen it to
+    /// internal" and "delete `private` at SearchIndex.swift:247" is the difference between eleven
+    /// dead files and eleven one-line refactors.
+    @Test func theAccessCaveatNamesTheModifierAndTheLine() throws {
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("WidenTarget-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("Search.swift")
+        try "enum Search {\n    private static func sanitize(_ text: String) -> String { text }\n}\n"
+            .write(to: file, atomically: true, encoding: .utf8)
+
+        let wrapped = InteractiveTriage.wrappedFileContents(
+            stub: "\n@Test func x() async {}",
+            suggestion: restrictedSuggestion(file: file.path, line: 2)
+        )
+        #expect(wrapped.contains("Delete `private` at Search.swift:2"))
+    }
+
+    /// **`nil` is an answer.** A declaration line carrying no modifier is the enclosing-type case:
+    /// a member of a `private` type is unreachable whatever its own modifier says, so naming a
+    /// word to delete would propose a patch that compiles and changes nothing.
+    /// `SpeculativeWidening` calls that the design's named trap. The general remedy still prints.
+    @Test func noModifierOnTheLineWithholdsTheSpecificEdit() throws {
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("WidenTarget-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("Search.swift")
+        try "private enum Search {\n    static func sanitize(_ text: String) -> String { text }\n}\n"
+            .write(to: file, atomically: true, encoding: .utf8)
+
+        let wrapped = InteractiveTriage.wrappedFileContents(
+            stub: "\n@Test func x() async {}",
+            suggestion: restrictedSuggestion(file: file.path, line: 2)
+        )
+        #expect(wrapped.contains("// Access:"))
+        #expect(wrapped.contains("Delete `") == false)
+    }
+
+    /// A function whose *name* contains `private` is not a `private` declaration — the
+    /// word-boundary rule this borrows from `SpeculativeWidening` exists for exactly that.
+    @Test func aFunctionNamedPrivateSomethingIsNotMistakenForOne() throws {
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("WidenTarget-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("Keys.swift")
+        try "enum Keys {\n    static func privateKeyFor(_ id: String) -> String { id }\n}\n"
+            .write(to: file, atomically: true, encoding: .utf8)
+
+        let wrapped = InteractiveTriage.wrappedFileContents(
+            stub: "\n@Test func x() async {}",
+            suggestion: restrictedSuggestion(file: file.path, line: 2)
+        )
+        #expect(wrapped.contains("Delete `") == false)
+    }
+
+    private func restrictedSuggestion(file: String, line: Int) -> Suggestion {
+        var suggestion = makeIdempotentSuggestion(funcName: "sanitize", typeName: "String", file: file)
+        suggestion.evidence = [
+            Evidence(
+                displayName: "sanitize(_:)",
+                signature: "(String) -> String",
+                location: SourceLocation(file: file, line: line, column: 1)
+            )
+        ]
+        suggestion.score = Score(advisorySignals: suggestion.score.signals + [
+            Signal(kind: .subjectNotVisibleToTests, weight: 0, detail: "no test can name the subject")
+        ])
+        return suggestion
+    }
+
     /// The line is absent for a reachable subject — an unconditional caveat would be noise on
     /// every file and would stop meaning anything on the two that need it.
     @Test func areachableSubjectCarriesNoAccessCaveat() {

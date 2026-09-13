@@ -113,7 +113,13 @@ public enum SpeculativeWidening {
     /// Word-boundary matched rather than `contains`: a function named
     /// `privateKeyFor(_:)` must not read as a `private` declaration, and that is a
     /// live shape in any crypto-adjacent codebase.
-    static func leadingAccessModifier(in line: String) -> String? {
+    ///
+    /// `public` for the emitter, which needs the same answer for a different purpose: an
+    /// accepted stub for a restricted subject cannot compile, and the reader who opens it is
+    /// owed the word to delete rather than a paraphrase of it. Same rule, one implementation —
+    /// a second copy of "which modifier is on this line" would drift from this one, and the
+    /// word-boundary case above is exactly the kind of thing a second copy gets wrong.
+    public static func leadingAccessModifier(in line: String) -> String? {
         for modifier in ["private", "fileprivate"] where containsWord(modifier, in: line) {
             return modifier
         }
