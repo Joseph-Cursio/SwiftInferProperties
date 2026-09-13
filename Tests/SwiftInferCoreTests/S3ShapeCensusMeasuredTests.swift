@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 import SwiftInferCore
 import SwiftInferTemplates
 import Testing
@@ -73,9 +74,14 @@ struct S3ShapeCensusMeasuredTests {
         var unary = Shape(key: "—  control: unary (T) -> T, what idempotence reaches", rows: "—")
         var closedRoleGap = Shape(key: "D' · closed role that idempotence CANNOT reach", rows: "T4 + T5")
         var closedRoleOverlap = Shape(key: "D\" · closed role idempotence ALREADY reaches", rows: "duplicate risk")
+        var fieldMeasure = Shape(key: "E  · returns a type carrying a MEASURE field", rows: "T1, T2 (+L3/P3/P4 shape)")
+        var fieldMeasureForeign = Shape(key: "E' · of those, returning a FOREIGN type", rows: "needs a curated table")
 
         var all: [Shape] {
-            [parameterised, gatedA, removal, measure, closedRole, closedRoleGap, closedRoleOverlap, anyRole, unary]
+            [
+                parameterised, gatedA, removal, measure, closedRole, closedRoleGap,
+                closedRoleOverlap, fieldMeasure, fieldMeasureForeign, anyRole, unary
+            ]
         }
     }
 
@@ -112,7 +118,16 @@ struct S3ShapeCensusMeasuredTests {
         }
     }
 
-    private static func classify(_ summary: FunctionSummary, corpus: String, into tally: inout Tally) {
+    /// Stored properties of every type the scan saw, by type name. The predicate for `T1`/`T2`
+    /// comes from a FIELD of the returned type, so the returned type's shape must be readable —
+    /// which it is for a project type and is not for `NSRange`.
+    private static func classify(
+        _ summary: FunctionSummary,
+        corpus: String,
+        fieldsByType: [String: [PropertyLawCore.StoredMember]],
+        into tally: inout Tally,
+        distinctPairs: inout Set<String>
+    ) {
         guard let returnText = summary.returnTypeText else { return }
         let ret = bare(returnText)
         guard ret != "Void", !ret.isEmpty else { return }
@@ -133,6 +148,11 @@ struct S3ShapeCensusMeasuredTests {
         if params.count == 1, bare(params[0].typeText) == ret {
             tally.unary.record("\(corpus): \(summary.name)")
         }
+        recordFieldMeasure(
+            summary, returning: ret,
+            fieldsByType: fieldsByType, into: &tally, distinctPairs: &distinctPairs
+        )
+
         if let role = RolePostcondition.matches(name: summary.name, parameterLabels: params.map(\.label)) {
             tally.anyRole.record("\(corpus): \(summary.name)")
             if closedRoles.contains(role) {
@@ -154,6 +174,7 @@ struct S3ShapeCensusMeasuredTests {
     @Test("size each candidate S3 shape across the manifest corpora")
     func censusCandidateShapes() {
         var tally = Tally()
+        var distinctPairs: Set<String> = []
         var totalFunctions = 0
         var scanned: [String] = []
 
@@ -163,15 +184,45 @@ struct S3ShapeCensusMeasuredTests {
                 .enumerator(at: corpus.primaryRoot, includingPropertiesForKeys: nil)?
                 .compactMap { $0 as? URL }
                 .filter { $0.pathExtension == "swift" && !Self.isExcluded($0) } ?? []
+            // Two passes: the field index must exist before a return type can be looked up in it.
+            var scanned: [ScannedCorpus] = []
+            var fieldsByType: [String: [PropertyLawCore.StoredMember]] = [:]
             for file in files {
                 guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
-                for summary in FunctionScanner.scanCorpus(source: source, file: file.lastPathComponent).summaries {
+                let result = FunctionScanner.scanCorpus(source: source, file: file.lastPathComponent)
+                for decl in result.typeDecls where decl.storedMembers.isEmpty == false {
+                    fieldsByType[decl.name, default: []].append(contentsOf: decl.storedMembers)
+                }
+                scanned.append(result)
+            }
+            for result in scanned {
+                for summary in result.summaries {
                     totalFunctions += 1
-                    Self.classify(summary, corpus: corpus.id, into: &tally)
+                    Self.classify(
+                        summary,
+                        corpus: corpus.id,
+                        fieldsByType: fieldsByType,
+                        into: &tally,
+                        distinctPairs: &distinctPairs
+                    )
                 }
             }
         }
 
+        report(tally, totalFunctions: totalFunctions, scanned: scanned, distinctPairs: distinctPairs)
+
+        // The census exists to be read, not to assert a threshold — a number pinned here would
+        // move every time a corpus does. What IS pinned: it looked at something.
+        #expect(totalFunctions > 1_000, "a census that scans almost nothing reports a silent zero")
+        #expect(CorpusManifest.available.isEmpty == false)
+    }
+
+    private func report(
+        _ tally: Tally,
+        totalFunctions: Int,
+        scanned: [String],
+        distinctPairs: Set<String>
+    ) {
         print("\n=== S3 CANDIDATE SHAPE CENSUS ===")
         print("corpora scanned: \(scanned.count) — \(scanned.joined(separator: ", "))")
         print("absent from this machine: \(CorpusManifest.absent.joined(separator: ", "))")
@@ -182,11 +233,42 @@ struct S3ShapeCensusMeasuredTests {
             print("\(key) \(shape.hits)  (\(String(format: "%.2f", share))%)  rows: \(shape.rows)")
             for example in shape.examples { print("      e.g. \(example)") }
         }
+        print("")
+        let sites = tally.fieldMeasure.hits
+        print("E · distinct (type, measure field) pairs behind those \(sites) sites: \(distinctPairs.count)")
+        let sample = distinctPairs.sorted().prefix(12).joined(separator: ", ")
+        print("    \(sample)")
         print("=== END CENSUS ===\n")
+    }
 
-        // The census exists to be read, not to assert a threshold — a number pinned here would
-        // move every time a corpus does. What IS pinned: it looked at something.
-        #expect(totalFunctions > 1_000, "a census that scans almost nothing reports a silent zero")
-        #expect(CorpusManifest.available.isEmpty == false)
+    /// Shape E: does the RETURNED type carry a field whose name is a curated non-negative
+    /// measure? `MeasureTemplate` fires when the function IS a measure; this is the same law one
+    /// level in. `offset` and `location` are deliberately absent from that curated list — a
+    /// signed measure can legitimately be negative — so this inherits the exclusion rather than
+    /// widening it to make a number larger.
+    private static func recordFieldMeasure(
+        _ summary: FunctionSummary,
+        returning ret: String,
+        fieldsByType: [String: [PropertyLawCore.StoredMember]],
+        into tally: inout Tally,
+        distinctPairs: inout Set<String>
+    ) {
+        guard let fields = fieldsByType[bare(ret)] else {
+            let opaque = !["Int", "Bool", "String", "Double", "Void", "Self"].contains(bare(ret))
+            if opaque, bare(ret).first?.isUppercase == true {
+                tally.fieldMeasureForeign.record("\(summary.name) -> \(ret)")
+            }
+            return
+        }
+        let measured = fields.filter { field in
+            MeasureTemplate.curatedVerbs.contains(field.name.lowercased())
+                && MeasureTemplate.signedIntegerCodomains.contains(bare(field.typeName))
+        }
+        guard measured.isEmpty == false else { return }
+        tally.fieldMeasure.record("\(summary.name) -> \(ret).\(measured[0].name)")
+        // **The law belongs to the TYPE, not to each function returning it.** `Row.count >= 0`
+        // restated at every `-> Row` is one law many times, which is the flooding failure #437
+        // measured. The distinct pair is the real population.
+        for field in measured { distinctPairs.insert("\(bare(ret)).\(field.name)") }
     }
 }
