@@ -1623,3 +1623,105 @@ and the two agree on the majority of rows, which is what makes it survive
 review. The second-pass entry stays in this document unedited, with this
 section as its correction, because a ledger that quietly revises its own closed
 rows is not a ledger.
+
+---
+
+# S3 — the first filing aimed at the stage that decides this subject (2026-09-13)
+
+Three passes and eleven filings had gone by without one of them touching S3.
+This is the first, and the interesting part is not the template — it is that
+the census picked a different one than either reading of the ledger would have.
+
+## Two rows had already closed, one of them by accident
+
+The second pass's tally of 19 was stale before this work started.
+
+- **P1** — `!s.hasPrefix("---") ⟹ parse(from: s) == (FrontMatter(), s)` — is now
+  proposed by `guard-domain`, which states it verbatim:
+  `!(source.hasPrefix("---")) ⟹ parse(source) == (Self(), source)`. #443 was
+  built to emit characterisation tests. Closing an S3 row was not its purpose
+  and nobody noticed until this pass re-ran the subject.
+- **T4** — idempotence of `clamped(to:)` — is closed by the work below.
+
+## The census, and the trap in it
+
+`S3ShapeCensusMeasuredTests`, 32 369 functions across 20 corpora:
+
+| shape | raw | through its gate | rows |
+|---|---:|---:|---|
+| A · parameterised idempotence `(T, P…) -> T` | 1 602 | **6** | T4 |
+| B · removal verb over `String` | 16 | 16 | P2, Q2 |
+| C · measure-named parameter | 668 | — | T1, T2 |
+| **D · closed role** | — | **25** | **T4, T5** |
+| *of D, already reached by `idempotence`* | — | 1 | — |
+| *control:* unary `(T) -> T` | 1 469 | — | — |
+
+**Shape A is the trap and it is a good one.** 1 602 sites is larger than the
+entire population `idempotence` reaches today, which reads as an obvious build.
+Through the curated verb gate that would actually fire it is **six**. The
+population is large *because* it is ungated: the bulk are GRDB query builders —
+`matching`, `selectOnly`, `merged` — whose idempotence is not merely unproven
+but probably false, since `matching(x).matching(x)` plausibly ANDs the
+condition twice. A 267× ratio between raw and gated.
+
+**Shape B was the prediction, written before the census: a removal verb entails
+its law cheaply, so it looked like the safe cheap win. Sixteen functions in
+thirty-two thousand.** Recorded because a census that only confirms what you
+expected has not done any work.
+
+## What shipped: `role-closure`
+
+`role-postcondition` asks what a name guarantees *of its output*. This asks the
+same catalogue a second question — **is that guarantee closed under
+reapplication?** — and where it is, states `f(f(x)) == f(x)`.
+
+**Closure is a second fact about the role, not a consequence of the first.**
+`escaped` satisfies *"contains no unescaped occurrence"* on every pass while
+changing the value every time: `\` → `\\` → `\\\\`. A template deriving closure
+from the postcondition would state a false law about correct code on the role
+where it is most obviously false. So `isClosedUnderReapplication` is a stated
+judgement per role, and a parameterised test pins all ten.
+
+⚠ **It is not entailment, and an earlier draft of this section said it was.**
+`role-postcondition` is deliberately absent from `Refutability.roleEntailedTemplates`
+— its law is only as good as the assumption that the name means what it usually
+means. This inherits that assumption and adds a second on top of it. It is
+stronger than signature-shaped idempotence because it rests on a stated
+guarantee; it is not a theorem.
+
+## Result
+
+Fires on `NSRange.clamped(to:)` at `NSRange+Clamp.swift:7` — **T4**. On
+SwiftMarkdownWiki suggestions go 47 → 48. Corpus-wide, 3 suggestions in 2 566
+(0.12%), against `role-postcondition`'s 6 — the same order, which is what a
+catalogue-supplied law should look like.
+
+⚠ `grdb` and `swift-syntax` returned **zero suggestions of any template** in
+that sweep. That is a scan failure, not a zero for this template — the SIGBUS
+trap `parsing-catalog-gap.md` records. Their rows contribute nothing in either
+direction and are not evidence of low volume.
+
+Emission is deferred, as `guard-domain`'s was. The roles that hold an argument
+fixed — `clamped(to:)`, `sorted(by:)` — need an emitter that can bind that
+argument across a nested call, which `StubApplicationArity` newly makes
+expressible and which is its own slice.
+
+## Running tally
+
+| stage | rows | note |
+|---|---|---|
+| S0 | 3 | 1 partially closed (#214) |
+| S1 | 0 | |
+| S2 | 0 | |
+| **S3** | **17** | **2 closed — P1 by accident, T4 by this filing.** T5 is stated only in its reachable form |
+| S4 | 2 | closed (#420) |
+| S5 | 5 | closed (third pass) |
+| S6 | 4 | closed (#431/#432/#440) |
+| S7 | 4 | 3 open |
+| S8 | 0 | 2 stubs compile; none demonstrated running |
+
+**Seventeen rows is still the dominant stage by a factor of four**, and the
+shape of what remains is now legible: L1–L4 and P2–P4 want a relation between
+an output and the input it was built from; Q2–Q5 and R1–R2 want a docstring
+clause or an invariance; T1/T2 want a predicate over a *field* of a returned
+type, which the scan cannot see at all. None of those is one template.

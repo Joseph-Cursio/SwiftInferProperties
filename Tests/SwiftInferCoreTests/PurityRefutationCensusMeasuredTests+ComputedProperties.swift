@@ -35,12 +35,19 @@ extension PurityRefutationCensusMeasuredTests {
     /// the oracle's teeth are pinned separately by
     /// `PurityVerdictAdoptionTests.clockReadingGetterIsRefuted`.
     /// Getters this repo's own oracle refutes for a reason that is not a defect. See the
-    /// comment at the assertion site — all three are the token `shuffled` appearing as an
+    /// comment at the assertion site — all four are the token `shuffled` appearing as an
     /// enum case name rather than as a call.
+    ///
+    /// `isClosedUnderReapplication` joined them when `role-closure` shipped, and it is the
+    /// entry that shows the guard working as designed: a new getter over the same enum
+    /// produced a new refutation, the suite failed, and the collision had to be identified
+    /// before it could be admitted. The list grows by one line per genuinely-false
+    /// refutation and never by a rename, so it keeps catching the next real one.
     static let knownFalseRefutations: Set<String> = [
         "RolePostcondition.swift#law",
         "RolePostcondition.swift#isStrong",
-        "RolePostcondition.swift#permittedLabels"
+        "RolePostcondition.swift#permittedLabels",
+        "RolePostcondition.swift#isClosedUnderReapplication"
     ]
 
     @Test("every computed property carries a verdict its Bool agrees with")
@@ -99,7 +106,7 @@ extension PurityRefutationCensusMeasuredTests {
                 }
             }
         }
-        // **Three FALSE refutations, recorded rather than dodged.**
+        // **Four FALSE refutations, recorded rather than dodged.**
         //
         // `RolePostcondition` declares `case shuffled`, and SEI's marker set treats the
         // token `shuffled` as a nondeterminism source — meaning `Array.shuffled()`. Every

@@ -294,6 +294,15 @@ extension TemplateRegistry {
                 generatorType: summary.parameters.first?.typeText ?? summary.containingTypeName
             )
         }
+        // The same catalogue, asked a second question: is that guarantee CLOSED? Where it is,
+        // reapplying the operation changes nothing. Measured at 25 sites across 20 corpora, 24 of
+        // them unreachable by `idempotence` — see `S3ShapeCensusMeasuredTests`.
+        if let suggestion = RoleClosureTemplate.suggest(for: summary) {
+            collector.record(
+                suggestion,
+                generatorType: RoleClosureTemplate.transformedType(of: summary)
+            )
+        }
         if let suggestion = InvariantPreservationTemplate.suggest(for: summary) {
             collector.record(suggestion, generatorType: summaryGenType)
         }
