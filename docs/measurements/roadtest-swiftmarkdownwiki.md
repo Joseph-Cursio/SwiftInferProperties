@@ -1340,3 +1340,135 @@ will find the harness's own arithmetic before it finds the subject's.
 the delivery is 80% of a law.** T3 is correct, catalogue-supplied, needs nothing
 from the reader, and catches the real bug. It is also stated over a domain that
 does not exist.
+
+---
+
+# Second pass — 2026-09-12, after the stage fixes shipped
+
+The first pass attributed 32 rows across seven stages and produced nine filings.
+Seven of those shipped. This pass re-runs the same subject against the fixed
+tools and asks the only question that settles whether a fix was worth making:
+**did the loop get further?**
+
+## Instrument
+
+| | |
+|---|---|
+| SwiftProjectLint | `770ac211` (clean) |
+| SwiftInferProperties | `c1b7cbc7` (clean) |
+| SwiftPropertyLaws | `232bd58` (clean) |
+| SwiftEffectInference | `1b62e764` (clean) |
+| **Subject** | SwiftMarkdownWiki `46cb4a9` (clean) |
+
+Pinned in full this time, `git status --porcelain` per repository rather than a
+line count — the first pass's note asked for exactly that.
+
+## What moved
+
+| stage | first pass | second pass |
+|---|---|---|
+| **S4** — advisory suppressed for parsers (#420) | 2 rows | **closed.** 85 → 88 advisory entries; the three suppressed parsers are back, each with a runnable reference-oracle scaffold |
+| **S5** — destination, imports, generator (#414/#415/#416) | 3 rows | **closed.** 19 of 19 stubs carry `@testable import SwiftMarkdownWiki`; calls are qualified and labelled |
+| **S6** — `import Foundation` | 1 of 2 rows | **closed** |
+| **S6** — actor isolation | 1 of 2 rows | **open**, now reached rather than predicted (#432) |
+| **S0** — foreign extensions (#214) | 1 row | **partial.** 7 seeds recovered corpus-wide; `NSRange.clamped(to:)` is not among them |
+| **S7** — the vacuous idempotence test (#416) | 1 row | **open**, with a sharper cause (SwiftPropertyLaws#42) |
+
+## The new S6 defect, which only the fixes could expose
+
+Emitting into the subject's own test target — the first time that has been
+possible — the target **failed to build entirely**:
+
+```
+error: couldn't build …/union.swift.o because of multiple producers
+```
+
+Files are written to `SwiftInfer/<template>/<name>.swift`, unique by path and not
+by basename, and SwiftPM names object files per basename within a module. `union`
+matches associativity *and* commutativity; `modificationDate` matches idempotence
+*and* monotonicity. Two collisions took all nineteen stubs down with them.
+
+Unreachable before #414 and #415, because the files went somewhere nothing
+compiled. Fixed in #431.
+
+## S6, once it is a census rather than a wall
+
+Nineteen stubs, eighteen errors, four causes:
+
+| cause | stubs | does the file say so? |
+|---|---|---|
+| subject is `private` | 11 | yes — access caveat (#428) |
+| no derivable generator | 8 (3 primary) | yes — to-do marker (#416) |
+| actor isolation | 2 | **no** (#432) |
+| compiles | 1 | — |
+
+**#428 verifies in situ**: exactly eleven files carry the access caveat, and they
+are exactly the eleven access failures.
+
+**The headline is the 11.** Fifty-eight percent of what the loop emits for this
+app cannot compile because the subject is `private` — and the scanner surfaces
+private functions *deliberately*, for reasons `SeededPrivateFunctionTests`
+records and this walk does not dispute. So on application code the loop's
+dominant emission outcome is a file that cannot build by design, carrying a note
+that says so. That is better than the silence it replaced and it is not a test.
+
+## S7 — the first emitted law of the walk runs, and it is a false alarm
+
+`highlight_idempotence.swift` is the one stub that compiles. It runs. **It goes
+red**, at input `"5"`.
+
+It is wrong to. `SwiftSyntaxHighlighter.highlight("5")` is
+`<span data-t="nm">5</span>`, and a second application nests the span. A
+highlighter takes escaped code, not already-highlighted HTML; no correct
+implementation is idempotent here. `idempotence` is a naming conjecture and
+`Refutability`'s own documentation says so — `--include-possible`, which this
+walk's protocol specifies, is the opt-in to exactly this.
+
+So the loop's first end-to-end delivery is a red test over a correct function.
+
+## S7 — #416 was necessary and is not sufficient
+
+Subject 3's row survives its fix. Measured over the edge-biased generator's whole
+reachable domain — 13 curated edges plus every alphanumeric string of length 0–2,
+3 920 values — run against a byte-copy of the real function:
+
+| | |
+|---|---|
+| values `strippingHeadingMarkers` changes at all | **0 of 3 920** |
+| values on which idempotence fails | **0 of 3 920** |
+
+`#` is drawable now, but only as the whole string `"#"`, which does not match
+`^#{1,6}[ \t]+`. The witness `"# ## Title"` needs a marker run, a space, then
+another marker run. `Gen.frequency` picks one whole string per draw and never
+composes, so **a curated list of whole strings cannot reach a law whose
+counterexample is a repetition of the structure the list carries.**
+SwiftPropertyLaws#42.
+
+## S0 — #214 does not reach `NSRange.clamped(to:)`
+
+Still absent from the manifest; zero findings on the file. #214's fix admits bare
+`self` on a stdlib carrier, and `clamped` reads `self.location` and `self.length`
+— the member path that fix deliberately left refusing. It is among the ~5 of the
+issue's ~12 not recovered. The obvious extension has a known counterexample:
+`Date.timeIntervalSinceNow` is a member read that consults the clock.
+
+## Running tally, after the second pass
+
+| stage | rows | note |
+|---|---|---|
+| S0 | 3 | 1 partially closed (#214); `NSRange.clamped` still silent |
+| S1 | 0 | unchanged |
+| S3 | 19 | unchanged — **still the dominant stage, and untouched by any fix so far** |
+| S4 | 2 | **closed** (#420) |
+| S5 | 3 | **closed** (#414/#415/#416) |
+| S6 | 3 | 1 closed, 1 open (#432), 1 new and closed (#431) |
+| S7 | 4 | 3 open; one new — the first running law is a false conjecture |
+| S2, S8 | 0 | S8 now reachable in principle: one stub compiles and runs |
+
+**What changed:** the loop now gets from suggestion to a compiling, running test.
+**What did not:** nothing it delivers for this subject is a law worth keeping.
+Nineteen emissions produced one runnable test and that test is wrong.
+
+The stage that decides this subject is **S3**, at nineteen rows and not addressed
+by a single one of the nine filings. Every fix so far has been plumbing between
+the catalog and the compiler; none has widened what the catalog can name.
