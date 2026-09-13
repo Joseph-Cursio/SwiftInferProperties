@@ -176,6 +176,27 @@ struct InteractiveTriageModuleImportTests {
         #expect(wrapped.contains("// Access:") == false)
     }
 
+    /// **Two templates on one function produced two files with the same basename**, and SwiftPM
+    /// names object files per basename within a module — so the test target failed to build
+    /// entirely with `couldn't build …/union.swift.o because of multiple producers`, taking the
+    /// other seventeen stubs down with it.
+    ///
+    /// Invisible until #414 and #415: before those, the files went somewhere nothing compiled.
+    /// Measured on SwiftMarkdownWiki: 19 stubs, two collisions — `union` (associativity +
+    /// commutativity) and `modificationDate` (idempotence + monotonicity).
+    @Test func twoTemplatesOnOneFunctionGetDistinctFileNames() throws {
+        let suggestion = makeIdempotentSuggestion(funcName: "union", typeName: "String")
+        let idempotence = try #require(InteractiveTriage.stubFileName(for: suggestion))
+
+        var other = suggestion
+        other.templateName = "commutativity"
+        let commutativity = try #require(InteractiveTriage.stubFileName(for: other))
+
+        #expect(idempotence == "union_idempotence.swift")
+        #expect(commutativity == "union_commutativity.swift")
+        #expect(idempotence != commutativity)
+    }
+
     /// Foundation is imported unconditionally. It used to ride only on the Codable round-trip
     /// generator, and a package enabling `MemberImportVisibility` — this one does — fails to
     /// build a generated file that touches any Foundation member without it.
