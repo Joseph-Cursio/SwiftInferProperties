@@ -1,5 +1,7 @@
 # Can the totality test reach the bugs totality is about? (2026-09-13)
 
+> **Status:** `measured` · **As of:** 2026-09-13
+
 `input-totality` and `predicate` state that a subject returns or throws for every
 input its parameter type admits, and never traps. The emitter for that law shipped
 today (#447), and S8 demonstrated one running and catching a planted trap.
