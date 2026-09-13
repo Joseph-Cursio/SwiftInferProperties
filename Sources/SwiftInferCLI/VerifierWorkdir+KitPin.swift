@@ -48,7 +48,20 @@ extension VerifierWorkdir {
     /// floor to equal the declared one, and a survey resolving both in one
     /// graph is the reason that test exists. Do not read this line as a claim
     /// that generated code calls a 4.3.0 symbol; it does not.
-    static let swiftPropertyLawsRequirement = "4.4.0"
+    ///
+    /// **Raised to 4.5.0 on 2026-09-13, lockstep again and worth saying why it is not a
+    /// feature dependency.** 4.5.0 changes what `RawType.edgeBiasedGeneratorExpression`
+    /// *emits* — tokens are composed rather than only drawn whole — and that expression is
+    /// produced by the `PropertyLawCore` THIS package links, not by the kit a workdir
+    /// resolves. The emitted text uses `Gen.frequency` / `Gen.element` / `zip` / `.map`,
+    /// every one of which 4.4.0 already had, so a workdir at the older floor would compile
+    /// the new expression fine.
+    ///
+    /// It is raised anyway because the floor must equal the declaration, and the raise was
+    /// caught by that test rather than remembered: bumping `Package.swift` alone left this
+    /// line at 4.4.0 and `VerifierWorkdirKitPinTests` failed on the next run. That is the
+    /// guard working, and the reason to write the rule down rather than trust a habit.
+    static let swiftPropertyLawsRequirement = "4.5.0"
 
     static var swiftPropertyLawsDependencyLine: String {
         ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", "
