@@ -26,6 +26,7 @@ public enum DocstringAdvisory: Sendable, Equatable {
 
     case referenceDefinition(ReferenceDefinition)
     case fallbackContract(FallbackContract)
+    case complementaryContract(ComplementaryContract)
 
     /// The docstring, attached to a proposed law that owes a reference definition.
     public struct ReferenceDefinition: Sendable, Equatable {
@@ -43,6 +44,30 @@ public enum DocstringAdvisory: Sendable, Equatable {
             self.docComment = docComment
             self.template = template
             self.fromLiftedTest = fromLiftedTest
+        }
+    }
+
+    /// The docstring, surfaced beside a role-entailed law that is **owed but not
+    /// reachable** — so it does not discharge the sentence.
+    ///
+    /// The third shape, and the reason it exists is that neither of the other two
+    /// could say this without lying. `.referenceDefinition` claims the law *owes*
+    /// an external spec: `input-totality` owes nothing, its claim is "does not
+    /// trap". `.fallbackContract` calls what fired a guess "a correct
+    /// implementation need not satisfy": `input-totality` is role-entailed and a
+    /// correct implementation must satisfy it. Both are true sentences about
+    /// other templates and false about this one.
+    public struct ComplementaryContract: Sendable, Equatable {
+        /// The reflowed docstring prose.
+        public let docComment: String
+
+        /// The role-entailed templates that fired and did not discharge it. Sorted,
+        /// de-duplicated.
+        public let servedBy: [String]
+
+        public init(docComment: String, servedBy: [String]) {
+            self.docComment = docComment
+            self.servedBy = servedBy
         }
     }
 
@@ -132,10 +157,49 @@ public enum DocstringAdvisor {
             return .fallbackContract(.init(docComment: doc, redHerrings: redHerrings))
         }
 
-        // 4. A self-contained role-entailed law already serves the function.
+        // 4. Every role-entailed law that fired is one no realistic generator reaches, so
+        //    nothing the reader was handed actually checks what the docstring claims. The
+        //    sentence stands beside it rather than instead of it.
+        let serving = suggestions.filter(Refutability.isWorthSurfacingBelowCut)
+        if serving.allSatisfy({ unreachableByRealisticInputTemplates.contains($0.templateName) }) {
+            return .complementaryContract(
+                .init(docComment: doc, servedBy: Set(serving.map(\.templateName)).sorted())
+            )
+        }
+
+        // 5. A self-contained role-entailed law already serves the function.
         //    Repeating the docstring would only cost trust. No advisory.
         return nil
     }
+
+    /// Role-entailed templates whose **counterexamples a realistic generator never produces**, so
+    /// the law being owed does not mean the reader has been served.
+    ///
+    /// **Owed is not the same as informative, and arm 5 assumed it was.** Its premise — repeating
+    /// a docstring beside a law that already serves the function costs trust — is right. What
+    /// broke is the "already serves": `input-totality`'s claim is *does not trap*, and its own
+    /// caveat list says so in capitals — *"A GENERATOR OF REALISTIC INPUT WILL NEVER FIND THIS.
+    /// The counterexamples live in malformed input."* A law reachable only by deliberately
+    /// malformed bytes says nothing about whether the parse is *right*, which is what the
+    /// docstring states.
+    ///
+    /// The cost was total rather than partial, because `input-totality` fires on every
+    /// interpretation verb — that is its trigger. So for the whole parse / decode / read family,
+    /// arm 5 always won and the reference-definition advisory could never fire
+    /// (SwiftInferProperties#420). Measured over SwiftMarkdownWiki: four of four `input-totality`
+    /// subjects suppressed, three of them carrying contract-cue docstrings.
+    ///
+    /// **The suppressed sentences were worth having.** `FrontMatter.parse`'s docstring says "YAML
+    /// front matter"; turning that word into a law — the three YAML sequence spellings must agree
+    /// — found a live bug, `tags: [math, demo]` parsing to `["[math", "demo]"]`, brackets
+    /// included, in a vault the repository ships. The tool had the docstring, classified it as a
+    /// contract, and declined to print it.
+    ///
+    /// One entry, deliberately. `normal-form` is the neighbouring candidate and is **not** here:
+    /// `print(parse(print(parse(s)))) == print(parse(s))` is checked by ordinary input and does
+    /// constrain what the parse means. Widening this set on no evidence is how the approximations
+    /// this file already records got written.
+    public static let unreachableByRealisticInputTemplates: Set<String> = ["input-totality"]
 
     /// Whether a docstring states a refutable **contract** — a checkable claim
     /// about the result — rather than merely **narrating** context or purpose.
