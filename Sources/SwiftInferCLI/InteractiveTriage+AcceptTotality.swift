@@ -49,7 +49,9 @@ extension InteractiveTriage {
         return LiftedTestEmitter.total(
             callee: callee,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            // Not `chooseGenerator` — totality is the one law in the catalog whose
+            // counterexamples live outside the domain the shared generator draws from.
+            generator: LiftedTestEmitter.hostileGenerator(for: typeName),
             isThrowing: evidence.signature.contains(" throws"),
             isAsync: evidence.signature.contains(" async")
         )

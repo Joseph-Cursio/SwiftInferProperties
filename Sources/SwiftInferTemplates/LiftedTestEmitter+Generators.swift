@@ -51,6 +51,29 @@ public extension LiftedTestEmitter {
         return "\(typeName).gen()\(todoGeneratorMarker)"
     }
 
+    /// The generator a **totality** law needs, which is not the one every other law gets.
+    ///
+    /// `defaultGenerator` reaches for `edgeBiasedGeneratorExpression`, tuned for *structural*
+    /// string laws — its tokens are YAML and Markdown markers, because it exists so an
+    /// idempotence law could reach a repetition witness. Totality is a different law and wants a
+    /// different draw: the counterexamples live in delimiters, non-ASCII and length.
+    ///
+    /// **Measured, six real trap classes planted in `WikilinkParser.parse` at 100 trials each:
+    /// 3 of 6 caught under the edge-biased generator, 6 of 6 under the hostile one, with the
+    /// correct implementation passing under both.** The worst miss was the delimiter — that
+    /// parser exists to read `[[…]]` and the edge-biased generator cannot produce a bracket.
+    /// `docs/measurements/totality-generator-reach.md`.
+    ///
+    /// Falls back to `defaultGenerator` for every non-`String` type, so this widens nothing it
+    /// was not measured against — the sweep covered one parameter type and the claim is scoped
+    /// to it.
+    static func hostileGenerator(for typeName: String) -> String {
+        if let rawType = RawType(typeName: typeName), let hostile = rawType.hostileGeneratorExpression {
+            return hostile
+        }
+        return defaultGenerator(for: typeName)
+    }
+
     /// Appended to the "you supply it" generator arm so an emitted file that cannot compile says
     /// so on the line that cannot compile.
     ///
