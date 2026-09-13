@@ -11,7 +11,8 @@ extension InteractiveTriage {
     static func commutativeStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
-              let typeName = paramType(from: evidence.signature) else {
+              let typeName = paramType(from: evidence.signature),
+              let call = StubCallShape.callExpression(for: evidence, applicationArity: 2) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -19,14 +20,16 @@ extension InteractiveTriage {
             funcName: funcName,
             typeName: typeName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            call: call
         )
     }
 
     static func associativeStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
-              let typeName = paramType(from: evidence.signature) else {
+              let typeName = paramType(from: evidence.signature),
+              let call = StubCallShape.callExpression(for: evidence, applicationArity: 2) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -34,7 +37,8 @@ extension InteractiveTriage {
             funcName: funcName,
             typeName: typeName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            call: call
         )
     }
 
@@ -49,7 +53,8 @@ extension InteractiveTriage {
               let opEvidence = suggestion.evidence.first,
               let identityEvidence = suggestion.evidence.dropFirst().first,
               let funcName = functionName(from: opEvidence.displayName),
-              let typeName = paramType(from: opEvidence.signature) else {
+              let typeName = paramType(from: opEvidence.signature),
+              let call = StubCallShape.callExpression(for: opEvidence, applicationArity: 2) else {
             return nil
         }
         let identityName = bareIdentityName(from: identityEvidence.displayName)
@@ -62,7 +67,8 @@ extension InteractiveTriage {
             typeName: typeName,
             identityName: identityName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            call: call
         )
     }
 
@@ -72,7 +78,13 @@ extension InteractiveTriage {
               let reverseEvidence = suggestion.evidence.dropFirst().first,
               let forwardName = functionName(from: forwardEvidence.displayName),
               let inverseName = functionName(from: reverseEvidence.displayName),
-              let forwardParam = paramType(from: forwardEvidence.signature) else {
+              let forwardParam = paramType(from: forwardEvidence.signature),
+              let forwardCall = StubCallShape.callExpression(
+                  for: forwardEvidence, applicationArity: 1
+              ),
+              let inverseCall = StubCallShape.callExpression(
+                  for: reverseEvidence, applicationArity: 1
+              ) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -82,7 +94,9 @@ extension InteractiveTriage {
             typeName: forwardParam,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: forwardParam),
-            equalityKind: equalityKind(forTypeText: forwardParam)
+            equalityKind: equalityKind(forTypeText: forwardParam),
+            forwardCall: forwardCall,
+            inverseCall: inverseCall
         )
     }
 }

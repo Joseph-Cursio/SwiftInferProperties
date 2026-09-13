@@ -41,12 +41,14 @@ public enum LiftedTestEmitter {
         typeName _: String,
         seed: SamplingSeed.Value,
         generator: String,
-        equalityKind: EqualityKind = .strict
+        equalityKind: EqualityKind = .strict,
+        call: String? = nil
     ) -> String {
+        let callee = call ?? funcName
         let testFunctionName = "\(funcName)_isIdempotent"
         let property = equalityExpression(
-            lhs: "\(funcName)(\(funcName)(value))",
-            rhs: "\(funcName)(value)",
+            lhs: "\(callee)(\(callee)(value))",
+            rhs: "\(callee)(value)",
             kind: equalityKind
         )
         let failureLabel = "\(funcName)(_:) failed idempotence"
@@ -73,11 +75,15 @@ public enum LiftedTestEmitter {
         inverseName: String,
         seed: SamplingSeed.Value,
         generator: String,
-        equalityKind: EqualityKind = .strict
+        equalityKind: EqualityKind = .strict,
+        forwardCall: String? = nil,
+        inverseCall: String? = nil
     ) -> String {
+        let forwardCallee = forwardCall ?? forwardName
+        let inverseCallee = inverseCall ?? inverseName
         let testFunctionName = "\(forwardName)_\(inverseName)_roundTrip"
         let property = equalityExpression(
-            lhs: "\(inverseName)(\(forwardName)(value))",
+            lhs: "\(inverseCallee)(\(forwardCallee)(value))",
             rhs: "value",
             kind: equalityKind
         )
@@ -100,9 +106,11 @@ public enum LiftedTestEmitter {
         typeName: String,
         returnType: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generator: String,
+        call: String? = nil
     ) -> String {
         _ = (typeName, returnType)
+        let callee = call ?? funcName
         let testFunctionName = "\(funcName)_isMonotonic"
         // T must conform to Comparable for this sample to typecheck.
         let sample = [
@@ -112,7 +120,7 @@ public enum LiftedTestEmitter {
             "                    return lhs < rhs ? (lhs, rhs) : (rhs, lhs)",
             "                }"
         ].joined(separator: "\n")
-        let property = "{ pair in \(funcName)(pair.0) <= \(funcName)(pair.1) }"
+        let property = "{ pair in \(callee)(pair.0) <= \(callee)(pair.1) }"
         let failureLabel = "\(funcName)(_:) failed monotonicity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
@@ -133,9 +141,11 @@ public enum LiftedTestEmitter {
         funcName: String,
         typeName: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generator: String,
+        call: String? = nil
     ) -> String {
         _ = typeName
+        let callee = call ?? funcName
         let testFunctionName = "\(funcName)_isCommutative"
         // Same multi-line sample shape as `monotonic`'s pair draw —
         // mirrors the column convention so the existing tests/goldens
@@ -147,7 +157,7 @@ public enum LiftedTestEmitter {
             "                    return (lhs, rhs)",
             "                }"
         ].joined(separator: "\n")
-        let property = "{ pair in \(funcName)(pair.0, pair.1) == \(funcName)(pair.1, pair.0) }"
+        let property = "{ pair in \(callee)(pair.0, pair.1) == \(callee)(pair.1, pair.0) }"
         let failureLabel = "\(funcName)(_:_:) failed commutativity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
@@ -168,9 +178,11 @@ public enum LiftedTestEmitter {
         funcName: String,
         typeName: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generator: String,
+        call: String? = nil
     ) -> String {
         _ = typeName
+        let callee = call ?? funcName
         let testFunctionName = "\(funcName)_isAssociative"
         // Three-value tuple sample — same multi-line style as monotonic /
         // commutative for visual consistency across the binary-op arms.
@@ -187,8 +199,8 @@ public enum LiftedTestEmitter {
         // template's 8-space strip.
         let property = [
             "{ triple in",
-            "            \(funcName)(\(funcName)(triple.0, triple.1), triple.2)",
-            "                == \(funcName)(triple.0, \(funcName)(triple.1, triple.2))",
+            "            \(callee)(\(callee)(triple.0, triple.1), triple.2)",
+            "                == \(callee)(triple.0, \(callee)(triple.1, triple.2))",
             "        }"
         ].joined(separator: "\n")
         let failureLabel = "\(funcName)(_:_:) failed associativity"
@@ -196,68 +208,6 @@ public enum LiftedTestEmitter {
             testFunctionName: testFunctionName,
             seed: seed,
             sampleExpression: sample,
-            propertyExpression: property,
-            failureLabel: failureLabel
-        )
-    }
-
-    /// Emit an identity-element test stub for `f: (T, T) -> T` paired
-    /// with a static identity element `T.\(identityName)`. The body
-    /// draws a single `T` value and asserts both
-    /// `f(value, T.identity) == value` and `f(T.identity, value) == value`.
-    /// `identityName` is the bare member name on `typeName` (e.g.
-    /// `"empty"`, `"zero"`, `"identity"`), extracted from the
-    /// suggestion's evidence[1] displayName (`"\(typeName).\(identityName)"`)
-    /// at dispatch time. M8.2 — retires the "no stub writeout available
-    /// for template 'identity-element' in v1" diagnostic.
-    public static func identityElement(
-        funcName: String,
-        typeName: String,
-        identityName: String,
-        seed: SamplingSeed.Value,
-        generator: String
-    ) -> String {
-        let testFunctionName = "\(funcName)_hasIdentity_\(identityName)"
-        // Single-value sample — the identity is constant in the body
-        // (referenced via `\(typeName).\(identityName)`), so the
-        // canonical `{ rng in (generator).run(using: &rng) }` shape applies.
-        let property = "\(funcName)(value, \(typeName).\(identityName)) == value"
-            + " && \(funcName)(\(typeName).\(identityName), value) == value"
-        let failureLabel = "\(funcName)(_:_:) failed identity-element \(typeName).\(identityName)"
-        return makeTestStub(
-            testFunctionName: testFunctionName,
-            seed: seed,
-            generator: generator,
-            propertyExpression: property,
-            failureLabel: failureLabel
-        )
-    }
-
-    /// Emit an inverse-pair test stub. Body shape matches `roundTrip`
-    /// (`inverse(forward(value)) == value`); distinct test-function
-    /// name + failure label keep the two arms disambiguable in test
-    /// runner output. The non-Equatable caveat lives in the §4.5
-    /// explainability block surfaced before accept.
-    public static func inversePair(
-        forwardName: String,
-        inverseName: String,
-        typeName: String,
-        seed: SamplingSeed.Value,
-        generator: String,
-        equalityKind: EqualityKind = .strict
-    ) -> String {
-        _ = typeName
-        let testFunctionName = "\(forwardName)_\(inverseName)_inversePair"
-        let property = equalityExpression(
-            lhs: "\(inverseName)(\(forwardName)(value))",
-            rhs: "value",
-            kind: equalityKind
-        )
-        let failureLabel = "\(forwardName)/\(inverseName) inverse-pair failed"
-        return makeTestStub(
-            testFunctionName: testFunctionName,
-            seed: seed,
-            generator: generator,
             propertyExpression: property,
             failureLabel: failureLabel
         )
@@ -280,14 +230,16 @@ public enum LiftedTestEmitter {
         typeName: String,
         invariantName: String,
         seed: SamplingSeed.Value,
-        generator: String
+        generator: String,
+        call: String? = nil
     ) -> String {
         _ = typeName
+        let callee = call ?? funcName
         let suffix = sanitizeKeyPathForIdentifier(invariantName)
         let testFunctionName = "\(funcName)_preservesInvariant_\(suffix)"
         let sample = "{ rng in (\(generator)).run(using: &rng) }"
         let property = "{ value in !value[keyPath: \(invariantName)] || "
-            + "\(funcName)(value)[keyPath: \(invariantName)] }"
+            + "\(callee)(value)[keyPath: \(invariantName)] }"
         let failureLabel = "\(funcName)(_:) failed invariant preservation \(invariantName)"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
@@ -308,7 +260,10 @@ extension LiftedTestEmitter {
     /// Convenience overload for unary-property arms — wraps the canonical
     /// `{ rng in (generator).run(using: &rng) }` sample and a single-value
     /// property closure, then forwards to `makeTestStubExpression`.
-    private static func makeTestStub(
+    /// Internal rather than `private` since #415: `identityElement` and `inversePair` moved to
+    /// `LiftedTestEmitter+Algebraic.swift` when the `call:` threading took this file past the
+    /// 400-line cap, and `private` is file-scoped.
+    static func makeTestStub(
         testFunctionName: String,
         seed: SamplingSeed.Value,
         generator: String,

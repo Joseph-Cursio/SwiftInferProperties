@@ -724,6 +724,82 @@ in fact reporting a live side effect.
 
 ### (b) Not one of the 19 can compile
 
+✅ **FIXED 2026-09-13 (#415), and BOTH of the issue's own claims about the cause were wrong.**
+
+The issue read `typeName _:` on `LiftedTestEmitter.idempotent` as *the emitter already
+receives what it needs to qualify the call and explicitly ignores it*. It does not: the
+caller passes `paramType(from: evidence.signature)` — the **first parameter's** type, so
+the proposed fix would have emitted `String.strippingHeadingMarkers(…)`. That is verbatim
+the defect `instance-method-shape-census.md` records for `monotonicity`
+(*`recipe.carrierTypeName` is the PARAMETER type … can never be right at any spelling*),
+in a second emitter.
+
+And prefixing the declaring type is wrong for a fifth of the population. Measured by
+emitting over this repo's own `SwiftInferCore` and locating every subject's declaration:
+**0 free functions, 20 static members, 5 instance methods**. `Type.method(x)` does not
+type-check for an instance method — it is the curried `(Type) -> (Arg) -> R` — which is
+why `VerifyCommand`'s `receiverCallExpression` exists. **`Evidence` already carried
+`qualifiedTypeName`, `isInstanceMethod`, `isMutatingMethod`, `isComputedProperty` and the
+labelled `displayName`**, and their own doc comments say they exist so the verify emitter
+can pick a shape. The accept path read none of them. A render defect, not a derivation one
+— the third time that distinction has decided a fix here.
+
+**Compiler-verified on a four-shape control.** Free / static / static-with-label / binary
+instance method, emitted then built:
+
+| shape | before | after |
+|---|---|---|
+| `freeTrim(_:)` | ✅ builds | ✅ builds |
+| `Formatter.staticTrim(_:)` | ❌ `cannot find 'staticTrim' in scope` | ✅ builds |
+| `Formatter.stripping(from:)` | ❌ same | ✅ builds |
+| `Doc.merge(_:)` | ❌ same | call shape correct; blocked on `Doc.gen()` (#416) |
+
+**Content A/B on a corpus copy — the measurement the count-based sweep is blind to.**
+27 files before, 22 after; **type-qualified calls 0 → 14**, trampoline/receiver shapes
+0 → 7, so **21 of 22 emitted stubs changed call shape and 0 of 27 were correct before**.
+`import Foundation` 0 → 22 (required by any package enabling `MemberImportVisibility`).
+⚠ **`@testable import` reads 27 of 27 and 22 of 22 — 100% in BOTH arms, and quoting that
+as evidence would be backwards**: this corpus is `Sources/`-conventional, so the old path
+heuristic already worked. The manifest fix buys nothing here and everything on
+SwiftMarkdownWiki, where the same row was 0 of 19.
+
+⚠ **THE WITHDRAWAL IS LARGE AND IS THE HEADLINE, not the qualification.** A one-parameter
+instance method cannot be called by a template that applies one argument (receiver +
+argument is two), so those rows now emit nothing. A/B over **21 of 22 corpora**:
+**2,033 → 1,286 writes, −747, with 2,144 receiver-declines.** Every removed row was a
+bare-name call to an instance method — sampled and traced to `private func` declarations
+on swift-format — so **0 compiling stubs were lost**. `swift-numerics` is the control that
+makes it readable: **627 → 627 with one decline**, a corpus of free and static functions
+where the change is a no-op, so the cut tracks where instance methods are rather than
+culling uniformly. `swiftlang-swift` takes the largest single cut (542 → 258).
+
+⚠ **`swift-syntax` could not be measured: `exit=138` (SIGBUS) in BOTH arms** — the
+stack-depth trap `parsing-catalog-gap.md` already records. The harness scored it
+*incomplete*, not zero; an earlier version would have scored it `0/0` and read it as
+*no change*.
+
+⚠ **The A/B harness failed FOUR times before producing a number worth keeping**, each
+time returning a NUMBER rather than an error: `yes`/`timeout` unresolved in a subshell
+(every cell 0, i.e. *no change*); command substitution truncating a multi-megabyte
+capture to empty counts; `--target` preferred over the manifest's `sources` (GRDB scanned
+nothing and reported a legitimate-looking 0); `wc`/`tr` unresolved mid-loop. The fifth
+version is Python with a **positive control** (arm A must read non-zero on
+`leaderboard-sort`) and a **per-log size floor**. This is the ninth through twelfth
+instances of *the cheap capture answered a different question*, and the lesson is the one
+already on the table: change instrument, do not add a guard per failure.
+
+✅ **A THIRD DEFECT, reachable only because #414 landed.** `stubFileName` relied on the
+`<template>/` directory to disambiguate, but **SwiftPM requires unique basenames within a
+target** — `merge.swift` under `commutativity/` and `associativity/` is
+`error: filename "merge.swift" used twice`. One function firing two templates is ordinary;
+`merge` fires three. Invisible while the files sat in no target. The lifted arm has
+emitted `<method>_lifted_<template>.swift` since M3.3 for exactly this reason and the rule
+was never generalised. Every stub filename now carries its template.
+
+**Each fix in this chain is what makes the next defect observable** — the standing
+*a refuter that fires first hides every refuter behind it* rule, landing on the emit side.
+
+
 | | |
 |---|---|
 | files containing `@testable import SwiftMarkdownWiki` | **0 of 19** |

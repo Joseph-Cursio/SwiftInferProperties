@@ -977,25 +977,25 @@ The tree below shows the conventional case; substitute your own test target's di
 <package-root>/
 ├── Tests/DemoTests/Generated/SwiftInfer/
 │   ├── idempotence/                  ← --interactive Accept (A)
-│   │   └── normalize.swift
+│   │   └── normalize_idempotence.swift
 │   ├── round-trip/
-│   │   └── encode_decode.swift
+│   │   └── encode_decode_round-trip.swift
 │   ├── commutativity/
-│   │   └── union.swift
+│   │   └── union_commutativity.swift
 │   ├── associativity/
-│   │   └── combine.swift
+│   │   └── combine_associativity.swift
 │   ├── identity-element/
-│   │   └── concat.swift
+│   │   └── concat_identity-element.swift
 │   ├── inverse-pair/
-│   │   └── mirror_unmirror.swift
+│   │   └── mirror_unmirror_inverse-pair.swift
 │   ├── monotonicity/
-│   │   └── length.swift
+│   │   └── length_monotonicity.swift
 │   ├── invariant-preservation/
-│   │   └── adjust.swift
+│   │   └── adjust_isValid_invariant-preservation.swift
 │   ├── count-invariance/
-│   │   └── reverse.swift
+│   │   └── reverse_count-invariance.swift
 │   ├── reduce-equivalence/
-│   │   └── sumLeftRight.swift
+│   │   └── sumLeftRight_reduce-equivalence.swift
 │   ├── equivalence-class/             ← M11 / M13 advisory
 │   │   ├── EquivalenceClasses_isValidUsername.swift
 │   │   └── EquivalenceClasses_classify_tristate.swift
@@ -1010,14 +1010,18 @@ The tree below shows the conventional case; substitute your own test target's di
         └── SetAlgebra.swift
 ```
 
-**File naming:**
+**File naming.** Every name ends in `_<template>`, because the `<template>/` directory does
+**not** disambiguate: SwiftPM requires unique basenames within a target, so `merge.swift` under
+both `commutativity/` and `associativity/` is `error: filename "merge.swift" used twice`. One
+function firing two templates is ordinary — a binary operation typically fires three.
 
 | Template | File name |
 |---|---|
-| Single-function templates (`idempotence`, `monotonicity`, `invariant-preservation`) | `<funcName>.swift` |
-| Pair templates (`round-trip`, `inverse-pair`) | `<forwardName>_<reverseName>.swift` |
-| Binary-op templates (`commutativity`, `associativity`, `identity-element`) | `<funcName>.swift` |
-| Reduce templates (`count-invariance`, `reduce-equivalence`) | `<funcName>.swift` |
+| Single-function templates (`idempotence`, `monotonicity`) | `<funcName>_<template>.swift` |
+| `invariant-preservation` | `<funcName>_<keyPath>_invariant-preservation.swift` |
+| Pair templates (`round-trip`, `inverse-pair`) | `<forwardName>_<reverseName>_<template>.swift` |
+| Binary-op templates (`commutativity`, `associativity`, `identity-element`) | `<funcName>_<template>.swift` |
+| Reduce templates (`count-invariance`, `reduce-equivalence`) | `<funcName>_<template>.swift` |
 | Equivalence-class advisory (two-class) | `EquivalenceClasses_<predicate>.swift` |
 | Equivalence-class advisory (N-class) | `EquivalenceClasses_<predicate>_<markerSetName>.swift` |
 | Consumer-producer chain advisory | `<consumerName>_<producerName>.swift` |

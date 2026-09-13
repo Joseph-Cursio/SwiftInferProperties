@@ -160,7 +160,7 @@ writes into a declared **test target**, so the file is inside something SwiftPM 
 package has several test targets, or none, read that note: it says which one was chosen and, when
 nothing will build the file, says so outright.
 
-`Tests/SlugTests/Generated/SwiftInfer/round-trip/encode_decode.swift`:
+`Tests/SlugTests/Generated/SwiftInfer/round-trip/encode_decode_round-trip.swift`:
 
 ```swift
 @Test func encode_decode_roundTrip() async {
@@ -188,11 +188,18 @@ nothing will build the file, says so outright.
 
 The seed numbers are derived from the suggestion's stable identity hash (PRD §16 #6), so re-runs of `swift test` exercise the same input sequence and produce the same pass/fail outcome.
 
-The emitter writes the imports for you — `Testing`, `PropertyBased`, `PropertyLawKit`, and
-`@testable import Slug`. Two things it does **not** do yet, both of which you may have to fix by
-hand before the file compiles: a call to a type's member is emitted unqualified (`encode(…)`
-rather than `Slug.encode(…)`, #415), and your test target must actually depend on `PropertyBased`
-and `PropertyLawKit` for those imports to resolve.
+The emitter writes the imports for you — `Foundation`, `Testing`, `PropertyBased`,
+`PropertyLawKit`, and `@testable import Slug`, the last resolved from `Package.swift` rather than
+guessed from the path. Calls to a type's members are qualified (`Slug.encode(…)`) and argument
+labels are carried through, so the file is meant to build as written.
+
+Two things can still stop it. **Your test target must actually depend on `PropertyBased` and
+`PropertyLawKit`** or those imports do not resolve — swift-infer cannot add a dependency to your
+manifest. And the generator for a custom carrier still falls back to `YourType.gen()`, which you
+may need to supply by hand (#416).
+
+If swift-infer could not derive the module under test, the file says so in a `// TODO:` on its
+first screen instead of quietly omitting the import.
 
 `.swiftinfer/decisions.json` is a small JSON record:
 

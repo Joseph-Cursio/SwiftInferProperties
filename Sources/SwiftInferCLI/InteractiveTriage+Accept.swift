@@ -41,10 +41,7 @@ extension InteractiveTriage {
             resolver.customTypeGenerator(forTypeName: typeName)?.expression
         }
         guard let stub = liftedTestStub(for: suggestion, customGenerator: customGenerator) else {
-            context.diagnostics.writeDiagnostic(
-                "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
-                    + "decision recorded without writing a file"
-            )
+            context.diagnostics.writeDiagnostic(noStubNote(for: suggestion))
             return nil
         }
         let fileName = stubFileName(for: suggestion) ?? "\(suggestion.identity.normalized).swift"
@@ -54,7 +51,11 @@ extension InteractiveTriage {
             context.output.write("[dry-run] would write \(path.path)")
             return nil
         }
-        let contents = wrappedFileContents(stub: stub, suggestion: suggestion)
+        let contents = wrappedFileContents(
+            stub: stub,
+            suggestion: suggestion,
+            packageRoot: context.outputDirectory
+        )
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -201,7 +202,8 @@ extension InteractiveTriage {
     private static func idempotentStub(for suggestion: Suggestion) -> String? {
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
-              let typeName = paramType(from: evidence.signature) else {
+              let typeName = paramType(from: evidence.signature),
+              let call = StubCallShape.callExpression(for: evidence, applicationArity: 1) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -210,7 +212,8 @@ extension InteractiveTriage {
             typeName: typeName,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: typeName),
-            equalityKind: equalityKind(forTypeText: typeName)
+            equalityKind: equalityKind(forTypeText: typeName),
+            call: call
         )
     }
 
@@ -261,7 +264,13 @@ extension InteractiveTriage {
               let reverseEvidence = suggestion.evidence.dropFirst().first,
               let forwardName = functionName(from: forwardEvidence.displayName),
               let inverseName = functionName(from: reverseEvidence.displayName),
-              let forwardParam = paramType(from: forwardEvidence.signature) else {
+              let forwardParam = paramType(from: forwardEvidence.signature),
+              let forwardCall = StubCallShape.callExpression(
+                  for: forwardEvidence, applicationArity: 1
+              ),
+              let inverseCall = StubCallShape.callExpression(
+                  for: reverseEvidence, applicationArity: 1
+              ) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -270,7 +279,9 @@ extension InteractiveTriage {
             inverseName: inverseName,
             seed: seed,
             generator: chooseGenerator(for: suggestion, typeName: forwardParam),
-            equalityKind: equalityKind(forTypeText: forwardParam)
+            equalityKind: equalityKind(forTypeText: forwardParam),
+            forwardCall: forwardCall,
+            inverseCall: inverseCall
         )
     }
 
@@ -278,7 +289,8 @@ extension InteractiveTriage {
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
               let typeName = paramType(from: evidence.signature),
-              let returnType = returnType(from: evidence.signature) else {
+              let returnType = returnType(from: evidence.signature),
+              let call = StubCallShape.callExpression(for: evidence, applicationArity: 1) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -287,7 +299,8 @@ extension InteractiveTriage {
             typeName: typeName,
             returnType: returnType,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            call: call
         )
     }
 
@@ -295,7 +308,8 @@ extension InteractiveTriage {
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
               let typeName = paramType(from: evidence.signature),
-              let invariantName = invariantKeypath(from: evidence.signature) else {
+              let invariantName = invariantKeypath(from: evidence.signature),
+              let call = StubCallShape.callExpression(for: evidence, applicationArity: 1) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -304,7 +318,8 @@ extension InteractiveTriage {
             typeName: typeName,
             invariantName: invariantName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            call: call
         )
     }
 
