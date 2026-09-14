@@ -50,12 +50,15 @@ public enum LiftedTestEmitter {
             kind: equalityKind
         ))
         let failureLabel = "\(callee.bareName)(_:) failed idempotence"
-        return makeTestStub(
-            testFunctionName: testFunctionName,
-            seed: seed,
-            generator: generator,
-            propertyExpression: property,
-            failureLabel: failureLabel
+        return withApproximateEqualityHelper(
+            makeTestStub(
+                testFunctionName: testFunctionName,
+                seed: seed,
+                generator: generator,
+                propertyExpression: property,
+                failureLabel: failureLabel
+            ),
+            kind: equalityKind
         )
     }
 
@@ -82,12 +85,15 @@ public enum LiftedTestEmitter {
             kind: equalityKind
         ))
         let failureLabel = "\(forward.bareName)/\(inverse.bareName) round-trip failed"
-        return makeTestStub(
-            testFunctionName: testFunctionName,
-            seed: seed,
-            generator: generator,
-            propertyExpression: property,
-            failureLabel: failureLabel
+        return withApproximateEqualityHelper(
+            makeTestStub(
+                testFunctionName: testFunctionName,
+                seed: seed,
+                generator: generator,
+                propertyExpression: property,
+                failureLabel: failureLabel
+            ),
+            kind: equalityKind
         )
     }
 
@@ -256,12 +262,15 @@ public enum LiftedTestEmitter {
             kind: equalityKind
         )
         let failureLabel = "\(forward.bareName)/\(inverse.bareName) inverse-pair failed"
-        return makeTestStub(
-            testFunctionName: testFunctionName,
-            seed: seed,
-            generator: generator,
-            propertyExpression: property,
-            failureLabel: failureLabel
+        return withApproximateEqualityHelper(
+            makeTestStub(
+                testFunctionName: testFunctionName,
+                seed: seed,
+                generator: generator,
+                propertyExpression: property,
+                failureLabel: failureLabel
+            ),
+            kind: equalityKind
         )
     }
 
@@ -378,23 +387,5 @@ extension LiftedTestEmitter {
     static func hex(_ word: UInt64) -> String {
         let raw = String(word, radix: 16, uppercase: true)
         return String(repeating: "0", count: 16 - raw.count) + raw
-    }
-
-    /// V1.31.B equality assertion. `.strict` → `lhs == rhs`;
-    /// `.approximate` → `lhs.isApproximatelyEqual(to: rhs)` for FP types
-    /// where IEEE 754 rounding makes strict `==` impractical. Emitted
-    /// test files need `import Numerics` for the approximate form.
-    static func equalityExpression(
-        lhs: String,
-        rhs: String,
-        kind: EqualityKind
-    ) -> String {
-        switch kind {
-        case .strict:
-            return "\(lhs) == \(rhs)"
-
-        case .approximate:
-            return "\(lhs).isApproximatelyEqual(to: \(rhs))"
-        }
     }
 }
