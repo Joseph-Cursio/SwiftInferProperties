@@ -92,11 +92,60 @@ extension InteractiveTriage {
         \(codableLine)
         // Suggestion identity: \(suggestion.identity.display)
         // Template: \(suggestion.templateName)
-        \(accessLine)
+        \(Self.lawClassLine(for: suggestion))\(accessLine)
         \(foundationImport)import Testing
         import PropertyBased
         import PropertyLawKit
         \(moduleImport)\(stub)
+        """
+    }
+
+    /// What a **pass** of this test is allowed to mean.
+    ///
+    /// ## The two are byte-indistinguishable today, and one of them is a guess
+    ///
+    /// An emitted `idempotence` test and an emitted `input-totality` test differ only in the
+    /// template name in the header. One is a law a correct implementation **cannot** fail; the
+    /// other is read off a type shape and a verb, and a correct implementation can fail it. A
+    /// green tick reports both identically.
+    ///
+    /// **Measured across two subjects: entailed laws 3 run, 0 false; conjectures 5 run, 3 false**
+    /// (`roadtest-swiftmarkdownwiki.md`, `roadtest-swift-argument-parser.md`). The class
+    /// predicted every outcome.
+    ///
+    /// The sharp case is #453. `mimeType_idempotence` was emitted, compiled, ran 100 trials and
+    /// **passed**, and the law is false — its counterexamples are the three literals `css`, `js`
+    /// and `woff2`, which the generator cannot produce. Nothing in the emitted file, and nothing
+    /// in any count the pipeline reports, separates that from the three totality laws that
+    /// genuinely passed beside it.
+    ///
+    /// ## Why the class and not the tier
+    ///
+    /// Carrying the **tier** was the obvious cheap fix and was measured not to work: `parse` and
+    /// `parseQuery` are Possible 30 and true, `mimeType` is Possible 20 and false — the same tier
+    /// with opposite verdicts. `Refutability.isRoleEntailed` is the distinction that separated
+    /// every outcome, and it already reaches the CLI and gates `isWorthSurfacingBelowCut`. It
+    /// simply never reached the test target.
+    ///
+    /// ## What this does not do
+    ///
+    /// It does not make a conjecture true, catch a false pass, or change which laws are emitted.
+    /// It tells the reader which kind of claim a green tick is, which is the whole of the fix —
+    /// #453's other two directions were measured and declined on population.
+    static func lawClassLine(for suggestion: Suggestion) -> String {
+        if Refutability.isRoleEntailed(suggestion) {
+            return """
+            // Law class: ENTAILED — a correct implementation cannot fail this, so a pass is a
+            //            statement about the code.
+
+            """
+        }
+        return """
+        // Law class: CONJECTURE — read from the signature and the name, not entailed by either,
+        //            so a CORRECT implementation can fail it. A pass means no counterexample was
+        //            found in the trials drawn, NOT that the law holds: a law whose
+        //            counterexamples lie outside the generator's reach passes while being false.
+
         """
     }
 
