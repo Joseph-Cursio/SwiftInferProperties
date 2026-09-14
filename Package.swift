@@ -333,7 +333,6 @@ let package = Package(
         .testTarget(
             name: "SwiftInferMacroTests",
             dependencies: [
-                "SwiftInferMacro",
                 "SwiftInferMacroImpl",
                 // `@testable import SwiftInferCore` in both expansion suites;
                 // previously reachable only through the macro targets.
