@@ -138,7 +138,7 @@ struct LiftedTestEmitterTests {
             seed: Self.determinismSeed,
             equalityKind: .approximate
         )
-        #expect(source.contains("scale(value).isApproximatelyEqual(to: scale(value))"))
+        #expect(source.contains("approximatelyEqual(scale(value), scale(value))"))
     }
 
     @Test
