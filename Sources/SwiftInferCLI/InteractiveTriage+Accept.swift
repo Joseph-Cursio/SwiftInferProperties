@@ -210,7 +210,7 @@ extension InteractiveTriage {
               let callee = CalleeReference(evidence: evidence),
               let arity = StubApplicationArity.forTemplate(suggestion.templateName),
               callee.accepts(applicationArity: arity),
-              let typeName = paramType(from: evidence.signature) else {
+              let typeName = carrierType(for: evidence) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
