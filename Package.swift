@@ -301,6 +301,11 @@ let package = Package(
             dependencies: [
                 "SwiftInferCLI",
                 "SwiftInferCore",
+                // Imported directly by the pipeline and convert-counterexample
+                // suites. Both were previously reachable only because
+                // SwiftInferCLI builds them.
+                "SwiftInferTemplates",
+                "SwiftInferTestLifter",
                 // V1.47.G.5 — StrategistDispatchEmitter tests need
                 // PropertyLawCore symbols (TypeShape construction)
                 // for the recipe-resolution coverage.
@@ -328,8 +333,10 @@ let package = Package(
         .testTarget(
             name: "SwiftInferMacroTests",
             dependencies: [
-                "SwiftInferMacro",
                 "SwiftInferMacroImpl",
+                // `@testable import SwiftInferCore` in both expansion suites;
+                // previously reachable only through the macro targets.
+                "SwiftInferCore",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
             ]
         ),
