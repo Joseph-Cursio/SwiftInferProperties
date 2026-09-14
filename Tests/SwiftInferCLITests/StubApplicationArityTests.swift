@@ -17,14 +17,15 @@ struct StubApplicationArityTests {
         displayName: String,
         carrier: String? = nil,
         isInstanceMethod: Bool = false,
-        isMutatingMethod: Bool = false
+        isMutatingMethod: Bool = false,
+        signature: String = "(String) -> String"
     ) -> Suggestion {
         Suggestion(
             templateName: template,
             evidence: [
                 Evidence(
                     displayName: displayName,
-                    signature: "(String) -> String",
+                    signature: signature,
                     location: SourceLocation(file: "F.swift", line: 1, column: 1),
                     isInstanceMethod: isInstanceMethod,
                     isMutatingMethod: isMutatingMethod,
@@ -77,6 +78,37 @@ struct StubApplicationArityTests {
                 template: "idempotence",
                 displayName: "strippingHeadingMarkers(from:)",
                 carrier: "EditorFormatter"
+            )
+        ) == nil)
+    }
+
+    /// `monotonicity` over an `Optional` carrier declines, and the reader is told why.
+    ///
+    /// **Without this the message would blame the template**, which is the misattribution #445
+    /// split for arity and #456 records in a third place. The compiler's own error names the
+    /// closure parameter rather than the comparison, so the emitted note is the only place
+    /// optionality gets mentioned at all.
+    @Test func anOptionalMonotonicityCarrierSaysWhy() throws {
+        let reason = try #require(StubApplicationArity.declineReason(
+            for: Self.suggestion(
+                template: "monotonicity",
+                displayName: "modificationDate(reported:)",
+                carrier: "NoteFile",
+                signature: "(Date?) -> Date"
+            )
+        ))
+        #expect(reason.contains("Date?"))
+        #expect(reason.contains("Optional is not Comparable"))
+    }
+
+    /// The control: an ordinary carrier still emits, so the template is narrowed, not disabled.
+    @Test func anOrderableMonotonicityCarrierHasNoReason() {
+        #expect(StubApplicationArity.declineReason(
+            for: Self.suggestion(
+                template: "monotonicity",
+                displayName: "retention(in:)",
+                carrier: "Vault",
+                signature: "(Int) -> Int"
             )
         ) == nil)
     }

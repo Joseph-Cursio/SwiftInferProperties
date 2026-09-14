@@ -292,6 +292,10 @@ extension InteractiveTriage {
               let arity = StubApplicationArity.forTemplate(suggestion.templateName),
               callee.accepts(applicationArity: arity),
               let typeName = paramType(from: evidence.signature),
+              // `monotonicity` sorts a drawn pair with `<`, so the carrier must be orderable.
+              // An `Optional` is not `Comparable`, and the resulting error names the closure
+              // rather than the comparison — see `isOrderableCarrier`.
+              FloatingPointEquatableTypes.isOrderableCarrier(typeText: typeName),
               let returnType = returnType(from: evidence.signature) else {
             return nil
         }

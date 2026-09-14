@@ -55,6 +55,31 @@ public enum FloatingPointEquatableTypes {
     /// `Complex<Double>` and `Complex<RealType>` both resolve to the
     /// bare `Complex` entry in the curated set.
     ///
+    /// Whether a carrier can be **ordered** with `<`, which `monotonicity` requires: it draws a
+    /// pair and sorts it so the law can read `f(lo) <= f(hi)`.
+    ///
+    /// **An `Optional` is not `Comparable`**, and the failure is badly disguised: `lhs < rhs`
+    /// over a `Date?` does not typecheck, and Swift reports `cannot infer type of closure
+    /// parameter 'pair'` — an error naming the closure rather than the comparison, so it does
+    /// not read as an optionality problem at all. Measured on `NoteFile.modificationDate(reported:
+    /// Date?)`, which emitted a stub that could not build (#454).
+    ///
+    /// **Declining is the answer already established for this repo**, one line above: FP
+    /// equality excludes optionals because *"optionality is orthogonal … and would require a
+    /// nullable-aware assertion wrapper in the emitted code"*. The same is true of ordering, and
+    /// the wrapper would be the same kind of thing. Unwrapping instead would change the law
+    /// being stated, since the optionality is the parameter's own.
+    ///
+    /// Deliberately **syntactic and narrow**: it answers "is this spelled Optional", not "is
+    /// this Comparable". A non-optional non-comparable carrier still gets through, and would
+    /// fail at compile time as it does today — closing that needs conformance resolution, which
+    /// this is not.
+    public static func isOrderableCarrier(typeText: String) -> Bool {
+        let trimmed = typeText.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.hasSuffix("?") else { return false }
+        return !trimmed.hasPrefix("Optional<")
+    }
+
     /// Whitespace-trim and generic-parameter-strip are applied uniformly.
     /// Optional types (`Double?`) intentionally return `false` —
     /// optionality is orthogonal to FP equality and would require a
