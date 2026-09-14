@@ -1971,3 +1971,28 @@ and of those nine laws **four hold, three are false, two do not build**.
 **The binding constraint is no longer plumbing.** It is that the catalogue states
 conjectures from names and checks them with generators built from types, and neither
 half knows the subject's domain. S3 is the same gap seen from the proposal side.
+
+---
+
+# Second subject, and what it says about this one (2026-09-14)
+
+`roadtest-swift-argument-parser.md` runs the same method against an Apple library.
+Two results bear directly on the numbers above.
+
+**The class split holds and the tier split does not.** Joining both subjects by
+`Refutability.isRoleEntailed`: entailed laws **3 run, 0 false**; conjectures **5 run,
+3 false**. Every false law across both subjects is a conjecture. Meanwhile `parse`
+and `parseQuery` are Possible 30 and true while `mimeType` is Possible 20 and false —
+**the same tier with opposite verdicts**, so carrying the tier into the emitted stub
+would not have separated them. An earlier draft of the S7 entry above proposed
+exactly that as the cheap fix; it would not have worked.
+
+**This subject's yield is not representative, and that was an unstated assumption.**
+48 → 21 → 9 here against **33 → 2 → 1** there. The difference is not catalogue
+coverage but API shape: 16 of that subject's suggestions decline as `mutating`
+(`run()`, `validate()`, `formUnion(_:)`), because a CLI framework's surface is
+commands and mutating parsers rather than `(T) -> T` value transforms.
+
+So the walk's headline figures — *proposes 48, emits 21, runs 9* — describe a
+**Markdown app with a large string-processing surface**, which is close to the
+catalogue's best case. Read them as an upper bound rather than a rate.
