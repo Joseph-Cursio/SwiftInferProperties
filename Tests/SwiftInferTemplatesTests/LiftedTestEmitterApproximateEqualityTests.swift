@@ -9,7 +9,17 @@ import Testing
 /// (cycle-14 priority #4). The current strict `==` assertion fails
 /// under IEEE 754 rounding even on canonical inverse pairs like
 /// `log(exp(z))`; the `.approximate` variant emits
-/// `isApproximatelyEqual(to:)` for FP-equatable types.
+/// a relative-tolerance comparison for FP-equatable types.
+///
+/// ⚠ **These assertions pinned `lhs.isApproximatelyEqual(to: rhs)` and were green for the whole
+/// life of a defect.** That method is swift-numerics; `PropertyLawKit` links only
+/// `PropertyBased`, so no emitted file could ever reach it and the arm had never produced a
+/// compiling stub since V1.31.A (#454). A codegen test comparing text to text can have both
+/// sides wrong together — SwiftPropertyLaws recorded four golden tests doing exactly this for
+/// its `.caseIterable` arm, and these were five more.
+///
+/// The strings below are updated, and they remain the *readable* record. The **executable** one
+/// is `ApproximateEqualityHelperTests`, which runs a live copy of the emitted helper.
 @Suite("LiftedTestEmitter — V1.31.B EqualityKind dispatch")
 struct LiftedTestEmitterApproxEqualityTests {
 
@@ -34,7 +44,7 @@ struct LiftedTestEmitterApproxEqualityTests {
         #expect(!source.contains("isApproximatelyEqual"))
     }
 
-    @Test("V1.31.B — round-trip with .approximate emits `lhs.isApproximatelyEqual(to: rhs)`")
+    @Test("V1.31.B — round-trip with .approximate emits the tolerance comparison")
     func roundTripApproximateEmitsApproximateEquality() {
         let source = LiftedTestEmitter.roundTrip(
             forward: "exp",
@@ -43,7 +53,7 @@ struct LiftedTestEmitterApproxEqualityTests {
             generator: "ComplexGenerator",
             equalityKind: .approximate
         )
-        #expect(source.contains("log(exp(value)).isApproximatelyEqual(to: value)"))
+        #expect(source.contains("approximatelyEqual(log(exp(value)), value)"))
         #expect(!source.contains("log(exp(value)) == value"))
     }
 
@@ -88,7 +98,7 @@ struct LiftedTestEmitterApproxEqualityTests {
             generator: "DoubleGenerator",
             equalityKind: .approximate
         )
-        #expect(source.contains("clamp(clamp(value)).isApproximatelyEqual(to: clamp(value))"))
+        #expect(source.contains("approximatelyEqual(clamp(clamp(value)), clamp(value))"))
         #expect(!source.contains("clamp(clamp(value)) == clamp(value)"))
     }
 
@@ -135,7 +145,7 @@ struct LiftedTestEmitterApproxEqualityTests {
             generator: "ComplexGenerator",
             equalityKind: .approximate
         )
-        #expect(source.contains("asinh(sinh(value)).isApproximatelyEqual(to: value)"))
+        #expect(source.contains("approximatelyEqual(asinh(sinh(value)), value)"))
         #expect(!source.contains("asinh(sinh(value)) == value"))
     }
 
@@ -169,7 +179,7 @@ struct LiftedTestEmitterApproxEqualityTests {
         )
         #expect(
             LiftedTestEmitter.equalityExpression(lhs: "f(x)", rhs: "y", kind: .approximate)
-                == "f(x).isApproximatelyEqual(to: y)"
+                == "approximatelyEqual(f(x), y)"
         )
     }
 }
