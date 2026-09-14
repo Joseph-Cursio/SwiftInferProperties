@@ -1551,6 +1551,7 @@ declares. A template whose arity does not match declines rather than emitting.
 | **compile** | **2** | **2** |
 | blocked by `private` | 11 | 6 |
 | blocked by missing generator | 3 | 4 |
+| ⚠ *both counts corrected below* | | |
 | blocked by inherited isolation | 1 | **0** (#440) |
 | **uncallable spelling** | **7, uncounted** | **0** |
 
@@ -1799,8 +1800,9 @@ package, links the kit, drives the backend, executes the subject 100 times, and
 fails loudly on a genuine defect in it.
 
 **Does not:** say anything about the other 20 stubs. This one clears every gate;
-6 are blocked by `private`, 4 by a missing generator, and 8 subjects declined
-because they are instance methods needing a receiver. Nor does it make the
+⚠ the counts originally written here — 6 access-blocked, 4 generator-blocked —
+were measured with a broken instrument and are corrected in the section below
+to **11 and 10, with 5 stubs clear of both**. Nor does it make the
 *law* interesting — totality is the weakest law in the catalogue, and
 `PredicateTemplate`'s own header says the interesting law is a hole only the
 author can fill.
@@ -1825,3 +1827,65 @@ demonstrated at least once on a subject nobody wrote the tool for.
 What remains is not plumbing. S3 at seventeen rows is the catalogue's reach,
 S7's open rows are about whether the laws delivered are worth keeping, and the
 `private` blocker is the subject's code rather than ours.
+
+---
+
+# Correction — the blocker counts were measured with a broken grep (2026-09-13)
+
+> **Status:** `measured` · **As of:** 2026-09-13
+
+The third pass and the S8 entry both quote how many emitted stubs are blocked, and
+by what. **Both counts were wrong, and the tool was right.**
+
+## What happened
+
+`isValidIdentifier(_:)` was classified *visible to a test target* and used as evidence
+that totality reaches a real population. It does not compile:
+
+```
+error: cannot find 'RawManifest' in scope
+```
+
+`RawManifest` is `private struct` at file scope, so `@testable import` cannot name it
+— `@testable` promotes `internal`, not `private`.
+
+**The tool had already said so, on line 8 of the file it emitted:**
+
+> `Access: no test can name the subject: its enclosing type is 'private' or 'fileprivate', so no test can name it — and widening this declaration alone would be a no-op, because the type is what blocks it. Widen the enclosing type first, or lift the logic out of it.`
+
+The census grepped for the *function*-level caveat — *"it is `private` or `fileprivate`"*
+— and this carries the differently-worded *enclosing-type* one. Five other stubs were
+miscounted the same way. **A measurement that pattern-matches on prose is measuring the
+prose**, which is the same defect as counting `.userGen` entries as unresolved because
+they render identically to `.todo`.
+
+## The corrected census, by reading both caveats
+
+| | as written | measured |
+|---|---:|---:|
+| stubs emitted | 21 | 21 |
+| access-blocked | 6 | **11** |
+| generator `.todo` | 4 | **10** |
+| **clear of both** | — | **5** |
+
+The five that clear both gates are `highlight`, `mimeType`, `strippingHeadingMarkers`,
+`parseQuery` and `parse`. Three have now been run.
+
+## What the three runs found
+
+| stub | predicted | measured |
+|---|---|---|
+| `parseQuery` | compiles, passes | **compiles and passes** |
+| `decode` | does not compile — `Data` has no generator | **`type 'Data' has no member 'gen'`** |
+| `isValidIdentifier` | compiles *if* `RawManifest` is visible | **`cannot find 'RawManifest' in scope`** |
+
+**`decode` is the row that generalises.** Totality needs no `Equatable` on the *return*,
+which is why it reaches further than the comparison-shaped arms — but it still needs a
+generator for the *parameter*, and `Data` has none. **So the 6-of-6 hostile-generator
+result is a fact about `String`, not about the law.**
+
+## The two blockers are different problems
+
+Access is the subject's code to change and the tool's advice on it is already precise.
+Generators are ours. At 10 of 21 they are now the larger half, and `Data` is the first
+concrete gap.
