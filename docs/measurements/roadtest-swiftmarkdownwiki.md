@@ -1889,3 +1889,85 @@ result is a fact about `String`, not about the law.**
 Access is the subject's code to change and the tool's advice on it is already precise.
 Generators are ours. At 10 of 21 they are now the larger half, and `Data` is the first
 concrete gap.
+
+---
+
+# S7 measured by execution — all nine runnable stubs (2026-09-14)
+
+> **Status:** `measured` · **As of:** 2026-09-14
+
+S7 asks whether a law the loop delivers is worth keeping. Until now it was answered
+by reading laws. This runs every stub that clears both blockers, against the real
+package, with predictions written first.
+
+## Result: of nine delivered laws, three are false
+
+| stub | predicted | measured |
+|---|---|---|
+| `parse_input-totality` | true | **passed** |
+| `parseQuery_input-totality` | true | **passed** |
+| `decode_input-totality` | true | **passed** |
+| `modificationDate_idempotence` | true | **passed** |
+| `strippingHeadingMarkers_idempotence` | **false** | **FAILED at `"# # "`** |
+| `highlight_idempotence` | false or vacuous | **FAILED at `"//."`** |
+| **`mimeType_idempotence`** | vacuous | **FALSE — and it passed** |
+| `clamp_idempotence` | true | **does not compile** (#454a) |
+| `modificationDate_monotonicity` | true | **does not compile** (#454b) |
+
+**5 of 9 predictions correct.** The three misses are the findings.
+
+## The one that matters: a false law that passed
+
+`mimeType(forExtension:)` is a four-arm switch. Its counterexamples are exactly
+`{css, js, woff2}` — everything else lands on the default where the law holds
+trivially.
+
+```
+css   → f(x)=text/css        f(f(x))=application/octet-stream   LAW VIOLATED
+png   → f(x)=application/octet-stream  f(f(x))=same             holds
+```
+
+The generator draws alphanumerics 0–8 plus curated markup tokens. **It will never
+produce the literal string `"css"`, and no trial budget changes that.**
+
+**This is strictly worse than the vacuity S7 already records.** A vacuous test tells
+the reader nothing; this one tells them something untrue. And it is invisible from
+every count the pipeline reports — emitted ✅, compiled ✅, ran ✅, passed ✅,
+indistinguishable from the three totality laws that genuinely passed beside it.
+
+The general shape: **a law whose counterexamples are a small set of domain-specific
+literals cannot be falsified by a generator that does not know those literals.** The
+catalogue takes the law from the *name* and the generator from the *type*; neither
+knows this function's interesting inputs are three file extensions. Filed as #453.
+
+## The two false laws that failed correctly are the loop working
+
+`strippingHeadingMarkers` failed at `"# # "` — the walk's Q1, predicted since the
+first pass and now demonstrated end to end. `highlight` failed at `"//."`. Both are
+**conjectures the catalogue read off a name**, and both are false of correct code. A
+property test that goes red on working code is the cost of a conjectural catalogue,
+and it is the cost this repo has always said it was paying.
+
+## The two compile failures were both predicted to pass
+
+Both types only became reachable with kit v4.6.2 the day before, so neither stub had
+ever met a compiler. **One fixed gate exposing the next**, for the third time in this
+walk. `isApproximatelyEqual` is emitted without swift-numerics; monotonicity orders a
+pair with `<` over an `Optional`, which is not `Comparable`. Filed as #454.
+
+## Running tally
+
+| stage | rows | note |
+|---|---|---|
+| S0 | 3 | 1 partially closed |
+| S3 | 17 | dominant by 4× |
+| S5, S6 | closed | |
+| **S7** | **6** | 3 open before; **+2 compile defects, +1 false-pass** |
+| S8 | reached | 5 of 9 laws execute and pass |
+
+**What the loop now does end to end:** proposes 48, emits 21, compiles 9, runs 9,
+and of those nine laws **four hold, three are false, two do not build**.
+
+**The binding constraint is no longer plumbing.** It is that the catalogue states
+conjectures from names and checks them with generators built from types, and neither
+half knows the subject's domain. S3 is the same gap seen from the proposal side.
