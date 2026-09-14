@@ -19,3 +19,21 @@
 excluded_paths:
   - "Tests/"
   - "fixtures/"
+
+rules:
+  # String-backed Codable enums whose raw values are stored in .swiftinfer/ files or read from the
+  # pbt-seeds manifest. Their spellings are pinned by
+  # Tests/SwiftInferCoreTests/WireFormatRawValueTests.swift instead of explicit raw values, which
+  # SwiftLint's default redundant_string_enum_value rejects when they equal the case name. Enums
+  # that never leave the process are deliberately not listed here.
+  "Implicit Codable Raw Value":
+    excluded_paths:
+      - "SwiftInferCore/Decisions.swift"
+      - "SwiftInferCore/IndexedTypeShape.swift"
+      - "SwiftInferCore/InteractionDecisions.swift"
+      - "SwiftInferCore/InteractionInvariantSuggestion.swift"
+      - "SwiftInferCore/KitEvidence.swift"
+      - "SwiftInferCore/PostAcceptanceOutcome.swift"
+      - "SwiftInferCore/SeedEffect.swift"
+      - "SwiftInferCore/TemplateName.swift"
+      - "SwiftInferCore/Tier.swift"
