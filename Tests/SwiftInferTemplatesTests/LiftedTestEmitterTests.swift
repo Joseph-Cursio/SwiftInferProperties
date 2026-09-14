@@ -86,7 +86,7 @@ struct LiftedTestEmitterTests {
                     trials: 100,
                     seed: seed,
                     sample: { rng in (Gen<Character>.letterOrNumber.string(of: 0...8)).run(using: &rng) },
-                    property: { value in normalize(normalize(value)) == normalize(value) }
+                    property: { (value: String) in normalize(normalize(value)) == normalize(value) }
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
@@ -97,6 +97,14 @@ struct LiftedTestEmitterTests {
             """
         #expect(source == expected)
     }
+
+    // The idempotence golden above carries `{ (value: String) in` rather than `{ value in`.
+    //
+    // **The annotation is load-bearing, not cosmetic.** A receiver-form property —
+    // `value.htmlEscaped.htmlEscaped == value.htmlEscaped` — gives the solver nothing to anchor
+    // `value` on, and Swift reports *"the compiler is unable to type-check this expression in
+    // reasonable time"*. A call form like `normalize(normalize(value))` anchors it for free,
+    // which is why this golden compiled for as long as only call forms were emitted (#456).
 
     // MARK: - deterministic(...)
 

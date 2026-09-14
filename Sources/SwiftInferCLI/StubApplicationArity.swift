@@ -53,6 +53,22 @@ enum StubApplicationArity {
         guard let callee = CalleeReference(evidence: evidence) else {
             return "\(evidence.displayName) is a mutating method, so it returns no value for the law to compare"
         }
+        // **A carrier the emitter cannot name is its own cause, and used to read as a missing
+        // template arm.** `paramType` answers for a parameterised subject and `qualifiedTypeName`
+        // for a receiver-form one; a free nullary function has neither, and the law has nothing
+        // to quantify over. Saying so is the difference between a reader looking at their
+        // signature and looking for a tool that does not exist (#456).
+        if InteractiveTriage.carrierType(for: evidence) == nil {
+            return "\(evidence.displayName) has no parameter and no enclosing type, so there is "
+                + "no value for the law to quantify over"
+        }
+        // A paired template needs both halves. One evidence row means the pair was never
+        // resolved, which is a fact about the SUBJECT rather than about the emitter.
+        if ["round-trip", "inverse-pair", "identity-element"].contains(suggestion.templateName),
+           suggestion.evidence.count < 2 {
+            return "'\(suggestion.templateName)' needs two subjects and this suggestion carries "
+                + "one, so the pair was never resolved"
+        }
         // `monotonicity` sorts a drawn pair with `<`. An Optional carrier cannot be ordered, and
         // the compiler reports it as an inference failure on the closure parameter — so saying so
         // here is the difference between a reader looking at optionality and looking at the

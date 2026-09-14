@@ -38,7 +38,7 @@ public enum LiftedTestEmitter {
     /// `f(f(value)).isApproximatelyEqual(to: f(value))`.
     public static func idempotent(
         callee: CalleeReference,
-        typeName _: String,
+        typeName: String,
         seed: SamplingSeed.Value,
         generator: String,
         equalityKind: EqualityKind = .strict
@@ -56,7 +56,8 @@ public enum LiftedTestEmitter {
                 seed: seed,
                 generator: generator,
                 propertyExpression: property,
-                failureLabel: failureLabel
+                failureLabel: failureLabel,
+                carrierType: typeName
             ),
             kind: equalityKind
         )
@@ -319,24 +320,6 @@ extension LiftedTestEmitter {
     /// Convenience overload for unary-property arms — wraps the canonical
     /// `{ rng in (generator).run(using: &rng) }` sample and a single-value
     /// property closure, then forwards to `makeTestStubExpression`.
-    private static func makeTestStub(
-        testFunctionName: String,
-        seed: SamplingSeed.Value,
-        generator: String,
-        propertyExpression: String,
-        failureLabel: String
-    ) -> String {
-        let sample = "{ rng in (\(generator)).run(using: &rng) }"
-        let property = "{ value in \(propertyExpression) }"
-        return makeTestStubExpression(
-            testFunctionName: testFunctionName,
-            seed: seed,
-            sampleExpression: sample,
-            propertyExpression: property,
-            failureLabel: failureLabel
-        )
-    }
-
     /// Shared scaffold for every arm — they differ only in the sample /
     /// property closure shape and failure-label string. Module-private
     /// (not file-private) so the M5.5 lifted-only arms in
