@@ -53,6 +53,16 @@ enum StubApplicationArity {
         guard let callee = CalleeReference(evidence: evidence) else {
             return "\(evidence.displayName) is a mutating method, so it returns no value for the law to compare"
         }
+        // `monotonicity` sorts a drawn pair with `<`. An Optional carrier cannot be ordered, and
+        // the compiler reports it as an inference failure on the closure parameter — so saying so
+        // here is the difference between a reader looking at optionality and looking at the
+        // template. Same split as the arity reasons below.
+        if suggestion.templateName == "monotonicity",
+           let carrier = InteractiveTriage.paramType(from: evidence.signature),
+           FloatingPointEquatableTypes.isOrderableCarrier(typeText: carrier) == false {
+            return "\(evidence.displayName) takes \(carrier), and 'monotonicity' orders its "
+                + "drawn pair with `<` — an Optional is not Comparable"
+        }
         guard !callee.accepts(applicationArity: arity) else { return nil }
         let needs = callee.applicationArity
         let receiver = callee.isInstanceMethod ? " (a receiver plus \(needs - 1))" : ""
