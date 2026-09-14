@@ -353,12 +353,43 @@ extension FunctionScannerVisitor {
     /// a nonisolated member of a `@MainActor` type are different facts, and only the innermost
     /// one that speaks is the answer.
     ///
-    /// `nonisolated` is deliberately not modelled. Missing it makes an emitted test hop onto an
-    /// actor it did not need, which compiles and costs a context switch per trial; reading it
-    /// wrongly would omit a hop the test does need, which does not compile. The asymmetry decides
-    /// the direction, and no corpus subject spells it on a candidate.
+    /// **`nonisolated` overrides an enclosing actor, and is now modelled.**
+    ///
+    /// It was deliberately skipped, on an asymmetry that still holds: missing it makes an emitted
+    /// test hop onto an actor it did not need, which compiles and costs a context switch per
+    /// trial, while *inferring* nonisolation wrongly would omit a hop the test does need, which
+    /// does not compile.
+    ///
+    /// **The clause that expired is the last one — "no corpus subject spells it on a candidate".**
+    /// `SearchService.parseQuery(_:)` on SwiftMarkdownWiki is `nonisolated static func` inside an
+    /// `@Observable @MainActor` type, and the emitted totality stub wrapped it in
+    /// `await MainActor.run { … }`: a hop onto an actor the declaration had explicitly opted out
+    /// of. It compiles, so nothing went red.
+    ///
+    /// And the asymmetry does not argue against reading the keyword, only against guessing at it.
+    /// An explicit `nonisolated` modifier is unambiguous — there is no wrong reading of a keyword
+    /// that is either present or absent — so the risk the original note weighed does not apply to
+    /// this arm. `nonisolated(unsafe)` is matched too; it says the same thing about isolation and
+    /// differs only in what it waives.
     func resolvedGlobalActor(of node: FunctionDeclSyntax) -> String? {
-        Self.globalActor(of: node.attributes)
+        guard Self.declaresNonisolated(node.modifiers) == false else { return nil }
+        return Self.globalActor(of: node.attributes)
             ?? enclosingTypeAccess.reversed().compactMap(\.globalActor).first
+    }
+
+    /// Whether this **function declaration** carries `nonisolated`, in any of its spellings.
+    ///
+    /// **Named `declaresNonisolated` and not `isNonisolated`, deliberately.**
+    /// `DeferralFalsifierTests` resolves a deferral's falsifier by last dotted component, so a
+    /// symbol named `isNonisolated` anywhere in `Sources/` resolves the standing falsifier
+    /// `IndexedTypeShape.isNonisolated` — and that deferral is about isolation modifiers on a
+    /// **type**, which this repo still does not record. Sharing the leaf name would report a
+    /// true claim as stale, which is the false alarm that suite's own header accepts as the
+    /// price of matching wide.
+    ///
+    /// The name is also simply more accurate: this reads a modifier list, it does not describe
+    /// a thing that *is* nonisolated.
+    static func declaresNonisolated(_ modifiers: DeclModifierListSyntax) -> Bool {
+        modifiers.contains { $0.name.text == "nonisolated" }
     }
 }
