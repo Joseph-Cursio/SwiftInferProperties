@@ -372,13 +372,24 @@ extension FunctionScannerVisitor {
     /// this arm. `nonisolated(unsafe)` is matched too; it says the same thing about isolation and
     /// differs only in what it waives.
     func resolvedGlobalActor(of node: FunctionDeclSyntax) -> String? {
-        guard Self.isNonisolated(node.modifiers) == false else { return nil }
+        guard Self.declaresNonisolated(node.modifiers) == false else { return nil }
         return Self.globalActor(of: node.attributes)
             ?? enclosingTypeAccess.reversed().compactMap(\.globalActor).first
     }
 
-    /// Whether the declaration carries `nonisolated`, in any of its spellings.
-    static func isNonisolated(_ modifiers: DeclModifierListSyntax) -> Bool {
+    /// Whether this **function declaration** carries `nonisolated`, in any of its spellings.
+    ///
+    /// **Named `declaresNonisolated` and not `isNonisolated`, deliberately.**
+    /// `DeferralFalsifierTests` resolves a deferral's falsifier by last dotted component, so a
+    /// symbol named `isNonisolated` anywhere in `Sources/` resolves the standing falsifier
+    /// `IndexedTypeShape.isNonisolated` — and that deferral is about isolation modifiers on a
+    /// **type**, which this repo still does not record. Sharing the leaf name would report a
+    /// true claim as stale, which is the false alarm that suite's own header accepts as the
+    /// price of matching wide.
+    ///
+    /// The name is also simply more accurate: this reads a modifier list, it does not describe
+    /// a thing that *is* nonisolated.
+    static func declaresNonisolated(_ modifiers: DeclModifierListSyntax) -> Bool {
         modifiers.contains { $0.name.text == "nonisolated" }
     }
 }

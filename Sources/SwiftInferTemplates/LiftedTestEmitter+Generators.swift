@@ -48,6 +48,23 @@ public extension LiftedTestEmitter {
         if let rawType = RawType(typeName: typeName) {
             return rawType.edgeBiasedGeneratorExpression ?? rawType.generatorExpression
         }
+        // **Ask the kit before giving up.** `DerivationStrategist.composedGenerator` already resolves
+        // Foundation value types outside the raw-type set — `Data`, `URL`, `UUID`, `Decimal`,
+        // `Date`, `Character` — along with optionals, arrays, sets and dictionaries over them,
+        // and the typealiases (`TimeInterval`, `CGFloat`, `unichar`). It has been `public` since
+        // v3.3.0 and this emitter never called it.
+        //
+        // **Measured on SwiftMarkdownWiki: 10 of 21 emitted stubs carried a `.todo` generator,
+        // and the kit already had a generator for the parameter type of most of them.** The gap
+        // was never a missing generator; it was a consumer that asked `RawType` and then stopped.
+        // `Gen<Data>.data()` has existed since v3.11.0.
+        //
+        // `resolve` is left at its default, so this arm answers only for types the kit knows
+        // outright. Project types keep the `.todo`, which is the `GeneratorResolver`'s job and
+        // reaches this emitter by a different route.
+        if let composed = DerivationStrategist.composedGenerator(forTypeName: typeName) {
+            return composed.expression
+        }
         return "\(typeName).gen()\(todoGeneratorMarker)"
     }
 
