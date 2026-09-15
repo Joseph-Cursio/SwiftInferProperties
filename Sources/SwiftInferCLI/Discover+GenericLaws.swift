@@ -172,7 +172,7 @@ extension SwiftInferCommand.Discover {
         return Suggestion(
             templateName: "determinism",
             evidence: [evidence],
-            score: Score(advisorySignals: [signal]),
+            score: Score(advisorySignals: [signal] + accessBlockerSignals(for: accessRestriction)),
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(
                 whySuggested: ["\(evidence.displayName) \(evidence.signature)", signal.formattedLine],
@@ -183,6 +183,20 @@ extension SwiftInferCommand.Discover {
             ),
             carrier: summary.containingTypeName
         )
+    }
+
+    /// The access signal a template row gets from `withAccessRestrictionCaveats`, for a law that
+    /// pass never sees.
+    ///
+    /// **The prose caveat was copied here verbatim and the signal was not.** The stub file's
+    /// `Access:` header and `StructuralBlocker` both key on `.subjectNotVisibleToTests`, not on
+    /// caveat text — so a `private` member's determinism stub failed to compile with no
+    /// explanation, the defect #428 fixed for every template row (#465). Weight 0, as there: the
+    /// tier is unchanged, because the remedy is to lift or widen and demoting would hide it.
+    private static func accessBlockerSignals(for restriction: AccessRestriction?) -> [Signal] {
+        guard let restriction, blocksEveryTest(restriction) else { return [] }
+        let detail = "no test can name the subject: \(restriction.remedy)"
+        return [Signal(kind: .subjectNotVisibleToTests, weight: 0, detail: detail)]
     }
 
     /// The renderer's `Evidence` row: the templates' own `inferenceEvidence`, not a copy of it.
