@@ -147,6 +147,6 @@ struct StubApplicationArityTests {
         // Totality has no number (#464): it calls once and discards the result.
         #expect(StubApplicationArity.forTemplate("predicate") == nil)
         #expect(StubApplicationArity.forTemplate("input-totality") == nil)
-        #expect(StubApplicationArity.arityFreeTemplates == ["predicate", "input-totality"])
+        #expect(StubApplicationArity.arityFreeTemplates == ["predicate", "input-totality", "determinism"])
     }
 }

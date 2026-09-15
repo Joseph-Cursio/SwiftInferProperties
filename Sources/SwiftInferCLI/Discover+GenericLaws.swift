@@ -35,6 +35,17 @@ extension SwiftInferCommand.Discover {
             }
         })
 
+        // **A restricted function is in `summaries` too**, and it is met there first. Since privacy
+        // stopped gating the scan, every access-restricted function enters `corpus.summaries` as
+        // well as `restrictedFunctions` — so the loop below synthesized its law with no restriction,
+        // `seen` then skipped it in the restricted loop, and the law went out with neither the
+        // remedy caveat nor the signal the stub's `Access:` header reads. Joined on the exact
+        // coordinate, as `withAccessRestrictionCaveats` joins, so a namesake cannot lend its
+        // verdict. Measured on SwiftMarkdownWiki once calls were qualified: 13 determinism stubs
+        // failed with "inaccessible due to 'private' protection level" and no header (#465).
+        let restrictionByCoordinate = Dictionary(
+            restrictedFunctions.map { (coordinate(of: $0.summary.location), $0.restriction) }
+        ) { first, _ in first }
         var synthesized: [Suggestion] = []
         var seen: Set<String> = []
         for summary in summaries {
@@ -42,7 +53,8 @@ extension SwiftInferCommand.Discover {
             guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
             guard qualifiesForDeterminism(summary) else { continue }
             seen.insert(key)
-            synthesized.append(determinismSuggestion(for: summary))
+            let restriction = restrictionByCoordinate[coordinate(of: summary.location)]
+            synthesized.append(determinismSuggestion(for: summary, accessRestriction: restriction))
         }
 
         // A seed naming a function the scan set aside is an explicit request from a producer that
@@ -172,7 +184,7 @@ extension SwiftInferCommand.Discover {
         return Suggestion(
             templateName: "determinism",
             evidence: [evidence],
-            score: Score(advisorySignals: [signal]),
+            score: Score(advisorySignals: [signal] + accessBlockerSignals(for: accessRestriction)),
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(
                 whySuggested: ["\(evidence.displayName) \(evidence.signature)", signal.formattedLine],
@@ -185,30 +197,30 @@ extension SwiftInferCommand.Discover {
         )
     }
 
-    /// Builds the renderer's `Evidence` row from a summary: a labelled display
-    /// name (`add(_:_:)`) and a trimmed signature (`(Int, Int) -> Int`, or
-    /// `(Int) async -> String` for a clock-deterministic async candidate).
-    /// Mirrors the templates' internal `inferenceEvidence` (not accessible
-    /// cross-module) — including its ` async` marker, which the acceptance
-    /// path's `deterministicStub` reads to emit the awaited stub form. Sync
-    /// signatures are byte-identical to before (identity hashes stable);
-    /// async candidates are new with the Phase 4 relaxation, so their
-    /// identities have no prior corpus to drift from.
+    /// The access signal a template row gets from `withAccessRestrictionCaveats`, for a law that
+    /// pass never sees.
+    ///
+    /// **The prose caveat was copied here verbatim and the signal was not.** The stub file's
+    /// `Access:` header and `StructuralBlocker` both key on `.subjectNotVisibleToTests`, not on
+    /// caveat text — so a `private` member's determinism stub failed to compile with no
+    /// explanation, the defect #428 fixed for every template row (#465). Weight 0, as there: the
+    /// tier is unchanged, because the remedy is to lift or widen and demoting would hide it.
+    private static func accessBlockerSignals(for restriction: AccessRestriction?) -> [Signal] {
+        guard let restriction, blocksEveryTest(restriction) else { return [] }
+        let detail = "no test can name the subject: \(restriction.remedy)"
+        return [Signal(kind: .subjectNotVisibleToTests, weight: 0, detail: detail)]
+    }
+
+    /// The renderer's `Evidence` row: the templates' own `inferenceEvidence`, not a copy of it.
+    ///
+    /// **The copy that used to live here kept the display name, signature and location and
+    /// dropped every fact about the declaring type** — `qualifiedTypeName`, `isInstanceMethod`,
+    /// `globalActor`, `isMutatingMethod`, `isComputedProperty`. Those are what `CalleeReference`
+    /// qualifies a call and draws a receiver from, so no determinism stub for a type member
+    /// could compile (#465). The display name and signature are byte-identical to the copy's,
+    /// so no suggestion identity moves.
     private static func makeEvidence(for summary: FunctionSummary) -> Evidence {
-        let labels = summary.parameters.map { "\($0.label ?? "_"):" }.joined()
-        let displayName = "\(summary.name)(\(labels))"
-        let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
-        let returnType = summary.returnTypeText ?? "Void"
-        // Effect markers in Swift order (`async throws`); the accept path's
-        // `deterministicStub` reads them to emit the awaited / `try?` stub form.
-        let asyncMarker = summary.isAsync ? " async" : ""
-        let throwsMarker = summary.isThrows ? " throws" : ""
-        let effectMarker = asyncMarker + throwsMarker
-        return Evidence(
-            displayName: displayName,
-            signature: "(\(paramTypes))\(effectMarker) -> \(returnType)",
-            location: summary.location
-        )
+        summary.inferenceEvidence
     }
 
     private static func canonicalInput(for summary: FunctionSummary, evidence: Evidence) -> String {

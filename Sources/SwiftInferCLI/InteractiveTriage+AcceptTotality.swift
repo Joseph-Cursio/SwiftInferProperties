@@ -58,7 +58,7 @@ extension InteractiveTriage {
     ) -> String? {
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
-              let argumentTypes = totalityArgumentTypes(callee: callee, evidence: evidence) else {
+              let argumentTypes = arityFreeArgumentTypes(callee: callee, evidence: evidence) else {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
@@ -74,12 +74,14 @@ extension InteractiveTriage {
     /// The type of each argument the call needs, in order — the **declaring** type for an
     /// instance method's receiver, then each parameter — or `nil` when the call cannot be spelled.
     ///
-    /// The receiver is the declaring type and not the carrier, the rule verify's predicate
-    /// composer settled first (`theReceiverTypeIsTheDeclaringTypeNotTheCarrier`).
+    /// Shared by every arity-free law: totality here, and determinism, which calls the subject
+    /// twice with the same arguments (#465). The receiver is the declaring type and not the
+    /// carrier, the rule verify's predicate composer settled first
+    /// (`theReceiverTypeIsTheDeclaringTypeNotTheCarrier`).
     ///
     /// Declines exactly what `StubApplicationArity.arityFreeDeclineReason` explains, so a reader
     /// is never told "no stub writeout available" for a subject that simply cannot be called.
-    static func totalityArgumentTypes(callee: CalleeReference, evidence: Evidence) -> [String]? {
+    static func arityFreeArgumentTypes(callee: CalleeReference, evidence: Evidence) -> [String]? {
         guard callee.applicationArity > 0 else { return nil }
         let parameters = parameterTypes(from: evidence.signature)
         guard parameters.count == callee.argumentLabels.count,
