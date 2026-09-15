@@ -303,28 +303,38 @@ extension InteractiveTriage {
         // TemplateEngine writeouts *in the same directory*); this applies the same convention to
         // the arm that reaches a build.
         let template = sanitizeForFileName(suggestion.templateName)
-        switch suggestion.templateName {
-        case "round-trip":
-            guard let reverse = suggestion.evidence.dropFirst().first,
-                  let reverseName = functionName(from: reverse.displayName) else {
+        let unqualified: String = {
+            switch suggestion.templateName {
+            case "round-trip":
+                guard let reverse = suggestion.evidence.dropFirst().first,
+                      let reverseName = functionName(from: reverse.displayName) else {
+                    return "\(funcName)_\(template).swift"
+                }
+                return "\(funcName)_\(reverseName)_\(template).swift"
+
+            case "invariant-preservation":
+                // File name carries the keypath suffix so distinct invariants
+                // on the same function don't overwrite each other.
+                guard let keyPath = invariantKeypath(from: evidence.signature) else {
+                    return "\(funcName)_\(template).swift"
+                }
+                let suffix = keyPath
+                    .replacingOccurrences(of: "\\.", with: "")
+                    .replacingOccurrences(of: ".", with: "_")
+                return "\(funcName)_\(suffix)_\(template).swift"
+
+            default:
                 return "\(funcName)_\(template).swift"
             }
-            return "\(funcName)_\(reverseName)_\(template).swift"
-
-        case "invariant-preservation":
-            // File name carries the keypath suffix so distinct invariants
-            // on the same function don't overwrite each other.
-            guard let keyPath = invariantKeypath(from: evidence.signature) else {
-                return "\(funcName)_\(template).swift"
-            }
-            let suffix = keyPath
-                .replacingOccurrences(of: "\\.", with: "")
-                .replacingOccurrences(of: ".", with: "_")
-            return "\(funcName)_\(suffix)_\(template).swift"
-
-        default:
-            return "\(funcName)_\(template).swift"
-        }
+        }()
+        // **The declaring type belongs in the name too (#467).** The name above is unique per
+        // function and template, not per *type*, and `Data.write(options: .atomic)` replaces
+        // silently — so five `matches(_:)` predicates on five types wrote one file, and the census
+        // counted 149 stubs lost that way. Every one sampled was a protocol-shaped family: `describes(_:)`
+        // on three enums in one file, `combine(_:_:)` on `Sum`, `Rotation` and `Peak`. A free
+        // function has no declaring type, keeps its name, and so every existing golden is unchanged.
+        guard let owner = evidence.qualifiedTypeName else { return unqualified }
+        return "\(sanitizeForFileName(owner))_\(unqualified)"
     }
 
     /// Replace `/`, whitespace, and other path-hostile characters with
