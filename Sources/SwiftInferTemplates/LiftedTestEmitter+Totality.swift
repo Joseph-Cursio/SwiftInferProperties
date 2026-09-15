@@ -43,8 +43,36 @@ extension LiftedTestEmitter {
         isThrowing: Bool,
         isAsync: Bool
     ) -> String {
+        total(callee: callee, seed: seed, generators: [generator], isThrowing: isThrowing, isAsync: isAsync)
+    }
+
+    /// Totality at **any** application arity: one generator per argument the call needs, the
+    /// receiver's first for an instance method.
+    ///
+    /// ## Why totality, alone in the catalog, takes every arity
+    ///
+    /// Every other arm composes or compares, so its arity is part of its law: `f(f(x))` is only
+    /// defined when the law applies one argument. Totality does neither — it calls once and
+    /// discards the result — so "returns or throws for every input" is equally well-formed for
+    /// `parse(_:)`, `isNeighbor(_:of:)` and `graph.matchesSearch(node)`. Holding it to arity 1
+    /// declined **497 entailed laws in the corpus funnel census, the largest single loss it
+    /// measured** (#464), while verify's predicate composer already drew one value per parameter
+    /// and one for the receiver.
+    ///
+    /// One generator renders exactly as the single-generator overload always did, so no existing
+    /// stub changes shape. Two or more draw a tuple — the multi-line sample the determinism arm
+    /// uses — and the call takes `args.0`, `args.1`, … in argument order.
+    public static func total(
+        callee: CalleeReference,
+        seed: SamplingSeed.Value,
+        generators: [String],
+        isThrowing: Bool,
+        isAsync: Bool
+    ) -> String {
         let testFunctionName = "\(callee.bareName)_isTotal"
-        var invocation = callee.call("value")
+        let isTuple = generators.count > 1
+        let bind = isTuple ? "args" : "value"
+        var invocation = callee.call(isTuple ? generators.indices.map { "args.\($0)" } : ["value"])
         if isAsync { invocation = "await \(invocation)" }
         if isThrowing { invocation = "try? \(invocation)" }
         // `_ =` discards the result: the law is that we GOT one, not what it was.
@@ -54,13 +82,26 @@ extension LiftedTestEmitter {
         // not need to: awaiting an isolated async function from a nonisolated context performs the
         // hop by itself. Wrapping it would emit code that does not compile, which is the defect
         // #432 fixed in the other direction.
-        let property = isAsync ? "{ value in \(body) }" : "{ value in \(callee.isolated(body)) }"
+        let property = isAsync ? "{ \(bind) in \(body) }" : "{ \(bind) in \(callee.isolated(body)) }"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
             seed: seed,
-            sampleExpression: "{ rng in (\(generator)).run(using: &rng) }",
+            sampleExpression: totalitySample(generators: generators),
             propertyExpression: property,
             failureLabel: "\(callee.displaySignature) failed totality"
         )
+    }
+
+    /// One draw for a single generator; a tuple of draws, in argument order, for several.
+    private static func totalitySample(generators: [String]) -> String {
+        guard generators.count > 1 else {
+            return "{ rng in (\(generators.first ?? "")).run(using: &rng) }"
+        }
+        let draws = generators.indices.map { index in
+            "                    let arg\(index) = (\(generators[index])).run(using: &rng)"
+        }
+        let slots = generators.indices.map { "arg\($0)" }.joined(separator: ", ")
+        return (["{ rng in"] + draws + ["                    return (\(slots))", "                }"])
+            .joined(separator: "\n")
     }
 }
