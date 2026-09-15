@@ -92,7 +92,7 @@ extension InteractiveTriage {
         \(codableLine)
         // Suggestion identity: \(suggestion.identity.display)
         // Template: \(suggestion.templateName)
-        \(Self.lawClassLine(for: suggestion))\(accessLine)
+        \(Self.lawClassLine(for: suggestion, isScaffold: Self.isScaffold(stub)))\(accessLine)
         \(foundationImport)import Testing
         import PropertyBased
         import PropertyLawKit
@@ -147,7 +147,24 @@ extension InteractiveTriage {
     /// impurity**, because it does not: the emitter compares strictly unless the return type is
     /// itself floating-point, so a pure function returning `[Double]` that holds a NaN fails
     /// (`[Double.nan] == [Double.nan]` is false), as does a result whose `==` compares identity.
-    static func lawClassLine(for suggestion: Suggestion) -> String {
+    ///
+    /// ## A scaffold is not a law at all (#466)
+    ///
+    /// A `replay-idempotence` stub cannot build its own fixture, so it records an issue on
+    /// purpose, naming the steps left to complete, and fails until a person completes them. It
+    /// used to carry the CONJECTURE line — *"a pass means no counterexample was found"* — on a
+    /// file that can never pass as written.
+    /// Checked first and read from the stub rather than from the template name, so the line
+    /// follows what the file does: `isScaffold(_:)`.
+    static func lawClassLine(for suggestion: Suggestion, isScaffold: Bool = false) -> String {
+        if isScaffold {
+            return """
+            // Law class: SCAFFOLD — not a law yet. It records an issue on purpose until you
+            //            complete the steps it lists, so it fails by design: red here is work
+            //            left to do, not a verdict about the code.
+
+            """
+        }
         if Refutability.isRefutable(suggestion) == false {
             return """
             // Law class: TAUTOLOGY — true of any pure implementation, so a pass only means no hidden
@@ -171,6 +188,17 @@ extension InteractiveTriage {
         //            counterexamples lie outside the generator's reach passes while being false.
 
         """
+    }
+
+    /// Whether a stub body is a scaffold: a test that records an issue on purpose, its message
+    /// opening with the to-do marker, until a person completes it.
+    ///
+    /// Read from the body rather than from the template name because the property belongs to the
+    /// file, not the template — today only the two replay emitters write one
+    /// (`LiftedTestEmitter.replayIdempotent`, `replayKeyBuilder`), and a template that starts
+    /// writing one tomorrow is labelled correctly without anyone remembering this function.
+    static func isScaffold(_ stub: String) -> Bool {
+        stub.contains("Issue.record(\"TODO")
     }
 
     /// The access caveat block, or empty for a subject a test can reach.
