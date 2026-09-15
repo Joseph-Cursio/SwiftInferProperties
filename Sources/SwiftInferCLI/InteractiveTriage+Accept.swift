@@ -101,16 +101,21 @@ extension InteractiveTriage {
         if suggestion.templateName == "determinism" {
             return deterministicStub(for: suggestion, customGenerator: customGenerator)
         }
-        return templateStub(for: suggestion)
+        return templateStub(for: suggestion, customGenerator: customGenerator)
     }
 
     /// Dispatches a signature-pattern template suggestion to its stub emitter.
-    private static func templateStub(for suggestion: Suggestion) -> String? {
+    private static func templateStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
         // The role-entailed arms are consulted first and live in their own file. Keeping them out
         // of this switch is what holds it under SwiftLint's cyclomatic ceiling, and it groups the
         // laws a correct implementation cannot fail rather than scattering them among the
         // conjectures.
-        if let entailed = entailedTemplateStub(for: suggestion) { return entailed }
+        if let entailed = entailedTemplateStub(for: suggestion, customGenerator: customGenerator) {
+            return entailed
+        }
         if let algebraic = algebraicTemplateStub(for: suggestion) { return algebraic }
         switch suggestion.templateName {
         case "idempotence":
