@@ -35,6 +35,17 @@ extension SwiftInferCommand.Discover {
             }
         })
 
+        // **A restricted function is in `summaries` too**, and it is met there first. Since privacy
+        // stopped gating the scan, every access-restricted function enters `corpus.summaries` as
+        // well as `restrictedFunctions` — so the loop below synthesized its law with no restriction,
+        // `seen` then skipped it in the restricted loop, and the law went out with neither the
+        // remedy caveat nor the signal the stub's `Access:` header reads. Joined on the exact
+        // coordinate, as `withAccessRestrictionCaveats` joins, so a namesake cannot lend its
+        // verdict. Measured on SwiftMarkdownWiki once calls were qualified: 13 determinism stubs
+        // failed with "inaccessible due to 'private' protection level" and no header (#465).
+        let restrictionByCoordinate = Dictionary(
+            restrictedFunctions.map { (coordinate(of: $0.summary.location), $0.restriction) }
+        ) { first, _ in first }
         var synthesized: [Suggestion] = []
         var seen: Set<String> = []
         for summary in summaries {
@@ -42,7 +53,8 @@ extension SwiftInferCommand.Discover {
             guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
             guard qualifiesForDeterminism(summary) else { continue }
             seen.insert(key)
-            synthesized.append(determinismSuggestion(for: summary))
+            let restriction = restrictionByCoordinate[coordinate(of: summary.location)]
+            synthesized.append(determinismSuggestion(for: summary, accessRestriction: restriction))
         }
 
         // A seed naming a function the scan set aside is an explicit request from a producer that

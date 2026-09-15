@@ -74,4 +74,59 @@ struct DeterminismAccessSignalTests {
         let reachable = try Self.law(restriction: .internalOrSPI)
         #expect(blocked.score.total == reachable.score.total)
     }
+
+    // MARK: - The shape a real scan produces
+
+    /// **The shape the tests above missed, and the one the scan actually hands over.** Since
+    /// privacy stopped gating discovery, a restricted function is in `summaries` AND in
+    /// `restrictedFunctions`. It is met in `summaries` first — so the fixtures above, which passed it
+    /// only as restricted, exercised a path no real run takes, and the signal they pinned never
+    /// reached a stub: re-measured on SwiftMarkdownWiki, 13 determinism stubs failed with
+    /// "inaccessible due to 'private' protection level" and no `Access:` header.
+    @Test func aRestrictedFunctionAlsoInSummariesCarriesTheSignal() throws {
+        let manifest = SeedManifest(seeds: [
+            SeedManifest.Seed(file: "Tokenizer.swift", line: 54, symbol: "tokenizeLine", kind: .pureFunction)
+        ])
+        let laws = SwiftInferCommand.Discover.synthesizeGenericLaws(
+            for: manifest,
+            summaries: [Self.summary],
+            covered: [],
+            diagnostics: SilentDiagnostics(),
+            restrictedFunctions: [RestrictedFunction(summary: Self.summary, restriction: .notVisibleToTests)]
+        )
+        let law = try #require(laws.first { $0.templateName == "determinism" })
+        #expect(laws.filter { $0.templateName == "determinism" }.count == 1, "met once, not once per list")
+        #expect(law.score.signals.contains { $0.kind == .subjectNotVisibleToTests })
+        #expect(law.explainability.whyMightBeWrong.first?.hasPrefix("NO TEST CAN RUN THIS LAW AS WRITTEN") == true)
+    }
+
+    /// The join is on the declaration's exact coordinate: a namesake elsewhere in the file that is
+    /// restricted must not lend a visible function its verdict — the collision
+    /// `withAccessRestrictionCaveats` was narrowed to exact coordinates to stop.
+    @Test func aRestrictedNamesakeDoesNotLendItsVerdict() throws {
+        let namesake = FunctionSummary(
+            name: "tokenizeLine",
+            parameters: Self.summary.parameters,
+            returnTypeText: "[Token]",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: true,
+            location: SourceLocation(file: "Tokenizer.swift", line: 120, column: 5),
+            containingTypeName: "Other",
+            bodySignals: .empty
+        )
+        let manifest = SeedManifest(seeds: [
+            SeedManifest.Seed(file: "Tokenizer.swift", line: 54, symbol: "tokenizeLine", kind: .pureFunction)
+        ])
+        let laws = SwiftInferCommand.Discover.synthesizeGenericLaws(
+            for: manifest,
+            summaries: [Self.summary],
+            covered: [],
+            diagnostics: SilentDiagnostics(),
+            restrictedFunctions: [RestrictedFunction(summary: namesake, restriction: .notVisibleToTests)]
+        )
+        let law = try #require(laws.first { $0.templateName == "determinism" })
+        #expect(law.score.signals.contains { $0.kind == .subjectNotVisibleToTests } == false)
+    }
 }
