@@ -31,7 +31,14 @@ extension FunctionSummary {
     ///
     /// Previously copy-pasted as `makeEvidence(_:)` / `displayName(for:)` /
     /// `signature(for:)` across seven-plus templates.
-    var inferenceEvidence: Evidence {
+    ///
+    /// **Public because the eighth copy lived in another module and was the one that went
+    /// wrong.** `Discover+GenericLaws` could not see this property, so it rebuilt the row by
+    /// hand — display name, signature and location, and nothing else. Every determinism law
+    /// therefore reached the stub emitter with no declaring type, no receiver and no isolation,
+    /// and not one determinism stub for a type member compiled across the corpus funnel census:
+    /// **33 of 33 that built were free functions** (#465).
+    public var inferenceEvidence: Evidence {
         Evidence(
             displayName: inferenceDisplayName,
             signature: inferenceSignature,

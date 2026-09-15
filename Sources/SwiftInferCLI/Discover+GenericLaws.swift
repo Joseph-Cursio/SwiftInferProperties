@@ -185,30 +185,16 @@ extension SwiftInferCommand.Discover {
         )
     }
 
-    /// Builds the renderer's `Evidence` row from a summary: a labelled display
-    /// name (`add(_:_:)`) and a trimmed signature (`(Int, Int) -> Int`, or
-    /// `(Int) async -> String` for a clock-deterministic async candidate).
-    /// Mirrors the templates' internal `inferenceEvidence` (not accessible
-    /// cross-module) — including its ` async` marker, which the acceptance
-    /// path's `deterministicStub` reads to emit the awaited stub form. Sync
-    /// signatures are byte-identical to before (identity hashes stable);
-    /// async candidates are new with the Phase 4 relaxation, so their
-    /// identities have no prior corpus to drift from.
+    /// The renderer's `Evidence` row: the templates' own `inferenceEvidence`, not a copy of it.
+    ///
+    /// **The copy that used to live here kept the display name, signature and location and
+    /// dropped every fact about the declaring type** — `qualifiedTypeName`, `isInstanceMethod`,
+    /// `globalActor`, `isMutatingMethod`, `isComputedProperty`. Those are what `CalleeReference`
+    /// qualifies a call and draws a receiver from, so no determinism stub for a type member
+    /// could compile (#465). The display name and signature are byte-identical to the copy's,
+    /// so no suggestion identity moves.
     private static func makeEvidence(for summary: FunctionSummary) -> Evidence {
-        let labels = summary.parameters.map { "\($0.label ?? "_"):" }.joined()
-        let displayName = "\(summary.name)(\(labels))"
-        let paramTypes = summary.parameters.map(\.typeText).joined(separator: ", ")
-        let returnType = summary.returnTypeText ?? "Void"
-        // Effect markers in Swift order (`async throws`); the accept path's
-        // `deterministicStub` reads them to emit the awaited / `try?` stub form.
-        let asyncMarker = summary.isAsync ? " async" : ""
-        let throwsMarker = summary.isThrows ? " throws" : ""
-        let effectMarker = asyncMarker + throwsMarker
-        return Evidence(
-            displayName: displayName,
-            signature: "(\(paramTypes))\(effectMarker) -> \(returnType)",
-            location: summary.location
-        )
+        summary.inferenceEvidence
     }
 
     private static func canonicalInput(for summary: FunctionSummary, evidence: Evidence) -> String {
