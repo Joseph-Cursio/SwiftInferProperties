@@ -132,7 +132,31 @@ extension InteractiveTriage {
     /// It does not make a conjecture true, catch a false pass, or change which laws are emitted.
     /// It tells the reader which kind of claim a green tick is, which is the whole of the fix —
     /// #453's other two directions were measured and declined on population.
+    ///
+    /// ## Three classes, not two (#466)
+    ///
+    /// This was a two-way switch — entailed, else conjecture — so `determinism`, the one member of
+    /// `Refutability.tautologicalTemplates`, was labelled the class it is least like: a
+    /// CONJECTURE, "a CORRECT implementation can fail it", on `f(x) == f(x)`. The terminal
+    /// renderer never made that mistake (`SuggestionRenderer` gates its conjecture caveat on
+    /// `isRefutable && !isRoleEntailed`), so only the file a reader keeps said it.
+    ///
+    /// A passing determinism test is the weakest green in the target, and its failure is the
+    /// informative outcome: both measured in the corpus funnel census were genuine hidden state —
+    /// a process-wide counter bumped per call. **The line does not claim a failure proves
+    /// impurity**, because it does not: the emitter compares strictly unless the return type is
+    /// itself floating-point, so a pure function returning `[Double]` that holds a NaN fails
+    /// (`[Double.nan] == [Double.nan]` is false), as does a result whose `==` compares identity.
     static func lawClassLine(for suggestion: Suggestion) -> String {
+        if Refutability.isRefutable(suggestion) == false {
+            return """
+            // Law class: TAUTOLOGY — true of any pure implementation, so a pass only means no hidden
+            //            state showed up in the trials drawn. A failure means either the subject
+            //            is not pure, or its result's `==` is not reflexive (a NaN inside a
+            //            collection, an identity comparison).
+
+            """
+        }
         if Refutability.isRoleEntailed(suggestion) {
             return """
             // Law class: ENTAILED — a correct implementation cannot fail this, so a pass is a
