@@ -56,9 +56,8 @@ extension InteractiveTriage {
             }
             return nil
         }
-        let fileName = stubFileName(for: suggestion) ?? "\(suggestion.identity.normalized).swift"
-        let path = context.generatedRoot
-            .appendingPathComponent("SwiftInfer/\(suggestion.templateName)/\(fileName)")
+        let path = stubDestination(for: suggestion, context: context)
+        let fileName = path.lastPathComponent
         if context.dryRun {
             context.output.write("[dry-run] would write \(path.path)")
             return nil
@@ -66,7 +65,8 @@ extension InteractiveTriage {
         let contents = wrappedFileContents(
             stub: stub,
             suggestion: suggestion,
-            moduleUnderTest: context.moduleUnderTest
+            moduleUnderTest: context.moduleUnderTest,
+            fileName: fileName
         )
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
