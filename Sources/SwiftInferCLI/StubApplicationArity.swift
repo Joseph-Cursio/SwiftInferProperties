@@ -46,7 +46,11 @@ enum StubApplicationArity {
     }
 
     /// Templates whose law holds at every application arity of one or more.
-    static let arityFreeTemplates: Set<String> = ["predicate", "input-totality"]
+    ///
+    /// `determinism` joined with #465: `f(args) == f(args)` composes nothing either — it calls the
+    /// subject twice with the same arguments — so an instance method or a function of several
+    /// parameters owes it exactly as a unary free function does.
+    static let arityFreeTemplates: Set<String> = ["predicate", "input-totality", "determinism"]
 
     /// Why this suggestion's subject cannot be called by its template, or `nil` when it can.
     ///
@@ -101,13 +105,13 @@ enum StubApplicationArity {
     /// Why a totality subject cannot be written, or `nil` when it can — the questions an
     /// arity-free law still has to ask once the number is gone.
     ///
-    /// Kept in step with `InteractiveTriage.totalityArgumentTypes`, which declines exactly these;
-    /// `ArityFreeTotalityTests` pins both sides of every row.
+    /// Kept in step with `InteractiveTriage.arityFreeArgumentTypes`, which declines exactly these;
+    /// `ArityFreeTotalityTests` and `DeterminismAcceptPathTests` pin both sides of every row.
     private static func arityFreeDeclineReason(callee: CalleeReference, evidence: Evidence) -> String? {
         // A static computed property or a static nullary function is called with nothing, so
         // there is no input for "every input" to range over.
         if callee.applicationArity == 0 {
-            return "\(callee.displaySignature) takes no arguments, so there is no input for totality "
+            return "\(callee.displaySignature) takes no arguments, so there is no input for the law "
                 + "to range over"
         }
         // An instance method's receiver is drawn from its declaring type; with none recorded

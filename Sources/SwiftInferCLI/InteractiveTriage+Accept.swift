@@ -139,51 +139,46 @@ extension InteractiveTriage {
     }
 
     /// Determinism stub for a seeded pure function `f: (P0, …) -> U`. Builds one
-    /// generator per parameter and emits `f(args) == f(args)`. Equality keys off
-    /// the return type. An `Int` parameter uses a *bounded* generator (see
+    /// generator per argument and emits `f(args) == f(args)`. Equality keys off
+    /// the return type. An `Int` argument uses a *bounded* generator (see
     /// `boundedDeterminismGenerator`) so unchecked arithmetic in `f` doesn't trap
     /// on overflow.
-    private static func deterministicStub(
+    ///
+    /// **Spelled through `CalleeReference`, like every other arm (#465).** This arm took the bare
+    /// function name and so wrote `tokenizeLine(value)` for a member of `SwiftTokenizer`; across
+    /// the corpus funnel census all 33 determinism stubs that compiled were free functions. A
+    /// static member is now qualified, and an instance method draws its receiver from the
+    /// declaring type ahead of its parameters — the same argument list, and the same declines,
+    /// as the totality arm (`arityFreeArgumentTypes`). Internal rather than private so the
+    /// accept path's behaviour can be tested without writing files.
+    static func deterministicStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)? = nil
     ) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let funcName = functionName(from: evidence.displayName) else {
+              let callee = CalleeReference(evidence: evidence),
+              let argumentTypes = arityFreeArgumentTypes(callee: callee, evidence: evidence) else {
             return nil
         }
         // Async / throwing candidates render as `(P0) async throws -> U` (Swift
         // order) in the evidence signature — detect the markers, then strip them
-        // so the existing parameter/return extraction stays untouched. The emitter
-        // reassembles the effect prefix (`await` / `try?`) on the call.
+        // so the return-type extraction stays untouched. The emitter reassembles
+        // the effect prefix (`await` / `try?`) on the call.
         let isAsync = evidence.signature.contains(" async")
         let isThrows = evidence.signature.contains(" throws")
         let signature = evidence.signature
             .replacingOccurrences(of: " async throws ->", with: " ->")
             .replacingOccurrences(of: " async ->", with: " ->")
             .replacingOccurrences(of: " throws ->", with: " ->")
-        guard let returnTypeText = returnType(from: signature),
-              let parsed = functionParameters(
-                  displayName: evidence.displayName,
-                  signature: signature
-              ) else {
-            return nil
+        guard let returnTypeText = returnType(from: signature) else { return nil }
+        let generators = argumentTypes.map { typeName in
+            boundedDeterminismGenerator(forTypeName: typeName)
+                ?? chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)
         }
-        let parameters = parsed.map { parameter in
-            LiftedTestEmitter.DeterminismParameter(
-                label: parameter.label,
-                generator: boundedDeterminismGenerator(forTypeName: parameter.type)
-                    ?? chooseGenerator(
-                        for: suggestion,
-                        typeName: parameter.type,
-                        customGenerator: customGenerator
-                    )
-            )
-        }
-        let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.deterministic(
-            funcName: funcName,
-            parameters: parameters,
-            seed: seed,
+            callee: callee,
+            generators: generators,
+            seed: SamplingSeed.derive(from: suggestion.identity),
             equalityKind: equalityKind(forTypeText: returnTypeText),
             isAsync: isAsync,
             isThrows: isThrows
