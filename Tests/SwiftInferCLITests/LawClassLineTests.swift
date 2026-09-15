@@ -65,31 +65,59 @@ struct LawClassLineTests {
         #expect(entailed.contains("CONJECTURE") == false)
     }
 
+    /// `f(x) == f(x)` was labelled a CONJECTURE — "a CORRECT implementation can fail it" — because
+    /// this line had two classes and `determinism` is in neither of them (#466). It is the one
+    /// member of `Refutability.tautologicalTemplates`, the class furthest from a conjecture.
+    @Test func aTautologyIsNotCalledAConjecture() {
+        let line = InteractiveTriage.lawClassLine(for: Self.suggestion(template: "determinism"))
+        #expect(line.contains("TAUTOLOGY"))
+        #expect(line.contains("CONJECTURE") == false)
+        #expect(line.contains("ENTAILED") == false)
+    }
+
+    /// A tautology's pass says almost nothing, and the line must say so. Its failure is the
+    /// informative outcome — but it must not overclaim: a pure function whose result's `==` is not
+    /// reflexive (a NaN inside a collection) fails too, and a reader told "impure" would go hunting
+    /// for state that is not there.
+    @Test func aTautologySaysWhatAPassAndAFailureMean() {
+        let line = InteractiveTriage.lawClassLine(for: Self.suggestion(template: "determinism"))
+        #expect(line.contains("a pass only means no hidden"))
+        #expect(line.contains("not pure"))
+        #expect(line.contains("not reflexive"))
+    }
+
     /// The class is read from `Refutability`, not restated here — a guard that hardcodes the
     /// thing it guards only checks that two copies agree.
+    ///
+    /// **Three-way, and it was two-way when #466 shipped.** The earlier form asserted "ENTAILED
+    /// exactly when `isRoleEntailed`, CONJECTURE otherwise" over a list without `determinism` —
+    /// so it encoded the bug it was meant to guard against, and passed.
     @Test("every template classifies as Refutability says", arguments: [
         "idempotence", "input-totality", "predicate", "monotonicity",
-        "guard-domain", "commutativity", "role-closure", "filter-subset"
+        "guard-domain", "commutativity", "role-closure", "filter-subset", "determinism"
     ])
     func theLineAgreesWithRefutability(template: String) {
         let suggestion = Self.suggestion(template: template)
         let line = InteractiveTriage.lawClassLine(for: suggestion)
-        let entailed = Refutability.isRoleEntailed(suggestion)
+        let tautology = Refutability.isRefutable(suggestion) == false
+        let entailed = !tautology && Refutability.isRoleEntailed(suggestion)
+        let conjecture = !tautology && !entailed
+        #expect(line.contains("TAUTOLOGY") == tautology)
         #expect(line.contains("ENTAILED") == entailed)
-        #expect(line.contains("CONJECTURE") == !entailed)
+        #expect(line.contains("CONJECTURE") == conjecture)
     }
 
     /// Every emitted stub carries one — a header that is sometimes silent is worse than one that
     /// is always present, because a reader cannot tell absence from "not applicable".
     @Test func theLineIsNeverEmpty() {
-        for template in ["idempotence", "input-totality", "round-trip", "anything-unknown"] {
+        for template in ["idempotence", "input-totality", "round-trip", "determinism", "anything-unknown"] {
             #expect(InteractiveTriage.lawClassLine(for: Self.suggestion(template: template)).isEmpty == false)
         }
     }
 
     /// It is a comment block, so it cannot affect what the stub compiles to.
     @Test func itIsEntirelyComment() {
-        for template in ["idempotence", "input-totality"] {
+        for template in ["idempotence", "input-totality", "determinism"] {
             let line = InteractiveTriage.lawClassLine(for: Self.suggestion(template: template))
             let code = line.split(separator: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("//") }
             #expect(code.allSatisfy { $0.trimmingCharacters(in: .whitespaces).isEmpty })

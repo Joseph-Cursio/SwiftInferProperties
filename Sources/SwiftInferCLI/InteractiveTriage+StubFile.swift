@@ -92,7 +92,7 @@ extension InteractiveTriage {
         \(codableLine)
         // Suggestion identity: \(suggestion.identity.display)
         // Template: \(suggestion.templateName)
-        \(Self.lawClassLine(for: suggestion))\(accessLine)
+        \(Self.lawClassLine(for: suggestion, isScaffold: Self.isScaffold(stub)))\(accessLine)
         \(foundationImport)import Testing
         import PropertyBased
         import PropertyLawKit
@@ -132,7 +132,48 @@ extension InteractiveTriage {
     /// It does not make a conjecture true, catch a false pass, or change which laws are emitted.
     /// It tells the reader which kind of claim a green tick is, which is the whole of the fix —
     /// #453's other two directions were measured and declined on population.
-    static func lawClassLine(for suggestion: Suggestion) -> String {
+    ///
+    /// ## Three classes, not two (#466)
+    ///
+    /// This was a two-way switch — entailed, else conjecture — so `determinism`, the one member of
+    /// `Refutability.tautologicalTemplates`, was labelled the class it is least like: a
+    /// CONJECTURE, "a CORRECT implementation can fail it", on `f(x) == f(x)`. The terminal
+    /// renderer never made that mistake (`SuggestionRenderer` gates its conjecture caveat on
+    /// `isRefutable && !isRoleEntailed`), so only the file a reader keeps said it.
+    ///
+    /// A passing determinism test is the weakest green in the target, and its failure is the
+    /// informative outcome: both measured in the corpus funnel census were genuine hidden state —
+    /// a process-wide counter bumped per call. **The line does not claim a failure proves
+    /// impurity**, because it does not: the emitter compares strictly unless the return type is
+    /// itself floating-point, so a pure function returning `[Double]` that holds a NaN fails
+    /// (`[Double.nan] == [Double.nan]` is false), as does a result whose `==` compares identity.
+    ///
+    /// ## A scaffold is not a law at all (#466)
+    ///
+    /// A `replay-idempotence` stub cannot build its own fixture, so it records an issue on
+    /// purpose, naming the steps left to complete, and fails until a person completes them. It
+    /// used to carry the CONJECTURE line — *"a pass means no counterexample was found"* — on a
+    /// file that can never pass as written.
+    /// Checked first and read from the stub rather than from the template name, so the line
+    /// follows what the file does: `isScaffold(_:)`.
+    static func lawClassLine(for suggestion: Suggestion, isScaffold: Bool = false) -> String {
+        if isScaffold {
+            return """
+            // Law class: SCAFFOLD — not a law yet. It records an issue on purpose until you
+            //            complete the steps it lists, so it fails by design: red here is work
+            //            left to do, not a verdict about the code.
+
+            """
+        }
+        if Refutability.isRefutable(suggestion) == false {
+            return """
+            // Law class: TAUTOLOGY — true of any pure implementation, so a pass only means no hidden
+            //            state showed up in the trials drawn. A failure means either the subject
+            //            is not pure, or its result's `==` is not reflexive (a NaN inside a
+            //            collection, an identity comparison).
+
+            """
+        }
         if Refutability.isRoleEntailed(suggestion) {
             return """
             // Law class: ENTAILED — a correct implementation cannot fail this, so a pass is a
@@ -147,6 +188,17 @@ extension InteractiveTriage {
         //            counterexamples lie outside the generator's reach passes while being false.
 
         """
+    }
+
+    /// Whether a stub body is a scaffold: a test that records an issue on purpose, its message
+    /// opening with the to-do marker, until a person completes it.
+    ///
+    /// Read from the body rather than from the template name because the property belongs to the
+    /// file, not the template — today only the two replay emitters write one
+    /// (`LiftedTestEmitter.replayIdempotent`, `replayKeyBuilder`), and a template that starts
+    /// writing one tomorrow is labelled correctly without anyone remembering this function.
+    static func isScaffold(_ stub: String) -> Bool {
+        stub.contains("Issue.record(\"TODO")
     }
 
     /// The access caveat block, or empty for a subject a test can reach.
