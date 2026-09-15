@@ -66,7 +66,8 @@ extension InteractiveTriage {
         let contents = wrappedFileContents(
             stub: stub,
             suggestion: suggestion,
-            moduleUnderTest: context.moduleUnderTest
+            moduleUnderTest: context.moduleUnderTest,
+            fileName: fileName
         )
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
