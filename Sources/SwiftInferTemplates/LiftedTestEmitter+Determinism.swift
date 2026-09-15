@@ -46,9 +46,43 @@ extension LiftedTestEmitter {
         isAsync: Bool = false,
         isThrows: Bool = false
     ) -> String {
-        let shape = parameters.count == 1
-            ? singleParameterShape(funcName: funcName, parameter: parameters[0])
-            : tupleShape(funcName: funcName, parameters: parameters)
+        deterministic(
+            callee: CalleeReference(bareName: funcName, argumentLabels: parameters.map(\.label)),
+            generators: parameters.map(\.generator),
+            seed: seed,
+            equalityKind: equalityKind,
+            isAsync: isAsync,
+            isThrows: isThrows
+        )
+    }
+
+    /// The determinism stub for a callee — qualified, labelled, and drawing a receiver.
+    ///
+    /// ## Why a bare name could not work
+    ///
+    /// The `funcName:` form above splices one string into the call, which is right for a free
+    /// function and wrong for every member: `tokenizeLine(args.0, args.1)` for a member of
+    /// `SwiftTokenizer` is `cannot find 'tokenizeLine' in scope`. **In the corpus funnel census all
+    /// 33 determinism stubs that compiled were free functions, and 776 member stubs failed** (#465)
+    /// — the defect #415 fixed for every signature-template arm, which this one dispatches ahead of.
+    ///
+    /// `generators` holds one draw per argument the call needs, the receiver's first for an
+    /// instance method, exactly as the totality arm takes them. One draws `value`; several draw a
+    /// tuple and call with `args.0`, `args.1`, ….
+    ///
+    /// A synchronous isolated callee gets one hop around the whole equality; an async one is
+    /// awaited instead, because `MainActor.run` cannot contain an `await` (#432).
+    public static func deterministic(
+        callee: CalleeReference,
+        generators: [String],
+        seed: SamplingSeed.Value,
+        equalityKind: EqualityKind = .strict,
+        isAsync: Bool = false,
+        isThrows: Bool = false
+    ) -> String {
+        let isTuple = generators.count > 1
+        let bind = isTuple ? "args" : "value"
+        let invocation = callee.call(isTuple ? generators.indices.map { "args.\($0)" } : ["value"])
         let property: String
         if isThrows {
             // A throwing pure function is deterministic over `Result`: compare
@@ -57,59 +91,32 @@ extension LiftedTestEmitter {
             // hidden nondeterminism the law targets — falsifies it. Strict `==` on
             // the resulting optional; the caveat already requires `Equatable`.
             let prefix = isAsync ? "try? await " : "try? "
-            let call = "(\(prefix)\(shape.call))"
+            let call = "(\(prefix)\(invocation))"
             property = "\(call) == \(call)"
         } else {
-            let call = isAsync ? "(await \(shape.call))" : shape.call
+            let call = isAsync ? "(await \(invocation))" : invocation
             property = equalityExpression(lhs: call, rhs: call, kind: equalityKind)
         }
         return makeTestStubExpression(
-            testFunctionName: "\(funcName)_isDeterministic",
+            testFunctionName: "\(callee.bareName)_isDeterministic",
             seed: seed,
-            sampleExpression: shape.sample,
-            propertyExpression: "{ \(shape.bind) in \(property) }",
-            failureLabel: "\(funcName)(_:) is not deterministic — same input produced different output"
+            sampleExpression: determinismSample(generators: generators),
+            propertyExpression: "{ \(bind) in \(isAsync ? property : callee.isolated(property)) }",
+            failureLabel: "\(callee.displaySignature) is not deterministic — same input produced different output"
         )
     }
 
-    /// The three emitted fragments that vary by arity: the `sample` closure, the
-    /// name its drawn input is bound to, and the call applied to that input.
-    private struct Shape {
-        let sample: String
-        let bind: String
-        let call: String
-    }
-
-    /// Single parameter: one `value` drawn from one generator, called directly.
-    private static func singleParameterShape(
-        funcName: String,
-        parameter: DeterminismParameter
-    ) -> Shape {
-        let argument = parameter.label.map { "\($0): value" } ?? "value"
-        return Shape(
-            sample: "{ rng in (\(parameter.generator)).run(using: &rng) }",
-            bind: "value",
-            call: "\(funcName)(\(argument))"
-        )
-    }
-
-    /// Two or more parameters: draw a tuple, one slot per parameter from its own
-    /// generator (the same multi-line sample shape `monotonic`/`commutative`
-    /// use), then call with `args.0`, `args.1`, … under each label.
-    private static func tupleShape(
-        funcName: String,
-        parameters: [DeterminismParameter]
-    ) -> Shape {
-        let draws = parameters.indices.map { index in
-            "                    let arg\(index) = (\(parameters[index].generator)).run(using: &rng)"
+    /// One draw for a single generator; for several, a tuple of draws in argument order (the
+    /// multi-line sample shape `monotonic`/`commutative` use).
+    private static func determinismSample(generators: [String]) -> String {
+        guard generators.count > 1 else {
+            return "{ rng in (\(generators.first ?? "")).run(using: &rng) }"
         }
-        let slots = parameters.indices.map { "arg\($0)" }.joined(separator: ", ")
+        let draws = generators.indices.map { index in
+            "                    let arg\(index) = (\(generators[index])).run(using: &rng)"
+        }
+        let slots = generators.indices.map { "arg\($0)" }.joined(separator: ", ")
         let tupleReturn = "                    return (\(slots))"
-        let sample = (["{ rng in"] + draws + [tupleReturn, "                }"]).joined(separator: "\n")
-        let argumentList = parameters.indices.map { index in
-            (parameters[index].label.map { "\($0): " } ?? "") + "args.\(index)"
-        }
-        let arguments = argumentList.joined(separator: ", ")
-        return Shape(sample: sample, bind: "args", call: "\(funcName)(\(arguments))")
+        return (["{ rng in"] + draws + [tupleReturn, "                }"]).joined(separator: "\n")
     }
 }
