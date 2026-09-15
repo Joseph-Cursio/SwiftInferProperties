@@ -60,6 +60,12 @@ enum StubApplicationArity {
     /// on SwiftMarkdownWiki after the call-shape fix, 7 of 7 declines were subjects rather than
     /// templates — so the one message was wrong every time it fired.
     static func declineReason(for suggestion: Suggestion) -> String? {
+        if suggestion.templateName == "comparator", let evidence = suggestion.evidence.first {
+            guard let callee = CalleeReference(evidence: evidence) else {
+                return "\(evidence.displayName) is a mutating method, so it returns no value for the law to compare"
+            }
+            return InteractiveTriage.comparatorDeclineReason(callee: callee, evidence: evidence)
+        }
         let isArityFree = arityFreeTemplates.contains(suggestion.templateName)
         let arity = forTemplate(suggestion.templateName)
         guard isArityFree || arity != nil, let evidence = suggestion.evidence.first else {
