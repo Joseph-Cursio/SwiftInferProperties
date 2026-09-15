@@ -29,9 +29,31 @@ extension InteractiveTriage {
         case "predicate", "input-totality":
             return totalityStub(for: suggestion, customGenerator: customGenerator)
 
+        case "caseiterable-key-injectivity":
+            return caseKeyInjectivityStub(for: suggestion)
+
         default:
             return nil
         }
+    }
+
+    /// Key injectivity over a `CaseIterable` enum: an exhaustive loop over `allCases` (#474).
+    ///
+    /// **Every fact the stub needs is already on the suggestion**, which is why this arm came first
+    /// of #468's nine: the enum is the evidence row's declaring type (qualified, so a nested enum
+    /// is spelled `Outer.Inner`), and `CalleeReference` spells the member as a property or a
+    /// method. The template admits only a zero-argument instance member, so anything else is a
+    /// malformed row and writes nothing. The corpus funnel census declined 20 of these, every one
+    /// over a subject a test could reach.
+    private static func caseKeyInjectivityStub(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let member = CalleeReference(evidence: evidence),
+              member.isInstanceMethod,
+              member.argumentLabels.isEmpty,
+              let enumType = evidence.qualifiedTypeName ?? suggestion.carrier else {
+            return nil
+        }
+        return LiftedTestEmitter.caseKeyInjectivity(enumType: enumType, member: member)
     }
 
     /// Totality, for `predicate` and `input-totality`.
