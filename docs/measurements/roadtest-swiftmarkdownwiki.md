@@ -309,7 +309,7 @@ run.
 | — | idempotence on the body | **not a law** | Predicted **false**: a body that itself begins with `---` gets a second block stripped. Recorded in advance so that if a template proposes it, that is a cry-wolf rather than a find. |
 
 **Suspected defect, predicted before running anything and separate from the tool
-measurement:** `parseFields` reads `tags` only in the inline form
+measurement:** `parseFields` reads `tags` only as a comma-separated string,
 `tags: a, b, c`. The block form —
 
 ```yaml
@@ -377,19 +377,20 @@ that entry away would silently retire a law.
 
 ## Finding 4 — the real defect is one no predicted law caught
 
-`parseFields` reads `tags` by splitting `rawValue` on `","`. YAML spells a
-sequence three ways, and the function understands one:
+`parseFields` reads `tags` by splitting `rawValue` on `","`. That handles the
+comma-separated string it was written for, and neither of YAML's two spellings of
+a sequence:
 
 ```
-tags: math, demo      ->  ["math", "demo"]     inline    ✓
-tags: [math, demo]    ->  ["[math", "demo]"]   flow      ✗ brackets kept
-tags:                 ->  []                   block     ✗ silently empty
+tags: math, demo      ->  ["math", "demo"]     comma string  ✓
+tags: [math, demo]    ->  ["[math", "demo]"]   flow sequence ✗ brackets kept
+tags:                 ->  []                   block sequence ✗ silently empty
   - math
 ```
 
-**The flow form is live in shipped data.** `ExampleVault/Math Notes.md` and
-`ExampleVault/Syntax Demo.md` both write `tags: [math, demo]`, so the app's own
-sample vault produces tags reading `[math` and `demo]`, which flow into
+**The flow form is live in shipped data.** `ExampleVault/Math Notes.md` writes
+`tags: [math, demo]` and `ExampleVault/Syntax Demo.md` writes `tags: [demo, swift]`,
+so the app's own sample vault produces tags reading `[math`, `demo]` and `[demo`, which flow into
 `GraphData`'s tag set and the graph's tag filter. The block form fails silently
 because `- math` carries no colon, so `parseFields` `continue`s past it.
 
@@ -401,8 +402,16 @@ with a live bug in the exact field it quantifies over.** That is the
 other direction: a law that holds, over a defect it is simply not about.
 
 What found it was the docstring's own word. *"Parses YAML front matter"* names a
-reference definition, and YAML's spelling of a sequence is a matter of public
-record — so the law is metamorphic: **the three spellings must agree.**
+reference definition, and in it the flow and block forms are the same sequence. The
+comma string is not a YAML sequence at all (`tags: math, demo` is one scalar string),
+but it is the spelling this parser was written for, so the app's contract makes the
+law metamorphic: **the three spellings must agree.**
+
+> **Corrected 2026-09-15.** This finding first said *YAML spells a sequence three
+> ways* and labelled the comma string `inline`. YAML has two sequence spellings, flow
+> and block; the comma form is a plain string the parser splits by convention. It also
+> said both vault files write `[math, demo]`; `Syntax Demo.md` writes `[demo, swift]`.
+> The defect, the law and the fix are unchanged.
 
 ```swift
 #expect(flow.tags == inline.tags)   // ["[math", "demo]"] != ["math", "demo"]
@@ -437,7 +446,7 @@ in source). S3 is a catalog gap, which is a roadmap item rather than a defect.
 
 ---
 
-## The fix — `parseFields` learns the other two YAML spellings
+## The fix — `parseFields` learns YAML's two sequence spellings
 
 `SwiftMarkdownWiki/Editor/FrontMatter.swift`, +46 −5. Two behaviours added and one
 design decision made explicit.
@@ -447,7 +456,7 @@ opens a sequence, and every following `- item` line belongs to it. Any line that
 is not an item closes it, so `tags:` followed by `title: X` still parses the
 title.
 
-**Flow form is deliberately not distinguished from the inline form.** Rather than
+**Flow form is deliberately not distinguished from the comma string.** Rather than
 detect `[…]` and strip the pair, each element is trimmed of whitespace, quotes and
 flow brackets after the split. That makes the malformed spellings — `[a, b` with
 no closing bracket, `a], b` with only a closing one — behave the same as the
