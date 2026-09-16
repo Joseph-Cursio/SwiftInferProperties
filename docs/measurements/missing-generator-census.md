@@ -1,6 +1,7 @@
 # The missing generator — the funnel's largest blocker, measured (2026-09-16)
 
 > **Status:** `measured` · **As of:** 2026-09-16
+> **§3's causes were added the same day**, from the probe §4 asked for.
 > **Instrument:** `swift-infer` at `56926b98`, the 19 repositories of [`corpus-funnel-census-2026-09-16.md`](corpus-funnel-census-2026-09-16.md)
 
 The corpus funnel re-run moved the binding constraint from *no writer exists* to *does not
@@ -76,44 +77,76 @@ Two of those are not defects:
 **The 318 plain structs are the interesting bucket**, because a memberwise struct is exactly
 what `GeneratorResolver` exists to derive.
 
-## 3. Why the plain structs fail — NOT ANSWERED, and the attempt is instructive
+## 3. Why the resolver declined — measured, over all 19 repositories
 
-Two mechanisms are visible by reading:
+The probe §4 asked for is built (`GeneratorBlockerCensusMeasuredTests`) and has been run over
+every scan group. It asks `GeneratorResolver` through the same entry point the accept path uses,
+and where that cannot answer it reads the **shape** — stored members, initializers, enum cases —
+rather than source text.
 
-- **A single unknown leaf.** `SwiftAssist.RunGate` is `struct RunGate: Sendable, Equatable`
-  with `let minimumInterval: Duration`. `Duration` is in neither `RawType` nor the kit's
-  composed-generator set, so one member blocks the whole struct.
-- **A tree of project types.** `DocCResponse`'s members are `DocCSchemaVersion`,
-  `DocCIdentifier`, `DocCMetadata`, `[DocCInlineContent]?` — derivable only if all of those are.
+**3,296 type shapes scanned; 2,016 (61%) have no generator.**
 
-⚠️ **An attempt to measure the split failed, and the failure is the point.** Walking each failing
-struct's stored members with a regex reported `some` and `View` among the "leaf types blocking a
-struct" — because `var body: some View` is a **computed** property and the pattern took it for a
-stored one. It left **119 of the failing structs with no blocker it could see at all**.
+| why | types | share |
+|---|---:|---:|
+| struct, nothing to build from | 490 | 24.3% |
+| blocked by a member | 348 | 17.3% |
+| struct, has members — **reason not visible** | 348 | 17.3% |
+| enum, nothing to build from | 270 | 13.4% |
+| class, no memberwise init | 228 | 11.3% |
+| class, nothing to build from | 174 | 8.6% |
+| struct, initializers only | 101 | 5.0% |
+| actor, no memberwise init | 31 | 1.5% |
+| enum, has members — reason not visible | 22 | 1.1% |
+| actor, nothing to build from | 4 | 0.2% |
 
-That is *a measurement that pattern-matches on text measures the text*, and it is the wrong
-instrument by construction: the question is what `GeneratorResolver` decided, and the only
-authority on that is `GeneratorResolver`.
+⚠️ **Two denominators, and they are not the same question.** The 2,016 here is every type the
+tool *cannot build*; the 548 in §1 is every type a stub actually *asked for*. Supply gap and
+demand. Neither is wrong and they must not be compared.
 
-**One hypothesis WAS testable and is refuted.** The resolver refuses an ambiguous bare name —
-*"Two or more distinct types share this bare name … Refusing keeps the referencing type at
-`.todo`"* — and plausible-looking names (`TypeShape`, `Node`, `Collector`, `Kind`) are in the
-failing set. Measured: **9 of 548 distinct failing types are declared more than once**; 379 are
-declared exactly once and 160 not at all. Ambiguity is not the cause.
+### The families, ranked
+
+**Nothing to build from — 938 types, 46.5%.** No stored members, no initializers, no enum cases.
+Hand-checked: `struct ActorReentrancy: PatternRegistrarProtocol` carries only a computed
+`var pattern`, so the shape is right rather than the scan wrong. **This is a defect this
+repository already recorded and shelved** — `filter-subset-stub-writer.md`: *a stateless struct
+gets NO generator; `struct Stateless {}` → `.todo` … isolated on a four-line probe, upstream,
+affects every template.* It was left unfixed because its population was unknown. It is the
+largest single family, and `Gen.always(T())` serves any of them with an accessible
+no-argument init.
+
+**Has members and still refused — 370 types, 18.4%.** The probe cannot see why. It is kept as
+its own outcome rather than folded into a neighbour, because an unexplained residue that gets
+quietly bucketed is how §3's earlier regex attempt produced a number that looked complete and
+was not.
+
+**Blocked by a member — 348 types, 17.3%**, and the blockers are app-shaped:
+`DiagramViewModel` 17 · `KnowledgeGraph` 16 · `BeadStore` 14 · `ModelRouter` 11 ·
+`MacCloudSyncManager` 9. Those are view models and stores — classes and actors — so this family
+is largely **downstream of the no-memberwise-init one**, not independent of it.
+
+**No memberwise init — 259 types, 12.8%.** Genuinely underivable by a memberwise strategy.
+
+⚠️ **The first reading of this probe was one target and was NOT representative.** On
+`SwiftProjectLintRules` alone, *nothing to build from* was **70%** of declines and *has members,
+reason not visible* was 5.7%. Corpus-wide they are **46.5%** and **18.4%**. The single target
+overstated the finding and understated the residue — a reminder that this census's own §1
+warning about concentration applies to its follow-ups too.
 
 ## 4. What to do next, and what not to
 
-**The next step is a probe that asks `GeneratorResolver` directly** — build it over a corpus's
-scanned `TypeShape`s and record, per failing type, which branch returned `nil`:
-ambiguous name, no shape, or a failure inside `derive`. The resolver currently reports no
-reason, so the probe either reads its branches or the resolver learns to say. That is the
-difference between 548 unexplained types and a ranked list of causes.
+**The stateless-type fix is the one with a population behind it** — 938 types, 46.5%, and a
+defect already isolated on a four-line probe. It belongs in the kit's `DerivationStrategist`
+rather than here, and unlike everything else measured this cycle it plausibly moves *laws*
+rather than rows, because a stateless type is often a leaf blocking a whole tree.
 
-⚠️ **Do not reach for the head of the list.** The ten most-wanted types are SwiftSyntax nodes, and
-a hand-written generator for `ExprSyntax` would serve one repository that happens to be 51% of
-this corpus. The long tail is the finding; a fix aimed at the head would move this census and
-not the general case.
+⚠️ **The 370 unexplained deserve the next probe, not a guess.** `GeneratorResolver` still
+reports no reason; the probe reconstructs two of its three `nil` paths from the same inputs and
+infers the third. Teaching the resolver to say why would replace that inference with an answer.
 
-⚠️ **`Duration` is worth checking on its own terms** — it is a stdlib type, it is not in
-`RawType`, and adding it is the kit's call rather than this repository's. Its population here
-is small and was measured by hand, not counted.
+⚠️ **Do not reach for the head of §1's type list.** Those ten are SwiftSyntax nodes serving one
+repository that is 51% of that count. A hand-written `ExprSyntax` generator would move this
+census and not the general case.
+
+⚠️ **`Duration` is worth checking on its own terms** — a stdlib type absent from `RawType`,
+which is the kit's call rather than this repository's. Its population here was read by hand,
+not counted.
