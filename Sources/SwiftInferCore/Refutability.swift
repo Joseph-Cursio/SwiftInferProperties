@@ -76,6 +76,20 @@ public enum Refutability {
         // `select` / `layer` that returns a non-member, or a `diff` whose added and
         // removed overlap, is either a bug or a lie about what the name promises —
         // both worth a red test even below the confidence cut.
+        //
+        // **Admission on this ground puts a standing obligation on the TEMPLATE, and #476 is
+        // what it cost to leave that unstated.** "The name is the contract" is only true while
+        // the template's name gate BOUNDS the promise. `filter-subset` matched a verb *prefix*,
+        // and a prefix does not bound a compound name: `pbt-book`'s
+        // `filterThenMap(_ values: [Int]) -> [Int]` is honestly named, entirely correct, and
+        // fails subset — proposed on a default run under a stub header reading *a correct
+        // implementation cannot fail this*. Both templates now reject a tail that announces a
+        // second operation. A noun-gated member such as `caseiterable-key-injectivity` needs no
+        // such check, because `hasSuffix` already matches the HEAD of the name.
+        //
+        // So: admitting a name-gated template here means asserting that no correctly-named
+        // subject can fail its law, and that assertion is falsifiable by one counterexample in
+        // any corpus. `SubsetNameContractTests` holds the one that was found.
         // `guard-domain`: the law is READ FROM the body, not inferred from a name, so a correct
         // implementation cannot fail it — the opposite end of the axis `idempotence` sits on.
         // It is role-entailed for a different reason from every other member of this set: the
