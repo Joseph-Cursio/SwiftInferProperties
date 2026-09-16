@@ -10,7 +10,6 @@ import SwiftInferTemplates
 /// and its length was never the interesting part.
 extension InteractiveTriage {
 
-
     /// A generator for any project type, derived from its parsed shape.
     ///
     /// `GeneratorResolver` is memoized and cycle-guarded, and is built per accept so the stub
@@ -21,7 +20,6 @@ extension InteractiveTriage {
         let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
         return { typeName in resolver.customTypeGenerator(forTypeName: typeName)?.expression }
     }
-
 
     /// Say why no stub was written, naming the cause rather than the template where it can.
     ///
@@ -40,7 +38,6 @@ extension InteractiveTriage {
             )
         }
     }
-
 
     /// The two maps `VerifyImportSet` needs, or `nil` for a caller with no package on disk.
     ///

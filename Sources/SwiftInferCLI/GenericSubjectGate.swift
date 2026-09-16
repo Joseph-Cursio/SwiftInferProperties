@@ -7,8 +7,8 @@ import SwiftInferCore
 ///
 /// ```swift
 /// // struct KeyedDecoding<Key: CodingKey> { func contains(_ key: Key) -> Bool }
-/// let arg0 = (KeyedDecoding.gen() /* TODO: no generator derived … */).run(using: &rng)
-/// let arg1 = (Key.gen()           /* TODO: no generator derived … */).run(using: &rng)
+/// let arg0 = (KeyedDecoding.gen() /* … no generator derived … */).run(using: &rng)
+/// let arg1 = (Key.gen()           /* … no generator derived … */).run(using: &rng)
 /// ```
 ///
 /// `Key` is not a name outside its declaration, so the file fails with `cannot find 'Key' in
@@ -89,7 +89,7 @@ enum GenericSubjectGate {
     /// `Box<Int>` → `Box`, `[Foo]` → `Foo`. Matches how shapes are keyed.
     private static func bareName(_ typeName: String) -> String {
         let trimmed = typeName.trimmingCharacters(in: CharacterSet(charactersIn: "[]?! "))
-        return trimmed.split(whereSeparator: { "<>,. ".contains($0) }).first.map(String.init)
-            ?? trimmed
+        let head = trimmed.split { "<>,. ".contains($0) }.first
+        return head.map(String.init) ?? trimmed
     }
 }
