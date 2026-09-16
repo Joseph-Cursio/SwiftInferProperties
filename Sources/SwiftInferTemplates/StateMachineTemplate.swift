@@ -36,8 +36,12 @@ public enum StateMachineTemplate {
             evidence: { pair in [pair.forward.inferenceEvidence, pair.backward.inferenceEvidence] },
             identity: { pair in
                 SuggestionIdentity(
-                    canonicalInput: "state-machine|\(pair.forward.containingTypeName ?? "")"
-                        + "|\(pair.forward.name)|\(pair.backward.name)"
+                    // GRDB's `Database` declares three add/remove pairs — transactionObserver,
+                    // function, collation — all spelled bare `add`/`remove`, and all three landed
+                    // on one key and were reported as corroboration (#490).
+                    canonicalInput: "state-machine|"
+                        + IdempotenceTemplate.canonicalSignature(of: pair.forward) + "|"
+                        + IdempotenceTemplate.canonicalSignature(of: pair.backward)
                 )
             },
             carrier: { $0.forward.containingTypeName },

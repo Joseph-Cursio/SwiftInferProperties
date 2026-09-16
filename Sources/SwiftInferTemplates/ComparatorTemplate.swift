@@ -26,7 +26,14 @@ public enum ComparatorTemplate {
             evidence: { [$0.inferenceEvidence] },
             identity: { summary in
                 SuggestionIdentity(
-                    canonicalInput: "comparator|\(summary.containingTypeName ?? "")|\(summary.name)"
+                    // The identity carries the full signature — argument labels and parameter types included
+                    // — because a bare `(type, name)` key cannot tell two overloads apart and Swift
+                    // overloads on labels. Measured over the 19 corpus-funnel repositories plus the 20
+                    // manifest corpora: 22 rows of these six templates collapsed into one another,
+                    // hiding up to 43 more. `ChannelPipeline` declares one `addHandler` against SIX
+                    // `removeHandler` overloads and reported them as a single row (#490).
+                    canonicalInput: "comparator|"
+                        + IdempotenceTemplate.canonicalSignature(of: summary)
                 )
             },
             carrier: { $0.containingTypeName },

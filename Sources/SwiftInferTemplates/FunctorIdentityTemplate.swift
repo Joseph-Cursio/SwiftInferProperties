@@ -111,7 +111,10 @@ public enum FunctorIdentityTemplate {
 
     static func makeIdentity(for shape: FunctorIdentityPairing.FunctorShape) -> SuggestionIdentity {
         SuggestionIdentity(
-            canonicalInput: "functor-identity|\(shape.typeName)|\(shape.mapper.name)"
+            // See `ComparatorTemplate` for the measurement (#490): a bare name cannot separate
+            // two overloads, so the mapper contributes its whole signature.
+            canonicalInput: "functor-identity|\(shape.typeName)|"
+                + IdempotenceTemplate.canonicalSignature(of: shape.mapper)
         )
     }
 }

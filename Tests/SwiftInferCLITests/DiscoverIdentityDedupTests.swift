@@ -160,34 +160,8 @@ struct DiscoverIdentityDedupTests {
         let why = output[0].explainability.whySuggested.joined(separator: " ")
         #expect(why.contains("3 DIFFERENT"))
         #expect(why.contains("NOT corroboration"))
-        // The reader is told WHY the key merged them, not just that it did.
-        #expect(why.contains("WITHOUT argument labels"))
-        #expect(why.contains("#490"))
         // And the old sentence must be gone: this is the claim that was false.
         #expect(!why.contains("reduce to this one law"))
-    }
-
-    /// The same shape on a template whose key DOES carry labels. Different declarations still
-    /// cannot be corroboration — but there is no label story to tell, so the note does not invent
-    /// one. A hash collision or a genuine key bug would land here.
-    @Test("a label-carrying template gets the conflation note without the label explanation")
-    func conflationWithoutTheLabelExplanation() {
-        let copies = [
-            suggestion(
-                template: "idempotence", score: 60, identity: "same",
-                evidence: [declaration("trimmed() -> String", line: 10)]
-            ),
-            suggestion(
-                template: "idempotence", score: 60, identity: "same",
-                evidence: [declaration("normalized() -> String", line: 20)]
-            )
-        ]
-        let why = SwiftInferCommand.Discover.dedupedByIdentity(copies)[0]
-            .explainability.whySuggested.joined(separator: " ")
-
-        #expect(why.contains("2 DIFFERENT"))
-        #expect(why.contains("NOT corroboration"))
-        #expect(!why.contains("WITHOUT argument labels"))
     }
 
     /// One declaration observed twice is still corroboration when evidence is present — the

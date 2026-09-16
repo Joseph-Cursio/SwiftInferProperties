@@ -255,3 +255,78 @@ struct ApplicationShapeTemplateTests {
         #expect(InvolutionTemplate.suggest(for: scaled) == nil)
     }
 }
+
+/// **Two overloads are two laws, and the identity has to say so** (#490).
+///
+/// Six templates keyed on the declaring type and the bare function name. Swift overloads on
+/// argument labels, so `add(function:)` and `add(collation:)` on one type produced one key and
+/// the surplus was folded away and reported as corroboration.
+///
+/// Measured over the 19 corpus-funnel repositories plus the 20 manifest corpora before the fix:
+/// **22 rows of these templates collapsed into one another, hiding up to 43 more.** GRDB's
+/// `Database` declares three add/remove pairs and yielded one row; `ChannelPipeline` declares one
+/// `addHandler` against six `removeHandler` overloads and yielded one.
+@Suite("Suggestion identity — overloads are distinct")
+struct OverloadIdentityTests {
+
+    private static let loc = SourceLocation(file: "Database.swift", line: 777, column: 5)
+
+    private func move(_ name: String, label: String, type: String) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [
+                Parameter(label: label, internalName: label, typeText: type, isInout: false)
+            ],
+            returnTypeText: nil,
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: Self.loc,
+            containingTypeName: "Database",
+            bodySignals: .empty,
+            docComment: nil
+        )
+    }
+
+    /// GRDB's `Database`: `add(function:)`/`remove(function:)` and
+    /// `add(collation:)`/`remove(collation:)`, both spelled bare `add`/`remove`.
+    @Test("two add/remove pairs on one type are two state-machine identities")
+    func stateMachinePairsAreDistinct() {
+        let pairs = InverseMutatorPairing.candidates(in: [
+            move("add", label: "function", type: "DatabaseFunction"),
+            move("remove", label: "function", type: "DatabaseFunction"),
+            move("add", label: "collation", type: "DatabaseCollation"),
+            move("remove", label: "collation", type: "DatabaseCollation")
+        ])
+        #expect(pairs.count == 2)
+
+        let identities = Set(pairs.compactMap { StateMachineTemplate.suggest(for: $0)?.identity })
+        #expect(identities.count == 2, "one key for two pairs is the #490 collapse")
+    }
+
+    /// The single-function shape, on the template with the largest population (189 rows).
+    @Test("two overloads differing only by label are two input-totality identities")
+    func totalityOverloadsAreDistinct() throws {
+        func decode(_ label: String) -> FunctionSummary {
+            FunctionSummary(
+                name: "decode",
+                parameters: [
+                    Parameter(label: label, internalName: "x", typeText: "String", isInout: false)
+                ],
+                returnTypeText: "Int",
+                isThrows: true,
+                isAsync: false,
+                isMutating: false,
+                isStatic: false,
+                location: Self.loc,
+                containingTypeName: "Row",
+                bodySignals: .empty,
+                docComment: nil
+            )
+        }
+        let first = try #require(InputTotalityTemplate.suggest(for: decode("forColumn")))
+        let second = try #require(InputTotalityTemplate.suggest(for: decode("atIndex")))
+        #expect(first.identity != second.identity)
+    }
+}
