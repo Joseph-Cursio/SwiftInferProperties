@@ -77,9 +77,13 @@ extension InteractiveTriage {
         return path
     }
 
-    /// Build the lifted-test source text for `suggestion`. After M8.2
-    /// every shipped template has a stub arm — `default` is a
-    /// defensive fallback for future templates.
+    /// Build the lifted-test source text for `suggestion`.
+    ///
+    /// ⚠ **Reaching `default` is a GAP, not a design.** This said *"every shipped template has a
+    /// stub arm — `default` is a defensive fallback"* until the corpus funnel census measured it
+    /// as the path taken by **244 refutable suggestions**, 148 of them role-entailed (#468).
+    /// Before adding a template, add its arm.
+    ///
     /// `customGenerator` derives a generator expression for a custom type name
     /// (from the project's parsed type shapes); it's currently wired into the
     /// determinism path — the lint → infer pipeline's output — so a seeded

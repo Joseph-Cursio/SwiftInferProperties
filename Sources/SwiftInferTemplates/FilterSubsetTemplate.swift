@@ -132,7 +132,12 @@ public enum FilterSubsetTemplate {
     /// The element of an array type: `[Violation]` → `Violation`,
     /// `Array<Rule>` → `Rule`. A dictionary (`[String: Rule]`) is not an array, so
     /// the top-level-colon form returns `nil`.
-    static func arrayElement(of type: String) -> String? {
+    ///
+    /// `public` because the accept path's stub writer needs the same answer: it resolves a
+    /// collection argument's generator at the element and checks the element for `Equatable`.
+    /// Restating the rule there instead would be the *two implementations of one rule drift*
+    /// trap the module-qualified leaf-spelling fix already paid for once.
+    public static func arrayElement(of type: String) -> String? {
         if type.hasPrefix("["), type.hasSuffix("]") {
             let inner = type.dropFirst().dropLast()
             return inner.contains(":") ? nil : String(inner)
