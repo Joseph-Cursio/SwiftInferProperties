@@ -35,6 +35,9 @@ extension InteractiveTriage {
         case "comparator":
             return comparatorStub(for: suggestion, customGenerator: customGenerator)
 
+        case "filter-subset":
+            return filterSubsetStub(for: suggestion, customGenerator: customGenerator)
+
         default:
             return nil
         }
