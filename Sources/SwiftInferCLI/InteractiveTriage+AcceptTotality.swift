@@ -32,6 +32,9 @@ extension InteractiveTriage {
         case "caseiterable-key-injectivity":
             return caseKeyInjectivityStub(for: suggestion)
 
+        case "comparator":
+            return comparatorStub(for: suggestion, customGenerator: customGenerator)
+
         default:
             return nil
         }
