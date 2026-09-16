@@ -38,6 +38,9 @@ extension InteractiveTriage {
         case "filter-subset":
             return filterSubsetStub(for: suggestion, customGenerator: customGenerator)
 
+        case "guard-domain":
+            return guardDomainStub(for: suggestion, customGenerator: customGenerator)
+
         default:
             return nil
         }
