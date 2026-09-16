@@ -45,6 +45,13 @@ extension SwiftInferCommand.Discover {
     /// line saying how many there were, so the five golden tests read as *corroboration* —
     /// which is what they are — rather than vanishing.
     ///
+    /// **That reading is not safe for every template, and the note now says which it is.** It
+    /// holds when the identity carries argument labels, which is every template routed through
+    /// `IdempotenceTemplate.canonicalSignature`. Six are not: they key on the declaring type and
+    /// the bare name, so overloads differing only by label share a key and the collapse folds
+    /// together laws that are genuinely different — see
+    /// `SuggestionIdentity.templatesKeyedWithoutArgumentLabels` and issue #490.
+    ///
     /// The line does not name the test methods, and that is now a choice rather than a
     /// limitation. It used to be the latter: `LiftedOrigin` carried a `testMethodName` and a
     /// `sourceLocation`, but the renderer ignored them and every lifted row printed
@@ -59,8 +66,11 @@ extension SwiftInferCommand.Discover {
     /// collapse, what the surviving row's own `whySuggested` block says one line above.
     static func dedupedByIdentity(_ suggestions: [Suggestion]) -> [Suggestion] {
         var countsByIdentity: [String: Int] = [:]
+        var declarationsByIdentity: [String: Set<String>] = [:]
         for suggestion in suggestions {
-            countsByIdentity[suggestion.identity.normalized, default: 0] += 1
+            let key = suggestion.identity.normalized
+            countsByIdentity[key, default: 0] += 1
+            declarationsByIdentity[key, default: []].insert(declarationFingerprint(of: suggestion))
         }
         guard countsByIdentity.contains(where: { $0.value > 1 }) else { return suggestions }
 
@@ -71,24 +81,100 @@ extension SwiftInferCommand.Discover {
             let key = suggestion.identity.normalized
             guard seen.insert(key).inserted else { continue }
             let copies = countsByIdentity[key] ?? 1
-            result.append(copies > 1 ? annotatingCollapse(suggestion, copies: copies) : suggestion)
+            guard copies > 1 else {
+                result.append(suggestion)
+                continue
+            }
+            result.append(
+                annotatingCollapse(
+                    suggestion,
+                    copies: copies,
+                    distinctDeclarations: declarationsByIdentity[key]?.count ?? 1
+                )
+            )
         }
         return result
     }
 
+    /// What the suggestion is *about*, as far as the collapse can see: each evidence row's
+    /// signature and location.
+    ///
+    /// **This is the discriminator, and the template name is not.** A collapse is corroboration
+    /// when the copies are one declaration observed more than once — the measured §10.4 case,
+    /// five golden tests lifting to one law — and a conflation when they are different
+    /// declarations that happen to share a key. `differential-equivalence` produces both, so any
+    /// rule keyed on the template gets one of them wrong; the existing five-golden-tests test is
+    /// what caught that.
+    ///
+    /// ⚠ **A lifted row carries no evidence rows**, so every copy of one fingerprints to the same
+    /// empty string and reads as corroboration. That is the right answer for the case on record
+    /// and it is an assumption, not a proof: if lifted rows ever carry per-test evidence, five
+    /// golden tests would start reading as five declarations. `fiveGoldenTestsAreCorroboration`
+    /// fails the day that changes, which is the point of stating it here.
+    static func declarationFingerprint(of suggestion: Suggestion) -> String {
+        suggestion.evidence
+            .map { "\($0.signature)@\($0.location.file):\($0.location.line)" }
+            .sorted()
+            .joined(separator: "|")
+    }
+
     /// Record the collapse on the survivor, so the dropped rows are accounted for.
-    private static func annotatingCollapse(_ suggestion: Suggestion, copies: Int) -> Suggestion {
+    ///
+    /// **The note reports the collapse; it asserts corroboration only where the key can support
+    /// that.** It used to say *"so they are corroboration rather than separate findings"*
+    /// unconditionally, which is true when the identity carries argument labels and false when it
+    /// does not: six templates key on the declaring type and the bare name, so `ChannelPipeline`'s
+    /// one `addHandler` and six `removeHandler` overloads collapse into a single row that claimed
+    /// six sources agreed about one law. They are six different laws (#490).
+    ///
+    /// A reader who takes that for agreement has been told something the tool cannot know — the
+    /// same failure the `TAUTOLOGY` and `CHARACTERISATION` law-class lines exist to prevent, one
+    /// layer out.
+    private static func annotatingCollapse(
+        _ suggestion: Suggestion,
+        copies: Int,
+        distinctDeclarations: Int
+    ) -> Suggestion {
         suggestion.withExplainability(
             ExplainabilityBlock(
                 whySuggested: suggestion.explainability.whySuggested + [
-                    "Stated \(copies) times by the scan — \(copies) sources reduce to this one "
-                        + "law, identical under `SuggestionIdentity` (same template, same "
-                        + "canonical signature), so they are corroboration rather than separate "
-                        + "findings. Collapsed to one row; `// swiftinfer: skip "
-                        + "\(suggestion.identity.display)` already suppressed all \(copies)."
+                    collapseNote(
+                        for: suggestion,
+                        copies: copies,
+                        distinctDeclarations: distinctDeclarations
+                    )
                 ],
                 whyMightBeWrong: suggestion.explainability.whyMightBeWrong
             )
         )
+    }
+
+    /// The sentence the survivor carries, chosen by what the collapsed copies were **about**.
+    ///
+    /// One declaration seen `copies` times is corroboration and says so. More than one declaration
+    /// under one key is not, and says *that* — naming the reason when the template's key is known
+    /// to omit argument labels, because a reader who cannot see why two laws merged cannot judge
+    /// whether they should have.
+    static func collapseNote(
+        for suggestion: Suggestion,
+        copies: Int,
+        distinctDeclarations: Int
+    ) -> String {
+        let skip = "`// swiftinfer: skip \(suggestion.identity.display)`"
+        guard distinctDeclarations > 1 else {
+            return "Stated \(copies) times by the scan — \(copies) sources reduce to this one law, "
+                + "identical under `SuggestionIdentity` and about the same declaration, so they are "
+                + "corroboration rather than separate findings. Collapsed to one row; \(skip) "
+                + "already suppressed all \(copies)."
+        }
+        let why = SuggestionIdentity.keyMayConflateOverloads(templateName: suggestion.templateName)
+            ? " `\(suggestion.templateName)` keys its identity on the declaring type and the bare "
+                + "function name, WITHOUT argument labels, so overloads that differ only by label "
+                + "share one key (issue #490)."
+            : ""
+        return "Collapsed \(copies) suggestions over \(distinctDeclarations) DIFFERENT "
+            + "declarations into this row — NOT corroboration. They share a `SuggestionIdentity`, "
+            + "so this row states one of them and \(skip) suppresses all \(copies).\(why) Read the "
+            + "declarations before treating the count as agreement."
     }
 }

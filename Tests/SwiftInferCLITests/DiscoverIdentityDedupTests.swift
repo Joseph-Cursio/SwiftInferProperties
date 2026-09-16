@@ -17,15 +17,25 @@ import Testing
 @Suite("Discover — identity dedup")
 struct DiscoverIdentityDedupTests {
 
+    /// One declaration, as the collapse sees it: a signature and a location.
+    private func declaration(_ signature: String, line: Int) -> Evidence {
+        Evidence(
+            displayName: signature,
+            signature: signature,
+            location: SourceLocation(file: "Database.swift", line: line, column: 1)
+        )
+    }
+
     private func suggestion(
         template: String,
         score: Int,
         identity: String,
-        why: [String] = []
+        why: [String] = [],
+        evidence: [Evidence] = []
     ) -> Suggestion {
         Suggestion(
             templateName: template,
-            evidence: [],
+            evidence: evidence,
             score: Score(signals: [
                 Signal(kind: .exactNameMatch, weight: score, detail: "w")
             ]),
@@ -66,7 +76,7 @@ struct DiscoverIdentityDedupTests {
     /// The collapse is reported. A dedup that silently drops rows produces output that looks
     /// like it covered everything — the "no silent caps" failure.
     @Test("the survivor says how many collapsed into it")
-    func collapseIsReported() {
+    func fiveGoldenTestsAreCorroboration() {
         let copies = (0..<5).map { _ in
             suggestion(template: "differential-equivalence", score: 80, identity: "same")
         }
@@ -120,5 +130,81 @@ struct DiscoverIdentityDedupTests {
     @Test("an empty list is unchanged")
     func emptyIsUnchanged() {
         #expect(SwiftInferCommand.Discover.dedupedByIdentity([]).isEmpty)
+    }
+
+    // MARK: - When the copies are NOT one declaration
+
+    /// **GRDB's `Database`.** Three add/remove pairs — `transactionObserver`, `function`,
+    /// `collation` — all spelled bare `add`/`remove`, so all three land on
+    /// `state-machine|Database|add|remove`. They are three different laws, and the note must not
+    /// call three different laws agreement.
+    @Test("different declarations under one key are reported as a conflation, not corroboration")
+    func differentDeclarationsAreNotCorroboration() {
+        let copies = [
+            suggestion(
+                template: "state-machine", score: 35, identity: "state-machine|Database|add|remove",
+                evidence: [declaration("add(function:) (DatabaseFunction) -> Void", line: 777)]
+            ),
+            suggestion(
+                template: "state-machine", score: 35, identity: "state-machine|Database|add|remove",
+                evidence: [declaration("add(collation:) (DatabaseCollation) -> Void", line: 804)]
+            ),
+            suggestion(
+                template: "state-machine", score: 35, identity: "state-machine|Database|add|remove",
+                evidence: [declaration("add(transactionObserver:) (some TransactionObserver) -> Void", line: 35)]
+            )
+        ]
+        let output = SwiftInferCommand.Discover.dedupedByIdentity(copies)
+        #expect(output.count == 1)
+
+        let why = output[0].explainability.whySuggested.joined(separator: " ")
+        #expect(why.contains("3 DIFFERENT"))
+        #expect(why.contains("NOT corroboration"))
+        // The reader is told WHY the key merged them, not just that it did.
+        #expect(why.contains("WITHOUT argument labels"))
+        #expect(why.contains("#490"))
+        // And the old sentence must be gone: this is the claim that was false.
+        #expect(!why.contains("reduce to this one law"))
+    }
+
+    /// The same shape on a template whose key DOES carry labels. Different declarations still
+    /// cannot be corroboration — but there is no label story to tell, so the note does not invent
+    /// one. A hash collision or a genuine key bug would land here.
+    @Test("a label-carrying template gets the conflation note without the label explanation")
+    func conflationWithoutTheLabelExplanation() {
+        let copies = [
+            suggestion(
+                template: "idempotence", score: 60, identity: "same",
+                evidence: [declaration("trimmed() -> String", line: 10)]
+            ),
+            suggestion(
+                template: "idempotence", score: 60, identity: "same",
+                evidence: [declaration("normalized() -> String", line: 20)]
+            )
+        ]
+        let why = SwiftInferCommand.Discover.dedupedByIdentity(copies)[0]
+            .explainability.whySuggested.joined(separator: " ")
+
+        #expect(why.contains("2 DIFFERENT"))
+        #expect(why.contains("NOT corroboration"))
+        #expect(!why.contains("WITHOUT argument labels"))
+    }
+
+    /// One declaration observed twice is still corroboration when evidence is present — the
+    /// discriminator is the declaration, not whether evidence exists at all.
+    @Test("the same declaration seen twice is corroboration")
+    func sameDeclarationTwiceIsCorroboration() {
+        let both = (0..<2).map { _ in
+            suggestion(
+                template: "state-machine", score: 35, identity: "same",
+                evidence: [declaration("add(function:) (DatabaseFunction) -> Void", line: 777)]
+            )
+        }
+        let why = SwiftInferCommand.Discover.dedupedByIdentity(both)[0]
+            .explainability.whySuggested.joined(separator: " ")
+
+        #expect(why.contains("Stated 2 times"))
+        #expect(why.contains("corroboration"))
+        #expect(!why.contains("DIFFERENT"))
     }
 }
