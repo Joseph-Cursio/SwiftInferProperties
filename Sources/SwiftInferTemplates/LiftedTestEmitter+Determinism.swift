@@ -78,10 +78,13 @@ extension LiftedTestEmitter {
         seed: SamplingSeed.Value,
         equalityKind: EqualityKind = .strict,
         isAsync: Bool = false,
-        isThrows: Bool = false
+        isThrows: Bool = false,
+        argumentTypes: [String] = []
     ) -> String {
         let isTuple = generators.count > 1
-        let bind = isTuple ? "args" : "value"
+        let bind = isTuple
+            ? Self.tupleBinding(argumentTypes: argumentTypes, count: generators.count)
+            : "value"
         let invocation = callee.call(isTuple ? generators.indices.map { "args.\($0)" } : ["value"])
         let property: String
         if isThrows {

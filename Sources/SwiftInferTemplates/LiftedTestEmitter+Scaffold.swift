@@ -48,3 +48,31 @@ extension LiftedTestEmitter {
         )
     }
 }
+
+extension LiftedTestEmitter {
+
+    /// The property closure's binding for a MULTI-ARGUMENT stub: `(args: (A, B, C))`, or a bare
+    /// `args` when the types are not available.
+    ///
+    /// **Why the annotation, and why it is the same fix `makeTestStub` already applies.** A tuple
+    /// parameter has nothing to anchor it: its type comes from the `sample` closure's return,
+    /// which is a tuple of large generic expressions — a four-arm `Gen.frequency`, a `zip` of
+    /// seven generators `map`ped into a struct. Swift gives up with *cannot infer type of closure
+    /// parameter 'args' without a type annotation*. `makeTestStub` supplies `carrierType` for the
+    /// one-value form for exactly this reason, measured on `htmlEscaped_idempotence`; the
+    /// multi-argument form never got it (#498).
+    ///
+    /// ⚠ **This frees far fewer stubs than fail this way, and the issue says so.** 288 stubs hit
+    /// that error across the 19 corpus-funnel repositories and **269 of them also carry a `.todo`
+    /// generator** — a `Foo.gen()` that does not exist — so the annotation changes their error
+    /// rather than removing it. That is the point: today the reader is told a closure parameter
+    /// cannot be inferred when the real problem is named three lines above, in a comment the
+    /// compiler never reaches. *A refuter that fires first hides every refuter behind it.*
+    ///
+    /// Falls back to the bare binding when `argumentTypes` is empty or disagrees with the
+    /// generator count, so a caller that cannot supply types emits exactly what it emitted before.
+    static func tupleBinding(argumentTypes: [String], count: Int) -> String {
+        guard argumentTypes.count == count, !argumentTypes.isEmpty else { return "args" }
+        return "(args: (\(argumentTypes.joined(separator: ", "))))"
+    }
+}

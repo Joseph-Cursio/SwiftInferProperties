@@ -84,7 +84,11 @@ struct DeterminismAcceptPathTests {
             containingType: "Highlighter"
         ))
         #expect(stub.contains("let arg0 = (Highlighter.gen()"), "the receiver comes first, from the declaring type")
-        #expect(stub.contains("{ args in args.0.render(line: args.1) == args.0.render(line: args.1) }"))
+        // Annotated since #498: a bare `args` cannot be inferred from the sample tuple.
+        #expect(stub.contains(
+            "{ (args: (Highlighter, String)) in "
+                + "args.0.render(line: args.1) == args.0.render(line: args.1) }"
+        ))
     }
 
     @Test func aDeclaredGlobalActorIsHoppedOnce() throws {
@@ -110,7 +114,10 @@ struct DeterminismAcceptPathTests {
             containingType: nil
         ))
         #expect(stub.contains("let arg0 = (Gen<Int>.int(in: -10_000 ... 10_000)).run(using: &rng)"))
-        #expect(stub.contains("{ args in combine(args.0, with: args.1) == combine(args.0, with: args.1) }"))
+        #expect(stub.contains(
+            "{ (args: (Int, Int)) in "
+                + "combine(args.0, with: args.1) == combine(args.0, with: args.1) }"
+        ))
     }
 
     /// A project-type receiver the resolver can build is built, rather than left at `.todo`.
