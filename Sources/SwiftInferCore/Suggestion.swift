@@ -83,6 +83,19 @@ public struct Suggestion: Sendable, Equatable {
     /// compatible: defaults `nil`.
     public var carrierTypeName: String?
 
+    /// **#477** — what the template actually matched, as data.
+    ///
+    /// `nil` for every template that carries no payload, which is most of them: a template whose
+    /// law is recoverable from the signature and the callee needs nothing here. It is populated by
+    /// the four whose match was computed and then **discarded into prose** — `guard-domain`,
+    /// `selection-subset`, `diff-disjointness`, `partition` — so a stub writer reads fields instead
+    /// of parsing a signal detail back apart. See `TemplateMatch` for why that parse must not be
+    /// the fallback.
+    ///
+    /// Backward-compatible: defaults `nil`, and `withGenerator(_:)`'s copy-mutation rule means no
+    /// rebuild site can silently drop it.
+    public var match: TemplateMatch?
+
     public init(
         templateName: String,
         evidence: [Evidence],
@@ -94,7 +107,8 @@ public struct Suggestion: Sendable, Equatable {
         mockGenerator: MockGenerator? = nil,
         carrier: String? = nil,
         carrierTypeName: String? = nil,
-        generatorRecipes: [GeneratorRecipe] = []
+        generatorRecipes: [GeneratorRecipe] = [],
+        match: TemplateMatch? = nil
     ) {
         self.templateName = templateName
         self.evidence = evidence
@@ -107,6 +121,7 @@ public struct Suggestion: Sendable, Equatable {
         self.carrier = carrier
         self.carrierTypeName = carrierTypeName
         self.generatorRecipes = generatorRecipes
+        self.match = match
     }
 
     /// A copy with `explainability` replaced — used by the render-time stdlib

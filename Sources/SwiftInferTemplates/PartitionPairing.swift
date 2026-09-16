@@ -32,13 +32,10 @@ public struct PartitionShape: Sendable, Equatable {
 
     /// How the tiler names the part it produces. The tiling law reads differently for each, and
     /// stating the wrong one at the reader is worse than stating none.
-    public enum TilerForm: Sendable, Equatable {
-        /// `(Int) -> Range<Int>` — the part is a range *into* the whole. Consecutive parts must abut.
-        case range
-
-        /// `(C, Int) -> C` — the part *is* a slice of the whole. The parts must concatenate to it.
-        case slice
-    }
+    ///
+    /// An alias to Core's `PartitionTilerForm` (#477) so the carried `PartitionMatch` and this
+    /// pairing pass name the same two cases rather than two enums a mapping has to keep in step.
+    public typealias TilerForm = PartitionTilerForm
 
     /// The type doing the partitioning — `ChunkPlan`.
     public let typeName: String

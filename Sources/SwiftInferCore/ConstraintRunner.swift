@@ -52,7 +52,8 @@ public enum ConstraintRunner {
             identity: constraint.identity(subject),
             carrier: constraint.carrier(subject),
             carrierTypeName: constraint.carrierType(subject),
-            generatorRecipes: constraint.generators(subject)
+            generatorRecipes: constraint.generators(subject),
+            match: constraint.match(subject)
         )
     }
 

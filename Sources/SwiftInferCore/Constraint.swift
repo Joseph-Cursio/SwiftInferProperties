@@ -109,6 +109,15 @@ public struct Constraint<Subject>: Sendable {
     /// generator from a caveat first.
     public let generators: @Sendable (Subject) -> [GeneratorRecipe]
 
+    /// **#477** — what this template matched, as data rather than as a rendered sentence.
+    ///
+    /// Defaults to `{ _ in nil }`, which is right for every template whose law a writer can
+    /// recover from the signature and the callee. The four that compute a structured match and
+    /// would otherwise spend it on a signal detail supply it here, at the point they already
+    /// computed it — so the payload cannot drift from the prose, because the prose is built from
+    /// the same value.
+    public let match: @Sendable (Subject) -> TemplateMatch?
+
     public init(
         templateName: String,
         appliesTo: @Sendable @escaping (Subject) -> Bool,
@@ -119,7 +128,8 @@ public struct Constraint<Subject>: Sendable {
         carrierType: @Sendable @escaping (Subject) -> String? = { _ in nil },
         caveats: @Sendable @escaping (Subject) -> [String] = { _ in [] },
         additionalWhySuggested: @Sendable @escaping (Subject) -> [String] = { _ in [] },
-        generators: @Sendable @escaping (Subject) -> [GeneratorRecipe] = { _ in [] }
+        generators: @Sendable @escaping (Subject) -> [GeneratorRecipe] = { _ in [] },
+        match: @Sendable @escaping (Subject) -> TemplateMatch? = { _ in nil }
     ) {
         self.templateName = templateName
         self.appliesTo = appliesTo
@@ -131,5 +141,6 @@ public struct Constraint<Subject>: Sendable {
         self.caveats = caveats
         self.additionalWhySuggested = additionalWhySuggested
         self.generators = generators
+        self.match = match
     }
 }
