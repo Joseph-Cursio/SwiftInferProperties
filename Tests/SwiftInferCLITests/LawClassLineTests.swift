@@ -89,9 +89,15 @@ struct LawClassLineTests {
     /// The class is read from `Refutability`, not restated here — a guard that hardcodes the
     /// thing it guards only checks that two copies agree.
     ///
-    /// **Three-way, and it was two-way when #466 shipped.** The earlier form asserted "ENTAILED
+    /// **Four-way now, and it was two-way when #466 shipped.** The earlier form asserted "ENTAILED
     /// exactly when `isRoleEntailed`, CONJECTURE otherwise" over a list without `determinism` —
     /// so it encoded the bug it was meant to guard against, and passed.
+    ///
+    /// The fourth class is CHARACTERISATION (#468), and **the precedence is the load-bearing
+    /// part**: it is a strict subset of role-entailed, so the more specific line has to win. A
+    /// `guard-domain` stub labelled ENTAILED would tell the reader *a pass is a statement about
+    /// the code* — and the code satisfies that law by construction, so the pass says nothing at
+    /// all. This test caught exactly that when the class was added.
     @Test("every template classifies as Refutability says", arguments: [
         "idempotence", "input-totality", "predicate", "monotonicity",
         "guard-domain", "commutativity", "role-closure", "filter-subset", "determinism"
@@ -100,11 +106,21 @@ struct LawClassLineTests {
         let suggestion = Self.suggestion(template: template)
         let line = InteractiveTriage.lawClassLine(for: suggestion)
         let tautology = Refutability.isRefutable(suggestion) == false
-        let entailed = !tautology && Refutability.isRoleEntailed(suggestion)
-        let conjecture = !tautology && !entailed
+        let characterisation = !tautology && Refutability.isCharacterisation(suggestion)
+        let entailed = !tautology && !characterisation && Refutability.isRoleEntailed(suggestion)
+        let conjecture = !tautology && !characterisation && !entailed
         #expect(line.contains("TAUTOLOGY") == tautology)
+        #expect(line.contains("CHARACTERISATION") == characterisation)
         #expect(line.contains("ENTAILED") == entailed)
         #expect(line.contains("CONJECTURE") == conjecture)
+    }
+
+    /// **Characterisation is a subset of entailed, and the sets must stay that way.** If a
+    /// template were listed as characterisation without being role-entailed, the line would claim
+    /// the code owes a law the tool does not believe it owes.
+    @Test func everyCharacterisationTemplateIsAlsoRoleEntailed() {
+        #expect(Refutability.characterisationTemplates.isSubset(of: Refutability.roleEntailedTemplates))
+        #expect(Refutability.characterisationTemplates.isDisjoint(with: Refutability.tautologicalTemplates))
     }
 
     /// Every emitted stub carries one — a header that is sometimes silent is worse than one that

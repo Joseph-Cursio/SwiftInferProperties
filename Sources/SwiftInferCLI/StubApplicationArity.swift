@@ -66,6 +66,14 @@ enum StubApplicationArity {
             }
             return InteractiveTriage.comparatorDeclineReason(callee: callee, evidence: evidence)
         }
+        // `guard-domain`'s law is source text the tool did not write, so what defeats it is a NAME
+        // in the author's own scope rather than an arity. Saying which name is the whole
+        // difference between a reader looking at their guard and looking for a tool that does not
+        // exist — the distinction this type exists to draw (#456, #468).
+        if suggestion.templateName == "guard-domain",
+           let reason = InteractiveTriage.guardDomainDeclineReason(for: suggestion) {
+            return reason
+        }
         let isArityFree = arityFreeTemplates.contains(suggestion.templateName)
         let arity = forTemplate(suggestion.templateName)
         guard isArityFree || arity != nil, let evidence = suggestion.evidence.first else {

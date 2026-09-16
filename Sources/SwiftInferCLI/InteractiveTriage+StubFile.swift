@@ -179,6 +179,20 @@ extension InteractiveTriage {
 
             """
         }
+        // Checked BEFORE `isRoleEntailed`, which it is a subset of. A characterisation law is
+        // entailed — and saying only that would tell the reader a pass is "a statement about the
+        // code", when the code satisfies the law by construction and a pass says nothing about
+        // today's behaviour. Same failure the TAUTOLOGY line exists to prevent (#466).
+        if Refutability.isCharacterisation(suggestion) {
+            return """
+            // Law class: CHARACTERISATION — this law was READ OUT OF the subject's own body, so it
+            //            cannot fail against the code it was read from and a pass says nothing
+            //            about today's behaviour. It catches an EDIT: a refactor that drops the
+            //            guard, reorders it after a mutation, or normalises the value it used to
+            //            return untouched. Read the sentence and decide whether you meant it.
+
+            """
+        }
         if Refutability.isRoleEntailed(suggestion) {
             return """
             // Law class: ENTAILED — a correct implementation cannot fail this, so a pass is a

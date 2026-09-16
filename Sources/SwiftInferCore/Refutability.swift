@@ -132,6 +132,38 @@ public enum Refutability {
         roleEntailedTemplates.contains(suggestion.templateName)
     }
 
+    /// Templates whose law is **read out of the subject's own body**, so it cannot fail against
+    /// the code it was read from.
+    ///
+    /// A strict subset of `roleEntailedTemplates`, and the distinction is about what a **pass**
+    /// means rather than about whether the law is owed. `predicate`'s totality is owed by a role
+    /// and a passing run says the code answers for every input drawn — a statement about the code.
+    /// `guard-domain`'s law is the guard, restated: the code satisfies it **by construction**, so
+    /// a passing run says nothing at all about today's behaviour.
+    ///
+    /// That does not make it worthless and it is not a tautology: it is a **characterisation**
+    /// test, and it catches an *edit* — a refactor that drops the guard, reorders it after a
+    /// mutation, or normalises the value it used to return untouched. `GuardDomainTemplate`'s own
+    /// caveat has said so since it shipped.
+    ///
+    /// It earns a set of its own because the emitted file has to **say which it is**. A reader who
+    /// takes a green characterisation tick for a correctness result has been misled by the tool,
+    /// which is the same failure the `TAUTOLOGY` line exists to prevent for `determinism` (#466).
+    ///
+    /// Adding a template here is a claim that its law is derived from the subject's body rather
+    /// than from its role or its name. If the law could be stated without reading the body, it
+    /// does not belong.
+    public static let characterisationTemplates: Set<String> = [
+        // The law IS the guard. See `GuardDomain`.
+        "guard-domain"
+    ]
+
+    /// Whether a pass tells the reader nothing about today's behaviour, because the law was read
+    /// out of the code it is checking.
+    public static func isCharacterisation(_ suggestion: Suggestion) -> Bool {
+        characterisationTemplates.contains(suggestion.templateName)
+    }
+
     /// A law worth showing a reader **below the confidence cut**: it can catch a bug, and it cannot
     /// cry wolf on correct code.
     ///
