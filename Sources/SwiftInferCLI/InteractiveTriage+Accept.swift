@@ -48,24 +48,9 @@ extension InteractiveTriage {
             )
             return nil
         }
-        let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
-        let customGenerator: (String) -> String? = { typeName in
-            resolver.customTypeGenerator(forTypeName: typeName)?.expression
-        }
+        let customGenerator = Self.customGenerator(for: context)
         guard let stub = liftedTestStub(for: suggestion, customGenerator: customGenerator) else {
-            // Two unlike causes used to share one sentence, and the shared one named the
-            // template — so a subject that simply could not be called was reported as a gap in
-            // the tool. `StubApplicationArity` answers first when it has something to say.
-            if let reason = StubApplicationArity.declineReason(for: suggestion) {
-                context.diagnostics.writeDiagnostic(
-                    "note: no stub written — \(reason); decision recorded without writing a file"
-                )
-            } else {
-                context.diagnostics.writeDiagnostic(
-                    "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
-                        + "decision recorded without writing a file"
-                )
-            }
+            reportNoStub(for: suggestion, context: context)
             return nil
         }
         let path = stubDestination(for: suggestion, context: context)
@@ -87,6 +72,35 @@ extension InteractiveTriage {
         try Data(contents.utf8).write(to: path, options: .atomic)
         context.output.write("Wrote \(path.path)")
         return path
+    }
+
+    /// Say why no stub was written, naming the cause rather than the template where it can.
+    ///
+    /// **Two unlike causes used to share one sentence**, and the shared one named the template —
+    /// so a subject that simply could not be called was reported as a gap in the tool.
+    /// `StubApplicationArity` answers first when it has something to say.
+    static func reportNoStub(for suggestion: Suggestion, context: Context) {
+        if let reason = StubApplicationArity.declineReason(for: suggestion) {
+            context.diagnostics.writeDiagnostic(
+                "note: no stub written — \(reason); decision recorded without writing a file"
+            )
+        } else {
+            context.diagnostics.writeDiagnostic(
+                "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
+                    + "decision recorded without writing a file"
+            )
+        }
+    }
+
+    /// A generator for any project type, derived from its parsed shape.
+    ///
+    /// `GeneratorResolver` is memoized and cycle-guarded, and is built per accept so the stub
+    /// emitter can render a custom-typed parameter without the subject having hand-written a
+    /// `gen()`. Lifted out of `acceptDecision`, which crossed SwiftLint's body-length cap once
+    /// #493's gate and #498's argument types both landed in it.
+    static func customGenerator(for context: Context) -> (String) -> String? {
+        let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
+        return { typeName in resolver.customTypeGenerator(forTypeName: typeName)?.expression }
     }
 
     /// Build the lifted-test source text for `suggestion`.
@@ -167,40 +181,6 @@ extension InteractiveTriage {
     /// declaring type ahead of its parameters — the same argument list, and the same declines,
     /// as the totality arm (`arityFreeArgumentTypes`). Internal rather than private so the
     /// accept path's behaviour can be tested without writing files.
-    static func deterministicStub(
-        for suggestion: Suggestion,
-        customGenerator: ((String) -> String?)? = nil
-    ) -> String? {
-        guard let evidence = suggestion.evidence.first,
-              let callee = CalleeReference(evidence: evidence),
-              let argumentTypes = arityFreeArgumentTypes(callee: callee, evidence: evidence) else {
-            return nil
-        }
-        // Async / throwing candidates render as `(P0) async throws -> U` (Swift
-        // order) in the evidence signature — detect the markers, then strip them
-        // so the return-type extraction stays untouched. The emitter reassembles
-        // the effect prefix (`await` / `try?`) on the call.
-        let isAsync = evidence.signature.contains(" async")
-        let isThrows = evidence.signature.contains(" throws")
-        let signature = evidence.signature
-            .replacingOccurrences(of: " async throws ->", with: " ->")
-            .replacingOccurrences(of: " async ->", with: " ->")
-            .replacingOccurrences(of: " throws ->", with: " ->")
-        guard let returnTypeText = returnType(from: signature) else { return nil }
-        let generators = argumentTypes.map { typeName in
-            boundedDeterminismGenerator(forTypeName: typeName)
-                ?? chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)
-        }
-        return LiftedTestEmitter.deterministic(
-            callee: callee,
-            generators: generators,
-            seed: SamplingSeed.derive(from: suggestion.identity),
-            equalityKind: equalityKind(forTypeText: returnTypeText),
-            isAsync: isAsync,
-            isThrows: isThrows
-        )
-    }
-
     /// A bounded generator for a numeric parameter type in a *determinism* stub,
     /// or `nil` for non-numeric types (the caller then chooses normally).
     ///

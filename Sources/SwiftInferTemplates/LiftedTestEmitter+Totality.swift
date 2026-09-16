@@ -62,16 +62,22 @@ extension LiftedTestEmitter {
     /// One generator renders exactly as the single-generator overload always did, so no existing
     /// stub changes shape. Two or more draw a tuple — the multi-line sample the determinism arm
     /// uses — and the call takes `args.0`, `args.1`, … in argument order.
+    /// - Parameter argumentTypes: the drawn values' types, in argument order, used to ANNOTATE
+    ///   the property closure's tuple parameter. Empty, or a count that disagrees with
+    ///   `generators`, emits exactly what it emitted before — see `tupleBinding`.
     public static func total(
         callee: CalleeReference,
         seed: SamplingSeed.Value,
         generators: [String],
         isThrowing: Bool,
-        isAsync: Bool
+        isAsync: Bool,
+        argumentTypes: [String] = []
     ) -> String {
         let testFunctionName = "\(callee.bareName)_isTotal"
         let isTuple = generators.count > 1
-        let bind = isTuple ? "args" : "value"
+        let bind = isTuple
+            ? tupleBinding(argumentTypes: argumentTypes, count: generators.count)
+            : "value"
         var invocation = callee.call(isTuple ? generators.indices.map { "args.\($0)" } : ["value"])
         if isAsync { invocation = "await \(invocation)" }
         if isThrowing { invocation = "try? \(invocation)" }

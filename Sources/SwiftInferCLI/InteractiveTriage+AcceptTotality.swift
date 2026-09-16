@@ -98,7 +98,10 @@ extension InteractiveTriage {
             seed: seed,
             generators: argumentTypes.map { totalityGenerator(for: $0, customGenerator: customGenerator) },
             isThrowing: evidence.signature.contains(" throws"),
-            isAsync: evidence.signature.contains(" async")
+            isAsync: evidence.signature.contains(" async"),
+            // #498 — `arityFreeArgumentTypes` already returned these, in the same order the
+            // generators were built from; they just never reached the property closure.
+            argumentTypes: argumentTypes
         )
     }
 
