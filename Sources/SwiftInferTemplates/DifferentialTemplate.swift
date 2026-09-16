@@ -51,9 +51,11 @@ public enum DifferentialTemplate {
             evidence: { [$0.reference.inferenceEvidence, $0.variant.inferenceEvidence] },
             identity: { pair in
                 SuggestionIdentity(
+                    // Both halves in full: a pair keyed on two bare names collapses two
+                    // different pairings that happen to share them (#490).
                     canonicalInput: "differential-equivalence|"
-                        + "\(pair.reference.containingTypeName ?? "")|\(pair.reference.name)|"
-                        + "\(pair.variant.containingTypeName ?? "")|\(pair.variant.name)"
+                        + IdempotenceTemplate.canonicalSignature(of: pair.reference) + "|"
+                        + IdempotenceTemplate.canonicalSignature(of: pair.variant)
                 )
             },
             carrier: { $0.reference.containingTypeName },

@@ -45,12 +45,11 @@ extension SwiftInferCommand.Discover {
     /// line saying how many there were, so the five golden tests read as *corroboration* —
     /// which is what they are — rather than vanishing.
     ///
-    /// **That reading is not safe for every template, and the note now says which it is.** It
-    /// holds when the identity carries argument labels, which is every template routed through
-    /// `IdempotenceTemplate.canonicalSignature`. Six are not: they key on the declaring type and
-    /// the bare name, so overloads differing only by label share a key and the collapse folds
-    /// together laws that are genuinely different — see
-    /// `SuggestionIdentity.templatesKeyedWithoutArgumentLabels` and issue #490.
+    /// **That reading is not safe merely because two rows share a key.** Six templates used to
+    /// key on the declaring type and the bare name, so overloads differing only by argument label
+    /// shared one key and the collapse folded together laws that were genuinely different (#490).
+    /// Every template now carries the full signature; the note still distinguishes the two cases
+    /// by what the copies were ABOUT rather than by trusting the key.
     ///
     /// The line does not name the test methods, and that is now a choice rather than a
     /// limitation. It used to be the latter: `LiftedOrigin` carried a `testMethodName` and a
@@ -152,9 +151,14 @@ extension SwiftInferCommand.Discover {
     /// The sentence the survivor carries, chosen by what the collapsed copies were **about**.
     ///
     /// One declaration seen `copies` times is corroboration and says so. More than one declaration
-    /// under one key is not, and says *that* — naming the reason when the template's key is known
-    /// to omit argument labels, because a reader who cannot see why two laws merged cannot judge
-    /// whether they should have.
+    /// under one key is not, and says *that*.
+    ///
+    /// The second case used to name its cause — six templates keyed on the declaring type and the
+    /// bare function name, so overloads differing only by argument label shared a key (#490).
+    /// Every template now carries the full signature, so there is no longer a standing cause to
+    /// name. The branch stays because a collapse over distinct declarations would still be worth
+    /// reporting honestly if one ever happened, and "should not happen" is not a reason to tell a
+    /// reader something the tool has not checked.
     static func collapseNote(
         for suggestion: Suggestion,
         copies: Int,
@@ -167,14 +171,9 @@ extension SwiftInferCommand.Discover {
                 + "corroboration rather than separate findings. Collapsed to one row; \(skip) "
                 + "already suppressed all \(copies)."
         }
-        let why = SuggestionIdentity.keyMayConflateOverloads(templateName: suggestion.templateName)
-            ? " `\(suggestion.templateName)` keys its identity on the declaring type and the bare "
-                + "function name, WITHOUT argument labels, so overloads that differ only by label "
-                + "share one key (issue #490)."
-            : ""
         return "Collapsed \(copies) suggestions over \(distinctDeclarations) DIFFERENT "
             + "declarations into this row — NOT corroboration. They share a `SuggestionIdentity`, "
-            + "so this row states one of them and \(skip) suppresses all \(copies).\(why) Read the "
+            + "so this row states one of them and \(skip) suppresses all \(copies). Read the "
             + "declarations before treating the count as agreement."
     }
 }
