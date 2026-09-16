@@ -41,6 +41,39 @@ public struct SuggestionIdentity: Sendable, Equatable, Hashable, Codable {
         self.normalized = hex
     }
 
+    /// Templates whose `canonicalInput` is built from the declaring type and the **bare function
+    /// name**, without argument labels or parameter types.
+    ///
+    /// Everything else routes through `IdempotenceTemplate.canonicalSignature(of:)`, which carries
+    /// labels, parameter types and the return type — so two overloads are two identities, and a
+    /// collapse there really is one law stated more than once.
+    ///
+    /// **These six cannot tell overloads apart**, and Swift overloads on labels. Measured over the
+    /// 19 corpus-funnel repositories plus the 20 manifest corpora: 22 of their rows collapse,
+    /// hiding up to 43 more. `ChannelPipeline` declares one `addHandler` and **six**
+    /// `removeHandler` overloads — by handler, by name, by context, each with and without a
+    /// promise — and reports them as one row *stated 6 times*; GRDB's `Database` does the same with
+    /// three add/remove pairs.
+    ///
+    /// The set exists so the collapse note can say which case the reader is looking at rather than
+    /// asserting corroboration it cannot know. **It is a description of a defect, not a design** —
+    /// issue #490 proposes routing these through the canonical signature, which deletes this set.
+    /// Until then, adding a template here is a claim that its key omits labels; check its
+    /// `identity:` closure before doing so.
+    public static let templatesKeyedWithoutArgumentLabels: Set<String> = [
+        "state-machine",
+        "comparator",
+        "input-totality",
+        "equivalence-relation",
+        "functor-identity",
+        "differential-equivalence"
+    ]
+
+    /// Whether a collapse under this template's key may have folded together *different* laws.
+    public static func keyMayConflateOverloads(templateName: String) -> Bool {
+        templatesKeyedWithoutArgumentLabels.contains(templateName)
+    }
+
     private static func hexByte(_ byte: UInt8) -> String {
         let raw = String(byte, radix: 16, uppercase: true)
         return raw.count == 1 ? "0" + raw : raw
