@@ -123,6 +123,31 @@ struct GeneratorBlockerCensusMeasuredTests {
     /// initializers and its enum cases, and those are exactly what a memberwise strategy needs.
     static func describe(_ shape: TypeShape) -> String {
         let kind = shape.kind.rawValue
+        // ⚠ ASK THIS FIRST. An empty shape has two unlike causes that look identical: the type
+        // really has no stored members, or its declaration was never scanned and the target only
+        // EXTENDS it. `TodoReason` measured the second in August 2026 — "435 of the 449 types in
+        // the 'no visible stored properties' bucket had no declaration in the scanned target at
+        // all … an enum lands here too: with no primary declaration the scanner cannot know the
+        // kind, `TypeShape.kind` falls back to `.struct`". Against that, "938 types have nothing
+        // to build from" would be a sentence about declarations nobody had read.
+        //
+        // ⚠ **IT FIRES ZERO TIMES, AND THE ZERO IS STRUCTURAL RATHER THAN MEASURED** — which is
+        // the stronger result, and is why the 938 stands. `TypeShapeBuilder.shape` RETURNS NIL
+        // for a group with no primary declaration, so a type this target merely extends never
+        // becomes a `TypeShape` here and cannot be in any bucket this probe reports. The two
+        // populations arrive by different doors: `TodoReason`'s 435 are shapes built by
+        // `PropertyLawDiscoveryTool`'s scanner, the ONLY producer that sets this flag `false`.
+        //
+        // Kept as a guard, not as evidence. It costs one comparison and it is the assertion that
+        // the sentence above stays true — the day a builder starts recording these instead of
+        // dropping them, this reports them rather than counting them as stateless types.
+        // ⚠ Its one inaccuracy is upstream of here and unreachable: the synthetic `hasUserGen`
+        // shape at `TypeShapeBuilder.swift:164` has no primary declaration and takes the
+        // parameter's `true` default. It is buildable by construction, so it never reaches
+        // `describe`.
+        guard shape.hasPrimaryDeclaration else {
+            return "declaration never scanned — this target only extends it"
+        }
         if shape.storedMembers.isEmpty, shape.initializers.isEmpty, shape.enumCases.isEmpty {
             return "\(kind), nothing to build from"
         }
