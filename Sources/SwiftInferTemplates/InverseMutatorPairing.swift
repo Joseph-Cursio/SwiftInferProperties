@@ -75,21 +75,58 @@ public enum InverseMutatorPairing {
         }
 
         return byType.sorted { $0.key < $1.key }.flatMap { _, members -> [InverseMutatorPair] in
-            rules.compactMap { rule in
-                guard let forward = members.first(where: { matches($0.name, rule.forward) }),
-                      let backward = members.first(where: { matches($0.name, rule.backward) }),
-                      forward.name != backward.name,
-                      // The forward move must say WHICH way it went — see `isMove`.
-                      isMove(forward) else {
-                    return nil
+            rules.flatMap { pairs(in: members, under: $0) }
+        }
+    }
+
+    /// Every pair one rule finds on one type — **every** pair, not the first.
+    ///
+    /// `members.first(where:)` on each side capped this at one pair per (type, rule), and
+    /// `docs/measurements/normal-form-state-machine-writers.md` measured two types where that
+    /// loses a law the tool had already found the halves of: `GRDB.Database` declares
+    /// `add(function:)`/`remove(function:)` AND `add(collation:)`/`remove(collation:)` and yielded
+    /// one row; `RuleDetailViewModel` declares three add/remove pairs (Disabled, OptIn, Only) and
+    /// yielded one — the wrong one, since the first `add…` and the first `remove…` on that type
+    /// name different rules.
+    private static func pairs(
+        in members: [FunctionSummary],
+        under rule: Rule
+    ) -> [InverseMutatorPair] {
+        // The forward move must say WHICH way it went — see `isMove` — and must not announce a
+        // second operation, which no single backward move undoes.
+        let forwards = members.filter {
+            matches($0.name, rule.forward) && isMove($0)
+                && !InverseMutatorNoun.announcesASecondOperation($0, afterStem: rule.forward)
+        }
+        // The `forward.name != backward.name` guard the original carried is in the inner loop,
+        // where the two are actually in hand.
+        let backwards = members.filter { matches($0.name, rule.backward) }
+        guard !forwards.isEmpty, !backwards.isEmpty else { return [] }
+
+        var found: [InverseMutatorPair] = []
+        for forward in forwards {
+            let forwardNoun = InverseMutatorNoun.tokens(of: forward, afterStem: rule.forward)
+            for backward in backwards where backward.name != forward.name {
+                let backwardNoun = InverseMutatorNoun.tokens(of: backward, afterStem: rule.backward)
+                // The backward move may name nothing — `navigateUp()`, and there is only one way
+                // up — but only where there is one way DOWN too, since with two forwards nothing
+                // says which one a single unnamed backward undoes. An empty FORWARD noun is never
+                // excused: naming what moved is the forward's whole job, which is why
+                // `add(_ anObject:)` × `removeObject(at:)` stays out.
+                let namesTheSameThing = forwardNoun == backwardNoun
+                    || (backwardNoun.isEmpty && forwards.count == 1)
+                if namesTheSameThing {
+                    found.append(
+                        InverseMutatorPair(
+                            forward: forward,
+                            backward: backward,
+                            convention: rule.convention
+                        )
+                    )
                 }
-                return InverseMutatorPair(
-                    forward: forward,
-                    backward: backward,
-                    convention: rule.convention
-                )
             }
         }
+        return found
     }
 
     /// The forward move must take an argument, and this gate is the difference between a law and a
