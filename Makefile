@@ -25,6 +25,29 @@
 SWIFT_ORG := $(HOME)/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift
 SWIFT ?= $(if $(wildcard $(SWIFT_ORG)),$(SWIFT_ORG),swift)
 
+# ...AND THE CHILD PROCESSES A TEST SPAWNS MUST GET THE SAME TOOLCHAIN.
+#
+# Choosing SWIFT above only decides what compiles and runs the tests. Several of them shell out
+# to SwiftPM again — `TestTargetScope`, `VerifyTargetInference`, `PackageProductResolver` all run
+# `swift package dump-package` through `DrainedProcess.standardOutputViaEnv`, which resolves the
+# name on PATH on purpose, "so the toolchain that runs `swift build` is the one that answers
+# these questions too". With SWIFT pointing one way and PATH another, that sentence is false and
+# the child gets a different compiler from its parent.
+#
+# Measured 2026-09-16, and it is not hypothetical: with swiftly on the `xcode` toolchain, PATH's
+# `swift` (Xcode 6.3.3) resolves the SDK to /Library/Developer/CommandLineTools (27.0, built with
+# Swift 6.4) and cannot compile ANY Package.swift — "failed to build module 'Swift'; this SDK is
+# not supported by the compiler". `dump-package` fails, `TestTargetScope.dump` returns nil, no
+# test target is found, and `GeneratedStubDestinationTests` goes red with 8 issues. That suite
+# exists to catch #414 — accepted stubs written to `Tests/Generated/`, which no SwiftPM target
+# builds — so the failure reads as the defect it guards against rather than as a broken PATH.
+#
+# Prepending SWIFT's own directory makes `/usr/bin/env swift` find the toolchain the gate already
+# chose. Only when SWIFT names a path: a bare `swift` has no directory, and `$(dir swift)` is
+# `./`, which would put the working directory on PATH.
+SWIFT_BIN_DIR := $(if $(findstring /,$(SWIFT)),$(patsubst %/,%,$(dir $(SWIFT))))
+export PATH := $(if $(SWIFT_BIN_DIR),$(SWIFT_BIN_DIR):$(PATH),$(PATH))
+
 SWIFT_TEST := $(SWIFT) test
 
 # Every `.subprocess` suite matches this regex: the `*MeasuredTests` family,

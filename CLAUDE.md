@@ -416,7 +416,21 @@ it, and `make test` does not run it.
   The Makefile handles this: `SWIFT` defaults to
   `~/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift` when present, so
   `make test` works regardless of what `swift` resolves to. Override with `make test SWIFT=…`.
-  A bare `swift test` will fail if your `swift` is Xcode's.
+  **It also puts that toolchain's directory on `PATH`**, because choosing `SWIFT` only decides what
+  runs the tests — `TestTargetScope` and two others shell out to `swift package dump-package`
+  through `DrainedProcess.standardOutputViaEnv`, which resolves the name on PATH on purpose.
+
+  **`.swift-version` pins the toolchain for swiftly users**, so a bare `swift` in this repo is the
+  swift.org one and Xcode's stays the default everywhere else — which is what lets SwiftMarkdownWiki
+  keep the opposite requirement. Without one of those two, a bare `swift test` fails if your
+  `swift` is Xcode's.
+
+  ⚠ **The failure does not look like a toolchain problem.** Measured 2026-09-16: PATH's `swift`
+  resolved the SDK to `/Library/Developer/CommandLineTools` (27.0, built with Swift 6.4) and could
+  not compile ANY `Package.swift` — *"this SDK is not supported by the compiler"*. `dump-package`
+  failed, no test target was found, and `GeneratedStubDestinationTests` went red with 8 issues —
+  a suite whose whole job is catching #414, stubs written where no target builds them. **It reads
+  as the defect it guards against.**
 
   This is the opposite constraint to SwiftMarkdownWiki, which needs Xcode's toolchain because the
   swift.org one cannot see SwiftUI cross-import overlay types. No single toolchain builds both.
