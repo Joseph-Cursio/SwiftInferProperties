@@ -15,15 +15,32 @@ import SwiftInferCore
 ///
 /// **Name-gated, deliberately.** A `(X, Container) -> [T]` that *derives* new
 /// elements from the container (a `map`) has the same shape and would fail subset;
-/// only a `select` / `applicable` / `layer` name asserts selection. So it is a
-/// Possible-tier name-conjecture, narrowed by the seed focus — not role-entailed.
+/// only a `select` / `applicable` / `layer` name asserts selection. Once one does,
+/// the **name is the contract** — which is why this is a member of
+/// `Refutability.roleEntailedTemplates`, Possible-tier on score and reaching a
+/// default run through the role-entailed path rather than `--include-possible`.
+///
+/// **The verb list was trimmed to make that true (#476).** It carried `collect`,
+/// `gather` and `resolve`, which are ACCUMULATION and DERIVATION verbs: nothing
+/// about `collectParticipants(diagram)` or `resolveLinks(index)` promises the
+/// result's elements came out of the container, so subset was being claimed as
+/// owed on names that never owed it. The surviving verbs all name a choice among
+/// things the container already holds, and `FilterSubsetTemplate`'s
+/// `nameAnnouncesASecondOperation` gate applies here too — see that type for the
+/// measured exhibit (`filterThenMap`) and why a verb PREFIX cannot bound a
+/// compound name.
 public enum SelectionSubsetTemplate {
 
     /// Selection verb prefixes (lower-cased). A name beginning with one asserts
     /// the function *selects* a sub-collection of a container it was handed.
+    /// `gather`, `collect` and `resolve` were REMOVED here (#476). They name building a
+    /// collection or turning one thing into another, not choosing among what a container
+    /// already holds, so they promise no membership and cannot carry role-entailment.
+    /// `layer` / `chain` / `ancestor` / `lineage` / `descendant` stay: each names a walk that
+    /// RETURNS nodes of the structure it was handed.
     public static let curatedVerbPrefixes: [String] = [
         "select", "filter", "keep", "retain", "matching", "applicable",
-        "gather", "collect", "resolve", "restrict", "only", "pick", "choose",
+        "restrict", "only", "pick", "choose",
         "layer", "chain", "ancestor", "lineage", "descendant"
     ]
 
@@ -104,8 +121,9 @@ public enum SelectionSubsetTemplate {
     }
 
     static func signals(match: Match) -> [Signal] {
-        // Possible-tier (20 + 15 = 35), the same name-conjecture posture as
-        // `filter-subset` / `idempotence`.
+        // Possible-tier on SCORE (20 + 15 = 35) but role-entailed, the same posture as
+        // `filter-subset`: it reaches a default run through the role-entailed path,
+        // not through `--include-possible`.
         [
             Signal(
                 kind: .orderedCodomainSignature,
@@ -130,7 +148,8 @@ public enum SelectionSubsetTemplate {
 
     private static func hasSelectionName(_ name: String) -> Bool {
         let lowered = name.lowercased()
-        return curatedVerbPrefixes.contains { lowered.hasPrefix($0) }
+        guard curatedVerbPrefixes.contains(where: { lowered.hasPrefix($0) }) else { return false }
+        return !FilterSubsetTemplate.nameAnnouncesASecondOperation(name)
     }
 
     static func makeCaveats(match: Match) -> [String] {
@@ -139,9 +158,10 @@ public enum SelectionSubsetTemplate {
                 + "selection returns only elements the container already held. A `select`/`layer`/… "
                 + "that maps, appends, or reads elsewhere returns one that was never in the container, "
                 + "and this law rejects exactly that.",
-            "SUBSET IS NAME-CONJECTURED, not shape-entailed. A `(X, \(match.containerType)) -> "
-                + "[\(match.elementType)]` that TRANSFORMS the members has the same shape and is a "
-                + "false positive — the law holds only because the NAME asserts selection.",
+            "THE NAME IS WHAT OWES THIS, not the shape. A `(X, \(match.containerType)) -> "
+                + "[\(match.elementType)]` that TRANSFORMS the members has the same shape and no such "
+                + "obligation — subset is owed here because the name asserts SELECTION. If this "
+                + "function nevertheless derives what it returns, that is a finding about the NAME.",
             "The element type must be Equatable (or Hashable) for the membership check to compile; "
                 + "this tool does not verify conformance — confirm before applying."
         ]

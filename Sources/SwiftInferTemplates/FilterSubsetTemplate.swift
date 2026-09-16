@@ -11,15 +11,36 @@ import SwiftInferCore
 ///
 /// **The name gates the shape, deliberately.** `[T] -> [T]` alone owes nothing:
 /// a `map` (`[1,2] -> [2,4]`) has that shape and violates subset without any bug.
-/// Subset is entailed only once a `filter` / `select` / `keep` name asserts the
-/// function *selects* rather than *transforms* — so it is a **name-conjecture**
-/// (like `idempotence` / `monotonicity`), refutable but Possible-tier, and left
-/// for the seed focus to narrow. It is not marked role-entailed for exactly this
-/// reason: a correct `map` would fail it.
+/// Subset is owed only once a `filter` / `select` / `keep` name asserts the
+/// function *selects* rather than *transforms*. Once it does, the **name is the
+/// contract** — a `filter` returning a non-member is a bug or a lie about the name
+/// — which is why `filter-subset` is a member of
+/// `Refutability.roleEntailedTemplates` rather than a conjecture like
+/// `idempotence` / `monotonicity`, where `get(key) -> key.count` is correct yet
+/// non-monotone. It stays Possible-tier on score and reaches a default run
+/// through the role-entailed path, not through `--include-possible`.
 ///
-/// **It is nonetheless refutable**, which earns it a template: a "filter" that
-/// quietly maps, appends a default, or reads from another source returns an
-/// element that was never in the input — and this law rejects exactly that.
+/// **The verb must be the name's ONLY operation, and that gate is measured, not
+/// assumed (#476).** Admission to `roleEntailedTemplates` rests on the name
+/// bounding the promise, and a verb *prefix* does not bound a compound name —
+/// the tail can revoke it. `pbt-book`'s `filterThenMap(_ values: [Int]) -> [Int]`
+/// is `values.filter { $0 > 10 }.map { $0 * 2 }`: honestly named, entirely
+/// correct, and `Set([22]) ⊆ Set([11])` is **false**. The shipped binary proposed
+/// subset on it — at Possible 35, on a run with no `--include-possible`, under a
+/// stub header reading *ENTAILED — a correct implementation cannot fail this*.
+/// `nameAnnouncesASecondOperation` is the fix: a connective (`…Then…`, `…And…`)
+/// or a transform verb in the tail means the name promises two operations, so
+/// subset is not owed and nothing is proposed.
+///
+/// Contrast the sibling admitted under the identical standard,
+/// `caseiterable-key-injectivity`: it matches `hasSuffix` on nouns (`…Key`), where
+/// the matched token *is* the head of the name and no tail can follow it. Verbs
+/// lead and nouns trail, so a verb-gated template needs this check and a
+/// noun-gated one does not.
+///
+/// **It is refutable**, which earns it a template: a "filter" that quietly maps,
+/// appends a default, or reads from another source returns an element that was
+/// never in the input — and this law rejects exactly that.
 public enum FilterSubsetTemplate {
 
     /// Curated filter/selection verb *prefixes* (matched lower-cased against the
@@ -77,9 +98,11 @@ public enum FilterSubsetTemplate {
               let element = arrayElement(of: returnType) else {
             return []
         }
-        // Possible-tier (20 + 15 = 35): a name-conjecture, narrowed by the seed
-        // focus, surfaced with `--include-possible` — the same posture as
-        // `idempotence` / `monotonicity`, and for the same reason (a `map` fails it).
+        // Possible-tier on SCORE (20 + 15 = 35) but role-entailed, so it reaches a
+        // default run through `Refutability.isWorthSurfacingBelowCut` rather than
+        // through `--include-possible`. That is the opposite posture from
+        // `idempotence` / `monotonicity`: the name here IS the contract, which is
+        // what `nameAnnouncesASecondOperation` exists to keep true.
         return [
             Signal(
                 kind: .orderedCodomainSignature,
@@ -122,7 +145,54 @@ public enum FilterSubsetTemplate {
 
     private static func hasFilterName(_ name: String) -> Bool {
         let lowered = name.lowercased()
-        return curatedVerbPrefixes.contains { lowered.hasPrefix($0) }
+        guard curatedVerbPrefixes.contains(where: { lowered.hasPrefix($0) }) else { return false }
+        return !nameAnnouncesASecondOperation(name)
+    }
+
+    /// Connectives that announce a SECOND operation, whatever it turns out to be.
+    ///
+    /// This is the general half of the gate and the cheaper one to be sure of: `filterThenMap`,
+    /// `collectAndTransform`, `selectAndSort` all promise two things, and only the first is
+    /// selection. What the second one *is* does not matter — `sort` preserves subset and `map`
+    /// does not — because the name no longer bounds the promise, and role-entailment is a claim
+    /// about what the name bounds.
+    ///
+    /// Matched as whole camelCase tokens, never as substrings, so `filterAndroidTargets`
+    /// tokenises to `android` and survives. `StreamConsumption.camelCaseTokens` is the
+    /// tokeniser the monotonicity subject census settled on for exactly this reason: an exact
+    /// whole-name match missed `_cos`, and a substring match read `distance(to:)` as trig.
+    static let secondOperationConnectives: Set<String> = ["and", "then", "plus"]
+
+    /// Verbs that name an operation applied to the ELEMENTS, so a name carrying one promises a
+    /// transform however it is spelled — `filterMappedRules`, `selectNormalizedPaths`.
+    ///
+    /// **Kept deliberately short.** The cost of a wrong entry here is a real law withdrawn, so
+    /// only tokens with no plausible noun or adjective reading are admitted. `build`, `make`,
+    /// `render`, `format`, `compute`, `generate` and `resolve` are all EXCLUDED for failing that
+    /// test — `filterBuildSettings` and `filterRenderedLines` are ordinary filters whose tail is
+    /// a noun phrase, and withdrawing them to catch a hypothetical would be the Daikon trap in
+    /// the gate rather than in the filter list.
+    static let transformVerbs: Set<String> = [
+        "map", "mapped", "mapping",
+        "transform", "transformed",
+        "convert", "converted",
+        "derive", "derived",
+        "normalize", "normalized", "normalise", "normalised",
+        "rewrite", "rewritten",
+        "expand", "expanded"
+    ]
+
+    /// Whether the name promises an operation BEYOND selection, so subset is not owed (#476).
+    ///
+    /// The leading token is the selection verb that admitted the name; only the tail is read.
+    /// Measured cost, same binary either side: the seventeen sibling repositories go 12 rows to
+    /// 11 — exactly one, and the one is the false law — and the twenty manifest corpora do not
+    /// move at all. See `docs/measurements/subset-name-contract-gate.md`.
+    static func nameAnnouncesASecondOperation(_ name: String) -> Bool {
+        let tail = StreamConsumption.camelCaseTokens(name).dropFirst()
+        return tail.contains { token in
+            secondOperationConnectives.contains(token) || transformVerbs.contains(token)
+        }
     }
 
     static func makeCaveats() -> [String] {
@@ -131,10 +201,11 @@ public enum FilterSubsetTemplate {
                 + "It is refutable where it matters: a `filter` that quietly maps, appends a default, or "
                 + "reads from another source returns an element that was never in the input, and this "
                 + "law rejects exactly that.",
-            "SUBSET IS NAME-CONJECTURED, not shape-entailed. A `[T] -> [T]` that TRANSFORMS its "
-                + "elements (a map: `[1,2] -> [2,4]`) has the same shape and is a false positive — the "
-                + "law holds only because the NAME asserts selection. Confirm the function selects "
-                + "rather than transforms.",
+            "THE NAME IS WHAT OWES THIS, not the shape. A `[T] -> [T]` that TRANSFORMS its elements "
+                + "(a map: `[1,2] -> [2,4]`) has the same shape and no such obligation — subset is owed "
+                + "here because the name asserts SELECTION, and a name that also announces a transform "
+                + "(`filterThenMap`) is rejected rather than proposed. If this function nevertheless "
+                + "transforms what it returns, that is a finding about the NAME.",
             "The element type must be Equatable (or Hashable) for the membership check to compile. "
                 + "This tool does not verify conformance — confirm before applying.",
             "Bias the generator so elements COLLIDE (a small alphabet, repeated values): a filter that "
