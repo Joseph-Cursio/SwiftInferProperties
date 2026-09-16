@@ -22,6 +22,11 @@ extension SwiftInferCommand.Discover {
         public var suggestions: [Suggestion]
         public let packageRoot: URL?
 
+        /// Skip markers in the scanned sources that matched nothing this run (#490).
+        /// Surfaced by `drift`; `discover` leaves them alone, because a marker that suppresses
+        /// nothing is not a reason to interrupt a discovery run.
+        public let unmatchedSkipHashes: Set<String>
+
         /// Refutable laws the tier cut hid — see `VisibilityCut`. Consumed by the final-answer
         /// guard in `focus(_:with:diagnostics:)`, which is the only stage that can see whether
         /// hiding them left the reader with an honest empty or a confident pile of tautologies.
@@ -137,6 +142,7 @@ extension SwiftInferCommand.Discover {
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
+            unmatchedSkipHashes: Set<String> = [],
             tierHiddenRefutableLaws: [Suggestion] = [],
             refutedLaws: [Suggestion] = [],
             inverseElementPairs: [InverseElementPair] = [],
@@ -160,6 +166,7 @@ extension SwiftInferCommand.Discover {
         ) {
             self.suggestions = suggestions
             self.packageRoot = packageRoot
+            self.unmatchedSkipHashes = unmatchedSkipHashes
             self.tierHiddenRefutableLaws = tierHiddenRefutableLaws
             self.refutedLaws = refutedLaws
             self.inverseElementPairs = inverseElementPairs

@@ -282,7 +282,9 @@ extension SwiftInferCommand.Discover {
             moduleUnderTest: GeneratedStubDestination.module(
                 forScanDirectory: directory,
                 packageRoot: packageRoot
-            )
+            ),
+            // #493 — already computed for `scaffold-kit-suites`, and dropped here until now.
+            genericParametersByName: pipeline.genericParametersByName
         )
         try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
     }
