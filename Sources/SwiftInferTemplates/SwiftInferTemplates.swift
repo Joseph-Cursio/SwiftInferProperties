@@ -213,64 +213,6 @@ public enum TemplateRegistry {
         ).suggestions
     }
 
-    /// Result of a `discoverArtifacts(in:)` run — bundles the surviving
-    /// suggestions with the inverse-element witness records M8.4.a's
-    /// `RefactorBridgeOrchestrator` needs to emit Group claims. M7.5
-    /// callers continue to use `discover(in:)` for the suggestions-only
-    /// shape; the M8.4.a CLI uses `discoverArtifacts` so it can thread
-    /// the inverse pairs into the orchestrator without a second corpus
-    /// scan.
-    public struct DiscoverArtifacts: Sendable {
-        public let suggestions: [Suggestion]
-        public let inverseElementPairs: [InverseElementPair]
-
-        /// `@lint.effect pure` advisory records — one per function the scan
-        /// inferred referentially transparent (`SoundPurity`). A separate
-        /// channel from `suggestions`: this is annotation advice, not a
-        /// property-test candidate, so it never enters the templateName-driven
-        /// accept / verify / decisions pipeline. Source-ordered.
-        public let effectAnnotations: [EffectAnnotationAdvice]
-
-        /// Function summaries the corpus scan produced. Exposed for
-        /// TestLifter M3.2's `LiftedSuggestionRecovery` pass — the
-        /// promoted lifted Suggestions need callee-type recovery from
-        /// the same `[FunctionSummary]` index TemplateEngine consumed
-        /// internally. Mirrors the M8.4.a `inverseElementPairs`
-        /// widening pattern: expose the pre-discovery state CLI
-        /// callers need to thread into downstream passes without a
-        /// second corpus scan.
-        public let summaries: [FunctionSummary]
-
-        /// Type declarations the corpus scan produced. Exposed for the
-        /// same M3.2 reason — the promoted lifted Suggestions go
-        /// through `GeneratorSelection` in CLI, which needs the
-        /// `[String: TypeShape]` index built from `typeDecls`.
-        public let typeDecls: [TypeDecl]
-
-        /// Functions the scan set aside as uncallable from an external test. A separate channel
-        /// from `summaries` for the same reason `effectAnnotations` is: these are not
-        /// property-test candidates by default and never enter the template pipeline. A **seed**
-        /// naming one is an explicit request, though, and can rescue it — with the access caveat
-        /// attached, so the reader learns what refactor unlocks the test.
-        public let restrictedFunctions: [RestrictedFunction]
-
-        public init(
-            suggestions: [Suggestion],
-            inverseElementPairs: [InverseElementPair],
-            summaries: [FunctionSummary] = [],
-            typeDecls: [TypeDecl] = [],
-            effectAnnotations: [EffectAnnotationAdvice] = [],
-            restrictedFunctions: [RestrictedFunction] = []
-        ) {
-            self.suggestions = suggestions
-            self.inverseElementPairs = inverseElementPairs
-            self.summaries = summaries
-            self.typeDecls = typeDecls
-            self.effectAnnotations = effectAnnotations
-            self.restrictedFunctions = restrictedFunctions
-        }
-    }
-
     /// Scan + discover + extract M8.3's inverse-element witnesses in
     /// one pass over the corpus. Mirrors `discover(in:)`'s semantics
     /// for suggestions and additionally returns `InverseElementPair`
@@ -356,7 +298,7 @@ public enum TemplateRegistry {
                 summaries: locallyAnalysed, manifest: $0, diagnostic: diagnostic
             )
         } ?? locallyAnalysed
-        let suggestions = discover(
+        let proposed = discover(
             in: analysed,
             identities: corpus.identities,
             typeDecls: corpus.typeDecls,
@@ -366,7 +308,12 @@ public enum TemplateRegistry {
             crossValidationOriginsFromTestLifter: crossValidationOriginsFromTestLifter,
             counterSignalsFromTestLifter: counterSignalsFromTestLifter,
             templateFilter: templateFilter
-        ).filter { suggestion in
+        )
+        // Recorded BEFORE the filter throws the evidence away: a marker that matches nothing
+        // suppresses nothing, and the reader cannot tell by looking — the suggestion simply
+        // appears, exactly as it would if no marker had been written (#490).
+        let unmatchedSkipHashes = skipHashes.subtracting(proposed.map(\.identity.normalized))
+        let suggestions = proposed.filter { suggestion in
             !skipHashes.contains(suggestion.identity.normalized)
         }
         let inverseElementPairs = InverseElementPairing.candidates(
@@ -386,6 +333,7 @@ public enum TemplateRegistry {
         return DiscoverArtifacts(
             suggestions: suggestions,
             inverseElementPairs: inverseElementPairs,
+            unmatchedSkipHashes: unmatchedSkipHashes,
             summaries: corpus.summaries,
             typeDecls: corpus.typeDecls,
             effectAnnotations: EffectAnnotationAdvice.adviceList(from: corpus.summaries),

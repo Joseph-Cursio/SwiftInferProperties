@@ -78,6 +78,36 @@ extension SwiftInferCommand {
         /// three to `DriftDetector`, prints warnings to `diagnostics`.
         /// `output` stays empty when no drift is detected — the
         /// CI-friendly "silent on no-changes" shape.
+        /// Report every `// swiftinfer: skip <hash>` that matched nothing this run.
+        ///
+        /// **A marker that suppresses nothing is invisible by construction.** The suggestion it
+        /// names simply appears, which is indistinguishable from one that was never suppressed —
+        /// so the only way a reader learns is if something tells them.
+        ///
+        /// #490 made this reachable rather than hypothetical: giving six templates' identities
+        /// their argument labels changed their hashes on one commit, so every marker written
+        /// against a `comparator`, `input-totality`, `equivalence-relation`, `functor-identity`,
+        /// `state-machine` or `differential-equivalence` row went inert at once.
+        ///
+        /// ⚠ **An observation, not a diagnosis.** A marker is equally orphaned when its subject
+        /// was deleted, when the law is no longer proposed, or when it predates a rename. Nothing
+        /// here can separate those, so the sentence says what it cannot tell rather than guessing
+        /// — and it never suggests deleting the marker, which would silently re-admit a
+        /// suggestion the author had already rejected.
+        static func warnOnOrphanedSkipMarkers(
+            _ unmatched: Set<String>,
+            diagnostics: any DiagnosticOutput
+        ) {
+            for hash in unmatched.sorted() {
+                diagnostics.writeDiagnostic(
+                    "warning: `// swiftinfer: skip 0x\(hash)` matches no suggestion this run "
+                        + "proposed, so it suppresses nothing. The subject may be gone, the law "
+                        + "may no longer be proposed, or the identity may have changed — check "
+                        + "before deleting the marker."
+                )
+            }
+        }
+
         public static func run(
             directory: URL,
             explicitVocabularyPath: URL? = nil,
@@ -135,6 +165,7 @@ extension SwiftInferCommand {
             // (A true "new corpus entries since baseline" diff would need a
             // *corpus* baseline; `baseline.json` snapshots suggestions, not the
             // corpus, so the regression check lives in `verify --replay-only`.)
+            warnOnOrphanedSkipMarkers(pipeline.unmatchedSkipHashes, diagnostics: diagnostics)
             let corpus = VerifyCorpusStore.load(packageRoot: packageRoot).corpus
             if corpus.entries.isEmpty == false {
                 diagnostics.writeDiagnostic(

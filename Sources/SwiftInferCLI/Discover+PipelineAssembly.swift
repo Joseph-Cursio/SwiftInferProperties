@@ -100,6 +100,7 @@ extension SwiftInferCommand.Discover {
                 summaries: artifacts.summaries
             ),
             packageRoot: setup.packageRoot,
+            unmatchedSkipHashes: artifacts.unmatchedSkipHashes,
             tierHiddenRefutableLaws: cut.hiddenRefutable,
             refutedLaws: cut.refuted,
             inverseElementPairs: artifacts.inverseElementPairs,

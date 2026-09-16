@@ -146,6 +146,11 @@ public enum InteractiveTriage {
         /// then carries a to-do line naming what is missing rather than silently omitting it.
         public let moduleUnderTest: String?
 
+        /// Each scanned type's generic parameters, so the accept path can tell a type parameter
+        /// from a type. `Discover+PipelineAssembly` already builds this for
+        /// `scaffold-kit-suites` and dropped it before the stub writer (#493).
+        public let genericParametersByName: [String: [TypeDecl.GenericParameter]]
+
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -159,7 +164,8 @@ public enum InteractiveTriage {
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
             typeShapesByName: [String: TypeShape] = [:],
-            moduleUnderTest: String? = nil
+            moduleUnderTest: String? = nil,
+            genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:]
         ) {
             self.prompt = prompt
             self.output = output
@@ -175,6 +181,7 @@ public enum InteractiveTriage {
             self.verifyEvidenceByIdentity = verifyEvidenceByIdentity
             self.typeShapesByName = typeShapesByName
             self.moduleUnderTest = moduleUnderTest
+            self.genericParametersByName = genericParametersByName
         }
     }
 
