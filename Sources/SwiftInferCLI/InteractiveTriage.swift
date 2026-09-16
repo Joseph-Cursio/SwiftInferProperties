@@ -150,6 +150,17 @@ public enum InteractiveTriage {
         /// from a type. `Discover+PipelineAssembly` already builds this for
         /// `scaffold-kit-suites` and dropped it before the stub writer (#493).
         public let genericParametersByName: [String: [TypeDecl.GenericParameter]]
+        /// Where each scanned type is declared, and the package those files sit in — the two
+        /// maps `VerifyImportSet` needs to turn a carrier's reachable types into imports.
+        ///
+        /// Discover already builds `sourceFileByTypeName` (`Discover.sourceFileIndex(from:)`)
+        /// and dropped it before the stub writer, which is why the accept path could not answer
+        /// a question the verify path had answered since 2026-08-03 (#492).
+        public let sourceFileByTypeName: [String: String]
+
+        /// `nil` for a caller with no package on disk, which is every unit fixture; carrier
+        /// imports are then not resolved and the stub emits what it did before.
+        public let packageRoot: URL?
 
         public init(
             prompt: any PromptInput,
@@ -165,7 +176,9 @@ public enum InteractiveTriage {
             verifyEvidenceByIdentity: [String: VerifyEvidence] = [:],
             typeShapesByName: [String: TypeShape] = [:],
             moduleUnderTest: String? = nil,
-            genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:]
+            genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
+            sourceFileByTypeName: [String: String] = [:],
+            packageRoot: URL? = nil
         ) {
             self.prompt = prompt
             self.output = output
@@ -182,6 +195,8 @@ public enum InteractiveTriage {
             self.typeShapesByName = typeShapesByName
             self.moduleUnderTest = moduleUnderTest
             self.genericParametersByName = genericParametersByName
+            self.sourceFileByTypeName = sourceFileByTypeName
+            self.packageRoot = packageRoot
         }
     }
 

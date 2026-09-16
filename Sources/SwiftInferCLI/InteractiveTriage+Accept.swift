@@ -63,7 +63,8 @@ extension InteractiveTriage {
             stub: stub,
             suggestion: suggestion,
             moduleUnderTest: context.moduleUnderTest,
-            fileName: fileName
+            fileName: fileName,
+            carrierImports: Self.carrierImports(for: context)
         )
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
@@ -72,35 +73,6 @@ extension InteractiveTriage {
         try Data(contents.utf8).write(to: path, options: .atomic)
         context.output.write("Wrote \(path.path)")
         return path
-    }
-
-    /// Say why no stub was written, naming the cause rather than the template where it can.
-    ///
-    /// **Two unlike causes used to share one sentence**, and the shared one named the template —
-    /// so a subject that simply could not be called was reported as a gap in the tool.
-    /// `StubApplicationArity` answers first when it has something to say.
-    static func reportNoStub(for suggestion: Suggestion, context: Context) {
-        if let reason = StubApplicationArity.declineReason(for: suggestion) {
-            context.diagnostics.writeDiagnostic(
-                "note: no stub written — \(reason); decision recorded without writing a file"
-            )
-        } else {
-            context.diagnostics.writeDiagnostic(
-                "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
-                    + "decision recorded without writing a file"
-            )
-        }
-    }
-
-    /// A generator for any project type, derived from its parsed shape.
-    ///
-    /// `GeneratorResolver` is memoized and cycle-guarded, and is built per accept so the stub
-    /// emitter can render a custom-typed parameter without the subject having hand-written a
-    /// `gen()`. Lifted out of `acceptDecision`, which crossed SwiftLint's body-length cap once
-    /// #493's gate and #498's argument types both landed in it.
-    static func customGenerator(for context: Context) -> (String) -> String? {
-        let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
-        return { typeName in resolver.customTypeGenerator(forTypeName: typeName)?.expression }
     }
 
     /// Build the lifted-test source text for `suggestion`.
