@@ -284,7 +284,10 @@ extension SwiftInferCommand.Discover {
                 packageRoot: packageRoot
             ),
             // #493 — already computed for `scaffold-kit-suites`, and dropped here until now.
-            genericParametersByName: pipeline.genericParametersByName
+            genericParametersByName: pipeline.genericParametersByName,
+            // #492 — the same map the index path already consumes. It was computed and dropped.
+            sourceFileByTypeName: pipeline.sourceFileByTypeName,
+            packageRoot: packageRoot
         )
         try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
     }
