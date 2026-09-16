@@ -45,11 +45,11 @@ public enum SelectionSubsetTemplate {
     ]
 
     /// The resolved container/member/element for a matching selection.
-    struct Match: Sendable, Equatable {
-        let containerType: String
-        let collectionMember: String
-        let elementType: String
-    }
+    ///
+    /// `SelectionSubsetMatch` lives in Core rather than here (#477) because it is carried on the
+    /// `Suggestion`: one definition, so the payload a writer reads and the value the caveat is
+    /// built from cannot drift apart.
+    typealias Match = SelectionSubsetMatch
 
     public static func suggest(
         for summary: FunctionSummary,
@@ -116,7 +116,8 @@ public enum SelectionSubsetTemplate {
             },
             carrier: { _ in match.containerType },
             carrierType: { _ in match.containerType },
-            caveats: { _ in Self.makeCaveats(match: match) }
+            caveats: { _ in Self.makeCaveats(match: match) },
+            match: { _ in .selectionSubset(match) }
         )
     }
 

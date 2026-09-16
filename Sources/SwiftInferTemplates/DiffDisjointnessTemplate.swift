@@ -26,12 +26,10 @@ public enum DiffDisjointnessTemplate {
         ("gained", "lost"), ("new", "old")
     ]
 
-    struct Match: Sendable, Equatable {
-        let diffType: String
-        let memberA: String
-        let memberB: String
-        let elementType: String
-    }
+    /// `DiffDisjointnessMatch` lives in Core rather than here (#477) — see
+    /// `SelectionSubsetTemplate.Match` for why one definition serves both the caveat and the
+    /// carried payload.
+    typealias Match = DiffDisjointnessMatch
 
     public static func suggest(
         for summary: FunctionSummary,
@@ -99,7 +97,8 @@ public enum DiffDisjointnessTemplate {
             },
             carrier: { $0.containingTypeName },
             carrierType: { $0.parameters.first?.typeText ?? $0.containingTypeName },
-            caveats: { _ in Self.makeCaveats(match: match) }
+            caveats: { _ in Self.makeCaveats(match: match) },
+            match: { _ in .diffDisjointness(match) }
         )
     }
 

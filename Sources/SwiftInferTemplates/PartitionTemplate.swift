@@ -41,8 +41,31 @@ public enum PartitionTemplate {
             carrier: { $0.typeName },
             carrierType: { $0.typeName },
             caveats: Self.makeCaveats(for:),
-            generators: Self.makeGenerators(for:)
+            generators: Self.makeGenerators(for:),
+            match: Self.makeMatch(for:)
         )
+    }
+
+    /// The shape, flattened to names for the carried payload (#477).
+    ///
+    /// **`PartitionShape` holds two whole `FunctionSummary` values and this holds none.** That is
+    /// `Evidence`'s rule — *captured as text rather than a pointer back to the `FunctionSummary`
+    /// so renderer output is decoupled from the parsing pipeline* — applied one layer out: a
+    /// payload carrying the parse tree would couple every consumer of a `Suggestion` to the
+    /// scanner.
+    ///
+    /// The index parameter is found by `PartitionPairing.isInteger`, the same predicate the
+    /// pairing pass recognises the shape with and `makeGenerators` already shares. A third copy
+    /// of that list is how the generator could stop finding an index the pairing had accepted.
+    static func makeMatch(for shape: PartitionShape) -> TemplateMatch? {
+        .partition(PartitionMatch(
+            typeName: shape.typeName,
+            tilerName: shape.tiler.name,
+            tilerForm: shape.tilerForm,
+            indexParameterName: shape.tiler.parameters
+                .first { PartitionPairing.isInteger($0.typeText) }?.internalName,
+            progressName: shape.progress?.name
+        ))
     }
 
     /// The generator the totality clause needs — and without which that clause is decoration.

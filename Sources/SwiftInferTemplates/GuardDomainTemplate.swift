@@ -56,7 +56,10 @@ public enum GuardDomainTemplate {
             },
             carrier: { $0.containingTypeName },
             carrierType: { $0.parameters.first?.typeText ?? $0.containingTypeName },
-            caveats: { _ in Self.makeCaveats() }
+            caveats: { _ in Self.makeCaveats() },
+            // #477 — the same `GuardDomain` the signal renders into prose, carried as data. The
+            // signal is built from this value, so the two cannot disagree.
+            match: { $0.bodySignals.guardDomain.map(TemplateMatch.guardDomain) }
         )
     }
 
