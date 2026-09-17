@@ -89,6 +89,14 @@ public struct Evidence: Sendable, Equatable {
     /// `nil` means *not recorded*, which is the behaviour every call site had before this.
     public let globalActor: String?
 
+    /// The subject function's OWN generic parameters, mirroring `FunctionSummary.genericParameters`.
+    ///
+    /// Carried so the accept path can withdraw a stub whose call would name one (`C.gen()`), which
+    /// no generator or import makes compile (#497). The declaring TYPE's parameters are not here —
+    /// they are joined by name through `genericParametersByName`. Empty means *not generic, or not
+    /// recorded*; the many hand-built rows keep compiling and keep their behaviour.
+    public let genericParameters: [TypeDecl.GenericParameter]
+
     public init(
         displayName: String,
         signature: String,
@@ -101,7 +109,8 @@ public struct Evidence: Sendable, Equatable {
         parameterTypeNames: [String] = [],
         parameterInternalNames: [String] = [],
         qualifiedTypeName: String? = nil,
-        globalActor: String? = nil
+        globalActor: String? = nil,
+        genericParameters: [TypeDecl.GenericParameter] = []
     ) {
         self.displayName = displayName
         self.signature = signature
@@ -115,6 +124,7 @@ public struct Evidence: Sendable, Equatable {
         self.parameterInternalNames = parameterInternalNames
         self.qualifiedTypeName = qualifiedTypeName
         self.globalActor = globalActor
+        self.genericParameters = genericParameters
     }
 
     /// This row with its global actor filled in — used by the post-pass that resolves isolation
@@ -132,7 +142,8 @@ public struct Evidence: Sendable, Equatable {
             parameterTypeNames: parameterTypeNames,
             parameterInternalNames: parameterInternalNames,
             qualifiedTypeName: qualifiedTypeName,
-            globalActor: actor
+            globalActor: actor,
+            genericParameters: genericParameters
         )
     }
 }

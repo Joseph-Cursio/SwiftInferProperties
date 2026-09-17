@@ -76,7 +76,6 @@ extension FunctionScannerVisitor {
         // collapse, so computing them separately would walk the body twice and
         // could drift.
         let purityVerdict = SoundPurity.verdict(for: node)
-        let isInferredPure = purityVerdict == .pure
         // Clock-determinism claim — same scan-time posture as the purity
         // verdict above; consumed by the async-veto relaxation (workplan
         // Phase 4). First EffectAnnotationParser use in this repo.
@@ -114,7 +113,7 @@ extension FunctionScannerVisitor {
             qualifiedContainingTypeName: qualifiedContainingTypeName,
             discoverableGroup: discoverableGroup,
             invariantKeypath: invariantKeypath,
-            isInferredPure: isInferredPure,
+            isInferredPure: purityVerdict == .pure,
             isClockDeterministic: isClockDeterministic,
             declaresUnknownEffect: declaresUnknownEffect,
             docComment: docComment,
@@ -122,7 +121,8 @@ extension FunctionScannerVisitor {
             purityVerdict: purityVerdict,
             bodyFingerprint: bodyFingerprint,
             globalActor: resolvedGlobalActor(of: node),
-            calledFreeFunctionNames: calleeCollector.names
+            calledFreeFunctionNames: calleeCollector.names,
+            genericParameters: Self.genericParameters(in: node.genericParameterClause)
         )
     }
 

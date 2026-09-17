@@ -163,7 +163,8 @@ extension InversePairTemplate {
         return Evidence(
             displayName: displayName,
             signature: signature,
-            location: lifted.originalSummary.location
+            location: lifted.originalSummary.location,
+            genericParameters: lifted.originalSummary.genericParameters
         )
     }
 

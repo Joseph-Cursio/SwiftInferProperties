@@ -299,7 +299,8 @@ extension IdempotenceTemplate {
             isInstanceMethod: summary.containingTypeName != nil && !summary.isStatic,
             isMutatingMethod: summary.isMutating,
             isNullary: summary.parameters.isEmpty,
-            returnsSelfType: false
+            returnsSelfType: false,
+            genericParameters: summary.genericParameters
         )
     }
 

@@ -59,12 +59,7 @@ extension FunctionScannerVisitor {
         // (`CodableRoundTripTemplate`). `InitializerDecodeSynthesizer` stays
         // struct-gated, so extension inits reach only the codable-round-trip
         // recogniser, which hard-filters to `Decoder`-typed inits.
-        let genericParameters = genericParameterClause?.parameters.map {
-            TypeDecl.GenericParameter(
-                name: $0.name.text,
-                constraint: $0.inheritedType?.trimmedDescription
-            )
-        } ?? []
+        let genericParameters = Self.genericParameters(in: genericParameterClause)
         let initializers = (kind == .struct || kind == .extension)
             ? MemberBlockInspector.initializers(in: memberBlock)
             : []
@@ -95,5 +90,19 @@ extension FunctionScannerVisitor {
             isVisibleToTestableImport: modifiers
                 .map { Self.access(of: $0) != .notVisibleToTests } ?? true
         )
+    }
+
+    /// The parameters a `<…>` clause binds, as written. Shared by the type path and the function
+    /// path so a generic function records its own parameters in exactly the shape a generic type
+    /// does — `GenericSubjectGate` reads both through one type, and two parsers would drift (#497).
+    static func genericParameters(
+        in clause: GenericParameterClauseSyntax?
+    ) -> [TypeDecl.GenericParameter] {
+        clause?.parameters.map {
+            TypeDecl.GenericParameter(
+                name: $0.name.text,
+                constraint: $0.inheritedType?.trimmedDescription
+            )
+        } ?? []
     }
 }

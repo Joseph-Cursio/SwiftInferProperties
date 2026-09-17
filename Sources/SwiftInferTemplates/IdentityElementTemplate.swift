@@ -323,7 +323,8 @@ extension IdentityElementTemplate {
         Evidence(
             displayName: summary.inferenceDisplayName,
             signature: summary.inferenceSignature,
-            location: summary.location
+            location: summary.location,
+            genericParameters: summary.genericParameters
         )
     }
 

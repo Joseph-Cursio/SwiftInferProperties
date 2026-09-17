@@ -261,6 +261,19 @@ public struct FunctionSummary: Sendable, Equatable {
     /// (PRD §7.5 skip markers, §16 #1), and this must not. See `SubjectFingerprint`.
     public let bodyFingerprint: String?
 
+    /// The function's OWN generic parameters — `<C: MutableCollection>` on
+    /// `func swapAtInvolutionCounterexample<C: MutableCollection>(for sample: C)` — as written.
+    ///
+    /// **Not the declaring type's.** Those live on `TypeDecl.genericParameters` and are joined by
+    /// name; these had no home at all, so the recorded signature `(C) -> String?` named a type
+    /// that exists nowhere outside the declaration and no gate could tell. A stub calling a
+    /// generic function writes `C.gen()`, which cannot compile under any budget or generator
+    /// (#497). Empty for a non-generic function and for every hand-built summary.
+    ///
+    /// ⚠ **An opaque parameter (`some Collection`) is generic too and is NOT recorded here** —
+    /// it has no clause to read.
+    public let genericParameters: [TypeDecl.GenericParameter]
+
     public init(
         name: String,
         parameters: [Parameter],
@@ -286,7 +299,8 @@ public struct FunctionSummary: Sendable, Equatable {
         purityVerdict: PurityVerdict = .refuted,
         bodyFingerprint: String? = nil,
         globalActor: String? = nil,
-        calledFreeFunctionNames: [String] = []
+        calledFreeFunctionNames: [String] = [],
+        genericParameters: [TypeDecl.GenericParameter] = []
     ) {
         self.name = name
         self.parameters = parameters
@@ -313,6 +327,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.bodyFingerprint = bodyFingerprint
         self.globalActor = globalActor
         self.calledFreeFunctionNames = calledFreeFunctionNames
+        self.genericParameters = genericParameters
     }
 }
 
