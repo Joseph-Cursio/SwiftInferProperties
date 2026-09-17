@@ -79,8 +79,14 @@ extension InteractiveTriage {
     ///
     /// ⚠ **Reaching `default` is a GAP, not a design.** This said *"every shipped template has a
     /// stub arm — `default` is a defensive fallback"* until the corpus funnel census measured it
-    /// as the path taken by **244 refutable suggestions**, 148 of them role-entailed (#468).
-    /// Before adding a template, add its arm.
+    /// as the path taken by 244 refutable suggestions (#468). Several arms have landed since, so
+    /// that count is history, not the gap.
+    ///
+    /// **The gap is a list, and it lives in `StubWriterCoverageTests.noWriterYet`** (#479): every
+    /// template something emits and no arm here writes, each with its measured size. That suite
+    /// fails when a new template joins the gap unlisted, and when an arm is written without its
+    /// entry being removed — so add the arm, then delete the entry, and the test says when both
+    /// are done.
     ///
     /// `customGenerator` derives a generator expression for a custom type name
     /// (from the project's parsed type shapes); it's currently wired into the
