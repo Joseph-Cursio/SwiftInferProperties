@@ -48,7 +48,6 @@ struct StubWriterCoverageTests {
         "model-law": "39 rows",
         "role-postcondition": "VERIFY · 39 rows",
         "equivalence-relation": "29 rows · 15 funnel declines, 1 repo",
-        "state-machine": "ENTAILED · 28 rows · 8 funnel declines — pairing fixed in #489, writer unbuilt",
         "set-relation-model-law": "25 rows",
         "binary-idempotence": "VERIFY · 22 rows",
         "differential-equivalence": "VERIFY · 19 rows",

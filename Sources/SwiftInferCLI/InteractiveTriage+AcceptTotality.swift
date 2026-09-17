@@ -41,6 +41,12 @@ extension InteractiveTriage {
         case "guard-domain":
             return guardDomainStub(for: suggestion, customGenerator: customGenerator)
 
+        // A SCAFFOLD, not a law (#478): the carrier, the state to compare and the move's
+        // precondition are decisions the suggestion does not carry. See
+        // `InteractiveTriage+AcceptStateMachine.swift`.
+        case "state-machine":
+            return stateMachineScaffold(for: suggestion)
+
         default:
             return nil
         }
