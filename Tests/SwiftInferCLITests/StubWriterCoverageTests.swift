@@ -53,7 +53,7 @@ struct StubWriterCoverageTests {
         "binary-idempotence": "VERIFY · 22 rows",
         "differential-equivalence": "VERIFY · 19 rows",
         "bulk-incremental-agreement": "18 rows",
-        "normal-form": "ENTAILED · 17 rows · 39 funnel declines — writer DECLINED on measurement (#478)",
+        "normal-form": "ENTAILED · 17 rows · 39 funnel declines — DECLINED by design (#478), see DeliberateStubDecline",
         "ended-access-round-trip": "16 rows",
         "functor-identity": "15 rows",
         "role-closure": "13 rows",
