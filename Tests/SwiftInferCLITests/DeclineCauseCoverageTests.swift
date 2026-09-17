@@ -12,7 +12,10 @@ import Testing
 /// carrier and for an unresolved pair.
 ///
 /// **Measured on SwiftMarkdownWiki after this: 18 declines name their cause, and the 8 that
-/// still take the generic sentence are templates that genuinely have no emitter arm.**
+/// still take the generic sentence are templates that genuinely have no emitter arm.** Which
+/// templates those are is not restated here — a count with no list went stale unseen (#479).
+/// `StubWriterCoverageTests.noWriterYet` names every template with no arm, and fails when that
+/// list and the accept path disagree.
 @Suite("Declines name their cause")
 struct DeclineCauseCoverageTests {
 
