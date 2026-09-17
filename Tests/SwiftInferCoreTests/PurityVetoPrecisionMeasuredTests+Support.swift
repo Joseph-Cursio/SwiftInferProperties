@@ -18,7 +18,7 @@ extension PurityVetoPrecisionMeasuredTests {
     /// The recorded whole-corpus survey, keyed by `identityHash`.
     static let survey: [String: SurveyRow] = {
         let path = PurityRefutationCensusMeasuredTests.packageRoot
-            .appendingPathComponent("fixtures/whole-corpus-survey/2026-08-05-whole-corpus.jsonl")
+            .appendingPathComponent("fixtures/whole-corpus-survey/2026-09-17-whole-corpus.jsonl")
         guard let text = try? String(contentsOf: path, encoding: .utf8) else { return [:] }
 
         var rows: [String: SurveyRow] = [:]
@@ -44,7 +44,7 @@ extension PurityVetoPrecisionMeasuredTests {
         case passed
         /// It never ran, so removing it costs nothing measurable.
         case inert
-        /// Not in the survey at all — the corpus has moved since 2026-08-05.
+        /// Not in the survey at all — the corpus has moved since the survey was taken.
         case unrecorded
 
         init(outcome: String?) {

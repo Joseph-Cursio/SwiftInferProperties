@@ -34,11 +34,24 @@ import Testing
 ///
 /// ## The answer key is recorded, stale, and joined exactly
 ///
-/// `fixtures/whole-corpus-survey/2026-08-05-whole-corpus.jsonl` — 281 rows, 139 of which
-/// executed. It is **13 days older than this measurement** and the corpus has moved, so
-/// the match rate is asserted rather than assumed: a join resolving almost nothing would
-/// report a veto that costs almost nothing, which is the most flattering possible artefact
-/// of a broken instrument.
+/// `fixtures/whole-corpus-survey/2026-09-17-whole-corpus.jsonl` — 633 rows, 200 of which
+/// executed. The corpus moves after every survey, so the match rate is asserted rather than
+/// assumed: a join resolving almost nothing would report a veto that costs almost nothing,
+/// which is the most flattering possible artefact of a broken instrument.
+///
+/// ⚠ **Re-taken 2026-09-17 because this control went red, and that was it working.** The
+/// census first joined the 2026-08-05 stream (281 rows). #494 then put the full signature into
+/// every suggestion identity, which rehashed `input-totality` among others, so two removals the
+/// old stream had priced (`parse`, `parseBudget`) no longer matched it and read `unrecorded` —
+/// 11 of 23 priced, one short of half. The survey was re-taken rather than the bar lowered: a
+/// stale answer key under a new identity scheme is the defect the control exists to catch.
+///
+/// ⚠ **THE WITNESS-SCOPED ARM IS VACUOUS on any survey taken after 2026-08-18** (#514). The veto
+/// SHIPPED then, and it removes exactly the scoped population before the index is built, so no
+/// post-veto survey contains a row to price: on 2026-09-17 it priced 0 of 10. The control below
+/// covers only the broad arm, so `narrowingTheScopeCostsLess`, `noVetoScopeRemovesARefutingLaw`
+/// (narrow half) and `scopingSparesThePasses` pass on a zero that means PRICED NOTHING. Read their
+/// green as the 2026-08-18 verdict, not a re-derivation of it.
 ///
 /// Joined on `SuggestionIdentity.display`, which *is* the survey's `identityHash` — an
 /// exact key, not a name. Name-keying has been the dominant defect at this seam in three
@@ -59,7 +72,7 @@ struct PurityVetoPrecisionMeasuredTests {
     /// rows being priced are mostly priced.
     @Test("control — the answer key loaded, and the removals are mostly priced")
     func theAnswerKeyResolves() {
-        #expect(Self.survey.count > 200, "the survey loaded \(Self.survey.count) rows; expected ~281")
+        #expect(Self.survey.count > 200, "the survey loaded \(Self.survey.count) rows; expected ~633")
         #expect(Self.measured.suggestions > 0, "no suggestions discovered — every number is vacuous")
 
         let priced = Self.measured.removals.filter { $0.cost != .unrecorded }.count
@@ -152,7 +165,7 @@ struct PurityVetoPrecisionMeasuredTests {
     func census() {
         let arm = Self.measured
         print("""
-        self (Sources/): \(arm.suggestions) suggestions · \(arm.recorded) with a 2026-08-05 survey row
+        self (Sources/): \(arm.suggestions) suggestions · \(arm.recorded) with a 2026-09-17 survey row
           veto on `.refuted` outright — \(arm.removals.count) removed
             \(Self.render(Self.counts(arm.removals)))
           veto scoped to witness-bearing — \(arm.narrow.count) removed

@@ -13,6 +13,7 @@ remembered count carries no record of the flags it was taken with.
 
 | file | what |
 |---|---|
+| `2026-09-17-whole-corpus.jsonl` | **633 records**, one per index entry, no `--template` filter — the re-take the purity-veto census joins (below) |
 | `2026-08-19-whole-corpus.jsonl` | **538 records**, one per index entry, no `--template` filter — the re-take |
 | `2026-08-05-whole-corpus.jsonl` | 281 records, one per index entry, no `--template` filter |
 | `2026-08-05-predicate-ab-before.jsonl` | 129 records, the `--template predicate` A/B **before**-arm |
@@ -122,6 +123,42 @@ The contrast is worth keeping, with its small numbers stated:
 **Suggestive and not a rate** — n=1 in each arm. But it points the catalogue-truth question
 where it belongs: at **unmet subjects**, not here. A survey of the corpus the tool was tuned
 on cannot answer whether the tool's laws are true in general.
+
+## The 2026-09-17 re-take — a stale answer key under a new identity scheme
+
+| | |
+|---|---|
+| subject | `SwiftInferProperties@cbdee60b`, SwiftPropertyLaws **4.7.0** |
+| **index command** | `swift-infer index --target T` for each of the six library targets, into an index **removed first** (none existed) → **633 entries** in 15s, then copied aside and passed via `--index-path` |
+| verify command | `swift-infer verify --all-from-index --max-parallel 4 --index-path <frozen>` (release binary, default budget N=1000) |
+| run | 2026-09-17 09:14–09:47 UTC · **33 min** — three times the 11 of 08-22, over 90 more entries; do not budget from either older figure |
+| result | 633 records, 633 distinct identities, exit 0 |
+
+**Why it was taken.** `PurityVetoPrecisionMeasuredTests` joins this survey on `identityHash`,
+and #494 put the full signature into every suggestion identity. That rehashed `input-totality`
+among others, so two removals the 2026-08-05 stream had priced no longer matched it and its
+control went red — 11 of 23 priced, one short of half. Re-taking the key, not lowering the bar,
+is the fix the control's own message names.
+
+⚠ **`.swiftinfer/decisions.json` was present (825 records, all `accepted`) and left in place.**
+`index` joins decisions to ANNOTATE each entry (`decision`, `decisionAt`) and filters nothing —
+checked in `IndexCommand+Projection.swift` before running, because interactive `discover` does
+suppress decided suggestions and a filter here would have removed 825 rows silently.
+
+| tier | n | ran | held | refuted | errored | declined |
+|---|---:|---:|---:|---:|---:|---:|
+| Strong | 9 | 5 | 5 | 0 | 1 | 3 |
+| Likely | 63 | 26 | 23 | 3 | 0 | 37 |
+| Possible | 270 | 169 | 153 | 16 | 20 | 81 |
+| Advisory | 291 | 0 | — | — | — | 291 |
+
+**RUNNABLE: 200 of 342 = 58.5%, against 179 of 275 = 65.1% on 2026-08-22 — and that is NOT a
+regression.** The denominator gained 67 runnable-tier rows. `Likely` alone went 28 → 63, and its
+`unsupported-template` declines went **2 → 37: 29 are `guard-domain`**, a template shipped after
+08-22 that the ACCEPT path writes and **`verify` has no dispatch for**, and 6 more are `comparator`.
+Every row that ran on 08-22 is not claimed to still run — this is not an A/B — but the drop is a
+new unverifiable template entering the denominator, which is this README's 08-19 lesson arriving
+from the other side. **`guard-domain` having no verify dispatch is recorded here, not fixed.**
 
 ## The stream now carries its own tier
 

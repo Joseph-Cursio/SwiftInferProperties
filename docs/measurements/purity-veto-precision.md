@@ -1,6 +1,7 @@
 # What would a purity veto cost?
 
-> **Status:** `measured` · **As of:** 2026-08-18
+> **Status:** `measured` · **As of:** 2026-09-17
+> ⚠ **Re-taken 2026-09-17 — read that section first.** The broad arm re-prices; **the witness-scoped arm can no longer be priced by any survey**, so its verdict below stands as a dated 2026-08-18 result ([#514](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/514)).
 
 Re-derivable at any time — `PurityVetoPrecisionMeasuredTests` *is* the harness, and
 `make batch2` runs it.
@@ -81,7 +82,48 @@ whose body reaches a settled-impure name — because a census scoring a veto aga
 
 ---
 
-## The measurement
+## Re-taken 2026-09-17 — the broad arm re-prices, the scoped arm is blind
+
+**Why.** The control went red: #494 put the full signature into every suggestion identity, which
+rehashed `input-totality`, so two removals the 2026-08-05 key had priced read `unrecorded` — 11 of
+23, one short of half. This file's own *What would reverse this* names that case: *"the survey is
+due a re-take rather than a citation"*. It was re-taken, not relaxed:
+`fixtures/whole-corpus-survey/2026-09-17-whole-corpus.jsonl`, 633 rows, on `cbdee60b`.
+
+**840 suggestions · 625 with a survey row · 23 resting on a refuted subject.**
+
+| veto scope | removed | **`refuted`** | `passed` | `inert` | `unrecorded` |
+|---|---|---|---|---|---|
+| on `.refuted` outright | **23** | **0** | **11** | 2 | 10 |
+| scoped to witness-bearing | **10** | **0** | **0** | 0 | **10** |
+
+**The broad arm re-prices and its verdict holds:** 13 of 23 priced, zero refutations, 11 passing
+laws — all `codable-round-trip :: encode(to:)`, the same template the 08-18 reading named. A veto on
+`.refuted` outright still costs passes that scoping spares.
+
+⚠ **The scoped arm prices NOTHING, and no re-take can fix it.** All ten of its removals are absent
+from the index — checked directly, zero entries — because the witness-scoped veto SHIPPED on
+2026-08-18 (`applyImpureSubjectVeto`) and removes exactly these suggestions before the index is
+built. **The veto removes its own evidence**, so every survey taken after it ships is blind to the
+arm that prices it.
+
+⚠ **So three of the suite's seven tests now pass on a zero that means *priced nothing***:
+`narrowingTheScopeCostsLess`, `noVetoScopeRemovesARefutingLaw` for the narrow arm, and
+`scopingSparesThePasses`, whose *broad 11 > narrow 0* reads as "scoping spares 11" and is an
+unpriced arm. The control that guards *mostly priced* covers only the broad arm, which is how this
+went vacuous without anything turning red. `theShippedVetoMatchesTheScope` is structural and
+unaffected.
+
+**What stands:** the 2026-08-18 scoped verdict below — *0 refutations, 2 passes, both intended* —
+as a **dated** result, taken on the last survey before the veto shipped. **What is lost:** the
+ability to re-derive it. Shipped green by choice; the structural fix is
+[#514](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/514) (price the arm against
+the pre-veto key, or declare it historical), and *a control must cover every arm a census quotes*
+is the general lesson.
+
+---
+
+## The measurement (2026-08-18)
 
 **712 suggestions · 274 with a survey row · 20 resting on a refuted subject.**
 
