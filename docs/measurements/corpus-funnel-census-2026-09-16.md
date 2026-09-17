@@ -99,9 +99,18 @@ first compiler error, 1,297 across 18 repositories at the time of the reading:
 Three of those became issues: the first is [#492](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/492)
 and [#493](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/493); the identity
 collapse found alongside it is [#490](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/490),
-now closed. **The 252 closure-parameter failures and the 74 missing-member ones are unfiled and
-uncharacterised** — recorded here so the next reader does not have to rediscover that they are
-the second- and fourth-largest buckets.
+now closed. **The 74 missing-member failures are unfiled and uncharacterised** — recorded here so
+the next reader does not have to rediscover that they are the fourth-largest bucket.
+
+✅ **The 252 closure-parameter failures were characterised and fixed the same day** — this page
+first called them unfiled, and it was out of date within hours. A multi-argument stub's property
+closure carried no annotation on its tuple
+([#498](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/498), fixed by
+[#499](https://github.com/Joseph-Cursio/SwiftInferProperties/pull/499)). **It freed no laws, as
+predicted**: 269 of the 288 stubs hitting that error also carry an underived generator, so the
+annotation changes their error to the true one instead of removing it — which is what made
+[`missing-generator-census.md`](missing-generator-census.md) measurable. 252 counts files whose
+FIRST error was this one; 288 counts every stub that hit it.
 
 ## 4. What the 666 is, and why it is not one problem
 
