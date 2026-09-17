@@ -5,37 +5,28 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
-/// **Why can the tool not derive a generator for this type?** — the probe
-/// `docs/measurements/missing-generator-census.md` §4 asks for.
+/// **Why can the tool not derive a generator for this type?** — asked of the resolver, which now
+/// answers.
 ///
-/// That census measured the population: **1,160 of 2,058 emitted stubs carry at least one
-/// `.gen()` the tool could not derive**, over **548 distinct types** whose top ten cover 26%.
-/// What it could not say is *why*, and its §3 records the failed attempt — walking each failing
-/// struct's stored members with a regex reported `some` and `View` among the blocking leaf
-/// types, because `var body: some View` is a computed property, and left 119 structs
-/// unexplained.
+/// `docs/measurements/missing-generator-census.md` measured the population — 1,326 of 2,058
+/// emitted stubs carry at least one `.gen()` the tool could not derive — and §3 attributed causes
+/// with an earlier version of this probe. That version had to INFER: `GeneratorResolver` returned
+/// `nil` from five places and reported none of them, so the probe reconstructed two paths from
+/// the resolver's inputs and read the third off the shape, leaving **370 types (18.4%) as
+/// *has members — reason not visible here***.
 ///
-/// **The only authority on what `GeneratorResolver` decided is `GeneratorResolver`**, so this
-/// asks it, over the same `TypeShape`s `Discover` builds (`TypeShapeBuilder.shapes(from:)`),
-/// through the same public entry point the accept path uses.
+/// SwiftPropertyLaws 4.7.0 (#50–#53) records the reason where the resolver gives up and returns
+/// it from `resolutionFailure(forTypeName:)`, carrying the strategist's own `.todo` sentence for
+/// `.noStrategy`. **So this probe no longer infers anything.** It asks which types are unbuildable
+/// through the whole chain the emitter uses, then asks the resolver why.
 ///
-/// ## What it attributes, and how
+/// ## How a `.noStrategy` reason is bucketed — without a second copy of the kit's table
 ///
-/// `resolve` returns `nil` down three paths, and reports which nowhere:
-///
-/// 1. **an ambiguous bare name** — two different types share it, and refusing is deliberate;
-/// 2. **no shape** — the type is external, or the scan never saw it;
-/// 3. **a failure inside `derive`** — it has a shape and still cannot be built.
-///
-/// The first two are decidable from the same inputs the resolver was given, so they are
-/// computed rather than guessed. For the third, the probe asks the resolver about **each of the
-/// type's own member types** — the three edges a generator traverses — and reports the ones
-/// that answer `nil`. That is a blocker naming a blocker, not a pattern match over source text.
-///
-/// ⚠ **A type in the third bucket with no failing member is left as its own outcome**, not
-/// folded into a neighbouring one. It means `derive` refused for a reason this probe cannot
-/// see, and saying so is the point — an unexplained residue that gets quietly bucketed is how
-/// the regex attempt produced a number that looked complete and was not.
+/// The kit buckets its own reasons with a substring table (`PropertyLawDiscoveryTool
+/// .todoCategory`), `internal` to an executable target and so not importable. Restating that
+/// table here would be the copy that drifts the day a reason is reworded. Instead a reason is
+/// reduced to its **sentence shape**: every backticked name becomes `…`. The buckets are then
+/// the resolver's own wording, and follow it when it changes.
 ///
 /// **Opt-in**, like `TrapAttributionCensusMeasuredTests`: it scans a corpus and answers a
 /// question that only changes when re-asked.
@@ -54,15 +45,7 @@ import Testing
 )
 struct GeneratorBlockerCensusMeasuredTests {
 
-    /// Why one type has no generator.
-    enum Blocker: Equatable {
-        case ambiguousBareName(declaredTimes: Int)
-        case noShape
-        case members([String])
-        case deriveRefused(shape: String)
-    }
-
-    @Test("every type the scan knows, attributed")
+    @Test("every type the scan knows, attributed by the resolver")
     func attributeEveryDeclinedType() throws {
         let root = URL(
             fileURLWithPath: ProcessInfo.processInfo.environment["SWIFT_INFER_GENERATOR_CENSUS"]!
@@ -70,69 +53,65 @@ struct GeneratorBlockerCensusMeasuredTests {
         let artifacts = try TemplateRegistry.discoverArtifacts(in: root)
         let shapes = TypeShapeBuilder.shapes(from: artifacts.typeDecls)
         let resolver = GeneratorResolver(types: shapes)
-
-        var declaredTimes: [String: Int] = [:]
-        for shape in shapes { declaredTimes[shape.name, default: 0] += 1 }
         let byName = Dictionary(shapes.map { ($0.name, $0) }) { first, _ in first }
 
-        var blockers: [String: Blocker] = [:]
+        var labels: [String: String] = [:]
+        var reasons: [String: String] = [:]
         for shape in shapes where !Self.isBuildable(shape.name, resolver: resolver) {
-            blockers[shape.name] = Self.blocker(
-                for: shape,
-                resolver: resolver,
-                declaredTimes: declaredTimes,
-                byName: byName
-            )
+            let failure = resolver.resolutionFailure(forTypeName: shape.name)
+            labels[shape.name] = Self.label(for: failure, kind: shape.kind)
+            reasons[shape.name] = Self.verbatim(failure)
         }
 
-        Self.report(blockers: blockers, total: shapes.count)
+        Self.report(labels: labels, reasons: reasons, total: shapes.count)
+        Self.reportBlame(declined: Set(labels.keys), byName: byName)
+        Self.reportSelfSpelling(declined: Set(labels.keys), byName: byName, reasons: reasons)
         // The instrument, not the answer: a run that attributes nothing has measured nothing.
         #expect(!shapes.isEmpty, "the corpus resolved no type shapes at all")
     }
 
-    /// Ask the resolver, then ask it again about the members, rather than reading source text.
-    static func blocker(
-        for shape: TypeShape,
-        resolver: GeneratorResolver,
-        declaredTimes: [String: Int],
-        byName: [String: TypeShape]
-    ) -> Blocker {
-        if let times = declaredTimes[shape.name], times > 1 {
-            return .ambiguousBareName(declaredTimes: times)
+    /// The bucket a declined type lands in: the resolver's failure case, and for `.noStrategy`
+    /// the declared kind plus the sentence shape of the strategist's reason.
+    ///
+    /// ⚠ **`nil` gets its own visible bucket rather than being folded into a neighbour.** It means
+    /// the resolver built a generator while `defaultGenerator` still emitted the `.todo` marker —
+    /// the two halves of the chain disagreeing — and hiding that is how the first regex attempt
+    /// produced a number that looked complete and was not.
+    static func label(for failure: ResolutionFailure?, kind: TypeShape.Kind) -> String {
+        switch failure {
+        case .none:
+            return "NO FAILURE RECORDED — the resolver built it and the emitter still declined"
+
+        case .notInUniverse:
+            return "not in the universe the resolver was built over"
+
+        case .ambiguous:
+            return "ambiguous — two or more types share the name"
+
+        case .aliasUnresolved:
+            return "typealias whose underlying spelling does not resolve"
+
+        case .unterminatedRecursion:
+            return "recursion with nothing to terminate it"
+
+        case .noStrategy(let reason):
+            return "\(kind.rawValue): \(sentenceShape(of: reason))"
         }
-        guard byName[shape.name] != nil else { return .noShape }
-        let failing = referencedTypeNames(of: shape)
-            .filter { $0 != shape.name }
-            // A name only counts as a blocker if the scan knows it as a type. `identifiers(in:)`
-            // over-collects on purpose — `VerifyImportSet` relies on a declaration map to filter,
-            // and without one a parameter label like `node` reads as a type.
-            .filter { byName[$0] != nil }
-            .filter { !isBuildable($0, resolver: resolver) }
-            .sorted()
-        guard failing.isEmpty else { return .members(failing) }
-        // Read off the SHAPE — the same structured record `derive` consumes — rather than the
-        // source text. A shape carries stored members, initializers and enum cases and nothing
-        // else, so this cannot pick up a computed property the way the regex attempt did.
-        return .deriveRefused(shape: describe(shape))
     }
 
-    /// What a shape `derive` refused looks like, in the terms `derive` sees it.
-    ///
-    /// The first run of this probe left 390 of 404 declines as one undifferentiated bucket. The
-    /// split is available without guessing: a shape records its kind, its stored members, its
-    /// initializers and its enum cases, and those are exactly what a memberwise strategy needs.
-    static func describe(_ shape: TypeShape) -> String {
-        let kind = shape.kind.rawValue
-        if shape.storedMembers.isEmpty, shape.initializers.isEmpty, shape.enumCases.isEmpty {
-            return "\(kind), nothing to build from"
-        }
-        if kind == "class" || kind == "actor" {
-            return "\(kind), no memberwise init"
-        }
-        if shape.enumCases.isEmpty, shape.storedMembers.isEmpty {
-            return "\(kind), initializers only"
-        }
-        return "\(kind), has members — reason not visible here"
+    /// The failure as the resolver states it, for a reader checking a bucket rather than counting
+    /// it. A sentence shape with its names replaced by `…` is right for counting and useless for
+    /// reading — asked the first time the shapes were shown.
+    static func verbatim(_ failure: ResolutionFailure?) -> String {
+        guard let failure else { return "no failure recorded" }
+        if case .noStrategy(let reason) = failure { return reason }
+        return "\(failure)"
+    }
+
+    /// A `.todo` reason with every backticked name replaced by `…`, so reasons that differ only
+    /// in the types and members they name share a bucket.
+    static func sentenceShape(of reason: String) -> String {
+        reason.replacingOccurrences(of: #"`[^`]*`"#, with: "`…`", options: .regularExpression)
     }
 
     /// Can the emitter build a value of this type — through the WHOLE chain it actually uses?
@@ -149,9 +128,65 @@ struct GeneratorBlockerCensusMeasuredTests {
             .contains(LiftedTestEmitter.todoGeneratorMarker)
     }
 
+    static func report(labels: [String: String], reasons: [String: String], total: Int) {
+        print("type shapes scanned: \(total)")
+        print("no generator:        \(labels.count)")
+        var counts: [String: Int] = [:]
+        for label in labels.values { counts[label, default: 0] += 1 }
+        for (label, count) in counts.sorted(by: { $0.value > $1.value }) {
+            print(String(format: "  %5d  %@", count, label))
+        }
+        print("\nexamples per bucket, as the resolver states them:")
+        var shown: [String: Int] = [:]
+        for (name, label) in labels.sorted(by: { $0.key < $1.key }) where shown[label, default: 0] < 3 {
+            shown[label, default: 0] += 1
+            print("  \(name): \(reasons[name] ?? label)")
+        }
+    }
+
+    /// Which unbuildable types stand in the way of others, read off the SHAPE's three edges — a
+    /// structural question the resolver's per-type reason does not aggregate.
+    static func reportBlame(declined: Set<String>, byName: [String: TypeShape]) {
+        var counts: [String: Int] = [:]
+        for name in declined {
+            guard let shape = byName[name] else { continue }
+            let blockers = referencedTypeNames(of: shape)
+                .filter { $0 != name && byName[$0] != nil && declined.contains($0) }
+            for blocker in blockers { counts[blocker, default: 0] += 1 }
+        }
+        print("\ntypes that BLOCK the most others:")
+        for (name, count) in counts.sorted(by: { $0.value > $1.value }).prefix(20) {
+            print(String(format: "  %5d  %@", count, name))
+        }
+    }
+
+    /// Declined types whose OWN edges spell `Self` — `case array([Self])`, `let next: Self?`.
+    ///
+    /// Nothing rewrites `Self` to the declaring type: `TypeShapeBuilder.resolvedSpelling` resolves
+    /// nested names against the enclosing scope and has no arm for it, and the kit's resolver looks
+    /// the spelling up by name. So a recursive payload written `[Self]` reaches the resolver as a
+    /// type called `Self`, which nothing declares — before its recursion handling, which a
+    /// collection-terminated payload is exactly the shape for, can run. Counted structurally so
+    /// the size does not rest on one example.
+    static func reportSelfSpelling(
+        declined: Set<String>,
+        byName: [String: TypeShape],
+        reasons: [String: String]
+    ) {
+        let spelled = declined
+            .filter { name in byName[name].map { referencedTypeNames(of: $0).contains("Self") } ?? false }
+            .sorted()
+        let blamed = spelled.filter { reasons[$0]?.contains("`Self`") == true }
+        print("\ndeclined types whose own edges spell `Self`: \(spelled.count)")
+        print("  … and whose reason names `Self` as what failed: \(blamed.count)")
+        for name in spelled.prefix(10) {
+            print("  \(name): \(reasons[name] ?? "")")
+        }
+    }
+
     /// The three edges a generator traverses, read off the SHAPE — the same three
-    /// `VerifyImportSet.referencedTypeTexts` walks, and the reason a computed property cannot
-    /// leak in the way it did through the regex attempt: a shape records stored members only.
+    /// `VerifyImportSet.referencedTypeTexts` walks. A shape records stored members only, so a
+    /// computed property cannot leak in the way it did through the regex attempt.
     static func referencedTypeNames(of shape: TypeShape) -> Set<String> {
         let texts = shape.storedMembers.map(\.typeName)
             + shape.initializers.flatMap { $0.parameters.map(\.typeName) }
@@ -161,64 +196,5 @@ struct GeneratorBlockerCensusMeasuredTests {
             names.formUnion(VerifyImportSet.identifiers(in: text))
         }
         return names
-    }
-
-    static func report(blockers: [String: Blocker], total: Int) {
-        print("type shapes scanned: \(total)")
-        print("no generator:        \(blockers.count)")
-        for (label, count) in tally(blockers).sorted(by: { $0.value > $1.value }) {
-            print(String(format: "  %5d  %@", count, label))
-        }
-        printExamples(blockers)
-
-        print("\ntypes that BLOCK the most others:")
-        for (name, count) in blamed(blockers).sorted(by: { $0.value > $1.value }).prefix(20) {
-            print(String(format: "  %5d  %@", count, name))
-        }
-    }
-
-    static func tally(_ blockers: [String: Blocker]) -> [String: Int] {
-        var counts: [String: Int] = [:]
-        for blocker in blockers.values {
-            counts[label(for: blocker), default: 0] += 1
-        }
-        return counts
-    }
-
-    static func label(for blocker: Blocker) -> String {
-        switch blocker {
-        case .ambiguousBareName:
-            return "ambiguous bare name"
-
-        case .noShape:
-            return "no shape — external or unscanned"
-
-        case .deriveRefused(let shape):
-            return "derive refused — \(shape)"
-
-        case .members:
-            return "blocked by a member"
-        }
-    }
-
-    static func blamed(_ blockers: [String: Blocker]) -> [String: Int] {
-        var counts: [String: Int] = [:]
-        for case .members(let names) in blockers.values {
-            for name in names { counts[name, default: 0] += 1 }
-        }
-        return counts
-    }
-
-    /// A few names per bucket, so a reader can check the attribution rather than trust it.
-    static func printExamples(_ blockers: [String: Blocker]) {
-        print("\nexamples per bucket:")
-        var shown: [String: Int] = [:]
-        for (name, blocker) in blockers.sorted(by: { $0.key < $1.key }) {
-            guard case .deriveRefused(let shape) = blocker, shown[shape, default: 0] < 4 else {
-                continue
-            }
-            shown[shape, default: 0] += 1
-            print("  \(shape): \(name)")
-        }
     }
 }
