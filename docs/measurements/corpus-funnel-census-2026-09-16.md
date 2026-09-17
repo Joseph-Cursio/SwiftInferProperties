@@ -32,6 +32,13 @@ population from the old ones, which is the finding in §3.
 Excluding the five book repos: named 2,353 · any 1,784 · refutable 785 · stub 846 ·
 compiles 112 · passes 63.
 
+⚠ **The 643 between *named* and *any* is not a catalogue gap** — measured 2026-09-17 in
+[`nothing-proposed-decomposition.md`](nothing-proposed-decomposition.md). 527 of the 639 it
+classifies are seeds the `determinism` fallback turns away at its own gates: **428 computed
+properties** rejected as parameterless although the receiver is their input, 90 same-named
+overloads sharing a `(file, symbol)` key, 9 nullary methods. The laws no template names are four
+sites across the 428 properties read. Do not quote this stage as *"no template names the shape"*.
+
 ## 1. Per repository
 
 `status` is per package, so a repository with several can show more than one.
