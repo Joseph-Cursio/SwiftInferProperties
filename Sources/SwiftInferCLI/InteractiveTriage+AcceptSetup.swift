@@ -27,16 +27,22 @@ extension InteractiveTriage {
     /// so a subject that simply could not be called was reported as a gap in the tool.
     /// `StubApplicationArity` answers first when it has something to say.
     static func reportNoStub(for suggestion: Suggestion, context: Context) {
-        if let reason = StubApplicationArity.declineReason(for: suggestion) {
-            context.diagnostics.writeDiagnostic(
-                "note: no stub written — \(reason); decision recorded without writing a file"
-            )
-        } else {
-            context.diagnostics.writeDiagnostic(
-                "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
-                    + "decision recorded without writing a file"
-            )
+        context.diagnostics.writeDiagnostic(noStubNote(for: suggestion))
+    }
+
+    /// The note `reportNoStub` writes, pure so the choice of sentence can be tested.
+    ///
+    /// **A deliberate decline answers first** (#478). A template declined by design has no
+    /// writer at ANY arity, so its reason is the truer one even where the subject's arity would
+    /// also have declined it — and saying *by design* stops a reader waiting for a writer.
+    static func noStubNote(for suggestion: Suggestion) -> String {
+        let reason = DeliberateStubDecline.reason(forTemplate: suggestion.templateName)
+            ?? StubApplicationArity.declineReason(for: suggestion)
+        if let reason {
+            return "note: no stub written — \(reason); decision recorded without writing a file"
         }
+        return "note: no stub writeout available for template '\(suggestion.templateName)' in v1; "
+            + "decision recorded without writing a file"
     }
 
     /// The two maps `VerifyImportSet` needs, or `nil` for a caller with no package on disk.
