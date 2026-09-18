@@ -54,10 +54,41 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **5,859 tests — 5,647 fast + 212 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-08-29** on **swift-property-based 2.0 /
-SwiftPropertyLaws 4.2.0** — every stage counted from that one run, and the run was UNPIPED:
-fast **5,647** · perf 8 · batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **25**.
+Suites green at **6,240 tests — 6,018 fast + 222 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-17** at `19db7e7f` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED: `make test > log 2>&1`, a REDIRECT and not a pipe, which keeps make's own exit
+code (**0**) *and* every per-stage count:
+fast **6,018** · perf 8 · batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **35**.
+**BOTH PINS MOVED since the previous reading — SwiftPropertyLaws 4.2.0 → 4.7.0 (`d6922875`,
+2026-09-16) and SEI `3ea25f2` → `1b62e764` (`44a23e1c`, 2026-09-12)** — so these counts belong to
+those pins and not to their predecessors; a re-take after a kit bump is a different measurement
+wearing the same number, which is why it was re-taken rather than carried.
+**`batch2` IS GREEN, which was PR #515's whole purpose**: 110 tests, 0 failures, 713.7s, inside its
+standing 679–801s spread — it had been red on `main` because #494 rehashed `input-totality`'s
+identity and two priced removals read `unrecorded`.
+**SEVEN OF THE EIGHT BATCH COUNTS ARE UNMOVED TO THE DIGIT, and every bit of the batch half's
+movement is `batch8`, 25 → 35**: 4 · 110 · 31 · 7 · 14 · 4 · 9 reproduce the 08-29 reading
+across **84 commits that touched `Tests/`**, and seven `batch8` suites changed in that window, so
+the +10 is not attributed to one suite here. ⚠ **A COUNT IS NOT A FIGURE**: these suites assert
+floors and memberships, so an unmoved count says no ARM was added or lost — **not** that no census
+figure moved. Their printed censuses were NOT diffed, and that is a different measurement.
+**The fast half moved 5,647 → 6,018, +371**, which is nineteen days of work rather than one change,
+so it is likewise not attributed to a suite. ⚠ **PR #515's body reported 6,018 on its own branch
+and that figure was NOT carried over** — it was re-measured here on the merge commit, because a
+reading taken on a branch is a different measurement from one taken on `main`; the agreement is a
+result, not an assumption.
+**Timings are usable, and the reason is that they are NOT uniformly inflated**: `batch5` **1,616s
+BELOW** its standing ~1,670s and `batch2` 713.7s inside its spread, against `batch3` 406s versus
+~352s and `batch8` 599s just above its ~460–592s range — and `batch8` grew by 10 tests, so its own
+rise is bought rather than noise. Mixed directions are the signature of a real reading; uniform
+inflation is the signature of a busy machine. **~72 minutes end to end INCLUDING a clean rebuild**
+(`swift package clean` first, because the merge touched test sources) — and the ten test stages
+alone sum to **~70 minutes**, so the clean cost ~2 minutes, far less than the re-take budgeted for
+it.
+**The prior reading — 5,859 = 5,647 fast + 212, taken 2026-08-29 on SwiftPropertyLaws 4.2.0 — and
+everything below it are SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
 **The batch half stood still at 210 and that is the load-bearing reading**: row 75's carrier fix
 changes VERIFY output — it took `monotonicity` from 0 to 10 `measured-bothPass` on
 `swift-collections` — and **no measured baseline in this repo moved**, `batch3` (`VerifyPipeline`)
