@@ -176,7 +176,18 @@ enum GeneratedStubDestination {
     static func module(forScanDirectory scanDirectory: URL, packageRoot: URL) -> String? {
         let scan = scanDirectory.standardizedFileURL.path
         let root = packageRoot.standardizedFileURL
+        // **Regular targets only, and that is a decision rather than an omission** (#521).
+        // This resolves the SUBJECT's module, which `rankedCandidates` then uses to find test
+        // targets exercising it and to prefer `<Module>Tests`. A subject that lives in a test
+        // target has no such module: answering `SomethingTests` here would send the ranking
+        // looking for `SomethingTestsTests`. `nil` is the better answer, and the fallback to
+        // every test target is what the doc above already describes.
+        //
+        // Until #521 this filter was unnecessary by accident: a test target reported
+        // `Sources/<name>`, which no scan directory matches. Now that the map is right, the
+        // population has to be chosen.
         let declared = TargetIsolation.declaredTargetDirectories(packageRoot: packageRoot)
+            .filter { !$0.isTest }
             .sorted { $0.path.count > $1.path.count }
         for candidate in declared {
             let directory = root.appendingPathComponent(candidate.path).standardizedFileURL.path

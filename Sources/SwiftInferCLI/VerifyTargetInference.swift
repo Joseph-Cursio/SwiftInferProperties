@@ -167,7 +167,16 @@ enum VerifyTargetInference {
     /// behaviour that existed before this was added.
     private static func manifestModule(forPath path: String, packageRoot: URL) -> String? {
         let root = packageRoot.standardizedFileURL.path
+        // **Regular targets only** (#521). This name becomes `@testable import <module>`, and a
+        // subject declared inside a test target needs no import at all — it is already in the
+        // stub's own module. Naming the test target would emit an import that does not compile,
+        // which is worse than the `nil` this returns.
+        //
+        // The filter changes nothing today: before #521 a test target reported a
+        // `Sources/<name>` directory that does not exist, so the on-disk check below rejected
+        // it. That made this correct BY ACCIDENT, and the accident is now a stated scope.
         let candidates = TargetIsolation.declaredTargetDirectories(packageRoot: packageRoot)
+            .filter { !$0.isTest }
             .sorted { $0.path.count > $1.path.count }
         for candidate in candidates {
             let directory = URL(fileURLWithPath: root)
