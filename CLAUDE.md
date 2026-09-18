@@ -54,7 +54,29 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,245 tests — 6,023 fast + 222 across `perf` and the eight batches**
+Suites green at **6,255 tests — 6,032 fast + 223 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-18** at `0abb6e63` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 72m19s):
+fast **6,032** · perf 8 · batches 4 · **111** · 31 · 7 · 14 · 4 · 9 · 35.
+**BOTH HALVES MOVED, AND BOTH WERE ALREADY KNOWN — which is exactly why they were RE-TAKEN rather
+than carried**: the fast half 6,023 → 6,032 for #519's nine arms (`TargetDefaultIsolationTests` 7,
+`NonisolatedKeywordTests` 2) and `batch2` 110 → 111 for #520's `theScopedArmIsUnpriceable`. Each
+figure had been measured on its own branch run; **6,023 + 9 and 110 + 1 is the arithmetic this file
+forbids**, and the agreement between the prediction and this run is a RESULT, not a shortcut taken.
+✅ **`batch3`'s flag is DISCHARGED, and the answer is NOISE.** The 2026-09-18 reading recorded it
+at 470s against ~352s standing and 406s the day before, +16% in a day on an unmoved count, with the
+note *two readings do not make a trend; recorded so a third can say*. **The third says 380s** —
+back inside the range, no fix, nothing changed. The standing figure stays ~352–406s and **470s is
+withdrawn as a reading, not kept as a ceiling**.
+**Timings usable and mixed in direction**: `batch5` **1,626s** below its standing ~1,670s for the
+third run running, `batch2` 760s inside its 679–801s spread, `batch8` 581s inside ~460–592s, against
+`batch1` 209s up on 186s and `batch4` 183s down on 222s. **~72 minutes end to end including a clean
+rebuild**, the ten test stages summing to **~70 minutes**, so the clean cost ~2.
+**The prior reading — 6,245 = 6,023 fast + 222, taken 2026-09-18 at `aed0b768` — follows, and
+everything below it is SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**PRIOR READING — 6,245 tests — 6,023 fast + 222 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-09-18** at `aed0b768` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
 run was UNPIPED (`make test > log 2>&1`, exit **0**):
