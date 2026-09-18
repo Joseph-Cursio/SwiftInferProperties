@@ -76,19 +76,7 @@ extension FunctionScannerVisitor {
         // collapse, so computing them separately would walk the body twice and
         // could drift.
         let purityVerdict = SoundPurity.verdict(for: node)
-        // Clock-determinism claim — same scan-time posture as the purity
-        // verdict above; consumed by the async-veto relaxation (workplan
-        // Phase 4). First EffectAnnotationParser use in this repo.
-        let isClockDeterministic = EffectAnnotationParser.isClockDeterministic(declaration: node)
-        let declaresUnknownEffect = EffectAnnotationParser.declaresUnknownEffect(declaration: node)
-        // The author's own retry-safety claim, in either spelling. Same
-        // scan-time posture and the same parser as the determinism claim
-        // above — but a DIFFERENT axis: `@lint.determinism` says the result
-        // does not vary with time, `@lint.effect` says what re-running costs.
-        // Until this line the parser was called for determinism alone, so
-        // `@Idempotent` / `@NonIdempotent` / `@ExternallyIdempotent` were
-        // parsed by a linked dependency and read by nothing.
-        let declaredEffect = EffectAnnotationParser.parseEffect(declaration: node)
+        let claims = effectClaims(of: node)
         // The leading doc comment — carried on the summary as a candidate
         // reference definition for the docstring advisory. Unclassified here.
         let docComment = DocCommentExtractor.docComment(from: node.leadingTrivia)
@@ -114,10 +102,10 @@ extension FunctionScannerVisitor {
             discoverableGroup: discoverableGroup,
             invariantKeypath: invariantKeypath,
             isInferredPure: purityVerdict == .pure,
-            isClockDeterministic: isClockDeterministic,
-            declaresUnknownEffect: declaresUnknownEffect,
+            isClockDeterministic: claims.isClockDeterministic,
+            declaresUnknownEffect: claims.declaresUnknown,
             docComment: docComment,
-            declaredEffect: declaredEffect,
+            declaredEffect: claims.declared,
             purityVerdict: purityVerdict,
             bodyFingerprint: bodyFingerprint,
             globalActor: resolvedGlobalActor(of: node),
