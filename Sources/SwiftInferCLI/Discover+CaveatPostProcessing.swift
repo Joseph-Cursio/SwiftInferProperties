@@ -257,6 +257,43 @@ extension SwiftInferCommand.Discover {
         }
     }
 
+    /// Fill in the global actor a subject inherits from its TARGET's default isolation.
+    ///
+    /// A SwiftPM target built with `.defaultIsolation(MainActor.self)` isolates every declaration
+    /// in the module with nothing written on the declaration to read, so a stub calling one from a
+    /// nonisolated context does not compile — `main actor-isolated property 'id' can not be
+    /// referenced from a nonisolated context`, and the diagnostic names neither the setting nor
+    /// the manifest (#482).
+    ///
+    /// **Runs last of the three isolation passes, and the order is the rule.** The declaration's
+    /// own attribute is read by the scanner, a conforming protocol's isolation by
+    /// `withInheritedIsolation`, and a target-wide default only where both were silent — innermost
+    /// fact wins, exactly as `withInheritedIsolation` already argues for itself.
+    ///
+    /// **`declaresNonisolated` is the guard that makes this sound.** A member that opts out sits
+    /// in a MainActor-default module and must not be hopped, and before #482 it was invisible
+    /// here: `resolvedGlobalActor` returns `nil` for the opted-out and the unannotated alike. The
+    /// scanner was computing the keyword and discarding it.
+    ///
+    /// ⚠ **Function-level only, and that is an over-approximation.** A `nonisolated` TYPE in a
+    /// MainActor-default target still has its members isolated here, because the scanner records
+    /// isolation modifiers on functions and not on type declarations — the gap `TargetIsolation`
+    /// already records as its own remaining limit (falsifier: `IndexedTypeShape.isNonisolated`).
+    /// The direction is the same one that type chose: a hop that was not needed compiles, while a
+    /// missing hop does not.
+    static func withTargetDefaultIsolation(_ suggestions: [Suggestion]) -> [Suggestion] {
+        suggestions.map { suggestion in
+            var updated = suggestion
+            updated.evidence = suggestion.evidence.map { row in
+                guard row.globalActor == nil, row.declaresNonisolated == false else { return row }
+                guard let resolved = TargetIsolation.defaultIsolation(forFile: row.location.file)
+                else { return row }
+                return row.withGlobalActor(resolved)
+            }
+            return updated
+        }
+    }
+
     /// `Scaffold` from `SwiftInferCommand.Scaffold` — `TypeDecl` records the declaration's own
     /// name, while evidence carries the full lexical path.
     static func leafName(of qualified: String) -> String {
