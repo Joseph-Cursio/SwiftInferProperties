@@ -75,6 +75,18 @@ extension PurityVetoPrecisionMeasuredTests {
         let removals: [Removal]
 
         var narrow: [Removal] { removals.filter(\.witnessBearing) }
+
+        /// The rows scoping SPARES — everything the broad veto removes and the scoped one does
+        /// not.
+        ///
+        /// **The complement is the half that can still be priced, and that is why it exists**
+        /// (#514). The scoped population is suppressed before the index is built, so no survey
+        /// taken after 2026-08-18 contains a row for it; the rows it spares are precisely the ones
+        /// the veto did NOT suppress, which is why they reach the index and carry outcomes.
+        ///
+        /// So the value of scoping — *it spares passing laws* — is a fact about THESE rows, and
+        /// asking them directly replaces the arithmetic that read it off the unpriceable arm.
+        var spared: [Removal] { removals.filter { !$0.witnessBearing } }
     }
 
     static func counts(_ rows: [Removal]) -> [Cost: Int] {
