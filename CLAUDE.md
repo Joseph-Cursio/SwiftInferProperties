@@ -472,8 +472,10 @@ it, and `make test` does not run it.
   NOT the tell — the plugin stage ABORTING is.** Measured 2026-09-17 on the swift.org toolchain: a
   clean `make test` printed that exact `Internal Error: DecodingError.dataCorrupted … Corrupted
   JSON` line **23 times**, interleaved with `Compiling SwiftInferCLITests`, with no `fatalError`
-  after it — and all ten stages went green. A session that greps for the message and stops will
-  misdiagnose a healthy run.
+  after it — and all ten stages went green. ⚠ **The very next full run, 2026-09-18 on the same
+  toolchain, printed it ZERO times and was equally green**, so the message is intermittent and
+  tracks nothing about the outcome. A session that greps for it and stops will misdiagnose a
+  healthy run.
 
   The Makefile handles this: `SWIFT` defaults to
   `~/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift` when present, so
