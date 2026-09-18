@@ -128,7 +128,8 @@ public enum InvariantPreservationTemplate {
         Evidence(
             displayName: summary.inferenceDisplayName,
             signature: signature(for: summary, keyPath: keyPath),
-            location: summary.location
+            location: summary.location,
+            genericParameters: summary.genericParameters
         )
     }
 

@@ -24,6 +24,11 @@ import SwiftInferCore
 /// arguments** (#493). Withdrawing them removes nothing that could ever have run, and replaces a
 /// compiler error in code the reader did not write with a sentence naming the unbound name.
 ///
+/// A generic **function** (`func f<C: MutableCollection>(for sample: C)`) is the same defect with
+/// a different source of names: its parameters come from `Evidence.genericParameters`, not the
+/// map, and it may have no declaring type at all. #493 read only the map, so it withdrew 8 of the
+/// 50 (#497).
+///
 /// ## Why it declines rather than substitutes, for now
 ///
 /// `ConcreteInstantiation` already chooses `Int` for a generic carrier and already declines with
@@ -43,15 +48,20 @@ enum GenericSubjectGate {
         for suggestion: Suggestion,
         genericParametersByName: [String: [TypeDecl.GenericParameter]]
     ) -> String? {
+        guard let evidence = suggestion.evidence.first else { return nil }
+        let display = evidence.displayName
+        // The function's own `<C>` first: it needs no owner and no map, which is why a top-level
+        // generic function slipped both guards below (#497).
+        if let reason = ownParameterReason(for: evidence, display: display) {
+            return reason
+        }
         guard !genericParametersByName.isEmpty,
-              let evidence = suggestion.evidence.first,
               let owner = evidence.qualifiedTypeName ?? suggestion.carrier
         else { return nil }
 
         let bound = boundParameters(of: owner, in: genericParametersByName)
         guard !bound.isEmpty else { return nil }
 
-        let display = suggestion.evidence.first?.displayName ?? suggestion.templateName
         // A parameter whose TYPE is one of the bound names: the `Key.gen()` case.
         let named = evidence.parameterTypeNames
             .map(bareName)
@@ -63,6 +73,37 @@ enum GenericSubjectGate {
         // The receiver itself: the `KeyedDecoding.gen()` case.
         return "\(display) is declared on the generic type \(bareName(owner)), and a stub cannot "
             + "name it without its type arguments"
+    }
+
+    /// Why a generic FUNCTION cannot be stubbed, or `nil` when it declares no parameters of its own.
+    ///
+    /// **Every** generic function is withdrawn, not only one whose parameters mention the name. A
+    /// parameter spelled `C` gives `C.gen()`; a parameter spelled `Set<T>` gives `Set<T>.gen()`; a
+    /// `T` used only in the return type leaves nothing to infer it from. None compiles, so the
+    /// name is reported where one is visible and the rule is not narrowed to it.
+    ///
+    /// Tokenised on identifier boundaries rather than `bareName`, because the head of `Set<T>` is
+    /// `Set` and the parameter is the argument.
+    private static func ownParameterReason(for evidence: Evidence, display: String) -> String? {
+        let own = Set(evidence.genericParameters.map(\.name))
+        guard !own.isEmpty else { return nil }
+        let named = evidence.parameterTypeNames.lazy
+            .compactMap { typeText in identifiers(in: typeText).first { own.contains($0) } }
+            .first
+        if let named {
+            return "\(display) takes \(named), which is a generic parameter of the function itself "
+                + "and names no type at the call site"
+        }
+        let names = evidence.genericParameters.map(\.name).joined(separator: ", ")
+        return "\(display) is a generic function over \(names), and a stub cannot name its type "
+            + "parameters at the call site"
+    }
+
+    /// `[Set<T>: (C) -> Bool]` → `Set`, `T`, `C`, `Bool`.
+    private static func identifiers(in typeText: String) -> [String] {
+        typeText
+            .split { !($0.isLetter || $0.isNumber || $0 == "_") }
+            .map(String.init)
     }
 
     /// Every generic parameter name the declaration (or an enclosing one) binds.

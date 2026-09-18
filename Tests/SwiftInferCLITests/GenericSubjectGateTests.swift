@@ -1,6 +1,7 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
+import SwiftInferTemplates
 import Testing
 
 /// **A stub that names a type parameter cannot compile, so it is not written** (#493).
@@ -83,5 +84,114 @@ struct GenericSubjectGateTests {
             for: suggestion(display: "contains(_:)", parameterTypes: ["Key"], owner: "KeyedDecoding"),
             genericParametersByName: [:]
         ) == nil)
+    }
+
+    // MARK: - A generic function's own parameters (#497)
+
+    /// The exhibit from #497, scanned rather than hand-built, so the test covers the scanner and
+    /// the `Evidence` projection as well as the gate. It is a top-level function with no declaring
+    /// type and an empty map — both guards #493's gate had, and the reason it withdrew nothing here.
+    @Test("a top-level generic function is withdrawn with no owner and no map")
+    func scannedGenericFreeFunction() throws {
+        let summary = try #require(FunctionScanner.scan(
+            source: """
+            func swapAtInvolutionCounterexample<C: MutableCollection>(for sample: C) -> String? { nil }
+            """,
+            file: "Involution.swift"
+        ).first)
+        #expect(summary.genericParameters == [
+            TypeDecl.GenericParameter(name: "C", constraint: "MutableCollection")
+        ])
+        let evidence = summary.inferenceEvidence
+        #expect(evidence.genericParameters == summary.genericParameters)
+
+        let reason = try #require(GenericSubjectGate.declineReason(
+            for: suggestion(evidence: evidence, carrier: nil),
+            genericParametersByName: [:]
+        ))
+        #expect(reason.contains("takes C"))
+        #expect(reason.contains("function itself"))
+    }
+
+    /// The head of `Set<T>` is `Set`, so `bareName` would miss it; the argument is the parameter.
+    @Test("a type parameter nested inside a parameter's type is named")
+    func nestedTypeParameterIsNamed() throws {
+        let reason = try #require(GenericSubjectGate.declineReason(
+            for: suggestion(
+                evidence: evidence(display: "union(_:)", parameterTypes: ["Set<T>"], generics: ["T"]),
+                carrier: nil
+            ),
+            genericParametersByName: [:]
+        ))
+        #expect(reason.contains("takes T"))
+    }
+
+    /// `func make<T>() -> T` has no parameter to name `T`, and nothing to infer it from either.
+    @Test("a type parameter used only in the return type is still withdrawn")
+    func returnOnlyTypeParameter() throws {
+        let reason = try #require(GenericSubjectGate.declineReason(
+            for: suggestion(
+                evidence: evidence(display: "make()", parameterTypes: [], generics: ["T"]),
+                carrier: nil
+            ),
+            genericParametersByName: [:]
+        ))
+        #expect(reason.contains("generic function over T"))
+    }
+
+    /// **The gate must still cost no laws**: a scanned non-generic free function records nothing
+    /// and is untouched.
+    @Test("a non-generic free function records no parameters and is not gated")
+    func nonGenericFreeFunctionIsUntouched() throws {
+        let summary = try #require(FunctionScanner.scan(
+            source: "func isValid(_ name: String) -> Bool { true }",
+            file: "Checker.swift"
+        ).first)
+        #expect(summary.genericParameters.isEmpty)
+        #expect(GenericSubjectGate.declineReason(
+            for: suggestion(evidence: summary.inferenceEvidence, carrier: nil),
+            genericParametersByName: [:]
+        ) == nil)
+    }
+
+    /// A method on a non-generic type that is itself generic: the function's parameters are read,
+    /// the map holding an unrelated type does not matter.
+    @Test("a generic method on a non-generic type is withdrawn")
+    func genericMethodOnPlainType() throws {
+        let summary = try #require(FunctionScanner.scan(
+            source: """
+            struct Sorter {
+                func sorted<S: Sequence>(_ values: S) -> [S.Element] where S.Element: Comparable { [] }
+            }
+            """,
+            file: "Sorter.swift"
+        ).first)
+        let reason = try #require(GenericSubjectGate.declineReason(
+            for: suggestion(evidence: summary.inferenceEvidence, carrier: "Sorter"),
+            genericParametersByName: ["Deque": [TypeDecl.GenericParameter(name: "Element", constraint: nil)]]
+        ))
+        #expect(reason.contains("takes S"))
+    }
+
+    private func evidence(display: String, parameterTypes: [String], generics: [String]) -> Evidence {
+        Evidence(
+            displayName: display,
+            signature: "\(display) -> Bool",
+            location: Self.loc,
+            parameterTypeNames: parameterTypes,
+            genericParameters: generics.map { TypeDecl.GenericParameter(name: $0, constraint: nil) }
+        )
+    }
+
+    private func suggestion(evidence: Evidence, carrier: String?) -> Suggestion {
+        Suggestion(
+            templateName: "predicate",
+            evidence: [evidence],
+            score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
+            generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
+            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: "predicate|\(evidence.displayName)"),
+            carrier: carrier
+        )
     }
 }
