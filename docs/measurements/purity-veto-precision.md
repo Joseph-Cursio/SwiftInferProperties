@@ -1,7 +1,7 @@
 # What would a purity veto cost?
 
 > **Status:** `measured` · **As of:** 2026-09-17
-> ⚠ **Re-taken 2026-09-17 — read that section first.** The broad arm re-prices; **the witness-scoped arm can no longer be priced by any survey**, so its verdict below stands as a dated 2026-08-18 result ([#514](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/514)).
+> ⚠ **Re-taken 2026-09-17 — read that section first.** The broad arm re-prices; **the witness-scoped arm can no longer be priced by any survey**, so its verdict below stands as a dated 2026-08-18 result, and the suite now prices the COMPLEMENT — the rows scoping spares — which is fully recorded ([#514](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/514), resolved 2026-09-18).
 
 Re-derivable at any time — `PurityVetoPrecisionMeasuredTests` *is* the harness, and
 `make batch2` runs it.
@@ -107,19 +107,51 @@ from the index — checked directly, zero entries — because the witness-scoped
 built. **The veto removes its own evidence**, so every survey taken after it ships is blind to the
 arm that prices it.
 
-⚠ **So three of the suite's seven tests now pass on a zero that means *priced nothing***:
+⚠ **So three of the suite's seven tests passed on a zero that means *priced nothing***:
 `narrowingTheScopeCostsLess`, `noVetoScopeRemovesARefutingLaw` for the narrow arm, and
 `scopingSparesThePasses`, whose *broad 11 > narrow 0* reads as "scoping spares 11" and is an
-unpriced arm. The control that guards *mostly priced* covers only the broad arm, which is how this
+unpriced arm. The control that guards *mostly priced* covered only the broad arm, which is how this
 went vacuous without anything turning red. `theShippedVetoMatchesTheScope` is structural and
 unaffected.
 
+### Resolved 2026-09-18 (#514) — by the COMPLEMENT, not by either proposed option
+
+⚠ **The issue's first option is REFUTED by measuring it.** *Price the scoped arm against the
+pre-veto 2026-08-05 key* was proposed on the reasoning that its witness-bearing rows are
+`predicate` and friends, which #494's rehash did not touch. Measured, that key prices the scoped
+arm at **3 of 10** — `isDirectory` (passed), `isStale` (passed), `fileExists` (inert), and seven
+`unrecorded` — which is below the *mostly priced* bar the same issue proposes adding, so option 1
+fails its own control. It does reproduce the broad arm's published **11 of 23** to the digit, which
+is what says the instrument is sound and the population is simply gone.
+
+✅ **What the arm is replaced by is the COMPLEMENT, which is fully priced.** The rows scoping
+*spares* are the non-witness-bearing removals — precisely the ones the veto does NOT suppress, so
+they reach the index and carry outcomes. Scoping's value is a fact about them:
+
+| arm | rows | `refuted` | `passed` | `inert` | `unrecorded` |
+|---|---:|---:|---:|---:|---:|
+| broad (`.refuted` outright) | 23 | 0 | 11 | 2 | 10 |
+| witness-scoped | 10 | — | — | — | **10, unpriceable** |
+| **SPARED by scoping** | **13** | **0** | **11** | **2** | **0** |
+
+**The broad arm's ten `unrecorded` ARE the scoped arm**, which is why *13 of 23 priced* was always
+a muddy figure: it is 13 of 13 on the half that can be priced, and 0 of 10 on the half that cannot.
+
+**`scopingSparesThePasses` now counts the spared rows directly rather than as `broad − narrow`.**
+The subtraction gave the same 11 and gave it for the wrong reason — the narrow term is a zero
+meaning *priced nothing*, so the assertion reduced to `broad > 0` and would have read 11 as
+*scoping spares 11* even had scoping spared nothing. `narrowingTheScopeCostsLess` keeps only what
+is structural (the two scopes partition the removals); its cost comparisons could not fail.
+
+✅ **`theScopedArmIsUnpriceable` is the second control, and it guards the mechanism**: every scoped
+removal must be absent from the survey. It goes RED exactly when the veto stops suppressing them —
+which is the moment re-pricing becomes possible — and it was confirmed red against the pre-veto key,
+naming those same three rows. The failure this suite ran into was silence, so the mechanism is now
+asserted rather than footnoted.
+
 **What stands:** the 2026-08-18 scoped verdict below — *0 refutations, 2 passes, both intended* —
-as a **dated** result, taken on the last survey before the veto shipped. **What is lost:** the
-ability to re-derive it. Shipped green by choice; the structural fix is
-[#514](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/514) (price the arm against
-the pre-veto key, or declare it historical), and *a control must cover every arm a census quotes*
-is the general lesson.
+as a **dated** result, taken on the last survey before the veto shipped. **What is still lost:** the
+ability to re-derive it. *A control must cover every arm a census quotes* is the general lesson.
 
 ---
 
