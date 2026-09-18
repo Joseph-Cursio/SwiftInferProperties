@@ -72,6 +72,14 @@ public enum TargetIsolation {
     private struct DumpedTarget: Decodable {
         let name: String
         let settings: [DumpedSetting]?
+        /// `"regular"`, `"test"`, `"executable"`, `"plugin"`, … — SwiftPM's own word for the
+        /// target kind. Decoded because **it is what decides the default directory**: a
+        /// `.target` with no `path:` lives at `Sources/<name>`, a `.testTarget` at
+        /// `Tests/<name>`, and assuming the first for both put every test target at a directory
+        /// that does not exist (#521). Optional so a kind this code has never heard of, or a
+        /// SwiftPM that stops reporting it, degrades to the regular default rather than failing
+        /// the decode and taking the whole manifest with it.
+        let type: String?
         /// The target's declared `path:`, relative to the package root, or `nil` when the
         /// manifest omits it and SwiftPM's `Sources/<name>` default applies.
         let path: String?
@@ -154,6 +162,12 @@ public enum TargetIsolation {
     }
 
     /// The manifest-declared target whose directory contains `fileURL`, longest match first.
+    ///
+    /// **Every target, test targets included** — the opposite scope from the two consumers that
+    /// resolve a subject's MODULE (#521). The compiler applies a test target's
+    /// `.defaultIsolation` exactly as it applies a library target's, so a subject declared in
+    /// one is isolated and its stub needs the hop. There is no equivalent of the *a test target
+    /// is not an importable module* objection here.
     static func declaredTarget(owning fileURL: URL, packageRoot: URL) -> String? {
         let rootPath = packageRoot.standardizedFileURL.path
         let filePath = fileURL.standardizedFileURL.path
@@ -211,16 +225,19 @@ public enum TargetIsolation {
     /// hand-staged arm — the scan reached 307 picks and then every stub lost its
     /// `@testable import`, trading `no such directory` for `cannot find type 'SQL' in scope`.
     ///
-    /// Effective path, not declared path: a target with no `path:` reports `Sources/<name>`,
-    /// so a caller matching against this list needs no special case for the default layout.
+    /// Effective path, not declared path, and the default depends on the target KIND — see
+    /// `DeclaredTarget` for why that is load-bearing and why each consumer must pick a
+    /// population rather than inherit one (#521).
     ///
     /// Empty when the manifest cannot be read, which leaves every caller on its previous
     /// path-shape rule.
-    public static func declaredTargetDirectories(packageRoot: URL) -> [(name: String, path: String)] {
+    public static func declaredTargetDirectories(packageRoot: URL) -> [DeclaredTarget] {
         guard let dumped = dump(packageRoot: packageRoot) else { return [] }
         return dumped.targets.map { target in
             let declared = target.path.flatMap { $0.isEmpty ? nil : $0 }
-            return (name: target.name, path: declared ?? "Sources/\(target.name)")
+            let isTest = target.type == "test"
+            let fallback = isTest ? "Tests/\(target.name)" : "Sources/\(target.name)"
+            return DeclaredTarget(name: target.name, path: declared ?? fallback, isTest: isTest)
         }
     }
 
