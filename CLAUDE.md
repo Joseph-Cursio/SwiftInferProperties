@@ -54,7 +54,30 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,240 tests — 6,018 fast + 222 across `perf` and the eight batches**
+Suites green at **6,245 tests — 6,023 fast + 222 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-18** at `aed0b768` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**):
+fast **6,023** · perf 8 · batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **35**.
+**THE BATCH HALF STOOD STILL AT 222, EVERY BATCH TO THE DIGIT, and that is the load-bearing
+reading**: #516's generic-function gate CHANGES DISCOVERY OUTPUT — it withdraws 15 stubs across 19
+repositories — and **no measured baseline in this repo moved**, `batch4` and `batch8`, the two that
+SURVEY a corpus, included. That is exactly the check the involution gate skipped when it left
+`main` red for four commits. ⚠ **`batch4` and `batch8` were also run STANDALONE on the merged state
+BEFORE the merge and agreed (7 and 35)**, so this is a second independent reading of them rather
+than the first.
+**The fast half moved 6,018 → 6,023** for the five `GenericSubjectGateTests` arms — a plain unit
+suite, so it needs no batch, the regex doing its job.
+**Timings usable, and MIXED IN DIRECTION, which is what says the machine was quiet** (load ~2.8 at
+start): `batch5` **1,626s BELOW** its standing ~1,670s, `batch2` 732s inside its 679–801s spread,
+`batch1` 186s and `batch6` 157s both DOWN on the day before — against ⚠ **`batch3` 470s, which is
+~352s standing and 406s the day before: +16% in a day on an unmoved count of 31.** Two readings do
+not make a trend; recorded so a third can say. **~73 minutes end to end including a clean rebuild**,
+with the ten test stages summing to **~71 minutes**, so the clean cost ~2.
+**The prior reading — 6,240 = 6,018 fast + 222, taken 2026-09-17 at `19db7e7f` — follows, and
+everything below it is SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**PRIOR READING — 6,240 tests — 6,018 fast + 222 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-09-17** at `19db7e7f` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
 run was UNPIPED: `make test > log 2>&1`, a REDIRECT and not a pipe, which keeps make's own exit
