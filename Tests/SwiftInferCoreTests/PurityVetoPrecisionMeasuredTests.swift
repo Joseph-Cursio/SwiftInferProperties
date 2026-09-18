@@ -46,12 +46,21 @@ import Testing
 /// 11 of 23 priced, one short of half. The survey was re-taken rather than the bar lowered: a
 /// stale answer key under a new identity scheme is the defect the control exists to catch.
 ///
-/// ⚠ **THE WITNESS-SCOPED ARM IS VACUOUS on any survey taken after 2026-08-18** (#514). The veto
-/// SHIPPED then, and it removes exactly the scoped population before the index is built, so no
-/// post-veto survey contains a row to price: on 2026-09-17 it priced 0 of 10. The control below
-/// covers only the broad arm, so `narrowingTheScopeCostsLess`, `noVetoScopeRemovesARefutingLaw`
-/// (narrow half) and `scopingSparesThePasses` pass on a zero that means PRICED NOTHING. Read their
-/// green as the 2026-08-18 verdict, not a re-derivation of it.
+/// ⚠ **THE WITNESS-SCOPED ARM IS PERMANENTLY UNPRICEABLE, and the suite no longer pretends
+/// otherwise** (#514). The veto shipped 2026-08-18 and suppresses exactly the scoped population
+/// before the index is built, so no survey taken since contains a row for it — 0 of 10 on
+/// 2026-09-17. **Re-taking the key does not help, and neither does the pre-veto one**: joined
+/// against the 2026-08-05 stream the scoped arm prices 3 of 10, below the bar this suite's own
+/// control sets, so the historical verdict cannot be re-derived from it either.
+///
+/// **What replaced the three vacuous assertions is the COMPLEMENT.** The rows scoping *spares*
+/// are the non-witness-bearing ones — precisely the rows the veto did not suppress, so they are
+/// in the index and they are priced. Scoping's value is a fact about them, and `Arm.spared` asks
+/// them directly instead of deriving it as `broad − narrow`, where the second term is a zero
+/// meaning *priced nothing*. The 2026-08-18 scoped verdict stands as a DATED result.
+///
+/// `theScopedArmIsUnpriceable` now guards the mechanism, so the arm cannot go quietly vacuous a
+/// second time — and it goes red exactly when re-pricing becomes possible again.
 ///
 /// Joined on `SuggestionIdentity.display`, which *is* the survey's `identityHash` — an
 /// exact key, not a name. Name-keying has been the dominant defect at this seam in three
@@ -75,11 +84,33 @@ struct PurityVetoPrecisionMeasuredTests {
         #expect(Self.survey.count > 200, "the survey loaded \(Self.survey.count) rows; expected ~633")
         #expect(Self.measured.suggestions > 0, "no suggestions discovered — every number is vacuous")
 
-        let priced = Self.measured.removals.filter { $0.cost != .unrecorded }.count
-        #expect(priced * 2 > Self.measured.removals.count, """
-        Only \(priced) of \(Self.measured.removals.count) removals carry a recorded outcome. \
-        Below half, this census is reporting mostly `unrecorded` and the veto's cost is \
+        let priced = Self.measured.spared.filter { $0.cost != .unrecorded }.count
+        #expect(priced * 2 > Self.measured.spared.count, """
+        Only \(priced) of \(Self.measured.spared.count) SPARED removals carry a recorded \
+        outcome. Below half, this census is reporting mostly `unrecorded` and the veto's cost is \
         understated — re-take the survey rather than quoting the small number.
+        """)
+    }
+
+    /// **The second control, and the suite went vacuous for a month without it** (#514).
+    ///
+    /// The scoped population is what the shipped veto suppresses, and a suppressed suggestion
+    /// never reaches the index the survey enumerates — so the scoped arm cannot be priced by any
+    /// survey taken after the veto shipped on 2026-08-18. **That is asserted here rather than
+    /// left as a footnote**, because the failure it guards is silence: three assertions read a
+    /// zero that meant *priced nothing* as though it meant *costs nothing*, and nothing went red.
+    ///
+    /// **If this goes RED the veto has stopped suppressing** — rows are reaching the index again,
+    /// which is exactly when re-pricing the scoped arm becomes possible. Re-derive the 2026-08-18
+    /// verdict then, and restore the comparisons this issue removed.
+    @Test("control — the scoped arm is unpriceable, by the veto's own doing")
+    func theScopedArmIsUnpriceable() {
+        let priced = Self.measured.narrow.filter { $0.cost != .unrecorded }
+        #expect(priced.isEmpty, """
+        \(priced.count) of \(Self.measured.narrow.count) witness-scoped removals now carry a \
+        recorded outcome: \(priced.map(\.subject).joined(separator: ", ")). The shipped veto is \
+        no longer suppressing them before the index is built, so the scoped arm can be priced \
+        again — re-derive it rather than deleting this control.
         """)
     }
 
@@ -94,18 +125,25 @@ struct PurityVetoPrecisionMeasuredTests {
 
     /// **The reason the census recommended scoping.** A veto on `.refuted` outright removes
     /// strictly more than one scoped to witness-bearing refutations.
-    @Test("the narrow scope costs no more than the naive one")
+    /// ⚠ **Structural only, deliberately.** This asserted `narrow.passed <= broad.passed` and
+    /// `narrow.refuted <= broad.refuted` until #514; both held because the narrow arm is
+    /// unpriced and every count on it is zero. A comparison against an unpriceable arm cannot
+    /// fail, so what remains is the partition, which is a real claim about the scope predicate.
+    @Test("the narrow scope is a strict subset of the naive one")
     func narrowingTheScopeCostsLess() {
-        let broad = Self.counts(Self.measured.removals)
-        let narrow = Self.counts(Self.measured.narrow)
-
         #expect(Self.measured.narrow.count <= Self.measured.removals.count)
-        #expect((narrow[.passed] ?? 0) <= (broad[.passed] ?? 0), """
-        Scoping the veto to witness-bearing refutations removes MORE passing laws than \
-        vetoing on `.refuted` outright, which is arithmetically impossible unless the scope \
-        predicate has inverted.
+        #expect(
+            Self.measured.narrow.count + Self.measured.spared.count
+                == Self.measured.removals.count,
+            """
+            The two scopes do not partition the removals, so `spared` is not the complement of \
+            `narrow` and every number read off it is describing some other population.
+            """
+        )
+        #expect(!Self.measured.spared.isEmpty, """
+        Scoping now spares nothing — the two scopes have become the same veto, and the \
+        recommendation to scope has no cost difference left to rest on.
         """)
-        #expect((narrow[.refuted] ?? 0) <= (broad[.refuted] ?? 0))
     }
 
     /// **The headline, pinned.** Neither scope removes a law that found a counterexample —
@@ -115,22 +153,30 @@ struct PurityVetoPrecisionMeasuredTests {
     @Test("no veto scope removes a law that found a counterexample")
     func noVetoScopeRemovesARefutingLaw() {
         let broad = Self.counts(Self.measured.removals)[.refuted] ?? 0
-        let narrow = Self.counts(Self.measured.narrow)[.refuted] ?? 0
+        let spared = Self.counts(Self.measured.spared)[.refuted] ?? 0
         #expect(broad == 0, """
         Vetoing on `.refuted` outright would now remove \(broad) law(s) that found a \
         counterexample. That is the unambiguous loss this census measured as zero.
         """)
-        #expect(narrow == 0)
+        // The SPARED half restated, because the broad zero above is only as strong as its
+        // priced rows and the scoped ones contribute nothing to it. This one is entirely
+        // priced, so it is a claim rather than an absence of evidence.
+        #expect(spared == 0)
     }
 
     /// The scoped veto's whole value in one number: the passing laws it spares.
+    ///
+    /// ⚠ **Counted on the spared rows DIRECTLY, not as broad − narrow** (#514). The subtraction
+    /// gave the same answer here and gave it for the wrong reason: the narrow term is
+    /// unpriceable, so `broad > narrow` reduced to `broad > 0` and would have read 11 as
+    /// *scoping spares 11* even if scoping had spared nothing. The complement is priced, so
+    /// asking it is both a correct derivation and a falsifiable one.
     @Test("scoping spares the codable-round-trip passes")
     func scopingSparesThePasses() {
-        let broadPasses = Self.counts(Self.measured.removals)[.passed] ?? 0
-        let narrowPasses = Self.counts(Self.measured.narrow)[.passed] ?? 0
-        #expect(broadPasses > narrowPasses, """
-        Scoping the veto no longer spares any passing law (\(broadPasses) → \(narrowPasses)). \
-        The recommendation to scope rests on that gap.
+        let sparedPasses = Self.counts(Self.measured.spared)[.passed] ?? 0
+        #expect(sparedPasses > 0, """
+        Scoping the veto spares \(sparedPasses) passing laws. The recommendation to scope \
+        rests on that number being positive — at zero, the two scopes cost the same.
         """)
     }
 
@@ -168,8 +214,10 @@ struct PurityVetoPrecisionMeasuredTests {
         self (Sources/): \(arm.suggestions) suggestions · \(arm.recorded) with a 2026-09-17 survey row
           veto on `.refuted` outright — \(arm.removals.count) removed
             \(Self.render(Self.counts(arm.removals)))
-          veto scoped to witness-bearing — \(arm.narrow.count) removed
+          veto scoped to witness-bearing — \(arm.narrow.count) removed  [UNPRICEABLE, #514]
             \(Self.render(Self.counts(arm.narrow)))
+          SPARED by scoping — \(arm.spared.count) rows, and these are the priced ones
+            \(Self.render(Self.counts(arm.spared)))
         """)
         for removal in arm.removals.sorted(by: { $0.subject < $1.subject }) {
             let scope = removal.witnessBearing ? "W" : "i"
