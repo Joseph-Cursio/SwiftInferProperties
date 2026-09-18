@@ -249,8 +249,10 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `3ea25f2` (2026-08-17), and `SEICrossRepoPinTests` is green.** Bumped
-as a joint act across all four manifests, which is what the guard exists to enforce:
+**Both repos pin SEI `1b62e764` (bumped 2026-09-12, `44a23e1c`), and `SEICrossRepoPinTests`
+is green as of the 2026-09-17 full run** — the guard compares this manifest against
+SwiftProjectLint's, so green means they agree, and the figures below were taken at `3ea25f2`.
+Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
 oracle, and that guard is the only thing that can say so.
 
