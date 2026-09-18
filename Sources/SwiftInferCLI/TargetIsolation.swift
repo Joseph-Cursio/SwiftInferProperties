@@ -114,6 +114,57 @@ public enum TargetIsolation {
             .kind.defaultIsolation?._0
     }
 
+    /// The default isolation compiled into whichever declared target owns `file`, or `nil`.
+    ///
+    /// **Per FILE, not per run, because a package may split isolation across its targets and one
+    /// scan spans several.** SwiftProjectLint's manifest is the measured exhibit: it builds Core
+    /// and CLI under `engineSwiftSettings` with a comment saying MainActor default isolation
+    /// "would be wrong here", and only the SwiftUI App target under `uiSwiftSettings`. A run-wide
+    /// answer would isolate the analysis engine or leave the UI bare, and the corpus scans both
+    /// directories in one pass (#482).
+    ///
+    /// **This is also what makes `--sources` work**, which the issue expected to give up on. The
+    /// two packages known to set the flag are both scanned that way — `SwiftFormatRuleStudioCore`
+    /// as a nested package, `swift-project-lint` across `Sources` and `Packages` — so a
+    /// manifest-target-only rule would have fired on neither. Nothing is guessed: the file is
+    /// matched against the directories the manifest itself declares, and a file under none of
+    /// them answers `nil`.
+    ///
+    /// Longest match wins, so a target nested inside another's directory is attributed to the
+    /// more specific one. `packageRoot(containing:)` walks to the NEAREST manifest, which is what
+    /// puts a nested package's files under its own settings rather than its parent's.
+    ///
+    /// Degrades exactly as the rest of this type does: every can't-answer arm returns `nil`, and
+    /// `nil` means *emit as before*.
+    public static func defaultIsolation(forFile file: String) -> String? {
+        let key = file
+        if let cached = isolationCache.value(forKey: key) { return cached.value }
+        let resolved = uncachedIsolation(forFile: file)
+        isolationCache.store(resolved, forKey: key)
+        return resolved
+    }
+
+    private static func uncachedIsolation(forFile file: String) -> String? {
+        let fileURL = URL(fileURLWithPath: file).standardizedFileURL
+        guard let root = packageRoot(containing: fileURL.deletingLastPathComponent()) else {
+            return nil
+        }
+        guard let targetName = declaredTarget(owning: fileURL, packageRoot: root) else { return nil }
+        return defaultIsolation(packageRoot: root, targetName: targetName)
+    }
+
+    /// The manifest-declared target whose directory contains `fileURL`, longest match first.
+    static func declaredTarget(owning fileURL: URL, packageRoot: URL) -> String? {
+        let rootPath = packageRoot.standardizedFileURL.path
+        let filePath = fileURL.standardizedFileURL.path
+        guard filePath.hasPrefix(rootPath + "/") else { return nil }
+        let relative = String(filePath.dropFirst(rootPath.count + 1))
+        return declaredTargetDirectories(packageRoot: packageRoot)
+            .filter { relative.hasPrefix($0.path + "/") }
+            .max { $0.path.count < $1.path.count }?
+            .name
+    }
+
     /// Where `targetName`'s sources actually live, resolved against the manifest.
     ///
     /// **`Sources/<target>` is a DEFAULT, not a rule, and assuming it made whole packages
@@ -270,6 +321,32 @@ public enum TargetIsolation {
             return computed
         }
     }
+
+    /// Memo for the per-file answer.
+    ///
+    /// The manifest dump beneath this is already cached, so this is not about subprocesses. It is
+    /// about the path arithmetic above running once per evidence ROW on a survey with thousands —
+    /// the same shape as the defect `DumpCache` records, one layer up and much cheaper. Negatives
+    /// are cached too: a file under no declared target is a fact about the file.
+    private final class IsolationCache: @unchecked Sendable {
+        private let lock = NSLock()
+        private var entries: [String: String?] = [:]
+
+        func value(forKey key: String) -> (value: String?, Void)? {
+            lock.lock()
+            defer { lock.unlock() }
+            guard let found = entries[key] else { return nil }
+            return (found, ())
+        }
+
+        func store(_ value: String?, forKey key: String) {
+            lock.lock()
+            entries[key] = value
+            lock.unlock()
+        }
+    }
+
+    private static let isolationCache = IsolationCache()
 
     private static let dumpCache = DumpCache()
 

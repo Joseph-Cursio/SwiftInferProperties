@@ -249,6 +249,19 @@ public struct FunctionSummary: Sendable, Equatable {
     /// compiling.
     public let globalActor: String?
 
+    /// Whether the declaration spells `nonisolated` itself, in any of its forms.
+    ///
+    /// **Carried because `globalActor == nil` answers two different questions with one value.**
+    /// `resolvedGlobalActor` returns `nil` both for a declaration nobody isolated and for one
+    /// that explicitly opted OUT, and those are the same only until something tries to supply a
+    /// default. A target compiled under `.defaultIsolation(MainActor.self)` isolates the first
+    /// and must not touch the second, so the fallback needs the distinction the scanner was
+    /// already computing and throwing away (#482).
+    ///
+    /// `false` means *not recorded, or not nonisolated* — the reading every hand-built summary
+    /// had before this, and the one that leaves behaviour unchanged.
+    public let declaresNonisolated: Bool
+
     public let calledFreeFunctionNames: [String]
 
     public let purityVerdict: PurityVerdict
@@ -299,6 +312,7 @@ public struct FunctionSummary: Sendable, Equatable {
         purityVerdict: PurityVerdict = .refuted,
         bodyFingerprint: String? = nil,
         globalActor: String? = nil,
+        declaresNonisolated: Bool = false,
         calledFreeFunctionNames: [String] = [],
         genericParameters: [TypeDecl.GenericParameter] = []
     ) {
@@ -326,6 +340,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.purityVerdict = purityVerdict
         self.bodyFingerprint = bodyFingerprint
         self.globalActor = globalActor
+        self.declaresNonisolated = declaresNonisolated
         self.calledFreeFunctionNames = calledFreeFunctionNames
         self.genericParameters = genericParameters
     }

@@ -89,6 +89,11 @@ public struct Evidence: Sendable, Equatable {
     /// `nil` means *not recorded*, which is the behaviour every call site had before this.
     public let globalActor: String?
 
+    /// Whether the subject spells `nonisolated` itself. Mirrors
+    /// `FunctionSummary.declaresNonisolated`; see that doc for why a `nil` `globalActor` cannot
+    /// carry this on its own. `false` means *not recorded, or not nonisolated*.
+    public let declaresNonisolated: Bool
+
     /// The subject function's OWN generic parameters, mirroring `FunctionSummary.genericParameters`.
     ///
     /// Carried so the accept path can withdraw a stub whose call would name one (`C.gen()`), which
@@ -110,6 +115,7 @@ public struct Evidence: Sendable, Equatable {
         parameterInternalNames: [String] = [],
         qualifiedTypeName: String? = nil,
         globalActor: String? = nil,
+        declaresNonisolated: Bool = false,
         genericParameters: [TypeDecl.GenericParameter] = []
     ) {
         self.displayName = displayName
@@ -124,6 +130,7 @@ public struct Evidence: Sendable, Equatable {
         self.parameterInternalNames = parameterInternalNames
         self.qualifiedTypeName = qualifiedTypeName
         self.globalActor = globalActor
+        self.declaresNonisolated = declaresNonisolated
         self.genericParameters = genericParameters
     }
 
@@ -143,6 +150,7 @@ public struct Evidence: Sendable, Equatable {
             parameterInternalNames: parameterInternalNames,
             qualifiedTypeName: qualifiedTypeName,
             globalActor: actor,
+            declaresNonisolated: declaresNonisolated,
             genericParameters: genericParameters
         )
     }
