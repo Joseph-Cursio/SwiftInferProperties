@@ -109,6 +109,7 @@ extension FunctionScannerVisitor {
             purityVerdict: purityVerdict,
             bodyFingerprint: bodyFingerprint,
             globalActor: resolvedGlobalActor(of: node),
+            declaresNonisolated: Self.declaresNonisolated(node.modifiers),
             calledFreeFunctionNames: calleeCollector.names,
             genericParameters: Self.genericParameters(in: node.genericParameterClause)
         )

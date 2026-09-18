@@ -52,6 +52,7 @@ extension FunctionSummary {
             parameterInternalNames: parameters.map(\.internalName),
             qualifiedTypeName: qualifiedContainingTypeName,
             globalActor: globalActor,
+            declaresNonisolated: declaresNonisolated,
             genericParameters: genericParameters
         )
     }
