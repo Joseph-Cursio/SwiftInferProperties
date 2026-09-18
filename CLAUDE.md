@@ -445,7 +445,12 @@ it, and `make test` does not run it.
   `Applying swift-infer`, `Applying soundness-probe` — fails with
   `Internal Error: DecodingError.dataCorrupted … Corrupted JSON` followed by `error: fatalError`.
   Under swift.org's `swift-6.3.3-RELEASE` it builds in ~55s. The two report the same version
-  number; `swiftlang-` in `swift --version` is the tell.
+  number; `swiftlang-` in `swift --version` is the tell. ⚠ **The `Corrupted JSON` line ALONE is
+  NOT the tell — the plugin stage ABORTING is.** Measured 2026-09-17 on the swift.org toolchain: a
+  clean `make test` printed that exact `Internal Error: DecodingError.dataCorrupted … Corrupted
+  JSON` line **23 times**, interleaved with `Compiling SwiftInferCLITests`, with no `fatalError`
+  after it — and all ten stages went green. A session that greps for the message and stops will
+  misdiagnose a healthy run.
 
   The Makefile handles this: `SWIFT` defaults to
   `~/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift` when present, so
