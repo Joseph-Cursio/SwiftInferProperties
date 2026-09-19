@@ -36,6 +36,275 @@ Consumers over the SemanticIndex, split by audience and trust bar: `query` (auth
 
 Suites green at **5,576 tests** (5,493 fast + 83 across `perf` and the eight batches; full `make test` verified green 2026-08-15 **at `4fac986`**, exit 0 with zero failures across all ten runs, ~22 min). **The batch total is the number to watch, and it has not moved: 83.** The fast suite grew by 216 since 2026-08-10 and the batches by zero, which is `SubprocessBatchCoverageTests` doing its job — a new `*MeasuredTests` suite that never reached a batch would show up here as the fast count rising while the batch count stands still, and that is exactly what a *correct* run of unbatched-but-cheap work looks like too. Quote both halves, never the total alone. **Flake note:** the long measured/calibration suites occasionally drop one issue under load — rerun before diagnosing. None flaked on this run, `MemoryCeilingPerformanceTests` included.
 
+### Superseded test-count readings
+
+Moved out of CLAUDE.md's *Current state* on 2026-09-19: every suite-count reading older than the current one, verbatim and newest first. It had grown to ~265 lines of a file loaded every session. **Read for what each verdict was decided on, never for a current count** — CLAUDE.md carries the current reading, and the next re-take moves the one it supersedes to the top of this list.
+
+**The prior reading — 6,262 = 6,039 fast + 223, taken 2026-09-19 at `cdc8dee8` — follows, and
+everything below it is SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**PRIOR READING — 6,262 tests — 6,039 fast + 223 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-19** at `cdc8dee8` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 71m55s):
+fast **6,039** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 35.
+**THE BATCH HALF STOOD STILL AT 223, EVERY BATCH TO THE DIGIT**, and the fast half moved
+**6,032 → 6,039** for #521's seven `TestTargetDirectoryDefaultTests` arms. **Four merges landed
+since the previous reading** (#519's isolation fix, #520's veto control, #521's test-target
+directories, #526's funnel harness) and only one of them shows here — which is the regex and the
+Makefile doing their job in both directions.
+✅ **#526 adding 985 lines moved NOTHING, and that is the load-bearing reading**: it lands
+entirely in `scripts/` and `docs/`, and `make test` runs neither. A census harness that changed a
+suite count would mean study tooling had entered the gate, which is the separation
+`scripts/`'s own note exists to keep.
+✅ **`batch3`'s third and fourth readings settle it as NOISE**: 470s was withdrawn on the
+2026-09-18 re-take, and the two since read **380s and 402s** — both inside the ~352–406s standing
+range, no fix, nothing changed. The flag cost one sentence and stopped a busy-machine reading from
+becoming a baseline.
+**Timings usable and mixed in direction**: `batch5` **1,616s** below its standing ~1,670s for the
+fourth reading running, `batch2` 769s inside its 679–801s spread, `batch8` 583s inside ~460–592s,
+`batch6` 158s and `batch4` 186s both down. Load average 1.62 at start, the quietest reading this
+file has recorded. **~72 minutes end to end including a clean rebuild**, the ten test stages
+summing to **~70 minutes**, so the clean cost ~2.
+**The prior reading — 6,255 = 6,032 fast + 223, taken 2026-09-18 at `aed0b768` — follows, and
+everything below it is SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**PRIOR READING — 6,255 tests — 6,032 fast + 223 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-18** at `0abb6e63` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 72m19s):
+fast **6,032** · perf 8 · batches 4 · **111** · 31 · 7 · 14 · 4 · 9 · 35.
+**BOTH HALVES MOVED, AND BOTH WERE ALREADY KNOWN — which is exactly why they were RE-TAKEN rather
+than carried**: the fast half 6,023 → 6,032 for #519's nine arms (`TargetDefaultIsolationTests` 7,
+`NonisolatedKeywordTests` 2) and `batch2` 110 → 111 for #520's `theScopedArmIsUnpriceable`. Each
+figure had been measured on its own branch run; **6,023 + 9 and 110 + 1 is the arithmetic this file
+forbids**, and the agreement between the prediction and this run is a RESULT, not a shortcut taken.
+✅ **`batch3`'s flag is DISCHARGED, and the answer is NOISE.** The 2026-09-18 reading recorded it
+at 470s against ~352s standing and 406s the day before, +16% in a day on an unmoved count, with the
+note *two readings do not make a trend; recorded so a third can say*. **The third says 380s** —
+back inside the range, no fix, nothing changed. The standing figure stays ~352–406s and **470s is
+withdrawn as a reading, not kept as a ceiling**.
+**Timings usable and mixed in direction**: `batch5` **1,626s** below its standing ~1,670s for the
+third run running, `batch2` 760s inside its 679–801s spread, `batch8` 581s inside ~460–592s, against
+`batch1` 209s up on 186s and `batch4` 183s down on 222s. **~72 minutes end to end including a clean
+rebuild**, the ten test stages summing to **~70 minutes**, so the clean cost ~2.
+**The prior reading — 6,245 = 6,023 fast + 222, taken 2026-09-18 at `aed0b768` — follows, and
+everything below it is SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**PRIOR READING — 6,245 tests — 6,023 fast + 222 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-18** at `aed0b768` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**):
+fast **6,023** · perf 8 · batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **35**.
+**THE BATCH HALF STOOD STILL AT 222, EVERY BATCH TO THE DIGIT, and that is the load-bearing
+reading**: #516's generic-function gate CHANGES DISCOVERY OUTPUT — it withdraws 15 stubs across 19
+repositories — and **no measured baseline in this repo moved**, `batch4` and `batch8`, the two that
+SURVEY a corpus, included. That is exactly the check the involution gate skipped when it left
+`main` red for four commits. ⚠ **`batch4` and `batch8` were also run STANDALONE on the merged state
+BEFORE the merge and agreed (7 and 35)**, so this is a second independent reading of them rather
+than the first.
+**The fast half moved 6,018 → 6,023** for the five `GenericSubjectGateTests` arms — a plain unit
+suite, so it needs no batch, the regex doing its job.
+**Timings usable, and MIXED IN DIRECTION, which is what says the machine was quiet** (load ~2.8 at
+start): `batch5` **1,626s BELOW** its standing ~1,670s, `batch2` 732s inside its 679–801s spread,
+`batch1` 186s and `batch6` 157s both DOWN on the day before — against ⚠ **`batch3` 470s, which is
+~352s standing and 406s the day before: +16% in a day on an unmoved count of 31.** Two readings do
+not make a trend; recorded so a third can say. **~73 minutes end to end including a clean rebuild**,
+with the ten test stages summing to **~71 minutes**, so the clean cost ~2.
+**The prior reading — 6,240 = 6,018 fast + 222, taken 2026-09-17 at `19db7e7f` — follows, and
+everything below it is SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**PRIOR READING — 6,240 tests — 6,018 fast + 222 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-17** at `19db7e7f` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED: `make test > log 2>&1`, a REDIRECT and not a pipe, which keeps make's own exit
+code (**0**) *and* every per-stage count:
+fast **6,018** · perf 8 · batches 4 · 110 · 31 · 7 · 14 · 4 · 9 · **35**.
+**BOTH PINS MOVED since the previous reading — SwiftPropertyLaws 4.2.0 → 4.7.0 (`d6922875`,
+2026-09-16) and SEI `3ea25f2` → `1b62e764` (`44a23e1c`, 2026-09-12)** — so these counts belong to
+those pins and not to their predecessors; a re-take after a kit bump is a different measurement
+wearing the same number, which is why it was re-taken rather than carried.
+**`batch2` IS GREEN, which was PR #515's whole purpose**: 110 tests, 0 failures, 713.7s, inside its
+standing 679–801s spread — it had been red on `main` because #494 rehashed `input-totality`'s
+identity and two priced removals read `unrecorded`.
+**SEVEN OF THE EIGHT BATCH COUNTS ARE UNMOVED TO THE DIGIT, and every bit of the batch half's
+movement is `batch8`, 25 → 35**: 4 · 110 · 31 · 7 · 14 · 4 · 9 reproduce the 08-29 reading
+across **84 commits that touched `Tests/`**, and seven `batch8` suites changed in that window, so
+the +10 is not attributed to one suite here. ⚠ **A COUNT IS NOT A FIGURE**: these suites assert
+floors and memberships, so an unmoved count says no ARM was added or lost — **not** that no census
+figure moved. Their printed censuses were NOT diffed, and that is a different measurement.
+**The fast half moved 5,647 → 6,018, +371**, which is nineteen days of work rather than one change,
+so it is likewise not attributed to a suite. ⚠ **PR #515's body reported 6,018 on its own branch
+and that figure was NOT carried over** — it was re-measured here on the merge commit, because a
+reading taken on a branch is a different measurement from one taken on `main`; the agreement is a
+result, not an assumption.
+**Timings are usable, and the reason is that they are NOT uniformly inflated**: `batch5` **1,616s
+BELOW** its standing ~1,670s and `batch2` 713.7s inside its spread, against `batch3` 406s versus
+~352s and `batch8` 599s just above its ~460–592s range — and `batch8` grew by 10 tests, so its own
+rise is bought rather than noise. Mixed directions are the signature of a real reading; uniform
+inflation is the signature of a busy machine. **~72 minutes end to end INCLUDING a clean rebuild**
+(`swift package clean` first, because the merge touched test sources) — and the ten test stages
+alone sum to **~70 minutes**, so the clean cost ~2 minutes, far less than the re-take budgeted for
+it.
+**The prior reading — 5,859 = 5,647 fast + 212, taken 2026-08-29 on SwiftPropertyLaws 4.2.0 — and
+everything below it are SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**The batch half stood still at 210 and that is the load-bearing reading**: row 75's carrier fix
+changes VERIFY output — it took `monotonicity` from 0 to 10 `measured-bothPass` on
+`swift-collections` — and **no measured baseline in this repo moved**, `batch3` (`VerifyPipeline`)
+included. The fast half moved **5,641 → 5,647** for `MonotonicityReceiverCarrierTests`. Timings
+usable: `batch2` 805s just above its 679–801s spread, `batch5` 1,708s against ~1,670s, **~70
+minutes end to end**.
+**The batch half moved 209 → 210 and the fast half did NOT, which is the regex doing its job in
+both directions**: `InactiveIfConfigCensusMeasuredTests` takes ~9 minutes, so it is named
+`*MeasuredTests` and **added to `BATCH8` by hand** — the step CLAUDE.md warns has been missed four
+times, and without it the ~6s fast path would have grown by nine minutes. ⚠ **It was NOT named
+that at first**: the suite was written as `InactiveCompilationConditionCensus`, which the skip
+regex does not match, and SwiftLint's 40-character `type_name` cap is what forced the rename that
+made it batchable. Timings usable: `batch2` 719s inside its 679–801s spread, `batch5` 1,703s
+against ~1,670s, **~68 minutes end to end**.
+**The batch half did NOT move on row 73's emitter fix, and that is the load-bearing reading**:
+the fix changes generated stub code for `monotonicity` / `idempotence-lifted`, and no measured
+baseline in this repo moved — the home corpora hold no labelled subject those two templates
+reach. The fast half moved **5,632 → 5,636** for `MonotonicityLabeledCallTests`, which is a
+plain unit suite and therefore needs no batch, the regex doing its job. ⚠ **Its timings are from
+the run before it**: the full gate for row 73 ran while a `verify` survey and a `test-fast` were
+on the same machine, so every stage inflated (`batch2` 905s against 656s, `batch5` 1,743s,
+`batch3` 385s, ~77 minutes) — **counts from that run, timings from the one before**, and the
+`fast suite: 259s against a 240s budget` error it produced was contention, re-taken at **42s**
+uncontended.
+**The batch half moved 208 → 209, and the fast half did NOT move**, which is the regex doing its
+job in both directions: the monotonicity subject census is a `@Test` added to the existing
+`CatalogHealthCensusMeasuredTests`, so it is skipped by the fast path and batched by name without
+a Makefile change. **The counts were RE-TAKEN rather than incremented** — 208 + 1 is exactly the
+arithmetic this file forbids, and the run is what says batches 1–7 and `perf` did not move.
+Timings usable: `batch2` 656s, `batch5` 1,713s against ~1,670s, `batch8` 579s, **~67 minutes end
+to end**.
+**THE BATCH HALF STOOD STILL at 208 and that is the load-bearing half**: row 72's fix changes
+DERIVATION output, and no measured baseline in this repo moved — the fixture corpora declare no
+delegating initializer. **The fast half moved 5,624 → 5,632** for the 8 new guards (5 in
+`IndexedTypeShapeParityPropertyTests`, 3 in `DelegatingInitializerCaptureTests`). ⚠ **The
+predecessor's 5,600 was already stale by 24 before this cycle touched anything** — commits landed
+between 2026-08-24 and 2026-08-28 without a re-take, so the baseline was MEASURED at 5,624 rather
+than derived from the changelog. ⚠ **AND THE FIRST ATTEMPT AT THIS RUN REPORTED SUCCESS ON A
+FAILING GATE**: it was invoked as `make test | tail -120`, which returns `tail`'s exit code and
+discards every per-stage count — the exact trap this file documents, paid for a third time.
+`batch4` was red, and red on `main` rather than from the change under test. **Never pipe the
+gate.** Timings usable: `batch2` 729s inside its 679–801s spread, `batch5` 1,719s against ~1,670s,
+`batch8` 562s against a ~460–592s observed range, **~68 minutes end to end**. **THE KIT PIN MOVED, 4.1.0 → 4.2.0**, so these counts
+belong to that pin and not to its predecessor — a re-take after a kit bump is a different
+measurement wearing the same number, which is why it was re-taken rather than carried.
+**The fast half alone moved, 5,593 → 5,600**: +4 `AccessCaveatJoinCollisionTests` and +3
+`QualifiedSpellingDerivationTests`. (A 7-test `StdlibTypeSpellingTests` arrived and was deleted
+inside the same session when its rule moved upstream, so the net is +7 rather than +14 — the kind
+of thing arithmetic over a changelog gets wrong and a re-take does not.)
+**The batch half standing still is again the load-bearing reading**: the qualified-spelling fix
+CHANGES DERIVATION OUTPUT — it took one unmet subject from **0 to 15 executing rows** — and the
+batches are where the corpus censuses live. **Stronger than an unmoved 208 this time: every census
+FIGURE reproduces to the digit**, not merely every assertion. Functions **31,431** · rows
+**5,892** · `userDefined` **5,213 (88%)** · `collection` **151 (2%)** · restricted **2,515 (42%)**
+· `internalOrSPI` **1,392** · two-operand templates still exactly **6** collection rows. That is
+the population census confirmed at scale: the shape the fix addresses occurs **once** across the
+20 corpora, so a rule worth 15 rows on generated code is worth nothing on hand-written Swift, and
+now it is measured rather than predicted.
+⚠ **QUOTE THE COUNTS FROM THIS RUN AND THE TIMINGS FROM AN EARLIER ONE.** Every stage is above its
+standing figure, **including stages this change cannot touch** — `batch3` (`VerifyPipeline`) 477s
+against ~352s (+36%), `batch8` 592s against ~460s (+29%), `batch2` 899s **above** its 679–801s
+spread, `batch5` 1,770s against ~1,670s, wall clock **~80 minutes against ~69**. Even the fast
+suite read 56s here against 44–51s standalone the same day. **Uniform inflation across unrelated
+stages is the signature of a busy machine, not an attributable new cost**, and recording it would
+set a baseline that is a fact about the machine — the trap this file already named once. The
+prior reading — **5,801 = 5,593 fast + 208, taken 2026-08-22 on SwiftPropertyLaws 4.1.0** — and
+everything below it are SUPERSEDED HISTORY, kept because each records what its verdict was decided
+on. **The fast half alone moved, 5,582 → 5,593**, for the
+eleven `UncallableDeclarationTests` arms. **The batch half standing still is the load-bearing
+reading here, not a formality**: the availability gate CHANGES DISCOVERY OUTPUT, and the batches
+are where the corpus censuses live — so an unmoved 208 is the evidence that removing 19
+suggestions from swiftlang-swift and 5 from swift-system broke no census. Timings usable and
+uncontended: `batch5` 1,616s against its standing ~1,670s, `batch2` 698s inside its 679–801s
+spread, **~68 minutes end to end**. **The 2026-08-23 run after the corpus-manifest fix is +9% SLOWER, and that cost is
+ATTRIBUTABLE rather than noise**: `batch2` 872s against its 679–801s spread, `batch5` 1,729s
+against ~1,670s, **~75 minutes against ~69**. Three corpora that had been resolving to ZERO
+`.swift` files now contribute **360**, roughly +14% of the scanned population, so a +9% wall
+clock is the censuses doing work they had been silently skipping. **Counts did not move** —
+the censuses assert floors and memberships, not absolute totals, which is why 360 new files
+changed their printed figures and none of their assertions. **The 2026-08-22 re-run at the RAISED trial budget (N=100 → N=1000) came in at the same
+counts and the same wall clock** — `batch5` 1,643s, `batch2` 730s, ~69 minutes — which is the
+compile-bound finding confirmed at SUITE scale rather than on one stub, and **no pinned law
+flipped**: a 10× budget turned no `bothPass` into a `defaultFails` anywhere, so
+`removingLastComponent` was not the tip of an iceberg. ⚠ **The FIRST attempt at this run was killed mid-`batch6` and
+leaked 4.9 GB to `$TMPDIR`** — `make clean-temp` reclaimed it to 200 MB, and the run was re-taken
+from scratch rather than resumed, because a partial run proves nothing about a number. The prior
+reading, 5,790 with fast at 5,582, follows. **The fast half alone moved, 5,578 → 5,582**, for the
+four `VerifyResultParserTests` arms on the trap diagnosis; the batch half stood still because
+none of them is a `*MeasuredTests` suite, which is the regex doing its job. **The KIT PIN MOVED
+in this reading — 4.0.0 → 4.1.0** — so the counts belong to that pin and not to its predecessor;
+a re-take after a kit bump is a different measurement wearing the same number. Timings are usable
+(`batch5` 1,635s against its standing ~1,670s), **~69 minutes end to end**. The prior reading,
+5,786 with fast at 5,578 on SwiftPropertyLaws 4.0.0, follows. **The fast half alone moved, 5,570 → 5,578** — six
+`ComputedPropertyCallShapeTests` and two `VerifyTargetInferenceTests`; the batch half stood still
+because neither is a `*MeasuredTests` suite, which is the regex doing its job. **This run's
+TIMINGS are usable, unlike the previous reading's**: `batch5` 1,643s against its standing ~1,670s
+and `batch2` 717s inside its 679–801s spread, so nothing inflated — **`make test` ~69 minutes end
+to end**. The prior reading, 5,778 with fast at 5,570, follows. **The fast half alone moved, 5,566 → 5,570**, for the
+four emitter tests that made `role-postcondition` executable; the batch half stood still because
+the new tests are cheap and unbatched. The prior reading, 5,774 with fast at 5,566, follows. **`role-postcondition` emits 30 rows across the 17 corpora** — mid-catalogue,
+above `equivalence-relation` (29) and `normal-form` (17) — taking the discovery total 5,514 → 5,544. **Nothing in the existing
+5,552 broke, and that was worth distrusting rather than celebrating**: the fixes removed 994
+discovery rows across the seventeen corpora, so the censuses' printed figures moved while their
+assertions — floors and memberships, not absolute counts — did not. The row totals were re-taken
+by hand from that run rather than left to imply they had held. **Quote the COUNTS from this run and the TIMINGS
+from the previous one**: this pass ran under load and every stage inflated (batch2 948s against
+649s, batch3 560s against 352s), so recording its wall clock would set a baseline that is a fact
+about the machine. The standing costs are **`batch5` ~1,670s and `batch8` ~460s**, with **`make
+test` ~65 minutes end to end**, roughly half of it two censuses whose questions are answered. Whether an answered census belongs in
+the default gate at full scope is open — **narrowing its corpus list is NOT the fix**, since that
+is the habit `universeIsTheManifest` exists to prevent. The prior reading, 5,747 with `batch8` at
+8, follows. **`batch5` costs 1,678s, up from 43s
+before this suite existed** — four discovery passes plus protocol parsing over 28,274 functions
+across the 17 corpora, **~28 minutes**, and `make test` is now ~57 minutes end to end. That is one
+answered census taking half the gate's wall clock; **it is a cost paid on purpose and recorded so
+it is not read later as a regression**, and whether an answered census should stay in the default
+gate at full scope is an open question — narrowing its corpus list is NOT the fix, since that is
+the habit `universeIsTheManifest` exists to prevent. The prior reading, 5,745 with `batch5` at 12,
+follows. **`batch2` costs 679–801s** — the two readings
+are the same suite on a busier and a quieter machine, so treat the spread as machine noise and
+not as a regression; the step up from ~460s is real and is the price of two censuses moving from
+three corpora to the manifest's seventeen. **This count was RE-TAKEN rather than derived**, and
+the arithmetic that was available and refused is 185 + 4: the prior run of this same branch was
+piped through `tail -35`, which kept the exit code and discarded every per-stage count, so it
+proved the branch green and proved nothing about the number — the standing rule below, re-earned
+the same day it was quoted. The prior reading
+follows. It
+reconciles with 183 + 2 and 5,548 + 4 — **which is why each was re-taken rather than added**. The
+sandbox-detector branch's first full run was piped through `tail -40`, which discarded every
+per-stage count while keeping the exit code: the run proved the branch green and proved nothing
+about the number, so the arithmetic was available and the measurement was not. Re-running cost
+half an hour, twice, and is the whole of this file's standing rule. The prior reading, at 2026-08-17,
+follows — it too was a genuine full run, every batch counted from it rather than carried
+over. The prior 5,654 reading was
+`test-fast` + `batch2` re-run directly with the other seven batches carried, and it is
+superseded rather than merely stale: the union of two branches' batch additions is not
+either branch's arithmetic. The batch half moved 92 → 112 as the four purity censuses
+joined batch2, then 117, 121, 126, 131, 136 as `PurityFixpointCensus`,
+`OwnershipPremiseCensus`, `ModuleStateCensus`, `PurityBacktest` and
+`BlindSpotBaseRateCensus` joined, then **136 → 147** as items 34/35's two suites and
+`SoundnessArmReachCensusMeasuredTests` landed together, then **147 → 151** for
+`SandboxDetectorMechanismMeasuredTests`, **151 → 158** for
+`PurityRefactoringReachMeasuredTests`, **158 → 162** for `PackagePurityJoinMeasuredTests`
+, **162 → 169** for `PurityVetoPrecisionMeasuredTests`
+, **169 → 172** for `ModifyAccessorCensusMeasuredTests`
+, **172 → 176** for `SoundnessArmProbeMeasuredTests`
+and **176 → 179** as that same suite gained the consumer question, then **179 → 181**
+for `LiftCallerReachMeasuredTests` and **181 → 183** for `ParameterRoleCensusMeasuredTests`. The fast half moved 5,531 → 5,532 for
+`ReleaseBuildabilityTests`, 5,532 → 5,534 for `VerifierWorkdirEnginePinTests` and
+5,534 → 5,540 for `LiftTargetsTests` 5,540 → 5,544 for `SurveyRecordTierTests` and 5,544 → 5,548 for the transitive-walk cases. The fast half has not moved for
+any of those, which is the regex doing its job; it moved 5,508 → 5,511 only for
+`PartitionOrderContainmentTests`, a property suite rather than a `*MeasuredTests` one,
+which therefore needs no batch — the regex doing its job in the other direction, as it did
+again on 2026-08-18 for `BuilderFieldParityTests`.
+Prior reading was 5,493 + 83 at `4fac986` on 2026-08-15).
+
 ## Where to look — full annotations
 
 | Question | File |
