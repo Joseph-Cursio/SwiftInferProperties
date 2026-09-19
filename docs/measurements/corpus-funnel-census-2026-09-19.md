@@ -7,7 +7,8 @@
 Harness: `scripts/corpus_funnel.py` + `scripts/corpus_funnel_stage5.py` — **committed this time**,
 unlike the two before it. Census binary: SwiftInferProperties `24270a1f`, one binary for all 19.
 
-> **Answer: passing laws more than doubled, 67 → 150, and compiles rose 183 → 219 while stubs
+> **Answer: passing laws more than doubled, 67 → 150 (**163** after the 2026-09-19 hang
+> attribution below), and compiles rose 183 → 219 while stubs
 > FELL 980 → 924.** Fewer stubs, more of them compiling, far more reaching a pass — which is the
 > shape the shipped work predicts: gates withdrawing rows, emitter fixes making the survivors
 > build, and SwiftPropertyLaws 4.7.0 clearing every stateless struct.
@@ -36,8 +37,11 @@ upstream are the deliberate ones.
 checked**: SwiftMarkdownWiki 26, SwiftCloneDetector 15, MacCloud_server 6, SwiftIdempotency 6 —
 subjects the parser was not tuned against.
 
-⚠ **837 of 924 stubs were measured.** 68 are blocked by subject-side dependency conflicts and 19
-returned no verdict (below). Neither is counted as a failure.
+⚠ **837 of 924 stubs were measured** — **855 after the 2026-09-19 hang attribution below**. 68 are
+blocked by subject-side dependency conflicts and 19 returned no verdict — **18 of those were the
+innocent neighbours of one hanging law**, and once it is set aside they carry a measured outcome:
+**14 report a verdict and 4 fail to compile**, leaving the hanging law itself as the only
+unmeasured stub. Neither bucket is counted as a failure.
 
 ## Where the movement is
 
@@ -65,7 +69,7 @@ alongside: they reproduce the previous census across every repository.
 | pbt-workbook-corpus | 20 | same |
 | pbt-workbook-sampler | 4 | same |
 | pbt-workbook | 1 | same |
-| **SwiftFormatRuleStudio** | **19** | **no verdict — the test process hangs before any test reports** |
+| **SwiftFormatRuleStudio** | **1** | **the test process hangs — ATTRIBUTED 2026-09-19 to one law over a REAL infinite loop; the other 14 run (§ below)** |
 
 The four dependency conflicts are the limit the 16 September census recorded and deliberately
 left standing; they were worth 2 compiles there, so the comparison is close to like-for-like.
@@ -95,6 +99,54 @@ removes it afterwards, which is a workaround recorded as one.
 compile — 15 of them — and the process then hangs before printing a first test. Recording that as
 *0 passed* would assert that 15 laws fail, which is not what was observed. They are excluded from
 the pass column rather than counted as zero.
+
+### ✅ ATTRIBUTED 2026-09-19 — one law, and the hang is a REAL DEFECT
+
+**The hang is ONE suite of 15**: `SwiftCodeTokenizer_tokens_input_totalityTests`. Skipping it
+alone takes the run from **>300s with nothing printed to 3 seconds**, confirmed by a direct probe
+rather than inferred from a bisection.
+
+**The cause is in the subject, not in the stub.** `SwiftCodeTokenizer.scanToken` guards its number
+branch on `char.isNumber` and then scans with `scanRun`, whose predicate is
+`$0.isHexDigit || "._xXbBoOeE".contains($0)`. **Those are not the same set.** For a character that
+passes the guard and fails the predicate the run is empty, `scanRun` returns `next == start`, and
+`tokens(inLine:)`'s `while index < chars.count` never advances — an unconditional infinite loop on
+a one-character input.
+
+**The gap enumerated, over the generator's own alphabet**: **0 characters in ASCII**, **6 in
+Latin-1** — `¹ ² ³ ¼ ½ ¾` — and **790 across the BMP**. The stub draws
+`Gen<Character>.latin1.string(of: 0...24)` at weight 1.0 of 10.0, which is why 100 trials reached
+it.
+
+**Verified by executing their code**, not by reading it: `tokens(inLine: "42")` returns in 0.001s;
+`tokens(inLine: "\u{00BD}")` does not terminate in 60s.
+
+✅ **Their own tests cannot reach it, and the reason is structural rather than lucky.**
+`SwiftCodeTokenizerTests.swift` is the tokenizer's dedicated suite — **3 tests, zero non-ASCII
+characters** — and **ASCII contains none of the 790**. This is
+`criterion-a-quality-swift-system.md`'s shape exactly: the law's whole value is on the input the
+subject's suite does not reach.
+
+⚠ **This is a HANG, not a refutation, and it does NOT enter the hand-check tally.** The law
+reaches no verdict — it finds the defect by failing to terminate, which is a category the
+refutation tally does not have a column for. Counting it as a refutation would inflate a number
+whose whole purpose is to price counterexamples.
+
+**What it costs the census: the repo contributes 13 passes, not 0.** Of the 15 that compile, 1
+hangs and **14 run in 0.038s — 13 pass and 1 fails**. ⚠ **That one failure is NOT a refutation
+either**: `SwiftFormatConfig_addRule_state-machine` is the `state-machine` SCAFFOLD, which
+`Issue.record`s a TODO by design until a human completes it, as
+`normal-form-state-machine-writers.md` records. **So the run total moves 150 → 163**, measured on
+the same tree and the same binary with one suite set aside.
+
+⚠ **Two harness defects were in the way, and the second would have hidden the first.** The
+bisection moved stub files aside, which forces a recompile and can break the build when a
+surviving stub references a removed one — and a build failure is reported as *not a hang*, so the
+search concluded the hang had gone and named nobody. Exercised against a fake oracle over every
+0/1/2/3-culprit combination of six suites, it also mis-attributed **all 35 multi-culprit cases**.
+Both are fixed (skip by name; narrow-then-minimize). **And the harness then read `passed` off the
+HUNG run rather than off the re-run**, so even a working bisection would have set the culprit
+aside and reported 0.
 
 ## A pass still means what it meant
 
