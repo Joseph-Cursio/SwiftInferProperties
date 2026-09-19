@@ -398,6 +398,14 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                             built["set_aside"][name] = "test process hangs before reporting"
                         entry["compiled"] = max(0, entry["compiled"] - len(culprits))
                         ran = s5.run_serially(package_dir, swift)
+                        # ⚠ **Read the counts back off the RE-RUN.** They were taken above from
+                        # the hung run, and setting the culprit aside is pointless if the entry
+                        # still reports what the hang produced — measured on
+                        # SwiftFormatRuleStudio, that is the difference between 0 passes and 13.
+                        entry["passed"] = len(ran["passed"])
+                        entry["failed"] = len(ran["failed"])
+                        entry["crashed"] = len(ran["crashed"])
+                        entry["hung"] = len(ran.get("hung", []))
                 if ran.get("no_verdict"):
                     # Not "0 passed": the run produced no verdict at all, so these stubs are
                     # unmeasured rather than failing. Kept out of the pass column deliberately.
