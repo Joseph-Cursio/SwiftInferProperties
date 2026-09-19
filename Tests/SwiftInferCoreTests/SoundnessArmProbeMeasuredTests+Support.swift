@@ -26,10 +26,17 @@ extension SoundnessArmProbeMeasuredTests {
 
     static let fixture = packageRoot.appendingPathComponent("fixtures/soundness-probe")
 
-    /// The probe binary, under whatever triple SwiftPM built into. Globbed rather than
-    /// hardcoded so an arm64/x86 host difference does not read as "the arm found nothing".
+    /// The probe binary, wherever SwiftPM built it. **`.build/debug` first**: both build
+    /// systems link it to their real products directory — `<triple>/debug` under `native`,
+    /// `out/Products/Debug` under `swiftbuild`, the default from Swift 6.4 — and
+    /// `VerifierSubprocess` already resolves its binary through it. The per-triple glob is
+    /// the fallback, so an arm64/x86 host difference does not read as "the arm found
+    /// nothing". Globbing alone found nothing under `swiftbuild`, and a stale `native`
+    /// build left in `.build` hid that until a `swift package clean` removed it.
     static let binary: URL? = {
         let build = packageRoot.appendingPathComponent(".build")
+        let linked = build.appendingPathComponent("debug/soundness-probe")
+        if FileManager.default.isExecutableFile(atPath: linked.path) { return linked }
         guard let triples = try? FileManager.default.contentsOfDirectory(
             at: build, includingPropertiesForKeys: nil
         ) else { return nil }
