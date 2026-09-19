@@ -44,7 +44,7 @@ public extension LiftedTestEmitter {
     /// missing-symbol error. That arm now carries the marker `todoGeneratorMarker` so a reader
     /// and a `grep` can tell a working generator from a deliberate compile error; four of the
     /// nineteen were this arm (`CGFloat`, `URL`, `Date?`, `[PluginLogEntry]`) and nothing said so.
-    static func defaultGenerator(for typeName: String) -> String {
+    static func defaultGenerator(for typeName: String, reason: String? = nil) -> String {
         if let rawType = RawType(typeName: typeName) {
             return rawType.edgeBiasedGeneratorExpression ?? rawType.generatorExpression
         }
@@ -65,7 +65,7 @@ public extension LiftedTestEmitter {
         if let composed = DerivationStrategist.composedGenerator(forTypeName: typeName) {
             return composed.expression
         }
-        return "\(typeName).gen()\(todoGeneratorMarker)"
+        return "\(typeName).gen()\(todoGeneratorMarker(reason: reason))"
     }
 
     /// The generator a **totality** law needs, which is not the one every other law gets.
@@ -105,8 +105,38 @@ public extension LiftedTestEmitter {
     /// *into* an expression — `{ rng in (\(generator)).run(using: &rng) }` — so a line comment
     /// would swallow `.run(using: &rng) }` and break the file in a way that has nothing to do
     /// with the missing generator. The first draft of this marker did exactly that.
-    static var todoGeneratorMarker: String {
-        " /* TODO: no generator derived — supply `static func gen()`; this will not compile */"
+    static var todoGeneratorMarker: String { todoGeneratorMarker(reason: nil) }
+
+    /// The same marker, naming WHY when the caller knows.
+    ///
+    /// **The kit answers this and we were throwing the answer away.**
+    /// `GeneratorResolver.resolutionFailure(forTypeName:)` has returned a `ResolutionFailure`
+    /// since v4.7.0 — `.notInUniverse`, `.ambiguous`, `.aliasUnresolved`, `.noStrategy(reason:)`
+    /// carrying the strategist's own sentence verbatim, `.unterminatedRecursion` — one case per
+    /// `nil` path. Every stub rendered the same fixed string regardless, so **656 markers in one
+    /// corpus run said the identical thing** and a reader could not tell five different problems
+    /// apart.
+    ///
+    /// The kit's own commit measured the cost of the discard downstream, in this repository:
+    /// the missing-generator census *"had to reconstruct two of the `nil` paths and guess the
+    /// third, and left 370 of 2,016 unresolved types (18.4%) unexplained for that reason alone"*.
+    ///
+    /// Fourth time in this sequence that the fix is a RENDER, not a derivation — `__genMesh`,
+    /// `willSet`/`didSet` and the private carrier were the first three
+    /// (`docs/measurements/kit-scaffold-conversion.md`).
+    ///
+    /// Still a block comment, for the reason the property above gives: the generator is spliced
+    /// INTO an expression, so a line comment would swallow the rest of the line.
+    static func todoGeneratorMarker(reason: String?) -> String {
+        guard let reason, !reason.isEmpty else {
+            return " /* TODO: no generator derived — supply `static func gen()`; this will not compile */"
+        }
+        // Newlines would break the splice; the kit writes sentences, not paragraphs, but a
+        // defensive fold costs nothing and a broken stub costs a reader the real error.
+        let folded = reason.replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "*/", with: "* /")
+        return " /* TODO: no generator derived — \(folded); supply `static func gen()`; "
+            + "this will not compile */"
     }
 
     /// TestLifter M4.4 — emit a `Gen<T>` expression for a mock-inferred

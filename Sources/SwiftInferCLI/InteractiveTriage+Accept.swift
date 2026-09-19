@@ -333,10 +333,15 @@ extension InteractiveTriage {
     /// **Module-private (not file-private)** so the M5.5 lifted-only
     /// dispatch helpers in `InteractiveTriage+AcceptM5.swift` can
     /// share the same dispatch without duplicating the priority order.
+    /// - Parameter failureReason: consulted only on the `.todo` arm, so the marker can name the
+    ///   kit's own account of why nothing derived instead of the one fixed sentence every stub
+    ///   carried. Optional, because most callers do not hold a resolver and a marker without a
+    ///   reason is what they rendered before.
     static func chooseGenerator(
         for suggestion: Suggestion,
         typeName: String,
-        customGenerator: ((String) -> String?)? = nil
+        customGenerator: ((String) -> String?)? = nil,
+        failureReason: ((String) -> String?)? = nil
     ) -> String {
         if suggestion.generator.source == .inferredFromTests,
            let mock = suggestion.mockGenerator {
@@ -353,7 +358,8 @@ extension InteractiveTriage {
         if let derived = customGenerator?(typeName) {
             return derived
         }
-        return LiftedTestEmitter.defaultGenerator(for: typeName)
+        let reason = failureReason?(typeName)
+        return LiftedTestEmitter.defaultGenerator(for: typeName, reason: reason)
     }
 
     /// Strip the optional `\(typeName).` prefix from an identity-element
