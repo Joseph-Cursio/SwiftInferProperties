@@ -17,19 +17,37 @@ extension InteractiveTriage {
     /// `gen()`. Lifted out of `acceptDecision`, which crossed SwiftLint's body-length cap once
     /// #493's gate and #498's argument types both landed in it.
     static func customGenerator(for context: Context) -> (String) -> String? {
-        projectTypeGenerator(types: Array(context.typeShapesByName.values))
+        let corpus = context.syntaxCorpus
+        return projectTypeGenerator(
+            types: Array(context.typeShapesByName.values),
+            syntaxNode: corpus.map { source in { source.generator(for: $0) } }
+        )
     }
 
     /// `customGenerator(for:)` over an explicit type universe, so the choice can be tested
     /// without assembling a triage `Context`.
-    static func projectTypeGenerator(types: [TypeShape]) -> (String) -> String? {
+    ///
+    /// - Parameter syntaxNode: a generator for a SwiftSyntax node type, from the package's test
+    ///   snippets (`SyntaxCorpusSource`). Consulted after the project's own types, so a scanned
+    ///   type that happens to be named `…Syntax` keeps its derived generator.
+    static func projectTypeGenerator(
+        types: [TypeShape],
+        syntaxNode: ((String) -> String?)? = nil
+    ) -> (String) -> String? {
         let resolver = GeneratorResolver(types: types)
         let explain = generatorFailureReason(types: types)
+        let resolve: (String) -> DerivationStrategist.ComposedGenerator? = { name in
+            resolver.customTypeGenerator(forTypeName: name)
+                ?? syntaxNode?(name).map { DerivationStrategist.ComposedGenerator(expression: $0) }
+        }
         return { typeName in
             if let derived = resolver.customTypeGenerator(forTypeName: typeName)?.expression {
                 return derived
             }
-            if let composed = composedOverProjectTypes(typeName, resolver: resolver) {
+            if let node = syntaxNode?(typeName) {
+                return node
+            }
+            if let composed = composedOverProjectTypes(typeName, resolve: resolve) {
                 return composed
             }
             // **The reason is attached HERE because this closure is already threaded
@@ -55,14 +73,14 @@ extension InteractiveTriage {
     /// runs BEFORE them in `chooseGenerator`: letting the kit compose `String` here would replace
     /// `RawType`'s edge-biased generator — the one the structural string laws were tuned on — with
     /// the kit's plain one.
-    static func composedOverProjectTypes(_ typeName: String, resolver: GeneratorResolver) -> String? {
+    static func composedOverProjectTypes(
+        _ typeName: String,
+        resolve: @escaping (String) -> DerivationStrategist.ComposedGenerator?
+    ) -> String? {
         guard RawType(typeName: typeName) == nil,
               DerivationStrategist.composedGenerator(forTypeName: typeName) == nil
         else { return nil }
-        return DerivationStrategist.composedGenerator(
-            forTypeName: typeName,
-            resolve: resolver.customTypeGenerator
-        )?.expression
+        return DerivationStrategist.composedGenerator(forTypeName: typeName, resolve: resolve)?.expression
     }
 
     /// Why the resolver produced no generator for `typeName`, in one sentence.

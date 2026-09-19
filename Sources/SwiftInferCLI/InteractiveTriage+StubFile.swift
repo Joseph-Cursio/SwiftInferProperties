@@ -104,6 +104,9 @@ extension InteractiveTriage {
         // subject like `mimeType` or `bucketURL` reaches Foundation through its own types.
         // An unused import is a no-op; a missing one is a build failure in generated code.
         let foundationImport = "import Foundation\n"
+        // A stub drawing from the syntax corpus names SwiftSyntax node types in its closure
+        // annotations; imports are per file, so the corpus file's own import does not reach here.
+        let syntaxImport = stub.contains("\(SyntaxCorpusSource.typeName).") ? "import SwiftSyntax\n" : ""
         let carrierImportLines = Self.carrierImportLines(
             for: suggestion,
             entryModule: resolvedModule,
@@ -126,7 +129,7 @@ extension InteractiveTriage {
         \(foundationImport)import Testing
         import PropertyBased
         import PropertyLawKit
-        \(moduleImport)\(carrierImportLines)\(namespacedStub)
+        \(syntaxImport)\(moduleImport)\(carrierImportLines)\(namespacedStub)
         """
     }
 

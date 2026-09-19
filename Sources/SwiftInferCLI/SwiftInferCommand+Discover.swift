@@ -261,7 +261,7 @@ extension SwiftInferCommand.Discover {
             outputDirectoryOverride: triageIO.outputDirectoryOverride
         )
         triageIO.diagnostics.writeDiagnostic("note: \(destination.note)")
-        let context = InteractiveTriage.Context(
+        var context = InteractiveTriage.Context(
             prompt: triageIO.prompt,
             output: triageIO.output,
             diagnostics: triageIO.diagnostics,
@@ -289,6 +289,11 @@ extension SwiftInferCommand.Discover {
             sourceFileByTypeName: pipeline.sourceFileByTypeName,
             inheritedTypesByName: pipeline.inheritedTypesByName,
             packageRoot: packageRoot
+        )
+        context.syntaxCorpus = SyntaxCorpusSource(
+            packageRoot: packageRoot,
+            generatedRoot: destination.generatedRoot,
+            dryRun: triageIO.dryRun
         )
         try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
     }

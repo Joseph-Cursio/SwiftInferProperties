@@ -163,6 +163,11 @@ public enum InteractiveTriage {
         /// `monotonicity` carrier can be ordered at all (`UnorderedCarrierGate`).
         public let inheritedTypesByName: [String: Set<String>]
 
+        /// Generators for SwiftSyntax node parameters, from snippets the package's tests parse.
+        /// `nil` for every caller that does not supply one, which keeps the explained `.todo`.
+        /// Set after construction because the type is internal and the initializer is public.
+        var syntaxCorpus: SyntaxCorpusSource?
+
         /// `nil` for a caller with no package on disk, which is every unit fixture; carrier
         /// imports are then not resolved and the stub emits what it did before.
         public let packageRoot: URL?
