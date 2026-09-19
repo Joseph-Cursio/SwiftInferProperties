@@ -18,7 +18,55 @@ extension InteractiveTriage {
     /// #493's gate and #498's argument types both landed in it.
     static func customGenerator(for context: Context) -> (String) -> String? {
         let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
-        return { typeName in resolver.customTypeGenerator(forTypeName: typeName)?.expression }
+        let explain = generatorFailureReason(for: context)
+        return { typeName in
+            if let derived = resolver.customTypeGenerator(forTypeName: typeName)?.expression {
+                return derived
+            }
+            // **The reason is attached HERE because this closure is already threaded
+            // everywhere a generator is chosen**, so naming the cause needs no signature to
+            // move. Delegating to `defaultGenerator` keeps the `RawType` and
+            // `DerivationStrategist.composedGenerator` arms exactly as they were — this only
+            // reaches the `.todo` arm, and only when the resolver has something to say.
+            guard let reason = explain(typeName) else { return nil }
+            return LiftedTestEmitter.defaultGenerator(for: typeName, reason: reason)
+        }
+    }
+
+    /// Why the resolver produced no generator for `typeName`, in one sentence.
+    ///
+    /// **Built from the SAME resolver that just returned `nil`**, so the explanation cannot
+    /// describe a different derivation from the one that failed. `resolutionFailure` is the
+    /// kit's own account of its `nil` paths (v4.7.0), and `.noStrategy` carries the strategist's
+    /// sentence verbatim rather than a paraphrase.
+    static func generatorFailureReason(for context: Context) -> (String) -> String? {
+        let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
+        return { typeName in
+            guard let failure = resolver.resolutionFailure(forTypeName: typeName) else {
+                return nil
+            }
+            switch failure {
+            case .notInUniverse:
+                return "`\(typeName)` is not among the scanned types"
+
+            case .ambiguous:
+                return "`\(typeName)` is ambiguous — more than one scanned type has that name"
+
+            case .aliasUnresolved(let underlying):
+                return "`\(typeName)` is an alias for `\(underlying)`, which did not resolve"
+
+            case .noStrategy(let reason):
+                return reason
+
+            case .unterminatedRecursion:
+                return "`\(typeName)` derives through itself without a base case"
+
+            @unknown default:
+                // A case the kit adds later must not silently read as "no reason": the marker
+                // falls back to its unexplained form, which is what it said before this existed.
+                return nil
+            }
+        }
     }
 
     /// Say why no stub was written, naming the cause rather than the template where it can.
