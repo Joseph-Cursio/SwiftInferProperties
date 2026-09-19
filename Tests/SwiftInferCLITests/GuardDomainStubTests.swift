@@ -119,6 +119,60 @@ struct GuardDomainStubTests {
         #expect(reason == nil)
     }
 
+    /// **`Self` in the signature must not rebind `Self` to itself.** SwiftMarkdownWiki's real
+    /// `parse(from:)` returns `(frontMatter: Self, body: String)` and `(Self(), source)`; inside the
+    /// generated test struct `Self` is the TEST struct, and the stub timed out the type checker.
+    @Test func selfInTheSignatureStillBindsToTheDeclaringType() throws {
+        let suggestion = try Self.suggestion(
+            Self.summary(
+                "parse",
+                parameters: [Self.param("from", "String", "source")],
+                returns: "(frontMatter: Self, body: String)",
+                owner: "FrontMatter",
+                domain: GuardDomain(
+                    condition: "source.hasPrefix(\"---\")",
+                    returnedExpression: "(Self(), source)",
+                    parameterName: "source",
+                    firesWhenConditionHolds: false
+                )
+            )
+        )
+        let stub = try #require(InteractiveTriage.entailedTemplateStub(for: suggestion, customGenerator: nil))
+        #expect(stub.contains("== (FrontMatter(), arg0)"))
+        // The stated law quotes the source text, `Self()` included; the CHECK must not.
+        #expect(!stub.contains("== (Self(), arg0)"))
+    }
+
+    /// **The law's own text is TEXT wherever it is quoted.** pbt-book's `formatDropping(_:)`
+    /// returns `"\(order.id)"`, and the coverage message spliced it raw into a `"""` literal —
+    /// which the compiler read as a live interpolation: `cannot find 'order' in scope`.
+    @Test func aLawContainingAnInterpolationIsEscapedInTheCoverageMessage() throws {
+        let suggestion = try Self.suggestion(
+            Self.summary(
+                "formatDropping",
+                parameters: [Self.param(nil, "Order", "order")],
+                returns: "String",
+                owner: "Formatter",
+                isStatic: false,
+                domain: GuardDomain(
+                    condition: "!order.lineItems.isEmpty",
+                    returnedExpression: "\"\\(order.id)\"",
+                    parameterName: "order",
+                    firesWhenConditionHolds: false
+                )
+            )
+        )
+        let stub = try #require(InteractiveTriage.entailedTemplateStub(for: suggestion, customGenerator: nil))
+        // The coverage message alone: past it, `\(input)` in the failure line is a real
+        // interpolation and must stay one.
+        let afterMarker = try #require(stub.split(separator: "NOT APPLIED").last)
+        let coverage = try #require(afterMarker.split(separator: "delete this test").first)
+        #expect(coverage.contains("\\\\(order.id)"), "the law's interpolation was not escaped")
+        // Every escaped one removed, nothing that still reads as an interpolation may remain.
+        let unescaped = String(coverage).replacingOccurrences(of: "\\\\(", with: "")
+        #expect(!unescaped.contains("\\("), "an unescaped interpolation reached the message")
+    }
+
     /// 57 of 156 measured sites mention `self`. It is the receiver, which for an instance method
     /// is the first argument the stub draws.
     @Test func selfBindsToTheDrawnReceiver() throws {

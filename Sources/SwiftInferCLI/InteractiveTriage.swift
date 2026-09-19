@@ -158,6 +158,16 @@ public enum InteractiveTriage {
         /// a question the verify path had answered since 2026-08-03 (#492).
         public let sourceFileByTypeName: [String: String]
 
+        /// Every scanned type's conformances, merged across files and extensions — the index
+        /// `scaffold-kit-suites` already reads. The accept path uses it to tell whether a
+        /// `monotonicity` carrier can be ordered at all (`UnorderedCarrierGate`).
+        public let inheritedTypesByName: [String: Set<String>]
+
+        /// Generators for SwiftSyntax node parameters, from snippets the package's tests parse.
+        /// `nil` for every caller that does not supply one, which keeps the explained `.todo`.
+        /// Set after construction because the type is internal and the initializer is public.
+        var syntaxCorpus: SyntaxCorpusSource?
+
         /// `nil` for a caller with no package on disk, which is every unit fixture; carrier
         /// imports are then not resolved and the stub emits what it did before.
         public let packageRoot: URL?
@@ -178,6 +188,7 @@ public enum InteractiveTriage {
             moduleUnderTest: String? = nil,
             genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
             sourceFileByTypeName: [String: String] = [:],
+            inheritedTypesByName: [String: Set<String>] = [:],
             packageRoot: URL? = nil
         ) {
             self.prompt = prompt
@@ -196,6 +207,7 @@ public enum InteractiveTriage {
             self.moduleUnderTest = moduleUnderTest
             self.genericParametersByName = genericParametersByName
             self.sourceFileByTypeName = sourceFileByTypeName
+            self.inheritedTypesByName = inheritedTypesByName
             self.packageRoot = packageRoot
         }
     }

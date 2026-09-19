@@ -98,7 +98,21 @@ struct StubApplicationArityTests {
             )
         ))
         #expect(reason.contains("Date?"))
-        #expect(reason.contains("Optional is not Comparable"))
+        #expect(reason.contains("an Optional, collection or tuple is not Comparable"))
+    }
+
+    /// A collection carrier declines the same way — `[Int]` is never `Comparable`.
+    @Test func aCollectionMonotonicityCarrierSaysWhy() throws {
+        let reason = try #require(StubApplicationArity.declineReason(
+            for: Self.suggestion(
+                template: "monotonicity",
+                displayName: "total(_:)",
+                carrier: "Stats",
+                signature: "([Int]) -> Int"
+            )
+        ))
+        #expect(reason.contains("[Int]"))
+        #expect(reason.contains("not Comparable"))
     }
 
     /// The control: an ordinary carrier still emits, so the template is narrowed, not disabled.

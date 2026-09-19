@@ -137,6 +137,29 @@ struct GuardDomainRebindingTests {
         )
     }
 
+    /// **An interpolation is code.** Measured on pbt-book's `formatDropping(_:)`, whose guard
+    /// returns `"\(order.id)"`: the condition was rebound to `arg0` and the interpolation was not,
+    /// so the stub failed with `cannot find 'order' in scope`.
+    @Test("a name inside an interpolation is rebound")
+    func interpolationIsRebound() {
+        #expect(
+            GuardDomainRebinding.rebind("\"\\(order.id)\"", bindings: ["order": "arg0"])
+                == "\"\\(arg0.id)\""
+        )
+        #expect(
+            GuardDomainRebinding.rebind("\"id: \\(f(order, (1)))!\"", bindings: ["order": "arg0", "f": "f"])
+                == "\"id: \\(f(arg0, (1)))!\""
+        )
+    }
+
+    /// And the other half of the same defect: a name there that cannot be bound must decline the
+    /// site, not slip past `unboundNames` into a stub that does not compile.
+    @Test("an unbound name inside an interpolation is reported")
+    func interpolationUnboundIsReported() {
+        #expect(GuardDomainRebinding.unboundNames(in: "\"\\(cache.key)\"", bindings: [:]) == ["cache"])
+        #expect(GuardDomainRebinding.rebind("\"\\(cache.key)\"", bindings: [:]) == nil)
+    }
+
     /// The template's own documented example, end to end.
     @Test("the template's documented example rebinds whole")
     func documentedExample() {

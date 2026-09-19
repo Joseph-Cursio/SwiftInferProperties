@@ -70,14 +70,21 @@ public enum FloatingPointEquatableTypes {
     /// the wrapper would be the same kind of thing. Unwrapping instead would change the law
     /// being stated, since the optionality is the parameter's own.
     ///
-    /// Deliberately **syntactic and narrow**: it answers "is this spelled Optional", not "is
-    /// this Comparable". A non-optional non-comparable carrier still gets through, and would
-    /// fail at compile time as it does today — closing that needs conformance resolution, which
-    /// this is not.
+    /// **Nor is a collection or a tuple.** `Array`, `Set`, `Dictionary` and tuples never conform
+    /// to `Comparable`, whatever their elements, so `[Int]` is refused by its spelling alone.
+    /// Measured on the 2026-09-19 corpus funnel re-run: `total(_: [Int])` and `mean(_: [Double])`
+    /// emitted stubs failing with `binary operator '<' cannot be applied to two '[Int]' operands`.
+    ///
+    /// Deliberately **syntactic**: it answers "is this spelled as something that can never be
+    /// ordered", not "is this Comparable". A nominal type that is not `Comparable` needs the
+    /// conformance index, which `UnorderedCarrierGate` reads on the accept path.
     public static func isOrderableCarrier(typeText: String) -> Bool {
         let trimmed = typeText.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.hasSuffix("?") else { return false }
-        return !trimmed.hasPrefix("Optional<")
+        guard !trimmed.hasSuffix("?"), !trimmed.hasPrefix("Optional<") else { return false }
+        // `[T]` and `[K: V]` both start with a bracket; a tuple starts with a parenthesis.
+        guard !trimmed.hasPrefix("["), !trimmed.hasPrefix("(") else { return false }
+        let unorderedGenerics = ["Array<", "ArraySlice<", "ContiguousArray<", "Set<", "Dictionary<"]
+        return !unorderedGenerics.contains { trimmed.hasPrefix($0) }
     }
 
     /// Whitespace-trim and generic-parameter-strip are applied uniformly.

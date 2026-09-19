@@ -65,24 +65,30 @@ extension LiftedTestEmitter {
     /// - Parameter argumentTypes: the drawn values' types, in argument order, used to ANNOTATE
     ///   the property closure's tuple parameter. Empty, or a count that disagrees with
     ///   `generators`, emits exactly what it emitted before — see `tupleBinding`.
+    /// - Parameter inoutArguments: positions, in argument order (receiver included), of
+    ///   arguments the subject takes `inout`. Each is copied into a `var` and passed with `&`,
+    ///   since a drawn value is a `let` and `f(value)` does not compile against `inout`.
     public static func total(
         callee: CalleeReference,
         seed: SamplingSeed.Value,
         generators: [String],
         isThrowing: Bool,
         isAsync: Bool,
-        argumentTypes: [String] = []
+        argumentTypes: [String] = [],
+        inoutArguments: Set<Int> = []
     ) -> String {
         let testFunctionName = "\(callee.bareName)_isTotal"
         let isTuple = generators.count > 1
         let bind = isTuple
             ? tupleBinding(argumentTypes: argumentTypes, count: generators.count)
             : "value"
-        var invocation = callee.call(isTuple ? generators.indices.map { "args.\($0)" } : ["value"])
+        let drawn = isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
+        let copies = drawn.indices.filter(inoutArguments.contains).map { "var inout\($0) = \(drawn[$0]); " }
+        var invocation = callee.call(drawn.indices.map { inoutArguments.contains($0) ? "&inout\($0)" : drawn[$0] })
         if isAsync { invocation = "await \(invocation)" }
         if isThrowing { invocation = "try? \(invocation)" }
         // `_ =` discards the result: the law is that we GOT one, not what it was.
-        let body = "_ = \(invocation); return true"
+        let body = copies.joined() + "_ = \(invocation); return true"
         // **An async subject must not be wrapped in an actor hop.** `MainActor.run` takes a
         // *synchronous* `@MainActor` closure, so an `await` cannot appear inside one — and it does
         // not need to: awaiting an isolated async function from a nonisolated context performs the

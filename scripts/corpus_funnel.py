@@ -166,6 +166,16 @@ def regular_targets(package_dir, swift):
 _IMPORT = re.compile(r"^@testable import ", re.M)
 
 
+# Files the accept path writes BESIDE the stubs rather than as one. The syntax corpus holds the
+# snippets SwiftSyntax-node generators draw from; counting it as a stub would add a law that
+# does not exist and, having no `@testable import`, drag the import-rate guard down.
+SUPPORT_FILES = {"SwiftInferSyntaxCorpus.swift"}
+
+
+def is_stub(name):
+    return name.endswith(".swift") and name not in SUPPORT_FILES
+
+
 def import_rate(stub_dir):
     """Share of stubs carrying a `@testable import`. **A guard, not a statistic.**
 
@@ -174,7 +184,7 @@ def import_rate(stub_dir):
     first on PATH -- and every downstream count is then a fact about the harness.
     """
     stubs = [os.path.join(r, f) for r, _, fs in os.walk(stub_dir)
-             for f in fs if f.endswith(".swift")]
+             for f in fs if is_stub(f)]
     if not stubs:
         return (0, 0)
     with_import = sum(1 for p in stubs
@@ -342,7 +352,7 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                         os.replace(os.path.join(root, name), target)
         dirs = [dirs[0]]
         stubs = sum(len([f for f in os.listdir(os.path.join(r))
-                         if f.endswith(".swift")])
+                         if is_stub(f)])
                     for d in dirs for r, _, _ in os.walk(d))
         stub_total += stubs
         with_import, total = import_rate(dirs[0])

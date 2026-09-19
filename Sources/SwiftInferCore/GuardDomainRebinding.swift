@@ -92,8 +92,9 @@ public enum GuardDomainRebinding {
 
     /// Walk `text` once, handing each piece to `emit`.
     ///
-    /// String literals are consumed whole — including `\"` escapes — before any identifier
-    /// matching happens, so nothing inside one is ever seen as a name.
+    /// String literals are consumed before any identifier matching happens, so their text is
+    /// never seen as a name — **except inside an interpolation**, whose contents are code and are
+    /// scanned like any other (`scanStringLiteral`).
     private static func scan(_ text: String, emit: (Token) -> Void) {
         let characters = Array(text)
         var index = 0
@@ -101,8 +102,7 @@ public enum GuardDomainRebinding {
             let character = characters[index]
 
             if character == "\"" {
-                let literal = consumeStringLiteral(characters, from: &index)
-                emit(.verbatim(literal))
+                scanStringLiteral(characters, from: &index, emit: emit)
                 continue
             }
 
@@ -155,20 +155,49 @@ public enum GuardDomainRebinding {
     }
 
     /// The string literal starting at `index`, advancing past its closing quote.
-    private static func consumeStringLiteral(_ characters: [Character], from index: inout Int) -> String {
-        var literal = String(characters[index])
+    ///
+    /// ⚠ **An interpolation is code, not text.** `guard !order.lineItems.isEmpty else { return
+    /// "\(order.id)" }` returns an expression over the parameter `order`, and consuming the
+    /// literal whole left it unbound: the stub rebound the condition to `arg0` and still returned
+    /// `"\(order.id)"`, failing with `cannot find 'order' in scope` (pbt-book, 2026-09-19 corpus
+    /// funnel). Worse, `unboundNames` never saw it, so the site was written rather than declined.
+    /// The contents of `\( … )` are handed back to `scan`.
+    private static func scanStringLiteral(
+        _ characters: [Character],
+        from index: inout Int,
+        emit: (Token) -> Void
+    ) {
+        emit(.verbatim(String(characters[index])))
         index += 1
         while index < characters.count {
             let character = characters[index]
-            literal.append(character)
-            index += 1
-            if character == "\\", index < characters.count {
-                literal.append(characters[index])
-                index += 1
+            let next = index + 1 < characters.count ? characters[index + 1] : nil
+            if character == "\\", next == "(" {
+                emit(.verbatim("\\("))
+                index += 2
+                let start = index
+                var depth = 1
+                while index < characters.count {
+                    if characters[index] == "(" { depth += 1 }
+                    if characters[index] == ")" { depth -= 1 }
+                    if depth == 0 { break }
+                    index += 1
+                }
+                scan(String(characters[start ..< index]), emit: emit)
+                if index < characters.count {
+                    emit(.verbatim(")"))
+                    index += 1
+                }
                 continue
             }
+            if character == "\\", let next {
+                emit(.verbatim(String([character, next])))
+                index += 2
+                continue
+            }
+            emit(.verbatim(String(character)))
+            index += 1
             if character == "\"" { break }
         }
-        return literal
     }
 }

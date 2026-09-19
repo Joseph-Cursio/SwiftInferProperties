@@ -102,6 +102,15 @@ public struct Evidence: Sendable, Equatable {
     /// recorded*; the many hand-built rows keep compiling and keep their behaviour.
     public let genericParameters: [TypeDecl.GenericParameter]
 
+    /// The positions, among the subject's own parameters, of those declared `inout`.
+    ///
+    /// `signature` renders each parameter's type with its specifier stripped, so
+    /// `extractMessages(from buffer: inout Data)` reads `(Data) -> [Data]` and a stub passed a
+    /// drawn `let` straight in: `cannot pass immutable value as inout argument` (SwiftAssist,
+    /// 2026-09-19 corpus funnel). Carried so the totality arm can copy into a `var` and pass `&`.
+    /// Empty means *none, or not recorded*.
+    public let inoutParameterIndices: [Int]
+
     public init(
         displayName: String,
         signature: String,
@@ -116,7 +125,8 @@ public struct Evidence: Sendable, Equatable {
         qualifiedTypeName: String? = nil,
         globalActor: String? = nil,
         declaresNonisolated: Bool = false,
-        genericParameters: [TypeDecl.GenericParameter] = []
+        genericParameters: [TypeDecl.GenericParameter] = [],
+        inoutParameterIndices: [Int] = []
     ) {
         self.displayName = displayName
         self.signature = signature
@@ -132,6 +142,7 @@ public struct Evidence: Sendable, Equatable {
         self.globalActor = globalActor
         self.declaresNonisolated = declaresNonisolated
         self.genericParameters = genericParameters
+        self.inoutParameterIndices = inoutParameterIndices
     }
 
     /// This row with its global actor filled in — used by the post-pass that resolves isolation
@@ -151,7 +162,8 @@ public struct Evidence: Sendable, Equatable {
             qualifiedTypeName: qualifiedTypeName,
             globalActor: actor,
             declaresNonisolated: declaresNonisolated,
-            genericParameters: genericParameters
+            genericParameters: genericParameters,
+            inoutParameterIndices: inoutParameterIndices
         )
     }
 }

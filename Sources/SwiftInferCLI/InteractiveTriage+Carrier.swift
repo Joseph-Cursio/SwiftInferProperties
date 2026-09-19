@@ -26,8 +26,25 @@ extension InteractiveTriage {
     /// `RoleClosureTemplate.transformedType(of:)` already drew exactly this distinction. This is
     /// the same rule, on the emitter side, where it was missing.
     static func carrierType(for evidence: Evidence) -> String? {
-        if let parameter = paramType(from: evidence.signature) { return parameter }
+        if let parameter = paramType(from: evidence.signature) {
+            return qualifiedAsDeclaringType(parameter, in: evidence)
+        }
         // No parameter: the law is over the receiver, which is what the call is made on.
         return evidence.qualifiedTypeName
+    }
+
+    /// `typeName` spelled as a test file must spell it, when it is the declaring type itself.
+    ///
+    /// Inside `extension ThinkState.Mode`, a signature says `Mode` and means `ThinkState.Mode`;
+    /// a test file has no such scope, so `{ (value: Mode) in … }` fails with `cannot find type
+    /// 'Mode' in scope` (SwiftAssist, 2026-09-19 corpus funnel) while the generator beside it
+    /// already spelled `ThinkState.Mode.normal`. Only the declaring type's own bare name is
+    /// rewritten — anything else would need the lexical scope, which this does not have.
+    static func qualifiedAsDeclaringType(_ typeName: String, in evidence: Evidence) -> String {
+        guard let qualified = evidence.qualifiedTypeName,
+              qualified.contains("."),
+              qualified.split(separator: ".").last.map(String.init) == typeName
+        else { return typeName }
+        return qualified
     }
 }
