@@ -107,7 +107,9 @@ extension InteractiveTriage {
             isAsync: evidence.signature.contains(" async"),
             // #498 — `arityFreeArgumentTypes` already returned these, in the same order the
             // generators were built from; they just never reached the property closure.
-            argumentTypes: argumentTypes
+            argumentTypes: argumentTypes,
+            // Parameter positions, shifted past the receiver an instance method draws first.
+            inoutArguments: Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) })
         )
     }
 

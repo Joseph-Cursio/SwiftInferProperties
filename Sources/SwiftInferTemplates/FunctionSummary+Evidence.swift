@@ -53,7 +53,8 @@ extension FunctionSummary {
             qualifiedTypeName: qualifiedContainingTypeName,
             globalActor: globalActor,
             declaresNonisolated: declaresNonisolated,
-            genericParameters: genericParameters
+            genericParameters: genericParameters,
+            inoutParameterIndices: parameters.indices.filter { parameters[$0].isInout }
         )
     }
 
