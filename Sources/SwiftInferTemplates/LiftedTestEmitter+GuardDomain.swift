@@ -110,7 +110,8 @@ extension LiftedTestEmitter {
         seedWords: String,
         draws: String
     ) -> String {
-        """
+        let law = escapedForMultiLineLiteral(call.statedLaw)
+        return """
             // COVERAGE. This law says nothing outside the sub-domain its guard carves out, so a
             // draw that never enters it passes without checking anything. Counted over the SAME
             // four seed words the check below uses, so these are the draws it will make.
@@ -124,7 +125,7 @@ extension LiftedTestEmitter {
                 Issue.record(
                     \"\"\"
                     NOT APPLIED — no draw entered the sub-domain in 100 trials, so the pass below \\
-                    means nothing. The law is: \(call.statedLaw). Narrow the generator until it \\
+                    means nothing. The law is: \(law). Narrow the generator until it \\
                     reaches the sub-domain, or delete this test.
                     \"\"\"
                 )
@@ -162,7 +163,16 @@ extension LiftedTestEmitter {
     /// first emitted stub against a real compiler rather than by a unit test, which is why the
     /// round trip is in the measurement and not only in the suite.
     ///
-    /// The coverage message needs no escaping: it is a `"""` literal, where a bare quote is legal.
+    /// ⚠ **A `"""` literal tolerates a bare quote and NOT a bare backslash.** The coverage
+    /// message was spliced raw on exactly that reasoning, and pbt-book's `formatDropping(_:)`
+    /// returns `"\(order.id)"` from its guard — so the law's own text carried an interpolation
+    /// into the generated file, which read it as code and failed with `cannot find 'order' in
+    /// scope` (2026-09-19 corpus funnel). The law is source TEXT wherever it is quoted.
+    static func escapedForMultiLineLiteral(_ text: String) -> String {
+        text.replacingOccurrences(of: "\\", with: "\\\\")
+    }
+
+    /// `text` safe to splice into a single-line Swift string literal.
     static func escapedForLiteral(_ text: String) -> String {
         text.replacingOccurrences(of: "\\", with: "\\\\")
             .replacingOccurrences(of: "\"", with: "\\\"")
