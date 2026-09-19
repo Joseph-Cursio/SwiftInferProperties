@@ -45,6 +45,21 @@ struct ReceiverCarrierTests {
         ) == "String")
     }
 
+    /// A parameter spelled with the declaring type's bare name is that type, and a test file must
+    /// spell it in full: inside `ThinkState.Mode`, `Mode` is in scope; in the stub it is not.
+    @Test func aParameterNamingTheNestedDeclaringTypeIsQualified() {
+        #expect(InteractiveTriage.carrierType(
+            for: Self.evidence("merged(_:)", signature: "(Mode) -> Mode", carrier: "ThinkState.Mode")
+        ) == "ThinkState.Mode")
+    }
+
+    /// The control: any other bare name is left alone — resolving it needs the lexical scope.
+    @Test func anUnrelatedParameterTypeIsNotQualified() {
+        #expect(InteractiveTriage.carrierType(
+            for: Self.evidence("apply(_:)", signature: "(Phase) -> Phase", carrier: "ThinkState.Mode")
+        ) == "Phase")
+    }
+
     /// **The negative.** A free nullary function has neither, and there is genuinely nothing for
     /// a law to quantify over — inventing a carrier here would emit a stub over a value that
     /// does not exist.
