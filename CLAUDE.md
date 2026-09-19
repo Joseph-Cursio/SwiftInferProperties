@@ -54,7 +54,33 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,255 tests — 6,032 fast + 223 across `perf` and the eight batches**
+Suites green at **6,262 tests — 6,039 fast + 223 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-19** at `cdc8dee8` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 71m55s):
+fast **6,039** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 35.
+**THE BATCH HALF STOOD STILL AT 223, EVERY BATCH TO THE DIGIT**, and the fast half moved
+**6,032 → 6,039** for #521's seven `TestTargetDirectoryDefaultTests` arms. **Four merges landed
+since the previous reading** (#519's isolation fix, #520's veto control, #521's test-target
+directories, #526's funnel harness) and only one of them shows here — which is the regex and the
+Makefile doing their job in both directions.
+✅ **#526 adding 985 lines moved NOTHING, and that is the load-bearing reading**: it lands
+entirely in `scripts/` and `docs/`, and `make test` runs neither. A census harness that changed a
+suite count would mean study tooling had entered the gate, which is the separation
+`scripts/`'s own note exists to keep.
+✅ **`batch3`'s third and fourth readings settle it as NOISE**: 470s was withdrawn on the
+2026-09-18 re-take, and the two since read **380s and 402s** — both inside the ~352–406s standing
+range, no fix, nothing changed. The flag cost one sentence and stopped a busy-machine reading from
+becoming a baseline.
+**Timings usable and mixed in direction**: `batch5` **1,616s** below its standing ~1,670s for the
+fourth reading running, `batch2` 769s inside its 679–801s spread, `batch8` 583s inside ~460–592s,
+`batch6` 158s and `batch4` 186s both down. Load average 1.62 at start, the quietest reading this
+file has recorded. **~72 minutes end to end including a clean rebuild**, the ten test stages
+summing to **~70 minutes**, so the clean cost ~2.
+**The prior reading — 6,255 = 6,032 fast + 223, taken 2026-09-18 at `aed0b768` — follows, and
+everything below it is SUPERSEDED HISTORY**, kept because each records what its verdict was
+decided on.
+**PRIOR READING — 6,255 tests — 6,032 fast + 223 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-09-18** at `0abb6e63` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
 run was UNPIPED (`make test > log 2>&1`, exit **0**, 72m19s):
