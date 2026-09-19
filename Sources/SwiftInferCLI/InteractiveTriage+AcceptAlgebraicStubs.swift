@@ -13,16 +13,19 @@ extension InteractiveTriage {
     /// It lived in `templateStub(for:)` until the totality arm pushed that switch past
     /// SwiftLint's cyclomatic ceiling. Moving the dispatch to sit with its builders is the fix
     /// the split of this file already implied — the arms were here and the routing was not.
-    static func algebraicTemplateStub(for suggestion: Suggestion) -> String? {
+    static func algebraicTemplateStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
         switch suggestion.templateName {
         case "commutativity":
-            return commutativeStub(for: suggestion)
+            return commutativeStub(for: suggestion, customGenerator: customGenerator)
 
         case "associativity":
-            return associativeStub(for: suggestion)
+            return associativeStub(for: suggestion, customGenerator: customGenerator)
 
         case "identity-element":
-            return identityElementStub(for: suggestion)
+            return identityElementStub(for: suggestion, customGenerator: customGenerator)
 
         case "inverse-pair":
             return inversePairStub(for: suggestion)
@@ -32,7 +35,11 @@ extension InteractiveTriage {
         }
     }
 
-    static func commutativeStub(for suggestion: Suggestion) -> String? {
+    static func commutativeStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
               let arity = StubApplicationArity.forTemplate(suggestion.templateName),
@@ -45,11 +52,15 @@ extension InteractiveTriage {
             callee: callee,
             typeName: typeName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: generatorFor(typeName)
         )
     }
 
-    static func associativeStub(for suggestion: Suggestion) -> String? {
+    static func associativeStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
               let arity = StubApplicationArity.forTemplate(suggestion.templateName),
@@ -62,7 +73,7 @@ extension InteractiveTriage {
             callee: callee,
             typeName: typeName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: generatorFor(typeName)
         )
     }
 
@@ -72,7 +83,11 @@ extension InteractiveTriage {
     /// `WitnessExtractor.identityWitnessName(from:)` — strips the
     /// optional type prefix so the emitter receives the bare member
     /// name and references it as `\(typeName).\(identityName)`.
-    static func identityElementStub(for suggestion: Suggestion) -> String? {
+    static func identityElementStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard suggestion.evidence.count >= 2,
               let opEvidence = suggestion.evidence.first,
               let identityEvidence = suggestion.evidence.dropFirst().first,
@@ -92,10 +107,12 @@ extension InteractiveTriage {
             typeName: typeName,
             identityName: identityName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: generatorFor(typeName)
         )
     }
 
+    /// No `customGenerator`: this arm renders its generator from the pair's own evidence rather
+    /// than resolving a parameter type, so there is nothing for the resolver to answer.
     static func inversePairStub(for suggestion: Suggestion) -> String? {
         guard suggestion.evidence.count >= 2,
               let forwardEvidence = suggestion.evidence.first,

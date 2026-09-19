@@ -101,7 +101,7 @@ extension InteractiveTriage {
         // Equivalence: emit what the test body actually claimed rather
         // than the stronger algebraic shape. Production-side suggestions
         // (no `liftedOrigin`) continue through the existing switch.
-        if let liftedOnly = liftedOnlyTestStub(for: suggestion) {
+        if let liftedOnly = liftedOnlyTestStub(for: suggestion, customGenerator: customGenerator) {
             return liftedOnly
         }
         // Determinism is the seed-driven generic law (not a signature template),
@@ -124,22 +124,30 @@ extension InteractiveTriage {
         if let entailed = entailedTemplateStub(for: suggestion, customGenerator: customGenerator) {
             return entailed
         }
-        if let algebraic = algebraicTemplateStub(for: suggestion) { return algebraic }
+        let algebraic = algebraicTemplateStub(for: suggestion, customGenerator: customGenerator)
+        if let algebraic { return algebraic }
+        // ⚠ **These arms dropped `customGenerator` and so could derive nothing.** Measured over
+        // seven repositories: templates reached through a threading call site derive project
+        // types (`predicate` 40), those reached through one that did not derive **zero**
+        // (`idempotence` 0 of 42). It also left their `.todo` markers unexplainable, since a
+        // reason needs the same closure — `generator-blocker-reasons.md`.
         switch suggestion.templateName {
         case "idempotence":
-            return idempotentStub(for: suggestion)
+            return idempotentStub(for: suggestion, customGenerator: customGenerator)
 
         case "replay-idempotence":
+            // No closure: this arm emits a scaffold rather than a generated value, so it has
+            // nothing to derive. Threading it here would be an unused parameter, not a fix.
             return replayIdempotentStub(for: suggestion)
 
         case "round-trip":
-            return roundTripStub(for: suggestion)
+            return roundTripStub(for: suggestion, customGenerator: customGenerator)
 
         case "monotonicity":
-            return monotonicStub(for: suggestion)
+            return monotonicStub(for: suggestion, customGenerator: customGenerator)
 
         case "invariant-preservation":
-            return invariantPreservingStub(for: suggestion)
+            return invariantPreservingStub(for: suggestion, customGenerator: customGenerator)
 
         default:
             return nil
@@ -179,7 +187,11 @@ extension InteractiveTriage {
         }
     }
 
-    private static func idempotentStub(for suggestion: Suggestion) -> String? {
+    private static func idempotentStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
               let arity = StubApplicationArity.forTemplate(suggestion.templateName),
@@ -192,7 +204,7 @@ extension InteractiveTriage {
             callee: callee,
             typeName: typeName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName),
+            generator: generatorFor(typeName),
             equalityKind: equalityKind(forTypeText: typeName)
         )
     }
@@ -238,7 +250,11 @@ extension InteractiveTriage {
         )
     }
 
-    private static func roundTripStub(for suggestion: Suggestion) -> String? {
+    private static func roundTripStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard suggestion.evidence.count >= 2,
               let forwardEvidence = suggestion.evidence.first,
               let reverseEvidence = suggestion.evidence.dropFirst().first,
@@ -255,12 +271,16 @@ extension InteractiveTriage {
             forward: forward,
             inverse: inverse,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: forwardParam),
+            generator: generatorFor(forwardParam),
             equalityKind: equalityKind(forTypeText: forwardParam)
         )
     }
 
-    private static func monotonicStub(for suggestion: Suggestion) -> String? {
+    private static func monotonicStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
               let arity = StubApplicationArity.forTemplate(suggestion.templateName),
@@ -279,11 +299,15 @@ extension InteractiveTriage {
             typeName: typeName,
             returnType: returnType,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: generatorFor(typeName)
         )
     }
 
-    private static func invariantPreservingStub(for suggestion: Suggestion) -> String? {
+    private static func invariantPreservingStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard let evidence = suggestion.evidence.first,
               let callee = CalleeReference(evidence: evidence),
               let arity = StubApplicationArity.forTemplate(suggestion.templateName),
@@ -298,7 +322,7 @@ extension InteractiveTriage {
             typeName: typeName,
             invariantName: invariantName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: generatorFor(typeName)
         )
     }
 

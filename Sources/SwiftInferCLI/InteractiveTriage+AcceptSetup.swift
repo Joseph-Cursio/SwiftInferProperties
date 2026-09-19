@@ -69,6 +69,20 @@ extension InteractiveTriage {
         }
     }
 
+    /// `chooseGenerator` with the accept path's resolver already bound.
+    ///
+    /// A local rather than a multi-line call at each site: the stub builders read better with a
+    /// single-line `generator:` argument, and SwiftLint's multiline-arguments-brackets rule
+    /// objects to the wrapped form.
+    static func boundGenerator(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)?
+    ) -> (String) -> String {
+        { typeName in
+            chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)
+        }
+    }
+
     /// Say why no stub was written, naming the cause rather than the template where it can.
     ///
     /// **Two unlike causes used to share one sentence**, and the shared one named the template —
