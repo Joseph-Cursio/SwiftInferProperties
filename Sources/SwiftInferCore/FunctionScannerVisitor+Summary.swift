@@ -159,6 +159,10 @@ extension FunctionScannerVisitor {
             location: SourceLocation(file: file, line: sourceLocation.line, column: sourceLocation.column),
             containingTypeName: containingTypeName,
             bodySignals: .empty,
+            // The whole stack, as the function path passes it. Omitted here, a property on
+            // `ThinkState.Mode` recorded its receiver as bare `Mode`, and its stub annotated
+            // `(value: Mode)` — a name a test file cannot see (SwiftAssist, 2026-09-19 funnel).
+            qualifiedContainingTypeName: typeStack.joined(separator: "."),
             isInferredPure: purityVerdict == .pure,
             isComputedProperty: true,
             docComment: DocCommentExtractor.docComment(from: node.leadingTrivia),
