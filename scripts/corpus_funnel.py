@@ -12,6 +12,7 @@ infinite loop and discarded a 2,914-stub pass.
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -181,6 +182,49 @@ def import_rate(stub_dir):
     return (with_import, len(stubs))
 
 
+# `Refutability.tautologicalTemplates` is exactly one template, and its doc says adding to that
+# set is "a deliberate, reviewable act". Mirrored here rather than inferred: a law class read off
+# a guess is the defect #466 already records.
+TAUTOLOGICAL = {"determinism"}
+
+def laws_proposed(index_files, seed_rows, tree):
+    """Named seeds that got ANY law, and that got a REFUTABLE one, from `seed-index.json`.
+
+    ⚠ **Read from the INDEX, not from the accept transcript.** The first version parsed
+    `discover --interactive` output, and that cannot answer this: interactive triage never shows
+    a determinism-only seed, so *any law proposed* came back equal to *refutable law proposed* on
+    every repository. It also matched paths in surrounding prose, so a transcript with four
+    `Template:` blocks yielded fifteen locations — which happened to equal the published figure,
+    and agreeing with a known answer for the wrong reason is worse than disagreeing.
+
+    The index records one entry per suggestion with its `templateName` and a `path:line`
+    location, which is exactly the join every other stage of this walk uses.
+    """
+    named = {(os.path.realpath(os.path.join(tree, row["file"])), row["line"])
+             for row in seed_rows if row.get("kind") != "extractable-kernel"}
+    any_law, refutable = set(), set()
+    for path in index_files:
+        try:
+            entries = json.load(open(path, encoding="utf-8")).get("entries", [])
+        except (OSError, json.JSONDecodeError):
+            continue
+        for entry in entries:
+            location = entry.get("location", "")
+            if ":" not in location:
+                continue
+            file_part, _, line_part = location.rpartition(":")
+            if not line_part.isdigit():
+                continue
+            key = (os.path.realpath(file_part), int(line_part))
+            if key not in named:
+                continue
+            any_law.add(key)
+            if entry.get("templateName") not in TAUTOLOGICAL:
+                refutable.add(key)
+    return {"any": len(any_law), "refutable": len(refutable)}
+
+
+
 def stub_dirs(package_dir):
     """Every `Generated/SwiftInfer` directory the accept path wrote into this package."""
     found = []
@@ -200,7 +244,8 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
     result["linked_siblings"] = link_path_dependencies(
         tree, os.path.join(scratch, "trees"), os.path.dirname(repo_path))
 
-    seeded = seeds(cli, tree, os.path.join(scratch, f"{repo}-seeds.json"))
+    seeds_path = os.path.join(scratch, f"{repo}-seeds.json")
+    seeded = seeds(cli, tree, seeds_path)
     result.update(seeds=seeded["seeds"], named=seeded["named"])
     if not seeded.get("rows"):
         result["note"] = "no seeds"
@@ -208,11 +253,40 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
 
     seed_files = {os.path.normpath(os.path.join(tree, s["file"])) for s in seeded["rows"]}
 
-    scanned, stub_total = [], 0
+    scanned, stub_total, transcripts, index_files = [], 0, [], []
     for package_dir in packages(tree):
         for name, directory, _kind in regular_targets(package_dir, swift):
             if not any(f.startswith(os.path.normpath(directory) + os.sep) for f in seed_files):
                 continue
+            # **The index runs FIRST, and its output is copied out**: `discover` clears
+            # `.swiftinfer/` below, which would take `seed-index.json` with it.
+            index_out = os.path.join(scratch, f"index-{repo}-{name}.json")
+            # ⚠ **`index --target` resolves `Sources/<target>` and nothing else.** A manifest may
+            # put a target anywhere via `path:` — SwiftMarkdownWiki uses `path:
+            # "SwiftMarkdownWiki"` — and the command then fails with *no `Sources/` directory*,
+            # so that repository contributed 0 to both middle stages while writing 35 stubs,
+            # which cannot both be true. `discover` has `--sources` for this; `index` does not,
+            # so the expected directory is linked for the duration. This is the harness working
+            # around a product gap, and it is recorded as such rather than hidden.
+            expected = os.path.join(package_dir, "Sources", name)
+            linked = False
+            if not os.path.exists(expected) and os.path.isdir(directory):
+                os.makedirs(os.path.dirname(expected), exist_ok=True)
+                try:
+                    os.symlink(directory, expected)
+                    linked = True
+                except OSError:
+                    pass
+            subprocess.run([infer, "index", "--target", name, "--seeds", seeds_path,
+                            "--include-possible"], cwd=package_dir, capture_output=True,
+                           text=True, timeout=timeout, env=environment(swift))
+            written = os.path.join(package_dir, ".swiftinfer", "seed-index.json")
+            if os.path.exists(written):
+                shutil.copy(written, index_out)
+                index_files.append(index_out)
+            if linked:
+                os.unlink(expected)
+
             # ⚠ **Recorded decisions are cleared between scan groups.** A decision suppresses
             # its suggestion, so `.swiftinfer/decisions.json` surviving from the previous
             # target offers this one nothing — the 16 September census's defect #1, and the
@@ -224,9 +298,19 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                                    "--include-possible", "--interactive"],
                                   cwd=tree, input="A\n" * 4000, capture_output=True,
                                   text=True, timeout=timeout, env=environment(swift))
+            # **Keep the accept path's own output.** The two middle funnel stages — *any law
+            # proposed* and *refutable law proposed* — are in here already, one `Template:` line
+            # per suggestion beside the subject's location. The first version of this harness
+            # discarded it and reported those two stages as "not captured", which left the
+            # funnel with a hole that a second tool invocation was going to be needed to fill.
+            transcript = os.path.join(scratch, f"discover-{repo}-{name}.txt")
+            open(transcript, "w", encoding="utf-8").write(done.stdout + done.stderr)
+            transcripts.append(transcript)
             scanned.append({"package": os.path.relpath(package_dir, tree),
                             "target": name, "exit": done.returncode})
     result["scanned_targets"] = scanned
+    proposed = laws_proposed(index_files, seeded["rows"], tree)
+    result.update(any_law=proposed["any"], refutable_law=proposed["refutable"])
 
     per_package = []
     for package_dir in packages(tree):
@@ -302,6 +386,18 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                 entry["failed"] = len(ran["failed"])
                 entry["crashed"] = len(ran["crashed"])
                 entry["hung"] = len(ran.get("hung", []))
+                if ran.get("no_verdict"):
+                    # **Name the law that hangs, then measure the rest.** A repo-level "no
+                    # verdict" says nothing about 18 innocent stubs; bisecting turns it into a
+                    # finding about one law and lets the others report.
+                    culprits = s5.bisect_hang(package_dir, dirs[0], swift,
+                                              os.path.join(scratch, f"hang-{repo}"))
+                    if culprits:
+                        entry["hangs"] = culprits
+                        for name in culprits:
+                            built["set_aside"][name] = "test process hangs before reporting"
+                        entry["compiled"] = max(0, entry["compiled"] - len(culprits))
+                        ran = s5.run_serially(package_dir, swift)
                 if ran.get("no_verdict"):
                     # Not "0 passed": the run produced no verdict at all, so these stubs are
                     # unmeasured rather than failing. Kept out of the pass column deliberately.
