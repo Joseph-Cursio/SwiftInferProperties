@@ -417,7 +417,7 @@ _PASSED = re.compile(r"Test\s+(\S+\(\))\s+passed")
 _FAILED = re.compile(r"Test\s+(\S+\(\))\s+(?:failed|recorded an issue)")
 
 
-def _runs_within(package_dir, swift, seconds):
+def _runs_within(package_dir, swift, seconds, skip=None):
     """Does the test target RUN to completion inside `seconds`?
 
     ⚠ **Build first, then time only the run.** Removing a stub forces a recompile, and on a
@@ -436,55 +436,90 @@ def _runs_within(package_dir, swift, seconds):
     if built.returncode != 0:
         return True  # not a hang: a build failure is the set-aside loop's business, not ours
     try:
-        subprocess.run([swift, "test", "--no-parallel"], cwd=package_dir,
-                       capture_output=True, text=True, env=env, timeout=seconds)
+        command = [swift, "test", "--no-parallel"]
+        for name in (skip or []):
+            command += ["--skip", re.escape(name)]
+        subprocess.run(command, cwd=package_dir, capture_output=True, text=True,
+                       env=env, timeout=seconds)
     except subprocess.TimeoutExpired:
         return False
     return True
 
 
-def bisect_hang(package_dir, stubs_dir, swift, aside_dir, seconds=150, limit=10):
-    """Name the stub whose presence stops the test process reporting at all.
+def _suite_names(stubs_dir):
+    """The generated suite names, read from the stub files themselves."""
+    names = []
+    for path in _swift_files(stubs_dir):
+        try:
+            text = open(path, encoding="utf-8", errors="ignore").read()
+        except OSError:
+            continue
+        names.extend(re.findall(r"^(?:final )?(?:public )?struct (\w+)\s*\{", text, re.M))
+    return sorted(set(names))
 
-    ⚠ **A hang before the FIRST test prints has no name to attribute it to**, so the crash
-    recovery — which sets aside the last test that started — has nothing to work with. Halving
-    the stub set does: a healthy generated suite runs in well under a second (the pilot ran 15
-    in 0.03s), so a set that does not finish in `seconds` contains the culprit.
 
-    Returns the basenames moved to `aside_dir`. Bounded by `limit` halvings, so a hang that is
-    not attributable to any single stub cannot spin.
+def bisect_hang(package_dir, stubs_dir, swift, aside_dir, seconds=150, limit=40):
+    """Name the suites whose presence stops the test process reporting at all.
+
+    ⚠ **Skip suites, do not remove files.** The first version moved stub files aside, which
+    forces a recompile and can break the build when a surviving stub references a removed one —
+    and `_runs_within` treats a build failure as "not a hang", so the search concluded the hang
+    was gone and named no culprit. Skipping needs no rebuild and cannot break the build, so
+    every probe measures the thing it is supposed to measure.
+
+    ⚠ **And it MINIMIZES, it does not bisect.** A plain bisection asks which half holds *a*
+    culprit and throws the other half away; with two hanging suites that discards one of them
+    and reports a single name while the run still hangs. Exercised against a fake oracle over
+    every 0/1/2/3-culprit combination of six suites, the bisecting version mis-attributed all
+    35 of the multi-culprit cases. This narrows by halves only while a half is *sufficient on
+    its own*, then removes one candidate at a time and keeps it only when its removal brings
+    the hang back — so what is returned is minimal, not merely sufficient.
+
+    Returns the suite names that had to be skipped for the run to finish, and moves their files
+    to `aside_dir` so the caller's counts stay consistent.
     """
     os.makedirs(aside_dir, exist_ok=True)
-    moved = []
-    for _ in range(limit):
-        if _runs_within(package_dir, swift, seconds):
-            return moved
-        present = _swift_files(stubs_dir)
-        if len(present) <= 1:
-            for path in present:
-                os.replace(path, os.path.join(aside_dir, os.path.basename(path)))
-                moved.append(os.path.basename(path))
-            return moved
-        half = present[: len(present) // 2]
-        parked = []
-        for path in half:
-            destination = os.path.join(aside_dir, os.path.basename(path))
-            os.replace(path, destination)
-            parked.append((path, destination))
-        if _runs_within(package_dir, swift, seconds):
-            # The culprit is in the half just removed: put back all but that half's own half.
-            for path, destination in parked[len(parked) // 2:]:
-                os.replace(destination, path)
+    suites = _suite_names(stubs_dir)
+    if not suites:
+        return []
+    probes = [0]
+
+    def runs(skip):
+        probes[0] += 1
+        return _runs_within(package_dir, swift, seconds, skip=skip)
+
+    if runs([]):
+        return []
+    if not runs(suites):
+        return []  # hangs even with every generated suite skipped: not ours to attribute
+
+    # Narrow by halves, but only while one half is sufficient BY ITSELF.
+    while len(suites) > 1 and probes[0] < limit:
+        first, second = suites[: len(suites) // 2], suites[len(suites) // 2:]
+        if runs(first):
+            suites = first
+        elif runs(second):
+            suites = second
         else:
-            # Still hanging without them: they were innocent, the culprit is in what remains.
-            for path, destination in parked:
-                os.replace(destination, path)
-            keep = _swift_files(stubs_dir)[len(present) // 2:]
-            for path in _swift_files(stubs_dir):
-                if path in keep:
-                    continue
+            break  # culprits straddle the split; halving would drop one
+
+    # Minimize: drop a candidate and keep it only if the hang comes back.
+    for name in list(suites):
+        if probes[0] >= limit:
+            break
+        trial = [n for n in suites if n != name]
+        if trial and runs(trial):
+            suites = trial
+
+    for name in suites:
+        # Match the DECLARATION, not a mention: a stub that merely names another suite in a
+        # comment would otherwise be set aside in place of the one that hangs.
+        pattern = re.compile(r"^(?:final )?(?:public )?struct " + re.escape(name) + r"\s*\{", re.M)
+        for path in _swift_files(stubs_dir):
+            if pattern.search(open(path, encoding="utf-8", errors="ignore").read()):
                 os.replace(path, os.path.join(aside_dir, os.path.basename(path)))
-    return moved
+                break
+    return suites
 
 
 def run_serially(package_dir, swift, census_target=None, max_resumes=30):
