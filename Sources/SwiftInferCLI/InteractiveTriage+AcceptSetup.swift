@@ -17,11 +17,20 @@ extension InteractiveTriage {
     /// `gen()`. Lifted out of `acceptDecision`, which crossed SwiftLint's body-length cap once
     /// #493's gate and #498's argument types both landed in it.
     static func customGenerator(for context: Context) -> (String) -> String? {
-        let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
-        let explain = generatorFailureReason(for: context)
+        projectTypeGenerator(types: Array(context.typeShapesByName.values))
+    }
+
+    /// `customGenerator(for:)` over an explicit type universe, so the choice can be tested
+    /// without assembling a triage `Context`.
+    static func projectTypeGenerator(types: [TypeShape]) -> (String) -> String? {
+        let resolver = GeneratorResolver(types: types)
+        let explain = generatorFailureReason(types: types)
         return { typeName in
             if let derived = resolver.customTypeGenerator(forTypeName: typeName)?.expression {
                 return derived
+            }
+            if let composed = composedOverProjectTypes(typeName, resolver: resolver) {
+                return composed
             }
             // **The reason is attached HERE because this closure is already threaded
             // everywhere a generator is chosen**, so naming the cause needs no signature to
@@ -33,6 +42,29 @@ extension InteractiveTriage {
         }
     }
 
+    /// A collection, optional or tuple of project types, composed from their derived generators.
+    ///
+    /// **`GeneratorResolver.customTypeGenerator` answers for a NAMED type only**, so `[LineItem]`
+    /// failed as *not among the scanned types* while `LineItem` itself derived. The kit's
+    /// `DerivationStrategist.composedGenerator` already builds arrays, sets, dictionaries and
+    /// optionals over an element — `defaultGenerator` just calls it with no resolver, so it could
+    /// only compose stdlib leaves. Measured on the 2026-09-19 corpus re-run: `[LineItem]` and
+    /// `[CloneClass]` blocked 7 stubs whose element type derives.
+    ///
+    /// ⚠ **Returns `nil` for every type the stdlib arms already answer**, because this closure
+    /// runs BEFORE them in `chooseGenerator`: letting the kit compose `String` here would replace
+    /// `RawType`'s edge-biased generator — the one the structural string laws were tuned on — with
+    /// the kit's plain one.
+    static func composedOverProjectTypes(_ typeName: String, resolver: GeneratorResolver) -> String? {
+        guard RawType(typeName: typeName) == nil,
+              DerivationStrategist.composedGenerator(forTypeName: typeName) == nil
+        else { return nil }
+        return DerivationStrategist.composedGenerator(
+            forTypeName: typeName,
+            resolve: resolver.customTypeGenerator
+        )?.expression
+    }
+
     /// Why the resolver produced no generator for `typeName`, in one sentence.
     ///
     /// **Built from the SAME resolver that just returned `nil`**, so the explanation cannot
@@ -40,7 +72,11 @@ extension InteractiveTriage {
     /// kit's own account of its `nil` paths (v4.7.0), and `.noStrategy` carries the strategist's
     /// sentence verbatim rather than a paraphrase.
     static func generatorFailureReason(for context: Context) -> (String) -> String? {
-        let resolver = GeneratorResolver(types: Array(context.typeShapesByName.values))
+        generatorFailureReason(types: Array(context.typeShapesByName.values))
+    }
+
+    static func generatorFailureReason(types: [TypeShape]) -> (String) -> String? {
+        let resolver = GeneratorResolver(types: types)
         return { typeName in
             guard let failure = resolver.resolutionFailure(forTypeName: typeName) else {
                 return nil
