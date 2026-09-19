@@ -119,6 +119,30 @@ struct GuardDomainStubTests {
         #expect(reason == nil)
     }
 
+    /// **`Self` in the signature must not rebind `Self` to itself.** SwiftMarkdownWiki's real
+    /// `parse(from:)` returns `(frontMatter: Self, body: String)` and `(Self(), source)`; inside the
+    /// generated test struct `Self` is the TEST struct, and the stub timed out the type checker.
+    @Test func selfInTheSignatureStillBindsToTheDeclaringType() throws {
+        let suggestion = try Self.suggestion(
+            Self.summary(
+                "parse",
+                parameters: [Self.param("from", "String", "source")],
+                returns: "(frontMatter: Self, body: String)",
+                owner: "FrontMatter",
+                domain: GuardDomain(
+                    condition: "source.hasPrefix(\"---\")",
+                    returnedExpression: "(Self(), source)",
+                    parameterName: "source",
+                    firesWhenConditionHolds: false
+                )
+            )
+        )
+        let stub = try #require(InteractiveTriage.entailedTemplateStub(for: suggestion, customGenerator: nil))
+        #expect(stub.contains("== (FrontMatter(), arg0)"))
+        // The stated law quotes the source text, `Self()` included; the CHECK must not.
+        #expect(!stub.contains("== (Self(), arg0)"))
+    }
+
     /// 57 of 156 measured sites mention `self`. It is the receiver, which for an instance method
     /// is the first argument the stub draws.
     @Test func selfBindsToTheDrawnReceiver() throws {

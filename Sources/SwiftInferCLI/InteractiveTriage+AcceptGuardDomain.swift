@@ -105,7 +105,14 @@ extension InteractiveTriage {
         }
         if callee.isInstanceMethod { bindings["self"] = "arg0" }
         if let declaringType = evidence.qualifiedTypeName { bindings["Self"] = declaringType }
-        for typeName in typeNamesInSignature(evidence.signature) { bindings[typeName] = typeName }
+        // ⚠ Never over an existing binding, and never `Self` to itself. `parse(from:) ->
+        // (frontMatter: Self, body: String)` names `Self` in its signature, and binding it here
+        // overwrote `Self → FrontMatter` with `Self → Self` — which inside the generated test
+        // struct means the TEST struct, and the tuple comparison timed out the type checker
+        // (SwiftMarkdownWiki, 2026-09-19 corpus funnel).
+        for typeName in typeNamesInSignature(evidence.signature) where typeName != "Self" && bindings[typeName] == nil {
+            bindings[typeName] = typeName
+        }
         return bindings
     }
 
