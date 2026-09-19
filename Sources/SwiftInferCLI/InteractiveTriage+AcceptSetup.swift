@@ -119,6 +119,22 @@ extension InteractiveTriage {
         }
     }
 
+    /// Why a suggestion is withdrawn before any emitter runs, or `nil` to go on and write it.
+    ///
+    /// Both gates withdraw a stub that could never compile whatever the generator, import or
+    /// budget: one names a type parameter (#493), the other orders a `monotonicity` pair over a
+    /// type nothing makes `Comparable`. Lifted out of `handleAccept` for its body-length cap.
+    static func gateDeclineReason(for suggestion: Suggestion, context: Context) -> String? {
+        GenericSubjectGate.declineReason(
+            for: suggestion,
+            genericParametersByName: context.genericParametersByName
+        ) ?? UnorderedCarrierGate.declineReason(
+            for: suggestion,
+            scannedTypeNames: Set(context.typeShapesByName.keys),
+            inheritedTypesByName: context.inheritedTypesByName
+        )
+    }
+
     /// Say why no stub was written, naming the cause rather than the template where it can.
     ///
     /// **Two unlike causes used to share one sentence**, and the shared one named the template —

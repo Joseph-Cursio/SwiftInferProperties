@@ -287,6 +287,7 @@ extension SwiftInferCommand.Discover {
             genericParametersByName: pipeline.genericParametersByName,
             // #492 — the same map the index path already consumes. It was computed and dropped.
             sourceFileByTypeName: pipeline.sourceFileByTypeName,
+            inheritedTypesByName: pipeline.inheritedTypesByName,
             packageRoot: packageRoot
         )
         try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)

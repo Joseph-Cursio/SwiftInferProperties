@@ -39,10 +39,7 @@ extension InteractiveTriage {
         // A stub naming a type parameter cannot compile under any budget, generator or import,
         // so it is withdrawn before an emitter spends work on it — the availability gate's
         // posture, which shipped at 0.58% of rows because it cost no laws (#493).
-        if let reason = GenericSubjectGate.declineReason(
-            for: suggestion,
-            genericParametersByName: context.genericParametersByName
-        ) {
+        if let reason = gateDeclineReason(for: suggestion, context: context) {
             context.diagnostics.writeDiagnostic(
                 "note: no stub written — \(reason); decision recorded without writing a file"
             )

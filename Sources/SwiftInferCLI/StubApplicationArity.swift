@@ -107,7 +107,7 @@ enum StubApplicationArity {
            let carrier = InteractiveTriage.paramType(from: evidence.signature),
            FloatingPointEquatableTypes.isOrderableCarrier(typeText: carrier) == false {
             return "\(evidence.displayName) takes \(carrier), and 'monotonicity' orders its "
-                + "drawn pair with `<` — an Optional is not Comparable"
+                + "drawn pair with `<` — an Optional, collection or tuple is not Comparable"
         }
         guard !callee.accepts(applicationArity: arity) else { return nil }
         let needs = callee.applicationArity
