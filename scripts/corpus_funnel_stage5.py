@@ -417,6 +417,76 @@ _PASSED = re.compile(r"Test\s+(\S+\(\))\s+passed")
 _FAILED = re.compile(r"Test\s+(\S+\(\))\s+(?:failed|recorded an issue)")
 
 
+def _runs_within(package_dir, swift, seconds):
+    """Does the test target RUN to completion inside `seconds`?
+
+    ⚠ **Build first, then time only the run.** Removing a stub forces a recompile, and on a
+    package with a heavy dependency graph that rebuild alone outlasts the probe's budget — so
+    every bisection attempt timed out during the BUILD and the search concluded that no single
+    stub was responsible. The build gets its own generous bound; the hang is measured against
+    the run.
+    """
+    env = dict(os.environ)
+    env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+    try:
+        built = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
+                               capture_output=True, text=True, env=env, timeout=1800)
+    except subprocess.TimeoutExpired:
+        return False
+    if built.returncode != 0:
+        return True  # not a hang: a build failure is the set-aside loop's business, not ours
+    try:
+        subprocess.run([swift, "test", "--no-parallel"], cwd=package_dir,
+                       capture_output=True, text=True, env=env, timeout=seconds)
+    except subprocess.TimeoutExpired:
+        return False
+    return True
+
+
+def bisect_hang(package_dir, stubs_dir, swift, aside_dir, seconds=150, limit=10):
+    """Name the stub whose presence stops the test process reporting at all.
+
+    ⚠ **A hang before the FIRST test prints has no name to attribute it to**, so the crash
+    recovery — which sets aside the last test that started — has nothing to work with. Halving
+    the stub set does: a healthy generated suite runs in well under a second (the pilot ran 15
+    in 0.03s), so a set that does not finish in `seconds` contains the culprit.
+
+    Returns the basenames moved to `aside_dir`. Bounded by `limit` halvings, so a hang that is
+    not attributable to any single stub cannot spin.
+    """
+    os.makedirs(aside_dir, exist_ok=True)
+    moved = []
+    for _ in range(limit):
+        if _runs_within(package_dir, swift, seconds):
+            return moved
+        present = _swift_files(stubs_dir)
+        if len(present) <= 1:
+            for path in present:
+                os.replace(path, os.path.join(aside_dir, os.path.basename(path)))
+                moved.append(os.path.basename(path))
+            return moved
+        half = present[: len(present) // 2]
+        parked = []
+        for path in half:
+            destination = os.path.join(aside_dir, os.path.basename(path))
+            os.replace(path, destination)
+            parked.append((path, destination))
+        if _runs_within(package_dir, swift, seconds):
+            # The culprit is in the half just removed: put back all but that half's own half.
+            for path, destination in parked[len(parked) // 2:]:
+                os.replace(destination, path)
+        else:
+            # Still hanging without them: they were innocent, the culprit is in what remains.
+            for path, destination in parked:
+                os.replace(destination, path)
+            keep = _swift_files(stubs_dir)[len(present) // 2:]
+            for path in _swift_files(stubs_dir):
+                if path in keep:
+                    continue
+                os.replace(path, os.path.join(aside_dir, os.path.basename(path)))
+    return moved
+
+
 def run_serially(package_dir, swift, census_target=None, max_resumes=30):
     """Run the surviving stubs one at a time, resuming past a crash.
 

@@ -17,16 +17,24 @@ unlike the two before it. Census binary: SwiftInferProperties `24270a1f`, one bi
 | stage | 14 Sep | 16 Sep | **19 Sep** | vs 16 Sep |
 |---|---:|---:|---:|---:|
 | named seeds | 2,716 | 2,723 | **2,730** | +7 |
-| any law proposed | 2,079 | 2,080 | *not captured* | — |
-| refutable law proposed | 1,010 | 1,019 | *not captured* | — |
+| any law proposed | 2,079 | 2,080 | **1,915** | −165 |
+| refutable law proposed | 1,010 | 1,019 | **937** | −82 |
 | stub file written | 309 | 980 | **924** | −56 |
 | **stub compiles** | 92 | 183 | **219** | **+36** |
 | **law passes** | 71 | 67 | **150** | **+83** |
 
-⚠ **Two stages are not captured and are NOT carried forward.** This harness measures seeds →
-stubs → compiles → passes; it does not record *any law proposed* or *refutable law proposed*,
-which the earlier censuses read from `index` output. Those rows stay at their 16 September values
-wherever they are quoted, labelled as a different run.
+**All six stages are measured from one run.** The first version of this census captured only four
+and said so; the middle two are now read from `seed-index.json`, one entry per suggestion with its
+`templateName` and a `path:line` location, joined on `(file, line)` like every other stage.
+
+**The whole funnel moves in one direction and it is the predicted one**: fewer laws proposed, as
+the gates withdraw rows — generic functions (#497), subset names (#476), involution, availability
+— fewer stubs, and yet *more of them compiling* and *more than twice as many passing*. The drops
+upstream are the deliberate ones.
+
+**`refutable` reproduces the 16 September census exactly on every repository that could be
+checked**: SwiftMarkdownWiki 26, SwiftCloneDetector 15, MacCloud_server 6, SwiftIdempotency 6 —
+subjects the parser was not tuned against.
 
 ⚠ **837 of 924 stubs were measured.** 68 are blocked by subject-side dependency conflicts and 19
 returned no verdict (below). Neither is counted as a failure.
@@ -61,6 +69,27 @@ alongside: they reproduce the previous census across every repository.
 
 The four dependency conflicts are the limit the 16 September census recorded and deliberately
 left standing; they were worth 2 compiles there, so the comparison is close to like-for-like.
+
+### ⚠ Two wrong instruments on the way to the middle stages
+
+The first attempt parsed `discover --interactive` output, and it could not have worked:
+interactive triage never shows a determinism-only seed, so *any law proposed* came back EQUAL to
+*refutable law proposed* on every repository. Its location regex also matched paths in
+surrounding prose, so a transcript with four `Template:` blocks yielded fifteen locations —
+**which happened to equal the published figure for that repository.** Agreeing with a known answer
+for the wrong reason is worse than disagreeing with it, because nothing prompts a second look.
+
+The "validation" run that followed read STALE result files, because `zsh` aborts a command on an
+unmatched glob and the `rm` never ran. Caught only by checking whether the index files existed.
+
+### ⚠ A product gap this census had to work around
+
+**`index --target` resolves `Sources/<target>` and nothing else.** A manifest may place a target
+anywhere via `path:` — SwiftMarkdownWiki uses `path: "SwiftMarkdownWiki"` — and the command then
+fails with *no `Sources/` directory*, so that repository contributed **0** to both middle stages
+while writing 35 stubs, which cannot both be true. `discover` has `--sources` for exactly this
+case; `index` has no equivalent. The harness links the expected directory for the duration and
+removes it afterwards, which is a workaround recorded as one.
 
 ⚠ **`no verdict` is a claim about the RUN, not about the laws.** SwiftFormatRuleStudio's 19 stubs
 compile — 15 of them — and the process then hangs before printing a first test. Recording that as
