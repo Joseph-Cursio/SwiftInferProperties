@@ -226,10 +226,19 @@ def laws_proposed(index_files, seed_rows, tree):
 
 
 def stub_dirs(package_dir):
-    """Every `Generated/SwiftInfer` directory the accept path wrote into this package."""
+    """Every `Generated/SwiftInfer` directory the accept path wrote into this package.
+
+    ⚠ **The walk stops at a nested package's boundary.** The accept path writes a nested
+    package's stubs into THAT package's test target, and descending into it here let the outer
+    package claim them — the consolidation below then moved them into the outer census target,
+    which cannot import the nested module. Measured on SwiftIdempotency: 4 stubs failed with
+    `no such module 'AssertIdempotentSample'` in the root package while the nested package that
+    owns them reported 0 stubs.
+    """
     found = []
     for dirpath, dirs, _files in os.walk(package_dir):
-        dirs[:] = [d for d in dirs if d not in (".build", ".git", "checkouts")]
+        dirs[:] = [d for d in dirs if d not in (".build", ".git", "checkouts")
+                   and not os.path.exists(os.path.join(dirpath, d, "Package.swift"))]
         if os.path.basename(dirpath) == "SwiftInfer" and "Generated" in dirpath:
             found.append(dirpath)
     return found
