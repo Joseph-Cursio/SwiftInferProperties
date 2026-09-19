@@ -135,6 +135,13 @@ def packages(tree):
 # SwiftIdempotency's targets instead of both, taking its triage from six suggestions to one.
 SOURCE_TARGET_TYPES = ("regular", "executable", "macro", "plugin", "system-target")
 
+# ⚠ **A plugin is not an importable module.** Listing `PropertyLawDiscoveryPlugin` among the
+# census target's dependencies made SwiftPM read it as a build-tool plugin to APPLY, and the
+# package failed with *Plugin is declared with the `buildTool` capability, but doesn't conform
+# to the `BuildToolPlugin` protocol* — which looks like a defect in the subject. Plugins are
+# still SCANNED for seeds; they are just never depended on.
+IMPORTABLE_TARGET_TYPES = ("regular", "executable", "macro")
+
 
 def regular_targets(package_dir, swift):
     done = subprocess.run([swift, "package", "dump-package"], cwd=package_dir,
@@ -147,10 +154,11 @@ def regular_targets(package_dir, swift):
         return []
     out = []
     for target in dumped.get("targets", []):
-        if target.get("type") not in SOURCE_TARGET_TYPES:
+        kind = target.get("type")
+        if kind not in SOURCE_TARGET_TYPES:
             continue
         path = target.get("path") or f"Sources/{target['name']}"
-        out.append((target["name"], os.path.join(package_dir, path)))
+        out.append((target["name"], os.path.join(package_dir, path), kind))
     return out
 
 
@@ -202,7 +210,7 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
 
     scanned, stub_total = [], 0
     for package_dir in packages(tree):
-        for name, directory in regular_targets(package_dir, swift):
+        for name, directory, _kind in regular_targets(package_dir, swift):
             if not any(f.startswith(os.path.normpath(directory) + os.sep) for f in seed_files):
                 continue
             # ⚠ **Recorded decisions are cleared between scan groups.** A decision suppresses
@@ -253,7 +261,8 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
             entry["blocked"] = f"import rate {with_import}/{total} — module did not resolve"
             per_package.append(entry)
             continue
-        modules = [t for t, _ in regular_targets(package_dir, swift)]
+        modules = [name for name, _dir, kind in regular_targets(package_dir, swift)
+                   if kind in IMPORTABLE_TARGET_TYPES]
         if not modules:
             entry["blocked"] = "no regular target"
             per_package.append(entry)
@@ -278,12 +287,28 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
             # described no artifact.
             entry["compiled"] = (total - len(built["set_aside"])) if built["built"] else 0
             if not built["built"]:
-                entry["unattributed"] = built.get("unattributed", "")[-400:]
+                detail = built.get("unattributed", "")
+                entry["unattributed"] = detail[-600:]
+                # **A resolution conflict is a fact about the SUBJECT, not a harness failure.**
+                # pbt-workbook, -sampler and -corpus pin swift-property-based 1.2 in library
+                # code while the stubs need the kit's 2.x; the 16 September census recorded that
+                # as a standing limit and left it standing. Classified so the funnel can report
+                # "emitted, not compilable here" rather than counting it as the tool's ceiling.
+                if "could not be resolved" in detail or "Dependencies could not" in detail:
+                    entry["limit"] = "dependency conflict in the subject (kit 2.x vs pinned 1.x)"
             if built["built"]:
                 ran = s5.run_serially(package_dir, swift)
                 entry["passed"] = len(ran["passed"])
                 entry["failed"] = len(ran["failed"])
                 entry["crashed"] = len(ran["crashed"])
+                entry["hung"] = len(ran.get("hung", []))
+                if ran.get("no_verdict"):
+                    # Not "0 passed": the run produced no verdict at all, so these stubs are
+                    # unmeasured rather than failing. Kept out of the pass column deliberately.
+                    entry["no_verdict"] = ran["no_verdict"]
+                    entry["passed"] = None
+                    entry["failed"] = None
+                entry["hung_tests"] = ran.get("hung", [])[:5]
                 entry["failures"] = ran["failed"]
         except subprocess.TimeoutExpired:
             entry["blocked"] = "timeout"
@@ -291,9 +316,13 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
 
     result["packages"] = per_package
     result["stubs"] = stub_total
-    result["compiled"] = sum(p.get("compiled", 0) for p in per_package)
-    result["passed"] = sum(p.get("passed", 0) for p in per_package)
-    result["failed"] = sum(p.get("failed", 0) for p in per_package)
+    # `or 0` rather than a default: a no-verdict package carries `None`, which means UNMEASURED
+    # and must not be summed as a zero — that is the distinction the whole classification exists
+    # for, and defaulting would put it straight back.
+    result["compiled"] = sum(p.get("compiled") or 0 for p in per_package)
+    result["passed"] = sum(p.get("passed") or 0 for p in per_package)
+    result["failed"] = sum(p.get("failed") or 0 for p in per_package)
+    result["no_verdict_stubs"] = sum(p["stubs"] for p in per_package if p.get("no_verdict"))
     result["finished"] = time.strftime("%H:%M:%S")
     return result
 
@@ -313,6 +342,11 @@ def main(argv):
             result = walk_repo(repo, repo_path, scratch, infer, cli)
         except Exception as error:  # noqa: BLE001 - one repo must not end the run
             result = {"repo": repo, "error": f"{type(error).__name__}: {str(error)[:400]}"}
+        # **Sweep SwiftPM's orphaned helpers between repositories.** `swiftpm-testing-helper`
+        # outlives its parent and keeps the inherited pipe open, which is what blocks the next
+        # `capture_output` call forever — observed alive at 25 minutes after its run was killed.
+        subprocess.run(["pkill", "-f", "swiftpm-testing-helper"], check=False,
+                       capture_output=True)
         json.dump(result, open(out, "w"), indent=2)
         print(f"{repo}: seeds {result.get('seeds','?')} named {result.get('named','?')} "
               f"stubs {result.get('stubs','?')} compiled {result.get('compiled','?')} "

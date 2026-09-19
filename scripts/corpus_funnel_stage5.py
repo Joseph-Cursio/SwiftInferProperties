@@ -62,8 +62,13 @@ def _last_significant(text):
     skipped; a `//` inside a string literal cannot appear at end of line here.
     """
     for line in reversed(text.splitlines()):
-        stripped = line.strip()
-        if not stripped or stripped.startswith("//"):
+        # ⚠ **A trailing comment can share the line with the code.** Skipping only whole comment
+        # LINES left `),// UI tests are configured in Xcode` reading as significant, so the last
+        # character was `e` and a second comma went in after the `),`. SwiftProjectLint's 434
+        # stubs were blocked on exactly that.
+        code = line.split("//")[0] if "//" in line else line
+        stripped = code.strip()
+        if not stripped:
             continue
         return stripped[-1]
     return ""
@@ -119,6 +124,65 @@ def rewrite_manifest(manifest_path, modules, census_target, stubs_relative_path)
             head -= 1
         text = text[:head] + text[tail:]
 
+    # 1b. **Dependency lines no remaining target uses are dropped.**
+    #
+    # The census records this as an adjustment: *"a swift-property-based 1.x pin used only by
+    # test targets was dropped with those targets"*. Removing the test targets without removing
+    # what only they referenced leaves the pin in the graph, so SwiftPM sees the subject
+    # demanding 1.2.x while the stubs demand the kit's 2.x and refuses to resolve — which then
+    # reads as a subject-side conflict rather than as a leftover. It blocked pbt-book (134
+    # stubs), SwiftLintRuleStudio (41) and SwiftUMLStudio (43).
+    #
+    # Only URL dependencies are pruned, and only when no surviving target names the package.
+    # 1a. **An existing SwiftPropertyLaws dependency below the pin is UPGRADED, not skipped.**
+    #
+    # The census records this adjustment: *"an existing SwiftPropertyLaws dependency
+    # (SwiftLintRuleStudioCore pins 3.x) was replaced by HEAD — the stubs are v4 code"*. The
+    # duplicate guard skipped it instead, so the subject kept 3.x while the stubs needed 4.x and
+    # SwiftPM refused: `root depends on 'swift-property-based' 2.0.0..<3.0.0 and root depends on
+    # 'swiftpropertylaws' 3.28.0..<4.0.0`. It blocked SwiftProjectLint's 434 stubs, and the same
+    # shape blocked SwiftLintRuleStudio and SwiftUMLStudio.
+    #
+    # Rewritten in place, so the dependency keeps its position and the array stays well formed.
+    while True:
+        existing = re.search(r'\.package\s*\(\s*url:\s*"[^"]*SwiftPropertyLaws[^"]*"', text)
+        if not existing:
+            break
+        open_paren = text.index("(", existing.start())
+        close = _matching_paren(text, open_paren)
+        clause = text[existing.start():close + 1]
+        if '"4.7.0"' in clause:
+            break
+        text = text[:existing.start()] + KIT_DEPENDENCY + text[close + 1:]
+
+    # ⚠ **Only the conflicting engine pin is dropped, not every unreferenced dependency.**
+    #
+    # The census's adjustment is specific: *"a swift-property-based 1.x pin used only by test
+    # targets was dropped with those targets"*. A general "prune what no surviving target
+    # references" rule was tried first and REGRESSED three manifests that had just parsed --
+    # it is too blunt, because a dependency can be referenced in ways this text scan does not
+    # model. The narrow rule cannot corrupt a manifest it does not match.
+    #
+    # Left standing where a LIBRARY target uses it: that is the subject-side conflict the
+    # census recorded and declined to work around, and it must stay visible as such.
+    for match in list(re.finditer(r'\.package\s*\(\s*url:\s*"[^"]*swift-property-based[^"]*"',
+                                  text)):
+        open_paren = text.index("(", match.start())
+        close = _matching_paren(text, open_paren)
+        clause = text[match.start():close + 1]
+        if '"2.' in clause or "2.0.0" in clause:
+            continue
+        tail = close + 1
+        while tail < len(text) and text[tail] in " \n\t":
+            tail += 1
+        if tail < len(text) and text[tail] == ",":
+            tail += 1
+        head = match.start()
+        while head > 0 and text[head - 1] in " \n\t":
+            head -= 1
+        text = text[:head] + text[tail:]
+        break
+
     # 2. the two dependencies, at the head of the package's `dependencies:` array
     # ⚠ **A dependency the manifest already declares must NOT be added again.** SwiftPM rejects
     # the package outright — `Conflicting identity for swift-property-based: dependency … and
@@ -134,10 +198,21 @@ def rewrite_manifest(manifest_path, modules, census_target, stubs_relative_path)
     own_name = own.group(1) if own else ""
     SELF = {"SwiftPropertyLaws": "PropertyLawKit", "swift-property-based": "PropertyBased"}
     local_products = [product for package, product in SELF.items() if package == own_name]
+    # ⚠ **A dependency can already be present as a PATH, not a URL.** pbt-book declares
+    # `.package(path: "../../SwiftPropertyLaws")`, so checking only URLs added the kit a second
+    # time under the same identity and SwiftPM reported `swiftpropertylaws` as *unresolved* —
+    # naming the package it could not resolve rather than the duplicate that caused it.
+    by_path = {os.path.basename(match.rstrip("/")).lower()
+               for match in re.findall(r'\.package\s*\(\s*path:\s*"([^"]+)"', text)}
     wanted = []
     for line in (KIT_DEPENDENCY, ENGINE_DEPENDENCY):
         url = re.search(r'url:\s*"([^"]+)"', line).group(1)
         if url in text:
+            continue
+        identity = url.rstrip("/").split("/")[-1]
+        if identity.endswith(".git"):
+            identity = identity[:-4]
+        if identity.lower() in by_path:
             continue
         if any(package in url for package in SELF if package == own_name):
             continue
@@ -210,8 +285,12 @@ def verify_manifest(package_dir, swift):
     """`dump-package` must parse the rewrite. An unparseable manifest fails HERE, loudly."""
     env = dict(os.environ)
     env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+    # ⚠ **Every SwiftPM call gets a timeout.** `capture_output` waits for EOF on the pipe, and
+    # SwiftPM spawns helpers that inherit it — so a build whose child has already exited can
+    # leave the parent blocked forever with no CPU and no children. The driver sat 25 minutes
+    # that way on one repository; it is the most plausible reading of the census's 2h29m loop.
     done = subprocess.run([swift, "package", "dump-package"], cwd=package_dir,
-                          capture_output=True, text=True, env=env)
+                          capture_output=True, text=True, env=env, timeout=300)
     if done.returncode != 0:
         raise SystemExit("REWRITTEN MANIFEST DOES NOT PARSE — refusing to build:\n"
                          + done.stderr[-2000:])
@@ -226,8 +305,11 @@ def _swift_files(directory):
 def _builds(package_dir, swift):
     env = dict(os.environ)
     env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
-    done = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
-                          capture_output=True, text=True, env=env)
+    try:
+        done = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
+                              capture_output=True, text=True, env=env, timeout=1800)
+    except subprocess.TimeoutExpired:
+        return False
     return done.returncode == 0
 
 
@@ -276,8 +358,12 @@ def build_to_fixpoint(package_dir, stubs_dir, swift, aside_dir, max_rounds=40):
     for round_number in range(max_rounds):
         env = dict(os.environ)
         env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
-        done = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
-                              capture_output=True, text=True, env=env)
+        try:
+            done = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
+                                  capture_output=True, text=True, env=env, timeout=1800)
+        except subprocess.TimeoutExpired:
+            return {"built": False, "rounds": round_number, "set_aside": set_aside,
+                    "unattributed": "build timed out after 1800s"}
         if done.returncode == 0:
             return {"built": True, "rounds": round_number, "set_aside": set_aside}
         first_error = {}
@@ -345,7 +431,7 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
     keying on the bare name silently collapsed them, reporting 12 results for 13 lines. That is
     this repository's most-repeated defect, arriving in the instrument that measures it.
     """
-    skipped, results, crashed = [], {}, []
+    skipped, results, crashed, hung = [], {}, [], []
     for _ in range(max_resumes):
         # **No `--filter`.** Stage 5 drops every other test target, so the census target is the
         # only one left — and `--filter` matches a test ID, not a target name, so passing the
@@ -355,8 +441,32 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
             command += ["--skip", re.escape(name.split(".")[-1])]
         env = dict(os.environ)
         env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
-        done = subprocess.run(command, cwd=package_dir, capture_output=True, text=True, env=env)
-        output = done.stdout + done.stderr
+        timed_out = False
+        try:
+            # ⚠ **600s, not 1800s.** A generated law is cheap — the pilot ran 15 of them in
+            # 0.03s — so minutes of test time means one law is looping, not working. The census
+            # recorded a chapter hanging for 677s.
+            done = subprocess.run(command, cwd=package_dir, capture_output=True, text=True,
+                                  env=env, timeout=600)
+            output = done.stdout + done.stderr
+            code = done.returncode
+        except subprocess.TimeoutExpired as expired:
+            # ⚠ **A HANG is recovered exactly like a crash, and it was not.** Returning here
+            # discarded every result the run had already produced: SwiftFormatRuleStudio read
+            # 15 compiled and 0 passed because one looping law ended the process, not because
+            # its laws failed. The partial output names which test never finished, so it is set
+            # aside and the rest are re-run — the same rule the census states for a crash.
+            # ⚠ **`TimeoutExpired.stdout` is BYTES even under `text=True`** — a documented
+            # quirk, and concatenating it to a str raised `TypeError` inside the recovery path,
+            # so the repository reported no counts at all rather than partial ones.
+            def _text(stream):
+                if stream is None:
+                    return ""
+                return stream.decode("utf-8", "replace") if isinstance(stream, bytes) else stream
+
+            output = _text(expired.stdout) + _text(expired.stderr)
+            code, timed_out = None, True
+        
 
         suite, started = None, []
         for line in output.splitlines():
@@ -377,14 +487,28 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
                 results[f"{suite}.{fail_match.group(1)}"] = "failed"
 
         unfinished = [name for name in started if name not in results]
+        if timed_out and unfinished:
+            victim = unfinished[-1]
+            hung.append(victim)
+            skipped.append(victim)
+            continue
+        if timed_out and not started:
+            # ⚠ **The process hung before ANY test reported**, so there is no name to attribute
+            # it to and nothing to skip. SwiftFormatRuleStudio does this: 15 stubs compile and
+            # the run never gets as far as printing a first test. Returning zeros here would
+            # read as "15 laws, none pass", which is a claim about the laws; this says the run
+            # never produced a verdict, which is a claim about the run.
+            return {"passed": [], "failed": [], "crashed": crashed, "hung": hung,
+                    "no_verdict": "test run timed out before any test reported"}
         if not unfinished:
             passed = sorted(k for k, v in results.items() if v == "passed")
             failed = sorted(k for k, v in results.items() if v == "failed")
             return {"passed": passed, "failed": failed, "crashed": crashed,
-                    "returncode": done.returncode}
+                    "hung": hung, "returncode": code}
         victim = unfinished[-1]
         crashed.append(victim)
         skipped.append(victim)
     passed = sorted(k for k, v in results.items() if v == "passed")
     failed = sorted(k for k, v in results.items() if v == "failed")
-    return {"passed": passed, "failed": failed, "crashed": crashed, "exhausted": True}
+    return {"passed": passed, "failed": failed, "crashed": crashed, "hung": hung,
+            "exhausted": True}
