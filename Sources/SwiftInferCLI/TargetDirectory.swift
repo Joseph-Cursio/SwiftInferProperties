@@ -44,41 +44,46 @@ enum TargetDirectory {
         let sources = root.appendingPathComponent("Sources")
         let directory = sources.appendingPathComponent(target)
 
+        // The convention first, so no package that resolved before resolves differently now.
+        if isDirectory(directory) { return directory }
+
+        // `Sources/<target>/` is a CONVENTION, not a rule — a manifest may put a target anywhere
+        // via `path:`. Ask the manifest before concluding anything, **including before concluding
+        // there is no `Sources/` at all**.
+        //
+        // FOURTH recurrence of this trap in a fourth subsystem, and the first three fixes each
+        // left this branch unreachable: `scripts/measurement.py` paid for it when GRDB
+        // (`path: "GRDB"`) resolved to zero files, `VerifyTargetInference.manifestModule` paid for
+        // it when swift-system (`path: "Sources/System"` for target `SystemPackage`) reported 21
+        // module-resolution failures under a carrier label, and `Euclid` (`path: "Sources"`) was
+        // unreachable until the fallback below was added — **but only under the `Sources/` guard**.
+        // A package with NO `Sources/` directory never reached it: SwiftMarkdownWiki declares
+        // `path: "SwiftMarkdownWiki"`, so `index --target` failed outright while `discover
+        // --sources` scanned it happily, and the corpus census recorded 0 laws for a repository
+        // that had just written 35 stubs (#528).
+        //
+        // Confirmed on disk before being returned, for `manifestModule`'s stated reason: a name
+        // taken from a manifest is a guess until something on disk agrees with it.
+        if let declared = manifestDirectory(for: target, packageRoot: root) { return declared }
+
+        // Only now is the failure real, and the two causes get the messages they had before:
+        // a package that is not laid out this way at all, or a target that does not exist.
         guard isDirectory(sources) else {
             throw ValidationError(
-                "no `Sources/` directory at \(sources.absoluteURL.standardizedFileURL.path). "
-                    + "`--target` names a SwiftPM target and resolves to `Sources/<target>/`, so it "
-                    + "needs a package laid out that way. Run this from the package root — or, if "
-                    + "this is an Xcode project rather than a SwiftPM package, there is no "
-                    + "`Sources/` to find and `--target` cannot reach your code."
+                "no `Sources/` directory at \(sources.absoluteURL.standardizedFileURL.path), and "
+                    + "the manifest declares no target `\(target)` elsewhere. `--target` names a "
+                    + "SwiftPM target and resolves to `Sources/<target>/` unless the manifest says "
+                    + "otherwise, so it needs a package laid out one of those two ways. Run this "
+                    + "from the package root — or, if this is an Xcode project rather than a "
+                    + "SwiftPM package, there is no `Sources/` to find and `--target` cannot reach "
+                    + "your code."
             )
         }
 
-        guard isDirectory(directory) else {
-            // `Sources/<target>/` is a CONVENTION, not a rule — a manifest may put a target
-            // anywhere via `path:`. Ask the manifest before concluding the target is absent.
-            //
-            // Third recurrence of this trap in a third subsystem, which is why the fallback is
-            // here rather than at the call sites: `scripts/measurement.py` paid for it when GRDB
-            // (`path: "GRDB"`) resolved to zero files, and `VerifyTargetInference.manifestModule`
-            // paid for it when swift-system (`path: "Sources/System"` for target `SystemPackage`)
-            // reported 21 module-resolution failures under a carrier label. `index --target` never
-            // learned it, so `Euclid` — whose manifest says `path: "Sources"` — was unreachable.
-            //
-            // The convention is tried FIRST and this only runs when it misses, so no package that
-            // resolved before resolves differently now. Confirmed on disk before being returned,
-            // for `manifestModule`'s stated reason: a name taken from a manifest is a guess until
-            // something on disk agrees with it.
-            if let declared = manifestDirectory(for: target, packageRoot: root) {
-                return declared
-            }
-            throw ValidationError(
-                "no target `\(target)` — nothing at "
-                    + "\(directory.absoluteURL.standardizedFileURL.path).\(availableTargetsClause(in: sources))"
-            )
-        }
-
-        return directory
+        throw ValidationError(
+            "no target `\(target)` — nothing at "
+                + "\(directory.absoluteURL.standardizedFileURL.path).\(availableTargetsClause(in: sources))"
+        )
     }
 
     /// The directory a manifest declares for `target` via `path:`, when it exists on disk.
