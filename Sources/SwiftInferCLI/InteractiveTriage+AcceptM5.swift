@@ -23,14 +23,17 @@ extension InteractiveTriage {
     /// dedicated lifted-only arm; nil otherwise. Caller's switch
     /// continues to the existing TemplateEngine-side arms when this
     /// returns nil.
-    static func liftedOnlyTestStub(for suggestion: Suggestion) -> String? {
+    static func liftedOnlyTestStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
         guard suggestion.liftedOrigin != nil else { return nil }
         switch suggestion.templateName {
         case "invariant-preservation":
-            return liftedCountInvarianceStub(for: suggestion)
+            return liftedCountInvarianceStub(for: suggestion, customGenerator: customGenerator)
 
         case "associativity":
-            return liftedReduceEquivalenceStub(for: suggestion)
+            return liftedReduceEquivalenceStub(for: suggestion, customGenerator: customGenerator)
 
         default:
             return nil
@@ -44,7 +47,11 @@ extension InteractiveTriage {
     /// `LiftedTestEmitter.liftedCountInvariance` which emits the
     /// direct `f(xs).count == xs.count` test over a `Gen<[T]>`
     /// collection sample.
-    private static func liftedCountInvarianceStub(for suggestion: Suggestion) -> String? {
+    private static func liftedCountInvarianceStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard let evidence = suggestion.evidence.first,
               let funcName = functionName(from: evidence.displayName),
               let typeName = paramType(from: evidence.signature) else {
@@ -55,7 +62,7 @@ extension InteractiveTriage {
             funcName: funcName,
             typeName: typeName,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: generatorFor(typeName)
         )
     }
 
@@ -67,7 +74,11 @@ extension InteractiveTriage {
     /// `xs.reduce(s, op) == xs.reversed().reduce(s, op)` test over a
     /// `Gen<[T]>` collection sample. Defaults seed to `"0"` when
     /// extraction fails (older promotion-shape compatibility).
-    private static func liftedReduceEquivalenceStub(for suggestion: Suggestion) -> String? {
+    private static func liftedReduceEquivalenceStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)? = nil
+    ) -> String? {
+        let generatorFor = boundGenerator(for: suggestion, customGenerator: customGenerator)
         guard let evidence = suggestion.evidence.first,
               let opName = functionName(from: evidence.displayName),
               let typeName = paramType(from: evidence.signature) else {
@@ -80,7 +91,7 @@ extension InteractiveTriage {
             elementTypeName: typeName,
             seedSource: seedSourceText,
             seed: seed,
-            generator: chooseGenerator(for: suggestion, typeName: typeName)
+            generator: generatorFor(typeName)
         )
     }
 }
