@@ -254,6 +254,22 @@ def stub_dirs(package_dir):
     return found
 
 
+def _unaccounted(per_package):
+    """Compiled stubs that reported no outcome of any kind, summed over a repository's packages.
+
+    A package with `no_verdict` is skipped: its stubs are UNMEASURED rather than lost, which is
+    the distinction `passed = None` already carries, and counting them here would report the
+    run's one honest abstention as a defect.
+    """
+    total = 0
+    for package in per_package:
+        if package.get("no_verdict") or package.get("passed") is None:
+            continue
+        outcomes = sum(package.get(key) or 0 for key in ("passed", "failed", "crashed", "hung"))
+        total += max(0, (package.get("compiled") or 0) - outcomes)
+    return total
+
+
 def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
     """Stages 1-5 for one repository. Every failure is recorded, never raised."""
     swift = toolchain(repo)
@@ -445,7 +461,21 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
     result["compiled"] = sum(p.get("compiled") or 0 for p in per_package)
     result["passed"] = sum(p.get("passed") or 0 for p in per_package)
     result["failed"] = sum(p.get("failed") or 0 for p in per_package)
+    result["crashed"] = sum(p.get("crashed") or 0 for p in per_package)
+    result["hung"] = sum(p.get("hung") or 0 for p in per_package)
     result["no_verdict_stubs"] = sum(p["stubs"] for p in per_package if p.get("no_verdict"))
+    # **A compiled stub must land in exactly one outcome, and for two runs it did not.**
+    # `compiled - (passed + failed + crashed + hung)` read 29 corpus-wide on both, and nothing
+    # printed it: a reader subtracting passed and failed from compiled found 29 stubs missing and
+    # no column to put them in. 23 were CRASHES, which are a third outcome and were simply never
+    # summed here; the remaining 6 are real losses — a `consumer-producer` stub that is
+    # documentation only and declares no test at all, and two pbt-book stubs sharing one
+    # `Suite.test` key so the results dictionary collapses them.
+    #
+    # Recorded per repository rather than asserted, because a legitimate third outcome must not
+    # end a 50-minute run. It is the seventh number in this harness put there so that a figure
+    # that cannot be true cannot also be invisible.
+    result["unaccounted"] = _unaccounted(per_package)
     result["finished"] = time.strftime("%H:%M:%S")
     return result
 
@@ -473,7 +503,8 @@ def main(argv):
         json.dump(result, open(out, "w"), indent=2)
         print(f"{repo}: seeds {result.get('seeds','?')} named {result.get('named','?')} "
               f"stubs {result.get('stubs','?')} compiled {result.get('compiled','?')} "
-              f"passed {result.get('passed','?')} {result.get('error','')}", flush=True)
+              f"passed {result.get('passed','?')} crashed {result.get('crashed','?')} "
+              f"unaccounted {result.get('unaccounted','?')} {result.get('error','')}", flush=True)
     return 0
 
 
