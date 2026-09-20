@@ -295,6 +295,10 @@ extension SwiftInferCommand.Discover {
             generatedRoot: destination.generatedRoot,
             dryRun: triageIO.dryRun
         )
+        context.receiverConstructions = ReceiverConstructionSource(
+            packageRoot: packageRoot,
+            wanted: Set(pipeline.typeShapesByName.keys)
+        )
         try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
     }
 }

@@ -19,7 +19,8 @@ extension InteractiveTriage {
     /// a project type.
     static func entailedTemplateStub(
         for suggestion: Suggestion,
-        customGenerator: ((String) -> String?)? = nil
+        customGenerator: ((String) -> String?)? = nil,
+        receiverExpression: ((String) -> String?)? = nil
     ) -> String? {
         switch suggestion.templateName {
         // Both state the same law — the subject returns or throws for every input its parameter
@@ -27,7 +28,11 @@ extension InteractiveTriage {
         // `Bool`-returning function carries; `input-totality` calls it the law a fuzz harness
         // asserts, reached without needing one to exist.
         case "predicate", "input-totality":
-            return totalityStub(for: suggestion, customGenerator: customGenerator)
+            return totalityStub(
+                for: suggestion,
+                customGenerator: customGenerator,
+                receiverExpression: receiverExpression
+            )
 
         case "caseiterable-key-injectivity":
             return caseKeyInjectivityStub(for: suggestion)
@@ -91,13 +96,19 @@ extension InteractiveTriage {
     /// census, while verify's predicate composer already drew receiver and parameters.
     private static func totalityStub(
         for suggestion: Suggestion,
-        customGenerator: ((String) -> String?)?
+        customGenerator: ((String) -> String?)?,
+        receiverExpression: ((String) -> String?)? = nil
     ) -> String? {
         guard let evidence = suggestion.evidence.first,
-              let callee = CalleeReference(evidence: evidence),
-              let argumentTypes = arityFreeArgumentTypes(callee: callee, evidence: evidence) else {
+              let parsed = CalleeReference(evidence: evidence),
+              let parsedTypes = arityFreeArgumentTypes(callee: parsed, evidence: evidence) else {
             return nil
         }
+        let constructed = constructedReceiver(
+            callee: parsed, evidence: evidence, receiverExpression: receiverExpression
+        )
+        let callee = constructed ?? parsed
+        let argumentTypes = constructed == nil ? parsedTypes : Array(parsedTypes.dropFirst())
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.total(
             callee: callee,
@@ -110,6 +121,35 @@ extension InteractiveTriage {
             argumentTypes: argumentTypes,
             // Parameter positions, shifted past the receiver an instance method draws first.
             inoutArguments: Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) })
+        )
+    }
+
+    /// The callee with its receiver CONSTRUCTED at the call site, or `nil` to draw one as usual.
+    ///
+    /// ⚠ **A class receiver cannot be drawn at all.** `Generator` requires a `Sendable` value, and
+    /// a visitor is a stateful class: generating one emitted `type 'LegacyClosureSyntaxVisitor'
+    /// does not conform to the 'Sendable' protocol` on 125 SwiftProjectLint stubs. The receiver is
+    /// not a value the law quantifies over — it is the thing the method is called on — so the
+    /// construction the package's own tests use is spelled at the call site instead, and only the
+    /// parameters are drawn.
+    ///
+    /// A fresh instance per trial follows, since the expression sits inside the property closure.
+    static func constructedReceiver(
+        callee: CalleeReference,
+        evidence: Evidence,
+        receiverExpression: ((String) -> String?)?
+    ) -> CalleeReference? {
+        guard callee.isInstanceMethod,
+              let receiverType = evidence.qualifiedTypeName,
+              let expression = receiverExpression?(receiverType)
+        else { return nil }
+        return CalleeReference(
+            bareName: callee.bareName,
+            qualifier: expression,
+            argumentLabels: callee.argumentLabels,
+            isolation: callee.isolation,
+            isInstanceMethod: false,
+            isComputedProperty: callee.isComputedProperty
         )
     }
 

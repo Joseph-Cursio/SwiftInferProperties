@@ -137,6 +137,11 @@ extension InteractiveTriage {
         }
     }
 
+    /// How to construct a class receiver at the call site, or `nil` for a caller with no source.
+    static func receiverExpression(for context: Context) -> ((String) -> String?)? {
+        context.receiverConstructions.map { source in { source.expression(for: $0) } }
+    }
+
     /// Why a suggestion is withdrawn before any emitter runs, or `nil` to go on and write it.
     ///
     /// Both gates withdraw a stub that could never compile whatever the generator, import or
