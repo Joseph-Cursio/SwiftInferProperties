@@ -30,11 +30,8 @@ final class ReceiverConstructionSource {
         self.constructions = constructions
     }
 
-    /// The generator expression for `typeName`, or `nil` when no test constructs it usably.
-    func generator(for typeName: String) -> String? {
-        guard let expression = constructions[typeName]
-            ?? constructions[typeName.components(separatedBy: ".").last ?? typeName]
-        else { return nil }
-        return "Gen.always(0).map { _ in \(expression) }"
+    /// The construction expression for `typeName`, or `nil` when no test constructs it usably.
+    func expression(for typeName: String) -> String? {
+        constructions[typeName] ?? constructions[typeName.components(separatedBy: ".").last ?? typeName]
     }
 }

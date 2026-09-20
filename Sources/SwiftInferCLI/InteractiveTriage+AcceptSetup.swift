@@ -18,11 +18,9 @@ extension InteractiveTriage {
     /// #493's gate and #498's argument types both landed in it.
     static func customGenerator(for context: Context) -> (String) -> String? {
         let corpus = context.syntaxCorpus
-        let receivers = context.receiverConstructions
         return projectTypeGenerator(
             types: Array(context.typeShapesByName.values),
-            syntaxNode: corpus.map { source in { source.generator(for: $0) } },
-            receiverConstruction: receivers.map { source in { source.generator(for: $0) } }
+            syntaxNode: corpus.map { source in { source.generator(for: $0) } }
         )
     }
 
@@ -32,20 +30,15 @@ extension InteractiveTriage {
     /// - Parameter syntaxNode: a generator for a SwiftSyntax node type, from the package's test
     ///   snippets (`SyntaxCorpusSource`). Consulted after the project's own types, so a scanned
     ///   type that happens to be named `…Syntax` keeps its derived generator.
-    /// - Parameter receiverConstruction: a generator for a type the package's own tests
-    ///   construct (`ReceiverConstructionSource`) — the answer for a class receiver, which
-    ///   memberwise derivation excludes by design. Consulted last, so anything derivable wins.
     static func projectTypeGenerator(
         types: [TypeShape],
-        syntaxNode: ((String) -> String?)? = nil,
-        receiverConstruction: ((String) -> String?)? = nil
+        syntaxNode: ((String) -> String?)? = nil
     ) -> (String) -> String? {
         let resolver = GeneratorResolver(types: types)
         let explain = generatorFailureReason(types: types)
         let resolve: (String) -> DerivationStrategist.ComposedGenerator? = { name in
             resolver.customTypeGenerator(forTypeName: name)
                 ?? syntaxNode?(name).map { DerivationStrategist.ComposedGenerator(expression: $0) }
-                ?? receiverConstruction?(name).map { DerivationStrategist.ComposedGenerator(expression: $0) }
         }
         return { typeName in
             if let derived = resolver.customTypeGenerator(forTypeName: typeName)?.expression {
@@ -53,9 +46,6 @@ extension InteractiveTriage {
             }
             if let node = syntaxNode?(typeName) {
                 return node
-            }
-            if let constructed = receiverConstruction?(typeName) {
-                return constructed
             }
             if let composed = composedOverProjectTypes(typeName, resolve: resolve) {
                 return composed
@@ -145,6 +135,11 @@ extension InteractiveTriage {
         { typeName in
             chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)
         }
+    }
+
+    /// How to construct a class receiver at the call site, or `nil` for a caller with no source.
+    static func receiverExpression(for context: Context) -> ((String) -> String?)? {
+        context.receiverConstructions.map { source in { source.expression(for: $0) } }
     }
 
     /// Why a suggestion is withdrawn before any emitter runs, or `nil` to go on and write it.
