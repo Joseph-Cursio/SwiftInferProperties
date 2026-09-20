@@ -55,6 +55,9 @@ enum GenericSubjectGate {
         if let reason = ownParameterReason(for: evidence, display: display) {
             return reason
         }
+        if let reason = opaqueParameterReason(for: evidence, display: display) {
+            return reason
+        }
         guard !genericParametersByName.isEmpty,
               let owner = evidence.qualifiedTypeName ?? suggestion.carrier
         else { return nil }
@@ -97,6 +100,25 @@ enum GenericSubjectGate {
         let names = evidence.genericParameters.map(\.name).joined(separator: ", ")
         return "\(display) is a generic function over \(names), and a stub cannot name its type "
             + "parameters at the call site"
+    }
+
+    /// Why a subject taking an OPAQUE parameter cannot be stubbed, or `nil`.
+    ///
+    /// `func f(_ node: some SyntaxProtocol)` is `func f<T: SyntaxProtocol>(_ node: T)` written in
+    /// sugar, and the scanner records the sugar: `parameterTypeNames` reads `some SyntaxProtocol`
+    /// while `genericParameters` is empty, so neither check above sees it. The emitter then writes
+    /// `some SyntaxProtocol.gen()`, which is not an expression at all — **10 stubs on
+    /// SwiftProjectLint failed with `expected ',' separator`, a SYNTAX error in code the reader
+    /// did not write**, and a parse failure hides the derivation-reason marker beside it.
+    ///
+    /// ⚠ **`any P` is deliberately not included.** An existential names a real type a stub can
+    /// spell, so `any P` that fails is an ordinary missing generator, not an unbindable name — the
+    /// same cut this gate already makes between *no generator* and *no name*.
+    private static func opaqueParameterReason(for evidence: Evidence, display: String) -> String? {
+        guard let opaque = evidence.parameterTypeNames.first(where: { identifiers(in: $0).contains("some") })
+        else { return nil }
+        return "\(display) takes \(opaque), an opaque type — a generic parameter in sugar, which "
+            + "names no type at the call site"
     }
 
     /// `[Set<T>: (C) -> Bool]` → `Set`, `T`, `C`, `Bool`.
