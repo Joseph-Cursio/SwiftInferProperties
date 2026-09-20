@@ -18,6 +18,38 @@ struct ReceiverConstructionHarvesterTests {
     }
     """
 
+    /// The shape the corpus is made of: a test helper that binds the argument, then constructs.
+    /// Two helpers bind the same name `pattern` to different expressions, so a resolution that
+    /// ignored scope would answer one of them with the other's.
+    private static let helpers = """
+    private func makeVisitor() -> TooManyEnvironmentObjectsVisitor {
+        let pattern = TooManyEnvironmentObjects().pattern
+        return TooManyEnvironmentObjectsVisitor(pattern: pattern)
+    }
+
+    private func makeChained() -> UIVisitor {
+        let category = PatternCategory.uiPatterns
+        let pattern = SyntaxPattern(category: category)
+        return UIVisitor(pattern: pattern)
+    }
+
+    private func makeRooted() -> ActorReentrancyVisitor {
+        let rule = ActorReentrancy()
+        return ActorReentrancyVisitor(pattern: rule.pattern)
+    }
+
+    private func makeUnresolved() -> MysteryVisitor {
+        let pattern = makePattern()
+        return MysteryVisitor(pattern: pattern)
+    }
+    """
+
+    private static func resolved(_ wanted: Set<String>) -> [String: String] {
+        Dictionary(ReceiverConstructionHarvester.constructions(in: helpers, wanted: wanted)) { first, _ in
+            first
+        }
+    }
+
     private static func constructions(_ wanted: Set<String>) -> [String: String] {
         Dictionary(ReceiverConstructionHarvester.constructions(in: source, wanted: wanted)) { first, _ in
             first
@@ -33,8 +65,9 @@ struct ReceiverConstructionHarvesterTests {
         #expect(found["Budget"] == #"Budget(limit: 10, name: "x")"#)
     }
 
-    /// ⚠ **The common shape, and it must be refused.** `Visitor(pattern: pattern)` names a local
-    /// the generated file has no binding for; copying it emits `cannot find 'pattern' in scope`.
+    /// ⚠ **A local is only as good as what it is bound to.** Copying `Visitor(pattern: pattern)`
+    /// emits `cannot find 'pattern' in scope`, and here the binding — `makePattern()` — is no
+    /// more callable from a generated file, so the whole construction is still refused.
     @Test("a construction naming a test-local is refused")
     func localsRefused() {
         #expect(Self.constructions(["TooManyEnvironmentObjectsVisitor"]).isEmpty)
@@ -52,6 +85,36 @@ struct ReceiverConstructionHarvesterTests {
     @Test("a construction taking a closure is refused")
     func closuresRefused() {
         #expect(Self.constructions(["WalkingVisitor"]).isEmpty)
+    }
+
+    /// The shape `localsRefused` pins, once the binding beside it is read.
+    @Test("a test-local is replaced by the expression it is bound to")
+    func localInlined() {
+        #expect(Self.resolved(["TooManyEnvironmentObjectsVisitor"])["TooManyEnvironmentObjectsVisitor"]
+            == "TooManyEnvironmentObjectsVisitor(pattern: TooManyEnvironmentObjects().pattern)")
+    }
+
+    /// ⚠ **One pass is not enough**: substituting `pattern` inserts `category`, which is another
+    /// local, and the inserted subtree is not re-visited by the pass that inserted it.
+    @Test("a local bound to another local resolves to a fixed point")
+    func chainedBindingsInlined() {
+        #expect(Self.resolved(["UIVisitor"])["UIVisitor"]
+            == "UIVisitor(pattern: SyntaxPattern(category: PatternCategory.uiPatterns))")
+    }
+
+    /// The base of `rule.pattern` is a local and the member is not — rewriting both would ask a
+    /// type for a member named after whatever the test happened to call its variable.
+    @Test("a local at the root of a member chain is replaced, and the member is not")
+    func memberChainRootInlined() {
+        #expect(Self.resolved(["ActorReentrancyVisitor"])["ActorReentrancyVisitor"]
+            == "ActorReentrancyVisitor(pattern: ActorReentrancy().pattern)")
+    }
+
+    /// Substitution moves the question rather than answering it: `makePattern()` is no more
+    /// callable from a generated file than `pattern` was.
+    @Test("a local whose own binding does not resolve is still refused")
+    func unresolvableBindingRefused() {
+        #expect(Self.resolved(["MysteryVisitor"]).isEmpty)
     }
 
     @Test("only the wanted types are collected")
