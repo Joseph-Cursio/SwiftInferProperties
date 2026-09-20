@@ -348,7 +348,7 @@ struct LiftedTestEmitterM7Tests {
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "adjust(_:) failed invariant preservation \\.isValid at input \\(input). \\(error?.message ?? "")"
+                        "adjust(_:) failed invariant preservation \\\\.isValid at input \\(input). \\(error?.message ?? "")"
                     )
                 }
             }

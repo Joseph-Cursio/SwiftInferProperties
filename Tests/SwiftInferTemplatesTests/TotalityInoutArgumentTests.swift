@@ -62,3 +62,41 @@ struct TotalityInoutArgumentTests {
         #expect(!after.contains("inout"))
     }
 }
+
+/// **A failure label is TEXT, and the receiver's construction is not a label.**
+///
+/// A constructed receiver's qualifier is an expression — `File(name: "test", …)` — and the label
+/// is spliced into a string literal, so carrying it there emitted `expected ',' separator` on 42
+/// stubs across five repositories (2026-09-20 census).
+@Suite("Totality — the failure label")
+struct TotalityFailureLabelTests {
+
+    private static let seed = SamplingSeed.Value(
+        stateA: 0x1234_5678_9ABC_DEF0, stateB: 0x0FED_CBA9_8765_4321,
+        stateC: 0xAAAA_BBBB_CCCC_DDDD, stateD: 0x1111_2222_3333_4444
+    )
+
+    private static func emit(callee: CalleeReference, label: String? = nil) -> String {
+        LiftedTestEmitter.total(
+            callee: callee, seed: seed, generators: ["Gen<Int>.int()"],
+            isThrowing: false, isAsync: false, failureLabel: label
+        )
+    }
+
+    @Test("a supplied label is used instead of the callee's own")
+    func suppliedLabel() {
+        let constructed = CalleeReference(
+            bareName: "canWrite", qualifier: #"File(name: "t")"#, argumentLabels: ["user"]
+        )
+        let stub = Self.emit(callee: constructed, label: "canWrite(user:) failed totality")
+        #expect(stub.contains(#""canWrite(user:) failed totality at input"#))
+        #expect(stub.contains(#"File(name: "t").canWrite(user:"#), "the CALL still constructs")
+    }
+
+    /// The control: any label reaching the literal is escaped, whatever produced it.
+    @Test("a label containing a quote cannot break the literal")
+    func escapedLabel() {
+        let stub = Self.emit(callee: CalleeReference(bareName: "f"), label: #"a "quoted" label"#)
+        #expect(stub.contains(#"\"quoted\""#))
+    }
+}
