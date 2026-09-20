@@ -1,6 +1,6 @@
 import PropertyLawCore
 @testable import SwiftInferCLI
-import SwiftInferCore
+@testable import SwiftInferCore
 import Testing
 
 /// Generators for SwiftSyntax node parameters come from the package's test snippets.
@@ -56,6 +56,16 @@ struct SyntaxCorpusSourceTests {
     ])
     func rawDelimiters(snippet: String, expected: Int) {
         #expect(SyntaxCorpusSource.rawDelimiterCount(for: snippet) == expected)
+    }
+
+    /// ⚠ **The emitted file must PARSE.** Splitting the template into a `machinery` constant for
+    /// SwiftLint's body-length cap left one `}` on both sides, and every test above still passed:
+    /// they assert fragments. The census caught it — SwiftEffectInference fell 25 compiles to 11
+    /// on `extraneous '}' at top level` — which is a whole corpus run to learn what a parse says.
+    @Test("the corpus file is syntactically valid Swift")
+    func fileParses() {
+        let text = SyntaxCorpusSource.fileContents(snippets: ["func f() {}", "struct S { let n: Int }"])
+        #expect(SyntaxSnippetHarvester.parsesCleanly(text))
     }
 
     @Test("the corpus file carries every snippet as a raw literal")

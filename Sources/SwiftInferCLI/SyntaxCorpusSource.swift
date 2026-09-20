@@ -103,6 +103,7 @@ final class SyntaxCorpusSource {
         // Swift snippets harvested from this package's own tests, each of which parses without
         // error. Generated laws over SwiftSyntax nodes draw their inputs from here.
 
+        import Foundation
         import PropertyBased
         import SwiftParser
         import SwiftSyntax
@@ -112,6 +113,17 @@ final class SyntaxCorpusSource {
         \(literals.joined(separator: ",\n"))
             ]
 
+        \(machinery)
+        }
+
+        """
+    }
+
+    /// The corpus type's fixed half: parse once, collect per node type, draw among the results.
+    ///
+    /// A constant rather than more lines of `fileContents`, which SwiftLint's body-length cap
+    /// reached the moment the cache landed in it.
+    private static let machinery = """
             private final class Collector<Node: SyntaxProtocol>: SyntaxAnyVisitor {
                 var found: [Node] = []
 
@@ -121,12 +133,36 @@ final class SyntaxCorpusSource {
                 }
             }
 
+            /// ⚠ **Parsed once, collected once per node type.** A stub calls `gen(_:)` inside its
+            /// per-trial closure, so a corpus re-parsed per call costs trials × snippets parses —
+            /// measured at over a million for one package, which reads as a hang rather than as
+            /// a slow generator.
+            private static let trees: [SourceFileSyntax] = snippets.map { Parser.parse(source: $0) }
+
+            private final class Cache: @unchecked Sendable {
+                private let lock = NSLock()
+                private var storage: [ObjectIdentifier: Any] = [:]
+
+                func nodes<Node: SyntaxProtocol>(_ type: Node.Type, build: () -> [Node]) -> [Node] {
+                    lock.lock()
+                    defer { lock.unlock() }
+                    if let hit = storage[ObjectIdentifier(type)] as? [Node] { return hit }
+                    let built = build()
+                    storage[ObjectIdentifier(type)] = built
+                    return built
+                }
+            }
+
+            private static let cache = Cache()
+
             /// Every node of type `Node` in the corpus, in source order.
             static func nodes<Node: SyntaxProtocol>(_ type: Node.Type) -> [Node] {
-                snippets.flatMap { snippet -> [Node] in
-                    let collector = Collector<Node>(viewMode: .sourceAccurate)
-                    collector.walk(Parser.parse(source: snippet))
-                    return collector.found
+                cache.nodes(type) {
+                    trees.flatMap { tree -> [Node] in
+                        let collector = Collector<Node>(viewMode: .sourceAccurate)
+                        collector.walk(tree)
+                        return collector.found
+                    }
                 }
             }
 
@@ -136,10 +172,7 @@ final class SyntaxCorpusSource {
                 let all = nodes(type)
                 return Gen<Int>.int(in: 0 ... max(all.count - 1, 0)).map { all[$0] }
             }
-        }
-
-        """
-    }
+    """
 
     /// The fewest `#`s such that `"""` + hashes and `\` + hashes never occur in `snippet`.
     static func rawDelimiterCount(for snippet: String) -> Int {
