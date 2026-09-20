@@ -145,6 +145,12 @@ Of the 91, **48 name a type that is neither a syntax node nor a class** — the 
 `missing-generator-census.md` measured — **37 are a class the tests never construct usably**, and
 **11 are a syntax node absent from the harvested corpus**.
 
+✅ **The 37 have been revisited, and the refusal was NOT the deliberate trade this page called
+it** — see [`receiver-construction-local-inlining.md`](receiver-construction-local-inlining.md).
+Following the local to its `let` binding buys **+2 compiles on SwiftProjectLint** and moves **54
+stubs off the receiver** onto their true next blocker, **42 of them to a `private` subject** — which
+is the widenable population the paragraph below could not name.
+
 ⚠ **The `private` bucket is not one decision.** 56 helpers were widened this cycle *because a
 generator existed for their arguments*; the 190 that remain mostly still have no generator, so
 widening them would change a subject's code and free nothing. Access and derivation have to fall

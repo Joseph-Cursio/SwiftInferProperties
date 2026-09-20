@@ -26,24 +26,60 @@ import SwiftSyntax
 /// An expression is only usable in a generated file if every name in it resolves there. So an
 /// argument may be a literal, a leading-dot enum case, a member chain rooted at a TYPE, or a
 /// nested call of the same kind — and never a lowercase identifier, which in a test body is a
-/// local (`Visitor(pattern: pattern)` is the common shape and is rejected). A type with several
-/// construction sites keeps the first self-contained one in file order, so the choice is stable.
+/// local. A type with several construction sites keeps the first self-contained one in file
+/// order, so the choice is stable.
+///
+/// ## A local is followed to what it is bound to
+///
+/// `Visitor(pattern: pattern)` is the common shape, and refusing it outright cost the stubs it
+/// was the only construction for. The binding is usually in the same block and is itself
+/// self-contained:
+///
+/// ```swift
+/// private func makeVisitor() -> TooManyEnvironmentObjectsVisitor {
+///     let pattern = TooManyEnvironmentObjects().pattern
+///     return TooManyEnvironmentObjectsVisitor(pattern: pattern)
+/// }
+/// ```
+///
+/// so the local is replaced by the expression it stands for and the result re-checked. A name
+/// with no visible `let` is still refused, and so is one whose binding does not itself resolve
+/// (`let pattern = makePattern()`) — the substitution moves the question, it does not answer it.
 public enum ReceiverConstructionHarvester {
 
     /// Construction expressions by the type they build, for `wanted` types only.
+    ///
+    /// ⚠ **A construction the test wrote verbatim outranks one a substitution recovered**, across
+    /// every file rather than within one. Following a local makes EARLIER sites eligible, and
+    /// first-in-file-order then hands a type a worse expression than the one it already had —
+    /// measured, one stub that compiled stopped compiling because its new construction named a
+    /// type the stub does not import.
     public static func harvest(roots: [URL], wanted: Set<String>) -> [String: String] {
-        var found: [String: String] = [:]
+        var verbatim: [String: String] = [:]
+        var inlined: [String: String] = [:]
         for file in swiftFiles(under: roots) {
             guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
-            for (name, expression) in constructions(in: source, wanted: wanted) where found[name] == nil {
-                found[name] = expression
+            for construction in constructions(in: source, wanted: wanted) {
+                if construction.substituted {
+                    if inlined[construction.type] == nil { inlined[construction.type] = construction.expression }
+                } else if verbatim[construction.type] == nil {
+                    verbatim[construction.type] = construction.expression
+                }
             }
         }
-        return found
+        return inlined.merging(verbatim) { _, written in written }
     }
 
-    /// Every self-contained construction of a `wanted` type in `source`, in source order.
-    static func constructions(in source: String, wanted: Set<String>) -> [(String, String)] {
+    /// A construction of a wanted type, and whether a test-local had to be followed to make it
+    /// usable — the flag is what lets a verbatim site outrank a recovered one.
+    struct Construction {
+        let type: String
+        let expression: String
+        let substituted: Bool
+    }
+
+    /// Every usable construction of a `wanted` type in `source`, in source order.
+    static func constructions(in source: String, wanted: Set<String>) -> [Construction] {
         let collector = CallCollector(viewMode: .sourceAccurate)
         collector.wanted = wanted
         collector.walk(Parser.parse(source: source))
@@ -56,6 +92,66 @@ public enum ReceiverConstructionHarvester {
         let checker = FreeNameChecker(viewMode: .sourceAccurate)
         checker.walk(expression)
         return checker.isSelfContained
+    }
+
+    /// How many times a substitution pass is repeated before a chain of locals is given up on.
+    private static let substitutionRounds = 3
+
+    /// The `let` bindings visible at `node`, innermost first, as a name → expression map.
+    ///
+    /// Read out of the file's own syntax: a name is recorded only from a `let` in a block that
+    /// encloses the call and is written before it, so the expression is the one the call saw.
+    ///
+    /// ⚠ **A name an enclosing parameter binds is dropped, not resolved.** `{ pattern in
+    /// Visitor(pattern: pattern) }` means the closure's own `pattern`, and answering it with an
+    /// outer `let` of the same name would copy a construction the test did not write. A parameter
+    /// resolves nowhere in a generated file either way, so dropping it refuses the call.
+    private static func visibleBindings(before node: some SyntaxProtocol) -> [String: ExprSyntax] {
+        var bindings: [String: ExprSyntax] = [:]
+        var shadowed: Set<String> = []
+        var scope = node.parent
+        while let current = scope {
+            shadowed.formUnion(parameterNames(of: current))
+            for item in current.as(CodeBlockItemListSyntax.self) ?? [] where item.position < node.position {
+                guard let declaration = item.item.as(VariableDeclSyntax.self),
+                      declaration.bindingSpecifier.tokenKind == .keyword(.let),
+                      declaration.bindings.count == 1,
+                      let binding = declaration.bindings.first,
+                      binding.accessorBlock == nil,
+                      let name = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
+                      let value = binding.initializer?.value,
+                      bindings[name] == nil
+                else { continue }
+                bindings[name] = value
+            }
+            scope = current.parent
+        }
+        return bindings.filter { !shadowed.contains($0.key) }
+    }
+
+    /// The names `scope` binds as parameters — a closure's, or a function's or initialiser's.
+    private static func parameterNames(of scope: Syntax) -> [String] {
+        if let closure = scope.as(ClosureExprSyntax.self) {
+            switch closure.signature?.parameterClause {
+            case .simpleInput(let names): return names.map(\.name.text)
+            case .parameterClause(let clause): return clause.parameters.map { ($0.secondName ?? $0.firstName).text }
+            case nil: return []
+            }
+        }
+        if let function = scope.as(FunctionDeclSyntax.self) {
+            return function.signature.parameterClause.parameters.map { ($0.secondName ?? $0.firstName).text }
+        }
+        if let initializer = scope.as(InitializerDeclSyntax.self) {
+            return initializer.signature.parameterClause.parameters.map { ($0.secondName ?? $0.firstName).text }
+        }
+        return []
+    }
+
+    /// Whether `text` is still one complete expression. A substituted operand can need the
+    /// parentheses its own context supplied, and a construction that does not parse is worth less
+    /// than none: it is a syntax error in code the reader did not write.
+    private static func parsesCleanly(_ text: String) -> Bool {
+        !Parser.parse(source: text).hasError
     }
 
     private static func swiftFiles(under roots: [URL]) -> [URL] {
@@ -78,7 +174,7 @@ public enum ReceiverConstructionHarvester {
 
     private final class CallCollector: SyntaxVisitor {
         var wanted: Set<String> = []
-        var found: [(String, String)] = []
+        var found: [Construction] = []
 
         override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
             let callee = node.calledExpression.trimmedDescription
@@ -86,10 +182,58 @@ public enum ReceiverConstructionHarvester {
                 return .visitChildren
             }
             guard node.trailingClosure == nil, node.additionalTrailingClosures.isEmpty,
-                  node.arguments.allSatisfy({ isSelfContained($0.expression) })
+                  let construction = resolved(node, type: callee)
             else { return .visitChildren }
-            found.append((callee, node.trimmedDescription))
+            found.append(construction)
             return .visitChildren
+        }
+
+        /// The call's own text when every argument already resolves there; otherwise its text with
+        /// each test-local replaced by what it is bound to, or `nil` when a name still does not.
+        private func resolved(_ node: FunctionCallExprSyntax, type: String) -> Construction? {
+            if node.arguments.allSatisfy({ isSelfContained($0.expression) }) {
+                return Construction(type: type, expression: node.trimmedDescription, substituted: false)
+            }
+            let bindings = visibleBindings(before: node)
+            guard !bindings.isEmpty else { return nil }
+            var call = node
+            // A binding can name another, so substitute to a fixed point rather than once —
+            // bounded, because the search is over source text and a chain has no declared length.
+            for _ in 0 ..< substitutionRounds {
+                guard let next = LocalBindingInliner(bindings: bindings).rewrite(call).as(FunctionCallExprSyntax.self),
+                      next.description != call.description
+                else { return nil }
+                call = next
+                guard call.arguments.allSatisfy({ isSelfContained($0.expression) }) else { continue }
+                let text = call.trimmedDescription
+                return parsesCleanly(text) ? Construction(type: type, expression: text, substituted: true) : nil
+            }
+            return nil
+        }
+    }
+
+    /// Replaces each name a test-local `let` binds with the expression it is bound to.
+    private final class LocalBindingInliner: SyntaxRewriter {
+        private let bindings: [String: ExprSyntax]
+
+        init(bindings: [String: ExprSyntax]) {
+            self.bindings = bindings
+            super.init()
+        }
+
+        override func visit(_ node: DeclReferenceExprSyntax) -> ExprSyntax {
+            guard let value = bindings[node.baseName.text] else { return super.visit(node) }
+            return value.trimmed
+                .with(\.leadingTrivia, node.leadingTrivia)
+                .with(\.trailingTrivia, node.trailingTrivia)
+        }
+
+        /// Only the BASE of `rule.pattern` is a name of its own. The member half is visited by
+        /// nobody, rather than by a check that has to recognise it — a local called `pattern`
+        /// must not rewrite the `.pattern` in someone else's chain.
+        override func visit(_ node: MemberAccessExprSyntax) -> ExprSyntax {
+            guard let base = node.base else { return ExprSyntax(node) }
+            return ExprSyntax(node.with(\.base, visit(base)))
         }
     }
 
@@ -100,7 +244,10 @@ public enum ReceiverConstructionHarvester {
         override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
             // A member (`.pattern`, `Rule().pattern`) is spelled by its base, which is checked on
             // its own; a bare lowercase name is a local the generated file has no binding for.
-            if node.parent?.is(MemberAccessExprSyntax.self) == true { return .skipChildren }
+            // ⚠ Only the MEMBER half is spelled that way. A base is a name in its own right, and
+            // both halves are children of the same `MemberAccessExprSyntax`, so asking whether the
+            // parent is one waved `pattern.category` through as if it were `Rule().pattern`.
+            if node.parent?.as(MemberAccessExprSyntax.self)?.declName.id == node.id { return .skipChildren }
             let text = node.baseName.text
             if let first = text.first, first.isLowercase { isSelfContained = false }
             return .visitChildren
