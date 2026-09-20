@@ -108,6 +108,11 @@ extension InteractiveTriage {
             callee: parsed, evidence: evidence, receiverExpression: receiverExpression
         )
         let callee = constructed ?? parsed
+        // ⚠ **The LABEL stays the parsed signature.** A constructed receiver's qualifier is an
+        // expression — `File(name: "test", …)` — and the label is spliced into a string literal,
+        // so using the constructed one emitted `expected ',' separator` on 42 stubs across five
+        // repositories (2026-09-20 census). The reader wants `canWrite(user:)` there anyway.
+        let failureLabel = "\(parsed.displaySignature) failed totality"
         let argumentTypes = constructed == nil ? parsedTypes : Array(parsedTypes.dropFirst())
         let seed = SamplingSeed.derive(from: suggestion.identity)
         return LiftedTestEmitter.total(
@@ -120,7 +125,8 @@ extension InteractiveTriage {
             // generators were built from; they just never reached the property closure.
             argumentTypes: argumentTypes,
             // Parameter positions, shifted past the receiver an instance method draws first.
-            inoutArguments: Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) })
+            inoutArguments: Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) }),
+            failureLabel: failureLabel
         )
     }
 

@@ -75,7 +75,8 @@ extension LiftedTestEmitter {
         isThrowing: Bool,
         isAsync: Bool,
         argumentTypes: [String] = [],
-        inoutArguments: Set<Int> = []
+        inoutArguments: Set<Int> = [],
+        failureLabel: String? = nil
     ) -> String {
         let testFunctionName = "\(callee.bareName)_isTotal"
         let isTuple = generators.count > 1
@@ -100,7 +101,7 @@ extension LiftedTestEmitter {
             seed: seed,
             sampleExpression: totalitySample(generators: generators),
             propertyExpression: property,
-            failureLabel: "\(callee.displaySignature) failed totality"
+            failureLabel: failureLabel ?? "\(callee.displaySignature) failed totality"
         )
     }
 

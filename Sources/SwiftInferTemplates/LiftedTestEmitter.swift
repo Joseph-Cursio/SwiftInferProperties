@@ -349,7 +349,7 @@ extension LiftedTestEmitter {
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "\(failureLabel) at input \\(input). \\(error?.message ?? "")"
+                    "\(escapedForLiteral(failureLabel)) at input \\(input). \\(error?.message ?? "")"
                 )
             }
         }
