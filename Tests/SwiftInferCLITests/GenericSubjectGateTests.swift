@@ -86,6 +86,50 @@ struct GenericSubjectGateTests {
         ) == nil)
     }
 
+    // MARK: - An opaque parameter, which is a type parameter in sugar
+
+    /// `func isTopLevel(_ decl: some SyntaxProtocol) -> Bool` — SwiftProjectLint
+    /// `MultipleTypesPerFileVisitor`, one of **10 stubs that emitted `some SyntaxProtocol.gen()`**
+    /// and failed with `expected ',' separator`: a SYNTAX error, so the derivation-reason
+    /// marker beside it was never read.
+    @Test("an opaque parameter is withdrawn, and the spelling is reported")
+    func opaqueParameterIsWithdrawn() throws {
+        let reason = try #require(GenericSubjectGate.declineReason(
+            for: suggestion(
+                display: "isTopLevel(_:)",
+                parameterTypes: ["some SyntaxProtocol"],
+                owner: "MultipleTypesPerFileVisitor"
+            ),
+            genericParametersByName: [:]
+        ))
+        #expect(reason.contains("some SyntaxProtocol"))
+        #expect(reason.contains("opaque"))
+    }
+
+    /// ⚠ **`any P` names a real type and is deliberately NOT gated.** An existential a stub can
+    /// spell but has no generator for is an ordinary missing generator, and withdrawing it would
+    /// cost a law the gate has no argument for taking.
+    @Test("an existential parameter is not gated")
+    func existentialIsNotGated() {
+        #expect(GenericSubjectGate.declineReason(
+            for: suggestion(
+                display: "accepts(_:)",
+                parameterTypes: ["any SyntaxProtocol"],
+                owner: "Checker"
+            ),
+            genericParametersByName: [:]
+        ) == nil)
+    }
+
+    /// The token must be the keyword, not a substring — `Handsome` is an ordinary type name.
+    @Test("a type whose name merely contains the letters some is not gated")
+    func substringIsNotGated() {
+        #expect(GenericSubjectGate.declineReason(
+            for: suggestion(display: "check(_:)", parameterTypes: ["HandsomeValue"], owner: "Checker"),
+            genericParametersByName: [:]
+        ) == nil)
+    }
+
     // MARK: - A generic function's own parameters (#497)
 
     /// The exhibit from #497, scanned rather than hand-built, so the test covers the scanner and
