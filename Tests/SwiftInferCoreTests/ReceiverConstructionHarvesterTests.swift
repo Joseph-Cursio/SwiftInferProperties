@@ -11,9 +11,10 @@ struct ReceiverConstructionHarvesterTests {
         let other = RetroactiveConformanceVisitor(pattern: RetroactiveConformance().pattern)
         let pattern = makePattern()
         let local = TooManyEnvironmentObjectsVisitor(pattern: pattern)
+        let chained = ChainedVisitor(pattern: pattern.category)
         let literal = Budget(limit: 10, name: "x")
         let closure = WalkingVisitor(viewMode: .sourceAccurate) { $0 }
-        _ = (visitor, other, local, literal, closure)
+        _ = (visitor, other, local, chained, literal, closure)
     }
     """
 
@@ -37,6 +38,14 @@ struct ReceiverConstructionHarvesterTests {
     @Test("a construction naming a test-local is refused")
     func localsRefused() {
         #expect(Self.constructions(["TooManyEnvironmentObjectsVisitor"]).isEmpty)
+    }
+
+    /// ⚠ **Both halves of `pattern.category` hang off one `MemberAccessExprSyntax`**, so a check
+    /// asking only whether the parent is one waved the BASE through as if it were the member of
+    /// `Rule().pattern`.
+    @Test("a member chain rooted at a test-local is refused")
+    func localRootedChainRefused() {
+        #expect(Self.constructions(["ChainedVisitor"]).isEmpty)
     }
 
     /// A trailing closure is a body the tool would be inventing semantics for.

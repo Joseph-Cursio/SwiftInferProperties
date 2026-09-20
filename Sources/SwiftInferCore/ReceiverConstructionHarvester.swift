@@ -100,7 +100,10 @@ public enum ReceiverConstructionHarvester {
         override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
             // A member (`.pattern`, `Rule().pattern`) is spelled by its base, which is checked on
             // its own; a bare lowercase name is a local the generated file has no binding for.
-            if node.parent?.is(MemberAccessExprSyntax.self) == true { return .skipChildren }
+            // ⚠ Only the MEMBER half is spelled that way. A base is a name in its own right, and
+            // both halves are children of the same `MemberAccessExprSyntax`, so asking whether the
+            // parent is one waved `pattern.category` through as if it were `Rule().pattern`.
+            if node.parent?.as(MemberAccessExprSyntax.self)?.declName.id == node.id { return .skipChildren }
             let text = node.baseName.text
             if let first = text.first, first.isLowercase { isSelfContained = false }
             return .visitChildren
