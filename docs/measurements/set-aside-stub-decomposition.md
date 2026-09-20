@@ -42,6 +42,36 @@ measurable return.
 ⚠ **The 5 that report `private` with no access note in their header** are a different symbol — a
 helper or a nested type the law reaches, not the subject the header is about. Not traced.
 
+## The 42 were widened, and every one converted
+
+[SwiftProjectLint #243](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/243) widened exactly
+the 42 — `private func` → `func`, 42 insertions and 42 deletions across 20 files, no signature
+touched. Re-run on the same census binary, subject `f93d9edf` → `fbf82dc9`:
+
+| | before | after |
+|---|---:|---:|
+| seeds / named / stub file written | 1,029 / 746 / 424 | identical |
+| **stub compiles** | **253** | **295** |
+| **law passes** | **250** | **292** |
+
+**+42 compiles and +42 passes, from 42 widenings.** 42 stubs freed, **0 newly set aside, 0 reasons
+changed**, and every other cause identical to the digit: no generator 61, a type not in scope 58, a
+syntax error 2, other 3.
+
+✅ **The ordering rule predicted the conversion exactly.** Its claim is that widening pays only
+where derivation has already landed, and selecting on *the compiler reports access first* is a
+sound test of that — none of the 42 hit a further blocker, where the 137-widening cycle that
+preceded the receiver generator converted 1.
+
+✅ **And it confirms the five.** The `private` bucket went **47 → 5**, and the 5 that remain are
+exactly the ones flagged below as reporting a protection-level error with no access note in their
+header — a different symbol, not the subject. They did not move, because nothing about the subject
+was what stopped them.
+
+⚠ **A pass still means no counterexample in 100 draws.** The 42 new passes are `predicate` totality
+over syntax nodes, the arm `template-refutation-rates.md` measures at **0 refutations of 102**.
+What they establish is that these helpers do not crash on realistic Swift.
+
 ## The import fix buys zero compiles here, and that is the finding
 
 The receiver-construction work
