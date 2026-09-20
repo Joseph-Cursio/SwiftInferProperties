@@ -82,10 +82,17 @@ public enum ReceiverConstructionHarvester {
     ///
     /// Read out of the file's own syntax: a name is recorded only from a `let` in a block that
     /// encloses the call and is written before it, so the expression is the one the call saw.
+    ///
+    /// ⚠ **A name an enclosing parameter binds is dropped, not resolved.** `{ pattern in
+    /// Visitor(pattern: pattern) }` means the closure's own `pattern`, and answering it with an
+    /// outer `let` of the same name would copy a construction the test did not write. A parameter
+    /// resolves nowhere in a generated file either way, so dropping it refuses the call.
     private static func visibleBindings(before node: some SyntaxProtocol) -> [String: ExprSyntax] {
         var bindings: [String: ExprSyntax] = [:]
+        var shadowed: Set<String> = []
         var scope = node.parent
         while let current = scope {
+            shadowed.formUnion(parameterNames(of: current))
             for item in current.as(CodeBlockItemListSyntax.self) ?? [] where item.position < node.position {
                 guard let declaration = item.item.as(VariableDeclSyntax.self),
                       declaration.bindingSpecifier.tokenKind == .keyword(.let),
@@ -100,7 +107,25 @@ public enum ReceiverConstructionHarvester {
             }
             scope = current.parent
         }
-        return bindings
+        return bindings.filter { !shadowed.contains($0.key) }
+    }
+
+    /// The names `scope` binds as parameters — a closure's, or a function's or initialiser's.
+    private static func parameterNames(of scope: Syntax) -> [String] {
+        if let closure = scope.as(ClosureExprSyntax.self) {
+            switch closure.signature?.parameterClause {
+            case .simpleInput(let names): return names.map(\.name.text)
+            case .parameterClause(let clause): return clause.parameters.map { ($0.secondName ?? $0.firstName).text }
+            case nil: return []
+            }
+        }
+        if let function = scope.as(FunctionDeclSyntax.self) {
+            return function.signature.parameterClause.parameters.map { ($0.secondName ?? $0.firstName).text }
+        }
+        if let initializer = scope.as(InitializerDeclSyntax.self) {
+            return initializer.signature.parameterClause.parameters.map { ($0.secondName ?? $0.firstName).text }
+        }
+        return []
     }
 
     /// Whether `text` is still one complete expression. A substituted operand can need the

@@ -42,6 +42,16 @@ struct ReceiverConstructionHarvesterTests {
         let pattern = makePattern()
         return MysteryVisitor(pattern: pattern)
     }
+
+    private func makeShadowed() -> [ShadowVisitor] {
+        let pattern = Shadow().pattern
+        _ = pattern
+        return categories.map { pattern in ShadowVisitor(pattern: pattern) }
+    }
+
+    private func makeParameterised(pattern: SyntaxPattern) -> ParameterVisitor {
+        return ParameterVisitor(pattern: pattern)
+    }
     """
 
     private static func resolved(_ wanted: Set<String>) -> [String: String] {
@@ -115,6 +125,20 @@ struct ReceiverConstructionHarvesterTests {
     @Test("a local whose own binding does not resolve is still refused")
     func unresolvableBindingRefused() {
         #expect(Self.resolved(["MysteryVisitor"]).isEmpty)
+    }
+
+    /// ⚠ **The shadow is what inlining newly makes dangerous.** `{ pattern in … }` means the
+    /// closure's own `pattern`, and answering it with the outer `let` a few lines up would copy a
+    /// construction the test never wrote.
+    @Test("a name an enclosing closure parameter binds is not resolved to an outer let")
+    func closureParameterNotInlined() {
+        #expect(Self.resolved(["ShadowVisitor"]).isEmpty)
+    }
+
+    /// A parameter resolves nowhere in a generated file, whether or not a `let` shares its name.
+    @Test("a name bound by the enclosing function's parameter is refused")
+    func functionParameterRefused() {
+        #expect(Self.resolved(["ParameterVisitor"]).isEmpty)
     }
 
     @Test("only the wanted types are collected")
