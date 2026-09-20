@@ -48,19 +48,38 @@ import SwiftSyntax
 public enum ReceiverConstructionHarvester {
 
     /// Construction expressions by the type they build, for `wanted` types only.
+    ///
+    /// ⚠ **A construction the test wrote verbatim outranks one a substitution recovered**, across
+    /// every file rather than within one. Following a local makes EARLIER sites eligible, and
+    /// first-in-file-order then hands a type a worse expression than the one it already had —
+    /// measured, one stub that compiled stopped compiling because its new construction named a
+    /// type the stub does not import.
     public static func harvest(roots: [URL], wanted: Set<String>) -> [String: String] {
-        var found: [String: String] = [:]
+        var verbatim: [String: String] = [:]
+        var inlined: [String: String] = [:]
         for file in swiftFiles(under: roots) {
             guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
-            for (name, expression) in constructions(in: source, wanted: wanted) where found[name] == nil {
-                found[name] = expression
+            for construction in constructions(in: source, wanted: wanted) {
+                if construction.substituted {
+                    if inlined[construction.type] == nil { inlined[construction.type] = construction.expression }
+                } else if verbatim[construction.type] == nil {
+                    verbatim[construction.type] = construction.expression
+                }
             }
         }
-        return found
+        return inlined.merging(verbatim) { _, written in written }
     }
 
-    /// Every self-contained construction of a `wanted` type in `source`, in source order.
-    static func constructions(in source: String, wanted: Set<String>) -> [(String, String)] {
+    /// A construction of a wanted type, and whether a test-local had to be followed to make it
+    /// usable — the flag is what lets a verbatim site outrank a recovered one.
+    struct Construction {
+        let type: String
+        let expression: String
+        let substituted: Bool
+    }
+
+    /// Every usable construction of a `wanted` type in `source`, in source order.
+    static func constructions(in source: String, wanted: Set<String>) -> [Construction] {
         let collector = CallCollector(viewMode: .sourceAccurate)
         collector.wanted = wanted
         collector.walk(Parser.parse(source: source))
@@ -155,7 +174,7 @@ public enum ReceiverConstructionHarvester {
 
     private final class CallCollector: SyntaxVisitor {
         var wanted: Set<String> = []
-        var found: [(String, String)] = []
+        var found: [Construction] = []
 
         override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
             let callee = node.calledExpression.trimmedDescription
@@ -163,16 +182,18 @@ public enum ReceiverConstructionHarvester {
                 return .visitChildren
             }
             guard node.trailingClosure == nil, node.additionalTrailingClosures.isEmpty,
-                  let expression = resolved(node)
+                  let construction = resolved(node, type: callee)
             else { return .visitChildren }
-            found.append((callee, expression))
+            found.append(construction)
             return .visitChildren
         }
 
         /// The call's own text when every argument already resolves there; otherwise its text with
         /// each test-local replaced by what it is bound to, or `nil` when a name still does not.
-        private func resolved(_ node: FunctionCallExprSyntax) -> String? {
-            if node.arguments.allSatisfy({ isSelfContained($0.expression) }) { return node.trimmedDescription }
+        private func resolved(_ node: FunctionCallExprSyntax, type: String) -> Construction? {
+            if node.arguments.allSatisfy({ isSelfContained($0.expression) }) {
+                return Construction(type: type, expression: node.trimmedDescription, substituted: false)
+            }
             let bindings = visibleBindings(before: node)
             guard !bindings.isEmpty else { return nil }
             var call = node
@@ -185,7 +206,7 @@ public enum ReceiverConstructionHarvester {
                 call = next
                 guard call.arguments.allSatisfy({ isSelfContained($0.expression) }) else { continue }
                 let text = call.trimmedDescription
-                return parsesCleanly(text) ? text : nil
+                return parsesCleanly(text) ? Construction(type: type, expression: text, substituted: true) : nil
             }
             return nil
         }

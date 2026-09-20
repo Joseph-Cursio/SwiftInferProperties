@@ -1,3 +1,4 @@
+import Foundation
 @testable import SwiftInferCore
 import Testing
 
@@ -52,18 +53,47 @@ struct ReceiverConstructionHarvesterTests {
     private func makeParameterised(pattern: SyntaxPattern) -> ParameterVisitor {
         return ParameterVisitor(pattern: pattern)
     }
+
+    private func makeRankedEarly() -> RankedVisitor {
+        let pattern = Recovered().pattern
+        return RankedVisitor(pattern: pattern)
+    }
+
+    private func makeRankedLate() -> RankedVisitor {
+        return RankedVisitor(pattern: Verbatim().pattern)
+    }
     """
 
+    /// Through `harvest`, not through `constructions` — the ranking these tests are about lives
+    /// in `harvest`, and a mirror of it here would be free to drift from the one that ships.
     private static func resolved(_ wanted: Set<String>) -> [String: String] {
-        Dictionary(ReceiverConstructionHarvester.constructions(in: helpers, wanted: wanted)) { first, _ in
-            first
-        }
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("receiver-constructions-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try? helpers.write(to: directory.appendingPathComponent("Helpers.swift"), atomically: true, encoding: .utf8)
+        return ReceiverConstructionHarvester.harvest(roots: [directory], wanted: wanted)
     }
 
     private static func constructions(_ wanted: Set<String>) -> [String: String] {
-        Dictionary(ReceiverConstructionHarvester.constructions(in: source, wanted: wanted)) { first, _ in
-            first
+        map(ReceiverConstructionHarvester.constructions(in: source, wanted: wanted))
+    }
+
+    /// `harvest`'s ranking, over one file: a verbatim construction beats a recovered one, and
+    /// within each kind the first in source order wins.
+    private static func map(
+        _ found: [ReceiverConstructionHarvester.Construction]
+    ) -> [String: String] {
+        var verbatim: [String: String] = [:]
+        var inlined: [String: String] = [:]
+        for construction in found {
+            if construction.substituted {
+                if inlined[construction.type] == nil { inlined[construction.type] = construction.expression }
+            } else if verbatim[construction.type] == nil {
+                verbatim[construction.type] = construction.expression
+            }
         }
+        return inlined.merging(verbatim) { _, written in written }
     }
 
     @Test("a construction of only literals, enum cases and types is kept")
@@ -139,6 +169,14 @@ struct ReceiverConstructionHarvesterTests {
     @Test("a name bound by the enclosing function's parameter is refused")
     func functionParameterRefused() {
         #expect(Self.resolved(["ParameterVisitor"]).isEmpty)
+    }
+
+    /// ⚠ **The regression this ranking exists for, measured**: following a local makes EARLIER
+    /// sites eligible, so first-in-source-order handed a type a recovered expression in place of
+    /// the verbatim one it already had, and a stub that compiled stopped compiling.
+    @Test("a verbatim construction outranks a recovered one written later")
+    func verbatimOutranksRecovered() {
+        #expect(Self.resolved(["RankedVisitor"])["RankedVisitor"] == "RankedVisitor(pattern: Verbatim().pattern)")
     }
 
     @Test("only the wanted types are collected")
