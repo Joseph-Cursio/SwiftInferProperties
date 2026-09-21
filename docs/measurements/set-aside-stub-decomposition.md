@@ -72,6 +72,40 @@ was what stopped them.
 over syntax nodes, the arm `template-refutation-rates.md` measures at **0 refutations of 102**.
 What they establish is that these helpers do not crash on realistic Swift.
 
+## Replicated on a second subject: 6 of 8, and the rule survives the miss
+
+42 of 42 is one package, and SwiftProjectLint is an unusual one — a Swift analyser whose subjects
+are syntax visitors. **SwiftUMLStudio is the second subject.** The same selection — *the compiler
+reports access first, and the stub's own header confirms the subject is private* — picks **8**
+declarations there ([#46](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/46), 950 tests
+unchanged).
+
+| | before | after |
+|---|---:|---:|
+| stubs | 43 | 43 |
+| **compiles** | **13** | **19** |
+| **passes** | **11** | **16** |
+
+**6 of 8 converted, against 42 of 42.** Six freed, none newly set aside, and **both misses are
+defects in `swift-infer`, not in the selection**:
+
+- `CoreDataModelExtractor.contentsURL` — the subject `throws`, and **the emitted stub calls it
+  without `try`**: `call can throw, but it is not marked with 'try'`.
+- `DagreLayoutEngine.fallbackLayout` — `idempotence` was proposed over `LayoutGraph`, which is
+  **not `Equatable`**, so the law cannot state itself: `referencing operator function '==' on
+  'Equatable' requires…`. `UnverifiableCause.carrierNotEquatable` exists for exactly this and did
+  not fire.
+
+✅ **So the rule held and the promise did not, which is the distinction this page already drew**:
+*that is a claim about what the compiler now REPORTS, never a promise of N compiles — a widened
+subject can fail on the next thing behind it.* Both of these did, and **both were invisible until
+access stopped hiding them** — #499's mechanism at a third site.
+
+⚠ **Read the rate as 48 of 50 across two subjects, not as 100% and then 75%.** The two misses are
+one throwing-subject defect and one gate that failed to fire; neither is a property of the
+selection, and neither would have been found without the widenings. **A second subject was worth
+it for the two defects alone.**
+
 ## The import fix buys zero compiles here, and that is the finding
 
 The receiver-construction work
