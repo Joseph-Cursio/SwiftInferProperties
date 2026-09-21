@@ -61,8 +61,23 @@ fields must be generator-derivable, and conformance does not imply it.* turf-swi
 case — 14 types in the intersection, and the coordinate every one of them is built from belongs to
 Apple.
 
-**0 of 9 reaching the build stage is the same reading swift-system gave at 0 of 41**, which §6.1
-records as *itself the signal that the chain was long*. Stopped there.
+⚠ **This page first wrote that as *0 of 9 reaching the build stage*, which is wrong, and wrong in
+exactly the way §6.1's last warning names.** All 9 stubs **reached** the build stage — they were
+compiled and failed. **Zero compiled.** swift-system's `0 of 41` was zero *reaching* it, so the two
+are not the same reading and turf-swift is the better of them on that axis.
+
+**Under the reading this decision rests on — rows reaching a VERDICT — turf-swift is 0 of 59.**
+Under *rows reaching the build stage* it is 9 of 59. §6.1 records that these differ by 3× on
+OpenAPIKit and that **which one the threshold means is unresolved**; this page names its reading
+rather than inheriting the ambiguity. Stopped on the verdict reading.
+
+✅ **And there is an argument for resolving it that way, not merely a preference.** *Reaching the
+build stage* means only that a stub was emitted and handed to the compiler — it says nothing about
+whether it compiled. **All 9 of turf-swift's stubs reached it and all 9 failed**, so on that metric
+a subject scores for producing code that does not build. **That is also exactly why the two
+readings diverge 3× on OpenAPIKit**: the gap between them IS the rows that reached the compiler and
+were rejected by it. A threshold that counts those as progress is measuring the emitter's
+willingness, not the subject's reach. Proposed for §6.1, which currently leaves the choice open.
 
 ## ⚠ Two readings that were NOT the subject, and the distinction matters
 
@@ -98,7 +113,7 @@ number is what §6.1 means by *A-reach's length is a property of the subject*.
 ## What would change the answer
 
 - **A generator for a small set of framework value types** — `CLLocationCoordinate2D` is two
-  `Double`s and would turn turf-swift from 0 of 9 into a real reading. That is a kit question, and
+  `Double`s and would turn turf-swift from 0 verdicts into a real reading. That is a kit question, and
   it is the first time a *named* subject has been blocked on a *nameable* framework type rather
   than on a long tail.
 - **A wider slice of the ranking**, which needs paging the search rather than sampling it.
