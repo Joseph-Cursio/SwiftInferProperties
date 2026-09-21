@@ -67,17 +67,38 @@ also evidence the behaviour is *intended*, which is exactly the ground on which 
 maintainer ruled `OpenAPI.XML` not a defect. **Not adjudicated here**, and not added to the tally:
 the tally moves on a hand-check, not on a shape match.
 
-## Shape B went 0 → 7, and that is the real movement
+## Shape B went 0 → 6 and then to 0 on a hand-check
 
-The shape the manifest could not witness at all exists here: **7 sites across two subjects**,
-4 in mcp-swift-sdk and 3 in swift-docc. That is the clearest vindication of §2's *the corpus cannot
-answer this* — a zero that meant *absent from Apple-adjacent library code*, not *absent*.
+The shape the manifest could not witness appeared to exist here — 6 sites across two subjects
+after two instrument fixes, 4 in mcp-swift-sdk and 2 in swift-docc. **Read one by one, none of
+them is real.**
 
-⚠ **They are NOT hand-checked, and the count is a population, not a finding.** The one read
-closely — mcp-swift-sdk's prompt-content decoder — writes `encodeIfPresent(mimeType,…)` while a
-branch of its decoder requires `.mimeType`, so a value with no mime type would encode and fail to
-decode. Whether that value is constructible through the type's API is the hand-check, and it was
-not done.
+### Hand-checked: 6 of 6 FALSE, and Shape B is refuted as a detector
+
+Every site was read. **Not one is an asymmetry any type has**, and a seventh — swift-docc's
+`LinkDestinationSummary.platforms` — was an artifact of this census's own regex, found while
+checking it. Four distinct false-positive modes, two of them beyond what a call-name proxy can
+see:
+
+| mode | sites | mechanism |
+|---|---:|---|
+| **cross-ARM in a discriminated union** | 3 | `Content` encodes `mimeType` required in `.image`/`.audio` and `encodeIfPresent` in `.resourceLink` — and decodes them `decode` and `decodeIfPresent` to match. **Every arm is internally consistent**; the proxy pairs keys across arms of one type |
+| **`encodeIfPresent` on a NON-OPTIONAL value** | 3 | `Elicitation`'s `requestedSchema` is `RequestSchema`, `RenderAttribute`'s payloads are `String`. Swift promotes `T` to `T?` at the call site, so the key is **always** written |
+| cross-TYPE in one file | 5 | fixed before publishing; `DocumentInfo.swift` declares `Contact`, `License` and `Info` together |
+| a regex spanning a parenthesis | 1 | `decode(SourceLanguage.self)` and a later `decodeIfPresent(…, forKey: .platforms)` read as one call |
+
+⚠ **The first two are the same missing capability the original census named**: *detecting that
+needs the property's optionality, not just the call name*. It recorded this as a reason Shape B
+would **undercount**; measured, it is why Shape B **overcounts**, and on this population it
+overcounts to the point of being all it does.
+
+**So Shape B has 0 real sites in 219 hand-written encoders across the four richest subjects
+known** — a precision of 0 of 6 on the sites it reported, or 0 of 12 before two instrument fixes.
+
+⚠ **This CORRECTS the reading published hours earlier in this same document**, which called Shape
+B *the real movement* and *the one worth pursuing* on the strength of the count alone. A shape
+census sizes a population; it was the hand-check that said what the population was, and the
+answer is nothing.
 
 ## ⚠ An instrument error, caught by reading a hit rather than by the control
 
@@ -97,18 +118,20 @@ tests the rest — which is why the hits are printed rather than only counted.
 - **The template split stays unproposed.** Shape A yields one new candidate across the four richest
   subjects known, and two of its four matches are irreducible `Any` erasure. Splitting
   `codable-round-trip` on this would rest on a population of one.
-- **Shape B is now the one worth pursuing**, and it inverts the original census's emphasis: the
-  sharp signal was Shape A, but Shape A is rare *and* imprecise here, while Shape B has 7 sites in
-  the two subjects most like the code these findings come from.
+- **Shape B is refuted as a detector on this population**, 0 real of 6. The original census called
+  Shape A the sharp signal and that survives — Shape A is rare and imprecise, but its matches are
+  at least *about* the thing; Shape B's are not. A call-name proxy cannot see an enum's arms or a
+  payload's optionality, and both are needed before its matches mean anything.
 - ⚠ **Nothing here moves the tally**, which stays **3 real of 42**. A shape census sizes a
   population; only a hand-check makes a finding.
 
 ## What would refute this
 
-- **Hand-checking the 7 Shape B sites and finding none reachable**, which would make Shape B a
-  syntactic coincidence in schema code rather than a lead.
-- **A fifth exhibit subject with a dense Shape A population**, which would make the 1-of-4-minus-2
-  reading here a property of these four subjects rather than of the shape.
+- **A fifth exhibit subject with a dense Shape A population**, which would make the
+  1-of-4-minus-2 reading here a property of these four subjects rather than of the shape.
+- **An arm-aware, optionality-aware Shape B finding real sites** where the call-name proxy found
+  none. That is a different instrument, and the 0-of-6 here says nothing about what it would read —
+  only that this proxy's matches are all explained by something else.
 
 ## Reproducing
 
