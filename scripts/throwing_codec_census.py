@@ -19,6 +19,13 @@ that can throw is a type admitting values it cannot serialise. That is `UserDete
 **Shape B — `encodeIfPresent` on a key `decode` requires.** The encoder may omit the key and the
 decoder demands it.
 
+⚠ **Shape B is REFUTED as a detector on the exhibit subjects: 0 real of 6 hand-checked.** Two of
+its false-positive modes are beyond a call-name proxy and are NOT fixed here — a discriminated
+union whose arms each pair consistently but share a coding key, and `encodeIfPresent` applied to a
+NON-OPTIONAL value, which always writes because Swift promotes `T` to `T?` at the call site.
+Its count is kept because the hit list is what a future arm-aware version would be checked
+against; **do not read it as a population.**
+
 ⚠ **Both are FLOORS, as the original census recorded.** Neither reaches a codec that throws
 through a helper, and Shape B's proxy misses the `encode`-writes-null form that its own exhibit
 (`CatalogFeatureFlags`) actually uses — catching that needs the property's optionality, not the
@@ -125,11 +132,11 @@ def shapes(text):
     for _, decoded, position in _bodies(text, DECODER):
         owner = _owner(spans, position)
         required_by_type.setdefault(owner, set()).update(
-            re.findall(r"(?<!IfPresent)\bdecode\s*\([^,]+,\s*forKey:\s*\.(\w+)", decoded))
+            re.findall(r"(?<!IfPresent)\bdecode\s*\([^,()]+,\s*forKey:\s*\.(\w+)", decoded))
     shape_b = 0
     for _, body, position in _bodies(text, ENCODER):
         owner = _owner(spans, position)
-        omitted = set(re.findall(r"encodeIfPresent\s*\([^,]+,\s*forKey:\s*\.(\w+)", body))
+        omitted = set(re.findall(r"encodeIfPresent\s*\([^,()]+,\s*forKey:\s*\.(\w+)", body))
         shape_b += len(omitted & required_by_type.get(owner, set()))
     return encoders, decoders, shape_a, shape_b
 
@@ -179,6 +186,25 @@ struct Requirer: Codable {
 }
 """
 
+# ⚠ A key-matching regex whose argument span crosses a PARENTHESIS can start in one call and
+# finish in a later one. Here `decode(SourceLanguage.self)` and a following `decodeIfPresent(…,
+# forKey: .platforms)` were read as one required decode of `.platforms`, in swift-docc.
+CONTROL_SPAN = """
+struct Spanning: Codable {
+    var platforms: [String]?
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(platforms, forKey: .platforms)
+    }
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        var nested = try container.nestedUnkeyedContainer(forKey: .languages)
+        _ = try nested.decode(String.self)
+        platforms = try container.decodeIfPresent([String].self, forKey: .platforms)
+    }
+}
+"""
+
 CONTROL_NEITHER = """
 struct Ordinary: Codable {
     var name: String
@@ -202,6 +228,7 @@ def control():
         ("Shape B detected", shapes(CONTROL_B)[3] == 1),
         ("Shape B does not fire on an ordinary codec", shapes(CONTROL_NEITHER)[3] == 0),
         ("Shape B does not pair ACROSS types in one file", shapes(CONTROL_TWO_TYPES)[3] == 0),
+        ("Shape B does not span a parenthesis into a later call", shapes(CONTROL_SPAN)[3] == 0),
         # The denominator has to be right too, or a zero is unreadable either way.
         ("an encoder is counted", shapes(CONTROL_NEITHER)[0] == 1),
         ("a decoder is counted", shapes(CONTROL_NEITHER)[1] == 1),
