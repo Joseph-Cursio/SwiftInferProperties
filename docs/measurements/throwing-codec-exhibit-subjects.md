@@ -100,6 +100,32 @@ B *the real movement* and *the one worth pursuing* on the strength of the count 
 census sizes a population; it was the hand-check that said what the population was, and the
 answer is nothing.
 
+### Rebuilt arm-aware, and it reproduces the hand-check unaided
+
+Shape B was rebuilt to pair an encoder with a decoder on the **same type, the same arm**, and only
+where the encoded value is **actually optional**. Arms are paired by the discriminator an encoder
+arm *writes* (`encode("image", forKey: .type)`) against the literal a decoder arm is *labelled*
+with (`case "image":`).
+
+**It reports 0 across all four subjects** — the same answer the hand-check reached by reading, now
+reached mechanically.
+
+⚠ **A zero is only worth as much as the proof the detector can still say one**, which is the trap
+`module-state-base-rate.md` shipped once and this census has now nearly repeated twice. Three
+controls were added to separate *discriminating* from *blind*, and all three are asserted before
+any subject figure is printed:
+
+| control | asserts |
+|---|---|
+| **still fires when the arms are paired** | a union whose *own* arm omits a key that same arm's decoder requires → **1** |
+| does not pair across arms of one union | the mcp-swift-sdk shape reduced → **0** |
+| ignores `encodeIfPresent` on a non-optional | the `requestedSchema` / `RenderAttribute` shape → **0** |
+
+⚠ **The count is now a FLOOR.** An arm whose discriminator cannot be read is skipped, because this
+shape's measured failure mode is overcounting and the conservative direction is the one that keeps
+a reported site worth reading. A real asymmetry in a union that discriminates some other way would
+be missed.
+
 ## ⚠ An instrument error, caught by reading a hit rather than by the control
 
 **The first run of this census read Shape B as 12.** The pairing was scoped to the *file*, so
@@ -118,10 +144,10 @@ tests the rest — which is why the hits are printed rather than only counted.
 - **The template split stays unproposed.** Shape A yields one new candidate across the four richest
   subjects known, and two of its four matches are irreducible `Any` erasure. Splitting
   `codable-round-trip` on this would rest on a population of one.
-- **Shape B is refuted as a detector on this population**, 0 real of 6. The original census called
-  Shape A the sharp signal and that survives — Shape A is rare and imprecise, but its matches are
-  at least *about* the thing; Shape B's are not. A call-name proxy cannot see an enum's arms or a
-  payload's optionality, and both are needed before its matches mean anything.
+- **Shape B's call-name proxy is refuted, 0 real of 6 — and the rebuilt detector agrees, reporting
+  0 from the other direction.** A proxy cannot see an enum's arms or a payload's optionality, and
+  both are needed before a match means anything. With both, the population on these four subjects
+  is **zero**, which is a measurement rather than a limitation.
 - ⚠ **Nothing here moves the tally**, which stays **3 real of 42**. A shape census sizes a
   population; only a hand-check makes a finding.
 
@@ -129,9 +155,8 @@ tests the rest — which is why the hits are printed rather than only counted.
 
 - **A fifth exhibit subject with a dense Shape A population**, which would make the
   1-of-4-minus-2 reading here a property of these four subjects rather than of the shape.
-- **An arm-aware, optionality-aware Shape B finding real sites** where the call-name proxy found
-  none. That is a different instrument, and the 0-of-6 here says nothing about what it would read —
-  only that this proxy's matches are all explained by something else.
+- **A subject where the arm-aware detector fires.** It is now built and proven to discriminate, so
+  a site it reports is worth reading; these four subjects simply have none.
 
 ## Reproducing
 
