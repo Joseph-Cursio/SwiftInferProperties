@@ -252,28 +252,74 @@ def mutants(source, span):
 
 # ---------------------------------------------------------------- probe and budget clones
 
-def wrap_subject_calls(line, subjects, tag):
-    """Wrap every call (or member access) of a subject in `line` in `__mutationProbe`."""
-    masked, _ = mask(line)
+def matching_back(masked, close_index):
+    """Index of the opener balancing the `)` or `]` at `close_index`."""
+    opener = {")": "(", "]": "["}[masked[close_index]]
+    depth = 0
+    for index in range(close_index, -1, -1):
+        if masked[index] == masked[close_index]:
+            depth += 1
+        elif masked[index] == opener:
+            depth -= 1
+            if depth == 0:
+                return index
+    raise ValueError("unbalanced")
+
+
+def chain_start(masked, at):
+    """Where the postfix chain ending in the member at `at` begins — `a.b(c).d` for `d`.
+
+    Walked backwards over `.`-separated segments, each an identifier or a balanced `(...)` /
+    `[...]` group, across newlines. A pattern could not do this: the first version allowed one
+    level of parentheses and missed `Simulator(cli: Actor(cache: Manager(…))).parse(…)`, whose
+    receiver spans three lines, and a leading-dot argument (`(mode: .x)`) must not start a chain.
+    """
+    word = lambda ch: ch.isalnum() or ch in "_$"
+    cur = at
+    while True:
+        dot = cur - 1
+        while dot >= 0 and masked[dot] in " \t\n":
+            dot -= 1
+        if dot < 0 or masked[dot] != ".":
+            return cur
+        end = dot - 1
+        while end >= 0 and masked[end] in " \t\n":
+            end -= 1
+        if end < 0:
+            return cur
+        if masked[end] in ")]":
+            end = matching_back(masked, end) - 1
+        elif not word(masked[end]):
+            return cur  # a leading-dot member, as in `(viewMode: .sourceAccurate)`
+        start = end
+        while start >= 0 and word(masked[start]):
+            start -= 1
+        cur = start + 1
+
+
+def wrap_subject_calls(text, subjects, tag):
+    """Wrap every call (or member access) of a subject in `text` in `__mutationProbe`."""
+    masked, _ = mask(text)
     edits = []
     for name in subjects:
-        # The receiver chain is part of the call: `args.0.hasDuplicate(args.1)` must be wrapped
-        # whole, so a segment may be a tuple index and the match may not start mid-chain.
-        for match in re.finditer(r"(?<![\w.$])((?:[\w$]+(?:\([^()]*\))?\.)*)" + re.escape(name) + r"\b", masked):
-            start = match.start()
+        for match in re.finditer(r"(?<![\w$])" + re.escape(name) + r"\b", masked):
             after = match.end()
+            rest = masked[after:].lstrip(" ")
+            if rest.startswith(":"):
+                continue  # an argument label, not a use
+            begin = chain_start(masked, match.start())
             if after < len(masked) and masked[after] == "(":
                 after = matching(masked, after, "(", ")") + 1
-            edits.append((start, after))
-    edits.sort()
+            edits.append((begin, after))
+    edits.sort(key=lambda edit: (edit[0], -edit[1]))
     kept = []
-    for start, end in edits:
-        if kept and start < kept[-1][1]:
+    for begin, end in edits:
+        if kept and begin < kept[-1][1]:
             continue  # nested inside an earlier wrap: the outer one already records it
-        kept.append((start, end))
-    for start, end in reversed(kept):
-        line = line[:start] + "__mutationProbe(" + line[start:end] + ', "' + tag + '")' + line[end:]
-    return line, len(kept)
+        kept.append((begin, end))
+    for begin, end in reversed(kept):
+        text = text[:begin] + "__mutationProbe(" + text[begin:end] + ', "' + tag + '")' + text[end:]
+    return text, len(kept)
 
 
 def clones(law):
@@ -283,15 +329,18 @@ def clones(law):
     if law["trials"]:
         n1000 = text.replace(f"struct {law['suite']}", f"struct {law['suite']}_N1000", 1) \
                     .replace("trials: 100,", "trials: 1000,")
-    rows = text.split("\n")
-    wrapped = 0
-    for index, row in enumerate(rows):
-        if "property:" in row or "by: {" in row:
-            rows[index], wrapped = wrap_subject_calls(row, law["subjects"], law["suite"])
-            break
+    # The WHOLE closure, not its first line: `guard-domain` and the relational laws spread the
+    # property over several lines, and reading one line left all of them unprobed.
+    masked, _ = mask(text)
+    anchor = next((masked.find(key) for key in ("property:", "by: {") if masked.find(key) >= 0), -1)
     probe = None
-    if wrapped:
-        probe = "\n".join(rows).replace(f"struct {law['suite']}", f"struct {law['suite']}_Probe", 1)
+    if anchor >= 0:
+        brace = masked.index("{", anchor)
+        close = matching(masked, brace)
+        region, wrapped = wrap_subject_calls(text[brace:close + 1], law["subjects"], law["suite"])
+        if wrapped:
+            probe = (text[:brace] + region + text[close + 1:]).replace(
+                f"struct {law['suite']}", f"struct {law['suite']}_Probe", 1)
     return n1000, probe
 
 
