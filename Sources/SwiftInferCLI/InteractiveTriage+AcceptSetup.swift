@@ -146,8 +146,9 @@ extension InteractiveTriage {
     ///
     /// Every gate withdraws a stub that could never compile whatever the generator, import or
     /// budget: one names a type parameter (#493), one orders a `monotonicity` pair over a type
-    /// nothing makes `Comparable`, and one compares results with `==` over a type nothing makes
-    /// `Equatable`. Lifted out of `handleAccept` for its body-length cap.
+    /// nothing makes `Comparable`, one compares results with `==` over a type nothing makes
+    /// `Equatable`, and one splices a bare call to a `throws` subject into a property closure
+    /// that cannot propagate. Lifted out of `handleAccept` for its body-length cap.
     static func gateDeclineReason(for suggestion: Suggestion, context: Context) -> String? {
         GenericSubjectGate.declineReason(
             for: suggestion,
@@ -160,7 +161,7 @@ extension InteractiveTriage {
             for: suggestion,
             scannedTypeNames: Set(context.typeShapesByName.keys),
             inheritedTypesByName: context.inheritedTypesByName
-        )
+        ) ?? ThrowingSubjectGate.declineReason(for: suggestion)
     }
 
     /// Say why no stub was written, naming the cause rather than the template where it can.
