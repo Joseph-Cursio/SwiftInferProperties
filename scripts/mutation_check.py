@@ -531,6 +531,66 @@ def report(sample_path, out_path):
     print(f"\nbaselines not passing (excluded): {len(not_passing)} {not_passing[:8]}")
 
 
+def portable(path):
+    """(repo, repo-relative path, repo root) for a path inside a census tree `…/trees/<repo>/…`."""
+    parts = path.split(os.sep)
+    root = os.sep.join(parts[:parts.index("trees") + 2])
+    return parts[parts.index("trees") + 1], os.path.relpath(path, root), root
+
+
+def record(sample_path, out_path, record_path):
+    """The run as a permanent, portable record: one row per law baseline and per mutant.
+
+    Paths are repo-relative and pinned by the subject repository's commit, each mutant is kept as a
+    unified diff regenerated from the restored source by the same functions that planted it, and a
+    probe is kept as a digest — the raw dumps run to megabytes and only equality is ever read.
+    ⚠ **A planted bug measures sensitivity, never a bug rate**: nothing in this file is a defect.
+    """
+    import difflib
+    import hashlib
+    laws = {law["suite"]: law for law in json.load(open(sample_path))["laws"]}
+    rows = [json.loads(row) for row in open(out_path)]
+    baselines = {row["suite"]: row for row in rows if row.get("mutant") == "baseline"}
+    shas = {}
+    digest = lambda lines: None if lines is None else hashlib.sha256("\n".join(lines).encode()).hexdigest()[:16]
+    out, patches_missing = [], 0
+    for row in rows:
+        if "error" in row or row.get("mutant") == "none":
+            continue
+        law = laws[row["suite"]]
+        repo, stub, root = portable(law["stub"])
+        if root not in shas:
+            shas[root] = subprocess.run(["git", "-C", root, "rev-parse", "HEAD"], capture_output=True,
+                                        text=True).stdout.strip()
+        entry = {"repo": repo, "commit": shas[root], "stub": stub, "suite": law["suite"],
+                 "test": law["test"], "template": law["template"], "stratum": law["stratum"]}
+        if row["mutant"] == "baseline":
+            entry.update(kind="baseline", law=row.get("law"), law1000=row.get("law1000"),
+                         probe=digest(row.get("probe")), probe_deterministic=row.get("deterministic"))
+        else:
+            _, subject_file, _ = portable(row["file"])
+            original = open(row["file"], encoding="utf-8").read()
+            line = next(ln for f, ln, name in subject_locations(law) if f == row["file"])
+            span = subject_body(original, line, row["subject"])
+            mutated = dict(mutants(original, span)).get(row["mutant"]) if span else None
+            patch = None
+            if mutated is None:
+                patches_missing += 1
+            else:
+                patch = "".join(difflib.unified_diff(original.splitlines(True), mutated.splitlines(True),
+                                                     "a/" + subject_file, "b/" + subject_file, n=2))
+            entry.update(kind="mutant", operator=row["mutant"], subject=row["subject"], file=subject_file,
+                         patch=patch, compiles=row.get("compiles"), law=row.get("law"),
+                         law1000=row.get("law1000"), probe=digest(row.get("probe")),
+                         outcome=score(row, baselines.get(row["suite"], {})))
+        out.append(entry)
+    with open(record_path, "w") as handle:
+        for entry in out:
+            handle.write(json.dumps(entry, sort_keys=True) + "\n")
+    print(f"{len(out)} rows ({sum(e['kind'] == 'mutant' for e in out)} mutants), "
+          f"{len(shas)} repositories, patches missing {patches_missing}")
+
+
 def main(argv):
     if argv[1] == "sample":
         found = candidates(argv[3:])
@@ -544,6 +604,9 @@ def main(argv):
         return 0
     if argv[1] == "run":
         return run(argv[2], argv[3])
+    if argv[1] == "record":
+        record(argv[2], argv[3], argv[4])
+        return 0
     if argv[1] == "report":
         report(argv[2], argv[3])
         return 0
