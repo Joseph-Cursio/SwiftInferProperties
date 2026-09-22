@@ -505,9 +505,9 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
     # `compiled - (passed + failed + crashed + hung)` read 29 corpus-wide on both, and nothing
     # printed it: a reader subtracting passed and failed from compiled found 29 stubs missing and
     # no column to put them in. 23 were CRASHES, which are a third outcome and were simply never
-    # summed here; the remaining 6 are real losses — a `consumer-producer` stub that is
-    # documentation only and declares no test at all, and two pbt-book stubs sharing one
-    # `Suite.test` key so the results dictionary collapses them.
+    # summed here; the remaining 6 were a `consumer-producer` stub that is documentation only
+    # and declares no test at all, and 5 pbt-book tests the resume loop's bare-name `--skip`
+    # never ran (fixed in `_skip_pattern`; first misread as a shared `Suite.test` key).
     #
     # Recorded per repository rather than asserted, because a legitimate third outcome must not
     # end a 50-minute run. It is the seventh number in this harness put there so that a figure
