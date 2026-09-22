@@ -1,11 +1,13 @@
 # What is actually stopping 171 stubs — the first error is not the blocker
 
-> **Status:** `measured` · **As of:** 2026-09-20
+> **Status:** `measured` · **As of:** 2026-09-22
 
 The corpus funnel classifies a set-aside stub by **the compiler's first error**, and
 `corpus-funnel-census-2026-09-20.md` reports the whole corpus that way: 190 `private`, 91 no
 generator, 27 other. **A stub usually carries more than one blocker, and which one the compiler
 reaches first is not which one you have to fix.**
+
+The sections through the replication were taken 2026-09-20; § *Corpus-wide* is the 2026-09-22 re-take over all 19 repositories.
 
 This reads the stubs themselves, on **SwiftProjectLint `f93d9edf`** — 45% of the corpus's stubs —
 by joining each stub's first error to what its own emitted header says about access.
@@ -42,6 +44,12 @@ measurable return.
 ⚠ **The 5 that report `private` with no access note in their header** are a different symbol — a
 helper or a nested type the law reaches, not the subject the header is about. Not traced.
 
+> ⚠ **CORRECTED 2026-09-22 — traced, and this reading was wrong.** All 5 DO carry an access note;
+> it is the *enclosing-type* note, which the join above did not match. The protection error names
+> the enclosing type because that is what blocks: `SensitiveReferenceFinder` (2 stubs),
+> `TypeMemberCollector` (1), `LocalBindingCollector` (2), each a `private` nested class. The
+> subject is the one the header is about. See § *Corpus-wide*.
+
 ## The 42 were widened, and every one converted
 
 [SwiftProjectLint #243](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/243) widened exactly
@@ -67,6 +75,10 @@ preceded the receiver generator converted 1.
 exactly the ones flagged below as reporting a protection-level error with no access note in their
 header — a different symbol, not the subject. They did not move, because nothing about the subject
 was what stopped them.
+
+> ⚠ **CORRECTED 2026-09-22**: not a different symbol — the subject's enclosing `private` class, which
+> widening the subject cannot reach. The conclusion stands (widening the subject would not move them);
+> the reason given was wrong.
 
 ⚠ **A pass still means no counterexample in 100 draws.** The 42 new passes are `predicate` totality
 over syntax nodes, the arm `template-refutation-rates.md` measures at **0 refutations of 102**.
@@ -156,6 +168,73 @@ parameter's type text reaches the emitter, and neither cause was traced to its s
 are recorded as two separate findings rather than swept by a parse check, because a stub that does
 not parse is a symptom and these are two different diseases.
 
+## Corpus-wide, 22 September: 154 private subjects, 15 ready
+
+Everything above is SwiftProjectLint plus one replication. **Re-run over all 19 repositories** on
+one `swift-infer` binary (`dd4ccfce`, the two accept-path gates of #554 included), subjects at their
+current heads (SwiftProjectLint `fbf82dc9`, SwiftUMLStudio `73d7823`):
+
+| | 20 Sep, all-resolve | 22 Sep |
+|---|---:|---:|
+| named / any law / refutable | 2,738 / 1,921 / 939 | identical |
+| stub file written | 905 | **902** |
+| **compiles** | 634 | **640** |
+| **passes** | 547 | **552** |
+| failed · trapped · unaccounted | 58 · 23 · 6 | 59 · 23 · 6 |
+
+**All of the movement is SwiftUMLStudio**: the 8 widenings of its #46 (compiles 13 → 19, passes
+11 → 16, one new failure) and the two #554 gates withdrawing 3 of its stubs that had never
+compiled (43 → 40). The other 18 repositories are identical to the digit, and the four outcome
+columns sum to 640.
+
+### What stands in front of the private subjects
+
+262 stubs set aside. **154 have a `private` subject by their own header; 18 report access first.**
+Classified by the rule this page established — *access first, and no `no generator derived`
+marker* — and split by where the keyword sits:
+
+| what it takes | stubs | where |
+|---|---:|---|
+| a generator, then widen | **106** | SwiftProjectLint 70; the rest ≤ 7 per repo |
+| an import, then widen | **30** | SwiftProjectLint 22, SwiftLintRuleStudio 7, SwiftAssist 1 |
+| ✅ **widen the declaration** | **4** | SwiftIdempotency 2, pbt-book 2 |
+| ✅ **drop `private` from an extension** | **8** | SwiftUMLStudio, all 8 |
+| ✅ **widen a `private` nested type** | **3** | SwiftProjectLint 2, SwiftPropertyLaws 1 |
+| other | 3 | — |
+
+**15 are ready, against 42 last time — and only 4 of them are the one-keyword edit this page
+measured.** The rest of the ready set is a different edit:
+
+- **SwiftUMLStudio's 8 are `private extension` members of `public` types** — `ERScript`,
+  `StateScript`, `ActivityScript`, `DepsScript`, `ComponentScript`, and `private extension String`.
+  The type needs nothing. Deleting the extension's keyword widens *every* member of it; moving the
+  8 functions into an unmarked extension widens only them.
+- **The 3 are members of `private` nested classes** (`TypeMemberCollector`, `LocalBindingCollector`,
+  SwiftPropertyLaws' `TargetDecl`) — widening a type, a larger change than widening a function.
+- **pbt-book's 2** are `FileSystem.exists` / `isAncestor` in a chapter-25 case study, where `private`
+  may be part of what the chapter teaches.
+
+⚠ **The ready set is yield, not bug-finding.** Every one of the 15 is `predicate` or `idempotence` —
+the arm at 0 refutations of 102 and the template at 18 of 18 hand-checked refutations false.
+
+### The header gave wrong advice on 11 of the 15, fixed in #555
+
+The stub's edit line read the declaration's own line alone:
+
+- for a **`private extension`** member — no keyword on its line — it printed no edit, while the
+  remedy said *widen the enclosing type*, a type already `public`. All 8 SwiftUMLStudio stubs.
+- for a **`private` member of a `private` class** it printed `Delete private at …:129` — the member —
+  one line below a remedy calling that edit a no-op. `SensitiveReferenceFinder`, 2 stubs.
+
+`RestrictedScopes` now finds every blocking keyword where it is written, and the edit names each —
+`Delete private at ERScript.swift:101 (extension ERScript)`, with the note that this widens the
+extension's other members. **Same-binary re-run on SwiftUMLStudio and SwiftProjectLint: stubs,
+compiles and passes identical; exactly 29 headers change, all enclosing-scope cases, all 29 now
+carrying an edit** (8 extension, 21 class or struct), and no stub body moves.
+
+⚠ **Instrument note.** 150 headers first read as changed; 121 differed only in the scratch
+directory's path, which the header embeds. Diff headers with the run directory normalised.
+
 ## Scope
 
 ⚠ **One subject**, chosen because it is 45% of the corpus's stubs. The proportions above are this
@@ -172,3 +251,8 @@ python3 scripts/corpus_funnel.py <out-dir> <swift-infer> <SwiftProjectLint CLI> 
 
 The join is each stub's first error in `packages[].set_aside` against the access note in the stub's
 own header under `aside-SwiftProjectLint/`.
+
+⚠ **Match the access note by its `// Access:` prefix, not by a phrase inside it.** The enclosing-type
+remedy words it differently from the declaration remedy, and a phrase match is what misread the 5
+above as a different symbol. The 22 September classifier was a session script over the same
+`result-*.json` and `aside-*/` layout; the rule is in the section above.
