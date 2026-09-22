@@ -71,9 +71,10 @@ public enum AccessRestriction: String, Sendable, Equatable, Codable {
                 + "Lift it out to a member or a free function."
 
         case .enclosingTypeNotVisibleToTests:
-            return "its enclosing type is `private` or `fileprivate`, so no test can name it — and "
-                + "widening this declaration alone would be a no-op, because the type is what "
-                + "blocks it. Widen the enclosing type first, or lift the logic out of it."
+            return "its enclosing type or extension is `private` or `fileprivate`, so no test can "
+                + "name it — and widening this declaration alone would be a no-op, because the "
+                + "enclosing scope is what blocks it. Widen that scope first, or lift the logic out "
+                + "of it."
         }
     }
 }
