@@ -71,7 +71,9 @@ def law_of(stub_path, repo, package_dir, template):
         return None
     stem = os.path.basename(stub_path)[:-len(".swift")]
     # `<Type>_<fn>[_<fn2>]_<template>` — the subjects are the names between type and template.
-    names = stem[:-(len(template) + 1)].split("_")[1:] if stem.endswith("_" + template) else []
+    # ⚠ **Not `[1:]`**: a FREE function's stub has no type prefix (`isFunctionLocal_predicate`), and
+    # dropping the first name dropped its only one — the first run crashed on exactly that.
+    names = stem[:-(len(template) + 1)].split("_") if stem.endswith("_" + template) else []
     # The leading names are the type and any nesting; the subject is the last one — two for a
     # round trip, which pairs a function with its inverse.
     names = names[-2:] if template == "round-trip" else names[-1:]

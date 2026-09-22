@@ -116,7 +116,9 @@
    "template": "predicate",
    "suite": "isFunctionLocal_predicateTests",
    "test": "isFunctionLocal_isTotal",
-   "subjects": [],
+   "subjects": [
+    "isFunctionLocal"
+   ],
    "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/Sources/SwiftEffectInference/EffectSymbolTable.swift",
    "line": 467,
    "trials": true,
@@ -414,7 +416,9 @@
    "template": "input-totality",
    "suite": "parseCommaDelimitedList_input_totalityTests",
    "test": "parseCommaDelimitedList_isTotal",
-   "subjects": [],
+   "subjects": [
+    "parseCommaDelimitedList"
+   ],
    "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
    "line": 51,
    "trials": true,
@@ -753,5 +757,6 @@
    "trials": false,
    "stratum": "other"
   }
- ]
+ ],
+ "amendment": "2026-09-22: subjects re-derived for 2 free-function laws after the harness dropped their only name; which laws are sampled is unchanged."
 }
