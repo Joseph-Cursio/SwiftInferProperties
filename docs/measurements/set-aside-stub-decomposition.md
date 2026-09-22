@@ -196,7 +196,7 @@ marker* — and split by where the keyword sits:
 | what it takes | stubs | where |
 |---|---:|---|
 | a generator, then widen | **106** | SwiftProjectLint 70; the rest ≤ 7 per repo |
-| an import, then widen | **30** | SwiftProjectLint 22, SwiftLintRuleStudio 7, SwiftAssist 1 |
+| an import, then widen | **30** | SwiftProjectLint 22, SwiftLintRuleStudio 7, SwiftAssist 1 — ⚠ **only 7 were imports; see § *The import bucket, taken apart*** |
 | ✅ **widen the declaration** | **4** | SwiftIdempotency 2, pbt-book 2 |
 | ✅ **drop `private` from an extension** | **8** | SwiftUMLStudio, all 8 |
 | ✅ **widen a `private` nested type** | **3** | SwiftProjectLint 2, SwiftPropertyLaws 1 |
@@ -234,6 +234,43 @@ carrying an edit** (8 extension, 21 class or struct), and no stub body moves.
 
 ⚠ **Instrument note.** 150 headers first read as changed; 121 differed only in the scratch
 directory's path, which the header embeds. Diff headers with the run directory normalised.
+
+### The import bucket, taken apart — 7 of the 30 were imports
+
+Read by the name each stub could not find, the 30 are four different things:
+
+| missing name | stubs | what it actually is |
+|---|---:|---|
+| `Collector`, `ClosureWriteTargetCollector` | **12** | **file-private TYPES, not imports.** A top-level `private` type is reported `cannot find '…' in scope`, not *inaccessible*, so the first-error classifier filed them here. They need the type widened. |
+| `MockSwiftLintCLIActor`, `IsolatedUserDefaults`, `SwiftLintCLIActor` | **7** | **real imports** — a test-support and a backend target the package builds, named by a construction copied from a test |
+| `SyntaxPattern`, `Parser` | **10** | names **no copied import can reach**: the constructing test gets `SyntaxPattern` only through `@testable import Core`, and `SwiftParser` is not a dependency of `SwiftProjectLintRules` at all |
+| `SkillAuthorMockBackend` | 1 | declared inside a test file — unreachable from any other file |
+
+✅ **The 7 are fixed, in #557**: a copied construction now brings its test file's imports, keeping only
+modules the package's own code builds with (`TestTargetScope.buildModules`). **Same subjects, full
+19-repository census: compiles 640 → 641, passes 552 → 553, upstream stages identical; 21 stubs move
+from *not in scope* to their real next blocker.** All 7 SwiftLintRuleStudio stubs land on the access
+error — so they join the ready set — and one more of its stubs compiles outright. ⚠ **#557's own
+description says 6; it is 7**, re-read from the stubs.
+
+⚠ **The build-module cut is load-bearing, and the census found that, not a review.** The first
+version emitted every import the test file had. Test files import what only a test target can see —
+the root package's `Core`, `ViewInspector`, `VaporTesting` — and **`SwiftProjectLintRules` went from
+230 compiles to 0**: `no such module 'Core'` stops a module's compile after a few files, so the
+harness's set-aside loop exhausted its rounds and the whole package read as unbuilt. Three other
+repositories lost one compile each the same way.
+
+So the ready set is now **22**, by the edit it takes:
+
+| edit | stubs | where |
+|---|---:|---|
+| delete `private` on the declaration | **9** | SwiftLintRuleStudio 5, SwiftIdempotency 2, pbt-book 2 |
+| delete `private` on an extension, or move the member out | **10** | SwiftUMLStudio 8, SwiftLintRuleStudio 2 (one extension) |
+| widen a `private` nested type | **3** | SwiftProjectLint 2, SwiftPropertyLaws 1 |
+
+plus the **12 file-private types** above, which need a type widened and were never in the ready
+count. ⚠ **Still yield, not bug-finding** — every one is `predicate`, `input-totality` or
+`idempotence`.
 
 ## Scope
 
