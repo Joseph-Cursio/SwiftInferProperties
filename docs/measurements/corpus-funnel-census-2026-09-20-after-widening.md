@@ -85,6 +85,16 @@ never summed it. It does now, alongside `hung`.
 **Four remain undiagnosed**, all in pbt-book, and are reported as a number rather than given a
 cause.
 
+> ⚠ **DIAGNOSED 2026-09-22 — all 5 pbt-book losses are one HARNESS defect, and the shared-key reading
+> above does not reproduce.** After a crash, `run_serially` resumed with `--skip <bare test name>`,
+> and Swift Testing matches that against every test ID. pbt-book traps 21 times, and when
+> `Mod8_combine_commutativityTests/combine_isCommutative()` crashed, the resume also skipped the
+> same-named test in `Peak_`, `Rotation_`, `Sum_` and `Tally_` — never run, counted nowhere. Re-run
+> with the skip anchored on `\.<Suite>/<test>` (`_skip_pattern`), the package reports **104 of 104**:
+> passes 57 → 59, crashes 21 → 24. On that run every stub reports once, so no two share a key; whether
+> one did on 20 September cannot now be checked. **Corpus-wide, unaccounted 6 → 1**, and the 1 is the
+> documentation-only `consumer-producer` stub above.
+
 ✅ **Recorded per repository, not asserted.** A legitimate third outcome must not end a 50-minute
 run. `result["unaccounted"]` is retro-checked against this run's stored records and reports 6,
 which is what the hand analysis found.
