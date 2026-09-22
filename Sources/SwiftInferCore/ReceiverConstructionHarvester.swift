@@ -55,19 +55,55 @@ public enum ReceiverConstructionHarvester {
     /// measured, one stub that compiled stopped compiling because its new construction named a
     /// type the stub does not import.
     public static func harvest(roots: [URL], wanted: Set<String>) -> [String: String] {
-        var verbatim: [String: String] = [:]
-        var inlined: [String: String] = [:]
+        harvestWithImports(roots: roots, wanted: wanted).mapValues(\.expression)
+    }
+
+    /// A construction together with the `import` lines of the test file it was copied from.
+    public struct Harvested: Sendable, Equatable {
+        public let expression: String
+        /// Each import declaration as written, attributes included — `import SwiftParser`,
+        /// `@testable import SwiftProjectLintRules`.
+        public let imports: [String]
+
+        public init(expression: String, imports: [String]) {
+            self.expression = expression
+            self.imports = imports
+        }
+    }
+
+    /// `harvest`, keeping the imports of the file each construction came from.
+    ///
+    /// **The expression is copied; the file it compiled in is not.** A test's construction names
+    /// whatever that test file imports — `Parser` from `SwiftParser`, `SyntaxPattern` from a nested
+    /// package's module, a mock from a test-support target — and none of those are in the index the
+    /// carrier-import resolver reads, because none of them is a scanned type. Measured on the
+    /// 22 September census: 17 stubs failed `cannot find '…' in scope` on exactly these names.
+    /// The test file already says where each one comes from.
+    public static func harvestWithImports(roots: [URL], wanted: Set<String>) -> [String: Harvested] {
+        var verbatim: [String: Harvested] = [:]
+        var inlined: [String: Harvested] = [:]
         for file in swiftFiles(under: roots) {
             guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
-            for construction in constructions(in: source, wanted: wanted) {
+            let found = constructions(in: source, wanted: wanted)
+            guard !found.isEmpty else { continue }
+            let imports = importLines(in: source)
+            for construction in found {
+                let harvested = Harvested(expression: construction.expression, imports: imports)
                 if construction.substituted {
-                    if inlined[construction.type] == nil { inlined[construction.type] = construction.expression }
+                    if inlined[construction.type] == nil { inlined[construction.type] = harvested }
                 } else if verbatim[construction.type] == nil {
-                    verbatim[construction.type] = construction.expression
+                    verbatim[construction.type] = harvested
                 }
             }
         }
         return inlined.merging(verbatim) { _, written in written }
+    }
+
+    /// The file's top-level import declarations, trimmed, in source order.
+    static func importLines(in source: String) -> [String] {
+        Parser.parse(source: source).statements.compactMap { item in
+            item.item.as(ImportDeclSyntax.self)?.trimmedDescription
+        }
     }
 
     /// A construction of a wanted type, and whether a test-local had to be followed to make it

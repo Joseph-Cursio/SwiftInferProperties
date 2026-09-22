@@ -104,7 +104,7 @@ def _package_level_label(text, label, want_start=False):
     raise ValueError(f"no package-level {label}:")
 
 
-def rewrite_manifest(manifest_path, modules, census_target, stubs_relative_path):
+def rewrite_manifest(manifest_path, modules, census_target, stubs_relative_path, external=()):
     """Drop every test target, add the two dependencies, add the census target."""
     text = open(manifest_path, encoding="utf-8").read()
 
@@ -262,6 +262,7 @@ def rewrite_manifest(manifest_path, modules, census_target, stubs_relative_path)
               '                .product(name: "PropertyBased", package: "swift-property-based")\n')
     dependencies = ("".join(f'                "{name}",\n' for name in modules)
                     + "".join(f'                "{name}",\n' for name in local_products)
+                    + "".join(f'                {entry},\n' for entry in external)
                     + kit + engine).rstrip(",\n") + "\n"
     block = (
         # ⚠ **The leading newline is load-bearing.** Without it the block continues whatever

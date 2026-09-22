@@ -163,6 +163,42 @@ def regular_targets(package_dir, swift):
     return out
 
 
+def external_dependencies(package_dir, swift):
+    """What the package's source targets depend on from OTHER packages, as manifest entries.
+
+    ⚠ **A copied receiver construction names what its test file imports**, and since
+    `swift-infer` began carrying those imports into the stub, the census target has to be able
+    to resolve them: `SyntaxPattern` is `SwiftProjectLintVisitors`, a product of a sibling
+    package that `SwiftProjectLintRules` depends on by name. A real test target depends on what
+    its package's code depends on; the census target depended on the package's own targets
+    alone, so it would have reported `no such module` for a module the package builds with.
+    """
+    done = subprocess.run([swift, "package", "dump-package"], cwd=package_dir,
+                          capture_output=True, text=True, env=environment(swift))
+    if done.returncode != 0:
+        return []
+    try:
+        dumped = json.loads(done.stdout)
+    except json.JSONDecodeError:
+        return []
+    own = {target["name"] for target in dumped.get("targets", [])}
+    entries = []
+    for target in dumped.get("targets", []):
+        if target.get("type") not in SOURCE_TARGET_TYPES:
+            continue
+        for dependency in target.get("dependencies", []):
+            if "product" in dependency:
+                name, package = dependency["product"][0], dependency["product"][1]
+                entry = f'.product(name: "{name}", package: "{package}")'
+            elif "byName" in dependency and dependency["byName"][0] not in own:
+                entry = f'"{dependency["byName"][0]}"'
+            else:
+                continue
+            if entry not in entries and not any(kit in entry for kit in ('"PropertyLawKit"', '"PropertyBased"')):
+                entries.append(entry)
+    return entries
+
+
 _IMPORT = re.compile(r"^@testable import ", re.M)
 
 
@@ -389,7 +425,8 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
         try:
             s5.rewrite_manifest(os.path.join(package_dir, "Package.swift"), modules,
                                 "SwiftInferCensusTests",
-                                os.path.relpath(dirs[0], package_dir))
+                                os.path.relpath(dirs[0], package_dir),
+                                external_dependencies(package_dir, swift))
             s5.verify_manifest(package_dir, swift)
         except (SystemExit, ValueError) as error:
             entry["blocked"] = f"manifest: {str(error)[:300]}"
