@@ -21,15 +21,33 @@ extension InteractiveTriage {
         public let typeShapesByName: [String: TypeShape]
         public let sourceFileByTypeName: [String: String]
         public let packageRoot: URL
+        /// Every copied receiver construction with its test file's imports, so a stub that uses one
+        /// can import what it names.
+        let receiverConstructions: [ReceiverConstructionHarvester.Harvested]
 
         public init(
             typeShapesByName: [String: TypeShape],
             sourceFileByTypeName: [String: String],
             packageRoot: URL
         ) {
+            self.init(
+                typeShapesByName: typeShapesByName,
+                sourceFileByTypeName: sourceFileByTypeName,
+                packageRoot: packageRoot,
+                receiverConstructions: []
+            )
+        }
+
+        init(
+            typeShapesByName: [String: TypeShape],
+            sourceFileByTypeName: [String: String],
+            packageRoot: URL,
+            receiverConstructions: [ReceiverConstructionHarvester.Harvested]
+        ) {
             self.typeShapesByName = typeShapesByName
             self.sourceFileByTypeName = sourceFileByTypeName
             self.packageRoot = packageRoot
+            self.receiverConstructions = receiverConstructions
         }
     }
 
@@ -107,10 +125,9 @@ extension InteractiveTriage {
         // A stub drawing from the syntax corpus names SwiftSyntax node types in its closure
         // annotations; imports are per file, so the corpus file's own import does not reach here.
         let syntaxImport = stub.contains("\(SyntaxCorpusSource.typeName).") ? "import SwiftSyntax\n" : ""
-        let carrierImportLines = Self.carrierImportLines(
-            for: suggestion,
-            entryModule: resolvedModule,
-            resolving: carrierImports
+        let carrierImportLines = Self.namedTypeImportLines(
+            for: suggestion, stub: stub, entryModule: resolvedModule,
+            carrierImports: carrierImports, beside: syntaxImport + moduleImport
         )
         let suiteKey = fileName ?? stubFileName(for: suggestion) ?? suggestion.identity.normalized
         let namespacedStub = Self.namespaced(

@@ -197,7 +197,8 @@ extension InteractiveTriage {
             CarrierImports(
                 typeShapesByName: context.typeShapesByName,
                 sourceFileByTypeName: context.sourceFileByTypeName,
-                packageRoot: $0
+                packageRoot: $0,
+                receiverConstructions: context.receiverConstructions?.allHarvested ?? []
             )
         }
     }

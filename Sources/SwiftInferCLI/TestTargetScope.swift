@@ -96,6 +96,7 @@ public enum TestTargetScope {
     private struct DumpedDependency: Decodable {
         let byName: [String?]?
         let target: [String?]?
+        let product: [String?]?
 
         var targetName: String? {
             if let name = byName?.first, let name { return name }
@@ -194,6 +195,27 @@ public enum TestTargetScope {
             }
             .filter { fileManager.fileExists(atPath: $0.directory.path) }
             .sorted { $0.directory.path < $1.directory.path }
+    }
+
+    /// Every module the package's own code builds with: each non-test target, and every product
+    /// or by-name dependency those targets declare. `nil` when the manifest cannot be read.
+    ///
+    /// **What a test-only dependency is NOT.** A test file may import `ViewInspector`, the root
+    /// package's `Core`, or `VaporTesting`; a module only a test target depends on is invisible
+    /// to any other target, so a generated file importing it fails `no such module` wherever it
+    /// lands. Measured: carrying test-file imports into stubs without this cut took one package
+    /// from 230 compiles to 0.
+    public static func buildModules(packageRoot: URL) -> Set<String>? {
+        guard let dumped = dump(packageRoot: packageRoot) else { return nil }
+        var modules: Set<String> = []
+        for target in dumped.targets where !target.isTest {
+            modules.insert(target.name)
+            for dependency in target.dependencies ?? [] {
+                if let name = dependency.targetName { modules.insert(name) }
+                if let name = dependency.product?.first, let name { modules.insert(name) }
+            }
+        }
+        return modules
     }
 
     /// Transitive reachability from `origin` to `module` over in-package target

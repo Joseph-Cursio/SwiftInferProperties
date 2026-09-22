@@ -15,23 +15,57 @@ final class ReceiverConstructionSource {
 
     private let testRoots: [URL]
     private let wanted: Set<String>
-    private lazy var constructions = ReceiverConstructionHarvester.harvest(roots: testRoots, wanted: wanted)
+    private let packageRoot: URL?
+    /// The modules a generated file in this package can import, read from the manifest once.
+    private lazy var buildModules: Set<String> = packageRoot.flatMap {
+        TestTargetScope.buildModules(packageRoot: $0)
+    } ?? []
+    private lazy var constructions = ReceiverConstructionHarvester.harvestWithImports(roots: testRoots, wanted: wanted)
 
     init(packageRoot: URL, wanted: Set<String>) {
         self.testRoots = SyntaxCorpusSource.testDirectories(of: packageRoot)
             + (SyntaxCorpusSource.outermostPackageRoot(from: packageRoot).map(SyntaxCorpusSource.testDirectories) ?? [])
         self.wanted = wanted
+        self.packageRoot = packageRoot
     }
 
     /// Test seam: constructions supplied directly.
-    init(constructions: [String: String]) {
+    init(constructions: [String: String], imports: [String] = []) {
         self.testRoots = []
         self.wanted = []
-        self.constructions = constructions
+        self.packageRoot = nil
+        self.constructions = constructions.mapValues {
+            ReceiverConstructionHarvester.Harvested(expression: $0, imports: imports)
+        }
     }
 
     /// The construction expression for `typeName`, or `nil` when no test constructs it usably.
     func expression(for typeName: String) -> String? {
+        harvested(for: typeName)?.expression
+    }
+
+    /// Every harvested construction, harvesting on first use, each keeping only the imports this
+    /// package can resolve — see `TestTargetScope.buildModules` for why a test file's other imports
+    /// must never reach a generated one. No manifest, no imports: the behaviour before any were carried.
+    var allHarvested: [ReceiverConstructionHarvester.Harvested] {
+        let resolvable = buildModules
+        return constructions.values.map { Self.keepingResolvable($0, in: resolvable) }
+    }
+
+    /// `harvested` with only the imports whose module is in `resolvable`.
+    static func keepingResolvable(
+        _ harvested: ReceiverConstructionHarvester.Harvested,
+        in resolvable: Set<String>
+    ) -> ReceiverConstructionHarvester.Harvested {
+        ReceiverConstructionHarvester.Harvested(
+            expression: harvested.expression,
+            imports: harvested.imports.filter { line in
+                InteractiveTriage.importedModule(in: line).map(resolvable.contains) ?? false
+            }
+        )
+    }
+
+    private func harvested(for typeName: String) -> ReceiverConstructionHarvester.Harvested? {
         constructions[typeName] ?? constructions[typeName.components(separatedBy: ".").last ?? typeName]
     }
 }
