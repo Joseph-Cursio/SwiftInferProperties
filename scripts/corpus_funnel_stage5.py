@@ -523,6 +523,23 @@ def bisect_hang(package_dir, stubs_dir, swift, aside_dir, seconds=150, limit=40)
     return suites
 
 
+def _skip_pattern(name):
+    """A `--skip` regex matching exactly the test `Suite.test()`, never its namesakes.
+
+    ⚠ **Skipping by the bare test name skipped every suite's test of that name.** A resume after
+    a crash passed `--skip combine_isCommutative`, and Swift Testing matched it against every ID —
+    `…Mod8_combine_commutativityTests/combine_isCommutative()` and the four other suites declaring
+    the same test — so those four never ran and were counted nowhere. That was 5 of the 22
+    September census's 6 *unaccounted* stubs, all in pbt-book, which has 21 crashes to resume past.
+    A test ID reads `Module.Suite/test()`, so the pattern anchors on the dot before the suite:
+    `Sum_…` must not match `CheckSum_…`.
+    """
+    suite, _, test = name.rpartition(".")
+    if not suite or suite == "None":
+        return re.escape(test)
+    return r"\." + re.escape(suite) + "/" + re.escape(test)
+
+
 def run_serially(package_dir, swift, census_target=None, max_resumes=30):
     """Run the surviving stubs one at a time, resuming past a crash.
 
@@ -544,7 +561,7 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
         # target here matched nothing and reported an empty run as a clean one.
         command = [swift, "test", "--no-parallel"]
         for name in skipped:
-            command += ["--skip", re.escape(name.split(".")[-1])]
+            command += ["--skip", _skip_pattern(name)]
         env = dict(os.environ)
         env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
         timed_out = False
