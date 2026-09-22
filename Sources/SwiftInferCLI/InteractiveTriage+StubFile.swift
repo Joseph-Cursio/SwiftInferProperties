@@ -248,43 +248,6 @@ extension InteractiveTriage {
         stub.contains("Issue.record(\"TODO")
     }
 
-    /// The access caveat block, or empty for a subject a test can reach.
-    static func accessCaveat(for suggestion: Suggestion) -> String {
-        guard let signal = suggestion.score.signals.first(where: { $0.kind == .subjectNotVisibleToTests })
-        else { return "" }
-        let edit = widenTarget(for: suggestion).map { "// \($0)\n" } ?? ""
-        return "// Access: \(signal.detail)\n\(edit)// This file will not compile until that is done.\n"
-    }
-
-    /// The exact edit that unblocks a restricted subject — `Delete `private` at Foo.swift:42` —
-    /// or `nil` when the declaration line carries no modifier to delete.
-    ///
-    /// **`nil` is an answer, not a shortfall.** The line carrying no `private` is the
-    /// enclosing-type case: a member of a `private` type is unreachable *whatever its own
-    /// modifier says*, so naming a word to delete would propose a patch that compiles and
-    /// changes nothing. `SpeculativeWidening`'s own doc calls that the design's named trap, and
-    /// records that it was live for a while because a doc asserted a guard nothing implemented.
-    /// The general remedy sentence above still prints; only the specific edit is withheld.
-    ///
-    /// Reuses `SpeculativeWidening.leadingAccessModifier` rather than re-deriving: the
-    /// word-boundary rule there exists because a function named `privateKeyFor(_:)` must not read
-    /// as a `private` declaration, and a second copy of that rule is exactly the kind that drifts.
-    static func widenTarget(for suggestion: Suggestion) -> String? {
-        guard let location = suggestion.evidence.first?.location,
-              location.line > 0,
-              let source = try? String(contentsOfFile: location.file, encoding: .utf8) else {
-            return nil
-        }
-        let lines = source.components(separatedBy: "\n")
-        let index = location.line - 1
-        guard lines.indices.contains(index),
-              let modifier = SpeculativeWidening.leadingAccessModifier(in: lines[index]) else {
-            return nil
-        }
-        let name = URL(fileURLWithPath: location.file).lastPathComponent
-        return "Delete `\(modifier)` at \(name):\(location.line), or lift the logic out."
-    }
-
     /// The module under test, derived from a source file path laid out the SPM
     /// way (`.../Sources/<Module>/<File>.swift`). Returns `nil` for paths with no
     /// `Sources/` component (e.g. unit-test fixtures), so the `@testable import`

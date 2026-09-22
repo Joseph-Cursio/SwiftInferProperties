@@ -217,7 +217,7 @@ struct SeededPrivateFunctionTests {
         )
 
         #expect(recording.text.contains("NO TEST CAN RUN THIS LAW AS WRITTEN"))
-        #expect(recording.text.contains("its enclosing type is `private` or `fileprivate`"))
+        #expect(recording.text.contains("its enclosing type or extension is `private` or `fileprivate`"))
         #expect(recording.text.contains("would be a no-op"))
         // The correction is announced, not applied silently: a remedy that changed because another
         // tool knew better is exactly the kind of thing a reader should be able to trace.

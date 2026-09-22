@@ -188,11 +188,12 @@ struct InteractiveTriageModuleImportTests {
         #expect(wrapped.contains("Delete `private` at Search.swift:2"))
     }
 
-    /// **`nil` is an answer.** A declaration line carrying no modifier is the enclosing-type case:
-    /// a member of a `private` type is unreachable whatever its own modifier says, so naming a
-    /// word to delete would propose a patch that compiles and changes nothing.
-    /// `SpeculativeWidening` calls that the design's named trap. The general remedy still prints.
-    @Test func noModifierOnTheLineWithholdsTheSpecificEdit() throws {
+    /// **The enclosing-type case names the TYPE's keyword, never the member's line.** A member of a
+    /// `private` type is unreachable whatever its own modifier says, so an edit on the member's
+    /// line would compile and change nothing — `SpeculativeWidening` calls that the design's named
+    /// trap. This used to be met by withholding the edit altogether; the keyword that actually
+    /// blocks is on line 1, and `RestrictedScopes` now finds it there.
+    @Test func anEnclosingTypeKeywordIsNamedWhereItIs() throws {
         let directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("WidenTarget-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -206,7 +207,8 @@ struct InteractiveTriageModuleImportTests {
             suggestion: restrictedSuggestion(file: file.path, line: 2)
         )
         #expect(wrapped.contains("// Access:"))
-        #expect(wrapped.contains("Delete `") == false)
+        #expect(wrapped.contains("Delete `private` at Search.swift:1 (`enum Search`)"))
+        #expect(wrapped.contains("at Search.swift:2") == false)
     }
 
     /// A function whose *name* contains `private` is not a `private` declaration — the
