@@ -62,7 +62,16 @@ def worktree(repo_path, destination):
     override package 'SwiftPropertyLaws' because its identity … doesn't match override's
     identity (directory name)*, which looked like a dependency conflict in the subject.
     """
-    if os.path.isdir(destination):
+    # ⚠ **A symlink here is the REAL repository, and the census must never run in it.**
+    # `link_path_dependencies` links `trees/<repo>` to the real sibling when another subject
+    # depends on it by `path:`. If that subject is walked first, this used to find the link,
+    # return it, and rewrite the real checkout's manifest — the 20 September census left
+    # SwiftPropertyLaws' `Package.swift` with every test target removed and a census target
+    # added, uncommitted, for two days. Replacing the link with a worktree keeps the other
+    # subject's path dependency resolving, now to a copy.
+    if os.path.islink(destination):
+        os.unlink(destination)
+    elif os.path.isdir(destination):
         return destination
     os.makedirs(os.path.dirname(destination), exist_ok=True)
     subprocess.run(["git", "-C", repo_path, "worktree", "add", "-q", "--detach",
