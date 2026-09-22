@@ -104,13 +104,39 @@ Per the scope's §8:
 - ❓ **Where to put writer effort** stays open: the templates that notice changes (`idempotence`,
   `round-trip`, `guard-domain`) have single-digit samples, and the relational ones have none.
 
+## The record
+
+**`fixtures/mutation-check/run-2026-09-22.jsonl` keeps every mutant permanently** — 121 rows, one per
+law baseline (49) and per mutant (72), across 10 repositories:
+
+- the subject repository and **its commit**, with repo-relative paths, so a row names code that can be
+  checked out rather than a scratch tree that no longer exists;
+- the mutant **as a unified diff**, regenerated from the restored source by the functions that
+  planted it and checked against every recorded mutant (72 of 72);
+- the law's result at 100 and 1,000 trials, the outcome, and the probe as a digest — the raw dumps run
+  to megabytes and only their equality is ever read.
+
+**What it is for: re-running the same mutants after a change and comparing row by row.** A generator
+fix that reaches boundary values should turn *never changed* rows into *changed* or *killed* ones, and
+this is the baseline that says which. Without it, every re-run draws a fresh sample and a gain cannot
+be told from sampling noise — the reason `fixtures/verify-runs/` exists for survey runs.
+
+⚠ **It is not a list of bugs.** Every row is a planted change to correct code. Read an outcome as
+*what the law noticed*, never as *what the code got wrong*.
+
+⚠ **Not a test.** Nothing in `make test` runs it: re-applying a patch needs the subject at the
+recorded commit and a census tree to build it in, so it is re-run on demand, when a change is meant to
+move it. ⚠ `sample.json` still names scratch paths — it is the frozen pre-registration and is left as
+committed; the record is what carries portable identities.
+
 ## Reproducing
 
 ```
 python3 scripts/mutation_check.py sample fixtures/mutation-check/sample.json <census-dirs…>
 python3 scripts/mutation_check.py run    fixtures/mutation-check/sample.json <out.jsonl>
 python3 scripts/mutation_check.py report fixtures/mutation-check/sample.json <out.jsonl>
+python3 scripts/mutation_check.py record fixtures/mutation-check/sample.json <out.jsonl> <record.jsonl>
 ```
 
-⚠ The sample names paths inside the census's scratch worktrees, so a run needs the 22 September census
-trees; the per-mutant results were not committed.
+⚠ The sample names paths inside the census's scratch worktrees, so a fresh run needs census trees at
+the recorded commits.
