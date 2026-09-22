@@ -1,6 +1,8 @@
 # What is a passing law worth? — a mutation check over the funnel's own output
 
-> **Status:** `proposed` · **As of:** 2026-09-22
+> **Status:** `shipped` · **As of:** 2026-09-22
+
+✅ **Run and measured** — the results are in `docs/measurements/funnel-mutation-check.md`.
 
 The corpus funnel reports **577 passing laws** (22 September, 19 repositories). A pass means *no
 counterexample in 100 draws*, and **no planted violator has been run against any passing law in any
