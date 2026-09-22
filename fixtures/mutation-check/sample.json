@@ -1,0 +1,757 @@
+{
+ "seed": 20260922,
+ "candidates": 491,
+ "by_template": {
+  "idempotence": 55,
+  "predicate": 369,
+  "caseiterable-key-injectivity": 3,
+  "guard-domain": 12,
+  "input-totality": 44,
+  "monotonicity": 1,
+  "round-trip": 3,
+  "filter-subset": 1,
+  "associativity": 1,
+  "comparator": 2
+ },
+ "shortfalls": {
+  "relational": "1 of 8 (pool 1)",
+  "round-trip": "3 of 5 (pool 3)",
+  "other": "4 of 6 (pool 5)"
+ },
+ "laws": [
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/PathEvidence_occurs_predicate.swift",
+   "template": "predicate",
+   "suite": "PathEvidence_occurs_predicateTests",
+   "test": "occurs_isTotal",
+   "subjects": [
+    "occurs"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/ExtractableTotalKernelVisitor.swift",
+   "line": 473,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/predicate/OllamaModelMatching_isInstalled_predicate.swift",
+   "template": "predicate",
+   "suite": "OllamaModelMatching_isInstalled_predicateTests",
+   "test": "isInstalled_isTotal",
+   "subjects": [
+    "isInstalled"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Ollama/OllamaModelMatching.swift",
+   "line": 17,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftPropertyLaws",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/./Tests/PropertyLawMacroTests/Generated/SwiftInfer/predicate/InitializerPreconditionDetector_delegatesToSelf_predicate.swift",
+   "template": "predicate",
+   "suite": "InitializerPreconditionDetector_delegatesToSelf_predicateTests",
+   "test": "delegatesToSelf_isTotal",
+   "subjects": [
+    "delegatesToSelf"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/Sources/PropertyLawSyntaxSupport/InitializerPreconditionDetector.swift",
+   "line": 78,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "MacCloud_server",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/MacCloud_server",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/MacCloud_server/./Tests/SyncCoreTests/Generated/SwiftInfer/predicate/FileNaming_containsControlCharacters_predicate.swift",
+   "template": "predicate",
+   "suite": "FileNaming_containsControlCharacters_predicateTests",
+   "test": "containsControlCharacters_isTotal",
+   "subjects": [
+    "containsControlCharacters"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/MacCloud_server/Sources/MacCloudServer/Models/FileNaming.swift",
+   "line": 26,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/LawOfDemeterVisitor_isInsideKeyPath_predicate.swift",
+   "template": "predicate",
+   "suite": "LawOfDemeterVisitor_isInsideKeyPath_predicateTests",
+   "test": "isInsideKeyPath_isTotal",
+   "subjects": [
+    "isInsideKeyPath"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/LawOfDemeterVisitor.swift",
+   "line": 243,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/RegistrationVerb_isStringOutputBuilding_predicate.swift",
+   "template": "predicate",
+   "suite": "RegistrationVerb_isStringOutputBuilding_predicateTests",
+   "test": "isStringOutputBuilding_isTotal",
+   "subjects": [
+    "isStringOutputBuilding"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/RegistrationVerb.swift",
+   "line": 50,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftEffectInference",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/./Tests/SwiftEffectInferenceTests/Generated/SwiftInfer/predicate/isFunctionLocal_predicate.swift",
+   "template": "predicate",
+   "suite": "isFunctionLocal_predicateTests",
+   "test": "isFunctionLocal_isTotal",
+   "subjects": [],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/Sources/SwiftEffectInference/EffectSymbolTable.swift",
+   "line": 467,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/ForwardingCall_isCoherentProjection_predicate.swift",
+   "template": "predicate",
+   "suite": "ForwardingCall_isCoherentProjection_predicateTests",
+   "test": "isCoherentProjection_isTotal",
+   "subjects": [
+    "isCoherentProjection"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/CollectionOperation.swift",
+   "line": 501,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/LawOfDemeterVisitor_hasExemptMember_predicate.swift",
+   "template": "predicate",
+   "suite": "LawOfDemeterVisitor_hasExemptMember_predicateTests",
+   "test": "hasExemptMember_isTotal",
+   "subjects": [
+    "hasExemptMember"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/LawOfDemeterVisitor.swift",
+   "line": 321,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftUMLStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/predicate/String_isMatching_predicate.swift",
+   "template": "predicate",
+   "suite": "String_isMatching_predicateTests",
+   "test": "isMatching_isTotal",
+   "subjects": [
+    "isMatching"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift",
+   "line": 98,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftMarkdownWiki",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftMarkdownWiki",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftMarkdownWiki/./SwiftMarkdownWikiTests/Generated/SwiftInfer/predicate/PluginLogFilter_includes_predicate.swift",
+   "template": "predicate",
+   "suite": "PluginLogFilter_includes_predicateTests",
+   "test": "includes_isTotal",
+   "subjects": [
+    "includes"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftMarkdownWiki/SwiftMarkdownWiki/UI/PluginLogPanelView.swift",
+   "line": 23,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftEffectInference",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/./Tests/SwiftEffectInferenceTests/Generated/SwiftInfer/predicate/CallSiteEffectInferrer_isMetricReceiver_predicate.swift",
+   "template": "predicate",
+   "suite": "CallSiteEffectInferrer_isMetricReceiver_predicateTests",
+   "test": "isMetricReceiver_isTotal",
+   "subjects": [
+    "isMetricReceiver"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/Sources/SwiftEffectInference/CallSiteEffectInferrer.swift",
+   "line": 459,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/predicate/Swift6ConcurrencyAuditor_isSwift6OrLater_predicate.swift",
+   "template": "predicate",
+   "suite": "Swift6ConcurrencyAuditor_isSwift6OrLater_predicateTests",
+   "test": "isSwift6OrLater_isTotal",
+   "subjects": [
+    "isSwift6OrLater"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Concurrency/Swift6ConcurrencyAuditor+Diagnostics.swift",
+   "line": 36,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftPropertyLaws",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/./Tests/PropertyLawMacroTests/Generated/SwiftInfer/predicate/SendableProtocols_satisfiesSendable_predicate.swift",
+   "template": "predicate",
+   "suite": "SendableProtocols_satisfiesSendable_predicateTests",
+   "test": "satisfiesSendable_isTotal",
+   "subjects": [
+    "satisfiesSendable"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/Sources/PropertyLawDiscoveryTool/SendableProtocols.swift",
+   "line": 51,
+   "trials": true,
+   "stratum": "predicate"
+  },
+  {
+   "repo": "SwiftUMLStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/idempotence/StateScript_renderStateToken_idempotence.swift",
+   "template": "idempotence",
+   "suite": "StateScript_renderStateToken_idempotenceTests",
+   "test": "renderStateToken_isIdempotent",
+   "subjects": [
+    "renderStateToken"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/StateScript.swift",
+   "line": 105,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftLintRuleStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Tests/Generated/SwiftInfer/idempotence/RuleParameterParser_deindent_idempotence.swift",
+   "template": "idempotence",
+   "suite": "RuleParameterParser_deindent_idempotenceTests",
+   "test": "deindent_isIdempotent",
+   "subjects": [
+    "deindent"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/RuleParameterParser.swift",
+   "line": 91,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftUMLStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/idempotence/ERScript_sanitizeLabel_idempotence.swift",
+   "template": "idempotence",
+   "suite": "ERScript_sanitizeLabel_idempotenceTests",
+   "test": "sanitizeLabel_isIdempotent",
+   "subjects": [
+    "sanitizeLabel"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ERScript.swift",
+   "line": 181,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftUMLStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/idempotence/ComponentScript_safeAlias_idempotence.swift",
+   "template": "idempotence",
+   "suite": "ComponentScript_safeAlias_idempotenceTests",
+   "test": "safeAlias_isIdempotent",
+   "subjects": [
+    "safeAlias"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ComponentScript.swift",
+   "line": 98,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "LintStudioUI",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/LintStudioUI",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/LintStudioUI/./Tests/LintStudioUITests/Generated/SwiftInfer/idempotence/CLIToolActor_buildEnvironment_idempotence.swift",
+   "template": "idempotence",
+   "suite": "CLIToolActor_buildEnvironment_idempotenceTests",
+   "test": "buildEnvironment_isIdempotent",
+   "subjects": [
+    "buildEnvironment"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/LintStudioUI/Sources/LintStudioCore/CLI/CLIToolActor.swift",
+   "line": 318,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftUMLStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/idempotence/ActivityScript_mermaidEscape_idempotence.swift",
+   "template": "idempotence",
+   "suite": "ActivityScript_mermaidEscape_idempotenceTests",
+   "test": "mermaidEscape_isIdempotent",
+   "subjects": [
+    "mermaidEscape"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivityScript.swift",
+   "line": 177,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/idempotence/PackageTargetSources_normalized_idempotence.swift",
+   "template": "idempotence",
+   "suite": "PackageTargetSources_normalized_idempotenceTests",
+   "test": "normalized_isIdempotent",
+   "subjects": [
+    "normalized"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Models/PackageTargetSources.swift",
+   "line": 125,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/./Tests/CoreTests/Generated/SwiftInfer/idempotence/RuleDocumentationLoader_camelCaseToKebab_idempotence.swift",
+   "template": "idempotence",
+   "suite": "RuleDocumentationLoader_camelCaseToKebab_idempotenceTests",
+   "test": "camelCaseToKebab_isIdempotent",
+   "subjects": [
+    "camelCaseToKebab"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Sources/App/Models/RuleDocumentationLoader.swift",
+   "line": 47,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "LintStudioUI",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/LintStudioUI",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/LintStudioUI/./Tests/LintStudioUITests/Generated/SwiftInfer/idempotence/HTMLEscaping_escape_idempotence.swift",
+   "template": "idempotence",
+   "suite": "HTMLEscaping_escape_idempotenceTests",
+   "test": "escape_isIdempotent",
+   "subjects": [
+    "escape"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/LintStudioUI/Sources/LintStudioCore/Export/HTMLEscaping.swift",
+   "line": 13,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/idempotence/NameListReader_normalize_idempotence.swift",
+   "template": "idempotence",
+   "suite": "NameListReader_normalize_idempotenceTests",
+   "test": "normalize_isIdempotent",
+   "subjects": [
+    "normalize"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/NameListReader.swift",
+   "line": 15,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftPropertyLaws",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/./Tests/PropertyLawMacroTests/Generated/SwiftInfer/idempotence/QualifiedTypeName_identifier_idempotence.swift",
+   "template": "idempotence",
+   "suite": "QualifiedTypeName_identifier_idempotenceTests",
+   "test": "identifier_isIdempotent",
+   "subjects": [
+    "identifier"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/Sources/PropertyLawCore/QualifiedTypeName.swift",
+   "line": 32,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintVisitors",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintVisitors/Tests/Generated/SwiftInfer/idempotence/DeclaredRoleClassifier_normalised_idempotence.swift",
+   "template": "idempotence",
+   "suite": "DeclaredRoleClassifier_normalised_idempotenceTests",
+   "test": "normalised_isIdempotent",
+   "subjects": [
+    "normalised"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/DeclaredRoleClassifier.swift",
+   "line": 92,
+   "trials": true,
+   "stratum": "idempotence"
+  },
+  {
+   "repo": "SwiftUMLStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/input-totality/parseCommaDelimitedList_input-totality.swift",
+   "template": "input-totality",
+   "suite": "parseCommaDelimitedList_input_totalityTests",
+   "test": "parseCommaDelimitedList_isTotal",
+   "subjects": [],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+   "line": 51,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintConfig",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintConfig/Tests/Generated/SwiftInfer/input-totality/InlineSuppressionParser_parse_input-totality.swift",
+   "template": "input-totality",
+   "suite": "InlineSuppressionParser_parse_input_totalityTests",
+   "test": "parse_isTotal",
+   "subjects": [
+    "parse"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintConfig/Sources/SwiftProjectLintConfig/Suppression/InlineSuppressionParser.swift",
+   "line": 69,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/input-totality/SkillSigner_sha256_input-totality.swift",
+   "template": "input-totality",
+   "suite": "SkillSigner_sha256_input_totalityTests",
+   "test": "sha256_isTotal",
+   "subjects": [
+    "sha256"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Skills/Packaging/SkillSigner.swift",
+   "line": 103,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftLintRuleStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Tests/Generated/SwiftInfer/input-totality/ImpactSimulator_parseViolations_input-totality.swift",
+   "template": "input-totality",
+   "suite": "ImpactSimulator_parseViolations_input_totalityTests",
+   "test": "parseViolations_isTotal",
+   "subjects": [
+    "parseViolations"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/ImpactSimulator.swift",
+   "line": 272,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftLintRuleStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Tests/Generated/SwiftInfer/input-totality/WorkspaceAnalyzer_parseViolations_input-totality.swift",
+   "template": "input-totality",
+   "suite": "WorkspaceAnalyzer_parseViolations_input_totalityTests",
+   "test": "parseViolations_isTotal",
+   "subjects": [
+    "parseViolations"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/WorkspaceAnalyzer+Helpers.swift",
+   "line": 198,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/input-totality/GitCommit_parse_input-totality.swift",
+   "template": "input-totality",
+   "suite": "GitCommit_parse_input_totalityTests",
+   "test": "parse_isTotal",
+   "subjects": [
+    "parse"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Git/GitCommit.swift",
+   "line": 31,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/input-totality/SwiftLintConfigParser_parse_input-totality.swift",
+   "template": "input-totality",
+   "suite": "SwiftLintConfigParser_parse_input_totalityTests",
+   "test": "parse_isTotal",
+   "subjects": [
+    "parse"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Linting/SwiftLintConfigParser.swift",
+   "line": 57,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftFormatRuleStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore/Tests/SwiftFormatRuleStudioCoreTests/Generated/SwiftInfer/input-totality/LintReportParser_parse_input-totality.swift",
+   "template": "input-totality",
+   "suite": "LintReportParser_parse_input_totalityTests",
+   "test": "parse_isTotal",
+   "subjects": [
+    "parse"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore/Sources/SwiftFormatRuleStudioCore/Parsing/LintReportParser.swift",
+   "line": 30,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftLintRuleStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Tests/Generated/SwiftInfer/input-totality/RuleRegistry_parseRulesTable_input-totality.swift",
+   "template": "input-totality",
+   "suite": "RuleRegistry_parseRulesTable_input_totalityTests",
+   "test": "parseRulesTable_isTotal",
+   "subjects": [
+    "parseRulesTable"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/RuleRegistry+Parsing.swift",
+   "line": 50,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftUMLStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/input-totality/SPMPackageReader_parse_input-totality.swift",
+   "template": "input-totality",
+   "suite": "SPMPackageReader_parse_input_totalityTests",
+   "test": "parse_isTotal",
+   "subjects": [
+    "parse"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftUMLStudio/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/SPMPackageDescription.swift",
+   "line": 67,
+   "trials": true,
+   "stratum": "input-totality"
+  },
+  {
+   "repo": "SwiftPropertyLaws",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/./Tests/PropertyLawMacroTests/Generated/SwiftInfer/guard-domain/RoundTripFinder_signature_guard-domain.swift",
+   "template": "guard-domain",
+   "suite": "RoundTripFinder_signature_guard_domainTests",
+   "test": "signature_holdsOnItsGuardedSubDomain",
+   "subjects": [
+    "signature"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/Sources/PropertyLawDiscoveryTool/RoundTripFinder.swift",
+   "line": 42,
+   "trials": true,
+   "stratum": "guard-domain"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/guard-domain/ThinkingRecipeExtractor_extract_guard-domain.swift",
+   "template": "guard-domain",
+   "suite": "ThinkingRecipeExtractor_extract_guard_domainTests",
+   "test": "extract_holdsOnItsGuardedSubDomain",
+   "subjects": [
+    "extract"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Thinking/ThinkingRecipeExtractor.swift",
+   "line": 46,
+   "trials": true,
+   "stratum": "guard-domain"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/guard-domain/ThinkingAnalyzer_analyze_guard-domain.swift",
+   "template": "guard-domain",
+   "suite": "ThinkingAnalyzer_analyze_guard_domainTests",
+   "test": "analyze_holdsOnItsGuardedSubDomain",
+   "subjects": [
+    "analyze"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Thinking/ThinkingAnalyzer.swift",
+   "line": 12,
+   "trials": true,
+   "stratum": "guard-domain"
+  },
+  {
+   "repo": "SwiftEffectInference",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/./Tests/SwiftEffectInferenceTests/Generated/SwiftInfer/guard-domain/CaptureMutationChecker_isShorthandParameter_guard-domain.swift",
+   "template": "guard-domain",
+   "suite": "CaptureMutationChecker_isShorthandParameter_guard_domainTests",
+   "test": "isShorthandParameter_holdsOnItsGuardedSubDomain",
+   "subjects": [
+    "isShorthandParameter"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/Sources/SwiftEffectInference/PurityInferrer.swift",
+   "line": 760,
+   "trials": true,
+   "stratum": "guard-domain"
+  },
+  {
+   "repo": "SwiftPropertyLaws",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/./Tests/PropertyLawMacroTests/Generated/SwiftInfer/guard-domain/DerivationStrategist_isCapacityOnly_guard-domain.swift",
+   "template": "guard-domain",
+   "suite": "DerivationStrategist_isCapacityOnly_guard_domainTests",
+   "test": "isCapacityOnly_holdsOnItsGuardedSubDomain",
+   "subjects": [
+    "isCapacityOnly"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftPropertyLaws/Sources/PropertyLawCore/InitializerBasedDerivation.swift",
+   "line": 121,
+   "trials": true,
+   "stratum": "guard-domain"
+  },
+  {
+   "repo": "SwiftEffectInference",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/./Tests/SwiftEffectInferenceTests/Generated/SwiftInfer/associativity/BodyInference_Anchor_strongest_associativity.swift",
+   "template": "associativity",
+   "suite": "BodyInference_Anchor_strongest_associativityTests",
+   "test": "strongest_isAssociative",
+   "subjects": [
+    "strongest"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftEffectInference/Sources/SwiftEffectInference/BodyEffectInferrer.swift",
+   "line": 45,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/round-trip/SQLiteGraphDatabase_encodeProperties_decodeProperties_round-trip.swift",
+   "template": "round-trip",
+   "suite": "SQLiteGraphDatabase_encodeProperties_decodeProperties_round_tripTests",
+   "test": "encodeProperties_decodeProperties_roundTrip",
+   "subjects": [
+    "encodeProperties",
+    "decodeProperties"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Knowledge/SQLiteGraphDatabase.swift",
+   "line": 327,
+   "trials": true,
+   "stratum": "round-trip"
+  },
+  {
+   "repo": "SwiftFormatRuleStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore/Tests/SwiftFormatRuleStudioCoreTests/Generated/SwiftInfer/round-trip/SwiftFormatConfig_parse_serialized_round-trip.swift",
+   "template": "round-trip",
+   "suite": "SwiftFormatConfig_parse_serialized_round_tripTests",
+   "test": "parse_serialized_roundTrip",
+   "subjects": [
+    "parse",
+    "serialized"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore/Sources/SwiftFormatRuleStudioCore/Config/SwiftFormatConfig.swift",
+   "line": 82,
+   "trials": true,
+   "stratum": "round-trip"
+  },
+  {
+   "repo": "SwiftLintRuleStudio",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Tests/Generated/SwiftInfer/round-trip/DateProvider_fixed_callAsFunction_round-trip.swift",
+   "template": "round-trip",
+   "suite": "DateProvider_fixed_callAsFunction_round_tripTests",
+   "test": "fixed_callAsFunction_roundTrip",
+   "subjects": [
+    "fixed",
+    "callAsFunction"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/DeterminismProviders.swift",
+   "line": 31,
+   "trials": true,
+   "stratum": "round-trip"
+  },
+  {
+   "repo": "SwiftProjectLint",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintModels",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintModels/Tests/Generated/SwiftInfer/caseiterable-key-injectivity/RuleIdentifier_suppressionKey_caseiterable-key-injectivity.swift",
+   "template": "caseiterable-key-injectivity",
+   "suite": "RuleIdentifier_suppressionKey_caseiterable_key_injectivityTests",
+   "test": "suppressionKey_isInjectiveOverCases",
+   "subjects": [
+    "suppressionKey"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-widened/trees/SwiftProjectLint/Packages/SwiftProjectLintModels/Sources/SwiftProjectLintModels/RuleIdentifier.swift",
+   "line": 295,
+   "trials": false,
+   "stratum": "other"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/filter-subset/Swift6ConcurrencyAuditor_filterConcurrencyDiagnostics_filter-subset.swift",
+   "template": "filter-subset",
+   "suite": "Swift6ConcurrencyAuditor_filterConcurrencyDiagnostics_filter_subsetTests",
+   "test": "filterConcurrencyDiagnostics_returnsOnlyElementsItWasGiven",
+   "subjects": [
+    "filterConcurrencyDiagnostics"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssist/Concurrency/Swift6ConcurrencyAuditor+Diagnostics.swift",
+   "line": 27,
+   "trials": true,
+   "stratum": "other"
+  },
+  {
+   "repo": "SwiftAssist",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/./Tests/SwiftAssistAppTests/Generated/SwiftInfer/caseiterable-key-injectivity/AppSection_id_caseiterable-key-injectivity.swift",
+   "template": "caseiterable-key-injectivity",
+   "suite": "AppSection_id_caseiterable_key_injectivityTests",
+   "test": "id_isInjectiveOverCases",
+   "subjects": [
+    "id"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftAssist/Sources/SwiftAssistApp/Navigation/NavigationDestination.swift",
+   "line": 13,
+   "trials": false,
+   "stratum": "other"
+  },
+  {
+   "repo": "SwiftMarkdownWiki",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftMarkdownWiki",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftMarkdownWiki/./SwiftMarkdownWikiTests/Generated/SwiftInfer/caseiterable-key-injectivity/PluginLogFilter_id_caseiterable-key-injectivity.swift",
+   "template": "caseiterable-key-injectivity",
+   "suite": "PluginLogFilter_id_caseiterable_key_injectivityTests",
+   "test": "id_isInjectiveOverCases",
+   "subjects": [
+    "id"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/5d4e9046-6afa-41fb-9671-9bf338207ded/scratchpad/census-imports2/trees/SwiftMarkdownWiki/SwiftMarkdownWiki/UI/PluginLogPanelView.swift",
+   "line": 12,
+   "trials": false,
+   "stratum": "other"
+  }
+ ]
+}
