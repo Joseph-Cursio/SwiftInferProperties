@@ -272,6 +272,38 @@ plus the **12 file-private types** above, which need a type widened and were nev
 count. ⚠ **Still yield, not bug-finding** — every one is `predicate`, `input-totality` or
 `idempotence`.
 
+### The 22 were widened, and every one converted
+
+Six pull requests, one per subject — [SwiftUMLStudio #47](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/47),
+[SwiftLintRuleStudio #49](https://github.com/Joseph-Cursio/SwiftLintRuleStudio/pull/49),
+[SwiftIdempotency #22](https://github.com/Joseph-Cursio/SwiftIdempotency/pull/22),
+[pbt-book #207](https://github.com/Joseph-Cursio/pbt-book/pull/207),
+[SwiftProjectLint #244](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/244),
+[SwiftPropertyLaws #56](https://github.com/Joseph-Cursio/SwiftPropertyLaws/pull/56) — each with its own tests
+green. Re-run over those six on one binary against the post-#557 baseline:
+
+| | before | after |
+|---|---:|---:|
+| stubs | 681 | 681 |
+| **compiles** | **478** | **500** |
+| **passes** | 415 | 439 |
+| failures | 36 | 36 |
+
+**22 freed, 0 newly set aside, all 22 pass** — 48 of 50 before, **70 of 72** now. Passes rise by 24,
+not 22: two of pbt-book's four come from the `--skip` fix (#559), which also accounts for its 3 extra
+traps and unaccounted 5 → 0. Corpus-wide that makes **compiles 641 → 663** and
+**passes 553 → 577**.
+
+⚠ **The edit was not always one keyword, and the header's advice was not always the edit.**
+SwiftUMLStudio's 8 and two of SwiftLintRuleStudio's were **moved** out of their `private extension`
+into an unmarked one — deleting the extension's keyword, as the header offers first, would have
+widened every other helper in it. And `TypeMemberCollector` **cascaded**: its stored property is typed
+by the `private` struct `TypeMembers`, which the enclosing catalog reads, so a second type had to be
+widened for one law. Three keywords bought SwiftProjectLint's two.
+
+⚠ **Still yield, not bug-finding.** All 22 are `predicate`, `input-totality` or `idempotence`, and all
+22 pass.
+
 ## Scope
 
 ⚠ **One subject**, chosen because it is 45% of the corpus's stubs. The proportions above are this
