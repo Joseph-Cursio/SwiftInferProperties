@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.150.0] — 2026-09-23
+
+Six weeks of work since 1.149.0 (2026-08-10), PRs #231–#574. The theme is **output that compiles, runs, and does not overclaim**: accepted suggestions now write runnable tests for most templates, generators reach far more types, and a set of measured gates withdraws laws the code does not owe.
+
+### Added
+
+- **Three commands.** `census` counts rows per template across registered corpora and records which corpora. `corpus` shows the measured subject codebases and whether each checkout still stands at its baseline revision. `survey-diff` compares two retained `prove-then-show` runs row by row.
+- **Stub writers on accept** for `comparator`, `filter-subset`, `guard-domain` (a new *characterisation* law class), `caseiterable-key-injectivity` (an exhaustive loop over `allCases`), `determinism`, and `input-totality` on instance methods and multi-argument functions. `state-machine` writes a scaffold.
+- **The role-postcondition template**: `isValid(f(x))` for role-named normalisers. It kills 4 of 4 real bugs where idempotence kills 1 of 4.
+- **Generators for what could not be derived before**: SwiftSyntax inputs taken from the package's own test snippets, class receivers built the way the package's tests build them, and collection generators composed from project types.
+- **Subject literals in string generators** (SwiftPropertyLaws 4.8.0). A stub's `String` generator also draws the subject's own string literals, which removed false passes and found a real infinite loop in shipped code (SwiftProjectLint #257).
+- **`REFUTED BY MEASUREMENT`** output, so a refutation is shown instead of dropped. Unverifiable picks are now attributed to the cause that actually blocked them, including a new `carrierNotEquatable` cause.
+
+### Changed
+
+- **The default verify trial budget is now N=1000** (was 100). A stub is compile-bound, so the tenfold budget adds about 5 ms per row. `--budget small` still means 100.
+- **Emitted stubs** name their subject and carry the template in the file name. They land in a test target the manifest names, hop onto the subject's actor, respect a target's default isolation, import what a copied receiver construction needs, and name the exact edit that unblocks an access-restricted subject.
+- **Dependencies:** SwiftPropertyLaws `from: "4.8.0"` (was 3.28.0), swift-property-based 2.0, SwiftEffectInference pinned at `1b62e764`. The SEI pin is guarded against SwiftProjectLint's across repositories.
+- **User reference** documents every subcommand, with consistent flag tables.
+
+### Removed (laws withdrawn, each measured before shipping)
+
+- Laws naming an `@available(*, unavailable)` or `obsoleted:` subject.
+- Laws on a witness-refuted impure subject.
+- `idempotence` where `involution` names the same declaration.
+- `monotonicity` on subjects whose name says it cannot hold.
+- `idempotence` on escapers that re-escape their own output.
+- Properties with a mutating accessor treated as read-only.
+- Accept-path stubs over a non-`Equatable` carrier, a throwing subject, an opaque parameter or a generic function.
+- Subset laws on names that do not promise membership.
+
+### Fixed
+
+- Module resolution now reads a target's `path:` from the manifest instead of assuming `Sources/<target>`.
+- Module-qualified stdlib spellings (`Swift.String`) are recognised as leaves.
+- Delegating initialisers inherit their target's precondition through the index.
+- Instance-method `monotonicity` is anchored at the receiver, and `Deque` is now an instance carrier.
+- Observed properties are treated as stored.
+- Emitted stubs no longer overwrite or redeclare one another.
+- Six emitter defects found by compiling the whole corpus.
+
+### Read before quoting a number
+
+- Across the measurement corpus, emitted stubs that pass rose from 67 to 577. **451 of those 577 (78%) only show that the subject does not crash**; 126 check behaviour. A planted-mutant check found that totality laws notice about 1 in 18 changes.
+- Suites at release: 6,145 fast + 223 in perf and the eight subprocess batches, green.
+
+## 1.42.0 – 1.149.0 — not recorded here
+
+This file stopped being maintained after 1.41.0. Versions 1.42 through 1.149 (2026-05-11 to 2026-08-10) shipped without changelog entries, and only v1.42–v1.63 were tagged. Their history is in `git log` and in `docs/archive/claude-md-narrative-history.md`. The entry above resumes the file from 1.150.0 and does not summarise the gap.
+
 ## [1.41.0] — 2026-05-11
 
 The thirty-eighth calibration cycle. **Closes the v1.35 cycle-32 finding**: `RefactorClusterAnalyzer.classify` now uses a two-layer dominant-pattern rule. OrderedSet's 29-suggestion cluster reclassifies from the misleading `algebraicStructure` (14% algebraic — fired only because the pre-v1.41 rule was "any 2 distinct algebraic templates wins") to `dual-style-consistency cluster` (dual-style 12 entries is the dominant single template). The curated suggestion text now correctly points the user at SetAlgebra conformance.
@@ -36,6 +86,7 @@ User's call from open paths: higher-order property composition (PRD §20.2 looka
 - **Cycle-38 findings.** `docs/calibration-cycle-38-findings.md`.
 - **Performance baseline v1.41.** O(1) per classify call delta.
 
+[1.150.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.150.0
 [1.41.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.41.0
 
 ## [1.40.0] — 2026-05-11
