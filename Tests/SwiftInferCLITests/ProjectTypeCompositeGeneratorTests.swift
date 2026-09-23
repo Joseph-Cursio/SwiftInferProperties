@@ -54,6 +54,14 @@ struct ProjectTypeCompositeGeneratorTests {
         "String", "Int", "[String]", "String?", "Data"
     ])
     func stdlibUntouched(typeName: String) {
-        #expect(Self.generator(typeName) == LiftedTestEmitter.defaultGenerator(for: typeName))
+        // A raw type is not answered here at all: it falls through to `chooseGenerator`, whose
+        // `defaultGenerator` call is the one that draws the subject's own literals. Answering it
+        // here rendered `String` without them. Either way nothing REPLACES the stdlib arm, which is
+        // what this test guards.
+        if RawType(typeName: typeName) != nil {
+            #expect(Self.generator(typeName) == nil)
+        } else {
+            #expect(Self.generator(typeName) == LiftedTestEmitter.defaultGenerator(for: typeName))
+        }
     }
 }

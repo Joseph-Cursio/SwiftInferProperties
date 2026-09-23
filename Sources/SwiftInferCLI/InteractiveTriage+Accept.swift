@@ -308,7 +308,10 @@ extension InteractiveTriage {
             return derived
         }
         let reason = failureReason?(typeName)
-        return LiftedTestEmitter.defaultGenerator(for: typeName, reason: reason)
+        // The subject's own literals, for a `String` carrier only — the one type the kit mixes them
+        // into — so a file is parsed only where the answer can change the stub.
+        let literals = RawType(typeName: typeName) == .string ? SubjectLiterals.of(suggestion) : []
+        return LiftedTestEmitter.defaultGenerator(for: typeName, reason: reason, subjectLiterals: literals)
     }
 
     /// Strip the optional `\(typeName).` prefix from an identity-element

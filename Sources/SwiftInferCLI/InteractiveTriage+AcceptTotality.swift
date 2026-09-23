@@ -115,10 +115,13 @@ extension InteractiveTriage {
         let failureLabel = "\(parsed.displaySignature) failed totality"
         let argumentTypes = constructed == nil ? parsedTypes : Array(parsedTypes.dropFirst())
         let seed = SamplingSeed.derive(from: suggestion.identity)
+        let literals = argumentTypes.contains { RawType(typeName: $0) == .string } ? SubjectLiterals.of(suggestion) : []
         return LiftedTestEmitter.total(
             callee: callee,
             seed: seed,
-            generators: argumentTypes.map { totalityGenerator(for: $0, customGenerator: customGenerator) },
+            generators: argumentTypes.map {
+                totalityGenerator(for: $0, customGenerator: customGenerator, subjectLiterals: literals)
+            },
             isThrowing: evidence.signature.contains(" throws"),
             isAsync: evidence.signature.contains(" async"),
             // #498 — `arityFreeArgumentTypes` already returned these, in the same order the
@@ -193,11 +196,12 @@ extension InteractiveTriage {
     /// still says on its own line what to write.
     private static func totalityGenerator(
         for typeName: String,
-        customGenerator: ((String) -> String?)?
+        customGenerator: ((String) -> String?)?,
+        subjectLiterals: [String]
     ) -> String {
         if RawType(typeName: typeName) == nil, let derived = customGenerator?(typeName) {
             return derived
         }
-        return LiftedTestEmitter.hostileGenerator(for: typeName)
+        return LiftedTestEmitter.hostileGenerator(for: typeName, subjectLiterals: subjectLiterals)
     }
 }

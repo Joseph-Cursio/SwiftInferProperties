@@ -44,9 +44,17 @@ public extension LiftedTestEmitter {
     /// missing-symbol error. That arm now carries the marker `todoGeneratorMarker` so a reader
     /// and a `grep` can tell a working generator from a deliberate compile error; four of the
     /// nineteen were this arm (`CGFloat`, `URL`, `Date?`, `[PluginLogEntry]`) and nothing said so.
-    static func defaultGenerator(for typeName: String, reason: String? = nil) -> String {
+    ///
+    /// `subjectLiterals` are the subject's own string literals (`SubjectLiterals`), mixed into a
+    /// `String` generator's baseline by the kit — empty for every caller that has no subject, which
+    /// renders exactly the expression it always did.
+    static func defaultGenerator(
+        for typeName: String,
+        reason: String? = nil,
+        subjectLiterals: [String] = []
+    ) -> String {
         if let rawType = RawType(typeName: typeName) {
-            return rawType.edgeBiasedGeneratorExpression ?? rawType.generatorExpression
+            return rawType.edgeBiasedGeneratorExpression(subjectTokens: subjectLiterals) ?? rawType.generatorExpression
         }
         // **Ask the kit before giving up.** `DerivationStrategist.composedGenerator` already resolves
         // Foundation value types outside the raw-type set — `Data`, `URL`, `UUID`, `Decimal`,
@@ -84,11 +92,17 @@ public extension LiftedTestEmitter {
     /// Falls back to `defaultGenerator` for every non-`String` type, so this widens nothing it
     /// was not measured against — the sweep covered one parameter type and the claim is scoped
     /// to it.
-    static func hostileGenerator(for typeName: String) -> String {
-        if let rawType = RawType(typeName: typeName), let hostile = rawType.hostileGeneratorExpression {
+    ///
+    /// **The subject's literals matter most here.** A parser traps on its own delimiters, which are
+    /// literals in its body the curated hostile list cannot know: `RuleDocView.parseBlocks` looped
+    /// forever on its own `"#"` — freezing the app on 29 bundled documents — and its totality law
+    /// passed until its generator drew that literal (`subject-literal-generation-scope.md` §4a).
+    static func hostileGenerator(for typeName: String, subjectLiterals: [String] = []) -> String {
+        if let rawType = RawType(typeName: typeName),
+           let hostile = rawType.hostileGeneratorExpression(subjectTokens: subjectLiterals) {
             return hostile
         }
-        return defaultGenerator(for: typeName)
+        return defaultGenerator(for: typeName, subjectLiterals: subjectLiterals)
     }
 
     /// Appended to the "you supply it" generator arm so an emitted file that cannot compile says
