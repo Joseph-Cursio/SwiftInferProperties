@@ -197,6 +197,8 @@ fix that reaches boundary values should turn *never changed* rows into *changed*
 this is the baseline that says which. Without it, every re-run draws a fresh sample and a gain cannot
 be told from sampling noise — the reason `fixtures/verify-runs/` exists for survey runs.
 
+⚠ **One recorded outcome does not reproduce**: `SwiftFormatConfig_parse_serialized_round_tripTests`' M6 mutant is recorded DIVERGED, and on 2026-09-23 it read UNEXERCISED on the same stub, tree and commit (100 of 100 probe lines identical). The probe wraps only `serialized()`, which cannot differ while the law holds. Quote it as UNEXERCISED; see `subject-literal-generation-scope.md` §4c.
+
 ⚠ **It is not a list of bugs.** Every row is a planted change to correct code. Read an outcome as
 *what the law noticed*, never as *what the code got wrong*.
 
