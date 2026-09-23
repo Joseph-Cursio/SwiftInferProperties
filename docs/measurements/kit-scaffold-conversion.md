@@ -258,7 +258,7 @@ reaching `sanitizePoints(points) == points`; that is *did not trap here*, not *c
 
 **The open follow-up**: the gate is type-wide because *delegates AND some initializer on this type
 asserts* avoids overload resolution. Resolving the delegation to its actual target would keep
-`Path` and `LineSegment` live. On this one subject that is 2 carriers of 3 and 11 laws of 17 —
+`Path` and `LineSegment` live. ✅ **SIZED AND DECLINED 2026-09-23** (`delegation-gate-census.md`): a precise gate gives **10 types in one corpus** a generator, really 3 roots plus 7 iterators, against a bar of 10 across 3 corpora. ⚠ **And the claim that it would keep `Path` and `LineSegment` live is FALSE by Euclid's source**: `Path`'s chain ends in two same-label overloads that BOTH assert, and `LineSegment`'s only clean delegation is failable. On Euclid it recovers 0. The original text continues: On this one subject that is 2 carriers of 3 and 11 laws of 17 —
 enough to be worth sizing, not enough to justify building on. `open-threads.md` row **72**.
 
 ### 3.3 The trap has a root cause, and it is a dropped field rather than a missing analysis
