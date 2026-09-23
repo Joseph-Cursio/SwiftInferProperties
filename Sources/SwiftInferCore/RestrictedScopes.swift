@@ -125,7 +125,10 @@ public enum RestrictedScopes {
 }
 
 /// The innermost function, initializer, subscript or property whose extent covers the line.
-private final class DeclarationFinder: SyntaxVisitor {
+///
+/// Shared by `RestrictedScopes` and `SubjectLiterals`: both ask *which declaration is this line
+/// in*, and two answers to that question would drift.
+final class DeclarationFinder: SyntaxVisitor {
     let line: Int
     let converter: SourceLocationConverter
     private(set) var innermost: DeclSyntax?
