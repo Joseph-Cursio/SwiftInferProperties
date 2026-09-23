@@ -352,7 +352,14 @@ let package = Package(
         // alongside the CLI pipeline path.
         .testTarget(
             name: "SwiftInferIntegrationTests",
-            dependencies: ["SwiftInferTemplates", "SwiftInferTestLifter", "SwiftInferCore", "SwiftInferCLI"]
+            dependencies: [
+                "SwiftInferTemplates", "SwiftInferTestLifter", "SwiftInferCore", "SwiftInferCLI",
+                // `DelegationGateCensusMeasuredTests` re-parses initializer bodies to resolve
+                // `self.init(…)` to its target. Declared rather than reached through
+                // SwiftInferCore, for the clean-build reason `SwiftInferCoreTests` records.
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax")
+            ]
         ),
         // Wall-clock performance budgets, isolated in their own target so their
         // load-sensitive flakiness can't fail a correctness run. Skip them with
