@@ -1,6 +1,6 @@
 # Drawing a subject's own literals — scope, gated on one measurement
 
-> **Status:** `open` · **As of:** 2026-09-22
+> **Status:** `shipped` · **As of:** 2026-09-23
 
 `funnel-mutation-check.md` §8 mixed each subject's own string literals into its law's string generator
 and refuted **7 of 52** passing behaviour laws — all false laws, no defects — which made literal
@@ -77,6 +77,39 @@ hanging on the old code; the per-law record is `fixtures/mutation-check/literal-
 **Per §4's table: ≥ 1 real trap, so build.** It is the first defect this line of work — the funnel census,
 the mutation check, the literal-reach runs — has found in shipped code, and it came from the arm measured
 to refute nothing: totality.
+
+## 4b. Built, and measured 2026-09-23
+
+SwiftPropertyLaws **v4.8.0** (`edgeBiasedGeneratorExpression(subjectTokens:)`,
+`hostileGeneratorExpression(subjectTokens:)`, the subject arm in the alphanumeric baseline only) and, in
+this repository, `SubjectLiterals` plus the accept path passing them for top-level `String` carriers.
+
+**The defect reproduces from a PLAIN stub.** On SwiftProjectLint `2b292e8f` — before its fix — the stub the
+tool now emits for `RuleDocView.parseBlocks` draws `["\n", "[←", "```", "#", "---"]` and **hangs at its
+shipped 100 trials**. The census recorded the same law as passing before this change.
+
+**Same-everything census A/B**, 19 repositories, binary from `main` against the gated one, one seed CLI:
+
+| | A | B |
+|---|---:|---:|
+| stubs · compiles | 900 · 661 | 900 · 661 |
+| passes | 575 | **573** |
+| — behaviour | 124 | **122** |
+| — does not crash | 451 | 451 |
+| failures | 59 | **61** |
+
+- **Newly failing: exactly the three §2 predicted** — `GlobTool.translate` and `KaTeXSchemeHandler.mimeType`
+  idempotence, and pbt-book's ASCII-only round trip. All three hand-checked false laws; no defect.
+- **Newly passing: one, and it is a coverage gain** — SwiftPropertyLaws' `componentTypeNames` `guard-domain`
+  law failed *NOT APPLIED* (no draw ended in `?`, so the guarded sub-domain was never entered); drawing the
+  subject's own `"?"` reaches it, and the law, now actually checked, holds.
+- Upstream stages identical; nothing else moved.
+
+⚠ **The first B moved NOTHING, and that was a defect in this build, not a null result.** The accept path's
+custom-generator closure answers before `chooseGenerator` does, and the resolver reports `String` as
+`.notInUniverse`, so the closure rendered `String`'s generator itself — without the literals. The unit test
+had called `chooseGenerator` without the closure the accept path always supplies. Fixed (a raw type falls
+through), with a test through the real closure that fails on the old code with exactly the census's symptom.
 
 ## 5. If it is built
 
