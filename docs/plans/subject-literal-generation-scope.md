@@ -1,0 +1,71 @@
+# Drawing a subject's own literals — scope, gated on one measurement
+
+> **Status:** `proposed` · **As of:** 2026-09-22
+
+`funnel-mutation-check.md` §8 mixed each subject's own string literals into its law's string generator
+and refuted **7 of 52** passing behaviour laws — all false laws, no defects — which made literal
+drawing the one generator change measured to make the funnel more honest rather than larger. This
+scopes building it, and finds that the case has changed since.
+
+## 1. Where string generators come from today
+
+The kit already has **two tuned `String` generators**, each chosen for a LAW, and swift-infer picks one
+from the type name alone:
+
+| expression (`PropertyLawCore.RawType`) | tuned for | tokens |
+|---|---|---|
+| `edgeBiasedGeneratorExpression` | idempotence / structural laws | YAML and Markdown markers, blanks — doubled, because repetition falsifies idempotence |
+| `hostileGeneratorExpression` | totality | delimiters, escapes, Latin-1, long ASCII — measured 6 of 6 planted traps against the edge-biased 3 of 6 |
+
+Both token lists are fixed. **What §8 added was a SUBJECT-tuned list** — the `&`, `"`, `css` the function
+itself handles. So the design splits along PRD §11: the kit takes extra tokens and stays ignorant of
+subjects; swift-infer, which knows the subject, harvests its literals and passes them in.
+
+## 2. The measured payoff has mostly been taken already
+
+Four of §8's seven false laws were escapers, and `ReplacementChainClassifier` (#568) now withdraws
+exactly those. Among behaviour laws, literal drawing would still refute **three**: `mimeType`,
+`GlobTool.translate`, and pbt-book's ASCII-only round trip. **Three laws do not carry a cross-repository
+change** — a kit release, a pin bump, and stub text moving under every `String` carrier.
+
+## 3. The payoff that has NOT been measured: totality
+
+The funnel's **451 totality passes** can only fail by trapping, and a parser traps on its own
+delimiters — which are its literals. The kit's own `hostileGeneratorExpression` measurement found the
+worst miss was exactly this: *"`WikilinkParser` exists to parse `[[…]]`, so its real trap bugs live in
+bracket handling, and the edge-biased generator cannot produce a single bracket."* A fixed hostile list
+guesses at delimiters; a subject's literals are its delimiters.
+
+**If subject literals make totality laws trap, that is bug-finding** — the axis nothing this cycle has
+moved: every lever so far raised yield or removed false passes. And it can be measured before anything
+is built: `literal_reach_check.py` over the totality laws instead of the behaviour ones.
+
+## 4. The gate
+
+**Run the totality arm first.** Every newly trapping law is hand-checked, and a trap is only a finding
+if the input could reach the function in real use — a parser that traps on its own delimiter is a
+defect; one that traps on a literal it never receives unescaped is not.
+
+| result | decision |
+|---|---|
+| ≥ 1 real trap | **build**: the kit takes extra tokens, swift-infer harvests and passes them |
+| traps, all unreachable in real use | decline for totality; the behaviour case (3 laws) does not carry it |
+| no traps | decline; record that subject literals do not reach totality failures on this corpus |
+
+## 5. If it is built
+
+- **Kit (SwiftPropertyLaws):** `RawType.edgeBiasedGeneratorExpression(extraTokens:)` and
+  `hostileGeneratorExpression(extraTokens:)` — the subject's tokens join the curated list, doubled and
+  embedded as the existing arms already do. Existing call sites pass none, so goldens do not move.
+- **swift-infer:** the accept path reads the subject's string literals from its body — the harvest
+  `literal_reach_check.py` already does, moved into Swift — and passes them for top-level `String`
+  carriers only, the kit's own stated scope for the biased expressions.
+- **Measured by the committed records:** `literal-reach-2026-09-22.jsonl` should reproduce its seven
+  refutations with no clone, and `run-2026-09-22.jsonl`'s literal mutants should change outcome.
+
+## 6. Not in scope
+
+- Literals for non-`String` carriers — integer literals are §7's *unreached boundaries*, and they sit on
+  derived counts, not parameters.
+- A subject-literal token list that replaces the curated ones: the law-tuned lists are measured correct
+  for their laws, and this only adds to them.
