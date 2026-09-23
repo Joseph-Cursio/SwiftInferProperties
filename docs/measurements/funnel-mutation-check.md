@@ -139,8 +139,46 @@ So the 34 unreached mutants were classified by what a generator would need to re
   its entities contain nothing it escapes and its idempotence law is genuinely true.
 
 **A narrow generator does not only miss planted bugs — it lets false laws pass.** That bears directly
-on the 126 behaviour passes, which are now the figure quoted as the meaningful one. The follow-up is to
-measure how many of them a generator that draws the subject's own literals would refute.
+on the 126 behaviour passes, which are now the figure quoted as the meaningful one.
+
+## 8. How many of the behaviour passes are false laws the generator hid? — at least 7 of 126
+
+`scripts/literal_reach_check.py` re-ran every passing behaviour law whose strings come from the kit's
+`letterOrNumber` generator, with that generator mixed with **the subject's own string literals** —
+alone, and embedded in random text — at 1,000 trials. No kit change, no new template: only the draws.
+
+| | laws |
+|---|---:|
+| behaviour stubs, compiled and not failing | 149 |
+| draw strings from the kit's `letterOrNumber` generator | 75 |
+| — subject has no string literal | 22 |
+| — the literal clone hit a type-check timeout | 1 |
+| **ran with literals** | **52** |
+| held | 45 |
+| **newly failed** | **7** |
+
+**All 7 hand-check as FALSE LAWS; none is a defect.** Every counterexample is by construction:
+
+| law | why it is false |
+|---|---|
+| `HTMLEscaping.escape` · `String.xmlEscaped` · `String.htmlEscaped` — idempotence | escaping `&` emits a new `&`: `&amp;` → `&amp;amp;` |
+| `ActivityScript.plantUMLEscape` — idempotence | escaping `"` emits a new `"`: `\"` → `\\"` |
+| `GlobTool.translate` — idempotence | its output is a regex, not a glob: `*` → `[^/]*` → escaped again |
+| `KaTeXSchemeHandler.mimeType` — idempotence | its output is not an extension: `css` → `text/css` → `application/octet-stream` |
+| pbt-book `byteReversed(graphemeReversed(x)) == x` — round-trip | true for ASCII only, a multi-byte character's reversed bytes are not UTF-8; a teaching example whose own test says `…ForTheAsciiExample` |
+
+- **`mimeType` is the case this repo already knew** as *passing while false* (SwiftMarkdownWiki); this
+  is the mechanism — the generator never drew `css`, so the second application never happened.
+- **Six of the seven are `idempotence` over an escape or a one-way mapping** — applied twice it escapes
+  or maps again — the same mechanism behind the 18 of 18 hand-checked `idempotence` refutations.
+  By template: `idempotence` **6 of 41**, `round-trip` 1 of 4, `guard-domain` 0 of 6.
+- **At least 7 of the 126 behaviour passes (5.6%) are false — a FLOOR.** Only laws drawing kit strings
+  from subjects with literals could be tested at all: 52 of 126. Nothing is claimed about the other 74.
+
+**What it argues for: drawing the subject's own literals is cheap and measured to remove false passes**
+— the one place this whole line of work has found a generator change that makes the numbers more honest
+rather than larger. It belongs in the kit's string strategy, not in stubs; the per-law record is
+`fixtures/mutation-check/literal-reach-2026-09-22.jsonl`, each refutation carrying its hand-check.
 
 ## The record
 
