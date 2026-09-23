@@ -9,6 +9,8 @@ Resumable by design: every repository writes its own JSON result and is skipped 
 exists. One hang costs one repository, not the run -- the 16 September census lost 2h29m to an
 infinite loop and discarded a 2,914-stub pass.
 """
+import collections
+import glob
 import json
 import os
 import re
@@ -299,6 +301,37 @@ def stub_dirs(package_dir):
     return found
 
 
+# Templates whose law cannot notice a WRONG ANSWER, only a crash — reported apart from `passed`.
+#
+# ⚠ **A totality pass means the call returned, nothing more.** The mutation check
+# (`docs/measurements/funnel-mutation-check.md`) inverted predicates' answers 12 times and these
+# laws caught none of them; the one totality kill was a trap. They were 75% of the funnel's
+# passes, so a single `passed` figure read as "577 behaviours checked" when it was mostly "577
+# functions did not crash". `determinism` joins them as `Refutability.tautologicalTemplates`'
+# one member: `f(x) == f(x)` cannot fail at all. Everything else is `passed_behaviour`.
+DOES_NOT_CRASH_TEMPLATES = {"predicate", "input-totality", "determinism"}
+
+
+def suite_templates(stubs_dir):
+    """Each generated suite's template, read from the directory its stub was written into."""
+    templates = {}
+    for path in glob.glob(os.path.join(stubs_dir, "*", "*.swift")):
+        match = re.search(r"^struct (\w+)", open(path, encoding="utf-8").read(), re.M)
+        if match:
+            templates[match.group(1)] = os.path.basename(os.path.dirname(path))
+    return templates
+
+
+def record_passes(entry, ran, stubs_dir):
+    """`passed` for the package, split into laws that check behaviour and laws that check survival."""
+    templates = suite_templates(stubs_dir)
+    by_template = collections.Counter(templates.get(name.split(".")[0], "unknown") for name in ran["passed"])
+    entry["passed"] = len(ran["passed"])
+    entry["passed_by_template"] = dict(by_template)
+    entry["passed_does_not_crash"] = sum(n for t, n in by_template.items() if t in DOES_NOT_CRASH_TEMPLATES)
+    entry["passed_behaviour"] = entry["passed"] - entry["passed_does_not_crash"]
+
+
 def _unaccounted(per_package):
     """Compiled stubs that reported no outcome of any kind, summed over a repository's packages.
 
@@ -463,7 +496,7 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                     entry["limit"] = "dependency conflict in the subject (kit 2.x vs pinned 1.x)"
             if built["built"]:
                 ran = s5.run_serially(package_dir, swift)
-                entry["passed"] = len(ran["passed"])
+                record_passes(entry, ran, dirs[0])
                 entry["failed"] = len(ran["failed"])
                 entry["crashed"] = len(ran["crashed"])
                 entry["hung"] = len(ran.get("hung", []))
@@ -483,7 +516,7 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                         # the hung run, and setting the culprit aside is pointless if the entry
                         # still reports what the hang produced — measured on
                         # SwiftFormatRuleStudio, that is the difference between 0 passes and 13.
-                        entry["passed"] = len(ran["passed"])
+                        record_passes(entry, ran, dirs[0])
                         entry["failed"] = len(ran["failed"])
                         entry["crashed"] = len(ran["crashed"])
                         entry["hung"] = len(ran.get("hung", []))
@@ -492,6 +525,8 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                     # unmeasured rather than failing. Kept out of the pass column deliberately.
                     entry["no_verdict"] = ran["no_verdict"]
                     entry["passed"] = None
+                    entry["passed_behaviour"] = None
+                    entry["passed_does_not_crash"] = None
                     entry["failed"] = None
                 entry["hung_tests"] = ran.get("hung", [])[:5]
                 entry["failures"] = ran["failed"]
@@ -506,6 +541,8 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
     # for, and defaulting would put it straight back.
     result["compiled"] = sum(p.get("compiled") or 0 for p in per_package)
     result["passed"] = sum(p.get("passed") or 0 for p in per_package)
+    result["passed_behaviour"] = sum(p.get("passed_behaviour") or 0 for p in per_package)
+    result["passed_does_not_crash"] = sum(p.get("passed_does_not_crash") or 0 for p in per_package)
     result["failed"] = sum(p.get("failed") or 0 for p in per_package)
     result["crashed"] = sum(p.get("crashed") or 0 for p in per_package)
     result["hung"] = sum(p.get("hung") or 0 for p in per_package)
@@ -549,7 +586,8 @@ def main(argv):
         json.dump(result, open(out, "w"), indent=2)
         print(f"{repo}: seeds {result.get('seeds','?')} named {result.get('named','?')} "
               f"stubs {result.get('stubs','?')} compiled {result.get('compiled','?')} "
-              f"passed {result.get('passed','?')} crashed {result.get('crashed','?')} "
+              f"passed {result.get('passed','?')} (behaviour {result.get('passed_behaviour','?')}, "
+              f"does not crash {result.get('passed_does_not_crash','?')}) crashed {result.get('crashed','?')} "
               f"unaccounted {result.get('unaccounted','?')} {result.get('error','')}", flush=True)
     return 0
 
