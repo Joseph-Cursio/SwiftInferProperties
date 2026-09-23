@@ -1,13 +1,14 @@
 # SwiftInferProperties — the inference engine
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-09-23
 
 
 **Repo:** this one (`github.com/Joseph-Cursio/SwiftInferProperties`, binary `swift-infer`) ·
 **Book home:** Chapters 16–18; the interaction families of 23–24; `verify-value-semantics` in
 Chapter 9; `known-properties` in Appendix A.
 
-> **As of 2026-08-12** · subject **is** the observer: `SwiftInferProperties@21bc279` (`v1.149.0`).
+> **As of 2026-09-23** · subject **is** the observer: `SwiftInferProperties@79d4baab` (`v1.149.0`).
+> Previously verified at `SwiftInferProperties@21bc279`, 2026-08-12.
 >
 > Counts and measurements here are **dated and will rot** — this is the doc most exposed to that,
 > since its file counts and stage order change with ordinary work. Diagnoses, design rationale, and
@@ -20,11 +21,20 @@ Chapter 9; `known-properties` in Appendix A.
 > informative number in the table: three re-verifications across nine days, +54 source files, and
 > not one new command. Growth keeps going into depth behind the existing surface.
 >
+> **What the 2026-09-23 pass changed.** 809 commits since `21bc279` (195 touching `Sources/`),
+> and the version string **still** reads `1.149.0` (`SwiftInferCommand.swift:24`). Every size count
+> moved again — +89 source files, ~+13,650 lines, a **ninth** source target (`soundness-probe`) —
+> and, for the first time, **the subcommand count moved: 25 → 28** (`survey-diff`, `corpus`,
+> `census`). The 2026-08-12 note's *"the command list can be trusted far longer than the table"*
+> held for three passes and then did not. Both dependency pins moved a major version and a
+> revision respectively. The stage order, the extension points and the invariants all re-verify
+> unchanged against the code.
+>
 > **The 2026-08-06 note said this is the fastest-rotting doc in the directory.** Six days later
 > every count in it was wrong again, so treat the table as a snapshot with a date rather than a
 > fact about the package.
 
-<!-- doc-provenance date=2026-08-12 subject=SwiftInferProperties@21bc279 observer=SwiftInferProperties@21bc279 -->
+<!-- doc-provenance date=2026-09-23 subject=SwiftInferProperties@79d4baab observer=SwiftInferProperties@79d4baab -->
 
 
 ```
@@ -45,6 +55,9 @@ Three docs already describe this repo and none of them describes its *shape*:
 - **`CLAUDE.md`** is a pointer-only index — where the reasoning for each shipped decision lives.
 - **`glossary.md`** is vocabulary keyed to code, alphabetical within stage.
 - **the four sibling docs** in this directory describe the boundary *from the other side*.
+  ⚠ *Re-verified 2026-09-23 at `79d4baab`: the directory also holds `swift-property-based.md`, a
+  fifth package doc for the engine beneath SwiftPropertyLaws; the four toolchain siblings are
+  unchanged.*
 
 This one is the **architecture**: the targets, the stage order a suggestion actually travels, the
 extension points, and the invariants that govern the whole thing. It deliberately does not restate
@@ -59,6 +72,13 @@ measured 2026-08-12; the `perf` and eight subprocess batches added **83** at the
 test` run, 2026-08-10, and are carried rather than re-counted here — a fast-suite figure is one
 command, a full run is ten).
 
+⚠ **Re-verified 2026-09-23 at `79d4baab`: 9 source targets, not 8** — `soundness-probe` is a
+second `executableTarget` beside `swift-infer` (`Package.swift`). **~108,700 lines of Swift, was
+~95,100** (703 `.swift` files under `Sources/`, was 614). **Tests: 6,367 = 6,144 fast + 223 in
+`perf` and the eight batches**, from the full `make test` recorded in `CLAUDE.md` *Current state*
+(2026-09-23, at `0e16203f`, eight commits before `79d4baab`) — carried from there, not re-taken
+here.
+
 | target | files | 2026-08-06 | 2026-08-03 | what it owns |
 |---|---|---|---|---|
 | `SwiftInferCore` | **156** | 148 | 137 | value types, scanners, scoring, the index, purity |
@@ -68,9 +88,20 @@ command, a full run is ten).
 | `SwiftInferMacro` / `Impl` | 1 / 3 | 1 / 3 | 1 / 3 | the macro surface |
 | `SwiftInferKitEvidence` | 1 | 1 | 1 | the kit-verdict feedback channel |
 
+⚠ **Re-verified 2026-09-23 at `79d4baab`** (the bold column above is the 2026-08-12 reading):
+`SwiftInferCore` **181** · `SwiftInferTemplates` **170** (**99** `*Template*` by filename) ·
+`SwiftInferCLI` **301**, owning **28** subcommands (`SwiftInferCommand.swift:25–53`; confirmed by
+the built binary's `--help`) · `SwiftInferTestLifter` **44** · `SwiftInferMacro` / `Impl` 1 / 3 ·
+`SwiftInferKitEvidence` 1 · plus `soundness-probe` 1 and `swift-infer` 1, not in the table.
+
 **Six more days moved every count except the small targets** — +8 Core, +16 CLI, +2 templates,
 +2 lifter, +4,600 lines. `SwiftInferTestLifter` moved for the first time across three passes, which
 is where this window's work went: reading test bodies more carefully, not adding surface.
+
+⚠ **Re-verified 2026-09-23 at `79d4baab`: no longer true — 28 subcommands.** `SurveyDiff`
+(`survey-diff`), `Corpus` (`corpus`) and `Census` (`census`) were registered after `21bc279`
+(`Corpus.self` arrived in `59fd08df`, *Register the measurement corpus*). The paragraph below is
+kept as the 2026-08-12 reading.
 
 **The subcommand count has now held at 25 across all three passes** — nine days, +54 source files,
 no new command. That is the useful column: the growth is depth behind an unchanged surface, and a
@@ -81,6 +112,12 @@ Dependencies: `swift-syntax` (exact `602.0.0`), `SwiftPropertyLaws` (`from: 3.28
 on 2026-08-06; **read it from `Package.swift`, never from here**, which is CLAUDE.md's standing
 instruction about exactly this line), `SwiftEffectInference` (revision `50c5d3a` — **see the pin
 note in `swifteffectinference.md`**), `swift-argument-parser`.
+
+⚠ **Re-verified 2026-09-23 at `79d4baab`: SwiftPropertyLaws is `from: "4.8.0"` (`Package.swift:112`),
+was `3.28.0`; SwiftEffectInference is revision `1b62e764bca74e727b0080f8aeaf85663877648b`
+(`Package.swift:122`), was `50c5d3a`.** `VerifierWorkdir.swiftPropertyLawsRequirement` reads
+`"4.8.0"` (`VerifierWorkdir+KitPin.swift:64`), so the equal-pins rule holds. `swift-syntax`
+(`exact: "602.0.0"`, `:113`) and `swift-argument-parser` (`from: "1.5.0"`, `:114`) unchanged.
 
 **The CLI is the biggest target, and that is not an accident.** Most of the hard-won behaviour in
 this repo is about *what to show a reader and when* — the tier cut, the seed focus, the rescues, the
@@ -159,6 +196,7 @@ code OWES is never hidden. Fixed by **ordering**, not hiding. See `SwiftInferPro
 
 **1. A template** (`SwiftInferTemplates/*Template*.swift`) decides *whether it fires* and *what score
 it assigns*, and ships the "why suggested / why this might be wrong" pair. 89 files.
+⚠ **Re-verified 2026-09-23 at `79d4baab`: 99 files match `*Template*` by filename** (93 at `21bc279`).
 
 > **Before adding one, run the §10 census A/B** — two binaries from the before/after commits, run on
 > **the same day over the same corpora**. Never today's run against a remembered count: a remembered
@@ -174,6 +212,10 @@ single-digit row counts.
 **3. A composer** (`StrategistDispatchEmitter+Templates.swift`) renders the stub source for one
 template, as a pure `(Inputs, GeneratorRecipe) -> String`. **This set — not the catalog — is what
 bounds verify reach**: 13 templates, and 62% of index entries decline `unsupported-template`.
+⚠ **Re-verified 2026-09-23 at `79d4baab`: the verify-supported set is 16 templates** —
+`TemplateName.verifiable` (`TemplateName.swift:136`), which `VerifyCommand.supportedTemplates`
+reads; it was 15 at `21bc279`, `role-postcondition` being the addition. The 62% is a measurement
+and was not re-taken.
 
 **4. A signal** (`Signal+Kind.swift`) contributes weighted score. The file is capped at 400 lines and
 `Signal.Kind` is one enum Swift will not split across files, so it grows monotonically with the
@@ -220,7 +262,7 @@ in here without noticing:
 | sibling | what it assumes holds here |
 |---|---|
 | `swiftprojectlint.md` | `SeedRole` keeps `comparator`/`predicate`/`partition` in `Refutability.roleEntailedTemplates`. Demote one and the producer's `impliesEntailedLaw` becomes a lie — pinned by `SeedRoleContractTests`. Also: a seed focus never hides a law the code owes. |
-| `swifteffectinference.md` | `SoundPurity` takes the **meet** of `ReducerPurityAnalyzer` and `PurityInferrer`. Claiming `.pure` from either alone is unsound. **The SEI pin should equal SwiftProjectLint's and deliberately does not** — the bump was attempted 2026-08-03 and reverted, because `097181aa` costs a measured ~2× regression on the discover path (5 of the §13 budgets fail). Filed as [SEI#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1); do not re-apply without reading it. |
+| `swifteffectinference.md` | `SoundPurity` takes the **meet** of `ReducerPurityAnalyzer` and `PurityInferrer`. Claiming `.pure` from either alone is unsound. **The SEI pin should equal SwiftProjectLint's and deliberately does not** — the bump was attempted 2026-08-03 and reverted, because `097181aa` costs a measured ~2× regression on the discover path (5 of the §13 budgets fail). Filed as [SEI#1](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/1); do not re-apply without reading it. ⚠ **Re-verified 2026-09-23 at `79d4baab`: the pins now AGREE** — this repo and `../SwiftProjectLint/Package.swift` both pin SEI `1b62e764`, and `SEICrossRepoPinTests` guards that they stay equal. `swifteffectinference.md` records SEI#1's regression as fixed (`6470222`). The obligation is now *keep the two pins equal*, not *keep them apart*. |
 | `swiftpropertylaws.md` | `VerifierWorkdir.swiftPropertyLawsRequirement` equals this package's own pin (`VerifierWorkdirKitPinTests`), and `ProtocolCoverageMap`'s claims stay true law-by-law (`KitCoverageLawLevelTests`). |
 | `swiftidempotency.md` | `@ClockDeterministic` is the *only* thing that admits async, and the determinism law it earns is what makes the author's claim falsifiable. |
 
@@ -231,10 +273,18 @@ in here without noticing:
 - **`TemplateName` does not enumerate every template.** ~89 template files against 17 enum cases;
   `predicate`, `input-totality`, `filter-subset` are live in the index and absent from the enum.
   Counting by `allCases` undercounts.
+  ⚠ **Re-verified 2026-09-23 at `79d4baab`: 99 template files against 21 enum cases, and
+  `predicate` IS in the enum** (`TemplateName.swift`; it was already present, as one of 20 cases,
+  at `21bc279`). `input-totality` and `filter-subset` are still absent from it while live as
+  templates (`InputTotalityTemplate.swift`, `FilterSubsetTemplate.swift`), so the trap stands.
 - **The glossary's mode table is one short.** It says "The 24 modes"; `SwiftInferCommand.subcommands`
   has **25** — `scaffold-kit-suites` is missing from the table. Same drift shape the repo has already
   paid for twice (`CuratedEntryRole` guarding the wrong join, `KitCoverageDriftTests` asserting at
   suite rather than law granularity): **a list that must track a registry, with nothing watching it.**
+  ⚠ **Re-verified 2026-09-23 at `79d4baab`: the specific gap is closed and the trap has RECURRED.**
+  `glossary.md:72` now reads *"The 25 `swift-infer` modes"* and its table does list
+  `scaffold-kit-suites` — but `SwiftInferCommand.subcommands` now has **28**, and the table's 25
+  omit `survey-diff`, `corpus` and `census`. Same shape, three rows short this time.
 - **Three "reach" numbers get conflated.** Discovery reach (bounded by the catalog), verify reach
   (bounded by the *composer* set), refutation reach (bounded by the generator). `unsupported-carrier`
   reads like the bottleneck and measures at ~4%.
@@ -257,15 +307,17 @@ in here without noticing:
 
 | command | what |
 |---|---|
-| `make test-fast` | lint gate + regex-skip fast path, ~6s |
+| `make test-fast` | lint gate + regex-skip fast path, ~6s ⚠ *Re-verified 2026-09-23 at `79d4baab`: the Makefile's own help text says **~35s**, and `test-fast` now also runs `measurement-selftest` and fails past a 240s `FAST_BUDGET_SECONDS` (`Makefile:135–158`). The ~6s was not re-timed.* |
 | `make test` | fast suite + sequential subprocess batches, fail-fast — **prefer over bare `swift test`** |
-| `make batch1`…`batch7` | the subprocess suites, bounded peak temp-disk |
+| `make batch1`…`batch7` | the subprocess suites, bounded peak temp-disk ⚠ *Re-verified 2026-09-23 at `79d4baab`: `batch1`…`batch8` — eight batches (`Makefile:113`), and already eight at `21bc279`* |
 | `make perf` | the §13 suites, alone and serial — they assert wall-clock and peak-RSS |
 | `make clean-temp` | sweep leaked TCA workdirs and `verify-workdir/` |
 
 The fast path is `--skip 'MeasuredTests|MeasuredExecutionTests|VerifyPipeline'` — a **regex against
 the test ID**, self-maintaining. Don't enumerate suite names: the old per-name list silently missed
 four `VerifyPipeline*` suites and the "fast" command ran ~90 minutes.
+⚠ *Re-verified 2026-09-23 at `79d4baab`: that regex is now `SUBPROCESS_RE` (`Makefile:62`), and
+`test-fast` skips `'$(SUBPROCESS_RE)|$(PERF_RE)'` — the perf suites too (`Makefile:147`).*
 
 `swiftlint lint --quiet --strict` must stay at **zero**.
 
