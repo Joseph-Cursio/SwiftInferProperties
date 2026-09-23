@@ -69,7 +69,7 @@ functions the manifest names. See [Seed / seed manifest](#seed--seed-manifest), 
 authority; this sketch used to open *"the linter **seeds** it →"* and read as though no trip
 began without SwiftProjectLint.
 
-### The 25 `swift-infer` modes, by stage
+### The 28 `swift-infer` modes, by stage
 
 Abstracts are the shipped `--help` text, condensed. `discover` is the default subcommand.
 Everything touching interaction invariants is the v2.0 reducer/MVVM surface and is listed
@@ -124,6 +124,15 @@ separately because it runs on a different carrier population.
 | `scaffold` | Emit best-effort `gen()` stubs with `<#...#>` placeholders for types that cannot be fully auto-derived. |
 | `scaffold-kit-suites` | Emit the PropertyLawKit conformance-law tests your types already owe. Half the carriers emit **commented out** — `DerivationStrategist` reaches 180 of 351 — because a live emission that cannot compile is worse than a disclosed gap. |
 | `convert-counterexample` | Turn a property-test counterexample into a focused regression test. |
+
+**Measure the toolchain itself** — added 2026-09-23; the table listed 25 of the 28 registered modes
+(`SwiftInferCommand.swift`) while this section's own warning was about exactly that drift.
+
+| mode | what it does |
+|---|---|
+| `survey-diff` | Compare two retained `prove-then-show` runs row by row: which picks changed bucket, which changed only their decline cause, which came and went. |
+| `corpus` | Show the subject codebases the toolchain is measured against, and whether each checkout still stands at the revision its baseline was taken at. |
+| `census` | Count rows per template across registered corpora (`fixtures/corpora/manifest.json`), recording which corpora — a census is only as wide as its corpus list. |
 
 **Three things the table does not say, and they matter.** Only `discover` accepts
 `--seeds`. Only `docc` is gated on *verified* rather than inferred. And the whole
