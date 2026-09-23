@@ -1,13 +1,17 @@
 # SwiftEffectInference — the shared leaf
 
-> **Status:** `reference` · **As of:** 2026-08-17
+> **Status:** `reference` · **As of:** 2026-09-23
+>
+> Written 2026-08-17; checkable claims re-verified 2026-09-23 — see the 2026-09-23 block below.
 
 
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
 **Book home:** Appendix C; Chapter 26 §26.3 (the lattice), Chapter 22 §22.6 (clock-determinism).
 
 > **Counts verified 2026-08-06** against subject `SwiftEffectInference@6f45139` · observer
-> `SwiftInferProperties@2c599c0`
+> `SwiftInferProperties@2c599c0` · ⚠ **re-verified 2026-09-23** against subject
+> `SwiftEffectInference@a52117c` · pinned `1b62e764` · observer `SwiftInferProperties@79d4baab`
+> (source counts and citations only; §13 and census figures not re-taken)
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
@@ -69,7 +73,19 @@
 > `docs/measurements/` were taken at `c66fceb` and earlier, and a refuter that withholds `.pure`
 > moves them by construction. Each census doc names its own pin; that is the number to trust.
 
-<!-- doc-provenance date=2026-08-17 subject=SwiftEffectInference@3ea25f2 pinned=3ea25f29de9e0fbb86a6a8f20b2c42ead58a039e observer=SwiftInferProperties@74786be -->
+> **2026-09-23 — re-verified by reading, at SEI HEAD `a52117c` and at this repo's pin `1b62e764`.**
+> Both consumers now pin **`1b62e764`** in all four manifests (this repo's `Package.swift:122`, bumped
+> by `44a23e1c` on 2026-09-12; SwiftProjectLint's root + `SwiftProjectLintVisitors` +
+> `SwiftProjectLintIdempotencyRules`). The pin is **10 commits ahead of `3ea25f2`** and SEI HEAD
+> `a52117c` is **4 commits ahead of the pin** (`e3cf6ee`, `49792df` + two merges). Those four change
+> **only access modifiers** — 13 `private` → `internal` edits across 6 source files, so tests can reach
+> helpers — and move no verdict; so every source count below is **identical at the pin and at HEAD**.
+> What moved between `3ea25f2` and the pin: `908f8d9` (file reads swallowed by `try?` refute),
+> `5fdc203` (`contentsOf` matched on the callee), and `e6fa169` (the new public `PurityRefutation`
+> witness). Corrections are marked inline. **Not re-taken:** the §13 perf table and every census
+> figure, since both need a build or a test run; the table has no column at `1b62e764`.
+
+<!-- doc-provenance date=2026-09-23 subject=SwiftEffectInference@a52117c pinned=1b62e764bca74e727b0080f8aeaf85663877648b observer=SwiftInferProperties@79d4baab -->
 
 
 ```
@@ -80,7 +96,8 @@ SwiftProjectLint ──▶ SwiftInferProperties ──▶ SwiftPropertyLaws ─�
 
 The smallest package in the toolchain and the only one with **no CLI and no dependents below it** —
 15 source files, ~4,362 lines (re-counted 2026-08-16, after SEI #10/#11), depends on nothing in the
-set. It is a library two other tools *embed*, which is the entire architectural point: **the linter and the inference engine consult one
+set. ⚠ **Re-verified 2026-09-23: 16 files / 4,927 lines, identical at the pin `1b62e764` and at HEAD
+`a52117c`** (the 16th is `PurityRefutation.swift`, 201 lines; at `3ea25f2` it was 15 / 4,560). It is a library two other tools *embed*, which is the entire architectural point: **the linter and the inference engine consult one
 purity oracle, so they cannot disagree about what is pure.**
 
 ### In and out, precisely
@@ -152,12 +169,17 @@ once already when `pure` was inserted at the bottom.
 | type | what it answers | swift-infer uses it? |
 |---|---|---|
 | `PurityInferrer` | is this function referentially transparent? | **yes** — via `SoundPurity` |
-| `EffectAnnotationParser` | what did the author *declare*? | **yes** — 3 sites |
+| `EffectAnnotationParser` | what did the author *declare*? | **yes** — 3 sites ⚠ **Re-verified 2026-09-23 at observer `79d4baab`: 5 call expressions in 3 files** (`ViewModelDiscoveryVisitor.swift:157`, `FunctionScannerVisitor+EffectClaims.swift:41–43`, `ReducerDiscoverer.swift:352`) |
 | `CallSiteEffectInferrer` | what does this call expression do? | **no** — SwiftProjectLint's, since `a9a242c` |
 | `BodyEffectInferrer` | what does this body do, from its callees? | **no** |
-| `EffectSymbolTable` | cross-file declared+inferred lookup | **no** |
+| `EffectSymbolTable` | cross-file declared+inferred lookup | **no** ⚠ **Re-verified 2026-09-23: YES, and has been since `5679488c` (2026-08-04)** — `EffectResolver.swift:45` builds one and `:55` calls `applyBodyInference(multiHop: false)`, behind `--resolve-effects`; `FunctionSignature` is constructed at `:96`. This section's own line on `applyBodyInference` already said so |
 | `NondeterminismSources` | is this expression determined by its inputs? | **no** — added 2026-08-16 |
 | `ClockDeterminismRefuter` | does this body contradict its own `@ClockDeterministic`? | **no** — added 2026-08-16 |
+
+> ⚠ **Re-verified 2026-09-23 — an eighth public type is not in the table.** `PurityRefutation`
+> (`PurityRefutation.swift`, added `e6fa169`, **inside the pin**) is the refutation *reason* behind
+> `PurityInferrer`'s new `refutation(for:)` / `wholeDomainRefutation(for:)` overloads. This repo does
+> not reference it (0 hits in `Sources/` at `79d4baab`).
 
 > **2026-08-16 — the heading said "four" and the table listed five; it now lists seven.** The two
 > additions are the shared nondeterminism classifier and the clock-determinism refuter (SEI #10,
@@ -232,7 +254,11 @@ and a missed refuter would be unsound.
 Two marker sets do the refuting, both matched by **bare identifier token**:
 
 - **side effects** — `print`, `NSLog`, `FileManager`, `URLSession`, `UserDefaults`,
-  `NotificationCenter`, `DispatchQueue`
+  `NotificationCenter`, `DispatchQueue` ⚠ **Re-verified 2026-09-23 (same at pin and HEAD): 17
+  entries, not 7** — plus `FileHandle`, `Process`, `Pipe` (`50125f8`) and the file-read members
+  `resourceValues`, `checkResourceIsReachable`, `checkPromisedItemIsReachable`,
+  `startAccessingSecurityScopedResource`, `stopAccessingSecurityScopedResource`, `contentsOfFile`,
+  `contentsOfDirectory` (`908f8d9`; bare `contentsOf` was removed again by `5fdc203`)
 - **nondeterminism** — `arc4random`, `arc4random_uniform`, `drand48`, `CFAbsoluteTimeGetCurrent`,
   `random`, `randomElement`, `shuffled`, `Date`, `UUID`
 
@@ -240,7 +266,10 @@ The token scan is **deliberately** crude and says so: it refutes `Date()` *and* 
 deterministic `Date(timeIntervalSince1970:)` alike, and refutes injected `random(in:using:)` as well
 as the system-RNG form. Over-refutation is the sound direction. The AST-precise forms live in
 SwiftProjectLint's `NonInjectedNondeterminismVisitor`; **this token set is the leaf-level
-over-approximation of that rule**, not a rival to it.
+over-approximation of that rule**, not a rival to it. ⚠ **Re-verified 2026-09-23: SEI's own doc
+comment (`PurityInferrer.swift`, at pin and HEAD) now says that pointer was wrong** — the AST-precise
+forms live in `NondeterminismSources` in the same module, and `hasRefutingMarker` consults it as a
+union with the token set (as the 2026-08-17 block above records).
 
 Plus signature gates: `async` refutes, a body-less declaration (a protocol requirement) refutes —
 there is nothing to inspect — and the body must be total (no traps, no force-unwraps).
@@ -263,18 +292,20 @@ Recognized attribute names are configurable (`AttributeRecognition`), with a `.d
 claims. The marker exists so downstream consumers can relax an **async veto** exactly where the claim
 is present, without pretending the lattice moved.
 
-That is the mechanism behind this repo's async story. `ViewModelDiscoveryVisitor:154` and
+That is the mechanism behind this repo's async story. `ViewModelDiscoveryVisitor:154` (⚠ **:157 as of 2026-09-23**) and
 `ReducerDiscoverer` call it; `FunctionSummary.isClockDeterministic` and
 `ReducerCandidate.isClockDeterministic` carry it forward. Bare `async` keeps a clean rejection that
 says how to make the claim; the claim, once made, is what admits the code to verification.
 
 ### The two swift-infer does not use
 
-`CallSiteEffectInferrer` (498 lines) classifies call expressions by callee name plus **the file's
+`CallSiteEffectInferrer` (498 lines; ⚠ **536 as re-verified 2026-09-23**) classifies call expressions by callee name plus **the file's
 imports** — framework-gated for FluentKit, Hummingbird, Vapor, AWSLambdaRuntime, TCA, swift-metrics,
 swift-log. The gate exists because of a real false positive: a user-defined `class Counter` in a
 module with no `import Metrics` was classifying as observational purely on the name match
-(`FrameworkGates`, 505 lines — the largest file in the package).
+(`FrameworkGates`, 505 lines — the largest file in the package). ⚠ **Re-verified 2026-09-23: still
+505, no longer the largest** — `PurityInferrer.swift` is 845, `EffectAnnotationParser.swift` 565 and
+`CallSiteEffectInferrer.swift` 536, at pin and HEAD alike.
 
 `StdlibIdempotentMutations` is the companion suppressor: `append`/`insert`/`remove` are correctly
 non-idempotent for a user-defined persistent queue and **wrong** for `Array.append` or `Set.insert`,
@@ -292,7 +323,7 @@ heuristic-downward > silent`, of which the table covers the first three.
 
 ## How this repo consumes it: `SoundPurity`
 
-`SwiftInferProperties/Sources/SwiftInferCore/SoundPurity.swift` — 45 lines, and the reason the conjunctive framing above
+`SwiftInferProperties/Sources/SwiftInferCore/SoundPurity.swift` — 45 lines (⚠ **163 as re-verified 2026-09-23** at `79d4baab`: it gained `verdict(for:)`, `verdict(forGetter:)` and `getterOnly(of:)`; the two lines quoted below are unchanged), and the reason the conjunctive framing above
 matters. It takes the **meet of two independent refutations**:
 
 ```swift
@@ -308,7 +339,7 @@ return PurityInferrer().inferredEffect(for: function)
 Mapping `ReducerPurity.pure` onto `Effect.pure` alone would be **unsound**: a reducer can be
 `ReducerPurity.pure` while calling `print()` or `Date()` or force-unwrapping.
 
-Consumers of the result: `FunctionScannerVisitor+Summary.swift:38` sets
+Consumers of the result: `FunctionScannerVisitor+Summary.swift:38` (⚠ **re-verified 2026-09-23: the call is now `SoundPurity.verdict(for:)` at `:78`, and `isInferredPure` is set from it at `:104`**) sets
 `FunctionSummary.isInferredPure` at scan time, where the syntax node is live; `EffectAnnotationAdvice`
 renders it as a *"consider adding `/// @lint.effect pure`"* row on its own advisory channel
 (`DiscoverArtifacts.effectAnnotations`) — deliberately **not** a property-test `Suggestion`, since
@@ -350,8 +381,8 @@ divergence is the thing worth remembering: it ran for weeks, and it had a named 
 
 | package | manifest | revision | vs SEI `HEAD` |
 |---|---|---|---|
-| SwiftInferProperties | `Package.swift:122` | `3ea25f2` | equal to the linter's; **verify against SEI's tip, do not trust this cell** |
-| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `3ea25f2` | equal to this repo's; **same** |
+| SwiftInferProperties | `Package.swift:122` | `3ea25f2` ⚠ **`1b62e764` as of 2026-09-23** (bumped `44a23e1c`, 2026-09-12) | equal to the linter's; **verify against SEI's tip, do not trust this cell** |
+| SwiftProjectLint | root + `SwiftProjectLintVisitors` + `SwiftProjectLintIdempotencyRules`, all three | `3ea25f2` ⚠ **`1b62e764` in all three as of 2026-09-23** (SPL `0d10011f`) | equal to this repo's; **same** |
 
 > **The `at HEAD` this table used to claim was the failure mode it exists to catch.** Both rows read
 > `22342ca` / **at HEAD** (2026-08-16) while `Package.swift` said `c66fceb` — the manifest had moved
@@ -428,7 +459,10 @@ The history of the gap, kept because each phase had a distinct cause:
 
 Both consumers compile against the full five-method `PurityInferrer` — `inferredEffect(for:)`,
 `isPure(_: FunctionDeclSyntax)`, `verdict(for:)`, `isPure(_: ClosureExprSyntax)`,
-`isPure(_: AccessorBlockSyntax)` — and both are past the regression that once blocked the bump
+`isPure(_: AccessorBlockSyntax)` — ⚠ **Re-verified 2026-09-23: 11 public methods at the pin
+`1b62e764` (and HEAD)** — the five above plus `wholeDomainRefutation(for:)`, three
+`refutation(for:)` overloads (function / closure / accessor), `mutatesCapturedState(_:)` and
+`mutatedCaptureName(_:)`; it was 6 at `3ea25f2` — and both are past the regression that once blocked the bump
 (`6470222` is an ancestor of both pins).
 
 **What the 2026-08-07 bump adds here.** `01bcdf7` *Track what an inferred effect rests on* gives
@@ -473,6 +507,9 @@ split this repo does not call. **There is deliberately no `c66fceb` column.** Th
 `7dad9f5` without a perf run at that revision, and an unmeasured column inferred from the one beside
 it is the precise thing the `097181aa` row exists to warn against — the regression that produced it
 was *reasoned* to be free. The table stops where the measurements stop.
+
+⚠ **2026-09-23: there is no `1b62e764` column either** — the pin moved there (`44a23e1c`) and this
+doc records no perf run at that revision; not re-taken in the re-verification pass, which did not build.
 
 The `3ea25f2` column was taken the same way, `make perf` alone before `make test`, and all 8 budgets
 are green with every row inside noise of `8127f26` (largest move: 16 ms on the 100-file pipeline,
@@ -565,8 +602,8 @@ Progress against the ordered list this section used to carry:
 | | item | state |
 |---|---|---|
 | 1 | **SEI#1** — restore the cheap path | ✅ **done** (`6470222`) |
-| 2 | bump, re-running `make perf` before `make test` | ✅ **done** — budgets green (this repo reached HEAD 2026-08-07; 2 docs-only commits behind as of 2026-08-16) |
-| 3 | pin-equality guard, phrased as *equality with the sibling consumer* | ⚠️ **half** — intra-repo guarded there, cross-repo unguarded |
+| 2 | bump, re-running `make perf` before `make test` | ✅ **done** — budgets green (this repo reached HEAD 2026-08-07; 2 docs-only commits behind as of 2026-08-16) ⚠ **2026-09-23: pin `1b62e764` is 4 commits behind HEAD `a52117c` — not docs-only, but access-modifier-only source edits** |
+| 3 | pin-equality guard, phrased as *equality with the sibling consumer* | ⚠️ **half** — intra-repo guarded there, cross-repo unguarded ⚠ **Re-verified 2026-09-23: the cross-repo half exists** — `Tests/SwiftInferCLITests/SEICrossRepoPinTests.swift` (`pinMatchesSwiftProjectLint`), as § *The pin divergence* already records |
 | 4 | adopt `verdict(for:)` for `.pureButPartial` | ⚠️ **half — corrected 2026-08-16.** Adopted at the scan boundary; **no consumer reads the third state**, deliberately |
 | 5 | SwiftProjectLint may be paying the regression unmeasured | ✅ **moot** — its pin is past the fix |
 
@@ -576,7 +613,7 @@ to carry.
 
 > **2026-08-16 — the sentence that used to end this paragraph said this repo "does not call it," and
 > that was wrong.** `SoundPurity.verdict(for:)` calls `PurityInferrer().verdict(for:)`, and
-> `FunctionScannerVisitor+Summary.swift:71` computes it at scan time and carries it on
+> `FunctionScannerVisitor+Summary.swift:71` (⚠ **:78 as of 2026-09-23**) computes it at scan time and carries it on
 > `FunctionSummary.purityVerdict`. What is *actually* open is one step further in: **nothing reads
 > `.pureButPartial`.** That is a measured decision, not an oversight — of 2,500 functions on this
 > repo, 2,206 are `.pure`, **35 are `.pureButPartial`**, 259 refuted, and the only consumer of the
@@ -642,7 +679,7 @@ above. A guard phrased as *equality with the sibling consumer* would currently f
 | why `Set.insert` is not a non-idempotent `insert` | `SwiftEffectInference/Sources/…/Internal/StdlibIdempotentMutations.swift` |
 | the full design, including the migration plan §10 | `SwiftEffectInference/docs/SwiftEffectInference Design v0.2.md` |
 | **the meet this repo actually takes** | `SwiftInferProperties/Sources/SwiftInferCore/SoundPurity.swift` |
-| where the verdict is recorded at scan time | `…/FunctionScannerVisitor+Summary.swift:38`, `FunctionSummary.swift` |
+| where the verdict is recorded at scan time | `…/FunctionScannerVisitor+Summary.swift:38` (⚠ **:78 as of 2026-09-23**), `FunctionSummary.swift` |
 | the advisory channel it renders on | `…/EffectAnnotationAdvice.swift` |
 | the linter's side of the same oracle | `docs/design-internal/swiftprojectlint.md` |
 | vocabulary — *Purity oracle*, *Effect lattice*, `@ClockDeterministic` | `docs/design-internal/glossary.md` § Neighbours |

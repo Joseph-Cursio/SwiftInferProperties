@@ -1,13 +1,24 @@
 # SwiftProjectLint — the entry point
 
-> **Status:** `reference` · **As of:** 2026-08-15
+> **Status:** `reference` · **As of:** 2026-09-23
 
 
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
 **Book home:** Appendix C, Chapter 15, and the seed hand-off in Chapters 12 and 16.
 
-> **Counts re-verified 2026-08-06 (third pass)** · subject `SwiftProjectLint@08a4b09` · observer
-> `SwiftInferProperties@2c599c0`
+> **Counts re-verified 2026-09-23 (eighth pass)** · subject `SwiftProjectLint@0d10011f` · observer
+> `SwiftInferProperties@79d4baab` *(third pass: 2026-08-06, `SwiftProjectLint@08a4b09` /
+> `SwiftInferProperties@2c599c0`)*
+>
+> **Eighth pass, 2026-09-23 — read-only re-verification against `0d10011f`, nothing built or run.**
+> `RuleIdentifier` grew **204 → 212** cases (210 selectable): eight new rules, spread over
+> `codeQuality` +3, `architecture` +3 and `testability` +2, and the kernel case was renamed
+> `extractablePureKernel` → `extractableTotalKernel` (`6e652e0c`), the spelling this doc already
+> uses. The seeding set is **unchanged at seven**; neither new testability rule seeds. The
+> README (210, three places) and `Docs/rules/RULES.md` (210) now both agree with
+> `selectableRules.count`, and `RULES.md` has its own guard. Figures that need the CLI or the
+> test suite to re-take (seed counts, flood counts, restricted-seed ratios) were **not re-taken**
+> and keep their `e06e39fc` values.
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
@@ -96,7 +107,7 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-08-15 subject=SwiftProjectLint@e06e39fc observer=SwiftInferProperties@392fb2a -->
+<!-- doc-provenance date=2026-09-23 subject=SwiftProjectLint@0d10011f observer=SwiftInferProperties@79d4baab -->
 
 ---
 
@@ -131,7 +142,7 @@ It never says whether a property *holds*. It says where to look and what to fix.
 | | `--target-type auto\|app\|library` | **new 2026-08-14** — the caller states what auto-detection cannot |
 | | `--include-nested-packages` | off by default; a nested first-party package is **skipped and said so on stderr** |
 | | **SwiftEffectInference**, in-process | the purity oracle — a library dependency, not a CLI hop |
-| **produces (1)** | the human report | `text` (default, collapses candidates) · `json` · `csv` — for a person |
+| **produces (1)** | the human report | `text` (default, collapses candidates) · `json` · `csv` — for a person ⚠ **Re-verified 2026-09-23 at `0d10011f`: `html` is a fifth `OutputFormat` case (`Sources/CLI/OutputFormat.swift:8`), and was already present at `e06e39fc`** |
 | **produces (2)** | the seed manifest | `--format pbt-seeds` → JSON v2 — for `swift-infer discover --seeds`, and nothing else |
 | | dropped-seed tally | **stderr**, so stdout stays a clean manifest |
 | | exit code | severity-gated — except under `pbt-seeds`, which always exits 0 |
@@ -162,7 +173,11 @@ rather than detection (§ *The census flood*).
 ## The rule catalogue, and how little of it is about properties
 
 `RuleIdentifier` has **204** cases, and **every one is accounted for**: **202** live rules and 2
-deliberate sentinels.
+deliberate sentinels. ⚠ **Re-verified 2026-09-23 at `0d10011f`: was 204, now 212 cases — 210
+selectable + the same 2 sentinels.** New: `undeclaredTargetDependency`, `unusedTargetDependency`,
+`layerDependency`, `forceCast`, `unconditionalTrap`, `implicitCodableRawValue`,
+`impureClosureInventory`, `contradictedClockDeterminism`; `extractablePureKernel` was renamed
+`extractableTotalKernel` (`6e652e0c`), not added.
 
 > **2026-08-15 — and the count is no longer this doc's to keep.** +1 since the last pass:
 > `.navigationButtonShouldBeLink`, which lands in `accessibility` (taking that family to 21).
@@ -195,7 +210,10 @@ deliberate sentinels.
 >
 > The remaining three are not a gap either. `unknown` and `fileParsingError` are sentinels the config
 > layer subtracts by name (`LintConfiguration.swift:164`, and again in `ContentViewModel.swift:178`),
-> so they are deliberately not rules. `onTapGestureMissingAccessibility` **is** emitted — at
+> so they are deliberately not rules. ⚠ **Re-verified 2026-09-23 at `0d10011f`: neither site
+> subtracts by name any more — both read `RuleIdentifier.selectableRules`
+> (`LintConfiguration.swift:158`, `ContentViewModel.swift:178`), and the sentinel set lives once, at
+> `RuleIdentifier.swift:290`.** `onTapGestureMissingAccessibility` **is** emitted — at
 > `OnTapGestureInsteadOfButtonVisitor.swift:97`, via `ruleName:` rather than `name:`, because one
 > visitor raises two findings. So: 199 + 1 + 2 = 202, residue **zero**.
 >
@@ -220,10 +238,14 @@ deliberate sentinels.
 > on a default run**. It was the sole entry in the new test's `unregisteredByDesign` map, and the
 > *"no exception is stale"* arm is what forced it to be fixed rather than left as a written excuse.
 > It now has its own pattern; the map is **empty**. Re-verified at `e06e39fc`: `ruleName:` is used
-> by 175 identifiers and **none of them is reachable only that way**.
+> by 175 identifiers and **none of them is reachable only that way**. ⚠ **Re-verified 2026-09-23 at
+> `0d10011f`: was 175, now 183 distinct `ruleName:` identifiers (git-tracked `Packages` +
+> `Sources`), and a textual check still finds none absent from `name:`; the registry test itself
+> was not re-run.** `unregisteredByDesign` is still `[:]`
+> (`RuleRegistrationResidualTests.swift:39`).
 >
 > So the current arithmetic is 204 = 202 registered + 2 sentinels — but **quote the test, not the
-> sum.** The sum was right three times while a rule sat dead behind it.
+> sum.** ⚠ **2026-09-23 at `0d10011f`: 212 = 210 + 2.** The sum was right three times while a rule sat dead behind it.
 
 What has changed since: **the enum and the registry are now asserted to agree** (2026-08-15). This
 section previously closed on *"nothing asserts the enum and the registry agree — the catalogue
@@ -234,11 +256,15 @@ first run.
 > grep.** Re-measured at `e06e39fc` over **git-tracked files only**: `category: \.` returns
 > **222**, `name: \.` returns 218 occurrences across **204** distinct values, 203 after dropping
 > `.unknown`. (The 2026-08-06 figures were 195 / 198 / 193 / 192.) All four still overcount or
-> mislead, for the same reason, and none of them is the registry.
+> mislead, for the same reason, and none of them is the registry. ⚠ **Re-verified 2026-09-23 at
+> `0d10011f`, same scope (git-tracked `Packages` + `Sources`, which reproduces 222 / 218 / 204 at
+> `e06e39fc` exactly): now 230 / 226 / 212 / 211.**
 >
 > **First trap: `.build`.** The obvious `grep -r … Packages Sources` sweeps vendored
 > **swift-syntax checkouts**, which contribute **786 of 1,112** `name: \.` hits and answer a
-> question about somebody else's parser. Use `git ls-files`.
+> question about somebody else's parser. Use `git ls-files`. ⚠ **2026-09-23 at `0d10011f`: 735 of
+> 961 — a figure that depends on which `.build` directories exist in the local checkout, which is
+> the trap's point.** The 8 `.unknown` placeholders in 6 files still hold.
 >
 > **Second trap, and this doc fell into it: the placeholder count was wrong when written.** The
 > note said **six** `SyntaxPattern(name: .unknown, …)` placeholders in **test-only convenience
@@ -270,6 +296,12 @@ first run.
 | `other` | 2 | the two sentinels — not rules |
 | **total** | **204** | **~12 rules, 7 of which seed** |
 
+> ⚠ **Re-verified 2026-09-23 at `0d10011f`, by parsing the same `category` switch: 212 cases, no
+> case classified twice, none missing. Three cells moved — `codeQuality` 52 → 55, `architecture`
+> 32 → 35, `testability` 10 → 12 (`impureClosureInventory`, `contradictedClockDeterminism`) — and
+> the total 204 → 212.** Every other row holds. Neither new testability rule seeds, so *7 of which
+> seed* is unchanged; *~12* was not re-derived.
+
 > **2026-08-15:** re-derived over all 204 cases at `e06e39fc` by parsing the `category` switch, so
 > it still partitions by construction — **204 distinct, no case classified twice, none missing**.
 > Only two cells moved: `accessibility` 20 → **21** (`.navigationButtonShouldBeLink`) and the
@@ -295,6 +327,10 @@ the flood; the correct mental model is a large linter with a small deliberate se
 `--categories testability` selects the 10, which is **not** the same set as the 4 that seed — two of
 the seeding rules are testability, and the flood-collapsing opt-in is keyed to the category, not to
 the seeding set. Confusing the two is how a reader concludes the manifest is empty when it is not.
+⚠ **Re-verified 2026-09-23 at `0d10011f`: the category now selects 12, and *two* of the seeding rules
+being testability was wrong when written** — `pureFunctionCandidate`, `pureClosureCandidate` and the
+kernel rule are all `testability` (`RuleIdentifier+Category.swift:135–139`, and the same three at
+`e06e39fc`), so it is **three** of the seven, then three of the four.
 
 ---
 
@@ -869,6 +905,12 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
   **Two disagreements survive, both unguarded.** `Docs/rules/RULES.md` opens *"all 165 lint
   rules"*, and `Docs/rules/` holds **205** `.md` files against 202 rules. Neither is in any test's
   scope. Do not silently pick whichever number supports the sentence you are writing.
+  ⚠ **Re-verified 2026-09-23 at `0d10011f`: the README now says 210 in three places
+  (`README.md:11`, `:21`, `:52`), equal to `selectableRules.count`; `RULES.md` now says *"all 210
+  lint rules"* and is GUARDED** — `RuleDocumentationConsistencyTests` (`846c9457`, *"Pin the rule
+  docs to the registry"*) asserts its stated count equals its row count and that every selectable
+  rule has a row. `Docs/rules/` holds **213** `.md` files (including `RULES.md`) against 210 rules;
+  the file count itself is still in no test's scope.
 - ~~**The 10-case gap is unexplained and untested.**~~ **Retracted 2026-08-06 — there is no gap, and
   this trap was itself the trap.** 202 = 199 referenced via `name:` across *all* packages + 1 via
   `ruleName:` + 2 sentinels. The "10" came from subtracting one package's registrations from the
@@ -895,7 +937,8 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
   many rules classify a seed role, and name them"*). The standing fact it recorded still holds and is
   the thing to remember: **three of the four seeding rules classify a role** — the two candidate
   rules and `ExtractableTotalKernelVisitor` — and `.idempotencyViolation` is the only one that does
-  not. Kept struck-through rather than deleted because the *count* is what a reader needs and the
+  not. ⚠ **Re-verified 2026-09-23 at `0d10011f`: three of the SEVEN** — the same three visitors pass
+  `role:`; neither `.idempotencyViolation` nor the three `carrier` rules does. Kept struck-through rather than deleted because the *count* is what a reader needs and the
   trap is where they will look for it.
 - **A producer-side field ADDITION is silent on the consumer, and always will be.** `Codable`
   ignores unknown keys, so a new field arrives, decodes into nothing, and changes no output. That is
@@ -1000,7 +1043,7 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
 | the kernel motivating case, with its two real bugs | `SwiftProjectLint/Docs/rules/extractable-total-kernel.md` |
 | policing the cure vs detecting the disease | `SwiftProjectLint/Docs/design/primitive-bypassing-domain-type-rule-design.md` |
 | the format wiring and the exit-gate bypass | `SwiftProjectLint/Sources/CLI/OutputFormat.swift`, `SwiftProjectLintCLI.swift` |
-| consumer side of the same hop | `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift`, `SeedManifest.swift`, `SeedRole.swift` |
+| consumer side of the same hop | `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift`, `SeedManifest.swift`, `SeedRole.swift` ⚠ **2026-09-23: the latter two live in `Sources/SwiftInferCore/`, not beside `Discover+Seeds.swift`** |
 | which fields this consumer reads, and the guard that says so | `SwiftInferProperties/Sources/SwiftInferCore/SeedField.swift` (`SeedFieldParity`) + `SwiftInferProperties/Tests/SwiftInferCoreTests/SeedFieldParityTests.swift` + `SwiftInferProperties/fixtures/seed-manifest-parity/` |
 | what `restriction` corrects, and the one disagreement it is allowed to settle | `SwiftInferProperties/Sources/SwiftInferCore/SeedRestriction.swift`, `SeedRestrictionResolver.swift` |
 | why the declaration's own `private` is **not** tested first | `SwiftInferProperties/Sources/SwiftInferCore/FunctionScannerVisitor+AccessRestriction.swift`, `RestrictedFunction.swift` |

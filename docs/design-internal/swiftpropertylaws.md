@@ -1,13 +1,16 @@
 # SwiftPropertyLaws — the law kit
 
-> **Status:** `reference` · **As of:** 2026-08-06
+> **Status:** `reference` · **As of:** 2026-09-23
 
 
 **Repo:** `~/xcode_projects/SwiftPropertyLaws` (`github.com/Joseph-Cursio/SwiftPropertyLaws`) ·
 **Book home:** Chapters 13–14, Appendix A; law families surface in nearly every chapter.
 
-> **As of 2026-08-25** · subject `SwiftPropertyLaws@cd5d543` (`v4.2.0`, equal to this repo's pin) ·
-> observer `SwiftInferProperties@4477c25f`
+> **As of 2026-09-23** · subject `SwiftPropertyLaws@004b1dd` (`v4.8.0`, equal to this repo's pin,
+> which resolves `004b1dde`) · observer `SwiftInferProperties@79d4baab`
+>
+> *Previous reading: 2026-08-25 · subject `SwiftPropertyLaws@cd5d543` (`v4.2.0`) · observer
+> `SwiftInferProperties@4477c25f`.*
 >
 > ⚠ **The line above read `v3.28.0`, "equal to this repo's pin", and that had become FALSE** — the
 > pin moved 3.28.0 → 4.0.0 → 4.1.0 → 4.2.0 while this doc asserted equality at the oldest of them.
@@ -18,8 +21,18 @@
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
 
-<!-- doc-provenance date=2026-08-25 subject=SwiftPropertyLaws@cd5d543 version=4.2.0 observer=SwiftInferProperties@4477c25f -->
+<!-- doc-provenance date=2026-09-23 subject=SwiftPropertyLaws@004b1dd version=4.8.0 observer=SwiftInferProperties@79d4baab -->
 
+> **2026-09-23 — scope of this re-verification.** 41 subject commits (`cd5d543..004b1dd`, v4.2.0 →
+> v4.8.0). **Re-checked by reading source, nothing built or run:** the pin and its verifier twin,
+> the product list, the `check…PropertyLaws` count, `SetAlgebra`'s law count, the Ring / deferral
+> claims, the `DerivationStrategy` cases and evaluation order, the arity limit, the curated
+> generators, every symbol and `file:line` citation, and the observer-side `ProtocolCoverageMap` /
+> `KitCoverageLawLevelTests` / `KitEvidenceScoring` claims. Corrections are annotated in place.
+> **NOT re-taken** (each needs a run over a corpus): 996 laws / 299 carriers / 5 execute; 180 of
+> 351 carriers / 598 of 1,153 laws; `105 of 281` declines; the veto's 1-in-~300; `known-properties`'
+> 71 vs the kit's 182.
+>
 > **2026-08-25 — scope of this re-verification, stated so it is not read as wider than it was.**
 > **Re-verified: the PIN and the derivation-tier table.** The pin is `v4.2.0` in `Package.swift`
 > and in `VerifierWorkdir.swiftPropertyLawsRequirement`, which agree and are guarded. The tier
@@ -76,7 +89,8 @@ that is the thing to hold onto. The pipeline diagram says "downstream" and the `
 | **↔ sideways (inference-time)** | neither — a *claim about* the kit | `ProtocolCoverageMap`'s veto, and `KitEvidence` reading its verdicts back |
 
 **Pin:** `from: "3.28.0"` (`Package.swift:112`), resolving to `9a73903` / tag `v3.28.0` — currently
-**equal to the kit's `HEAD`**. Read the pin from `Package.swift`, never from prose; this line has
+**equal to the kit's `HEAD`**. ⚠ **Re-verified 2026-09-23: now `from: "4.8.0"` (`Package.swift:112`),
+resolving `004b1dde` / tag `v4.8.0`, which IS the kit's `HEAD` — equality holds again.** Read the pin from `Package.swift`, never from prose; this line has
 been a full major version stale before.
 
 ### In and out, precisely
@@ -104,6 +118,12 @@ stale belief is silent in the expensive direction: it suppresses laws that would
 ## Products
 
 Seven library products, and the split is a dependency-footprint decision, not a taxonomy:
+⚠ **Re-verified 2026-09-23 at `004b1dd`: NINE, not seven.** The table below omits `PropertyLawSyntax`
+(opt-in swift-syntax node generators, drags in **swift-syntax**; present since v3.28.0) and
+`PropertyLawMinimalTypes` (weakest-legal `Sequence` / `Collection` / `BidirectionalCollection`
+conformances for running a suite against something that is not `Array`; depends on `PropertyLawKit`
+only; added v4.3.0, `3648cc0`). And `PropertyLawAsync`'s *drags in* cell is wrong: it depends on
+**swift-async-algorithms** and **swift-clocks** (`Package.swift`, target `PropertyLawAsync`).
 
 | product | purpose | drags in |
 |---|---|---|
@@ -116,14 +136,18 @@ Seven library products, and the split is a dependency-footprint decision, not a 
 | `PropertyLawAsync` | `AsyncSequenceLaw`, virtual-time `TimedAsyncLaw` | — |
 
 The three opt-ins exist so `PropertyLawKit` keeps a **zero swift-numerics / swift-collections
-footprint**. This repo consumes `PropertyLawCore` + `PropertyLawSyntaxSupport` as build
-dependencies, and emits `PropertyLawComplex` into *generated* stubs' imports — it is not a dependency
+footprint** (⚠ **2026-09-23: five opt-ins now** — `Complex`, `Syntax`, `Collections`,
+`MinimalTypes`, `Async` — same posture, now also keeping swift-syntax and async-algorithms out).
+This repo consumes `PropertyLawCore` + `PropertyLawSyntaxSupport` as build
+dependencies (⚠ **2026-09-23: incomplete** — two non-test targets, `SwiftInferMacro` and
+`SwiftInferKitEvidence`, also depend on `PropertyLawKit`; the test targets add `PropertyLawMacro`), and emits `PropertyLawComplex` into *generated* stubs' imports — it is not a dependency
 of this package. `SeededStubEmitter.swift:101` carries the base import set
 (`ComplexModule`, `Foundation`, `PropertyBased`, `PropertyLawComplex`, `RealModule`);
 `DoubleEdgeCaseStub` deliberately omits it.
 
 **44 `check…PropertyLaws` suites** ship today (`grep -rho 'public func check[A-Za-z]*PropertyLaws'`,
-2026-08-03) — the stdlib conformance protocols, the owned algebraic chain (`Semigroup` → `Ring`),
+2026-08-03; ✅ **still 44 at `004b1dd`** — but that grep prints **65** lines, one per public
+overload, so the 44 needs a `| sort -u`) — the stdlib conformance protocols, the owned algebraic chain (`Semigroup` → `Ring`),
 the interaction-invariant harnesses of Chapters 19/23–24, and the collection/async families.
 
 **`Ring` is no longer deferred** — `checkRingPropertyLaws` ships. Still deferred kit-side:
@@ -152,8 +176,23 @@ inventing its own derivation would make three tools that disagree about what `Ge
 | `initializerBased(arguments:)` | a user `init` suppressed the memberwise one; compose per-argument and honour labels |
 | **`todo(reason:)`** | **nothing matched** |
 
+⚠ **Re-verified 2026-09-23 at `004b1dd`: the seven cases hold, but the table is not the order
+`DerivationStrategist.strategy(for:)` evaluates them in** (`DerivationStrategy.swift:154–215`):
+`userGen` → `caseIterable` → `memberwiseArbitrary` → `initializerBased` → **stateless** →
+`enumCases` → `rawRepresentable` → `todo`. `enumCases` before `rawRepresentable` is load-bearing and
+the source says why (a `rawRepresentable` filter can fail to terminate). The **stateless** tier is new
+since the last reading (`0305bca`, v4.7.0): a memberless struct derives as `Gen.always(T())`, returned
+as `.initializerBased(arguments: [])` — no new case.
+
 **The arity cliff is real and worth knowing:** memberwise derivation supports **1–10 members**, and
 11+ falls through to `.todo` — because `swift-property-based` ships `zip` overloads up to 10-arity.
+⚠ **Re-verified 2026-09-23 by reading the source — the cliff is at 100, not 10**, and was already
+before the 2026-08-25 reading (`f137a4e`, an ancestor of `cd5d543`). `memberwiseMemberLimit =
+memberwiseArityLimit²` (`DerivationStrategy.swift:148`): 11–100 members compose by **nested** `zip`
+(`MemberwiseEmitter.swift:77`), the guard is `storedMembers.count <= memberwiseMemberLimit`
+(`DerivationStrategy.swift:265`), and 101+ is the `.todo` (`TodoReason.swift:118`). The 10-limit still
+binds **per enum-case payload** (`EnumPayloadDerivation.swift:55`). ⚠ The kit's own docstrings still say
+10 at `DerivationStrategy.swift:21` and `:242` — stale in the subject, not here.
 That is an engine limit surfacing as a kit limit surfacing as a `.todo` in your stub.
 
 **`.todo` is the boundary, not a failure.** It emits a deliberate compile error pointing at where the
@@ -173,7 +212,8 @@ and composers read the generator solely from `recipe.expression`.
 Two emitters generate calls **into** the kit:
 
 **1. Verify stubs.** `VerifierWorkdir` builds a throwaway SwiftPM package per suggestion, whose
-manifest carries `VerifierWorkdir.swiftPropertyLawsRequirement` — currently `"3.28.0"`,
+manifest carries `VerifierWorkdir.swiftPropertyLawsRequirement` — currently `"3.28.0"`
+(⚠ **2026-09-23: `"4.8.0"`, `VerifierWorkdir+KitPin.swift:64`, equal to `Package.swift:112`**),
 **equal to this package's own pin and guarded by `VerifierWorkdirKitPinTests`.**
 
 > **The verifier's kit pin must equal this package's own.** A `--corpus-module` survey resolves both
@@ -227,18 +267,23 @@ from "it ran elsewhere" (the log's **emptiness** is what tells them apart).
 kills the case *for* un-vetoing.
 
 **3. 13 of 56 `(key, law)` claims were false** (`SwiftInferProperties/docs/measurements/protocol-coverage-law-drift.md`, kit `4a2dada`).
-The live one: `checkSetAlgebraPropertyLaws` runs fifteen laws and **union associativity was not one of
-them** — yet the map claimed it, a template emitted it, and a green test *pinned the suppression as
+The live one: `checkSetAlgebraPropertyLaws` runs fifteen laws (⚠ **nineteen since v4.3.0, `7f59361`**
+— four paired-mutation laws, `formUnionMatchesUnion` etc.; still no associativity) and **union
+associativity was not one of them** — yet the map claimed it, a template emitted it, and a green test *pinned the suppression as
 correct*. **Both halves are now fixed**, and the current source shows it — `"SetAlgebra"` lists six
-laws with union associativity gone, and the comment records `equatableBase` removed 2026-08-02
+laws with union associativity gone (⚠ **2026-09-23: ten** — the four paired-mutation properties were
+claimed 2026-09-08 against kit 4.4.0, `ProtocolCoverageMap.swift:150–158`), and the comment records `equatableBase` removed 2026-08-02
 because `checkSetAlgebraPropertyLaws` does not delegate to `checkEquatablePropertyLaws`.
-`KitCoverageLawLevelTests` now verifies all 17 keys law-by-law against a 27-row
+`KitCoverageLawLevelTests` now verifies all 17 keys law-by-law against a 27-row (⚠ **2026-09-23: 31
+rows**, the same four paired-mutation entries; 17 keys holds)
 `KnownProperty → [kit law identifier]` table, with delegation **read** from
 `await check<Parent>PropertyLaws` rather than re-derived from Swift's conformance graph.
 
 Still open, in order: `Self` resolution in `assumedCoverageSignal` (deliberately last — resolving it
 makes the map live *including* any remaining false claims), a behavioural companion to the guard, and
-the under-claim direction (`SetAlgebra` claims 6 of 15, `Strideable` 1 of 12).
+the under-claim direction (`SetAlgebra` claims 6 of 15, `Strideable` 1 of 12). ⚠ **2026-09-23:
+`SetAlgebra` now claims 10 of 19; `Strideable` 1 of 12 holds** (4 own + 4 `Comparable` + 4
+`Equatable`, by delegation).
 
 ### `KitEvidence` — the kit's verdicts feeding back
 
@@ -269,7 +314,11 @@ Worth being precise, because Appendix C is:
   This is the engine, and every package above sits on it.
 - **The kit adds about nine curated generators** — the Foundation types the engine lacks (`uuid`,
   `url`, `data`, `decimal`) and the edge-biased numerics (`doubleWithNaN`, `floatWithNaN`,
-  `boundedForArithmetic`, `PropertyLawComplex.edgeCaseBiased`).
+  `boundedForArithmetic`, `PropertyLawComplex.edgeCaseBiased`). ⚠ **2026-09-23: all present, plus
+  `date` (`FoundationGenerators.swift:26`), `unicodeScalar` and `asciiScalar`
+  (`StdlibGenerators.swift:29`, `:99`)** in `PropertyLawKit` — and the opt-in `PropertyLawCollections`,
+  `PropertyLawSyntax` and `PropertyLawMinimalTypes` products each carry generator files of their own,
+  so "about nine" undercounts by whatever one decides those are.
 - **The kit's real generator contribution is not a catalog but `DerivationStrategist`** — it
   *synthesizes* a `Gen<YourType>` per type rather than shipping one.
 
