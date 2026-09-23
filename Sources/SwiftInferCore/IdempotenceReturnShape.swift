@@ -34,6 +34,11 @@ public enum IdempotenceReturnShape: Sendable, Equatable {
     /// Carries the spelling found, for the explainability line.
     case extendsInput(via: String)
 
+    /// The result is a replacement chain whose output re-enters its own patterns, so a second
+    /// application rewrites again — an escaper escaping its own escapes. Carries a witness `s` with
+    /// `f(f(s)) != f(s)`, found by evaluating the chain. See `ReplacementChainClassifier`.
+    case reappliesItsRewrite(witness: String)
+
     /// The return expression was read and matched no extension shape. **Not** a
     /// claim that the function is idempotent — only that this classifier saw no
     /// reason to say it is not. The veto fires on positive detection only.
@@ -65,11 +70,27 @@ public enum IdempotenceReturnShapeClassifier {
     ///
     /// `nil` when there is no single returned expression to read — a body that
     /// branches to several returns is not something this wants to guess about.
-    public static func classify(body: CodeBlockSyntax) -> IdempotenceReturnShape {
+    public static func classify(body: CodeBlockSyntax, parameterName: String? = nil) -> IdempotenceReturnShape {
         guard let result = resultExpression(of: Array(body.statements)) else {
             return .notExtending
         }
+        if let parameterName,
+           let chain = ReplacementChainClassifier.shape(of: result, root: parameterName) {
+            return chain
+        }
         return classify(result: result)
+    }
+
+    /// The replacement-chain arm ALONE, for a computed property's getter, whose input is `self`.
+    ///
+    /// ⚠ **Only this arm, deliberately.** Computed properties have carried `BodySignals.empty`, so
+    /// no return-shape veto has ever applied to them — which is how `String.xmlEscaped` and
+    /// `String.htmlEscaped` got false idempotence laws. Running the whole classifier here would
+    /// also switch the `.extendsInput` veto on for every property, a second change whose cost this
+    /// one has not measured.
+    public static func replacementChainShape(getter statements: CodeBlockItemListSyntax) -> IdempotenceReturnShape? {
+        guard let result = resultExpression(of: Array(statements)) else { return nil }
+        return ReplacementChainClassifier.shape(of: result, root: nil)
     }
 
     static func classify(result: ExprSyntax) -> IdempotenceReturnShape {
