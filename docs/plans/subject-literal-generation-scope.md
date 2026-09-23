@@ -1,6 +1,6 @@
 # Drawing a subject's own literals — scope, gated on one measurement
 
-> **Status:** `proposed` · **As of:** 2026-09-22
+> **Status:** `open` · **As of:** 2026-09-22
 
 `funnel-mutation-check.md` §8 mixed each subject's own string literals into its law's string generator
 and refuted **7 of 52** passing behaviour laws — all false laws, no defects — which made literal
@@ -51,6 +51,32 @@ defect; one that traps on a literal it never receives unescaped is not.
 | ≥ 1 real trap | **build**: the kit takes extra tokens, swift-infer harvests and passes them |
 | traps, all unreachable in real use | decline for totality; the behaviour case (3 laws) does not carry it |
 | no traps | decline; record that subject literals do not reach totality failures on this corpus |
+
+## 4a. The gate, run 2026-09-22 — BUILD
+
+`literal_reach_check.py --totality` over every passing totality law:
+
+| | laws |
+|---|---:|
+| totality stubs, compiled and not failing | 454 |
+| draw strings from the kit's generators | 178 |
+| — subject has no string literal | 95 |
+| **ran with the subject's literals, 1,000 trials** | **83** |
+| held | 82 |
+| **hung** | **1** |
+
+**The one is a REAL DEFECT, reachable in shipped use.** `RuleDocView.parseBlocks` (SwiftProjectLint) loops
+forever on any `#` line `singleLineBlock` does not recognise — H1, H4–H6, a bare `#` — because the paragraph
+loop stops on `#` without consuming the line. **29 of the 213 rule docs the app bundles carry a `####`
+heading, so opening any of their documentation froze the app on the main actor.** Its `input-totality`
+law passed as emitted: the totality generator draws delimiters and Latin-1, never a line starting with `#`.
+The subject's own literal `"#"` hung it on the first run. Fixed in
+[SwiftProjectLint #257](https://github.com/Joseph-Cursio/SwiftProjectLint/pull/257), with tests watched
+hanging on the old code; the per-law record is `fixtures/mutation-check/literal-reach-totality-2026-09-22.jsonl`.
+
+**Per §4's table: ≥ 1 real trap, so build.** It is the first defect this line of work — the funnel census,
+the mutation check, the literal-reach runs — has found in shipped code, and it came from the arm measured
+to refute nothing: totality.
 
 ## 5. If it is built
 
