@@ -151,14 +151,29 @@ def mask(text):
             end = text.find("*/", index) + 2
             out[index:end] = " " * (end - index)
             index = end
+        elif text[index] == "#" and re.match(r'#+"', text[index:]):
+            # ⚠ **A raw string may hold unescaped quotes** — `#"say "hi""#` — and scanning it as an
+            # ordinary literal ran off the end of a file on the first run of the literal-reach check.
+            # It closes only on `"` followed by the same number of `#`.
+            hashes = len(re.match(r'#+', text[index:]).group(0))
+            opener = "#" * hashes + ('"""' if text.startswith('"""', index + hashes) else '"')
+            closer = opener[hashes:] + "#" * hashes
+            close = text.find(closer, index + len(opener))
+            end = len(text) if close < 0 else close + len(closer)
+            out[index + len(opener):max(index + len(opener), end - len(closer))] = \
+                " " * max(0, end - len(closer) - index - len(opener))
+            index = end
         elif text.startswith('"""', index):
             end = text.find('"""', index + 3) + 3
             out[index + 3:end - 3] = " " * (end - index - 6)
             index = end
         elif text[index] == '"':
             end = index + 1
-            while text[end] != '"':
+            while end < len(text) and text[end] not in '"\n':
                 end += 2 if text[end] == "\\" else 1
+            if end >= len(text) or text[end] != '"':
+                index = end  # unterminated on this line: leave it rather than run off the file
+                continue
             body = text[index + 1:end]
             if body and "\\(" not in body:
                 literals.append((index, end + 1))
