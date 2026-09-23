@@ -163,7 +163,14 @@ kills 0.
 shows they do not make a passing law catch more planted bugs: net −1 kill at the shipped budget, 0 at
 1,000. The `guard-domain` cost is the actionable part. A literal the guard *tests for* should be drawn
 mostly on the checked side (e.g. with the prefix removed or embedded after other characters), not added
-as-is. That is a follow-up.
+as-is.
+
+❌ **That fix is DECLINED on population, measured 2026-09-23.** Across census B's trees there are **23
+`guard-domain` stubs; 3 draw subject literals, and exactly ONE draws a literal its own guard tests** —
+`CaptureMutationChecker.isShorthandParameter`, the case above (counted by matching each stub's
+non-curated `element(of:)` tokens against the quoted literals in its `guard !(…)` line). A generator
+rule for one law is the Daikon trap, and the kill is still there at 1,000 trials. **Reopens** if a
+census finds guard-literal `guard-domain` stubs in more than one repository.
 
 ## 5. If it is built
 
