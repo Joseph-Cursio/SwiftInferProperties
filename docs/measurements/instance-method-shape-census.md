@@ -1,6 +1,6 @@
 # `instance-method-shape-not-supported` — the largest blocker, diagnosed
 
-> **Status:** `measured` · **As of:** 2026-08-30
+> **Status:** `measured` · **As of:** 2026-09-23
 
 **31 of 64 `monotonicity` rows on `swift-collections` @ `899809d3` (48%)** — the single largest
 blocker on that template, and untouched since it was first labelled. Diagnosed here, **not
@@ -236,3 +236,42 @@ adding `Deque` would take those 2 rows from decline to a likely `bothPass`, and 
 (`BitArray`, `UniqueDeque`, `RigidDeque`, `UniqueArray`, `RigidArray`, …) need a curated recipe
 each plus a check that `Index == Int`. **Measured and ready, not taken**, because it is a
 different change with a different risk.
+
+## 9. `Deque` added — 2 rows moved, both to `measured-bothPass`
+
+**Taken 2026-09-23.** `Deque<Int>` joins `monotonicityInstanceCarriers`. Its curated recipe draws 1…6
+elements, so the receiver is never empty and the §5 guard is not what makes it safe. The prediction was
+written before the run: **exactly the two `Deque` rows move, to a verdict, and nothing else moves.**
+
+**Same-subject A/B, `swift-collections` @ `899809d3`**, both binaries built from the same `main` except
+this change. Each arm ran in its own clone, indexed every target under `Sources/`, then ran
+`verify --all-from-index --template monotonicity --max-parallel 4` (N=1000):
+
+| outcome | before | after |
+|---|---:|---:|
+| `measured-bothPass` | 10 | **12** |
+| `monotonicity-domain-not-comparable` | 2 | **0** |
+| `instance-method-shape-not-supported` | 19 | 19 |
+| `unsupported-carrier` | 19 | 19 |
+| `internal-api-not-accessible` | 1 | 1 |
+| `measured-defaultFails` | 5 | 5 |
+| `measured-error` | 4 | 4 |
+| **rows** | **60** | **60** |
+
+- ✅ **Prediction held exactly.** `Deque.index(after:)` and `index(before:)` both reach
+  `measured-bothPass` at 1,000 trials, and every other row is identical (one `build-failed` detail
+  differs only by the scratch path in its message, checked).
+- ⚠ **Two true laws, not findings**, as §8 said of the first ten: `index(after:)` is monotonic on any
+  `RandomAccessCollection` with integer indices.
+- ⚠ **The before arm is 60 rows against §8's 61.** Every bucket §8 reported reproduces to the digit
+  except the non-shape declines, 41 against 42. Not chased: both arms indexed identically, so it cannot
+  move this comparison, and this repo has already seen run-to-run drift in its totals.
+- ⚠ **A harness trap, recorded so it isn't paid for again**: the first attempt put the clones in
+  directories named `sc-A` / `sc-B`, and **all 60 rows in both arms failed with `multiple similar
+  targets`**. The stub package depends on the subject by path, SwiftPM names a path dependency after
+  its directory, and the kit's own graph already contains `swift-collections`, so the same targets
+  arrived twice. **The subject's directory must be named `swift-collections`.**
+- **The residue is 17 rows** (`BitArray`, `UniqueDeque`, `RigidDeque`, `UniqueArray`, `RigidArray`, …),
+  each needing its own curated recipe plus a check that `Index == Int`. That is a recipe per carrier for
+  two rows each, on laws that are true by construction. Left unbuilt.
+
