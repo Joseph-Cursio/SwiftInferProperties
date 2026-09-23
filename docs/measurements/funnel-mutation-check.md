@@ -98,7 +98,13 @@ Three, each caught before it could reach a number:
 Per the scope's §8:
 
 - ✅ **Totality kills ≈ 0 of what it exercises**, so the funnel's *passes* should report totality laws
-  on their own line — *does not crash* — rather than as yield. Not done here.
+  on their own line — *does not crash* — rather than as yield. ✅ **Done 2026-09-22**: the census harness
+  now reports `passed_behaviour` and `passed_does_not_crash` beside `passed`, and a test-only re-run of
+  every repository's latest census tree splits today's figure — **577 = 126 behaviour + 451 does not
+  crash (78%)**, every repository reproducing its census count to the digit. SwiftProjectLint, 51% of
+  the passes, is **276 of 294 (94%) does not crash**. ⚠ *Behaviour* is the complement, not a
+  guarantee: it still holds `idempotence` conjectures and `guard-domain` characterisations, which
+  §1's table shows notice some changes and miss others.
 - ✅ **Unreached mutants equal exercised ones**, so generator reach is as large a lever as the laws
   themselves — and it is boundary values specifically that go unreached.
 - ❓ **Where to put writer effort** stays open: the templates that notice changes (`idempotence`,
