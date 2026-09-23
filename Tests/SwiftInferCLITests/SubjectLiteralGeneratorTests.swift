@@ -34,6 +34,24 @@ struct SubjectLiteralGeneratorTests {
         #expect(generator.contains(#"["&", "&amp;"] as [String]"#))
     }
 
+    /// **Through the closure the accept path always supplies.** The test above passed while the census
+    /// moved nothing: the resolver answers `String` with `.notInUniverse`, and the closure rendered the
+    /// generator itself — without literals — before `chooseGenerator` could.
+    @Test("the literals survive the accept path's own custom-generator closure")
+    func literalsSurviveTheCustomGeneratorClosure() throws {
+        let subject = try subjectFile(
+            #"func escape(_ text: String) -> String { text.replacingOccurrences(of: "&", with: "&amp;") }"#
+        )
+        defer { try? FileManager.default.removeItem(at: subject.directory) }
+        let suggestion = makeIdempotentSuggestion(funcName: "escape", typeName: "String", file: subject.path)
+        let generator = InteractiveTriage.chooseGenerator(
+            for: suggestion,
+            typeName: "String",
+            customGenerator: InteractiveTriage.projectTypeGenerator(types: [])
+        )
+        #expect(generator == RawType.string.edgeBiasedGeneratorExpression(subjectTokens: ["&", "&amp;"]))
+    }
+
     /// **The control.** No readable subject — every unit-test fixture — and the generator is exactly
     /// the one every stub emitted before, so no golden moves.
     @Test("with no readable subject the generator is unchanged")

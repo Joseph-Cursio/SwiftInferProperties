@@ -55,7 +55,13 @@ extension InteractiveTriage {
             // move. Delegating to `defaultGenerator` keeps the `RawType` and
             // `DerivationStrategist.composedGenerator` arms exactly as they were — this only
             // reaches the `.todo` arm, and only when the resolver has something to say.
-            guard let reason = explain(typeName) else { return nil }
+            //
+            // ⚠ **A raw stdlib type returns `nil` here and falls through to `chooseGenerator`**, which
+            // is where the subject's own literals are drawn. The resolver answers `String` with
+            // `.notInUniverse`, so this closure used to render `String`'s generator itself — without
+            // the literals — and the first census A/B of subject-literal drawing moved nothing for
+            // exactly that reason. Every other raw type renders identically on either path.
+            guard RawType(typeName: typeName) == nil, let reason = explain(typeName) else { return nil }
             return LiftedTestEmitter.defaultGenerator(for: typeName, reason: reason)
         }
     }
