@@ -158,7 +158,7 @@ extension FunctionScannerVisitor {
             isStatic: isStatic,
             location: SourceLocation(file: file, line: sourceLocation.line, column: sourceLocation.column),
             containingTypeName: containingTypeName,
-            bodySignals: .empty,
+            bodySignals: Self.computedPropertySignals(accessorBlock, type: typeAnnotation.type, in: containingTypeName),
             // The whole stack, as the function path passes it. Omitted here, a property on
             // `ThinkState.Mode` recorded its receiver as bare `Mode`, and its stub annotated
             // `(value: Mode)` — a name a test file cannot see (SwiftAssist, 2026-09-19 funnel).
@@ -313,7 +313,12 @@ extension FunctionScannerVisitor {
             // even propose for. Same bargain as `equalityBodyShape` above: pay
             // the read where a template will use it, nowhere else.
             idempotenceReturnShape: Self.isUnaryEndomorphism(node)
-                ? IdempotenceReturnShapeClassifier.classify(body: body)
+                ? IdempotenceReturnShapeClassifier.classify(
+                    body: body,
+                    parameterName: node.signature.parameterClause.parameters.first.map {
+                        ($0.secondName ?? $0.firstName).text
+                    }
+                )
                 : nil,
             // Only for `throws`/`async` functions — the effectful handler shape a
             // replay-idempotency gate lives in. Keeps the statement walk off the

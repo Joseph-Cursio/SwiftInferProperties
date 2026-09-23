@@ -58,12 +58,27 @@ Two independent instruments, one answer.
 
 ## Recommendation
 
-1. **Build the gate**: `idempotence` is not proposed for a pure replacement chain the evaluation shows
-   is not idempotent. Zero cost in laws, measured; four known false laws withdrawn. The same posture
+1. ✅ **Build the gate** — built, below: `idempotence` is not proposed for a pure replacement chain the
+   evaluation shows is not idempotent. Zero cost in laws, measured; four known false laws withdrawn. The same posture
    as the availability gate, which shipped on 24 rows because it cost none.
 2. **Hold the new law** until it has more than ten subjects. It would be proposed for ten functions in
    four repositories, all application code; a template for a ten-row population is the Daikon trap
    the catalogue avoids.
+
+## Built: the gate
+
+✅ **Shipped 2026-09-22.** `ReplacementChainClassifier` runs the same evaluation at discovery time and
+returns `IdempotenceReturnShape.reappliesItsRewrite(witness:)`; `idempotence`'s existing return-shape
+veto withdraws the law and names the witness. Computed properties gain **only this arm** — they had
+carried no body signals at all, which is how `xmlEscaped` and `htmlEscaped` escaped the veto — so the
+existing `.extendsInput` veto is not switched on for properties by this change.
+
+**Same-source A/B**, `discover --include-possible` over every source directory of the funnel's 14
+repositories, a binary from `main` against the gated one: **79 directories, 75 byte-identical. Exactly
+the five chains this census calls not idempotent lost their `idempotence` suggestion — `xmlEscaped`,
+`plantUMLEscape`, `htmlEscaped`, `HTMLEscaping.escape`, `markdownCell` — none was added, and the five
+idempotent chains kept theirs.** Full `make test` green with every batch count unchanged (4 · 111 · 31 ·
+7 · 14 · 4 · 9 · 35), as a manifest with zero pure chains predicts.
 
 ## Reproducing
 

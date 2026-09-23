@@ -15,6 +15,15 @@ extension IdempotenceTemplate {
     /// function is idempotent, so it must not become a positive signal; absence
     /// of a reason to veto is not evidence for the law.
     static func returnShapeVeto(for summary: FunctionSummary) -> Signal? {
+        if case let .reappliesItsRewrite(witness) = summary.bodySignals.idempotenceReturnShape {
+            return Signal(
+                kind: .returnExtendsInput,
+                weight: Signal.vetoWeight,
+                detail: "The body is a replacement chain whose output re-enters its own patterns, so "
+                    + "\(summary.name) applied twice rewrites again — evaluated on \"\(witness)\", "
+                    + "f(f(x)) differs from f(x). The law is false rather than unlikely"
+            )
+        }
         guard case let .extendsInput(via) = summary.bodySignals.idempotenceReturnShape else {
             return nil
         }
