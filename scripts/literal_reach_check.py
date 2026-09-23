@@ -10,7 +10,12 @@ generator mixed with those literals — alone, and embedded in random text — a
 that passes as emitted and fails with literals is a CANDIDATE: a false law the generator hid, or a
 real defect. **Every candidate is hand-checked before it is counted as either.**
 
-    python3 scripts/literal_reach_check.py <census-root> <out.jsonl>
+    python3 scripts/literal_reach_check.py <census-root> <out.jsonl>              # behaviour laws
+    python3 scripts/literal_reach_check.py <census-root> <out.jsonl> --totality   # totality laws
+
+**`--totality`** runs the does-not-crash laws instead (`subject-literal-generation-scope.md` §3). A
+totality law fails only by trapping or hanging, so a refutation there is a CRASH on the subject's own
+literal — a candidate defect, hand-checked for whether the input can reach the function in real use.
 
 ⚠ Scratch census worktrees only (#560). The clones are removed afterwards.
 """
@@ -74,7 +79,7 @@ def build_setting_aside(package, swift, rounds=6):
     return False, output, broken
 
 
-def behaviour_stubs(root):
+def behaviour_stubs(root, totality=False):
     """Every compiled, not-failed stub whose law checks behaviour, from each repo's LATEST census tree.
 
     `census-widened` supersedes `census-imports2` for the six repositories it re-ran; a totality
@@ -98,14 +103,14 @@ def behaviour_stubs(root):
             for path in sorted(glob.glob(os.path.join(target, "*", "*.swift"))):
                 template = os.path.basename(os.path.dirname(path))
                 suite = re.search(r"^struct (\w+)", open(path, encoding="utf-8").read(), re.M)
-                if template in cf.DOES_NOT_CRASH_TEMPLATES or not suite or suite.group(1) in failed:
+                if (template in cf.DOES_NOT_CRASH_TEMPLATES) != totality or not suite or suite.group(1) in failed:
                     continue
                 stubs.append((repo, template, path))
     return stubs
 
 
-def main(root, out_path):
-    stubs = behaviour_stubs(root)
+def main(root, out_path, *flags):
+    stubs = behaviour_stubs(root, totality="--totality" in flags)
     done = set()
     if os.path.exists(out_path):
         done = {json.loads(row)["suite"] for row in open(out_path)}

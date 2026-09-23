@@ -21,6 +21,14 @@ counting only rows that reached a verdict (build failures, traps and parse error
 ## 1. What is strong
 
 **`predicate` / totality never refutes on real code: 0 of 102, across all three corpora.**
+
+> ⚠ **SUPERSEDED IN PART 2026-09-22 — a totality law refuted shipped code, and the refutation is a REAL
+> DEFECT.** The 0 of 102 stands as a reading of totality laws under the kit's fixed generators. Given the
+> SUBJECT's own string literals (`docs/plans/subject-literal-generation-scope.md` §4a), 83 totality laws
+> re-ran and one hung: `RuleDocView.parseBlocks` looped forever on a `####` heading that 29 of SwiftProjectLint's
+> 213 bundled rule docs contain, freezing the app (fixed, SwiftProjectLint #257). **So "totality predicts
+> nothing will fire" was a fact about the GENERATOR, not the template**: the law was right all along and
+> could not reach its input.
 It is not that it rarely fires; it did not fire once. The only time a totality law has ever
 refuted anything was against a **planted** mutant
 (`criterion-a-quality-swift-system.md`). Safe, and so far uninformative.
