@@ -111,6 +111,60 @@ custom-generator closure answers before `chooseGenerator` does, and the resolver
 had called `chooseGenerator` without the closure the accept path always supplies. Fixed (a raw type falls
 through), with a test through the real closure that fails on the old code with exactly the census's symptom.
 
+## 4c. §5's second check — the recorded literal mutants, re-run 2026-09-23
+
+§5 said `run-2026-09-22.jsonl`'s literal mutants should change outcome. All 23 M6 (*empty string
+literal*) mutants were re-applied from their recorded patches against census B's stubs — the ones this
+build regenerated — and scored by `mutation_check.py`'s own `evaluate` and `score`
+(`scripts/literal_mutant_rerun.py`; record `fixtures/mutation-check/literal-mutants-rerun-2026-09-23.jsonl`).
+**Predictions were written before the run**: the one behaviour law §7 said literals would reach moves
+UNEXERCISED → DIVERGED and is *not* killed; HTMLEscaping's law is gone; nothing KILLED un-kills; new
+kills 0.
+
+| | mutants |
+|---|---:|
+| recorded | 23 |
+| did not compile in the recorded run | 1 |
+| law withdrawn since (`HTMLEscaping.escape`, the replacement-chain gate) | 1 |
+| **re-run** | **21** |
+| same outcome | 17 |
+| UNEXERCISED → DIVERGED | **2** |
+| KILLED → UNEXERCISED | **1** |
+| DIVERGED → UNEXERCISED | **1** |
+
+- ✅ **New kills: 0, as predicted. Literals bought REACH on this set, not kills.** `mermaidEscape`
+  (idempotence) and `CallSiteEffectInferrer.isMetricReceiver` (a totality `predicate`) now draw the
+  literal the mutant emptied and see the output change. Neither law can fail on it: `mermaidEscape`
+  stays idempotent when it stops escaping `"`, and a totality law cannot notice a wrong answer.
+- ⚠ **ONE KILL WAS LOST, and it was not predicted.** `CaptureMutationChecker.isShorthandParameter` is a
+  `guard-domain` law: *`!name.hasPrefix("$")` ⟹ result is `false`*. The subject literal is `"$"` — **the
+  guard's own prefix — so every literal draw lands OUTSIDE the sub-domain the law checks**. From the
+  stub's own weights: the one arm that can draw a killing input (non-`$` alphanumerics, e.g. `a5`) fell
+  from **3/8 of draws to 3/16**, half its weight now spent on `$`-prefixed strings the guard skips. At
+  the scored 100 trials the mutant survives; **at 1,000 it is still killed**. So this is a budget-sized
+  loss, not a blind spot — but it is a real cost, in exactly the template the feature was expected to
+  help, and it generalises: **a `guard-domain` law's literal is usually its guard's own literal, which
+  spends draws on the side the law says nothing about.** Not fixed here.
+- ⚠ **The other change is an error in the 09-22 RECORD, not a change in behaviour.**
+  `SwiftFormatConfig` parse/serialized was recorded DIVERGED and now reads UNEXERCISED. Re-run on the
+  **old stub, in the old tree, at the recorded commit**, it reads UNEXERCISED too: 100 of 100 probe lines
+  identical, baseline deterministic. The probe wraps only the outer `serialized()`, whose output equals
+  the input whenever the law holds — so it cannot see this mutant at all. Why the recorded digests
+  differed is not recoverable (the old probe clone is gone). Quote this row as UNEXERCISED.
+- Not moved, as predicted: `RoundTripFinder.signature` draws a syntax node, which no string literal
+  reaches. Three totality rows whose input is a `String` (`GitCommit.parse`,
+  `InlineSuppressionParser.parse`, `OllamaModelMatching.isInstalled`) also stayed UNEXERCISED, so
+  *some totality rows move* held for one row of four.
+- ⚠ Two trees sat at later commits than recorded (SwiftProjectLint `0d10011f` against `2b292e8f`,
+  SwiftPropertyLaws `004b1dde` against `23af53bf`); every patch applied cleanly, and each row carries both
+  commits.
+
+**What it decides.** §4b showed literals make the *passes* more honest, removing false laws. This check
+shows they do not make a passing law catch more planted bugs: net −1 kill at the shipped budget, 0 at
+1,000. The `guard-domain` cost is the actionable part. A literal the guard *tests for* should be drawn
+mostly on the checked side (e.g. with the prefix removed or embedded after other characters), not added
+as-is. That is a follow-up.
+
 ## 5. If it is built
 
 - **Kit (SwiftPropertyLaws):** `RawType.edgeBiasedGeneratorExpression(extraTokens:)` and
