@@ -151,14 +151,29 @@ def mask(text):
             end = text.find("*/", index) + 2
             out[index:end] = " " * (end - index)
             index = end
+        elif text[index] == "#" and re.match(r'#+"', text[index:]):
+            # ⚠ **A raw string may hold unescaped quotes** — `#"say "hi""#` — and scanning it as an
+            # ordinary literal ran off the end of a file on the first run of the literal-reach check.
+            # It closes only on `"` followed by the same number of `#`.
+            hashes = len(re.match(r'#+', text[index:]).group(0))
+            opener = "#" * hashes + ('"""' if text.startswith('"""', index + hashes) else '"')
+            closer = opener[hashes:] + "#" * hashes
+            close = text.find(closer, index + len(opener))
+            end = len(text) if close < 0 else close + len(closer)
+            out[index + len(opener):max(index + len(opener), end - len(closer))] = \
+                " " * max(0, end - len(closer) - index - len(opener))
+            index = end
         elif text.startswith('"""', index):
             end = text.find('"""', index + 3) + 3
             out[index + 3:end - 3] = " " * (end - index - 6)
             index = end
         elif text[index] == '"':
             end = index + 1
-            while text[end] != '"':
+            while end < len(text) and text[end] not in '"\n':
                 end += 2 if text[end] == "\\" else 1
+            if end >= len(text) or text[end] != '"':
+                index = end  # unterminated on this line: leave it rather than run off the file
+                continue
             body = text[index + 1:end]
             if body and "\\(" not in body:
                 literals.append((index, end + 1))
@@ -591,6 +606,44 @@ def record(sample_path, out_path, record_path):
           f"{len(shas)} repositories, patches missing {patches_missing}")
 
 
+SPLITS = re.compile(r"\.(split|components)\(")
+COUNTED = re.compile(r"\.count\b|\[\d+\]|\b(parts|fields|components|words|lines)\b")
+
+
+def unreached(sample_path, record_path, trees_root):
+    """Classify every mutant the drawn inputs never reached by what a generator would need to reach it.
+
+    `separator+count` — the subject splits its input on a separator and the planted change touches a
+    count or index of the parts; `literal` — the change is to a string literal the input would have to
+    contain; `split, not count` / `neither` otherwise. Crossed with whether the law checks behaviour,
+    because reaching a mutant under a totality law still cannot kill it.
+    """
+    laws = {law["suite"]: law for law in json.load(open(sample_path))["laws"]}
+    table = collections.Counter()
+    for row in (json.loads(line) for line in open(record_path)):
+        if row["kind"] != "mutant" or row["outcome"] != "UNEXERCISED":
+            continue
+        law = laws[row["suite"]]
+        path = next(p for p in (os.path.join(trees_root, d, "trees", row["repo"], row["file"])
+                                for d in ("census-widened", "census-imports2"))
+                    if os.path.exists(p) and row["repo"] in law["stub"])
+        source = open(path, encoding="utf-8").read()
+        line = next(ln for f, ln, _ in subject_locations(law) if f.endswith(row["file"]))
+        start, end, _ = subject_body(source, line, row["subject"])
+        added = next(l[1:] for l in row["patch"].splitlines() if l.startswith("+") and not l.startswith("+++"))
+        split = bool(SPLITS.search(source[start:end]))
+        if split and COUNTED.search(added):
+            feature = "separator+count"
+        elif row["operator"].startswith("M6"):
+            feature = "literal"
+        else:
+            feature = "split, not count" if split else "neither"
+        kind = "totality" if law["template"] in ("predicate", "input-totality") else "behaviour"
+        table[(kind, feature)] += 1
+    for (kind, feature), count in sorted(table.items()):
+        print(f"{kind:10} {feature:18} {count}")
+
+
 def main(argv):
     if argv[1] == "sample":
         found = candidates(argv[3:])
@@ -604,6 +657,9 @@ def main(argv):
         return 0
     if argv[1] == "run":
         return run(argv[2], argv[3])
+    if argv[1] == "unreached":
+        unreached(argv[2], argv[3], argv[4])
+        return 0
     if argv[1] == "record":
         record(argv[2], argv[3], argv[4])
         return 0
