@@ -1,6 +1,6 @@
 # SwiftIdempotency — the terminal package
 
-> **Status:** `reference` · **As of:** 2026-08-12
+> **Status:** `reference` · **As of:** 2026-09-23
 
 
 **Repo:** `~/xcode_projects/SwiftIdempotency` (`github.com/Joseph-Cursio/swiftidempotency`) ·
@@ -19,7 +19,14 @@ sequence property's MBT reading in Chapter 19 §19.5.2.
 > doc's headline count expired, exactly as three open threads predicted it would. The subject also
 > gained a seventh annotation (`@EffectUnknown`, `1467faa`). The zero-dependency fact is unchanged.
 
-<!-- doc-provenance date=2026-08-12 subject=SwiftIdempotency@797290c version=0.4.1 observer=SwiftInferProperties@21bc279 -->
+> **Re-verified 2026-09-23** · subject `SwiftIdempotency@5863dad` (`0.4.2`+13; `797290c` was
+> `0.4.1`+27, and `0.4.2` is the first tag containing it) · observer `SwiftInferProperties@79d4baab`.
+> The subject moved 18 commits; only two touch `Sources/` or `Package.swift` —
+> `swift-property-based` now `from: "2.0.0"` (was `1.0.0`), and two `IdempotencyTestsMacro` helpers
+> widened from `private` to internal. The seven `@attached(peer)` macros are unchanged and still
+> match `fixtures/effect-vocabulary/swiftidempotency-peer-macros.json`. Corrections are inline, dated.
+
+<!-- doc-provenance date=2026-09-23 subject=SwiftIdempotency@5863dad version=0.4.2 observer=SwiftInferProperties@79d4baab -->
 
 
 ```
@@ -33,39 +40,49 @@ the end of the *adoption loop*, not the bottom of a dependency graph.
 So the honest question this doc answers is narrower than the previous three: **what does property
 inference actually touch here?** Same grep over `Sources/`, re-measured 2026-08-06:
 
-| grammar term | 2026-08-03 | 2026-08-06 | **2026-08-12** |
-|---|---|---|---|
-| `@ClockDeterministic` | 9 | 9 | **9** |
-| `@Idempotent` | 0 | 15 | **14** |
-| `@NonIdempotent` | 0 | 12 | **16** |
-| `@ExternallyIdempotent` | 0 | 5 | **14** |
-| `@EffectUnknown` | — *(did not exist)* | 5 | **5** |
-| `@Pure` · `@Observational` | 0 | 1 each | **1** each |
-| `IdempotencyKey` · `assertIdempotent` | 0 | 0 | **40** · **9** |
+| grammar term | 2026-08-03 | 2026-08-06 | 2026-08-12 | **2026-09-23** |
+|---|---|---|---|---|
+| `@ClockDeterministic` | 9 | 9 | 9 | **9** |
+| `@Idempotent` | 0 | 15 | 14 | **14** |
+| `@NonIdempotent` | 0 | 12 | 16 | **16** |
+| `@ExternallyIdempotent` | 0 | 5 | 14 | **14** |
+| `@EffectUnknown` | — *(did not exist)* | 5 | 5 | **6** |
+| `@Pure` · `@Observational` | 0 | 1 each | 1 each | **1** each |
+| `IdempotencyKey` · `assertIdempotent` | 0 | 0 | 40 · 9 | **40** · **9** |
 
 > **2026-08-12 — the last row left zero, and it is the interesting one.** Every earlier pass
 > measured `IdempotencyKey` and `assertIdempotent` at 0: swift-infer knew the *annotation* grammar
 > and not the *types*. It now reads `IdempotencyKey` as a shape signal — `replayIdempotencyKeyParameter`,
 > `DedupGateShape`, `BodySignalVisitor` — so the contact is no longer only vocabulary the scanner
 > recognises in a comment, it is a carrier the scorer keys on. 38 occurrences across 20 files, 20 of
-> them in code rather than doc comments.
+> them in code rather than doc comments. ⚠ **Re-verified 2026-09-23: *38 occurrences across 20
+> files* does not reproduce at either observer SHA.** At `21bc279` the same grep gives **40
+> occurrences on 38 lines in 8 files** (the table's 40 was right; 38 is the LINE count); at
+> `79d4baab` it is **40 occurrences in 8 files**, 21 lines without `///`. The *20 files* matches the
+> annotation-grammar spread in the paragraph below, not `IdempotencyKey`.
 >
 > The measurement is the same `grep -rho "@Term" Sources/` over THIS repo's sources, verified
 > comparable by two anchors that did not move (`@ClockDeterministic` 9, `@EffectUnknown` 5). The
 > small `@Idempotent` dip (15 → 14) is within that method's noise — it counts occurrences, not
 > call sites — and is not read as a retreat.
+>
+> ⚠ **2026-09-23: one anchor moved — `@EffectUnknown` 5 → 6**, a doc-comment mention added in
+> `Sources/SwiftInferCore/FunctionSummary+Builders.swift` by `03fb269e`. The other anchor
+> (`@ClockDeterministic` 9) and every other row reproduce exactly.
 
 **"One word of shared vocabulary" is no longer true, and its expiry was the point of three open
 threads.** This doc used to headline that number; the vocabulary went from one term to six between
 2026-08-03 and 2026-08-06 because open-threads items 17 and 20 shipped — `swift-infer` now *reads*
 the effect grammar (`@Idempotent` corroborates, `@NonIdempotent` / `@ExternallyIdempotent` veto,
 `@EffectUnknown` earns a caveat and no score). It is spread across **20 files** (**ten** on
-2026-08-06), with
+2026-08-06; ⚠ **21 on 2026-09-23**, same seven-attribute grep), with
 `EffectResolver`, `IdempotenceTemplate+DeclaredEffect` and `IdempotenceTemplate+UnknownEffect` doing
 the work.
 
 **What has *not* changed is the dependency fact**, and it is the one that matters: `IdempotencyKey`
-and `assertIdempotent` are still at zero, and this repo still never links the package. The vocabulary
+and `assertIdempotent` are still at zero, and this repo still never links the package. ⚠ **Stale
+since 2026-08-12 by this doc's own table: both left zero (40 · 9). The *never links* half still
+holds — 0 matches in `Package.swift` / `Package.resolved` on 2026-09-23.** The vocabulary
 crossed; the code did not. That is why item 4's cross-repo contract test exists — six terms matched
 **by name**, against a package no manifest mentions, is six renames away from silent breakage.
 
@@ -86,7 +103,8 @@ reach two tools that never see each other.
 
 ## The package itself
 
-Version `0.4.1` (`git describe`: `0.4.1-6-g4a8e801`). Four library products; the last is opt-in:
+Version `0.4.1` (`git describe`: `0.4.1-6-g4a8e801`). ⚠ **Re-verified 2026-09-23: `0.4.2`
+(`0.4.2-13-g5863dad`).** Four library products; the last is opt-in:
 
 | product | what it is |
 |---|---|
@@ -117,7 +135,9 @@ based on these seven spellings while linking nothing.
 ### Tier 1 — `IdempotencyKey`, enforced by the type checker
 
 The type has **no `init()`**, no `init(_ uuid: UUID)`, no `ExpressibleByStringLiteral`. Two
-construction paths only: `init(from:)` (requires `Identifiable`) and `init(fromAuditedString:)`
+construction paths only: `init(from:)` (requires `Identifiable`) ⚠ **2026-09-23: spelled
+`init(fromEntity:)` (`IdempotencyKey.swift:69`, same at `797290c`); `init(from:)` is the
+`Codable` decoder, line 100** and `init(fromAuditedString:)`
 (requires the caller to explicitly audit a string as stable across retries).
 
 > Using `UUID()` or `Date()` as a key becomes a type error — not a runtime mistake, not a lint
@@ -129,7 +149,8 @@ package and by a missing initializer in another — belt and braces on the same 
 
 ### Tier 2 — the annotation grammar
 
-Six markers, each with a doc-comment twin:
+Six markers, each with a doc-comment twin: ⚠ **2026-09-23: seven `@attached(peer)` macros ship —
+`@EffectUnknown` (`/// @lint.effect unknown`, `EffectUnknown.swift:3`) is absent from this table.**
 
 | attribute | doc comment | on the lattice? |
 |---|---|---|
@@ -142,7 +163,9 @@ Six markers, each with a doc-comment twin:
 
 All are `@attached(peer)` macros — they attach nothing and generate nothing. **Their entire job is
 to be readable by a static analyzer**, which is why a package that emits no code still matters to two
-that read it. The README calls it a one-way producer: SwiftIdempotency defines the grammar and takes
+that read it. The README calls it a one-way producer: ⚠ **2026-09-23: no such phrase in the
+subject's `README.md` / `USER_GUIDE.md` / `REFERENCE.md` / `TUTORIAL.md`, and `git log -S"one-way"`
+on `README.md` finds no commit ever adding it — read as a paraphrase.** SwiftIdempotency defines the grammar and takes
 no inference dependency in return.
 
 ### Tier 3 — test scaffolding
@@ -204,7 +227,7 @@ outside `Effect` entirely. This repo consumes the claim as a **conjunction gate 
 - **un-annotated async stays excluded**, because it would make seeded sequence replays
   nondeterministic — and bare `async` keeps a clean rejection that says how to make the claim.
 
-Carried here by `ViewModelDiscoveryVisitor:154` → `FunctionSummary.isClockDeterministic` →
+Carried here by `ViewModelDiscoveryVisitor:154` (⚠ **2026-09-23: now `:157`**) → `FunctionSummary.isClockDeterministic` →
 `ReducerCandidate.isClockDeterministic`, decoded with a `false` default.
 
 **The claim is checkable, and that is the point.** It asserts exactly the property SwiftPropertyLaws'
@@ -240,7 +263,10 @@ lattice, it is the third.
 
 ### Other things worth knowing
 
-- **The grammar join has no contract test.** `PBTSeedRole` ↔ `SeedRole` gets one
+- **The grammar join has no contract test.** ⚠ **Stale since 2026-08-05 (`d51ae013`, item 4):
+  `EffectVocabularyContractTests` and `EffectVocabularyCrossRepoTests` now pin the names against
+  `fixtures/effect-vocabulary/swiftidempotency-peer-macros.json` — which this doc's own opening
+  section already cites as item 4's contract test.** `PBTSeedRole` ↔ `SeedRole` gets one
   (`SeedRoleContractTests`) because a drifted entailment claim would propose a false law. The
   attribute-name join is softer — `AttributeRecognition` is configurable and defaults to
   `["Pure"], ["Idempotent"], …` — but nothing in any repo asserts those strings still match the
@@ -267,12 +293,12 @@ lattice, it is the third.
 | question | file |
 |---|---|
 | the key type and its two construction paths | `swiftIdempotency/Sources/SwiftIdempotency/IdempotencyKey.swift` |
-| the five effect markers | `…/Sources/SwiftIdempotency/Idempotent.swift` |
+| the five effect markers ⚠ *2026-09-23: four effect markers + `@IdempotencyTests`; `@Pure` and `@EffectUnknown` have their own files* | `…/Sources/SwiftIdempotency/Idempotent.swift` |
 | **the one marker this repo reads**, and why it is off the lattice | `…/Sources/SwiftIdempotency/ClockDeterministic.swift` |
 | why a trapping assertion destroys a counterexample | `…/Sources/SwiftIdempotencyPropertyBased/AssertIdempotentProperty.swift` |
 | the verified-and-worse-than-predicted write-up | `…/docs/property-based/trial-findings.md`, commit `7fc5128` |
 | task-oriented adoption, incl. coordinating with the linter | `…/USER_GUIDE.md` · `TUTORIAL.md` · `REFERENCE.md` |
 | who parses the grammar | `docs/design-internal/swifteffectinference.md` |
 | who enforces it | `docs/design-internal/swiftprojectlint.md` |
-| where the claim is consumed here | `SwiftInferProperties/Sources/SwiftInferCore/FunctionSummary.swift`, `ReducerCandidate.swift`, `ViewModelDiscoveryVisitor.swift:154` |
+| where the claim is consumed here | `SwiftInferProperties/Sources/SwiftInferCore/FunctionSummary.swift`, `ReducerCandidate.swift`, `ViewModelDiscoveryVisitor.swift:154` (⚠ *2026-09-23: `:157`*) |
 | vocabulary — `@ClockDeterministic`, *Effect lattice* | `docs/design-internal/glossary.md` § Neighbours |
