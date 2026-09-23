@@ -54,32 +54,26 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,273 tests — 6,050 fast + 223 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-09-19** at `45b32aeb` on **swift-property-based
-2.0 / SwiftPropertyLaws 4.7.0 / SEI `1b62e764`** — every stage counted from that one run, and the
-run was UNPIPED (`make test > log 2>&1`, exit **0**, 75m16s):
-fast **6,050** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 35.
-**THE BATCH HALF STOOD STILL AT 223, EVERY BATCH TO THE DIGIT — and here that is load-bearing
-rather than a formality**: #530 renders a derivation REASON into every unresolved `.todo` marker
-and #531 threads the resolver into six template arms that never had one, so **both change
-generated stub text**, and all 223 assertions still passed. ⚠ **Read the two halves of that
-separately**: an unmoved COUNT says no arm was added or lost, and the GREEN says no baseline
-assertion broke — neither says a printed census figure held, which was not diffed.
-**The fast half moved 6,039 → 6,050, +11, and it reconciles exactly**: 4
-`TargetPathOutsideSourcesTests` + 7 `GeneratorFailureReasonTests`, with **no other test file's
-`@Test` count changing in the window**. Both are plain unit suites, so neither needs a batch — the
-regex doing its job.
-⚠ **`batch3` READS 483s, THE HIGHEST OF FIVE, WHICH REOPENS THE RANGE AND NOT THE DIAGNOSIS.**
-The previous reading withdrew 470s as noise on the strength of 380s and 402s; this run is higher
-still, on a count unmoved at 31 across all five. **Noise was the right cause and ~352–406s was the
-wrong ceiling** — the five readings give **380–483s**, and that spread is the standing figure now.
-A sixth inside it says nothing; one outside it is worth a sentence.
-**Timings usable, because the directions are MIXED rather than uniform**: `batch5` **1,641s**
-below its standing ~1,670s for the fifth reading running and `batch6` 160s flat, with `batch2`
-771s inside its 679–801s spread — against `batch1` 219s, `batch4` 228s and `batch8` 591s at or
-just above theirs. Uniform inflation is the signature of a busy machine; the longest stage reading
-LOW is not. Load average 2.09 at start. **75m16s end to end including a clean rebuild**, the ten
-test stages summing to **72m56s**, so the clean cost ~2.
+Suites green at **6,367 tests — 6,144 fast + 223 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-23** at `0e16203f` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.8.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 69m41s):
+fast **6,144** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 35.
+**THE BATCH HALF STOOD STILL AT 223, EVERY BATCH TO THE DIGIT**, across the kit 4.7.0 → 4.8.0 bump
+and the subject-literal generators, both of which change generated stub text. ⚠ As before, an
+unmoved COUNT says no arm was added or lost and the GREEN says no baseline assertion broke —
+neither says a printed census figure held.
+**The fast half moved 6,050 → 6,144, +94, RECONCILED BY TEST ID, not by grep**: `swift test list`
+at both commits, filtered by the skip regex — **95 added, 1 removed, all in plain unit suites** across
+25 suites (`ReceiverConstructionHarvesterTests` 12, `SyntaxCorpusSourceTests` 7, …), the one removal
+a rename inside `InteractiveTriageModuleImportTests`. ⚠ **Counting `@Test` lines does NOT reconcile
+and is the wrong instrument**: it read +98, and +88 after discounting `@Test` inside test-fixture
+string literals — the listed IDs are the only exact count. Both lists also reproduce the two totals
+to the digit (6,273 and 6,367).
+**Timings**: `batch3` **387s**, inside the standing 380–483s; `batch2` 760s inside 679–801s;
+`batch5` **1,625s**, below ~1,670s for the sixth reading running; `batch1` 188s, `batch4` 192s,
+`batch6` 159s, `batch7` 202s, `batch8` 583s. Load average 2.04 at start. The `Corrupted JSON` line
+printed **0** times. 69m41s end to end including a clean rebuild.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
