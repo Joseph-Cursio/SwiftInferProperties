@@ -100,6 +100,8 @@ struct MonotonicityReceiverCarrierTests {
     func instanceCarrierTestAcceptsBothSpellings() {
         #expect(StrategistDispatchEmitter.isMonotonicityInstanceCarrier("OrderedSet"))
         #expect(StrategistDispatchEmitter.isMonotonicityInstanceCarrier("OrderedSet<Int>"))
-        #expect(!StrategistDispatchEmitter.isMonotonicityInstanceCarrier("Deque"))
+        // `Deque` was the negative case until it joined the list (census §9); `BitArray` is
+        // still outside it, with no curated recipe.
+        #expect(!StrategistDispatchEmitter.isMonotonicityInstanceCarrier("BitArray"))
     }
 }

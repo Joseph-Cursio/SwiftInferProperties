@@ -157,6 +157,22 @@ struct MonotonicityOCEmitterTests {
         #expect(!source.contains("min(firstDraw, secondDraw)"))
     }
 
+    /// `Deque` had a curated recipe and no place in the instance-carrier list, so its
+    /// `index(after:)` / `index(before:)` rows declined `monotonicity-domain-not-comparable`
+    /// — `instance-method-shape-census.md` §8. Its `Index` is `Int`, as the shape needs.
+    @Test("Deque<Int> emits the instance shape, on either spelling", arguments: [
+        "Deque<Int>",
+        "Deque"
+    ])
+    func dequeEmitsInstanceShape(carrier: String) throws {
+        #expect(StrategistDispatchEmitter.isMonotonicityInstanceCarrier(carrier))
+        let source = try StrategistDispatchEmitter.emit(
+            Self.inputs(carrier: "Deque<Int>", primaryFunctionName: "index(after:)")
+        )
+        #expect(source.contains("let resultA = receiver.index(after: lowerIndex)"))
+        #expect(!source.contains("min(firstDraw, secondDraw)"))
+    }
+
     @Test("the 3 nested-OC binding keys resolve to their bound forms")
     func nestedOCBindingsResolve() {
         #expect(

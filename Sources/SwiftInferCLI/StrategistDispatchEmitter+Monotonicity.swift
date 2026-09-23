@@ -77,7 +77,12 @@ extension StrategistDispatchEmitter {
         // so the receiver-and-index emit shape applies unchanged.
         "OrderedSet<Int>.SubSequence",
         "OrderedDictionary<Int, Int>.Values",
-        "OrderedDictionary<Int, Int>.Elements.SubSequence"
+        "OrderedDictionary<Int, Int>.Elements.SubSequence",
+        // `Deque` is a RandomAccessCollection with `Index == Int` and already had a curated
+        // recipe, which draws 1…6 elements — so the receiver is never empty. Until it was
+        // listed here its rows reached the value composer and declined
+        // `monotonicity-domain-not-comparable` (instance-method-shape-census.md §8).
+        "Deque<Int>"
     ]
 
     /// Value-monotonicity domains the strategist can generate AND order with
