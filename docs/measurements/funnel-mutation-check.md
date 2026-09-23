@@ -110,6 +110,38 @@ Per the scope's §8:
 - ❓ **Where to put writer effort** stays open: the templates that notice changes (`idempotence`,
   `round-trip`, `guard-domain`) have single-digit samples, and the relational ones have none.
 
+## 7. Would a smarter generator reach them? — separators no, literals yes, and the literals expose a false law
+
+**The unreached boundaries are not on integer inputs.** Of §2's 13 unreached boundary and off-by-one
+mutants, almost none compare an integer parameter: they compare counts DERIVED from parsing a string —
+`parts.count > 4` in `GitCommit.parse`, `wordCount > 1`, a version `major > 6` parsed out of text. Edge-
+biasing integer generators toward 0, ±1 and max would reach none of them.
+
+So the 34 unreached mutants were classified by what a generator would need to reach each
+(`mutation_check.py unreached`), crossed with whether the law checks behaviour:
+
+| law | the subject splits its input and the change touches a count | the change is to a string literal | neither |
+|---|---:|---:|---:|
+| totality | 4 | 6 | 8 |
+| behaviour | **0** | **3** | 13 |
+
+- ❌ **Separator-aware generation is DECLINED on measurement.** Drawing strings with k−1, k and k+1
+  separator-delimited fields reaches **4 mutants, all under totality laws**, which cannot notice a
+  reached change. It buys zero kills.
+- **Most behaviour-law misses need structured input no string trick provides** — a non-empty trace
+  array, an indentation pattern, a syntax node with a return clause: 13 of 16.
+- ⚠ **The 3 literal cases found something worse than a miss: a FALSE law passing.** Two are escape
+  functions whose planted bug stopped escaping `"` or `&`, unreached because the input never contained
+  either. `HTMLEscaping.escape` turns `&` into `&amp;`, so escaping twice gives `&amp;amp;` — **its
+  `idempotence` law is false**, and it passed at 100 and at 1,000 trials only because the stub's string
+  generator (letters, digits and an edge alphabet of blanks and punctuation) never draws `&`, `<`, `>` or
+  `"`. `ActivityScript.mermaidEscape` is the control: it escapes `"`, `<`, `>` and `|` but not `&`, so
+  its entities contain nothing it escapes and its idempotence law is genuinely true.
+
+**A narrow generator does not only miss planted bugs — it lets false laws pass.** That bears directly
+on the 126 behaviour passes, which are now the figure quoted as the meaningful one. The follow-up is to
+measure how many of them a generator that draws the subject's own literals would refute.
+
 ## The record
 
 **`fixtures/mutation-check/run-2026-09-22.jsonl` keeps every mutant permanently** — 121 rows, one per
