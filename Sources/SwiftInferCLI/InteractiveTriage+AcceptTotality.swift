@@ -34,6 +34,15 @@ extension InteractiveTriage {
                 receiverExpression: receiverExpression
             )
 
+        // Same call as totality, and a predicate on what it returns: a count is never negative.
+        case "measure-non-negativity":
+            return totalityStub(
+                for: suggestion,
+                customGenerator: customGenerator,
+                receiverExpression: receiverExpression,
+                law: .nonNegative
+            )
+
         case "caseiterable-key-injectivity":
             return caseKeyInjectivityStub(for: suggestion)
 
@@ -94,10 +103,16 @@ extension InteractiveTriage {
     /// receiver and each of its parameters, and a multi-parameter function draws one value per
     /// parameter. Held to arity 1, this arm declined 497 entailed laws in the corpus funnel
     /// census, while verify's predicate composer already drew receiver and parameters.
+    /// What an arity-free call is checked for. Totality discards the result; non-negativity is a
+    /// predicate on it. Everything before the last line — which arguments, which receiver, which
+    /// generators — is the same decision for both, which is why they share one arm.
+    enum ArityFreeLaw { case totality, nonNegative }
+
     private static func totalityStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)?,
-        receiverExpression: ((String) -> String?)? = nil
+        receiverExpression: ((String) -> String?)? = nil,
+        law: ArityFreeLaw = .totality
     ) -> String? {
         guard let evidence = suggestion.evidence.first,
               let parsed = CalleeReference(evidence: evidence),
@@ -116,12 +131,22 @@ extension InteractiveTriage {
         let argumentTypes = constructed == nil ? parsedTypes : Array(parsedTypes.dropFirst())
         let seed = SamplingSeed.derive(from: suggestion.identity)
         let literals = argumentTypes.contains { RawType(typeName: $0) == .string } ? SubjectLiterals.of(suggestion) : []
+        let generators = argumentTypes.map {
+            totalityGenerator(for: $0, customGenerator: customGenerator, subjectLiterals: literals)
+        }
+        if law == .nonNegative {
+            return LiftedTestEmitter.nonNegative(
+                callee: callee,
+                seed: seed,
+                generators: generators,
+                argumentTypes: argumentTypes,
+                failureLabel: "\(parsed.displaySignature) returned a negative measure"
+            )
+        }
         return LiftedTestEmitter.total(
             callee: callee,
             seed: seed,
-            generators: argumentTypes.map {
-                totalityGenerator(for: $0, customGenerator: customGenerator, subjectLiterals: literals)
-            },
+            generators: generators,
             isThrowing: evidence.signature.contains(" throws"),
             isAsync: evidence.signature.contains(" async"),
             // #498 — `arityFreeArgumentTypes` already returned these, in the same order the

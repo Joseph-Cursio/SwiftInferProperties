@@ -106,7 +106,7 @@ extension LiftedTestEmitter {
     }
 
     /// One draw for a single generator; a tuple of draws, in argument order, for several.
-    private static func totalitySample(generators: [String]) -> String {
+    static func totalitySample(generators: [String]) -> String {
         guard generators.count > 1 else {
             return "{ rng in (\(generators.first ?? "")).run(using: &rng) }"
         }

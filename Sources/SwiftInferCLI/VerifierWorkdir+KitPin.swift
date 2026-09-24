@@ -61,7 +61,7 @@ extension VerifierWorkdir {
     /// caught by that test rather than remembered: bumping `Package.swift` alone left this
     /// line at 4.4.0 and `VerifierWorkdirKitPinTests` failed on the next run. That is the
     /// guard working, and the reason to write the rule down rather than trust a habit.
-    static let swiftPropertyLawsRequirement = "4.8.0"
+    static let swiftPropertyLawsRequirement = "4.9.0"
 
     static var swiftPropertyLawsDependencyLine: String {
         ".package(url: \"https://github.com/Joseph-Cursio/SwiftPropertyLaws.git\", "
