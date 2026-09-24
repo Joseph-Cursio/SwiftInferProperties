@@ -35,14 +35,21 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
         case `actor`
     }
 
-    /// Stored property mirror — name + source-declared type spelling.
+    /// Stored property mirror — name, source-declared type spelling, and access level.
+    ///
+    /// `accessLevel` is the kit's `AccessLevel` raw value, optional so an index written before it
+    /// existed still decodes (read as the implicit level). It is carried because the kit refuses
+    /// memberwise derivation for a `private` member, and a shape that drops it makes the kit emit
+    /// a memberwise call no test file can make. Its spellings are pinned in `WireFormatRawValueTests`.
     public struct StoredMember: Codable, Sendable, Equatable {
         public let name: String
         public let typeName: String
+        public let accessLevel: String?
 
-        public init(name: String, typeName: String) {
+        public init(name: String, typeName: String, accessLevel: String? = nil) {
             self.name = name
             self.typeName = typeName
+            self.accessLevel = accessLevel
         }
     }
 
@@ -272,7 +279,7 @@ extension IndexedTypeShape {
             inheritedTypes: kitShape.inheritedTypes,
             hasUserGen: kitShape.hasUserGen,
             storedMembers: kitShape.storedMembers.map {
-                StoredMember(name: $0.name, typeName: $0.typeName)
+                StoredMember(name: $0.name, typeName: $0.typeName, accessLevel: $0.accessLevel.rawValue)
             },
             hasUserInit: kitShape.hasUserInit,
             initializers: kitShape.initializers.map { sig in
@@ -306,7 +313,11 @@ extension IndexedTypeShape {
             inheritedTypes: inheritedTypes,
             hasUserGen: hasUserGen,
             storedMembers: storedMembers.map {
-                PropertyLawCore.StoredMember(name: $0.name, typeName: $0.typeName)
+                PropertyLawCore.StoredMember(
+                    name: $0.name,
+                    typeName: $0.typeName,
+                    accessLevel: $0.accessLevel.flatMap(AccessLevel.init(rawValue:)) ?? .implicit
+                )
             },
             hasUserInit: hasUserInit,
             initializers: initializers.map { sig in
