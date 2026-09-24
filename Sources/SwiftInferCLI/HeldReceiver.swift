@@ -101,7 +101,10 @@ enum HeldReceiver {
     ) -> (String) -> String? {
         { typeName in
             if let constructed = receiverExpression?(typeName) { return constructed }
-            guard let generator = customGenerator?(typeName), !generator.contains(".todo") else {
+            // Either unresolved spelling means the receiver cannot be built: the `.todo` member,
+            // or the block-comment marker, which census 13 found inside a derived generator.
+            guard let generator = customGenerator?(typeName),
+                  !generator.contains(".todo"), !generator.contains("no generator derived") else {
                 return nil
             }
             if let only = singleValue(of: generator) { return only }

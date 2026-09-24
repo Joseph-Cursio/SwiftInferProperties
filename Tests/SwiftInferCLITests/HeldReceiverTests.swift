@@ -77,6 +77,10 @@ struct HeldReceiverTests {
         #expect(spell("Codec") == text, "deterministic")
         let todo = HeldReceiver.spelling(for: suggestion, receiverExpression: nil) { _ in "Codec.gen() /* .todo */" }
         #expect(todo("Codec") == nil)
+        let marked = HeldReceiver.spelling(for: suggestion, receiverExpression: nil) { _ in
+            "Codec.gen() /* TODO: no generator derived — supply `static func gen()`; this will not compile */"
+        }
+        #expect(marked("Codec") == nil)
     }
 
     @Test("a single-value generator is spelled as its value")
