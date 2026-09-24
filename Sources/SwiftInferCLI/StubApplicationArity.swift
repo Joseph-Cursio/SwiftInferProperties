@@ -34,7 +34,7 @@ enum StubApplicationArity {
 
     static func forTemplate(_ templateName: String) -> Int? {
         switch templateName {
-        case "idempotence", "round-trip", "monotonicity", "invariant-preservation", "inverse-pair":
+        case "idempotence", "involution", "round-trip", "monotonicity", "invariant-preservation", "inverse-pair":
             return 1
 
         case "commutativity", "associativity", "identity-element":
