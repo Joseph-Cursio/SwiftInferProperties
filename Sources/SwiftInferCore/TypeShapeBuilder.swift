@@ -197,7 +197,8 @@ public enum TypeShapeBuilder {
             inheritedTypes: mergedInherited,
             hasUserGen: hasUserGen,
             storedMembers: primary.storedMembers.map {
-                StoredMember(name: $0.name, typeName: resolve($0.typeName))
+                // `accessLevel` carried, not rebuilt away: the kit's memberwise gate reads it.
+                StoredMember(name: $0.name, typeName: resolve($0.typeName), accessLevel: $0.accessLevel)
             },
             hasUserInit: primary.hasUserInit,
             // **Initializers merge from UNCONDITIONAL extensions, any file.** Only the

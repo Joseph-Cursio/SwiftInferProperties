@@ -1,3 +1,4 @@
+import PropertyLawCore
 @testable import SwiftInferCore
 import Testing
 
@@ -40,6 +41,13 @@ struct WireFormatRawValueTests {
             "role-postcondition", "differential-equivalence", "predicate", "inverse-pair",
             "identity-element", "composition", "invariant-preservation", "replay-idempotence"
         ])
+    }
+
+    /// Not this repo's enum: the kit's, copied into `index.json` as `StoredMember.accessLevel`. A
+    /// renamed case there would make a stored `private` read back as the implicit level.
+    @Test func storedMemberAccessLevel() {
+        #expect(PropertyLawCore.AccessLevel.allCases.map(\.rawValue)
+            == ["private", "fileprivate", "internal", "package", "public", "open"])
     }
 
     @Test func indexedTypeShapeKind() {

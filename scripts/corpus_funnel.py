@@ -216,7 +216,10 @@ _IMPORT = re.compile(r"^@testable import ", re.M)
 # Files the accept path writes BESIDE the stubs rather than as one. The syntax corpus holds the
 # snippets SwiftSyntax-node generators draw from; counting it as a stub would add a law that
 # does not exist and, having no `@testable import`, drag the import-rate guard down.
-SUPPORT_FILES = {"SwiftInferSyntaxCorpus.swift"}
+# The Sendable shim (`SendableShim`) is the same kind of file: one per test target, declaring
+# drawn types `@unchecked Sendable`, with no test in it. Counted as a stub, it read as a compiled
+# law that never reported — 15 phantom `unaccounted` on the first census run that wrote shims.
+SUPPORT_FILES = {"SwiftInferSyntaxCorpus.swift", "SwiftInferSendableShims.swift"}
 
 
 def is_stub(name):

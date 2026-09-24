@@ -40,6 +40,29 @@ Suites green at **5,576 tests** (5,493 fast + 83 across `perf` and the eight bat
 
 Moved out of CLAUDE.md's *Current state* on 2026-09-19: every suite-count reading older than the current one, verbatim and newest first. It had grown to ~265 lines of a file loaded every session. **Read for what each verdict was decided on, never for a current count** — CLAUDE.md carries the current reading, and the next re-take moves the one it supersedes to the top of this list.
 
+**The prior reading — 6,367 = 6,144 fast + 223, taken 2026-09-23 at `0e16203f` — follows, and
+everything below it is SUPERSEDED HISTORY.**
+**PRIOR READING — 6,367 tests — 6,144 fast + 223 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-23** at `0e16203f` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.8.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 69m41s):
+fast **6,144** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 35.
+**THE BATCH HALF STOOD STILL AT 223, EVERY BATCH TO THE DIGIT**, across the kit 4.7.0 → 4.8.0 bump
+and the subject-literal generators, both of which change generated stub text. ⚠ As before, an
+unmoved COUNT says no arm was added or lost and the GREEN says no baseline assertion broke —
+neither says a printed census figure held.
+**The fast half moved 6,050 → 6,144, +94, RECONCILED BY TEST ID, not by grep**: `swift test list`
+at both commits, filtered by the skip regex — **95 added, 1 removed, all in plain unit suites** across
+25 suites (`ReceiverConstructionHarvesterTests` 12, `SyntaxCorpusSourceTests` 7, …), the one removal
+a rename inside `InteractiveTriageModuleImportTests`. ⚠ **Counting `@Test` lines does NOT reconcile
+and is the wrong instrument**: it read +98, and +88 after discounting `@Test` inside test-fixture
+string literals — the listed IDs are the only exact count. Both lists also reproduce the two totals
+to the digit (6,273 and 6,367).
+**Timings**: `batch3` **387s**, inside the standing 380–483s; `batch2` 760s inside 679–801s;
+`batch5` **1,625s**, below ~1,670s for the sixth reading running; `batch1` 188s, `batch4` 192s,
+`batch6` 159s, `batch7` 202s, `batch8` 583s. Load average 2.04 at start. The `Corrupted JSON` line
+printed **0** times. 69m41s end to end including a clean rebuild.
+
 **The prior reading — 6,273 = 6,050 fast + 223, taken 2026-09-19 at `45b32aeb` — follows, and
 everything below it is SUPERSEDED HISTORY.**
 **PRIOR READING — 6,273 tests — 6,050 fast + 223 across `perf` and the eight batches**

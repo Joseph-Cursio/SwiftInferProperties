@@ -1117,7 +1117,12 @@ keys, so it is a schema addition plus decode-tolerance for existing indexes. Tha
 work on persisted state to correct a label on a row whose *verdict* is already right, so it
 is **recorded as declined-for-now** rather than queued: the two open generator items each
 add executing laws, and this adds none.
-(falsifier: `IndexedTypeShape.accessLevel`)
+⚠ **2026-09-23: still declined, and the falsifier is renamed to what it meant.** A STORED MEMBER's
+access level now crosses the mirror (`IndexedTypeShape.StoredMember.accessLevel`), because
+dropping it let the kit emit a memberwise call for a `private` member. That is not this item: the
+field this deferral wants is the TYPE's own access level, which the shape still does not carry.
+The old falsifier matched the new member field by name, so it names the type-level field now.
+(falsifier: `IndexedTypeShape.declaredAccessLevel`)
 
 **One thing the same query corrected in passing.** §9.2 describes `Visitor` as ambiguous
 across seven declaration sites. The index holds **both** `ViewModelProtocolScanner.Visitor`

@@ -45,7 +45,7 @@ extension InteractiveTriage {
             )
             return nil
         }
-        let customGenerator = Self.customGenerator(for: context)
+        let (customGenerator, drawn) = recordingGenerator(for: context)
         guard let stub = liftedTestStub(
             for: suggestion,
             customGenerator: customGenerator,
@@ -73,6 +73,7 @@ extension InteractiveTriage {
         )
         try Data(contents.utf8).write(to: path, options: .atomic)
         context.output.write("Wrote \(path.path)")
+        try writeSendableShims(for: drawn.typeNames, context: context)
         return path
     }
 

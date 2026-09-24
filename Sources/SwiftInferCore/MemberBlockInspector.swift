@@ -44,7 +44,13 @@ enum MemberBlockInspector {
                 guard let typeAnnotation = binding.typeAnnotation else { continue }
                 result.append(StoredMember(
                     name: identifier.identifier.text,
-                    typeName: typeAnnotation.type.trimmedDescription
+                    typeName: typeAnnotation.type.trimmedDescription,
+                    // The kit refuses memberwise derivation when a member is `private`, because
+                    // the synthesized initializer then is too — but only if it is TOLD. Dropped
+                    // here, `CorrectSession(received: $0)` was emitted for a `private var`, which
+                    // no test file can call (7 set-aside stubs, seventh corpus census). The kit's
+                    // own reader is used so `private(set)` is judged by the same rule.
+                    accessLevel: PropertyLawSyntaxSupport.MemberBlockInspector.accessLevel(of: varDecl.modifiers)
                 ))
             }
         }

@@ -26,6 +26,15 @@ extension InteractiveTriage {
         case "equivalence-relation":
             return equivalenceRelationStub(for: suggestion, customGenerator: customGenerator)
 
+        case "codable-round-trip":
+            return codableRoundTripStub(for: suggestion, customGenerator: customGenerator)
+
+        case "binary-idempotence":
+            return binaryIdempotenceStub(for: suggestion, customGenerator: customGenerator)
+
+        case "dual-style-consistency":
+            return dualStyleConsistencyStub(for: suggestion, customGenerator: customGenerator)
+
         default:
             return nil
         }

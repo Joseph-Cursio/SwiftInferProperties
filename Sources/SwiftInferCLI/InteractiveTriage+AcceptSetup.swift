@@ -18,8 +18,13 @@ extension InteractiveTriage {
     /// #493's gate and #498's argument types both landed in it.
     static func customGenerator(for context: Context) -> (String) -> String? {
         let corpus = context.syntaxCorpus
+        // A class a shim will make `Sendable` is presented to the kit as `@unchecked Sendable`, so
+        // it derives through its initializer (kit 4.9.0). Only test-visible classes: those are the
+        // only ones a shim may name, and so the only ones the stub can then draw.
         return projectTypeGenerator(
-            types: Array(context.typeShapesByName.values),
+            types: SendableShim.presentingShimmableClasses(
+                Array(context.typeShapesByName.values), visible: context.testVisibleTypeNames
+            ),
             syntaxNode: corpus.map { source in { source.generator(for: $0) } }
         )
     }
@@ -96,7 +101,11 @@ extension InteractiveTriage {
     /// kit's own account of its `nil` paths (v4.7.0), and `.noStrategy` carries the strategist's
     /// sentence verbatim rather than a paraphrase.
     static func generatorFailureReason(for context: Context) -> (String) -> String? {
-        generatorFailureReason(types: Array(context.typeShapesByName.values))
+        // The same universe `customGenerator(for:)` resolves over, so a reason never describes a
+        // derivation other than the one that ran.
+        generatorFailureReason(types: SendableShim.presentingShimmableClasses(
+            Array(context.typeShapesByName.values), visible: context.testVisibleTypeNames
+        ))
     }
 
     static func generatorFailureReason(types: [TypeShape]) -> (String) -> String? {

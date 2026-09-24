@@ -131,6 +131,10 @@ extension InteractiveTriage {
         /// every caller that does not supply one, which keeps the explained `.todo`.
         var receiverConstructions: ReceiverConstructionSource?
 
+        /// Types a generated `Sendable` shim may name (`SendableShim`). Empty for every caller
+        /// that does not supply it — which writes no shim, the behaviour before shims existed.
+        var testVisibleTypeNames: Set<String> = []
+
         /// `nil` for a caller with no package on disk, which is every unit fixture; carrier
         /// imports are then not resolved and the stub emits what it did before.
         public let packageRoot: URL?
