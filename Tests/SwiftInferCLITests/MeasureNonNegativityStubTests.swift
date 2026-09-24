@@ -67,4 +67,21 @@ struct MeasureNonNegativityStubTests {
         #expect(!stub.contains("_ = "))
         #expect(!stub.contains("return true"))
     }
+    /// A constructed receiver with a nullary measure leaves nothing to draw. The first cut
+    /// rendered `{ rng in ().run(using: &rng) }`, which does not compile — 15 set-aside stubs on
+    /// the census that shipped this writer, e.g. pbt-book's `BoundedCache(capacity: 1).count`.
+    @Test("a constructed receiver with nothing to draw still compiles")
+    func constructedReceiverWithNothingToDraw() throws {
+        let suggestion = Self.suggestion(
+            displayName: "count()", signature: "() -> Int", carrier: "BoundedCache", isInstanceMethod: true
+        )
+        let constructed: (String) -> String? = { $0 == "BoundedCache" ? "BoundedCache(capacity: 1)" : nil }
+        let stub = try #require(InteractiveTriage.entailedTemplateStub(
+            for: suggestion,
+            receiverExpression: constructed
+        ))
+        #expect(!stub.contains("().run(using:"), "got:\n\(stub)")
+        #expect(stub.contains("sample: { _ in () }"))
+        #expect(stub.contains("BoundedCache(capacity: 1).count() >= 0"))
+    }
 }

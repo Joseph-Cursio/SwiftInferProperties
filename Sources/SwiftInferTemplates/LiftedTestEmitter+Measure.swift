@@ -21,15 +21,19 @@ extension LiftedTestEmitter {
         failureLabel: String? = nil
     ) -> String {
         let isTuple = generators.count > 1
-        let bind = isTuple
-            ? tupleBinding(argumentTypes: argumentTypes, count: generators.count)
-            : "value"
-        let drawn = isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
+        // **Nothing to draw** happens when the receiver is constructed at the call site and the
+        // measure takes no arguments — `BoundedCache(capacity: 1).count`. The check then runs on
+        // that one receiver, and the sample yields `()`: rendering the usual draw emitted
+        // `{ rng in ().run(using: &rng) }`, which does not compile (15 census stubs).
+        let bind = generators.isEmpty ? "_"
+            : isTuple ? tupleBinding(argumentTypes: argumentTypes, count: generators.count) : "value"
+        let drawn = generators.isEmpty ? []
+            : isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
         let body = "return \(callee.call(drawn)) >= 0"
         return makeTestStubExpression(
             testFunctionName: "\(callee.bareName)_isNonNegative",
             seed: seed,
-            sampleExpression: totalitySample(generators: generators),
+            sampleExpression: generators.isEmpty ? "{ _ in () }" : totalitySample(generators: generators),
             propertyExpression: "{ \(bind) in \(callee.isolated(body)) }",
             failureLabel: failureLabel ?? "\(callee.displaySignature) returned a negative measure"
         )
