@@ -67,6 +67,7 @@ extension InteractiveTriage {
         ) {
             return entailed
         }
+        if let law = entailedLawStub(for: suggestion, customGenerator: customGenerator) { return law }
         let algebraic = algebraicTemplateStub(for: suggestion, customGenerator: customGenerator)
         if let algebraic { return algebraic }
         // ⚠ **These arms dropped `customGenerator` and so could derive nothing.** Measured over
