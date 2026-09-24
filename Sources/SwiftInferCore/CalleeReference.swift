@@ -183,8 +183,18 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
     /// change.
     public func isolated(_ expression: String) -> String {
         guard let isolation else { return expression }
+        if isolation == Self.actorReceiverIsolation { return "await \(expression)" }
         return "await \(isolation).run { \(expression) }"
     }
+
+    /// The isolation of a method on an **actor instance**, as distinct from a global actor.
+    ///
+    /// Such a call is reached with a bare `await`, not a hop: there is no `run` to call, and one
+    /// `await` covers every call in the expression, as `try` does. Census 13 set aside 11 stubs
+    /// across four repositories on *actor-isolated instance method cannot be called from outside
+    /// of the actor* or a missing `await`. `actor` is a keyword, so no global actor can share the
+    /// spelling. Set by the accept path only (`ActorReceiver`); never indexed.
+    public static let actorReceiverIsolation = "actor"
 
     /// The parameter labels inside a display name's parentheses — `(from:)` is `["from"]`,
     /// `(_:_:)` is `[nil, nil]`, `()` is `[]`.

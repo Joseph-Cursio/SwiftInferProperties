@@ -84,8 +84,11 @@ extension InteractiveTriage {
         context: Context
     ) -> (Suggestion, String?) {
         let receiverExpression = Self.receiverExpression(for: context)
+        let marked = ActorReceiver.marking(
+            suggestion, actorTypeNames: ActorReceiver.actorTypeNames(in: context.typeShapesByName)
+        )
         let writable = HeldReceiver.writable(
-            suggestion, receiverExpression: receiverExpression, customGenerator: customGenerator
+            marked, receiverExpression: receiverExpression, customGenerator: customGenerator
         )
         let stub = liftedTestStub(
             for: writable, customGenerator: customGenerator, receiverExpression: receiverExpression
