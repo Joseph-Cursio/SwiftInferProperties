@@ -48,6 +48,15 @@ struct ActorReceiverTests {
         #expect(marked.evidence.first?.globalActor == nil)
     }
 
+    @Test("statement bodies get one await per statement, never right of an operator")
+    func statementBodiesAreAwaitedPerStatement() {
+        let callee = CalleeReference(bareName: "count", isolation: CalleeReference.actorReceiverIsolation)
+        #expect(callee.isolated("return s.count() >= 0") == "return await s.count() >= 0")
+        #expect(callee.isolated("_ = s.parse(value); return true") == "_ = await s.parse(value); return true")
+        #expect(callee.isolated("let selected = s.keep(xs); return selected.isEmpty")
+            == "let selected = await s.keep(xs); return await selected.isEmpty")
+    }
+
     @Test("a global actor still hops")
     func globalActorStillHops() {
         let callee = CalleeReference(bareName: "f", isolation: "MainActor")
