@@ -46,12 +46,10 @@ extension InteractiveTriage {
             return nil
         }
         let (customGenerator, drawn) = recordingGenerator(for: context)
-        guard let stub = liftedTestStub(
-            for: suggestion,
-            customGenerator: customGenerator,
-            receiverExpression: Self.receiverExpression(for: context)
-        ) else {
-            reportNoStub(for: suggestion, context: context)
+        // The gates above read the suggestion as discovered; the writers read it held.
+        let (writable, written) = heldStub(for: suggestion, customGenerator: customGenerator, context: context)
+        guard let stub = written else {
+            reportNoStub(for: writable, context: context)
             return nil
         }
         let path = stubDestination(for: suggestion, context: context)
@@ -75,6 +73,24 @@ extension InteractiveTriage {
         context.output.write("Wrote \(path.path)")
         try writeSendableShims(for: drawn.typeNames, context: context)
         return path
+    }
+
+    /// The stub for `suggestion` with its receiver held where it is configuration
+    /// (`HeldReceiver`), and the suggestion the writer saw — which `reportNoStub` must also see,
+    /// so a decline names the call that was actually attempted.
+    static func heldStub(
+        for suggestion: Suggestion,
+        customGenerator: @escaping (String) -> String?,
+        context: Context
+    ) -> (Suggestion, String?) {
+        let receiverExpression = Self.receiverExpression(for: context)
+        let writable = HeldReceiver.writable(
+            suggestion, receiverExpression: receiverExpression, customGenerator: customGenerator
+        )
+        let stub = liftedTestStub(
+            for: writable, customGenerator: customGenerator, receiverExpression: receiverExpression
+        )
+        return (writable, stub)
     }
 
     /// Build the lifted-test source text for `suggestion`.
