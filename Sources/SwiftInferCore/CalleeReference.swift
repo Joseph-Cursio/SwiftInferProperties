@@ -183,7 +183,39 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
     /// change.
     public func isolated(_ expression: String) -> String {
         guard let isolation else { return expression }
+        if isolation == Self.actorReceiverIsolation { return Self.awaitingEachStatement(expression) }
         return "await \(isolation).run { \(expression) }"
+    }
+
+    /// The isolation of a method on an **actor instance**, as distinct from a global actor.
+    ///
+    /// Such a call is reached with a bare `await`, not a hop: there is no `run` to call, and one
+    /// `await` covers every call in the expression, as `try` does. Census 13 set aside 11 stubs
+    /// across four repositories on *actor-isolated instance method cannot be called from outside
+    /// of the actor* or a missing `await`. `actor` is a keyword, so no global actor can share the
+    /// spelling. Set by the accept path only (`ActorReceiver`); never indexed.
+    public static let actorReceiverIsolation = "actor"
+
+    /// `body` with one `await` at the head of each statement's expression.
+    ///
+    /// A writer hands `isolated` either an expression or the `;`-joined statements of a property
+    /// closure (`_ = f(x); return true`). A hop takes either inside its closure; a bare `await`
+    /// does not, and cannot go on each call instead — Swift rejects `await` to the right of `==`.
+    /// So it goes where each statement's expression begins: after `return `, after `_ = ` or a
+    /// binding's `= `, else in front. An `await` over a statement with no actor call only warns.
+    static func awaitingEachStatement(_ body: String) -> String {
+        let statements = body.components(separatedBy: "; ").map(awaitingStatement)
+        return statements.joined(separator: "; ")
+    }
+
+    private static func awaitingStatement(_ statement: String) -> String {
+        // Totality's closing `return true` calls nothing; awaiting it only adds a warning.
+        if statement == "return true" { return statement }
+        if statement.hasPrefix("return ") { return "return await " + statement.dropFirst("return ".count) }
+        if let range = statement.range(of: #"^(_|(let|var) \w+) = "#, options: .regularExpression) {
+            return statement[range] + "await " + statement[range.upperBound...]
+        }
+        return "await " + statement
     }
 
     /// The parameter labels inside a display name's parentheses — `(from:)` is `["from"]`,

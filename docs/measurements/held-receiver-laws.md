@@ -113,7 +113,28 @@ is a floor, as `set-aside-stub-decomposition.md` already found for first-error c
   tests, and was reverted.
 - **Actor receivers are a gap across templates**: 11 stubs over four repositories fail on an
   actor-isolated call or a missing `await`, most of them totality and measure stubs that predate held
-  receivers. Not built.
+  receivers. ✅ **Built 2026-09-24** — see below.
+
+## Actor receivers — built
+
+A method on an actor instance is isolated to that instance, and every writer spliced it as a plain call.
+The accept path now marks such rows (`ActorReceiver`), and `CalleeReference.isolated` renders them with
+`await` rather than a global-actor hop. `nonisolated` and `static` members are left alone.
+
+**Of the 11, 9 were calls on an actor instance, and all 9 now compile and pass.** Census 14 against census
+13: compiles 834 → 840, passes 675 → 681 (behaviour 222 → 224), every other repository unchanged, stubs
+1,160 → 1,141 exactly as counted for the underivable-receiver fix. The prediction written before the run
+was +3 to +7 compiles; it read +6.
+
+⚠ **Census 14 also found a defect in the first version**: three measure stubs came out as
+`await return x.count() >= 0`, because a writer can hand `isolated` statements, which a hop accepts and a
+leading `await` does not. The `await` now goes at the head of each statement's expression; it cannot go
+on each call, since Swift rejects `await` to the right of `==`. **Those three were checked by hand, not
+by a re-run**: their text corrected to what the fixed emitter writes, compiled in the census's own
+target, and run — all three pass. So read the total as compiles 834 → 843.
+
+The other 2 of the 11 are not actor instances: `CompatibilityReport` calls a `MainActor`-isolated
+initializer from a synchronous generator, and `GraphViewModel` awaits nothing where it must. Not built.
 
 ## Decisions
 
