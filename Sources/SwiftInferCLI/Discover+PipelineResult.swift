@@ -90,6 +90,11 @@ extension SwiftInferCommand.Discover {
         /// consumer predating this map assumed for everything.
         public let visibleToTestableImportByName: [String: Bool]
 
+        /// Qualified names of the types a test file can name — visible to `@testable import`
+        /// inside enclosing types that all are. The only types a generated `Sendable` shim may
+        /// mention, since naming any other breaks the whole test target (`SendableShim`).
+        public let testVisibleTypeNames: Set<String>
+
         /// The file each type is **declared** in, keyed by bare type name.
         ///
         /// Third sidecar map, and here for the same reason as the two above: `TypeShape` belongs
@@ -152,6 +157,7 @@ extension SwiftInferCommand.Discover {
             inheritedTypesByName: [String: Set<String>] = [:],
             genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
             visibleToTestableImportByName: [String: Bool] = [:],
+            testVisibleTypeNames: Set<String> = [],
             sourceFileByTypeName: [String: String] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
@@ -176,6 +182,7 @@ extension SwiftInferCommand.Discover {
             self.inheritedTypesByName = inheritedTypesByName
             self.genericParametersByName = genericParametersByName
             self.visibleToTestableImportByName = visibleToTestableImportByName
+            self.testVisibleTypeNames = testVisibleTypeNames
             self.sourceFileByTypeName = sourceFileByTypeName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries

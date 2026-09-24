@@ -112,6 +112,7 @@ extension SwiftInferCommand.Discover {
             inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: artifacts.typeDecls),
             genericParametersByName: genericParametersIndex(from: artifacts.typeDecls),
             visibleToTestableImportByName: visibleToTestableImportIndex(from: artifacts.typeDecls),
+            testVisibleTypeNames: SendableShim.testVisibleTypeNames(from: artifacts.typeDecls),
             sourceFileByTypeName: sourceFileIndex(from: artifacts.typeDecls),
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,
