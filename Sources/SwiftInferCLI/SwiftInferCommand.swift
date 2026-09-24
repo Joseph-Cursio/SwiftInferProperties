@@ -21,7 +21,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
         All output is suggestions for human review; nothing auto-executes. \
         See `docs/SwiftInferProperties PRD v1.0.md` for the full design.
         """,
-        version: BuildIdentity.versionString("1.151.0"),
+        version: BuildIdentity.versionString("1.152.0"),
         subcommands: [
             Discover.self,
             Scaffold.self,

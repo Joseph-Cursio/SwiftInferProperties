@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.152.0] — 2026-09-24
+
+Laws over a method on a separate object — a codec, a formatter, a normaliser — are now written instead of declined. PRs #581–#582.
+
+### Added
+
+- **Held receivers.** A law over an instance method whose receiver is configuration rather than an operand is written with that receiver held fixed: `codec.decode(codec.encode(x)) == x`. The receiver is spelled as the package's own tests construct it, or as one draw of its derived generator on a seed fixed by the suggestion. These suggestions were declined as needing one argument more than the law applies (*"needs 2 arguments (a receiver plus 1)"*); 244 were declined this way across the measurement corpus.
+
+### Not held, deliberately
+
+- A receiver of the parameter's own type (`a.appending(b)`): that is an operand, and holding it is the accumulating-operand false law.
+- An `async` or `throws` subject, and a receiver whose generator was not derived.
+
+### Read before quoting a number
+
+- Across the 19-repository measurement corpus: stubs 967 → 1,160, compiled 699 → 834, passing laws that check behaviour **151 → 222**, laws that only check the code does not crash unchanged at 453.
+- **Nearly all of it is in the teaching repositories**, which are built from exactly this shape. Outside them: +9 compiles, +4 passes.
+- Laws discovery proposes that are false now reach a test instead of a decline — idempotence of a reversal, of doubling, of delta encoding, of a hash; monotonicity of `abs`.
+- A pass is a statement about the one receiver the stub holds.
+- Suites at release: 6,180 fast, green.
+
 ## [1.151.0] — 2026-09-24
 
 More of what the catalogue proposes now lands as runnable tests, and more of the project's own types can be drawn as inputs. PRs #577–#579, with SwiftPropertyLaws 4.9.0 and 4.9.1.
