@@ -68,12 +68,12 @@ struct SendableShimTests {
 
     @Test("merging dedupes, sorts, and keeps every module's import")
     func mergingIsIdempotent() {
-        let first = SendableShim.merged(existing: nil, adding: ["Rec"], module: "LawFix")
-        let second = SendableShim.merged(existing: first, adding: ["Counter", "Rec"], module: "Other")
+        let first = SendableShim.merged(existing: nil, adding: ["Rec"], modules: ["LawFix"])
+        let second = SendableShim.merged(existing: first, adding: ["Counter", "Rec"], modules: ["Other"])
         #expect(second.contains("@testable import LawFix\n@testable import Other"))
         #expect(second.contains("extension Counter: @unchecked Sendable {}\nextension Rec: @unchecked Sendable {}"))
         #expect(second.components(separatedBy: "extension Rec:").count == 2, "declared once")
-        #expect(SendableShim.merged(existing: second, adding: ["Rec"], module: "LawFix") == second)
+        #expect(SendableShim.merged(existing: second, adding: ["Rec"], modules: ["LawFix"]) == second)
     }
 
     @Test("a visible non-Sendable class is presented to the kit as @unchecked Sendable")
@@ -81,5 +81,15 @@ struct SendableShimTests {
         let presented = SendableShim.presentingShimmableClasses(Array(shapes.values), visible: visible)
         #expect(presented.first { $0.name == "Counter" }?.isSendableClass == true)
         #expect(presented.first { $0.name == "Rec" }?.inheritedTypes.contains("@unchecked Sendable") == false)
+    }
+
+    /// A shim's `@testable import` must be a Swift module name, not a target name. The first
+    /// census that wrote shims emitted `@testable import swift-assist-cli` for an executable
+    /// target, which does not parse and took its whole test target down.
+    @Test("a hyphenated target is imported by its Swift module name")
+    func hyphenatedTargetIsSanitised() {
+        let merged = SendableShim.merged(existing: nil, adding: ["Command"], modules: ["swift-assist-cli"])
+        #expect(merged.contains("@testable import swift_assist_cli"))
+        #expect(!merged.contains("swift-assist-cli"))
     }
 }
