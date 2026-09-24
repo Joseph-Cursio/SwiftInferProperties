@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.151.0] — 2026-09-24
+
+More of what the catalogue proposes now lands as runnable tests, and more of the project's own types can be drawn as inputs. PRs #577–#579, with SwiftPropertyLaws 4.9.0 and 4.9.1.
+
+### Added
+
+- **Seven stub writers for laws `verify` already checked**: `measure-non-negativity` (a count or size is never negative), `involution` (`f(f(x)) == x`), `role-postcondition` (`lowercased` returns no uppercase character, and the like), `equivalence-relation` (reflexive, symmetric, transitive), `codable-round-trip` (`decode(encode(x)) == x` through JSON), `binary-idempotence` (`op(x, x) == x`), and `dual-style-consistency` (`x.sorted()` agrees with a sorted copy). Each states exactly its `verify` composer's law, and each was checked against a planted bug before shipping.
+- **Generated `Sendable` shims.** A property check's inputs must be `Sendable`, and Swift infers that for neither a `public` type nor a class. The accept path now declares the project types a stub draws `@unchecked Sendable`, in one generated file per test target (`Generated/SwiftInfer/SwiftInferSendableShims.swift`), so a `public struct` or a class can be drawn. Checks draw a fresh value per trial and run trials in sequence, so nothing is shared; the conformance lives in the test target only.
+- **Class generators.** A class that declares `Sendable` (or is shimmed) derives a generator through its initializer, fresh per draw (SwiftPropertyLaws 4.9.0). The scanner now hands the kit a class's initializers.
+- `Substring` is recognised as a stdlib value type (SwiftPropertyLaws 4.9.0).
+
+### Changed
+
+- **SwiftPropertyLaws `from: "4.9.1"`** (was 4.8.0). 4.9.1 refuses a trial budget below one with a named failure; a negative `TrialBudget.custom(trials:)` used to crash and zero passed without checking anything.
+- A non-`Sendable` class's generator reason names the missing conformance instead of "memberwise derivation supports structs only".
+- An equivalence stub reports transitivity as *not applied* when no drawn triple relates, instead of passing green; a dual-style stub draws its operand pair tie-dense, since most operand pairs differ only on overlapping values.
+
+### Fixed
+
+- A struct with a `private` stored property no longer gets a memberwise generator call no test file can make: stored members' access levels now reach the kit, through both the scan and the index (existing indexes still decode).
+- A measure stub whose receiver is built at the call site and takes no arguments now compiles.
+
+### Read before quoting a number
+
+- Across the 19-repository measurement corpus, passing stubs went **573 → 604** since 1.150.0, and passing laws that check behaviour **122 → 151**; laws that only check the code does not crash stayed at 453.
+- Suites at release: 6,173 fast + 224 in perf and the eight subprocess batches, green.
+
 ## [1.150.0] — 2026-09-23
 
 Six weeks of work since 1.149.0 (2026-08-10), PRs #231–#574. The theme is **output that compiles, runs, and does not overclaim**: accepted suggestions now write runnable tests for most templates, generators reach far more types, and a set of measured gates withdraws laws the code does not owe.
@@ -86,6 +113,7 @@ User's call from open paths: higher-order property composition (PRD §20.2 looka
 - **Cycle-38 findings.** `docs/calibration-cycle-38-findings.md`.
 - **Performance baseline v1.41.** O(1) per classify call delta.
 
+[1.151.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.151.0
 [1.150.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.150.0
 [1.41.0]: https://github.com/Joseph-Cursio/SwiftInferProperties/releases/tag/v1.41.0
 
