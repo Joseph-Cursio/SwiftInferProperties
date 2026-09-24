@@ -128,6 +128,25 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
         self.isolation = evidence.globalActor
     }
 
+    /// A mutating instance method, read for use as a STATEMENT — `copy.formUnion(other)` — which
+    /// is the one place a law may call one. `init?(evidence:)` refuses mutating methods because as
+    /// a value they are `()`; the dual-style law needs exactly that call, applied to a copy and
+    /// compared afterwards, so it asks for it by this name rather than weakening that guard.
+    public static func mutatingStatement(evidence: Evidence) -> Self? {
+        guard evidence.isMutatingMethod, evidence.isInstanceMethod,
+              let parenIndex = evidence.displayName.firstIndex(of: "(") else { return nil }
+        let name = String(evidence.displayName[..<parenIndex])
+        guard !name.isEmpty, !isOperatorName(name) else { return nil }
+        return Self(
+            bareName: name,
+            qualifier: nil,
+            argumentLabels: labels(inDisplayName: evidence.displayName, after: parenIndex),
+            isolation: evidence.globalActor,
+            isInstanceMethod: true,
+            isComputedProperty: false
+        )
+    }
+
     /// How many arguments a caller must supply to spell one call — the declared parameters,
     /// plus the receiver when there is one, and zero for a static computed property.
     public var applicationArity: Int {
