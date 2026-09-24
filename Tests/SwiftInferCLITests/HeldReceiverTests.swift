@@ -72,10 +72,26 @@ struct HeldReceiverTests {
         let suggestion = try #require(Self.suggestions(template: "round-trip").first)
         let spell = HeldReceiver.spelling(for: suggestion, receiverExpression: nil) { _ in "Codec.gen()" }
         let text = try #require(spell("Codec"))
-        #expect(text.hasPrefix("{ var receiverRNG = Xoshiro(seed: (0x"))
-        #expect(text.hasSuffix("return (Codec.gen()).run(using: &receiverRNG) }()"))
+        #expect(text.hasPrefix("({ () -> Codec in var receiverRNG = Xoshiro(seed: (0x"))
+        #expect(text.hasSuffix("return (Codec.gen()).run(using: &receiverRNG) })()"))
         #expect(spell("Codec") == text, "deterministic")
         let todo = HeldReceiver.spelling(for: suggestion, receiverExpression: nil) { _ in "Codec.gen() /* .todo */" }
         #expect(todo("Codec") == nil)
+    }
+
+    @Test("a single-value generator is spelled as its value")
+    func alwaysIsSpelledDirectly() throws {
+        let suggestion = try #require(Self.suggestions(template: "round-trip").first)
+        let spell = HeldReceiver.spelling(for: suggestion, receiverExpression: nil) { _ in "Gen.always(Codec())" }
+        #expect(spell("Codec") == "Codec()")
+        #expect(HeldReceiver.singleValue(of: "Gen.always(Codec()).map(f)") == nil)
+    }
+
+    @Test("an async or throwing subject is not held")
+    func effectfulSubjectIsNotHeld() {
+        #expect(HeldReceiver.hasEffects("(String) async -> Int"))
+        #expect(HeldReceiver.hasEffects("(String) throws -> Int"))
+        #expect(!HeldReceiver.hasEffects("([Int]) rethrows -> Int"))
+        #expect(!HeldReceiver.hasEffects("(ThrowsPolicy) -> Int"))
     }
 }

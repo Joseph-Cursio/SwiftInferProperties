@@ -72,6 +72,7 @@ enum HeldReceiver {
     /// arguments the law applies, none of them of the receiver's own type.
     static func isHoldable(_ evidence: Evidence, receiverType: String, arity: Int) -> Bool {
         guard evidence.qualifiedTypeName == receiverType,
+              !hasEffects(evidence.signature),
               let callee = CalleeReference(evidence: evidence),
               callee.isInstanceMethod, !callee.isComputedProperty,
               callee.applicationArity == arity + 1
@@ -79,6 +80,15 @@ enum HeldReceiver {
         let bareReceiver = receiverType.split(separator: ".").last.map(String.init) ?? receiverType
         let parameters = InteractiveTriage.parameterTypes(from: evidence.signature)
         return !parameters.contains { $0 == receiverType || $0 == bareReceiver || $0 == "Self" }
+    }
+
+    /// `async` or `throws` in the signature's effects position. Every arm this reaches splices a
+    /// bare call into a synchronous, non-throwing property closure, and was never asked to handle
+    /// either before — these subjects were declined for arity first. Measured on the first census
+    /// with held receivers: 7 of the stubs it wrote failed on exactly this. `rethrows` is not
+    /// matched; its `throws` follows a letter.
+    static func hasEffects(_ signature: String) -> Bool {
+        signature.range(of: #"(?<![A-Za-z])(async|throws)(?![A-Za-z])"#, options: .regularExpression) != nil
     }
 
     /// The receiver as an expression: the tests' own construction when there is one, else one
@@ -94,13 +104,32 @@ enum HeldReceiver {
             guard let generator = customGenerator?(typeName), !generator.contains(".todo") else {
                 return nil
             }
+            if let only = singleValue(of: generator) { return only }
             let seed = SamplingSeed.derive(fromIdentityHash: suggestion.identity.normalized + "|receiver")
             let state = [seed.stateA, seed.stateB, seed.stateC, seed.stateD]
                 .map { "0x" + String($0, radix: 16, uppercase: true) }
                 .joined(separator: ", ")
-            return "{ var receiverRNG = Xoshiro(seed: (\(state))); "
-                + "return (\(generator)).run(using: &receiverRNG) }()"
+            // Parenthesised and typed: a closure literal opening a statement does not parse
+            // (`consecutive statements on a line`), and an untyped one left the writers' `pair in`
+            // closures with nothing to infer from — both measured on the first census.
+            return "({ () -> \(typeName) in var receiverRNG = Xoshiro(seed: (\(state))); "
+                + "return (\(generator)).run(using: &receiverRNG) })()"
         }
+    }
+
+    /// The value a `Gen.always(…)` generator always draws, which needs no RNG to spell.
+    static func singleValue(of generator: String) -> String? {
+        let prefix = "Gen.always(", suffix = ")"
+        guard generator.hasPrefix(prefix), generator.hasSuffix(suffix) else { return nil }
+        let inner = generator.dropFirst(prefix.count).dropLast(suffix.count)
+        // Only when the parentheses are the call's own: `Gen.always(a).map(b)` must not match.
+        var depth = 0
+        for character in inner {
+            if character == "(" { depth += 1 }
+            if character == ")" { depth -= 1 }
+            if depth < 0 { return nil }
+        }
+        return depth == 0 ? String(inner) : nil
     }
 }
 
