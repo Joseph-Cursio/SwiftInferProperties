@@ -72,7 +72,10 @@ trap aborts a `swift test` run.
 
 ## Three defects the first census found in this change
 
-Census 12 ran the first version. Three set-aside causes were the change's own, each fixed and re-measured:
+Census 12 ran the first version. Three set-aside causes were the change's own, each fixed. ⚠ **Fixes 1
+and 2 moved no compiles in census 13**: the stubs that showed those errors are also blocked by a
+`private` subject or an underivable receiver, and two SwiftAssist stubs still report *consecutive
+statements* with no receiver closure left in them, so that error has a second, undiagnosed source.
 
 1. A closure literal opening a statement does not parse (`consecutive statements on a line`). The
    drawn receiver is now parenthesised, and a `Gen.always(X)` receiver is spelled as `X`.
