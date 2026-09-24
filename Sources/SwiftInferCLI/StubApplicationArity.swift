@@ -50,7 +50,12 @@ enum StubApplicationArity {
     /// `determinism` joined with #465: `f(args) == f(args)` composes nothing either — it calls the
     /// subject twice with the same arguments — so an instance method or a function of several
     /// parameters owes it exactly as a unary free function does.
-    static let arityFreeTemplates: Set<String> = ["predicate", "input-totality", "determinism"]
+    ///
+    /// `measure-non-negativity` joined when it got a writer: it calls once and checks the result,
+    /// so a nullary measure of `self` and a one-argument measure are the same call shape.
+    static let arityFreeTemplates: Set<String> = [
+        "predicate", "input-totality", "determinism", "measure-non-negativity"
+    ]
 
     /// Why this suggestion's subject cannot be called by its template, or `nil` when it can.
     ///

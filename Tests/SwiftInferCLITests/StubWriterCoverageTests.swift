@@ -41,7 +41,6 @@ struct StubWriterCoverageTests {
     /// renders through `StrategistDispatchEmitter`, so its law has an emitter to reuse — the two
     /// largest gaps are both `VERIFY`.
     static let noWriterYet: [String: String] = [
-        "measure-non-negativity": "VERIFY · 442 rows · 23 funnel declines, 9 repos — the largest gap",
         "codable-round-trip": "VERIFY · 154 rows · 0 funnel declines",
         "dual-style-consistency": "VERIFY · 59 rows",
         "value-round-trip": "53 rows · 43 funnel declines, 7 repos",
