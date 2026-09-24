@@ -88,11 +88,32 @@ statements* with no receiver closure left in them, so that error has a second, u
 ## What stops the rest outside the teaching repos
 
 Of the new stubs outside the teaching repositories that do not compile, the leading causes existed
-before this change: the compiler's type-check timeout (13, most on stubs whose receiver is a plain
-construction and whose argument is a large literal-mixing `String` generator), `monotonicity` over a
-parameter type nothing makes `Comparable` (12, SwiftSyntax's `Syntax`, which `UnorderedCarrierGate`
-cannot see because it is not a scanned type), test-harvested constructions naming a type the generated
-file cannot see (10), `private` subjects (6), and missing argument generators (7).
+before this change: the compiler's type-check timeout (13), `monotonicity` over a parameter type
+nothing makes `Comparable` (12, SwiftSyntax's `Syntax`, which `UnorderedCarrierGate` cannot see because
+it is not a scanned type), test-harvested constructions naming a type the generated file cannot see
+(10), `private` subjects (6), and missing argument generators (7).
+
+### The type-check timeouts are access errors — corrected 2026-09-24
+
+This section first blamed the timeouts on the large literal-mixing `String` generator. **That was
+wrong, and measuring it showed so.** The generator compiles in 4.3s on its own. Two of the failing stubs,
+compiled in the census's own test target, reproduce the timeout — and with their subjects' `private`
+removed in a scratch copy, one compiles and the other reports its real error (an actor method called
+without `await`). **18 of census 13's 19 timeouts have a `private` subject**, already named in the
+stub's own `// Access:` header. The compiler, unable to call an inaccessible member inside a large
+expression, tries every overload and reports exhaustion instead of access. So the `private` bucket above
+is a floor, as `set-aside-stub-decomposition.md` already found for first-error classification.
+
+### Two other readings from the same pass
+
+- **`?.gen()` is the specified placeholder, not an emitter defect.** 13 stubs set aside on *expected
+  expression* are lifted suggestions whose value type was not recovered. PRD §7.4 item 4 and §16 #4
+  specify exactly this uncompilable placeholder, so the user supplies the generator consciously, and
+  `TestLifterAcceptFlowIntegrationTests` pins it. A gate that withdrew them was written, broke those
+  tests, and was reverted.
+- **Actor receivers are a gap across templates**: 11 stubs over four repositories fail on an
+  actor-isolated call or a missing `await`, most of them totality and measure stubs that predate held
+  receivers. Not built.
 
 ## Decisions
 
