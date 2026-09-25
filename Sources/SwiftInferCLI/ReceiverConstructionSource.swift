@@ -21,6 +21,10 @@ final class ReceiverConstructionSource {
         TestTargetScope.buildModules(packageRoot: $0)
     } ?? []
     private lazy var constructions = ReceiverConstructionHarvester.harvestWithImports(roots: testRoots, wanted: wanted)
+    /// The module declaring each type name anywhere in the outermost package's sources.
+    private lazy var declaringModules: [String: Set<String>] = packageRoot.map { root in
+        DeclaringModuleIndex.index(root: SyntaxCorpusSource.outermostPackageRoot(from: root) ?? root)
+    } ?? [:]
 
     init(packageRoot: URL, wanted: Set<String>) {
         self.testRoots = SyntaxCorpusSource.testDirectories(of: packageRoot)
@@ -49,7 +53,29 @@ final class ReceiverConstructionSource {
     /// must never reach a generated one. No manifest, no imports: the behaviour before any were carried.
     var allHarvested: [ReceiverConstructionHarvester.Harvested] {
         let resolvable = buildModules
-        return constructions.values.map { Self.keepingResolvable($0, in: resolvable) }
+        let declaring = declaringModules
+        return constructions.values.map { harvested in
+            let widened = Self.addingDeclaringImports(harvested, declaring: declaring, in: resolvable)
+            return Self.keepingResolvable(widened, in: resolvable)
+        }
+    }
+
+    /// `harvested` with an `import` for each type it names whose single declaring module this
+    /// package can import — the module the test file reached through an import the stub cannot
+    /// make (`DeclaringModuleIndex`). A name declared in two modules is left alone.
+    static func addingDeclaringImports(
+        _ harvested: ReceiverConstructionHarvester.Harvested,
+        declaring: [String: Set<String>],
+        in resolvable: Set<String>
+    ) -> ReceiverConstructionHarvester.Harvested {
+        let present = Set(harvested.imports.compactMap(InteractiveTriage.importedModule(in:)))
+        let added = DeclaringModuleIndex.typeNames(in: harvested.expression)
+            .compactMap { declaring[$0].flatMap { $0.count == 1 ? $0.first : nil } }
+            .filter { resolvable.contains($0) && !present.contains($0) }
+        let lines = Set(added).sorted().map { "import \($0)" }
+        return ReceiverConstructionHarvester.Harvested(
+            expression: harvested.expression, imports: harvested.imports + lines
+        )
     }
 
     /// `harvested` with only the imports whose module is in `resolvable`.

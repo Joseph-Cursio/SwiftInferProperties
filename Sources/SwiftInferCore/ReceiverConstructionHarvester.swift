@@ -115,11 +115,39 @@ public enum ReceiverConstructionHarvester {
     }
 
     /// Every usable construction of a `wanted` type in `source`, in source order.
+    ///
+    /// ⚠ **A type the file declares itself is never harvested.** A test's own `Collector` visitor
+    /// shares only its NAME with a production `private struct Collector`, and constructions are
+    /// keyed by bare name — so `Collector(viewMode: .sourceAccurate)`, copied from two test files
+    /// that declare their own, was handed to 11 stubs whose `Collector` takes no arguments. A
+    /// subject is always declared in `Sources/`, so a same-named type in a test file is always
+    /// a different type.
     static func constructions(in source: String, wanted: Set<String>) -> [Construction] {
+        let tree = Parser.parse(source: source)
         let collector = CallCollector(viewMode: .sourceAccurate)
-        collector.wanted = wanted
-        collector.walk(Parser.parse(source: source))
+        collector.wanted = wanted.subtracting(declaredTypeNames(in: tree))
+        collector.walk(tree)
         return collector.found
+    }
+
+    /// Every nominal type the file declares, at any depth.
+    static func declaredTypeNames(in tree: SourceFileSyntax) -> Set<String> {
+        let finder = TypeDeclarationFinder(viewMode: .sourceAccurate)
+        finder.walk(tree)
+        return finder.names
+    }
+
+    private final class TypeDeclarationFinder: SyntaxVisitor {
+        var names: Set<String> = []
+
+        override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind { record(node.name) }
+        override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind { record(node.name) }
+        override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind { record(node.name) }
+        override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind { record(node.name) }
+        private func record(_ name: TokenSyntax) -> SyntaxVisitorContinueKind {
+            names.insert(name.text)
+            return .visitChildren
+        }
     }
 
     /// Whether `expression` names only things a generated test file can see: literals, leading-dot
