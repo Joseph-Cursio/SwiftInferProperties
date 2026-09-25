@@ -92,6 +92,20 @@ struct UnorderedCarrierGateTests {
         #expect(Self.reason(signature: "(\(typeName)) -> Int", scanned: ["Shape"]) == nil)
     }
 
+    /// 11 stubs in the 2026-09-24 census ordered a pair of syntax nodes with `<`.
+    @Test("an unscanned SwiftSyntax node is declined", arguments: ["Syntax", "MemberBlockSyntax", "StructDeclSyntax"])
+    func syntaxNodeIsDeclined(typeName: String) throws {
+        let reason = try #require(Self.reason(signature: "(\(typeName)) -> Int", scanned: []))
+        #expect(reason.contains("SwiftSyntax node"))
+    }
+
+    @Test("a scanned project type named like a node follows the conformance rule")
+    func scannedSyntaxNamedTypeIsReadNormally() {
+        #expect(Self.reason(
+            signature: "(RankSyntax) -> Int", scanned: ["RankSyntax"], inherited: ["RankSyntax": ["Comparable"]]
+        ) == nil)
+    }
+
     @Test("other templates are untouched")
     func otherTemplates() {
         #expect(Self.reason(signature: "(Shape) -> Shape", scanned: ["Shape"], template: "idempotence") == nil)

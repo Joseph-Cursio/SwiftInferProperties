@@ -19,6 +19,8 @@ import SwiftInferCore
 ///
 /// ## It declines only on positive evidence
 ///
+/// One unscanned family is declined by name: SwiftSyntax nodes, which are never `Comparable`.
+///
 /// A type is declined when it is a **scanned project type** and no chain of its inheritance
 /// clauses — across every scanned file, extensions included — reaches `Comparable` or a
 /// protocol refining it. A type the scan never saw (a framework type, a dependency's type) is
@@ -54,6 +56,14 @@ enum UnorderedCarrierGate {
         let name = ProtocolCoverageMap.strippingGenericParameters(
             carrier.trimmingCharacters(in: .whitespaces)
         )
+        // A SwiftSyntax node is the one unscanned family whose answer is known: no node type is
+        // `Comparable`. The 2026-09-24 census set aside 11 stubs over `Syntax`, `MemberBlockSyntax`
+        // and `…DeclSyntax`, all "is this count monotonic in the node" — a law with no order to
+        // state. `ProxyConstruction` already recognises the family by name.
+        if !scannedTypeNames.contains(name), ProxyConstruction.isParserConstructed(name) {
+            return "\(evidence.displayName) takes \(carrier), a SwiftSyntax node, which is never "
+                + "Comparable, and 'monotonicity' orders its drawn pair with `<`"
+        }
         guard scannedTypeNames.contains(name),
               !reachesComparable(name, scannedTypeNames: scannedTypeNames, inheritedTypesByName: inheritedTypesByName)
         else { return nil }
