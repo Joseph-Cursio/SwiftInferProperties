@@ -183,4 +183,22 @@ struct ReceiverConstructionHarvesterTests {
     func onlyWanted() {
         #expect(Self.constructions(["Budget"]).keys.sorted() == ["Budget"])
     }
+
+    /// A test that declares its own `Collector` constructs THAT type, which shares only a name
+    /// with the production one — 11 census stubs were handed its initializer.
+    @Test("a type the test file declares itself is not harvested")
+    func testLocalTypeIsNotHarvested() {
+        let source = """
+        final class Collector: SyntaxVisitor {}
+        @Test func walks() {
+            let collector = Collector(viewMode: .sourceAccurate)
+            let visitor = LawOfDemeterVisitor(patternCategory: .architecture)
+            _ = (collector, visitor)
+        }
+        """
+        let found = ReceiverConstructionHarvester.constructions(
+            in: source, wanted: ["Collector", "LawOfDemeterVisitor"]
+        )
+        #expect(found.map(\.type) == ["LawOfDemeterVisitor"])
+    }
 }
