@@ -40,6 +40,25 @@ Suites green at **5,576 tests** (5,493 fast + 83 across `perf` and the eight bat
 
 Moved out of CLAUDE.md's *Current state* on 2026-09-19: every suite-count reading older than the current one, verbatim and newest first. It had grown to ~265 lines of a file loaded every session. **Read for what each verdict was decided on, never for a current count** — CLAUDE.md carries the current reading, and the next re-take moves the one it supersedes to the top of this list.
 
+**The prior reading — 6,397 = 6,173 fast + 224, taken 2026-09-24 at `c70ce740` — follows, and
+everything below it is SUPERSEDED HISTORY.**
+**PRIOR READING — 6,397 tests — 6,173 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-24** at `c70ce740` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.9.0 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 68m39s):
+fast **6,173** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half moved 223 → 224, and the +1 is accounted for**: `DelegationGateCensusMeasuredTests`,
+opt-in and scheduled in `batch8`, which counts it whether or not it runs. Every other batch stood still
+to the digit across seven new stub writers, `Sendable` shims and the private-member fix — which
+change generated stub text and generator derivation — so no baseline assertion moved.
+**The fast half moved 6,144 → 6,173, +29, RECONCILED BY TEST ID**: `swift test list` against the
+previous reading's list — **29 added, 0 removed**, all plain unit suites (`SendableShimTests` 7,
+`EntailedLawStubTests` 6, `ConformanceLawStubTests` 4, `MeasureNonNegativityStubTests` 4, …).
+**Timings**: ⚠ `batch3` **353s**, BELOW the standing 380–483s range for the first time in six
+readings — one outside it is worth a sentence, and this one is low, so it is not load; `batch2` 752s
+inside 679–801s; `batch5` 1,617s; `batch1` 174s, `batch4` 174s, `batch6` 157s, `batch7` 200s,
+`batch8` 586s. 68m39s end to end including a clean rebuild.
+
 **The prior reading — 6,367 = 6,144 fast + 223, taken 2026-09-23 at `0e16203f` — follows, and
 everything below it is SUPERSEDED HISTORY.**
 **PRIOR READING — 6,367 tests — 6,144 fast + 223 across `perf` and the eight batches**

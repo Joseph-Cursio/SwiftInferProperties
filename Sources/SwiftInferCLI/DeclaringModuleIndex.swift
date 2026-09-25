@@ -16,11 +16,23 @@ enum DeclaringModuleIndex {
 
     static func index(root: URL) -> [String: Set<String>] {
         var modules: [String: Set<String>] = [:]
+        for (module, text) in sourceFiles(under: root) {
+            for name in declaredNames(in: text) {
+                modules[name, default: []].insert(module)
+            }
+        }
+        return modules
+    }
+
+    /// Every Swift file under a `Sources/<Module>/` directory beneath `root`, with its module —
+    /// skipping build products, checkouts, tests and generated stubs.
+    static func sourceFiles(under root: URL) -> [(module: String, text: String)] {
         let skipped: Set<String> = [".build", ".git", "Tests", "Generated", "checkouts", ".swiftpm"]
         let keys: [URLResourceKey] = [.isDirectoryKey]
         guard let walker = FileManager.default.enumerator(at: root, includingPropertiesForKeys: keys) else {
-            return [:]
+            return []
         }
+        var files: [(module: String, text: String)] = []
         for case let url as URL in walker {
             if skipped.contains(url.lastPathComponent) {
                 walker.skipDescendants()
@@ -29,11 +41,9 @@ enum DeclaringModuleIndex {
             guard url.pathExtension == "swift",
                   let module = InteractiveTriage.moduleName(fromSourceFile: url.path),
                   let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
-            for name in declaredNames(in: text) {
-                modules[name, default: []].insert(module)
-            }
+            files.append((module, text))
         }
-        return modules
+        return files
     }
 
     private static let declaration = try? NSRegularExpression(

@@ -21,10 +21,20 @@ final class ReceiverConstructionSource {
         TestTargetScope.buildModules(packageRoot: $0)
     } ?? []
     private lazy var constructions = ReceiverConstructionHarvester.harvestWithImports(roots: testRoots, wanted: wanted)
+    /// The outermost package's source files, read once for both indexes below.
+    private lazy var sourceFiles: [(module: String, text: String)] = packageRoot.map { root in
+        DeclaringModuleIndex.sourceFiles(under: SyntaxCorpusSource.outermostPackageRoot(from: root) ?? root)
+    } ?? []
     /// The module declaring each type name anywhere in the outermost package's sources.
-    private lazy var declaringModules: [String: Set<String>] = packageRoot.map { root in
-        DeclaringModuleIndex.index(root: SyntaxCorpusSource.outermostPackageRoot(from: root) ?? root)
-    } ?? [:]
+    private lazy var declaringModules: [String: Set<String>] = sourceFiles.reduce(into: [:]) { index, file in
+        for name in DeclaringModuleIndex.declaredNames(in: file.text) {
+            index[name, default: []].insert(file.module)
+        }
+    }
+    /// Every class the sources declare, for `TrivialConstruction`.
+    private lazy var classes = TrivialConstruction.classes(in: sourceFiles.map(\.text))
+    /// Receivers built by `TrivialConstruction`, cached so `allHarvested` carries their imports.
+    private var trivial: [String: ReceiverConstructionHarvester.Harvested] = [:]
 
     init(packageRoot: URL, wanted: Set<String>) {
         self.testRoots = SyntaxCorpusSource.testDirectories(of: packageRoot)
@@ -54,7 +64,7 @@ final class ReceiverConstructionSource {
     var allHarvested: [ReceiverConstructionHarvester.Harvested] {
         let resolvable = buildModules
         let declaring = declaringModules
-        return constructions.values.map { harvested in
+        return (Array(constructions.values) + trivial.values).map { harvested in
             let widened = Self.addingDeclaringImports(harvested, declaring: declaring, in: resolvable)
             return Self.keepingResolvable(widened, in: resolvable)
         }
@@ -91,7 +101,20 @@ final class ReceiverConstructionSource {
         )
     }
 
+    /// A construction a test wrote, else one `TrivialConstruction` can build from an initializer
+    /// whose arguments all have an obvious empty value — never the other way round, since a test's
+    /// receiver holds the state the tests exercise.
     private func harvested(for typeName: String) -> ReceiverConstructionHarvester.Harvested? {
-        constructions[typeName] ?? constructions[typeName.components(separatedBy: ".").last ?? typeName]
+        let bare = typeName.components(separatedBy: ".").last ?? typeName
+        if let written = constructions[typeName] ?? constructions[bare] { return written }
+        if let cached = trivial[typeName] { return cached }
+        guard packageRoot != nil, let (expression, needsSyntax) = TrivialConstruction.expression(
+            for: typeName, classes: classes
+        ) else { return nil }
+        let built = ReceiverConstructionHarvester.Harvested(
+            expression: expression, imports: needsSyntax ? ["import SwiftSyntax"] : []
+        )
+        trivial[typeName] = built
+        return built
     }
 }
