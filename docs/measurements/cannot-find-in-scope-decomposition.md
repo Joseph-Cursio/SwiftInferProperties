@@ -68,3 +68,20 @@ builds with its tests; no name collided.
 ⚠ SwiftProjectLint's branch is 10 upstream commits ahead of census 14's, so part of its +16 is those.
 **Three newly reachable laws fail and all three are false** — idempotence of `sha256`, of a key-to-title
 map, and of a URL derivation — the named mechanisms, no defect.
+
+### Then: class receivers from an empty initializer
+
+**32 of the 102 widened stubs still waiting on a generator were blocked by nothing but their class
+receiver** — mostly SwiftProjectLint's cross-file visitors, each of which inherits
+`required init(fileCache:)` from `CrossFileVisitorBase`, declared in another package where the
+generator derivation never looks. `TrivialConstruction` now builds such a receiver from the first
+accessible initializer up the superclass chain whose every argument has a default or an empty value
+(`X(fileCache: [:])`), and a `SyntaxVisitor` subclass with none of its own gets `init(viewMode:)`.
+
+**Census 16 against census 15, the same widened code:** compiles **563 → 600**, passes 520 → 557 —
+SwiftProjectLint +35, SwiftUMLStudio +2, nothing down, failures unchanged. The prediction was +15 to
++30 against a ceiling of 32; it read +37 because a buildable receiver also let 7 more suggestions write
+a stub. **All 37 new passes are "does not crash"** — behaviour stays at 106 — so this is reach, not
+bug-finding. Not fixable this way: `ButtonAccessibilityChecker` (7, needs an `AccessibilityVisitor`
+built from a pattern) and `YAMLConfig` (6, a parameterless initializer the kit rightly refuses as a
+one-value domain).
