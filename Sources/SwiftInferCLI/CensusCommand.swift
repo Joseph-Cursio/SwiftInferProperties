@@ -91,7 +91,7 @@ extension SwiftInferCommand {
                 label: label,
                 capturedAt: Date(),
                 flags: includePossible ? "--include-possible" : "(default tier)",
-                swiftInferVersion: BuildIdentity.versionString("1.152.0"),
+                swiftInferVersion: BuildIdentity.versionString("1.153.0"),
                 corpora: members
             )
 
