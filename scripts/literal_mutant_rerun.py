@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Re-run a mutation-check record's string-literal (M6) mutants against a newer census's stubs.
 
-    literal_mutant_rerun.py <old-scratch-root> <new-trees-dir> <out.jsonl>
+    literal_mutant_rerun.py <old-scratch-root> <new-trees-dir> <out.jsonl> [operator-prefixes]
 
 `<old-scratch-root>` is the directory holding the census trees `sample.json` names
 (`census-widened/`, `census-imports2/`); `<new-trees-dir>` is a later census's `trees/`, whose stubs
@@ -17,10 +17,16 @@ import mutation_check as mc  # noqa: E402
 OLD = os.path.join(sys.argv[1], "")
 B = os.path.join(sys.argv[2], "")
 OUT = sys.argv[3]
+# Which recorded mutants to re-run, by operator prefix: `M6` (the default, §4c's literal mutants), or a
+# comma list such as `M1,M4` for the boundary classes `docs/measurements/boundary-reach.md` re-runs.
+OPERATORS = tuple((sys.argv[4] if len(sys.argv) > 4 else "M6").split(","))
+# Optional: only these suites (comma list), to re-measure one stub after regenerating it.
+SUITES = set(sys.argv[5].split(",")) if len(sys.argv) > 5 else None
 
 laws = {l["suite"]: l for l in json.load(open(os.path.join(REPO, "fixtures/mutation-check/sample.json")))["laws"]}
 rows = [r for r in map(json.loads, open(os.path.join(REPO, "fixtures/mutation-check/run-2026-09-22.jsonl")))
-        if r["kind"] == "mutant" and r["operator"].startswith("M6")]
+        if r["kind"] == "mutant" and r["operator"].startswith(OPERATORS)
+        and (SUITES is None or r["suite"] in SUITES)]
 
 
 def rebase(path):
