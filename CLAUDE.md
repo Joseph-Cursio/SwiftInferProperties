@@ -39,7 +39,7 @@ keeps a zero `swift-numerics` footprint.
 
 ## Current state
 
-**v1.152.0.** Two disjoint surfaces, both discovered → surfaced → verified → promoted end
+**v1.153.0.** Two disjoint surfaces, both discovered → surfaced → verified → promoted end
 to end:
 
 - **Algebraic** — pure-function laws from signatures, cross-function pairs, and lifted
