@@ -46,10 +46,39 @@ other arrays and nested arrays keep the kit's form, and struct members are untou
 **Measured: `deindent`'s killable mutant goes UNEXERCISED → KILLED**, with the original still passing.
 32 compiled stubs across 12 repositories take a `[String]` argument — 16 of them behaviour laws.
 
+**And it costs nothing elsewhere — same-code A/B, old binary against new, nine repositories** (census 16
+for six whose code had not moved; census 17b re-run with the old binary for SwiftProjectLint, whose `main`
+had moved, and for SwiftFormatRuleStudio and pbt-workbook-corpus, which census 16 did not cover): **stubs,
+compiles, passes and failures identical in every repository, and the failure sets identical test for
+test** — no law that passed before fails now, so no hand-check was owed. The prediction written before the
+run was 0 to 3 new failures and compiles unchanged. 20 compiled stubs draw the new element form; the 15
+still carrying the plain one are almost all `[String]` **members** of a derived struct, which stay plain
+by design. ⚠ **Not covered: `[String]?`** — `nearMissLines` and `mergedWith(existing:)` take an optional
+array and keep the plain elements; 2 stubs, left unwidened rather than changed unmeasured.
+
 ## What is not reached, and why
 
 - **`isSwift6OrLater`** (predicate) needs a major version of exactly 6; alphanumeric strings rarely
   parse as an `Int` at all. Digits near the body's numeric literals would reach it — but it is a
   totality law, so it could only diverge.
 - **`GitCommit.parse`** needs a header with four `\0`-separated fields — also totality.
-- **`analyze` / `extract`** (guard-domain) are not yet diagnosed.
+- **`analyze` / `extract`** (guard-domain) are **outside the law's scope**. A guard-domain law
+  characterises ONE guard — here `!trace.isEmpty ⟹ result == .neutral` / `== nil` — and returns `true`
+  for every other input. All three mutants sit in code only a non-empty trace reaches — `analyze`'s
+  later `wordCount > 0` guard, and `extract`'s comparison choosing between two candidate lists — where
+  the law says nothing. No generator makes this law catch
+  them; only a law about the non-empty case could.
+
+## So what bounds discrimination here
+
+| of the 13 | why unexercised | can a better generator help? |
+|---:|---|---|
+| 7 | under a **totality** law, which asserts only that the call returns | no — DIVERGED at best |
+| 3 | outside the one guard their **guard-domain** law characterises | no |
+| 1 | **equivalent** to the original | no |
+| **2** | genuinely unreached | **yes — and both are now killed** (`normalized` by today's toolchain, `deindent` by the `[String]` fix) |
+
+**Generator reach bounds 2 of 13; the law's scope bounds 10.** The boundary bugs the mutation check
+planted are mostly in code the emitted law does not claim anything about. Finding more of them means laws
+that compare outputs across the whole domain, which is the catalogue question
+`behaviour-law-funnel.md` ends on, not a generator one.
