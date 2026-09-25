@@ -43,3 +43,28 @@ A name was attributed to the receiver construction when it appears in the proper
 subject's call; its declaration was then located by a regex over the subject's tree, excluding `.build/`
 and `Generated/`. **The regex found a test file first for `PatternCategory` and `Parser`, which was
 wrong** — both were resolved by reading. Classification is per stub, first matching rule, header first.
+
+## Acted on, 2026-09-24 — widened, and three fixes
+
+**Widened, all but pbt-book** — 161 declarations across nine repositories, including the 104 private
+subjects still waiting on a generator, so a later generator is the only step left for them. Widening a
+method whose signature names another `private` type widened that type too (10 more). Every package
+builds with its tests; no name collided.
+
+**Three `swift-infer` fixes the widening exposed:**
+
+- **A test's own type lent its initializer to a production type of the same name** — SwiftProjectLint's
+  `private struct Collector` was handed `Collector(viewMode:)` from two test files declaring their own
+  visitor. The harvester now ignores a construction whose file declares that type (11 stubs).
+- **A construction's names now import their declaring module** when the test file reached them through
+  an import the destination cannot make (`@testable import Core` → `SwiftProjectLintVisitors`,
+  `SwiftProjectLintModels`; 10 stubs). `Parser` stays unfixed: it needs `SwiftParser`, which the nested
+  package does not depend on — a manifest change in the subject, not an import.
+- **`monotonicity` over a SwiftSyntax node is declined** — no node is `Comparable`, and the gate waved
+  every unscanned type through (11 stubs, withdrawn rather than freed).
+
+**Census 15 (the nine widened branches, fixed binary) against census 14:** compiles **531 → 563**, passes
+**492 → 520** (behaviour 89 → 106), stubs 796 → 783. The prediction written first was +25 to +40.
+⚠ SwiftProjectLint's branch is 10 upstream commits ahead of census 14's, so part of its +16 is those.
+**Three newly reachable laws fail and all three are false** — idempotence of `sha256`, of a key-to-title
+map, and of a URL derivation — the named mechanisms, no defect.
