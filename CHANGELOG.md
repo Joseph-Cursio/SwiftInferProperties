@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.153.0] — 2026-09-24
+
+More receivers can be built and more stubs import what they name, so more of what the catalogue proposes compiles. PRs #584–#587.
+
+### Added
+
+- **Actor receivers.** A method on an actor instance is reached with `await` instead of being spliced as a plain call; `nonisolated` and `static` members are left alone.
+- **Class receivers from an empty initializer.** When no test constructs a class receiver, its superclass chain is read from the package's sources for an initializer whose every argument has a default or an empty value (`[:]`, `[]`, `nil`) — `CouldBePrivateMemberVisitor(fileCache: [:])`, inherited from its base class. A `SyntaxVisitor` subclass with no initializer of its own gets `init(viewMode: .sourceAccurate)`. A test's own construction still wins.
+- **Imports for a copied construction's names.** Each type a construction copied from a test names is imported from the module that declares it, when the test reached it through an import the stub cannot make.
+
+### Fixed
+
+- A test that declares its own type of some name no longer lends its initializer to a production type of the same name.
+- `monotonicity` is declined over a SwiftSyntax node, which is never `Comparable`, instead of writing a stub that cannot compile.
+- An actor call handed as statements (`return x.count() >= 0`) gets its `await` at the head of each statement.
+
+### Changed
+
+- The measurement harness records a set-aside stub as `private subject` whenever its own `// Access:` header says so, rather than trusting the compiler's first error.
+
+### Read before quoting a number
+
+- Across the nine repositories the widening round touched, after widening their `private` helpers (subject PRs, not this package): compiles **531 → 600**, passing laws **492 → 557** — behaviour 89 → 106, does not crash 403 → 451.
+- The class-receiver rule alone: compiles 563 → 600, all 37 new passes "does not crash".
+- Newly reachable laws that fail are all false laws of recorded mechanisms (idempotence of a hash, a key-to-title map, a URL derivation); no defect.
+- Suites at release: 6,418 = 6,194 fast + 224 in perf and the eight subprocess batches, from a full `make test`, green.
+
 ## [1.152.0] — 2026-09-24
 
 Laws over a method on a separate object — a codec, a formatter, a normaliser — are now written instead of declined. PRs #581–#582.
