@@ -56,6 +56,15 @@ public extension LiftedTestEmitter {
         if let rawType = RawType(typeName: typeName) {
             return rawType.edgeBiasedGeneratorExpression(subjectTokens: subjectLiterals) ?? rawType.generatorExpression
         }
+        // **The elements of a top-level `[String]` are the property's input too.** The kit's composed
+        // `[String]` draws plain alphanumeric elements, so a subject reading its lines' leading spaces
+        // or markers never sees one: `deindent(_ lines: [String])` computes a minimum indent of 0 on
+        // every draw, and both boundary mutants the mutation check planted there stayed UNEXERCISED
+        // (`docs/measurements/boundary-reach.md`). The element gets the String carrier's own draw.
+        if let element = arrayElement(of: typeName),
+           let biased = RawType(typeName: element)?.edgeBiasedGeneratorExpression(subjectTokens: subjectLiterals) {
+            return "(\(biased)).array(of: 0...8)"
+        }
         // **Ask the kit before giving up.** `DerivationStrategist.composedGenerator` already resolves
         // Foundation value types outside the raw-type set — `Data`, `URL`, `UUID`, `Decimal`,
         // `Date`, `Character` — along with optionals, arrays, sets and dictionaries over them,
@@ -102,7 +111,20 @@ public extension LiftedTestEmitter {
            let hostile = rawType.hostileGeneratorExpression(subjectTokens: subjectLiterals) {
             return hostile
         }
+        if let element = arrayElement(of: typeName),
+           let hostile = RawType(typeName: element)?.hostileGeneratorExpression(subjectTokens: subjectLiterals) {
+            return "(\(hostile)).array(of: 0...8)"
+        }
         return defaultGenerator(for: typeName, subjectLiterals: subjectLiterals)
+    }
+
+    /// `X` for an array spelled `[X]`, or `nil` — a dictionary `[K: V]` is not an array.
+    static func arrayElement(of typeName: String) -> String? {
+        let trimmed = typeName.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]") else { return nil }
+        let inner = String(trimmed.dropFirst().dropLast()).trimmingCharacters(in: .whitespaces)
+        guard !inner.isEmpty, !inner.contains(":"), !inner.contains("[") else { return nil }
+        return inner
     }
 
     /// Appended to the "you supply it" generator arm so an emitted file that cannot compile says
