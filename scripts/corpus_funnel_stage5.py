@@ -349,6 +349,30 @@ def _bisect_crash(package_dir, stubs_dir, swift, aside_dir, code, limit=12):
     return moved
 
 
+# The header the accept path writes on a stub whose subject no test can name
+# (`InteractiveTriage+AccessCaveat.swift`).
+ACCESS_HEADER = "// Access: no test can name the subject"
+PRIVATE_PREFIX = "private subject; compiler said: "
+
+
+def attributed_reason(path, message):
+    """The set-aside reason, naming `private` when the stub's own header already does.
+
+    ⚠ **The compiler's first error is not the cause for a private subject.** It reports a name it
+    cannot see, or gives up type-checking after trying every overload, instead of saying
+    *inaccessible*. Census 14 recorded 16 stubs as access failures while 164 carried this
+    header — 18 of 19 type-check timeouts and 53 of 84 *cannot find in scope* among them
+    (`docs/measurements/cannot-find-in-scope-decomposition.md`). The compiler's text is kept
+    after the prefix, so nothing it said is lost.
+    """
+    try:
+        with open(path, encoding="utf-8") as stub:
+            head = stub.read(4096)
+    except OSError:
+        return message
+    return PRIVATE_PREFIX + message if ACCESS_HEADER in head else message
+
+
 _ERROR = re.compile(r"^(/[^:]+\.swift):(\d+):(\d+): error: (.+)$")
 
 
@@ -398,7 +422,7 @@ def build_to_fixpoint(package_dir, stubs_dir, swift, aside_dir, max_rounds=40):
             return {"built": False, "rounds": round_number, "set_aside": set_aside,
                     "unattributed": f"build exited {done.returncode} with no error line"}
         for path, message in first_error.items():
-            set_aside[os.path.basename(path)] = message
+            set_aside[os.path.basename(path)] = attributed_reason(path, message)
             os.replace(path, os.path.join(aside_dir, os.path.basename(path)))
     return {"built": False, "rounds": max_rounds, "set_aside": set_aside,
             "exhausted": True}
