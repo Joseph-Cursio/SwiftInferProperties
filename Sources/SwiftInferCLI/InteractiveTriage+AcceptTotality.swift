@@ -130,7 +130,7 @@ extension InteractiveTriage {
         let failureLabel = "\(parsed.displaySignature) failed totality"
         let argumentTypes = constructed == nil ? parsedTypes : Array(parsedTypes.dropFirst())
         let seed = SamplingSeed.derive(from: suggestion.identity)
-        let literals = argumentTypes.contains { RawType(typeName: $0) == .string } ? SubjectLiterals.of(suggestion) : []
+        let literals = argumentTypes.contains(where: drawsStrings) ? SubjectLiterals.of(suggestion) : []
         let generators = argumentTypes.map {
             totalityGenerator(for: $0, customGenerator: customGenerator, subjectLiterals: literals)
         }
@@ -224,9 +224,15 @@ extension InteractiveTriage {
         customGenerator: ((String) -> String?)?,
         subjectLiterals: [String]
     ) -> String {
-        if RawType(typeName: typeName) == nil, let derived = customGenerator?(typeName) {
+        if RawType(typeName: typeName) == nil, !drawsStrings(typeName), let derived = customGenerator?(typeName) {
             return derived
         }
         return LiftedTestEmitter.hostileGenerator(for: typeName, subjectLiterals: subjectLiterals)
+    }
+
+    /// Whether an argument of this type is drawn from the `String` carrier's generator — a `String`,
+    /// or the elements of a `[String]`, which get the same draw (`LiftedTestEmitter.defaultGenerator`).
+    static func drawsStrings(_ typeName: String) -> Bool {
+        RawType(typeName: LiftedTestEmitter.arrayElement(of: typeName) ?? typeName) == .string
     }
 }
