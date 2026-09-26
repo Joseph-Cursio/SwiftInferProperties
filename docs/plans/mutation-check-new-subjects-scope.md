@@ -1,6 +1,8 @@
 # Does a passing law notice a planted bug — on subjects the catalogue never met?
 
-> **Status:** `proposed` · **As of:** 2026-09-26
+> **Status:** `shipped` · **As of:** 2026-09-26
+
+✅ **Run and measured** — the results are in `docs/measurements/mutation-check-new-subjects.md`.
 
 The first mutation check (`docs/measurements/funnel-mutation-check.md`) ran on the funnel's own 19
 repositories — the corpus every template and generator was tuned against — and left one stratum
