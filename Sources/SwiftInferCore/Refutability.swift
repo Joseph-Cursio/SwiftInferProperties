@@ -96,6 +96,7 @@ public enum Refutability {
         // others are owed by virtue of a role, this one because the code is its source. See
         // `GuardDomainTemplate` for why it still cannot find a bug that exists today.
         "guard-domain",
+        "rewrite-postcondition", // the tokens the body removes; see `RewritePostcondition`
         "filter-subset",     // result ⊆ the collection it selects from
         "selection-subset",  // result ⊆ container.<collection>
         "diff-disjointness", // added ∩ removed = ∅
@@ -155,7 +156,10 @@ public enum Refutability {
     /// does not belong.
     public static let characterisationTemplates: Set<String> = [
         // The law IS the guard. See `GuardDomain`.
-        "guard-domain"
+        "guard-domain",
+        // The law IS the rewrite: the tokens the body's own replacements or split remove.
+        // See `RewritePostcondition`.
+        "rewrite-postcondition"
     ]
 
     /// Whether a pass tells the reader nothing about today's behaviour, because the law was read
