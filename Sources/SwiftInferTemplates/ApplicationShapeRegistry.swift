@@ -99,6 +99,28 @@ extension TemplateRegistry {
             )
         ),
         SingleFunctionAppShape(
+            name: "rewrite-postcondition",
+            suggest: RewritePostconditionTemplate.suggest(for:),
+            generatorType: { $0.parameters.first?.typeText },
+            exclusionGroup: nil,
+            referenceFixture: appShapeFixture(
+                "safeAlias",
+                params: [.init(label: nil, internalName: "name", typeText: "String", isInout: false)],
+                returns: "String",
+                on: "ComponentScript",
+                // Body-derived, like guard-domain: a signature alone cannot trigger it.
+                bodySignals: BodySignals(
+                    rewritePostcondition: RewritePostcondition(
+                        parameterName: "name",
+                        guarantee: .outputLacks(["-", " "])
+                    ),
+                    hasNonDeterministicCall: false,
+                    hasSelfComposition: false,
+                    nonDeterministicAPIsDetected: []
+                )
+            )
+        ),
+        SingleFunctionAppShape(
             name: "filter-subset",
             suggest: FilterSubsetTemplate.suggest(for:),
             generatorType: { FilterSubsetTemplate.haystackType(of: $0) },

@@ -35,6 +35,9 @@ extension InteractiveTriage {
         case "dual-style-consistency":
             return dualStyleConsistencyStub(for: suggestion, customGenerator: customGenerator)
 
+        case "rewrite-postcondition":
+            return rewritePostconditionStub(for: suggestion, customGenerator: customGenerator)
+
         default:
             return nil
         }
@@ -83,6 +86,29 @@ extension InteractiveTriage {
         return LiftedTestEmitter.rolePostcondition(
             callee: callee,
             role: role,
+            typeName: typeName,
+            seed: SamplingSeed.derive(from: suggestion.identity),
+            generator: chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)
+        )
+    }
+
+    /// The tokens the body removes, over the parameter's own type — `String` by construction of the
+    /// reader. One application of a static or free function to the drawn value; an instance method is
+    /// left unwritten, since its receiver would have to be built as well.
+    private static func rewritePostconditionStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)?
+    ) -> String? {
+        guard let postcondition = suggestion.match?.rewritePostconditionMatch,
+              let evidence = suggestion.evidence.first,
+              let callee = CalleeReference(evidence: evidence),
+              !callee.isInstanceMethod, callee.argumentLabels.count == 1,
+              let typeName = parameterTypes(from: evidence.signature).first else {
+            return nil
+        }
+        return LiftedTestEmitter.rewritePostcondition(
+            callee: callee,
+            postcondition: postcondition,
             typeName: typeName,
             seed: SamplingSeed.derive(from: suggestion.identity),
             generator: chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)
