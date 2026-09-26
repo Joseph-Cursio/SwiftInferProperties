@@ -134,6 +134,8 @@ extension InteractiveTriage {
         /// Types a generated `Sendable` shim may name (`SendableShim`). Empty for every caller
         /// that does not supply it — which writes no shim, the behaviour before shims existed.
         var testVisibleTypeNames: Set<String> = []
+        /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
+        var typeAliases: [String: String] = [:]
 
         /// `nil` for a caller with no package on disk, which is every unit fixture; carrier
         /// imports are then not resolved and the stub emits what it did before.

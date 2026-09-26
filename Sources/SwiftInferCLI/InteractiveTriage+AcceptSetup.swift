@@ -25,6 +25,7 @@ extension InteractiveTriage {
             types: SendableShim.presentingShimmableClasses(
                 Array(context.typeShapesByName.values), visible: context.testVisibleTypeNames
             ),
+            aliases: context.typeAliases,
             syntaxNode: corpus.map { source in { source.generator(for: $0) } }
         )
     }
@@ -37,10 +38,11 @@ extension InteractiveTriage {
     ///   type that happens to be named `…Syntax` keeps its derived generator.
     static func projectTypeGenerator(
         types: [TypeShape],
+        aliases: [String: String] = [:],
         syntaxNode: ((String) -> String?)? = nil
     ) -> (String) -> String? {
-        let resolver = GeneratorResolver(types: types)
-        let explain = generatorFailureReason(types: types)
+        let resolver = GeneratorResolver(types: types, aliases: aliases)
+        let explain = generatorFailureReason(types: types, aliases: aliases)
         let resolve: (String) -> DerivationStrategist.ComposedGenerator? = { name in
             resolver.customTypeGenerator(forTypeName: name)
                 ?? syntaxNode?(name).map { DerivationStrategist.ComposedGenerator(expression: $0) }
@@ -103,13 +105,16 @@ extension InteractiveTriage {
     static func generatorFailureReason(for context: Context) -> (String) -> String? {
         // The same universe `customGenerator(for:)` resolves over, so a reason never describes a
         // derivation other than the one that ran.
-        generatorFailureReason(types: SendableShim.presentingShimmableClasses(
-            Array(context.typeShapesByName.values), visible: context.testVisibleTypeNames
-        ))
+        generatorFailureReason(
+            types: SendableShim.presentingShimmableClasses(
+                Array(context.typeShapesByName.values), visible: context.testVisibleTypeNames
+            ),
+            aliases: context.typeAliases
+        )
     }
 
-    static func generatorFailureReason(types: [TypeShape]) -> (String) -> String? {
-        let resolver = GeneratorResolver(types: types)
+    static func generatorFailureReason(types: [TypeShape], aliases: [String: String] = [:]) -> (String) -> String? {
+        let resolver = GeneratorResolver(types: types, aliases: aliases)
         return { typeName in
             guard let failure = resolver.resolutionFailure(forTypeName: typeName) else {
                 return nil

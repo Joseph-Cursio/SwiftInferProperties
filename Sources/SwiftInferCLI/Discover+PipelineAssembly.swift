@@ -113,6 +113,7 @@ extension SwiftInferCommand.Discover {
             genericParametersByName: genericParametersIndex(from: artifacts.typeDecls),
             visibleToTestableImportByName: visibleToTestableImportIndex(from: artifacts.typeDecls),
             testVisibleTypeNames: SendableShim.testVisibleTypeNames(from: artifacts.typeDecls),
+            typeAliases: artifacts.typeAliases,
             sourceFileByTypeName: sourceFileIndex(from: artifacts.typeDecls),
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,

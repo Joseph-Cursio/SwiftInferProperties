@@ -54,6 +54,9 @@ public extension TemplateRegistry {
         /// attached, so the reader learns what refactor unlocks the test.
         public let restrictedFunctions: [RestrictedFunction]
 
+        /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
+        public let typeAliases: [String: String]
+
         public init(
             suggestions: [Suggestion],
             inverseElementPairs: [InverseElementPair],
@@ -61,7 +64,8 @@ public extension TemplateRegistry {
             summaries: [FunctionSummary] = [],
             typeDecls: [TypeDecl] = [],
             effectAnnotations: [EffectAnnotationAdvice] = [],
-            restrictedFunctions: [RestrictedFunction] = []
+            restrictedFunctions: [RestrictedFunction] = [],
+            typeAliases: [String: String] = [:]
         ) {
             self.suggestions = suggestions
             self.inverseElementPairs = inverseElementPairs
@@ -70,6 +74,7 @@ public extension TemplateRegistry {
             self.typeDecls = typeDecls
             self.effectAnnotations = effectAnnotations
             self.restrictedFunctions = restrictedFunctions
+            self.typeAliases = typeAliases
         }
     }
 }
