@@ -54,6 +54,9 @@ public enum TemplateMatch: Sendable, Equatable {
     /// `partition` — the tiler, its form, and the optional progress member.
     case partition(PartitionMatch)
 
+    /// `rewrite-postcondition` — the tokens a string-rewriting body removes. See `RewritePostcondition`.
+    case rewritePostcondition(RewritePostcondition)
+
     /// The `GuardDomain` this match carries, or `nil` for any other template.
     ///
     /// Present so a writer reads one accessor rather than spelling a `switch` with three
@@ -61,6 +64,12 @@ public enum TemplateMatch: Sendable, Equatable {
     public var guardDomainMatch: GuardDomain? {
         guard case .guardDomain(let domain) = self else { return nil }
         return domain
+    }
+
+    /// The `RewritePostcondition` this match carries, or `nil` for any other template.
+    public var rewritePostconditionMatch: RewritePostcondition? {
+        guard case .rewritePostcondition(let postcondition) = self else { return nil }
+        return postcondition
     }
 }
 

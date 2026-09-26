@@ -124,6 +124,10 @@ public struct BodySignals: Sendable, Equatable {
     /// The sub-domain the body's first statement carves out, or `nil`. See `GuardDomain`.
     public let guardDomain: GuardDomain?
 
+    /// The tokens a string-rewriting body removes from its output, or `nil`. See
+    /// `RewritePostcondition`.
+    public let rewritePostcondition: RewritePostcondition?
+
     /// `true` when the body invokes any API in the curated
     /// non-deterministic list (PRD §4.1's -∞ counter-signal). Drives
     /// the structural disqualifier for idempotence and most algebraic
@@ -198,6 +202,7 @@ public struct BodySignals: Sendable, Equatable {
 
     public init(
         guardDomain: GuardDomain? = nil,
+        rewritePostcondition: RewritePostcondition? = nil,
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
         nonDeterministicAPIsDetected: [String],
@@ -210,6 +215,7 @@ public struct BodySignals: Sendable, Equatable {
         callsIdempotentWrite: Bool = false
     ) {
         self.guardDomain = guardDomain
+        self.rewritePostcondition = rewritePostcondition
         self.equalityBodyShape = equalityBodyShape
         self.idempotenceReturnShape = idempotenceReturnShape
         self.dedupGateShape = dedupGateShape
