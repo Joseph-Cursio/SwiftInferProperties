@@ -39,7 +39,7 @@ keeps a zero `swift-numerics` footprint.
 
 ## Current state
 
-**v1.153.0.** Two disjoint surfaces, both discovered → surfaced → verified → promoted end
+**v1.154.0.** Two disjoint surfaces, both discovered → surfaced → verified → promoted end
 to end:
 
 - **Algebraic** — pure-function laws from signatures, cross-function pairs, and lifted
@@ -54,22 +54,21 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,418 tests — 6,194 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-09-24** at `3357f210` on **swift-property-based
+Suites green at **6,434 tests — 6,210 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-25** at `3b9737b8` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.9.1 / SEI `1b62e764`** — every stage counted from that one run, and the
-run was UNPIPED (`make test > log 2>&1`, exit **0**, 69m35s):
-fast **6,194** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 224, every batch to the digit**, across held receivers, actor receivers,
-four stub fixes and the empty-initializer receiver rule — all of which change generated stub text — so
-no baseline assertion moved.
-**The fast half moved 6,173 → 6,194, +21, RECONCILED BY TEST ID**: `swift test list` against the
-previous reading's list — **21 added, 0 removed**, all plain unit suites (`HeldReceiverTests` 7,
-`ActorReceiverTests` 4, `TrivialConstructionTests` 4, `DeclaringModuleImportTests` 3,
-`UnorderedCarrierGateTests` 2, `ReceiverConstructionHarvesterTests` 1).
-**Timings**: `batch3` **359s**, below the 380–483s range for the SECOND reading running (353s last time),
-so the range's floor is moving down, not a one-off; `batch2` 795s inside 679–801s; `batch5` 1,637s;
-`batch1` 176s, `batch4` 176s, `batch6` 157s, `batch7` 204s, `batch8` 584s. 69m35s end to end
-including a clean rebuild.
+run was UNPIPED (`make test > log 2>&1`, exit **0**; the ten test stages sum to 68m21s):
+fast **6,210** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across the `[String]` element draw,
+ternary guard-domain with its literal fix, and the new `rewrite-postcondition` template — all of which
+change what discovery proposes or what a stub draws — so no corpus baseline moved.
+**The fast half moved 6,194 → 6,210, +16, RECONCILED BY TEST ID**: `swift test list` against the
+previous reading's list — **16 added, 0 removed**, all plain unit suites (`RewritePostconditionTests` 6,
+`GuardDomainTernaryTests` 4, `StringArrayElementGeneratorTests` 3, `RewritePostconditionStubTests` 2,
+`GuardDomainLiteralTests` 1).
+**Timings**: `batch3` **356s**, below the 380–483s range for the THIRD reading running (353s, 359s
+before) — the range's floor has moved down and ~350s is the new normal; `batch2` 732s inside 679–801s;
+`batch5` 1,647s; `batch1` 178s, `batch4` 175s, `batch6` 151s, `batch7` 200s, `batch8` 587s.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands

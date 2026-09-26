@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.154.0] — 2026-09-26
+
+Two new laws that catch bugs the older ones missed, and wider string inputs for a law whose argument is a list of strings. PRs #590–#593.
+
+### Added
+
+- **`rewrite-postcondition`.** A function whose whole body is a chain of `replacingOccurrences` never returns a single character it replaced (when nothing afterwards writes it back); one that splits on a literal separator, then only trims or drops elements, never returns an element containing the separator. Read from the body, so it catches an edit rather than a bug that exists today. Static and free functions only.
+- **Ternary `guard-domain`.** A function whose body is one ternary, `name == "*" ? "[*]" : name`, now states the same law as an early `if` return: `name == "*" ⟹ f(name) == "[*]"`.
+
+### Changed
+
+- **A top-level `[String]` draws its elements like a `String` argument** — spaces, newlines, markers and the subject's own literals — instead of alphanumerics only. Struct members, dictionaries and other arrays are unchanged.
+
+### Fixed
+
+- `guard-domain` no longer reads the letters inside a string literal as names, so a guard returning a word literal (`return "unknown"`) is read at all.
+
+### Read before quoting a number
+
+- Against the mutation check's recorded mutants, the new laws catch every mutant they target: both ternary mutants, both `safeAlias` mutants and `parseCommaDelimitedList`, each of which passed its old law; the `[String]` fix catches `deindent`'s one killable boundary mutant.
+- Populations are small by design: across 33,150 functions, ternary `guard-domain` adds 32 laws, the literal fix 21, `rewrite-postcondition` 6.
+- The first version of `rewrite-postcondition` proposed a false law (`stripMarkTags` "never returns `<mark>`"), found by hand-checking; only single characters are claimed now.
+- Of 13 boundary mutants no generated input exercised, better inputs could reach only 2; the rest are limits of the law (totality, a guard-domain law's single guard) or equivalent mutants.
+- Suites at release: 6,434 = 6,210 fast + 224 in perf and the eight subprocess batches, from a full `make test`, green.
+
 ## [1.153.0] — 2026-09-24
 
 More receivers can be built and more stubs import what they name, so more of what the catalogue proposes compiles. PRs #584–#587.
