@@ -90,6 +90,16 @@ four commits. The writer declines those rows today with a named identifier, so n
 is emitted; the reader fix is a row of its own, and it is a **withdrawal** (fewer rows), like the
 availability gate.
 
+✅ **FIXED 2026-09-26, with the A/B this section asked for.** `mentionsOnly` now counts a token starting
+with `_` as a name (the bare wildcard `_` excepted), and judges a type name past its leading underscores,
+so `_AttributeStorage()` stays nameable in a returned expression exactly as `AttributeStorage()` does.
+**Across 33,150 functions — the 20 resolving manifest corpora plus the 19 funnel repositories — the
+reader withdraws 23 guards and admits none it did not before**: `_root != nil`, `_fastPath(…)`,
+`_slowPath(…)`, `_predicate(element)`, `index.base == _base.endIndex`, and the rest of this list. **A full
+`make test` stayed green**, every `*MeasuredTests` corpus survey included, so no recorded baseline asserted
+the withdrawn rows. The first version of the fix also refused `_AttributeStorage()`, an over-strictness the
+census caught before commit.
+
 ## 5. What this does NOT claim
 
 - **Not that these laws find bugs.** They cannot, by construction. The emitted header says so in

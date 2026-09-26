@@ -22,9 +22,9 @@ a ternary. A second hole sat in front of it.
 **Measured over 33,150 functions** (the 20 resolving manifest corpora plus the 19 funnel repositories,
 `Sources/` only, every function through the reader): the statement form reads **211 → 232** guards with
 the literal fix, and ternaries add **32**. Most are the intended shape — `colorScheme == .dark ⟹ .dark`,
-`name.hasPrefix("$") ⟹ String(name.dropFirst())`. ⚠ One, `_offset`, slips the reader's recorded
-underscore hole (`_base` is not counted as a free name); that hole is unchanged and affects the statement
-form equally, and the stub writer declines such a name downstream.
+`name.hasPrefix("$") ⟹ String(name.dropFirst())`. One, `_offset`, slipped the reader's recorded
+underscore hole (`_base` was not counted as a free name); ✅ **that hole is now closed**
+(`guard-domain-stub-writer.md` §4), and `_offset` is among the 23 guards it withdraws.
 
 **A full `make test` stayed green** — no recorded corpus baseline asserts the guard-domain count, so none
 had to be re-taken.
