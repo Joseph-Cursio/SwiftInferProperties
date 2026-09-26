@@ -180,6 +180,30 @@ alone, and embedded in random text — at 1,000 trials. No kit change, no new te
 rather than larger. It belongs in the kit's string strategy, not in stubs; the per-law record is
 `fixtures/mutation-check/literal-reach-2026-09-22.jsonl`, each refutation carrying its hand-check.
 
+## 9. Re-scored, 2026-09-26 — what changed against the same mutants
+
+The record exists to be re-run, and three things since have been measured against its rows. **There is
+no single new rate**: only some operator classes were re-run, and the denominator — mutants that change
+output — moved in both directions. So the change is stated as a ledger against the 22 September rows.
+
+| source | what moved | net against the record |
+|---|---|---|
+| **new laws** — ternary `guard-domain` (`ternary-guard-domain.md`) and `rewrite-postcondition` (`rewrite-postcondition.md`) | `renderStateToken`, `sanitizeLabel`, `safeAlias` ×2, `parseCommaDelimitedList`: each changed output and passed its sampled law; each is now killed by a law the tool emits for the same subject | **+5 caught** among the 34 that changed output |
+| **boundary re-run** (M1/M4, today's toolchain, then the `[String]` element fix — `boundary-reach.md`) | `normalized` and `deindent` (`?? 1`) go UNEXERCISED → KILLED by their own sampled law; `isCoherentProjection` UNEXERCISED → DIVERGED; `camelCaseToKebab`'s baseline now traps and cannot be scored | **+2 caught** that were never exercised |
+| **literal re-run** (M6, subject literals — §7, `subject-literal-generation-scope.md` §4c) | 2 UNEXERCISED → DIVERGED, 1 DIVERGED → UNEXERCISED, 1 withdrawn, and **1 kill lost at 100 trials** (still killed at 1,000): a `guard-domain` law's literal is its guard's own, so literal draws land on the side the law skips | **−1 caught at 100 trials** |
+
+**Read together: of the 34 mutants that changed output on 22 September, 14 are now caught by a law the
+tool emits (9 then), counting the new laws; the sampled laws alone, on today's toolchain, catch 10 at 100
+trials and 11 at 1,000.** Not re-run: M2 and M3 — negated conditions and inverted predicates, 17 of the
+25 law-blind mutants, most under `predicate` totality, which no generator change can make catch anything
+(§1) — and M5 outside `safeAlias`.
+
+**Where the gains came from matters more than their count.** All five new kills came from laws derived
+from the subject's **body** — a characterisation of its ternary or its rewrite — and none from a better
+generator; the two generator-side kills are boundary mutants whose inputs had never reached them.
+`law-blind-mutants.md` sizes what is left: predicate agreement specific to each subject, and syntax-tree
+predicates with no law beyond test examples — neither a template.
+
 ## The record
 
 **`fixtures/mutation-check/run-2026-09-22.jsonl` keeps every mutant permanently** — 121 rows, one per
