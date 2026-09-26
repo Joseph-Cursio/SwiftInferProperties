@@ -55,7 +55,45 @@ public enum GuardDomainReader {
                 firesWhenConditionHolds: true
             )
         }
+        if function.body?.statements.count == 1 {
+            return ternaryDomain(first, parameter: name)
+        }
         return nil
+    }
+
+    /// The domain a body that is ONE ternary carves out — `cond ? literal : x`, or `return` of one.
+    ///
+    /// **The same law as an early return, written as an expression.** `name == "*" ? "[*]" : name`
+    /// states `name == "*" ⟹ f(name) == "[*]"` exactly as `if name == "*" { return "[*]" }` would,
+    /// and the reader saw only the statement forms, so the law was never proposed — and the two
+    /// law-blind mutants in `docs/measurements/law-blind-mutants.md` that swap the literal went
+    /// uncaught. The then-branch is the law, firing when the condition holds; when the then-branch
+    /// is the parameter itself (`cond ? x : literal`), the else-branch is, firing when it does not.
+    ///
+    /// Unfolded syntax: the parser leaves `a ? b : c` as a sequence with an unresolved ternary in
+    /// it, the condition before and the else-branch after. Only a single top-level ternary is read.
+    private static func ternaryDomain(_ item: CodeBlockItemSyntax.Item, parameter: String) -> GuardDomain? {
+        let expression = item.as(ReturnStmtSyntax.self)?.expression
+            ?? item.as(ExpressionStmtSyntax.self)?.expression
+            ?? item.as(ExprSyntax.self)
+        guard let sequence = expression?.as(SequenceExprSyntax.self) else { return nil }
+        let elements = Array(sequence.elements)
+        let ternaries = elements.indices.filter { elements[$0].is(UnresolvedTernaryExprSyntax.self) }
+        guard ternaries.count == 1, let index = ternaries.first, index > 0, index < elements.count - 1,
+              let ternary = elements[index].as(UnresolvedTernaryExprSyntax.self) else { return nil }
+        let condition = elements[..<index].map(\.trimmedDescription).joined(separator: " ")
+        let thenBranch = ternary.thenExpression.trimmedDescription
+        let elseBranch = elements[(index + 1)...].map(\.trimmedDescription).joined(separator: " ")
+        guard mentionsOnly(parameter, in: condition) else { return nil }
+        let (returned, fires) = thenBranch == parameter ? (elseBranch, false) : (thenBranch, true)
+        guard returned != parameter, !returned.isEmpty,
+              mentionsOnly(parameter, in: returned, allowingTypeNames: true) else { return nil }
+        return GuardDomain(
+            condition: condition,
+            returnedExpression: returned,
+            parameterName: parameter,
+            firesWhenConditionHolds: fires
+        )
     }
 
     private static func domain(
@@ -112,7 +150,7 @@ public enum GuardDomainReader {
         var free: Set<String> = []
         var previousWasDot = false
         var current = ""
-        for character in condition {
+        for character in withoutPlainStringLiterals(condition) {
             if character.isLetter || character.isNumber || character == "_" {
                 current.append(character)
                 continue
@@ -127,5 +165,19 @@ public enum GuardDomainReader {
         free.subtract([parameter, "true", "false", "nil", "self", "Self"])
         if allowingTypeNames { free = free.filter { $0.first?.isUppercase != true } }
         return free.isEmpty
+    }
+
+    /// `text` with every string literal that interpolates nothing emptied to `""`.
+    ///
+    /// **A word inside quotes is not a name.** `return "relates"` was refused because the scan read
+    /// `relates` as a free identifier, so every guard returning a word literal — and every ternary
+    /// swapping one in (`raw.isEmpty ? "relates" : raw`) — was invisible to the law. A literal that
+    /// interpolates keeps its text: `"\(name)!"` does reach `name`.
+    static func withoutPlainStringLiterals(_ text: String) -> String {
+        text.replacingOccurrences(
+            of: #""(?:[^"\\]|\\[^(])*""#,
+            with: "\"\"",
+            options: .regularExpression
+        )
     }
 }
