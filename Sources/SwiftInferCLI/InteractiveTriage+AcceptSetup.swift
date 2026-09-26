@@ -41,7 +41,8 @@ extension InteractiveTriage {
         aliases: [String: String] = [:],
         syntaxNode: ((String) -> String?)? = nil
     ) -> (String) -> String? {
-        let resolver = GeneratorResolver(types: types, aliases: aliases)
+        let scoped = TypeAliasMap.resolvingNestedAliases(in: types, aliases: aliases)
+        let resolver = GeneratorResolver(types: scoped, aliases: aliases)
         let explain = generatorFailureReason(types: types, aliases: aliases)
         let resolve: (String) -> DerivationStrategist.ComposedGenerator? = { name in
             resolver.customTypeGenerator(forTypeName: name)
@@ -114,7 +115,8 @@ extension InteractiveTriage {
     }
 
     static func generatorFailureReason(types: [TypeShape], aliases: [String: String] = [:]) -> (String) -> String? {
-        let resolver = GeneratorResolver(types: types, aliases: aliases)
+        let scoped = TypeAliasMap.resolvingNestedAliases(in: types, aliases: aliases)
+        let resolver = GeneratorResolver(types: scoped, aliases: aliases)
         return { typeName in
             guard let failure = resolver.resolutionFailure(forTypeName: typeName) else {
                 return nil

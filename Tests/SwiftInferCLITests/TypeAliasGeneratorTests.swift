@@ -31,4 +31,43 @@ struct TypeAliasGeneratorTests {
         #expect(expression.contains("no generator derived"))
         #expect(expression.contains("`Word` does not"))
     }
+
+    /// BigInt's own shape: four `Word`s, so the bare name is ambiguous and dropped from the map, yet
+    /// inside `BigUInt` it can only mean `BigUInt.Word`, and `BigInt.Word` reaches `UInt` through it.
+    private static let ambiguous = FunctionScanner.scanCorpus(source: """
+        public struct BigUInt: Equatable {
+            public typealias Word = UInt
+            var storage: [Word]
+            public init(words: [Word]) { storage = words }
+        }
+        public struct BigInt: Equatable {
+            public typealias Word = BigUInt.Word
+            var magnitude: [Word]
+            public init(word: Word) { magnitude = [word] }
+        }
+        public struct Units<Words: Collection> {
+            public typealias Word = Words.Element
+        }
+        """, file: "Big.swift")
+
+    @Test("an ambiguous bare alias still resolves inside the type that declares it")
+    func scopedAliasResolves() throws {
+        #expect(Self.ambiguous.typeAliases["Word"] == nil)
+        let shapes = TypeShapeBuilder.shapes(from: Self.ambiguous.typeDecls)
+        let generate = InteractiveTriage.projectTypeGenerator(types: shapes, aliases: Self.ambiguous.typeAliases)
+        let unsigned = try #require(generate("BigUInt"))
+        #expect(unsigned.contains("BigUInt(words:"), "got: \(unsigned)")
+        let signed = try #require(generate("BigInt"))
+        #expect(signed.contains("BigInt(word:"), "got: \(signed)")
+    }
+
+    @Test("the rewrite touches only a bare name, following the alias chain")
+    func rewriteIsScoped() {
+        let aliases = ["BigUInt.Word": "UInt", "BigInt.Word": "BigUInt.Word"]
+        let rewrite = { TypeAliasMap.resolvingNestedAliases(in: $0, declaredOn: $1, aliases: aliases) }
+        #expect(rewrite("[Word]", "BigInt") == "[UInt]")
+        #expect(rewrite("Foo.Word", "BigInt") == "Foo.Word")
+        #expect(rewrite("Words", "BigInt") == "Words")
+        #expect(rewrite("Word", "Other") == "Word")
+    }
 }
