@@ -156,15 +156,29 @@ public enum GuardDomainReader {
                 continue
             }
             if !current.isEmpty {
-                if !previousWasDot, current.first?.isLetter == true { free.insert(current) }
+                if !previousWasDot, Self.isName(current) { free.insert(current) }
                 current = ""
             }
             previousWasDot = character == "."
         }
-        if !current.isEmpty, !previousWasDot, current.first?.isLetter == true { free.insert(current) }
+        if !current.isEmpty, !previousWasDot, Self.isName(current) { free.insert(current) }
         free.subtract([parameter, "true", "false", "nil", "self", "Self"])
-        if allowingTypeNames { free = free.filter { $0.first?.isUppercase != true } }
+        // A type name is judged past its leading underscores: `_AttributeStorage` is a type, which a
+        // test importing the module can name, exactly as it can `AttributeStorage`.
+        if allowingTypeNames { free = free.filter { $0.drop { $0 == "_" }.first?.isUppercase != true } }
         return free.isEmpty
+    }
+
+    /// Whether a scanned token is an identifier: it starts with a letter, or with an underscore and
+    /// is more than the bare wildcard `_`.
+    ///
+    /// **`_base` is a name.** The first version counted only tokens starting with a letter, so
+    /// `index.base == _base.endIndex` passed as if `_base` were the parameter's, and a law naming a
+    /// private stored property no test can reach was proposed — `_offset`, `_fastPath` and `_root`
+    /// among them, the whole 27-of-156 gap `guard-domain-stub-writer.md` recorded and left for an A/B.
+    static func isName(_ token: String) -> Bool {
+        guard let first = token.first else { return false }
+        return first.isLetter || (first == "_" && token.count > 1)
     }
 
     /// `text` with every string literal that interpolates nothing emptied to `""`.
