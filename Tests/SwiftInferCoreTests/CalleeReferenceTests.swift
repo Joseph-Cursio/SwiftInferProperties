@@ -143,12 +143,12 @@ struct CalleeReferenceTests {
         #expect(callee?.accepts(applicationArity: 1) == false)
     }
 
-    /// `Money.+` is not a spelling; `+(lhs, rhs)` is. An operator is left unqualified even when
-    /// the row records a declaring type.
+    /// `Money.+` is not a spelling, and neither is `+(lhs, rhs)`: an operator is left unqualified
+    /// even when the row records a declaring type, and is written infix.
     @Test func anOperatorIsNeverQualified() {
         let callee = CalleeReference(evidence: evidence("+(_:_:)", qualifiedTypeName: "Money"))
         #expect(callee?.qualifier == nil)
-        #expect(callee?.call("lhs", "rhs") == "+(lhs, rhs)")
+        #expect(callee?.call("lhs", "rhs") == "(lhs + rhs)")
     }
 
     // MARK: - Label parsing

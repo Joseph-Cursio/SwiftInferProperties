@@ -73,9 +73,33 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
         self.isComputedProperty = isComputedProperty
     }
 
-    /// Operators are never qualified and never take labels: `Money.+` is not a spelling, while
-    /// `+(lhs, rhs)` is. Kept as its own question rather than folded into the qualifier rule,
-    /// because the two have different reasons.
+    /// Operators are never qualified and never take labels. Kept as its own question rather than
+    /// folded into the qualifier rule, because the two have different reasons.
+    ///
+    /// ⚠ **Nor are they called like functions.** `+(lhs, rhs)` is not a spelling either — this
+    /// comment once said it was — so `call` writes `(lhs + rhs)` and `~value`. BigInt declares
+    /// `static func +(a: BigInt, b: BigInt)`, and its every arithmetic law was set aside on
+    /// `+(a: pair.0, b: pair.1)`.
+    public var isOperator: Bool { Self.isOperatorName(bareName) }
+
+    /// A name the emitted `@Test func` can carry. The bare name, except for an operator, whose
+    /// characters are spelled out — `@Test func +_isCommutative()` does not parse, and
+    /// `plus_isCommutative` does.
+    public var identifierName: String {
+        guard isOperator else { return bareName }
+        let spelled = bareName.compactMap { Self.operatorCharacterWords[$0] }
+        return (spelled.first ?? "") + spelled.dropFirst().map(Self.capitalized).joined()
+    }
+
+    /// Each operator character spelled as a word, for names that must be identifiers.
+    public static let operatorCharacterWords: [Character: String] = [
+        "+": "plus", "-": "minus", "*": "times", "/": "divide", "%": "modulo",
+        "<": "less", ">": "greater", "=": "equal", "!": "not",
+        "&": "ampersand", "|": "bar", "^": "caret", "~": "tilde", "?": "question"
+    ]
+
+    public static func capitalized(_ word: String) -> String { word.prefix(1).uppercased() + word.dropFirst() }
+
     static func isOperatorName(_ name: String) -> Bool {
         let operatorCharacters: Set<Character> = [
             "+", "-", "*", "/", "%",
@@ -241,6 +265,13 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
     public func call(_ arguments: String...) -> String { call(arguments) }
 
     public func call(_ arguments: [String]) -> String {
+        if isOperator, !isInstanceMethod, !isComputedProperty {
+            switch arguments.count {
+            case 1: return "\(bareName)(\(arguments[0]))"
+            case 2: return "(\(arguments[0]) \(bareName) \(arguments[1]))"
+            default: break
+            }
+        }
         guard isInstanceMethod else {
             if isComputedProperty { return "\(callPrefix)\(bareName)" }
             return "\(callPrefix)\(bareName)(\(labelled(arguments).joined(separator: ", ")))"

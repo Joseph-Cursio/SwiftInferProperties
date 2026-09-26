@@ -31,7 +31,7 @@ extension LiftedTestEmitter {
             : isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
         let body = "return \(callee.call(drawn)) >= 0"
         return makeTestStubExpression(
-            testFunctionName: "\(callee.bareName)_isNonNegative",
+            testFunctionName: "\(callee.identifierName)_isNonNegative",
             seed: seed,
             sampleExpression: generators.isEmpty ? "{ _ in () }" : totalitySample(generators: generators),
             propertyExpression: "{ \(bind) in \(callee.isolated(body)) }",

@@ -25,7 +25,7 @@ public extension LiftedTestEmitter {
         }
         let body = "let result = \(callee.call("value")); return \(check)"
         return makeTestStub(
-            testFunctionName: "\(callee.bareName)_lacksWhatItRemoves",
+            testFunctionName: "\(callee.identifierName)_lacksWhatItRemoves",
             seed: seed,
             generator: generator,
             propertyExpression: callee.isolated(body),

@@ -42,7 +42,9 @@ struct StubNamespaceTests {
         ("normalize_idempotence.swift", "normalize_idempotenceTests"),
         ("parse_input-totality.swift", "parse_input_totalityTests"),
         ("Editor_Tokenizer_tokenizeLine_determinism.swift", "Editor_Tokenizer_tokenizeLine_determinismTests"),
-        ("3d_round-trip.swift", "_3d_round_tripTests")
+        ("3d_round-trip.swift", "_3d_round_tripTests"),
+        ("BigInt_+_commutativity.swift", "BigInt_Plus_commutativityTests"),
+        ("BigInt_*_commutativity.swift", "BigInt_Times_commutativityTests")
     ])
     func theSuiteNameIsAnIdentifier(fileName: String, expected: String) {
         #expect(InteractiveTriage.suiteName(forStubFileName: fileName) == expected)

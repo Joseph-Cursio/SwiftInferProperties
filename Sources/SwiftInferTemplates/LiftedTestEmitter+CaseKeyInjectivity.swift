@@ -31,7 +31,7 @@ extension LiftedTestEmitter {
         let actor = member.isolation.map { "@\($0) " } ?? ""
         let subject = "\(enumType).\(member.bareName)"
         return """
-        @Test \(actor)func \(member.bareName)_isInjectiveOverCases() {
+        @Test \(actor)func \(member.identifierName)_isInjectiveOverCases() {
             let casesByKey = Dictionary(grouping: \(enumType).allCases, by: { String(describing: \(key)) })
             let collisions = casesByKey.filter { $0.value.count > 1 }.sorted { $0.key < $1.key }
             let report = collisions.map { "\\($0.key) ← \\($0.value)" }

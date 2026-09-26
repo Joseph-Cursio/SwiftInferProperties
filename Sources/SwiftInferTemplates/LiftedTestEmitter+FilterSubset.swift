@@ -90,7 +90,7 @@ extension LiftedTestEmitter {
                 + "// does not compile, that is what to check first — the law is sound, the check needs `==`."
             : ""
         return note + makeTestStubExpression(
-            testFunctionName: "\(call.callee.bareName)_returnsOnlyElementsItWasGiven",
+            testFunctionName: "\(call.callee.identifierName)_returnsOnlyElementsItWasGiven",
             seed: seed,
             sampleExpression: subsetSample(generators: call.generators),
             propertyExpression: "{ \(bind) in \(call.callee.isolated(body)) }",

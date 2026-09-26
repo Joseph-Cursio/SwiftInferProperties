@@ -24,7 +24,7 @@ extension LiftedTestEmitter {
         ))
         return withApproximateEqualityHelper(
             makeTestStub(
-                testFunctionName: "\(callee.bareName)_isAnInvolution",
+                testFunctionName: "\(callee.identifierName)_isAnInvolution",
                 seed: seed,
                 generator: generator,
                 propertyExpression: property,
@@ -49,7 +49,7 @@ extension LiftedTestEmitter {
         guard let violation = role.violationExpression else { return nil }
         let body = "let result = \(callee.call("value")); return !(\(violation))"
         return makeTestStub(
-            testFunctionName: "\(callee.bareName)_keepsItsPostcondition",
+            testFunctionName: "\(callee.identifierName)_keepsItsPostcondition",
             seed: seed,
             generator: generator,
             propertyExpression: callee.isolated(body),
@@ -102,7 +102,7 @@ extension LiftedTestEmitter {
             + "failed at input \\(input). \\(error?.message ?? \"\")"
         return """
 
-        @Test func \(call.callee.bareName)_isAnEquivalence() async {
+        @Test func \(call.callee.identifierName)_isAnEquivalence() async {
             let backend = SwiftPropertyBasedBackend()
             let seed = Seed(
                 stateA: 0x\(hex(seed.stateA)),
