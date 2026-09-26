@@ -40,6 +40,20 @@ STRATA = [
     ("round-trip", ("round-trip",), 5),
     ("other", ("caseiterable-key-injectivity", "monotonicity", "filter-subset"), 6),
 ]
+# `docs/plans/mutation-check-new-subjects-scope.md` §2: the second check samples the relational stratum
+# the first could not, and the two body-derived templates built since. Selected with
+# `MUTATION_STRATA=new-subjects`; the default stays the first check's, so its record reproduces.
+STRATA_NEW_SUBJECTS = [
+    ("totality", ("predicate", "input-totality"), 12),
+    ("idempotence", ("idempotence",), 10),
+    ("relational", ("commutativity", "associativity"), 15),
+    ("characterisation", ("guard-domain", "rewrite-postcondition"), 8),
+    ("round-trip", ("round-trip", "codable-round-trip"), 6),
+    ("other", ("monotonicity", "involution", "equivalence-relation", "caseiterable-key-injectivity",
+               "filter-subset", "measure-non-negativity"), 9),
+]
+if os.environ.get("MUTATION_STRATA") == "new-subjects":
+    STRATA = STRATA_NEW_SUBJECTS
 SEED = 20260922
 PROBE_FILE = "SwiftInferMutationProbe.swift"
 PROBE_HELPER = """// Written by scripts/mutation_check.py — records a subject's output per trial.
