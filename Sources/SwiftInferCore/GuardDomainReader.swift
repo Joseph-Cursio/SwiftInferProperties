@@ -112,7 +112,7 @@ public enum GuardDomainReader {
         var free: Set<String> = []
         var previousWasDot = false
         var current = ""
-        for character in condition {
+        for character in withoutPlainStringLiterals(condition) {
             if character.isLetter || character.isNumber || character == "_" {
                 current.append(character)
                 continue
@@ -127,5 +127,19 @@ public enum GuardDomainReader {
         free.subtract([parameter, "true", "false", "nil", "self", "Self"])
         if allowingTypeNames { free = free.filter { $0.first?.isUppercase != true } }
         return free.isEmpty
+    }
+
+    /// `text` with every string literal that interpolates nothing emptied to `""`.
+    ///
+    /// **A word inside quotes is not a name.** `return "relates"` was refused because the scan read
+    /// `relates` as a free identifier, so every guard returning a word literal — and every ternary
+    /// swapping one in (`raw.isEmpty ? "relates" : raw`) — was invisible to the law. A literal that
+    /// interpolates keeps its text: `"\(name)!"` does reach `name`.
+    static func withoutPlainStringLiterals(_ text: String) -> String {
+        text.replacingOccurrences(
+            of: #""(?:[^"\\]|\\[^(])*""#,
+            with: "\"\"",
+            options: .regularExpression
+        )
     }
 }
