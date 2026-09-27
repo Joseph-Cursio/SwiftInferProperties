@@ -682,7 +682,12 @@ def record(sample_path, out_path, record_path):
                                         text=True).stdout.strip()
         entry = {"repo": repo, "commit": shas[root], "stub": stub, "suite": law["suite"],
                  "test": law["test"], "template": law["template"], "stratum": law["stratum"]}
-        if row["mutant"] == "baseline":
+        if row["mutant"] == "none-arithmetic":
+            # Kept, not dropped: a relational law whose subject has nothing to mutate is part of the
+            # arithmetic check's answer (scope §2), and a record without it overstates coverage.
+            _, subject_file, _ = portable(row["file"])
+            entry.update(kind="no-site", subject=row["subject"], file=subject_file)
+        elif row["mutant"] == "baseline":
             entry.update(kind="baseline", law=row.get("law"), law1000=row.get("law1000"),
                          probe=digest(row.get("probe")), probe_deterministic=row.get("deterministic"))
         else:
