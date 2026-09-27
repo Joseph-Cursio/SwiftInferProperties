@@ -1,6 +1,6 @@
 # Does generator reach bound what a law can kill? — one mutant set, two generators
 
-> **Status:** `proposed` · **As of:** 2026-09-27
+> **Status:** `shipped` · **As of:** 2026-09-27
 
 `mutation-check-arithmetic.md` found relational laws killing **11 of 11** exercised arithmetic mutants —
 and **all 6** of `BigUInt.*`'s UNEXERCISED, because the generator draws `BigUInt(word:)`, one machine
