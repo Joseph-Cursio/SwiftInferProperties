@@ -1,0 +1,490 @@
+{
+ "seed": 20260922,
+ "candidates": 72,
+ "by_template": {
+  "predicate": 11,
+  "commutativity": 8,
+  "guard-domain": 3,
+  "idempotence": 17,
+  "measure-non-negativity": 5,
+  "round-trip": 3,
+  "associativity": 8,
+  "codable-round-trip": 7,
+  "identity-element": 1,
+  "monotonicity": 1,
+  "dual-style-consistency": 3,
+  "involution": 1,
+  "binary-idempotence": 4
+ },
+ "shortfalls": {
+  "relational": "16 of 40 (pool 16)",
+  "comparison": "15 of 20 (pool 16)"
+ },
+ "laws": [
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/commutativity/BigUInt_*_commutativity.swift",
+   "template": "commutativity",
+   "suite": "BigUInt_Times_commutativityTests",
+   "test": "times_isCommutative",
+   "subjects": [
+    "*"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Multiplication.swift",
+   "line": 91,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/associativity/max_associativity.swift",
+   "template": "associativity",
+   "suite": "max_associativityTests",
+   "test": "max_isAssociative",
+   "subjects": [
+    "max"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Vector.swift",
+   "line": 127,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/associativity/BigUInt_*_associativity.swift",
+   "template": "associativity",
+   "suite": "BigUInt_Times_associativityTests",
+   "test": "times_isAssociative",
+   "subjects": [
+    "*"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Multiplication.swift",
+   "line": 91,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/associativity/BigUInt_+_associativity.swift",
+   "template": "associativity",
+   "suite": "BigUInt_Plus_associativityTests",
+   "test": "plus_isAssociative",
+   "subjects": [
+    "+"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Addition.swift",
+   "line": 84,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/commutativity/BigInt_*_commutativity.swift",
+   "template": "commutativity",
+   "suite": "BigInt_Times_commutativityTests",
+   "test": "times_isCommutative",
+   "subjects": [
+    "*"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Multiplication.swift",
+   "line": 159,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/commutativity/BigInt_+_commutativity.swift",
+   "template": "commutativity",
+   "suite": "BigInt_Plus_commutativityTests",
+   "test": "plus_isCommutative",
+   "subjects": [
+    "+"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Addition.swift",
+   "line": 98,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/commutativity/BigUInt_+_commutativity.swift",
+   "template": "commutativity",
+   "suite": "BigUInt_Plus_commutativityTests",
+   "test": "plus_isCommutative",
+   "subjects": [
+    "+"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Addition.swift",
+   "line": 84,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/commutativity/Bounds_intersection_commutativity.swift",
+   "template": "commutativity",
+   "suite": "Bounds_intersection_commutativityTests",
+   "test": "intersection_isCommutative",
+   "subjects": [
+    "intersection"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Bounds.swift",
+   "line": 232,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/associativity/Bounds_union_associativity.swift",
+   "template": "associativity",
+   "suite": "Bounds_union_associativityTests",
+   "test": "union_isAssociative",
+   "subjects": [
+    "union"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Bounds.swift",
+   "line": 211,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/commutativity/min_commutativity.swift",
+   "template": "commutativity",
+   "suite": "min_commutativityTests",
+   "test": "min_isCommutative",
+   "subjects": [
+    "min"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Vector.swift",
+   "line": 122,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/commutativity/max_commutativity.swift",
+   "template": "commutativity",
+   "suite": "max_commutativityTests",
+   "test": "max_isCommutative",
+   "subjects": [
+    "max"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Vector.swift",
+   "line": 127,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/commutativity/Color_*_commutativity.swift",
+   "template": "commutativity",
+   "suite": "Color_Times_commutativityTests",
+   "test": "times_isCommutative",
+   "subjects": [
+    "*"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Color.swift",
+   "line": 225,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/associativity/BigInt_*_associativity.swift",
+   "template": "associativity",
+   "suite": "BigInt_Times_associativityTests",
+   "test": "times_isAssociative",
+   "subjects": [
+    "*"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Multiplication.swift",
+   "line": 159,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/associativity/Bounds_intersection_associativity.swift",
+   "template": "associativity",
+   "suite": "Bounds_intersection_associativityTests",
+   "test": "intersection_isAssociative",
+   "subjects": [
+    "intersection"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Bounds.swift",
+   "line": 232,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/associativity/BigInt_+_associativity.swift",
+   "template": "associativity",
+   "suite": "BigInt_Plus_associativityTests",
+   "test": "plus_isAssociative",
+   "subjects": [
+    "+"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Addition.swift",
+   "line": 98,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/associativity/min_associativity.swift",
+   "template": "associativity",
+   "suite": "min_associativityTests",
+   "test": "min_isAssociative",
+   "subjects": [
+    "min"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Vector.swift",
+   "line": 122,
+   "trials": true,
+   "stratum": "relational"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/predicate/Bounds_contains_predicate.swift",
+   "template": "predicate",
+   "suite": "Bounds_contains_predicateTests",
+   "test": "contains_isTotal",
+   "subjects": [
+    "contains"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Bounds.swift",
+   "line": 256,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/guard-domain/removingRepeatedClosedPrefixTail_guard-domain.swift",
+   "template": "guard-domain",
+   "suite": "removingRepeatedClosedPrefixTail_guard_domainTests",
+   "test": "removingRepeatedClosedPrefixTail_holdsOnItsGuardedSubDomain",
+   "subjects": [
+    "removingRepeatedClosedPrefixTail"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Utilities.swift",
+   "line": 1113,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/measure-non-negativity/BigUInt_count_measure-non-negativity.swift",
+   "template": "measure-non-negativity",
+   "suite": "BigUInt_count_measure_non_negativityTests",
+   "test": "count_isNonNegative",
+   "subjects": [
+    "count"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/BigUInt.swift",
+   "line": 186,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/idempotence/Line_nearestPoint_idempotence.swift",
+   "template": "idempotence",
+   "suite": "Line_nearestPoint_idempotenceTests",
+   "test": "nearestPoint_isIdempotent",
+   "subjects": [
+    "nearestPoint"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/PointComparable.swift",
+   "line": 90,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/measure-non-negativity/BigUInt_leadingZeroBitCount_measure-non-negativity.swift",
+   "template": "measure-non-negativity",
+   "suite": "BigUInt_leadingZeroBitCount_measure_non_negativityTests",
+   "test": "leadingZeroBitCount_isNonNegative",
+   "subjects": [
+    "leadingZeroBitCount"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Words and Bits.swift",
+   "line": 60,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/predicate/pointsAreSelfIntersecting_predicate.swift",
+   "template": "predicate",
+   "suite": "pointsAreSelfIntersecting_predicateTests",
+   "test": "pointsAreSelfIntersecting_isTotal",
+   "subjects": [
+    "pointsAreSelfIntersecting"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Utilities.swift",
+   "line": 681,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/idempotence/_Vector__removingAdjacentDuplicates_idempotence.swift",
+   "template": "idempotence",
+   "suite": "_Vector__removingAdjacentDuplicates_idempotenceTests",
+   "test": "removingAdjacentDuplicates_isIdempotent",
+   "subjects": [
+    "removingAdjacentDuplicates"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Utilities.swift",
+   "line": 538,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/predicate/pointsAreCollinear_predicate.swift",
+   "template": "predicate",
+   "suite": "pointsAreCollinear_predicateTests",
+   "test": "pointsAreCollinear_isTotal",
+   "subjects": [
+    "pointsAreCollinear"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Utilities.swift",
+   "line": 639,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/measure-non-negativity/BigInt_bitWidth_measure-non-negativity.swift",
+   "template": "measure-non-negativity",
+   "suite": "BigInt_bitWidth_measure_non_negativityTests",
+   "test": "bitWidth_isNonNegative",
+   "subjects": [
+    "bitWidth"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Words and Bits.swift",
+   "line": 78,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/idempotence/removingRepeatedClosedPrefixTail_idempotence.swift",
+   "template": "idempotence",
+   "suite": "removingRepeatedClosedPrefixTail_idempotenceTests",
+   "test": "removingRepeatedClosedPrefixTail_isIdempotent",
+   "subjects": [
+    "removingRepeatedClosedPrefixTail"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Utilities.swift",
+   "line": 1113,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/monotonicity/quantize_monotonicity.swift",
+   "template": "monotonicity",
+   "suite": "quantize_monotonicityTests",
+   "test": "quantize_isMonotonic",
+   "subjects": [
+    "quantize"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Utilities.swift",
+   "line": 54,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/predicate/pointsAreDegenerate_predicate.swift",
+   "template": "predicate",
+   "suite": "pointsAreDegenerate_predicateTests",
+   "test": "pointsAreDegenerate_isTotal",
+   "subjects": [
+    "pointsAreDegenerate"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Utilities.swift",
+   "line": 616,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "Euclid",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/./Tests/Generated/SwiftInfer/predicate/Bounds_intersects_predicate.swift",
+   "template": "predicate",
+   "suite": "Bounds_intersects_predicateTests",
+   "test": "intersects_isTotal",
+   "subjects": [
+    "intersects"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/Euclid/Sources/Bounds.swift",
+   "line": 245,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/measure-non-negativity/BigUInt_bitWidth_measure-non-negativity.swift",
+   "template": "measure-non-negativity",
+   "suite": "BigUInt_bitWidth_measure_non_negativityTests",
+   "test": "bitWidth_isNonNegative",
+   "subjects": [
+    "bitWidth"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Words and Bits.swift",
+   "line": 48,
+   "trials": true,
+   "stratum": "comparison"
+  },
+  {
+   "repo": "BigInt",
+   "package": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt",
+   "stub": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/./Tests/Generated/SwiftInfer/guard-domain/BigUInt_advanced_guard-domain.swift",
+   "template": "guard-domain",
+   "suite": "BigUInt_advanced_guard_domainTests",
+   "test": "advanced_holdsOnItsGuardedSubDomain",
+   "subjects": [
+    "advanced"
+   ],
+   "source": "/private/tmp/claude-501/-Users-josephcursio-xcode-projects-SwiftInferProperties/4e27990f-529f-4878-8b95-6a6c7914bc8d/scratchpad/census-aor/trees/BigInt/Sources/Strideable.swift",
+   "line": 14,
+   "trials": true,
+   "stratum": "comparison"
+  }
+ ]
+}

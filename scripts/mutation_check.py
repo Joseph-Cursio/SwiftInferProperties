@@ -52,8 +52,20 @@ STRATA_NEW_SUBJECTS = [
     ("other", ("monotonicity", "involution", "equivalence-relation", "caseiterable-key-injectivity",
                "filter-subset", "measure-non-negativity"), 9),
 ]
+# `docs/plans/mutation-check-arithmetic-scope.md`: the relational laws the second check could not
+# test, against an ARITHMETIC mutant class instead of M1–M6, with a comparison stratum of the other
+# laws on the same subjects. Two subjects only, so the per-repo cap is a half, not a third.
+STRATA_ARITHMETIC = [
+    ("relational", ("commutativity", "associativity"), 40),
+    ("comparison", ("predicate", "input-totality", "idempotence", "guard-domain", "rewrite-postcondition",
+                    "round-trip", "codable-round-trip", "monotonicity", "involution", "equivalence-relation",
+                    "measure-non-negativity", "binary-idempotence"), 20),
+]
+ARITHMETIC = os.environ.get("MUTATION_STRATA") == "arithmetic"
 if os.environ.get("MUTATION_STRATA") == "new-subjects":
     STRATA = STRATA_NEW_SUBJECTS
+if ARITHMETIC:
+    STRATA = STRATA_ARITHMETIC
 SEED = 20260922
 PROBE_FILE = "SwiftInferMutationProbe.swift"
 PROBE_HELPER = """// Written by scripts/mutation_check.py — records a subject's output per trial.
@@ -131,7 +143,12 @@ def draw(found):
     for stratum, templates, wanted in STRATA:
         pool = sorted((law for law in found if law["template"] in templates), key=lambda l: l["stub"])
         rng.shuffle(pool)
-        cap = -(-wanted // 3)
+        if ARITHMETIC and stratum == "comparison":
+            # Scope §2: the comparison asks what a NON-relational law does with an arithmetic
+            # mutant, so only laws whose subject body HAS an arithmetic site are eligible. The
+            # relational stratum takes every law, and reports the ones with no site.
+            pool = [law for law in pool if arithmetic_sites(law)]
+        cap = -(-wanted // 2) if ARITHMETIC else -(-wanted // 3)
         per_repo = collections.Counter()
         chosen = []
         for law in pool:
@@ -214,7 +231,11 @@ def subject_body(source, line, name):
     """(start, end, returns_bool) of the body of `name` declared at or just after `line`."""
     masked, _ = mask(source)
     offset = sum(len(row) + 1 for row in source.split("\n")[:max(line - 1, 0)])
-    pattern = re.compile(r"\b(?:func\s+" + re.escape(name) + r"\b|var\s+" + re.escape(name) + r"\s*:)")
+    if is_operator(name):
+        # `\b` cannot follow `+`, so an operator is found by the `(` or `<` its declaration opens.
+        pattern = re.compile(r"\bfunc\s+" + re.escape(name) + r"\s*(?=[(<])")
+    else:
+        pattern = re.compile(r"\b(?:func\s+" + re.escape(name) + r"\b|var\s+" + re.escape(name) + r"\s*:)")
     match = pattern.search(masked, offset)
     if not match or masked.count("\n", offset, match.start()) > 12:
         return None
@@ -225,8 +246,49 @@ def subject_body(source, line, name):
     return brace + 1, end, returns_bool
 
 
+def is_operator(name):
+    return bool(name) and all(character in "+-*/%<>=!&|^~?" for character in name)
+
+
+# Scope §2's swap table. Longest first, so `&+` is never read as `+` and `+=` never as `+`.
+ARITHMETIC_SWAPS = [("&+", "&-"), ("&-", "&+"), ("&*", "&+"), ("+=", "-="), ("-=", "+="), ("*=", "/="),
+                    ("/=", "*="), ("+", "-"), ("-", "+"), ("*", "/"), ("/", "*")]
+ARITHMETIC_SITE = re.compile(r"(?<=\s)(&\+|&-|&\*|\+=|-=|\*=|/=|\+|-|\*|/)(?=\s)")
+
+
+def arithmetic_mutants(source, span):
+    """Up to three `(operator, mutated_source)`: the first three BINARY arithmetic operators in the
+    body, each swapped per the table. Spaces on both sides is what makes one binary — a unary minus,
+    a `->`, a `//` comment (masked anyway) and a generic `<T>` never match."""
+    start, end, _ = span
+    masked, _ = mask(source)
+    body = masked[start:end]
+    found = []
+    for index, match in enumerate(ARITHMETIC_SITE.finditer(body)):
+        if index == 3:
+            break
+        token = match.group(1)
+        swap = dict(ARITHMETIC_SWAPS)[token]
+        at = start + match.start(1)
+        found.append((f"M7 arithmetic swap #{index + 1} ({token} -> {swap})",
+                      source[:at] + swap + source[at + len(token):]))
+    return found
+
+
+def arithmetic_sites(law):
+    """Whether the law's subject body has any site — used to fill the comparison stratum."""
+    try:
+        source = open(law["source"], encoding="utf-8").read()
+    except OSError:
+        return False
+    span = subject_body(source, law["line"], law["subjects"][0]) if law["subjects"] else None
+    return bool(span and arithmetic_mutants(source, span))
+
+
 def mutants(source, span):
     """Up to three `(operator, mutated_source)` for the body in `span`, in the scope's fixed order."""
+    if ARITHMETIC:
+        return arithmetic_mutants(source, span)
     start, end, returns_bool = span
     masked, literals = mask(source)
     body = masked[start:end]
@@ -331,6 +393,22 @@ def wrap_subject_calls(text, subjects, tag):
     masked, _ = mask(text)
     edits = []
     for name in subjects:
+        if is_operator(name):
+            # The law writes an operator infix, `(a + b)`, so the use to record is the parenthesised
+            # group around each ` + `, not a call spelled with the name.
+            for match in re.finditer(r"\s" + re.escape(name) + r"\s", masked):
+                depth, begin = 0, None
+                for back in range(match.start(), -1, -1):
+                    if masked[back] == ")":
+                        depth += 1
+                    elif masked[back] == "(":
+                        if depth == 0:
+                            begin = back
+                            break
+                        depth -= 1
+                if begin is not None:
+                    edits.append((begin, matching(masked, begin, "(", ")") + 1))
+            continue
         for match in re.finditer(r"(?<![\w$])" + re.escape(name) + r"\b", masked):
             after = match.end()
             rest = masked[after:].lstrip(" ")
@@ -497,7 +575,11 @@ def run(sample_path, out_path):
                     log.write(json.dumps({"suite": law["suite"], "mutant": "none", "file": path,
                                           "error": f"no body found for {name}"}) + "\n")
                     continue
-                for operator, mutated in mutants(original, span):
+                found_mutants = mutants(original, span)
+                if ARITHMETIC and not found_mutants:
+                    log.write(json.dumps({"suite": law["suite"], "mutant": "none-arithmetic", "file": path,
+                                          "subject": name}) + "\n")
+                for operator, mutated in found_mutants:
                     key = (law["suite"], operator, path)
                     if key in done:
                         continue
@@ -540,12 +622,15 @@ def report(sample_path, out_path):
     baselines = {row["suite"]: row for row in rows if row.get("mutant") == "baseline"}
     table = collections.defaultdict(collections.Counter)
     killed_at_1000 = collections.Counter()
+    by_trap = collections.Counter()
     for row in rows:
-        if row.get("mutant") in ("baseline", "none") or "error" in row:
+        if row.get("mutant") in ("baseline", "none", "none-arithmetic") or "error" in row:
             continue
         law = laws[row["suite"]]
         outcome = score(row, baselines.get(row["suite"], {}))
         table[law["stratum"]][outcome] += 1
+        if outcome == "KILLED" and row.get("law") in ("trapped", "hung"):
+            by_trap[law["stratum"]] += 1
         if outcome != "KILLED" and row.get("law1000") in ("failed", "trapped", "hung"):
             killed_at_1000[law["stratum"]] += 1
     print(f"{'stratum':16}{'KILLED':>8}{'DIVERGED':>10}{'UNEXERC':>9}{'other':>7}{'discard':>9}{'kill% exercised':>17}{'+@1000':>8}")
@@ -556,6 +641,10 @@ def report(sample_path, out_path):
         rate = f"{100 * counts['KILLED'] / exercised:.0f}% of {exercised}" if exercised else "—"
         print(f"{stratum:16}{counts['KILLED']:>8}{counts['DIVERGED']:>10}{counts['UNEXERCISED']:>9}"
               f"{other:>7}{counts['DISCARDED']:>9}{rate:>17}{killed_at_1000[stratum]:>8}")
+    if ARITHMETIC:
+        print(f"\nkills by trap or hang, not by the law's check: {dict(by_trap)}")
+        no_site = [row["suite"] for row in rows if row.get("mutant") == "none-arithmetic"]
+        print(f"laws with no arithmetic site in the subject body: {len(no_site)} {no_site[:8]}")
     not_passing = [s for s, b in baselines.items() if b.get("law") != "passed"]
     print(f"\nbaselines not passing (excluded): {len(not_passing)} {not_passing[:8]}")
 
@@ -593,7 +682,12 @@ def record(sample_path, out_path, record_path):
                                         text=True).stdout.strip()
         entry = {"repo": repo, "commit": shas[root], "stub": stub, "suite": law["suite"],
                  "test": law["test"], "template": law["template"], "stratum": law["stratum"]}
-        if row["mutant"] == "baseline":
+        if row["mutant"] == "none-arithmetic":
+            # Kept, not dropped: a relational law whose subject has nothing to mutate is part of the
+            # arithmetic check's answer (scope §2), and a record without it overstates coverage.
+            _, subject_file, _ = portable(row["file"])
+            entry.update(kind="no-site", subject=row["subject"], file=subject_file)
+        elif row["mutant"] == "baseline":
             entry.update(kind="baseline", law=row.get("law"), law1000=row.get("law1000"),
                          probe=digest(row.get("probe")), probe_deterministic=row.get("deterministic"))
         else:
