@@ -1,6 +1,6 @@
 # Do relational laws notice an arithmetic bug? — the mutation check's untested stratum
 
-> **Status:** `proposed` · **As of:** 2026-09-27
+> **Status:** `shipped` · **As of:** 2026-09-27
 
 Both mutation checks predicted relational laws (`commutativity`, `associativity`) would kill **≥ 50%** of
 the mutants that change output, and neither could test it. The first had one passing relational law
