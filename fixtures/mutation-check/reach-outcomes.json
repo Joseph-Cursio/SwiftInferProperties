@@ -1,0 +1,4565 @@
+{
+ "arms": {
+  "single-word": "swift-infer 6bbfebd5, kit 4.9.2 \u2014 BigUInt(word:)",
+  "word-arrays": "swift-infer 6a65c1c4 + SwiftPropertyLaws prefer-collection-initializer 15e59fe \u2014 BigUInt(words:)"
+ },
+ "note": "A planted mutant measures sensitivity, never a bug rate; nothing here is a defect.",
+ "plan": "fixtures/mutation-check/reach-plan.json",
+ "results": {
+  "single-word": {
+   "baseline": {
+    "BigInt_Plus_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigInt_Plus_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigInt_Times_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigInt_Times_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Plus_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Plus_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Times_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Times_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    }
+   },
+   "mutants": {
+    "0": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "1": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "10": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "11": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "12": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "13": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "14": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "15": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "16": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "17": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "18": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "19": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "2": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "failed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "20": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "21": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "22": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "23": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "24": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "25": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "26": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "27": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "28": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "29": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "3": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "failed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "30": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "31": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "32": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "33": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "34": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "35": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "36": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "37": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "38": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "39": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "4": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "40": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "41": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "42": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "43": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "44": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "45": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "46": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "47": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "48": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "49": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "5": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "50": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "51": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "52": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "53": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "54": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "55": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "56": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "57": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "58": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "59": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "6": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "DIVERGED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "60": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "61": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "62": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "63": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "64": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "65": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "66": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "67": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "68": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "69": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "7": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "DIVERGED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "70": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "71": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "72": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "73": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "74": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "75": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "76": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "77": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "78": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "79": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "8": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "80": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "81": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "82": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "83": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "84": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "trapped",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "85": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "86": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "87": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "88": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "89": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "9": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "DIVERGED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "90": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "91": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "92": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "93": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "94": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "95": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "96": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    }
+   }
+  },
+  "word-arrays": {
+   "baseline": {
+    "BigInt_Plus_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigInt_Plus_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigInt_Times_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigInt_Times_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Plus_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Plus_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Times_associativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    },
+    "BigUInt_Times_commutativityTests": {
+     "law": "passed",
+     "law1000": "passed",
+     "probe_deterministic": true
+    }
+   },
+   "mutants": {
+    "0": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "1": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "10": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "11": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "12": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "13": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "14": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "15": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "16": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "17": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "18": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "19": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "2": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "failed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "20": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "21": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "22": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "23": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "24": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "25": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "26": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "27": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "28": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "29": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "trapped",
+      "BigInt_Times_commutativityTests": "trapped",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "trapped",
+      "BigUInt_Times_commutativityTests": "trapped"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "3": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "hung",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "hung",
+      "BigUInt_Plus_commutativityTests": "failed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "30": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "trapped",
+      "BigInt_Times_commutativityTests": "trapped",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "trapped",
+      "BigUInt_Times_commutativityTests": "trapped"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "31": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "32": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "33": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "34": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "35": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "36": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "37": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "38": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "39": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "4": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "40": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "41": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "hung",
+      "BigInt_Times_commutativityTests": "hung",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "hung",
+      "BigUInt_Times_commutativityTests": "hung"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "42": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "43": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "44": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "45": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "trapped",
+      "BigInt_Times_commutativityTests": "trapped",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "trapped",
+      "BigUInt_Times_commutativityTests": "trapped"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "46": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "47": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "48": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "trapped",
+      "BigInt_Times_commutativityTests": "trapped",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "trapped",
+      "BigUInt_Times_commutativityTests": "trapped"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "49": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "5": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "50": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "51": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "52": {
+     "best": "DIVERGED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "DIVERGED",
+      "BigInt_Times_commutativityTests": "DIVERGED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "DIVERGED",
+      "BigUInt_Times_commutativityTests": "DIVERGED"
+     }
+    },
+    "53": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "54": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "55": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "56": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "57": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "58": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "59": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "6": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "failed",
+      "BigUInt_Plus_commutativityTests": "failed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "60": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "61": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "62": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "63": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "failed",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "failed",
+      "BigUInt_Times_commutativityTests": "failed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "KILLED",
+      "BigUInt_Times_commutativityTests": "KILLED"
+     }
+    },
+    "64": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "65": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "66": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "67": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "68": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "69": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "7": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "DIVERGED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "70": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "71": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "72": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "73": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "74": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "75": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "76": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "77": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "78": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "79": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "8": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "trapped",
+      "BigUInt_Plus_commutativityTests": "trapped",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "KILLED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "80": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "81": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "82": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "83": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "84": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "trapped",
+      "BigInt_Times_commutativityTests": "failed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "KILLED",
+      "BigInt_Times_commutativityTests": "KILLED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "85": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "86": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "87": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "88": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "hung",
+      "BigInt_Plus_commutativityTests": "hung",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "89": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "9": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "failed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "failed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "DIVERGED",
+      "BigUInt_Plus_commutativityTests": "KILLED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "90": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "91": {
+     "best": "UNEXERCISED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "passed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "UNEXERCISED",
+      "BigInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "92": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "93": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "94": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "failed",
+      "BigInt_Plus_commutativityTests": "passed",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "DIVERGED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "95": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    },
+    "96": {
+     "best": "KILLED",
+     "law_results": {
+      "BigInt_Plus_associativityTests": "trapped",
+      "BigInt_Plus_commutativityTests": "trapped",
+      "BigInt_Times_associativityTests": "passed",
+      "BigInt_Times_commutativityTests": "passed",
+      "BigUInt_Plus_associativityTests": "passed",
+      "BigUInt_Plus_commutativityTests": "passed",
+      "BigUInt_Times_associativityTests": "passed",
+      "BigUInt_Times_commutativityTests": "passed"
+     },
+     "per_law": {
+      "BigInt_Plus_associativityTests": "KILLED",
+      "BigInt_Plus_commutativityTests": "KILLED",
+      "BigInt_Times_associativityTests": "UNEXERCISED",
+      "BigInt_Times_commutativityTests": "UNEXERCISED",
+      "BigUInt_Plus_associativityTests": "UNEXERCISED",
+      "BigUInt_Plus_commutativityTests": "UNEXERCISED",
+      "BigUInt_Times_associativityTests": "UNEXERCISED",
+      "BigUInt_Times_commutativityTests": "UNEXERCISED"
+     }
+    }
+   }
+  }
+ },
+ "subject": "BigInt @ 63feef7"
+}
