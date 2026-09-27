@@ -8,9 +8,10 @@ the generator**: plan and predictions in `docs/plans/mutation-reach-scope.md`, c
 mutants (`fixtures/mutation-check/reach-plan.json`) before either arm ran; every mutant's outcome per law
 in `fixtures/mutation-check/reach-outcomes.json`.
 
-The generator change is a local SwiftPropertyLaws branch (`prefer-collection-initializer`, `15e59fe`,
-**not released**): where a type offers `init(x: T)` and a later `init(xs: [T])`, derive through the
-collection form, so `BigUInt` draws zero to several words.
+The generator change was measured from a local SwiftPropertyLaws branch (`prefer-collection-initializer`,
+`15e59fe`) and **released as 4.9.3** (SwiftPropertyLaws #62), which this repository now pins: where a type
+offers `init(x: T)` and a later `init(xs: [T])`, derive through the collection form, so `BigUInt` draws
+zero to several words.
 
 ## Result — BigInt's 8 relational laws, 97 mutants
 
@@ -70,5 +71,5 @@ NOT APPLIED because no single word is zero, is now **checked and passes**: an em
 ## What this does not answer
 
 One subject, and a generator change chosen for it. The corpus A/B says the rule moves nothing else in 19
-repositories, which is also why it is safe to release — and why it will not move the funnel. Releasing it
-is a separate step.
+repositories, which is why it was safe to release — and why it will not move the funnel. A full
+`make test` on the 4.9.3 pin left every measured batch unchanged, so no corpus baseline moved either.

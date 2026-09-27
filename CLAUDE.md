@@ -55,20 +55,16 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 Async is admitted only via the `@ClockDeterministic` claim.
 
 Suites green at **6,448 tests — 6,224 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-09-26** at `98fff246` on **swift-property-based
-2.0 / SwiftPropertyLaws 4.9.2 / SEI `1b62e764`** — every stage counted from that one run, and the
-run was UNPIPED (`make test > log 2>&1`, exit **0**, 69m27s):
+(**a genuine full `make test`, verified green 2026-09-27** at `3c2e0efd` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 72m28s):
 fast **6,224** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 224, every batch to the digit**, across the kit 4.9.2 pin, scoped type
-aliases in the accept path's generator resolver, operator subjects written as valid Swift, and the
-guard-domain underscore fix — all of which change what a stub draws, names or proposes — so no corpus
-baseline moved.
-**The fast half moved 6,210 → 6,224, +14, RECONCILED BY TEST ID**: `swift test list` against the
-previous reading's list — **14 added, 0 removed**, all plain unit suites (`OperatorStubSpellingTests` 5,
-`TypeAliasGeneratorTests` 4, `GuardDomainUnderscoreTests` 3, `TypeAliasMapTests` 2).
-**Timings**: `batch3` **392s**, back inside the 380–483s range after three readings near 350s;
-`batch2` 718s inside 679–801s; `batch5` 1,639s; `batch1` 207s, `batch4` 190s, `batch6` 155s,
-`batch7` 200s, `batch8` 580s.
+**Both halves stood still to the digit** across the kit 4.9.3 pin, whose one change prefers a
+collection initializer over its single-element form when deriving a generator — a derivation rule, so
+every batch that surveys a corpus could have moved, and none did. The fast half is the previous
+reading's 6,224 by test ID; the new `scripts/mutation_reach.py` is study tooling, not a test.
+**Timings**: `batch3` 401s, inside 380–483s; `batch2` 748s inside 679–801s; `batch5` 1,647s;
+`batch1` 184s, `batch4` 198s, `batch6` 180s, `batch7` 232s, `batch8` 594s.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -255,7 +251,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does a passing law notice a planted bug on subjects the catalogue NEVER met?** | `docs/measurements/mutation-check-new-subjects.md` (scope: `docs/plans/mutation-check-new-subjects-scope.md`) | **Measured to frozen predictions — and too thin to settle the relational question.** 38 of 60 laws sampled, 10 baselines trapped, 35 mutants: **3 of 20 changed outputs caught (15%)**, against 26% on the funnel. Totality 1 of 10 ✅, unexercised 36% ✅, 1,000 trials 0 extra ✅. ⚠ **Relational got 1 mutant from 5 laws**: the six operators find nothing to mutate in arithmetic bodies — answering it needs an arithmetic-operator mutant, a new pre-registered run. ⚠ **9 BigInt baselines trapped on a KIT generator defect**: `BigUInt` derived through `init(unicodeScalarLiteral:)` over arbitrary scalars, a force-unwrap documented to need a decimal digit, where `ExpressibleByIntegerLiteral` was available. `swift-algorithms` yielded nothing (generic API) |
 | **What did scoped aliases and operator stubs buy the funnel?** | `docs/measurements/corpus-funnel-census-2026-09-27.md` | **Same-code A/B over 19 repos: compiles 938 → 940, passes 771 → 773 — ONE repository, two stubs** (SwiftUMLStudio guard-domain laws over a nested-alias `Kind`). 18 repos identical, upstream stages unmoved, no failure changed. **Operator subjects: ZERO in the corpus** — BigInt (compiles 10 → 31) is the only exhibit. Corpus standing vs census 14: compiles 840 → 940, passes 681 → 773, a mix of subject drift and every tool change since, not attributed |
 | **Do relational laws notice an ARITHMETIC bug?** | `docs/measurements/mutation-check-arithmetic.md` (scope: `docs/plans/mutation-check-arithmetic-scope.md`) | **Yes, every one they reach: 11 of 11 exercised arithmetic mutants killed** (7 by the law's check, 4 by trap) on Euclid + BigInt — the ≥50% prediction both earlier checks could not test. ⚠ **Reach is the other half**: 9 of 16 relational laws have no arithmetic to mutate (`min`/`max`/`union`/`intersection`, `BigUInt.+` delegating), and `BigUInt.*`'s 6 mutants are all UNEXERCISED — single-word draws never reach its multi-word paths. Comparison laws 7 of 12, **5 by trap** — the ≤35% prediction refuted as written, 2 of 12 by the check |
-| **Does generator REACH bound what a law can kill?** | `docs/measurements/mutation-reach.md` (scope: `docs/plans/mutation-reach-scope.md`) | **Yes — one frozen set of 97 BigInt mutants, two generators: killed 35 → 58, unexercised 56 → 36, 23 moves all one way.** `multiplyAndAdd` 0/21 → 15/21 exercised-and-killed. Kit rule (local, unreleased): prefer `init(xs: [T])` over `init(x: T)`. **Corpus A/B: 0 of 943 stubs changed.** ⚠ Reach is necessary, not sufficient: the 20 Karatsuba mutants need >1,024 words, and a mutant making `*` return zero is law-blind to every relational law. All six predictions held |
+| **Does generator REACH bound what a law can kill?** | `docs/measurements/mutation-reach.md` (scope: `docs/plans/mutation-reach-scope.md`) | **Yes — one frozen set of 97 BigInt mutants, two generators: killed 35 → 58, unexercised 56 → 36, 23 moves all one way.** `multiplyAndAdd` 0/21 → 15/21 exercised-and-killed. Kit rule, released as 4.9.3: prefer `init(xs: [T])` over `init(x: T)`. **Corpus A/B: 0 of 943 stubs changed.** ⚠ Reach is necessary, not sufficient: the 20 Karatsuba mutants need >1,024 words, and a mutant making `*` return zero is law-blind to every relational law. All six predictions held |
 | **Would a PRECISE delegation gate recover generators?** | `docs/measurements/delegation-gate-census.md` | **Measured NO: DECLINED 2026-09-23.** The kit declines a delegating init when ANY init on the type asserts. Resolving `self.init(…)` by labels, following chains, over 20 corpora: the gate fires on 355 types, wrongly on 16, and **10 gain a generator, all in `swift-collections`, really 3 roots plus 7 iterators** (`SortedSet` is trait-gated, `BigSubstring` is in `_RopeModule`). Floor, not ceiling: 773 inits are same-label overloads only a type-aware resolver could split. ⚠ **The Euclid exhibit that motivated it was wrong**: `Path`'s target asserts and `LineSegment`'s clean path is failable, so on Euclid it recovers 0 |
 | **Did the emitted kit suites catch a real projection bug?** | `docs/measurements/kit-suite-backtest-arms-2-3.md` | **MISS** — but the laws are not structurally blind; it is a generator-domain failure, and this repo owns it. The baseline is not green |
 | **Are the property tests a codebase ALREADY has any good?** | `docs/plans/existing-property-test-audit-scope.md` | Scoped, **not built**. The cheap lint version measures 0 hits and would ship a green bill of health |
