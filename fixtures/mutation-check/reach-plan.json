@@ -1,0 +1,1211 @@
+{
+ "repo": "BigInt",
+ "laws": [
+  {
+   "suite": "BigUInt_Times_commutativityTests",
+   "test": "times_isCommutative",
+   "template": "commutativity",
+   "subjects": [
+    "*"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/commutativity/BigUInt_*_commutativity.swift",
+   "trials": true
+  },
+  {
+   "suite": "BigInt_Times_commutativityTests",
+   "test": "times_isCommutative",
+   "template": "commutativity",
+   "subjects": [
+    "*"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/commutativity/BigInt_*_commutativity.swift",
+   "trials": true
+  },
+  {
+   "suite": "BigInt_Plus_commutativityTests",
+   "test": "plus_isCommutative",
+   "template": "commutativity",
+   "subjects": [
+    "+"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/commutativity/BigInt_+_commutativity.swift",
+   "trials": true
+  },
+  {
+   "suite": "BigUInt_Plus_commutativityTests",
+   "test": "plus_isCommutative",
+   "template": "commutativity",
+   "subjects": [
+    "+"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/commutativity/BigUInt_+_commutativity.swift",
+   "trials": true
+  },
+  {
+   "suite": "BigInt_Plus_associativityTests",
+   "test": "plus_isAssociative",
+   "template": "associativity",
+   "subjects": [
+    "+"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/associativity/BigInt_+_associativity.swift",
+   "trials": true
+  },
+  {
+   "suite": "BigUInt_Plus_associativityTests",
+   "test": "plus_isAssociative",
+   "template": "associativity",
+   "subjects": [
+    "+"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/associativity/BigUInt_+_associativity.swift",
+   "trials": true
+  },
+  {
+   "suite": "BigUInt_Times_associativityTests",
+   "test": "times_isAssociative",
+   "template": "associativity",
+   "subjects": [
+    "*"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/associativity/BigUInt_*_associativity.swift",
+   "trials": true
+  },
+  {
+   "suite": "BigInt_Times_associativityTests",
+   "test": "times_isAssociative",
+   "template": "associativity",
+   "subjects": [
+    "*"
+   ],
+   "stub": "Tests/Generated/SwiftInfer/associativity/BigInt_*_associativity.swift",
+   "trials": true
+  }
+ ],
+ "functions": [
+  {
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42
+  },
+  {
+   "file": "Sources/Addition.swift",
+   "function": "adding",
+   "line": 67
+  },
+  {
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 84
+  },
+  {
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98
+  },
+  {
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16
+  },
+  {
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplied",
+   "line": 33
+  },
+  {
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45
+  },
+  {
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91
+  },
+  {
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 159
+  },
+  {
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68
+  },
+  {
+   "file": "Sources/Subtraction.swift",
+   "function": "subtract",
+   "line": 115
+  }
+ ],
+ "mutants": [
+  {
+   "id": 0,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M1 relational boundary",
+   "at": 1308,
+   "original": ">=",
+   "replacement": ">",
+   "source_line": 43
+  },
+  {
+   "id": 1,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M4 integer off-by-one",
+   "at": 1311,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 43
+  },
+  {
+   "id": 2,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M4 integer off-by-one",
+   "at": 1357,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 45
+  },
+  {
+   "id": 3,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M2 negate condition",
+   "at": 1398,
+   "original": "bi < bc || carry",
+   "replacement": "!(bi < bc || carry)",
+   "source_line": 47
+  },
+  {
+   "id": 4,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M1 relational boundary",
+   "at": 1401,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 47
+  },
+  {
+   "id": 5,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 1444,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 48
+  },
+  {
+   "id": 6,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M2 negate condition",
+   "at": 1529,
+   "original": "carry",
+   "replacement": "!(carry)",
+   "source_line": 50
+  },
+  {
+   "id": 7,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M4 integer off-by-one",
+   "at": 1594,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 51
+  },
+  {
+   "id": 8,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M7 arithmetic swap (+= -> -=)",
+   "at": 1776,
+   "original": "+=",
+   "replacement": "-=",
+   "source_line": 59
+  },
+  {
+   "id": 9,
+   "file": "Sources/Addition.swift",
+   "function": "add",
+   "line": 42,
+   "operator": "M4 integer off-by-one",
+   "at": 1779,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 59
+  },
+  {
+   "id": 10,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 3089,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 101
+  },
+  {
+   "id": 11,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 3198,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 103
+  },
+  {
+   "id": 12,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M2 negate condition",
+   "at": 3258,
+   "original": "a.magnitude >= b.magnitude",
+   "replacement": "!(a.magnitude >= b.magnitude)",
+   "source_line": 105
+  },
+  {
+   "id": 13,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M1 relational boundary",
+   "at": 3270,
+   "original": ">=",
+   "replacement": ">",
+   "source_line": 105
+  },
+  {
+   "id": 14,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 3353,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 106
+  },
+  {
+   "id": 15,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 3468,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 109
+  },
+  {
+   "id": 16,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M2 negate condition",
+   "at": 3542,
+   "original": "b.magnitude >= a.magnitude",
+   "replacement": "!(b.magnitude >= a.magnitude)",
+   "source_line": 112
+  },
+  {
+   "id": 17,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M1 relational boundary",
+   "at": 3554,
+   "original": ">=",
+   "replacement": ">",
+   "source_line": 112
+  },
+  {
+   "id": 18,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 3637,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 113
+  },
+  {
+   "id": 19,
+   "file": "Sources/Addition.swift",
+   "function": "+",
+   "line": 98,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 3752,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 116
+  },
+  {
+   "id": 20,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M2 negate condition",
+   "at": 400,
+   "original": "y != 0",
+   "replacement": "!(y != 0)",
+   "source_line": 17
+  },
+  {
+   "id": 21,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M4 integer off-by-one",
+   "at": 405,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 17
+  },
+  {
+   "id": 22,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M4 integer off-by-one",
+   "at": 421,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 17
+  },
+  {
+   "id": 23,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M2 negate condition",
+   "at": 447,
+   "original": "y != 1",
+   "replacement": "!(y != 1)",
+   "source_line": 18
+  },
+  {
+   "id": 24,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M4 integer off-by-one",
+   "at": 452,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 18
+  },
+  {
+   "id": 25,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M4 integer off-by-one",
+   "at": 496,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 19
+  },
+  {
+   "id": 26,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M4 integer off-by-one",
+   "at": 542,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 21
+  },
+  {
+   "id": 27,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 725,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 25
+  },
+  {
+   "id": 28,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiply",
+   "line": 16,
+   "operator": "M4 integer off-by-one",
+   "at": 727,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 25
+  },
+  {
+   "id": 29,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M1 relational boundary",
+   "at": 1579,
+   "original": ">=",
+   "replacement": ">",
+   "source_line": 46
+  },
+  {
+   "id": 30,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 1582,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 46
+  },
+  {
+   "id": 31,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M2 negate condition",
+   "at": 1599,
+   "original": "y != 0 && x.count > 0",
+   "replacement": "!(y != 0 && x.count > 0)",
+   "source_line": 47
+  },
+  {
+   "id": 32,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 1604,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 47
+  },
+  {
+   "id": 33,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M1 relational boundary",
+   "at": 1617,
+   "original": ">",
+   "replacement": ">=",
+   "source_line": 47
+  },
+  {
+   "id": 34,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 1619,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 47
+  },
+  {
+   "id": 35,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M2 negate condition",
+   "at": 1651,
+   "original": "y != 1",
+   "replacement": "!(y != 1)",
+   "source_line": 48
+  },
+  {
+   "id": 36,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 1656,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 48
+  },
+  {
+   "id": 37,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 1734,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 49
+  },
+  {
+   "id": 38,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 1807,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 52
+  },
+  {
+   "id": 39,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M2 negate condition",
+   "at": 1823,
+   "original": "xi < xc || addCarry || mulCarry > 0",
+   "replacement": "!(xi < xc || addCarry || mulCarry > 0)",
+   "source_line": 53
+  },
+  {
+   "id": 40,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M1 relational boundary",
+   "at": 1826,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 53
+  },
+  {
+   "id": 41,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M1 relational boundary",
+   "at": 1855,
+   "original": ">",
+   "replacement": ">=",
+   "source_line": 53
+  },
+  {
+   "id": 42,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 1857,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 53
+  },
+  {
+   "id": 43,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 2012,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 56
+  },
+  {
+   "id": 44,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 2014,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 56
+  },
+  {
+   "id": 45,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 2049,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 58
+  },
+  {
+   "id": 46,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M2 negate condition",
+   "at": 2137,
+   "original": "addCarry",
+   "replacement": "!(addCarry)",
+   "source_line": 60
+  },
+  {
+   "id": 47,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 2211,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 61
+  },
+  {
+   "id": 48,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M7 arithmetic swap (+= -> -=)",
+   "at": 2409,
+   "original": "+=",
+   "replacement": "-=",
+   "source_line": 69
+  },
+  {
+   "id": 49,
+   "file": "Sources/Multiplication.swift",
+   "function": "multiplyAndAdd",
+   "line": 45,
+   "operator": "M4 integer off-by-one",
+   "at": 2412,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 69
+  },
+  {
+   "id": 50,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M2 negate condition",
+   "at": 3440,
+   "original": "xc == 0",
+   "replacement": "!(xc == 0)",
+   "source_line": 94
+  },
+  {
+   "id": 51,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 3446,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 94
+  },
+  {
+   "id": 52,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M2 negate condition",
+   "at": 3480,
+   "original": "yc == 0",
+   "replacement": "!(yc == 0)",
+   "source_line": 95
+  },
+  {
+   "id": 53,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 3486,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 95
+  },
+  {
+   "id": 54,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M2 negate condition",
+   "at": 3520,
+   "original": "yc == 1",
+   "replacement": "!(yc == 1)",
+   "source_line": 96
+  },
+  {
+   "id": 55,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 3526,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 96
+  },
+  {
+   "id": 56,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 3560,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 96
+  },
+  {
+   "id": 57,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M2 negate condition",
+   "at": 3577,
+   "original": "xc == 1",
+   "replacement": "!(xc == 1)",
+   "source_line": 97
+  },
+  {
+   "id": 58,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 3583,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 97
+  },
+  {
+   "id": 59,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 3617,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 97
+  },
+  {
+   "id": 60,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M1 relational boundary",
+   "at": 3653,
+   "original": "<=",
+   "replacement": "<",
+   "source_line": 99
+  },
+  {
+   "id": 61,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M1 relational boundary",
+   "at": 3755,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 101
+  },
+  {
+   "id": 62,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M1 relational boundary",
+   "at": 3797,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 102
+  },
+  {
+   "id": 63,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 3868,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 104
+  },
+  {
+   "id": 64,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M2 negate condition",
+   "at": 4030,
+   "original": "yc < xc",
+   "replacement": "!(yc < xc)",
+   "source_line": 110
+  },
+  {
+   "id": 65,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M1 relational boundary",
+   "at": 4033,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 110
+  },
+  {
+   "id": 66,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4098,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 112
+  },
+  {
+   "id": 67,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4123,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 113
+  },
+  {
+   "id": 68,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M2 negate condition",
+   "at": 4201,
+   "original": "xc < yc",
+   "replacement": "!(xc < yc)",
+   "source_line": 116
+  },
+  {
+   "id": 69,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M1 relational boundary",
+   "at": 4204,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 116
+  },
+  {
+   "id": 70,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4269,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 118
+  },
+  {
+   "id": 71,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4294,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 119
+  },
+  {
+   "id": 72,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4592,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 130
+  },
+  {
+   "id": 73,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4616,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 131
+  },
+  {
+   "id": 74,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M1 relational boundary",
+   "at": 4639,
+   "original": ">=",
+   "replacement": ">",
+   "source_line": 132
+  },
+  {
+   "id": 75,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M1 relational boundary",
+   "at": 4663,
+   "original": ">=",
+   "replacement": ">",
+   "source_line": 133
+  },
+  {
+   "id": 76,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 4693,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 134
+  },
+  {
+   "id": 77,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 4701,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 134
+  },
+  {
+   "id": 78,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 4731,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 135
+  },
+  {
+   "id": 79,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (- -> +)",
+   "at": 4739,
+   "original": "-",
+   "replacement": "+",
+   "source_line": 135
+  },
+  {
+   "id": 80,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4763,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 136
+  },
+  {
+   "id": 81,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M4 integer off-by-one",
+   "at": 4820,
+   "original": "2",
+   "replacement": "3",
+   "source_line": 139
+  },
+  {
+   "id": 82,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 4822,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 139
+  },
+  {
+   "id": 83,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 91,
+   "operator": "M2 negate condition",
+   "at": 4917,
+   "original": "xp == yp",
+   "replacement": "!(xp == yp)",
+   "source_line": 142
+  },
+  {
+   "id": 84,
+   "file": "Sources/Multiplication.swift",
+   "function": "*",
+   "line": 159,
+   "operator": "M7 arithmetic swap (* -> /)",
+   "at": 5429,
+   "original": "*",
+   "replacement": "/",
+   "source_line": 160
+  },
+  {
+   "id": 85,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M1 relational boundary",
+   "at": 2975,
+   "original": ">=",
+   "replacement": ">",
+   "source_line": 69
+  },
+  {
+   "id": 86,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M4 integer off-by-one",
+   "at": 2978,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 69
+  },
+  {
+   "id": 87,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M4 integer off-by-one",
+   "at": 3024,
+   "original": "0",
+   "replacement": "1",
+   "source_line": 71
+  },
+  {
+   "id": 88,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M2 negate condition",
+   "at": 3096,
+   "original": "bi < bc || (shift + bi < count && carry)",
+   "replacement": "!(bi < bc || (shift + bi < count && carry))",
+   "source_line": 74
+  },
+  {
+   "id": 89,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M1 relational boundary",
+   "at": 3099,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 74
+  },
+  {
+   "id": 90,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 3114,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 74
+  },
+  {
+   "id": 91,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M1 relational boundary",
+   "at": 3119,
+   "original": "<",
+   "replacement": "<=",
+   "source_line": 74
+  },
+  {
+   "id": 92,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M7 arithmetic swap (+ -> -)",
+   "at": 3166,
+   "original": "+",
+   "replacement": "-",
+   "source_line": 75
+  },
+  {
+   "id": 93,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M2 negate condition",
+   "at": 3256,
+   "original": "carry",
+   "replacement": "!(carry)",
+   "source_line": 77
+  },
+  {
+   "id": 94,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M4 integer off-by-one",
+   "at": 3326,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 78
+  },
+  {
+   "id": 95,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M7 arithmetic swap (+= -> -=)",
+   "at": 3508,
+   "original": "+=",
+   "replacement": "-=",
+   "source_line": 86
+  },
+  {
+   "id": 96,
+   "file": "Sources/Subtraction.swift",
+   "function": "subtractReportingOverflow",
+   "line": 68,
+   "operator": "M4 integer off-by-one",
+   "at": 3511,
+   "original": "1",
+   "replacement": "2",
+   "source_line": 86
+  }
+ ]
+}
