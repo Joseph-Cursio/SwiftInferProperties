@@ -56,7 +56,8 @@ public enum FunctionScanner {
             summaries: visitor.summaries,
             identities: visitor.identities,
             typeDecls: visitor.typeDecls,
-            restricted: visitor.restricted
+            restricted: visitor.restricted,
+            typeAliases: TypeAliasMap.merged([visitor.typeAliases])
         )
     }
 
@@ -75,12 +76,14 @@ public enum FunctionScanner {
         var identities: [IdentityCandidate] = []
         var typeDecls: [TypeDecl] = []
         var restricted: [RestrictedFunction] = []
+        var aliases: [[String: String]] = []
         for fileURL in swiftFiles {
             let corpus = try scanCorpus(file: fileURL)
             summaries.append(contentsOf: corpus.summaries)
             identities.append(contentsOf: corpus.identities)
             typeDecls.append(contentsOf: corpus.typeDecls)
             restricted.append(contentsOf: corpus.restricted)
+            aliases.append(corpus.typeAliases)
         }
         return ScannedCorpus(
             // The one-hop refuting callee join, applied HERE and deliberately not in
@@ -92,7 +95,8 @@ public enum FunctionScanner {
             summaries: PackagePurityJoin.applied(to: summaries),
             identities: identities,
             typeDecls: typeDecls,
-            restricted: restricted
+            restricted: restricted,
+            typeAliases: TypeAliasMap.merged(aliases)
         )
     }
 }
@@ -105,6 +109,14 @@ public enum FunctionScanner {
 /// `FunctionScannerVisitor+TypeDecls.swift`, and
 /// `FunctionScannerVisitor+Identities.swift`.
 final class FunctionScannerVisitor: SyntaxVisitor {
+
+    /// Aliases this file declares, bare and qualified, before merging. See `ScannedCorpus.typeAliases`.
+    var typeAliases: [String: String] = [:]
+
+    override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
+        recordAlias(node)
+        return .skipChildren
+    }
 
     var summaries: [FunctionSummary] = []
     var identities: [IdentityCandidate] = []

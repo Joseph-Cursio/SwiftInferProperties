@@ -95,6 +95,9 @@ extension SwiftInferCommand.Discover {
         /// mention, since naming any other breaks the whole test target (`SendableShim`).
         public let testVisibleTypeNames: Set<String>
 
+        /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
+        public let typeAliases: [String: String]
+
         /// The file each type is **declared** in, keyed by bare type name.
         ///
         /// Third sidecar map, and here for the same reason as the two above: `TypeShape` belongs
@@ -158,6 +161,7 @@ extension SwiftInferCommand.Discover {
             genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
             visibleToTestableImportByName: [String: Bool] = [:],
             testVisibleTypeNames: Set<String> = [],
+            typeAliases: [String: String] = [:],
             sourceFileByTypeName: [String: String] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
@@ -183,6 +187,7 @@ extension SwiftInferCommand.Discover {
             self.genericParametersByName = genericParametersByName
             self.visibleToTestableImportByName = visibleToTestableImportByName
             self.testVisibleTypeNames = testVisibleTypeNames
+            self.typeAliases = typeAliases
             self.sourceFileByTypeName = sourceFileByTypeName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries

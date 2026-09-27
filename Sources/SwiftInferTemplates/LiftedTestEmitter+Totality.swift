@@ -78,7 +78,7 @@ extension LiftedTestEmitter {
         inoutArguments: Set<Int> = [],
         failureLabel: String? = nil
     ) -> String {
-        let testFunctionName = "\(callee.bareName)_isTotal"
+        let testFunctionName = "\(callee.identifierName)_isTotal"
         let isTuple = generators.count > 1
         let bind = isTuple
             ? tupleBinding(argumentTypes: argumentTypes, count: generators.count)

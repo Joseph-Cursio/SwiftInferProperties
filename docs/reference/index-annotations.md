@@ -40,7 +40,25 @@ Suites green at **5,576 tests** (5,493 fast + 83 across `perf` and the eight bat
 
 Moved out of CLAUDE.md's *Current state* on 2026-09-19: every suite-count reading older than the current one, verbatim and newest first. It had grown to ~265 lines of a file loaded every session. **Read for what each verdict was decided on, never for a current count** — CLAUDE.md carries the current reading, and the next re-take moves the one it supersedes to the top of this list.
 
-**The prior reading — 6,418 = 6,194 fast + 224, taken 2026-09-24 at `3357f210` — follows, and
+**The prior reading — 6,434 = 6,210 fast + 224, taken 2026-09-25 at `3b9737b8` — follows, and
+everything below it is SUPERSEDED HISTORY.**
+**PRIOR READING — 6,434 tests — 6,210 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-25** at `3b9737b8` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.9.1 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**; the ten test stages sum to 68m21s):
+fast **6,210** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across the `[String]` element draw,
+ternary guard-domain with its literal fix, and the new `rewrite-postcondition` template — all of which
+change what discovery proposes or what a stub draws — so no corpus baseline moved.
+**The fast half moved 6,194 → 6,210, +16, RECONCILED BY TEST ID**: `swift test list` against the
+previous reading's list — **16 added, 0 removed**, all plain unit suites (`RewritePostconditionTests` 6,
+`GuardDomainTernaryTests` 4, `StringArrayElementGeneratorTests` 3, `RewritePostconditionStubTests` 2,
+`GuardDomainLiteralTests` 1).
+**Timings**: `batch3` **356s**, below the 380–483s range for the THIRD reading running (353s, 359s
+before) — the range's floor has moved down and ~350s is the new normal; `batch2` 732s inside 679–801s;
+`batch5` 1,647s; `batch1` 178s, `batch4` 175s, `batch6` 151s, `batch7` 200s, `batch8` 587s.
+
+**The reading before it — 6,418 = 6,194 fast + 224, taken 2026-09-24 at `3357f210` — follows, and
 everything below it is SUPERSEDED HISTORY.**
 **PRIOR READING — 6,418 tests — 6,194 fast + 224 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-09-24** at `3357f210` on **swift-property-based

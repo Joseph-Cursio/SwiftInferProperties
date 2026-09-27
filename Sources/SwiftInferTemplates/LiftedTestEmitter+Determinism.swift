@@ -101,7 +101,7 @@ extension LiftedTestEmitter {
             property = equalityExpression(lhs: call, rhs: call, kind: equalityKind)
         }
         return makeTestStubExpression(
-            testFunctionName: "\(callee.bareName)_isDeterministic",
+            testFunctionName: "\(callee.identifierName)_isDeterministic",
             seed: seed,
             sampleExpression: determinismSample(generators: generators),
             propertyExpression: "{ \(bind) in \(isAsync ? property : callee.isolated(property)) }",

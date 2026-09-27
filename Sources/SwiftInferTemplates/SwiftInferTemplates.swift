@@ -337,7 +337,8 @@ public enum TemplateRegistry {
             summaries: corpus.summaries,
             typeDecls: corpus.typeDecls,
             effectAnnotations: EffectAnnotationAdvice.adviceList(from: corpus.summaries),
-            restrictedFunctions: restricted
+            restrictedFunctions: restricted,
+            typeAliases: corpus.typeAliases
         )
     }
 }

@@ -43,7 +43,7 @@ public enum LiftedTestEmitter {
         generator: String,
         equalityKind: EqualityKind = .strict
     ) -> String {
-        let testFunctionName = "\(callee.bareName)_isIdempotent"
+        let testFunctionName = "\(callee.identifierName)_isIdempotent"
         let property = callee.isolated(equalityExpression(
             lhs: callee.call(callee.call("value")),
             rhs: callee.call("value"),
@@ -79,7 +79,7 @@ public enum LiftedTestEmitter {
         generator: String,
         equalityKind: EqualityKind = .strict
     ) -> String {
-        let testFunctionName = "\(forward.bareName)_\(inverse.bareName)_roundTrip"
+        let testFunctionName = "\(forward.identifierName)_\(inverse.identifierName)_roundTrip"
         let property = inverse.isolated(equalityExpression(
             lhs: inverse.call(forward.call("value")),
             rhs: "value",
@@ -110,7 +110,7 @@ public enum LiftedTestEmitter {
         generator: String
     ) -> String {
         _ = (typeName, returnType)
-        let testFunctionName = "\(callee.bareName)_isMonotonic"
+        let testFunctionName = "\(callee.identifierName)_isMonotonic"
         // T must conform to Comparable for this sample to typecheck.
         let sample = [
             "{ rng in",
@@ -142,8 +142,7 @@ public enum LiftedTestEmitter {
         seed: SamplingSeed.Value,
         generator: String
     ) -> String {
-        _ = typeName
-        let testFunctionName = "\(callee.bareName)_isCommutative"
+        let testFunctionName = "\(callee.identifierName)_isCommutative"
         // Same multi-line sample shape as `monotonic`'s pair draw —
         // mirrors the column convention so the existing tests/goldens
         // share the same indentation envelope. Two values, no sort.
@@ -155,7 +154,8 @@ public enum LiftedTestEmitter {
             "                }"
         ].joined(separator: "\n")
         let sides = "\(callee.call("pair.0", "pair.1")) == \(callee.call("pair.1", "pair.0"))"
-        let property = "{ pair in \(callee.isolated(sides)) }"
+        let binding = operandBinding("pair", arity: 2, callee: callee, typeName: typeName)
+        let property = "{ \(binding) in \(callee.isolated(sides)) }"
         let failureLabel = "\(callee.bareName)(_:_:) failed commutativity"
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
@@ -178,8 +178,7 @@ public enum LiftedTestEmitter {
         seed: SamplingSeed.Value,
         generator: String
     ) -> String {
-        _ = typeName
-        let testFunctionName = "\(callee.bareName)_isAssociative"
+        let testFunctionName = "\(callee.identifierName)_isAssociative"
         // Three-value tuple sample — same multi-line style as monotonic /
         // commutative for visual consistency across the binary-op arms.
         let sample = [
@@ -194,7 +193,7 @@ public enum LiftedTestEmitter {
         // one-liner past 120 chars. Indents match the test-stub
         // template's 8-space strip.
         let property = [
-            "{ triple in",
+            "{ \(operandBinding("triple", arity: 3, callee: callee, typeName: typeName)) in",
             "            " + callee.call(callee.call("triple.0", "triple.1"), "triple.2"),
             "                == " + callee.call("triple.0", callee.call("triple.1", "triple.2")),
             "        }"
@@ -225,7 +224,7 @@ public enum LiftedTestEmitter {
         seed: SamplingSeed.Value,
         generator: String
     ) -> String {
-        let testFunctionName = "\(callee.bareName)_hasIdentity_\(identityName)"
+        let testFunctionName = "\(callee.identifierName)_hasIdentity_\(identityName)"
         // Single-value sample — the identity is constant in the body
         // (referenced via `\(typeName).\(identityName)`), so the
         // canonical `{ rng in (generator).run(using: &rng) }` shape applies.
@@ -256,7 +255,7 @@ public enum LiftedTestEmitter {
         equalityKind: EqualityKind = .strict
     ) -> String {
         _ = typeName
-        let testFunctionName = "\(forward.bareName)_\(inverse.bareName)_inversePair"
+        let testFunctionName = "\(forward.identifierName)_\(inverse.identifierName)_inversePair"
         let property = equalityExpression(
             lhs: inverse.call(forward.call("value")),
             rhs: "value",
@@ -296,7 +295,7 @@ public enum LiftedTestEmitter {
     ) -> String {
         _ = typeName
         let suffix = sanitizeKeyPathForIdentifier(invariantName)
-        let testFunctionName = "\(callee.bareName)_preservesInvariant_\(suffix)"
+        let testFunctionName = "\(callee.identifierName)_preservesInvariant_\(suffix)"
         let sample = "{ rng in (\(generator)).run(using: &rng) }"
         let property = "{ value in !value[keyPath: \(invariantName)] || "
             + "\(callee.call("value"))[keyPath: \(invariantName)] }"

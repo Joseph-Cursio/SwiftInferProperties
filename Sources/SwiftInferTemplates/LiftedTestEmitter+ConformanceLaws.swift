@@ -37,7 +37,7 @@ extension LiftedTestEmitter {
         ))
         return withApproximateEqualityHelper(
             makeTestStub(
-                testFunctionName: "\(callee.bareName)_withItselfIsANoOp",
+                testFunctionName: "\(callee.identifierName)_withItselfIsANoOp",
                 seed: seed,
                 generator: generator,
                 propertyExpression: property,
@@ -82,7 +82,7 @@ extension LiftedTestEmitter {
             + "return \(pair.nonMutating.call([receiver] + operand)) == copy"
         let binding = pair.takesOperand ? tupleBinding(argumentTypes: [typeName, typeName], count: 2) : "value"
         return makeTestStubExpression(
-            testFunctionName: "\(pair.nonMutating.bareName)_agreesWith_\(pair.mutating.bareName)",
+            testFunctionName: "\(pair.nonMutating.identifierName)_agreesWith_\(pair.mutating.bareName)",
             seed: seed,
             sampleExpression: totalitySample(
                 generators: pair.takesOperand ? [tieDense(generator), tieDense(generator)] : [generator]

@@ -84,7 +84,7 @@ extension LiftedTestEmitter {
             .joined(separator: "\n")
         return """
 
-        @Test func \(call.callee.bareName)_holdsOnItsGuardedSubDomain() async {
+        @Test func \(call.callee.identifierName)_holdsOnItsGuardedSubDomain() async {
             let backend = SwiftPropertyBasedBackend()
             let seed = Seed(
                 stateA: 0x\(hex(seed.stateA)),

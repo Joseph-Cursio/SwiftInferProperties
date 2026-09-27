@@ -45,7 +45,7 @@ extension LiftedTestEmitter {
             """
         }
         return """
-        @Test func \(callee.bareName)_isAStrictWeakOrdering() async throws {
+        @Test func \(callee.identifierName)_isAStrictWeakOrdering() async throws {
         \(calls.joined(separator: "\n"))
         }
         """

@@ -31,11 +31,23 @@ extension InteractiveTriage {
     /// The suite type a stub file's tests live in: its base name as a Swift identifier, plus `Tests`.
     ///
     /// `normalize_idempotence.swift` → `normalize_idempotenceTests`;
-    /// `parse_input-totality.swift` → `parse_input_totalityTests`.
+    /// `parse_input-totality.swift` → `parse_input_totalityTests`;
+    /// `BigInt_+_commutativity.swift` → `BigInt_Plus_commutativityTests`.
+    ///
+    /// **An operator character is spelled, not blanked.** Blanking every one made `BigInt_+_…` and
+    /// `BigInt_*_…` — distinct files — both `BigInt___…Tests`, an `invalid redeclaration` that set
+    /// both aside. `-` stays `_`, since it is what separates a kebab-case template name.
     static func suiteName(forStubFileName fileName: String) -> String {
         let base = fileName.hasSuffix(".swift") ? String(fileName.dropLast(".swift".count)) : fileName
         let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
-        var identifier = String(base.map { allowed.contains($0) ? $0 : "_" })
+        let pieces = base.map { character -> String in
+            if allowed.contains(character) { return String(character) }
+            if character != "-", let word = CalleeReference.operatorCharacterWords[character] {
+                return CalleeReference.capitalized(word)
+            }
+            return "_"
+        }
+        var identifier = pieces.joined()
         if identifier.first.map(\.isNumber) ?? true { identifier = "_" + identifier }
         return identifier + "Tests"
     }

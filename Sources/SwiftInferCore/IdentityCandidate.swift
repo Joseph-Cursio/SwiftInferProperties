@@ -58,16 +58,25 @@ public struct ScannedCorpus: Sendable, Equatable {
     /// access caveat attached.
     public let restricted: [RestrictedFunction]
 
+    /// Every non-generic `typealias`, underlying spelling by name — bare (`Word`) and qualified
+    /// (`BigUInt.Word`). The generator resolver follows an alias only when told it exists: BigInt's
+    /// initializers take `Word` (`typealias Word = UInt`), and without this map none of them
+    /// derived, so neither `BigUInt` nor `BigInt` had a generator. A bare name two declarations
+    /// spell differently is dropped rather than guessed (`TypeAliasMap.merged`).
+    public let typeAliases: [String: String]
+
     public init(
         summaries: [FunctionSummary],
         identities: [IdentityCandidate],
         typeDecls: [TypeDecl],
-        restricted: [RestrictedFunction] = []
+        restricted: [RestrictedFunction] = [],
+        typeAliases: [String: String] = [:]
     ) {
         self.summaries = summaries
         self.identities = identities
         self.typeDecls = typeDecls
         self.restricted = restricted
+        self.typeAliases = typeAliases
     }
 
     public static let empty = Self(summaries: [], identities: [], typeDecls: [])
