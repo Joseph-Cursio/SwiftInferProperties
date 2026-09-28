@@ -61,12 +61,26 @@ public enum FunctionPairing {
         conformances: [String: Set<String>] = [:]
     ) -> [FunctionPair] {
         let pairable = summaries.filter(isPairable)
+        // Resolved once per function: the loop below is quadratic.
+        let declared = declaredTypePaths(in: summaries)
+        let shapes = pairable.map { summary in
+            ResolvedShape(
+                domain: transformationDomain(summary).map {
+                    resolvingScopedNames($0, declaredIn: summary, declared: declared)
+                },
+                codomain: summary.returnTypeText.map {
+                    resolvingScopedNames($0, declaredIn: summary, declared: declared)
+                }
+            )
+        }
         var pairs: [FunctionPair] = []
         for (lhsIndex, lhs) in pairable.enumerated() {
-            for rhs in pairable.dropFirst(lhsIndex + 1)
-                where hasInverseTypeShape(lhs, rhs, conformances: conformances)
-                    && initializerPairAdmissible(lhs, rhs) {
-                pairs.append(orientedPair(lhs, rhs))
+            for rhsIndex in (lhsIndex + 1) ..< pairable.count {
+                let rhs = pairable[rhsIndex]
+                if hasInverseTypeShape(lhs, rhs, shapes[lhsIndex], shapes[rhsIndex], conformances: conformances),
+                   initializerPairAdmissible(lhs, rhs) {
+                    pairs.append(orientedPair(lhs, rhs))
+                }
             }
         }
         return pairs.sorted(by: lessThan)
@@ -226,12 +240,12 @@ public enum FunctionPairing {
     private static func hasInverseTypeShape(
         _ lhs: FunctionSummary,
         _ rhs: FunctionSummary,
+        _ lhsShape: ResolvedShape,
+        _ rhsShape: ResolvedShape,
         conformances: [String: Set<String>] = [:]
     ) -> Bool {
-        guard let lhsDomain = transformationDomain(lhs).map({ resolvingSelf($0, declaredIn: lhs) }),
-              let rhsDomain = transformationDomain(rhs).map({ resolvingSelf($0, declaredIn: rhs) }),
-              let lhsReturn = lhs.returnTypeText.map({ resolvingSelf($0, declaredIn: lhs) }),
-              let rhsReturn = rhs.returnTypeText.map({ resolvingSelf($0, declaredIn: rhs) }) else {
+        guard let lhsDomain = lhsShape.domain, let rhsDomain = rhsShape.domain,
+              let lhsReturn = lhsShape.codomain, let rhsReturn = rhsShape.codomain else {
             return false
         }
         if lhsReturn == rhsDomain, lhsDomain == rhsReturn {
@@ -278,8 +292,11 @@ public enum FunctionPairing {
         to protocolName: String,
         _ conformances: [String: Set<String>]
     ) -> Bool {
-        guard type != protocolName else { return false }
-        return conformances[type]?.contains(protocolName) ?? false
+        // The index is keyed by bare name; a scoped name keeps it as its last component.
+        let bare = { (name: String) in String(name.split(separator: ".").last ?? Substring(name)) }
+        guard bare(type) != bare(protocolName) else { return false }
+        let inherited = conformances[type] ?? conformances[bare(type)] ?? []
+        return inherited.contains(protocolName) || inherited.contains(bare(protocolName))
     }
 
     private static func orientedPair(
