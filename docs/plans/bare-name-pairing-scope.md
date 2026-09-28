@@ -1,6 +1,6 @@
 # Pair round trips by the type a name MEANS, not how it is spelled
 
-> **Status:** `proposed` · **As of:** 2026-09-28
+> **Status:** `shipped` · **As of:** 2026-09-28
 
 `round-trip-pairing-evidence.md` found that 15 of 39 false pairings in its hand-check — and none of the
 21 true ones — pair functions on **different nested types that share a bare name**: OpenAPIKit's

@@ -54,17 +54,20 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,448 tests — 6,224 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-09-27** at `3c2e0efd` on **swift-property-based
+Suites green at **6,453 tests — 6,229 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-28** at `0db3589e` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`** — every stage counted from that one run, and the
-run was UNPIPED (`make test > log 2>&1`, exit **0**, 72m28s):
-fast **6,224** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**Both halves stood still to the digit** across the kit 4.9.3 pin, whose one change prefers a
-collection initializer over its single-element form when deriving a generator — a derivation rule, so
-every batch that surveys a corpus could have moved, and none did. The fast half is the previous
-reading's 6,224 by test ID; the new `scripts/mutation_reach.py` is study tooling, not a test.
-**Timings**: `batch3` 401s, inside 380–483s; `batch2` 748s inside 679–801s; `batch5` 1,647s;
-`batch1` 184s, `batch4` 198s, `batch6` 180s, `batch7` 232s, `batch8` 594s.
+run was UNPIPED (`make test > log 2>&1`, exit **0**, 74m12s):
+fast **6,229** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across pairing round trips by the type a
+name resolves to and synthetic initializers carrying their qualified path — both change which round-trip
+pairs discovery proposes, and no corpus baseline moved.
+**The fast half moved 6,224 → 6,229, +5, RECONCILED BY TEST ID**: `swift test list` against the previous
+reading's list — **5 added, 0 removed** (`FunctionPairingScopedTypeNameTests` 4, and the opt-in
+`RoundTripPairingEvidenceCensusTests` 1, which skips without its environment variable).
+**Timings**: ⚠ `batch3` **634s** and `batch2` **821s**, both ABOVE their ranges (380–483s, 679–801s) for the
+first time — one reading, recorded rather than explained; `batch5` 1,379s; `batch1` 233s, `batch4` 241s,
+`batch6` 213s, `batch7` 273s, `batch8` 559s.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -254,6 +257,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does generator REACH bound what a law can kill?** | `docs/measurements/mutation-reach.md` (scope: `docs/plans/mutation-reach-scope.md`) | **Yes — one frozen set of 97 BigInt mutants, two generators: killed 35 → 58, unexercised 56 → 36, 23 moves all one way.** `multiplyAndAdd` 0/21 → 15/21 exercised-and-killed. Kit rule, released as 4.9.3: prefer `init(xs: [T])` over `init(x: T)`. **Corpus A/B: 0 of 943 stubs changed.** ⚠ Reach is necessary, not sufficient: the 20 Karatsuba mutants need >1,024 words, and a mutant making `*` return zero is law-blind to every relational law. All six predictions held |
 | **How often does a derived generator draw only a CORNER of its type?** | `docs/measurements/generator-diversity.md` (scope: `docs/plans/generator-diversity-scope.md`) | **Once in 433 probes.** Every generator the 19-repo census's compiled stubs use, 1,000 draws, distinct values and shapes: CONSTANT 51 (49 held receivers, by design), NARROW 31 (bools, enums, snippet corpora), SHAPE-FIXED **0**. The one corner: `Reading(percent:)` clamps, so full-range `Int` draws give only 0 and 100. `BigUInt`'s shape is absent here — generator degeneracy is not a funnel lever |
 | **What licenses a `round-trip` pairing?** | `docs/measurements/round-trip-pairing-evidence.md` (scope: `docs/plans/round-trip-pairing-evidence-scope.md`) | **Mostly nothing: 96% of 2,372 rows rest on type symmetry alone (89% without OpenAPIKit).** Hand-check: TYPES-ONLY 15% true, NAMED 70%. ⚠ **Row 70's third gate — require a name — is CLOSED**: it drops 87% of false pairings and 29% of true ones. **Found instead: pairing by BARE type name** — 15 of 39 false pairings, 0 true; 1,520 rows, all OpenAPIKit's nested `CodingKeys`. Unbuilt |
+| **Does pairing by the type a name MEANS remove the bare-name collisions?** | `docs/measurements/bare-name-pairing.md` (scope: `docs/plans/bare-name-pairing-scope.md`) | **Yes, costing no true pairing: round-trip rows 2,372 → 838**, OpenAPIKit 1,686 → 166, manifest corpora 567 → 564, 0 same-type rows removed; all 21 true sample pairings kept, exactly the 15 collisions removed. ⚠ The first A/B lost 8 true pairings — synthetic initializer summaries dropped their qualified type; fixed. `make test` unchanged |
 | **Would a PRECISE delegation gate recover generators?** | `docs/measurements/delegation-gate-census.md` | **Measured NO: DECLINED 2026-09-23.** The kit declines a delegating init when ANY init on the type asserts. Resolving `self.init(…)` by labels, following chains, over 20 corpora: the gate fires on 355 types, wrongly on 16, and **10 gain a generator, all in `swift-collections`, really 3 roots plus 7 iterators** (`SortedSet` is trait-gated, `BigSubstring` is in `_RopeModule`). Floor, not ceiling: 773 inits are same-label overloads only a type-aware resolver could split. ⚠ **The Euclid exhibit that motivated it was wrong**: `Path`'s target asserts and `LineSegment`'s clean path is failable, so on Euclid it recovers 0 |
 | **Did the emitted kit suites catch a real projection bug?** | `docs/measurements/kit-suite-backtest-arms-2-3.md` | **MISS** — but the laws are not structurally blind; it is a generator-domain failure, and this repo owns it. The baseline is not green |
 | **Are the property tests a codebase ALREADY has any good?** | `docs/plans/existing-property-test-audit-scope.md` | Scoped, **not built**. The cheap lint version measures 0 hits and would ship a green bill of health |
