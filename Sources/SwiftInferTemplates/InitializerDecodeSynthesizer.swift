@@ -48,6 +48,10 @@ public enum InitializerDecodeSynthesizer {
                         location: decl.location,
                         containingTypeName: decl.name,
                         bodySignals: .empty,
+                        // The declaration's full lexical path, as a scanned method carries. Without
+                        // it an init on `_HTable.Bucket` claims a top-level `Bucket`, and pairing
+                        // by resolved type name loses it against `_HTable.Bucket.offset`.
+                        qualifiedContainingTypeName: decl.qualifiedName,
                         isInitializer: true
                     )
                 )
