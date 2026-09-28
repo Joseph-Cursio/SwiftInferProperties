@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.155.0] — 2026-09-28
+
+Arithmetic libraries now get their laws: type aliases reach the generator, operators are written as Swift, and a type offering both a single-element and a collection initializer is drawn through the collection. PRs #596, #598, #601.
+
+### Changed
+
+- **A generator is derived through a type's collection initializer when it also has a single-element one** (SwiftPropertyLaws 4.9.3). A type declaring `init(word: UInt)` before `init(words: [UInt])` was drawn one element at a time, so code that only runs on several elements was never reached. Only the exact `T` / `[T]` pair on one parameter each is affected.
+- **Type aliases reach the accept path's generator.** An initializer that takes an alias (`typealias Word = UInt`) now derives. An alias is resolved in the scope of the type that declares it, so a type can still derive when several types declare aliases with the same name.
+- Pins SwiftPropertyLaws 4.9.3, whose 4.9.2 also stops deriving through a text-literal initializer (`init(unicodeScalarLiteral:)`), which the compiler calls with source text and which can trap on arbitrary input.
+
+### Fixed
+
+- **Operator subjects compile.** A law over `static func +` was emitted as `@Test func +_isCommutative()` calling `+(a: x, b: y)`, neither of which parses. Operators are now called infix (`(x + y)`) or prefix (`~x`) and named in words (`plus_isCommutative`); suite names spell operator characters (`BigInt_Plus_…`); and a commutativity or associativity closure over an operator declares its tuple type, which it needs to type-check in time.
+- `guard-domain` now counts an underscored identifier (`_fastPath`, `_count`) as a free name, so it no longer proposes laws over internal storage a test cannot reach.
+
+### Read before quoting a number
+
+- On BigInt, the three changes together take compiled laws from 10 to 31 and passing ones from 6 to 21; all eight `+`/`*` commutativity and associativity laws pass. Over the 19-repository funnel corpus the alias and operator changes move two laws in one repository, and no repository there declares an operator a law is proposed for. The collection-initializer rule changes 0 of 943 stubs.
+- What the collection rule buys was measured on one frozen set of 97 BigInt mutants: killed 35 → 58 with word arrays instead of single words. On arithmetic code, generator reach decided what the laws could catch; a census of every generator in the funnel corpus found the pattern once in 433.
+- The underscore fix withdraws 23 `guard-domain` laws over 33,150 functions and adds none.
+- Suites at release: 6,448 = 6,224 fast + 224 in perf and the eight subprocess batches, from a full `make test`, green.
+
 ## [1.154.0] — 2026-09-26
 
 Two new laws that catch bugs the older ones missed, and wider string inputs for a law whose argument is a list of strings. PRs #590–#593.
