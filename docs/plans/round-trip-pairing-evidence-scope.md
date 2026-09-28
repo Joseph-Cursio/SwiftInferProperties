@@ -1,6 +1,6 @@
 # What licenses a `round-trip` pairing? — a census before any gate
 
-> **Status:** `proposed` · **As of:** 2026-09-28
+> **Status:** `shipped` · **As of:** 2026-09-28
 
 Open-threads row 70: `round-trip` can choose an inverse on type signature alone — `Rotation.yaw(r.angle)
 == r`, and unrelated `Vector -> Vector` functions paired as inverses on Euclid. Two gates have been
