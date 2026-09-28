@@ -1,6 +1,6 @@
 # Would structural name rules name the round trips the vocabulary misses?
 
-> **Status:** `proposed` · **As of:** 2026-09-28
+> **Status:** `shipped` · **As of:** 2026-09-28
 
 `round-trip-pairing-evidence.md` found type-only pairings 15% true, and the true ones are real inverses
 **named in ways the curated vocabulary cannot match**: it compares base names for exact equality against
