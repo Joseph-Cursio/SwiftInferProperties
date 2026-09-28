@@ -1,0 +1,2297 @@
+[
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Document/Document.swift",
+   "line": 592,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Document.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Operation/Operation.swift",
+   "line": 363,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Operation.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Tag.swift",
+   "line": 246,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Tag.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Path Item/PathItem.swift",
+   "line": 325,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.PathItem.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Content/Content.swift",
+   "line": 494,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Content.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/ExternalDocumentation.swift",
+   "line": 92,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.ExternalDocumentation.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Server.swift",
+   "line": 191,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Server.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "inverse": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Components Object/Components.swift",
+   "line": 291,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Components.CodingKeys",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> CodingKeys \u2194 CodingKeys -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Server.swift",
+   "line": 210,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Server.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Server.swift",
+   "line": 274,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Server.Variable.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "_HeapNode",
+  "corpus": "swift-collections",
+  "forward": {
+   "displayName": "leftChild()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/HeapModule/_HeapNode.swift",
+   "line": 130,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_HeapNode",
+   "signature": "() -> Self"
+  },
+  "inverse": {
+   "displayName": "rightChild()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/HeapModule/_HeapNode.swift",
+   "line": 136,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_HeapNode",
+   "signature": "() -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _HeapNode -> Self \u2194 Self -> _HeapNode",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_HeapNode) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Server.swift",
+   "line": 223,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Server.Variable.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "inverse": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Server.swift",
+   "line": 240,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Server.Variable.CodingKeys",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> CodingKeys \u2194 CodingKeys -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/ExternalDocumentation.swift",
+   "line": 107,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.ExternalDocumentation.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Request/Request.swift",
+   "line": 57,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Request.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "_swift_stdlib_getScript(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/UnicodeData.swift",
+   "line": 294,
+   "parameterInternalNames": [
+    "scalar"
+   ],
+   "signature": "(UInt32) -> UInt8"
+  },
+  "inverse": {
+   "displayName": "_continuationPayload(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/UnicodeHelpers.swift",
+   "line": 118,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "signature": "(UInt8) -> UInt32"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UInt32 -> UInt8 \u2194 UInt8 -> UInt32",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Tag.swift",
+   "line": 223,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Tag.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "inverse": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Path Item/PathItem.swift",
+   "line": 360,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.PathItem.CodingKeys",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> CodingKeys \u2194 CodingKeys -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "Trivia",
+  "corpus": "swift-syntax",
+  "forward": {
+   "displayName": "byteSize()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-syntax/Sources/SwiftSyntax/Trivia.swift",
+   "line": 52,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Trivia",
+   "signature": "() -> Int"
+  },
+  "inverse": {
+   "displayName": "newlines(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-syntax/Sources/SwiftSyntax/generated/TriviaPieces.swift",
+   "line": 196,
+   "parameterInternalNames": [
+    "count"
+   ],
+   "qualifiedTypeName": "Trivia",
+   "signature": "(Int) -> Trivia"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Trivia -> Int \u2194 Int -> Trivia",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (Trivia) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Document/DocumentInfo.swift",
+   "line": 252,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Document.Info.Contact.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Example.swift",
+   "line": 132,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Example.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "PathComponent",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/JSONReference.swift",
+   "line": 249,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "JSONReference.PathComponent",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "property(named:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/JSONReference.swift",
+   "line": 256,
+   "parameterInternalNames": [
+    "name"
+   ],
+   "qualifiedTypeName": "JSONReference.PathComponent",
+   "signature": "(String) -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: PathComponent -> String \u2194 String -> PathComponent",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (PathComponent) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Document/DocumentInfo.swift",
+   "line": 236,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Document.Info.License.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "inverse": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/ExternalDocumentation.swift",
+   "line": 94,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.ExternalDocumentation.CodingKeys",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> CodingKeys \u2194 CodingKeys -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "_bridgeObject(fromTagged:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Builtin.swift",
+   "line": 561,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "signature": "(UInt) -> Builtin.BridgeObject"
+  },
+  "inverse": {
+   "displayName": "_bridgeObject(toTagged:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Builtin.swift",
+   "line": 598,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "signature": "(Builtin.BridgeObject) -> UInt"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UInt -> Builtin.BridgeObject \u2194 Builtin.BridgeObject -> UInt",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "StringProtocol",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "_toUTF16Offsets(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringBridge.swift",
+   "line": 879,
+   "parameterInternalNames": [
+    "indices"
+   ],
+   "qualifiedTypeName": "StringProtocol",
+   "signature": "(Range<Index>) -> Range<Int>"
+  },
+  "inverse": {
+   "displayName": "_toUTF16Indices(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringBridge.swift",
+   "line": 896,
+   "parameterInternalNames": [
+    "range"
+   ],
+   "qualifiedTypeName": "StringProtocol",
+   "signature": "(Range<Int>) -> Range<Index>"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Range<Index> -> Range<Int> \u2194 Range<Int> -> Range<Index>",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (StringProtocol) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "RelativePath",
+  "corpus": "swift-package-manager",
+  "forward": {
+   "displayName": "basenameWithoutExt()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-package-manager/Sources/Basics/FileSystem/RelativePath.swift",
+   "line": 58,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "RelativePath",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "appending(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-package-manager/Sources/Basics/FileSystem/RelativePath.swift",
+   "line": 127,
+   "parameterInternalNames": [
+    "component"
+   ],
+   "qualifiedTypeName": "RelativePath",
+   "signature": "(String) -> RelativePath"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: RelativePath -> String \u2194 String -> RelativePath",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Document/DocumentInfo.swift",
+   "line": 343,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Document.Info.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Example.swift",
+   "line": 132,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Example.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Request/Request.swift",
+   "line": 84,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Request.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/Server.swift",
+   "line": 223,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Server.Variable.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "AbsolutePath",
+  "corpus": "swift-package-manager",
+  "forward": {
+   "displayName": "appending(component:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-package-manager/Sources/Basics/FileSystem/AbsolutePath.swift",
+   "line": 153,
+   "parameterInternalNames": [
+    "component"
+   ],
+   "qualifiedTypeName": "AbsolutePath",
+   "signature": "(String) -> AbsolutePath"
+  },
+  "inverse": {
+   "displayName": "basenameWithoutAnyExtension()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-package-manager/Sources/Basics/FileSystem/AbsolutePath.swift",
+   "line": 271,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "AbsolutePath",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> AbsolutePath \u2194 AbsolutePath -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (AbsolutePath) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "CodingKeys",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Document/DocumentInfo.swift",
+   "line": 424,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "OpenAPI.Document.Info.CodingKeys",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "extendedKey(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/Server.swift",
+   "line": 191,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "OpenAPI.Server.CodingKeys",
+   "signature": "(String) -> CodingKeys"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: CodingKeys -> String \u2194 String -> CodingKeys",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (CodingKeys) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "Date",
+  "corpus": "swift-foundation",
+  "forward": {
+   "displayName": "timeIntervalSince1970()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/Date.swift",
+   "line": 124,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Date",
+   "signature": "() -> TimeInterval"
+  },
+  "inverse": {
+   "displayName": "addingTimeInterval(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/Date.swift",
+   "line": 139,
+   "parameterInternalNames": [
+    "timeInterval"
+   ],
+   "qualifiedTypeName": "Date",
+   "signature": "(TimeInterval) -> Date"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Date -> TimeInterval \u2194 TimeInterval -> Date",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (Date) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   },
+   {
+    "detail": "subject is judged impure with a witness (timeIntervalSince1970) \u2014 a generated law would execute that impurity in-process",
+    "kind": "impureSubject",
+    "weight": -9223372036854775808
+   }
+  ],
+  "tier": "Suppressed"
+ },
+ {
+  "carrier": "ResolvedTopicReference",
+  "corpus": "extra:swift-docc",
+  "forward": {
+   "displayName": "appendingPath(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-docc/Sources/SwiftDocC/Model/Identifier.swift",
+   "line": 332,
+   "parameterInternalNames": [
+    "path"
+   ],
+   "qualifiedTypeName": "ResolvedTopicReference",
+   "signature": "(String) -> ResolvedTopicReference"
+  },
+  "inverse": {
+   "displayName": "lastPathComponent()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-docc/Sources/SwiftDocC/Model/Identifier.swift",
+   "line": 415,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "ResolvedTopicReference",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> ResolvedTopicReference \u2194 ResolvedTopicReference -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "DatabaseError",
+  "corpus": "grdb",
+  "forward": {
+   "displayName": "noSuchSchema(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/Core/DatabaseError.swift",
+   "line": 412,
+   "parameterInternalNames": [
+    "schemaName"
+   ],
+   "qualifiedTypeName": "DatabaseError",
+   "signature": "(String) -> Self"
+  },
+  "inverse": {
+   "displayName": "description()",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/Core/DatabaseError.swift",
+   "line": 566,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "DatabaseError",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> Self \u2194 Self -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "SQLExpression",
+  "corpus": "grdb",
+  "forward": {
+   "displayName": "not(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/QueryInterface/SQL/SQLExpression.swift",
+   "line": 881,
+   "parameterInternalNames": [
+    "expression"
+   ],
+   "qualifiedTypeName": "SQLExpression",
+   "signature": "(SQLExpression) -> Self"
+  },
+  "inverse": {
+   "displayName": "countDistinct(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/QueryInterface/SQL/SQLExpression.swift",
+   "line": 1123,
+   "parameterInternalNames": [
+    "expression"
+   ],
+   "qualifiedTypeName": "SQLExpression",
+   "signature": "(SQLExpression) -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: SQLExpression -> Self \u2194 Self -> SQLExpression",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (SQLExpression) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "TrialBudget",
+  "corpus": "swift-property-laws",
+  "forward": {
+   "displayName": "trialCount()",
+   "file": "/Users/josephcursio/xcode_projects/SwiftPropertyLaws/Sources/PropertyLawKit/Model/TrialBudget.swift",
+   "line": 28,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "TrialBudget",
+   "signature": "() -> Int"
+  },
+  "inverse": {
+   "displayName": "exhaustive(_:)",
+   "file": "/Users/josephcursio/xcode_projects/SwiftPropertyLaws/Sources/PropertyLawKit/Model/TrialBudget.swift",
+   "line": 50,
+   "parameterInternalNames": [
+    "trials"
+   ],
+   "qualifiedTypeName": "TrialBudget",
+   "signature": "(Int) -> TrialBudget"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: TrialBudget -> Int \u2194 Int -> TrialBudget",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (TrialBudget) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "RawSpan",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "byteCount()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Span/RawSpan.swift",
+   "line": 373,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "RawSpan",
+   "signature": "() -> Int"
+  },
+  "inverse": {
+   "displayName": "extracting(first:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Span/RawSpan.swift",
+   "line": 866,
+   "parameterInternalNames": [
+    "maxLength"
+   ],
+   "qualifiedTypeName": "RawSpan",
+   "signature": "(Int) -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: RawSpan -> Int \u2194 Int -> RawSpan",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "UniqueArray",
+  "corpus": "swift-collections",
+  "forward": {
+   "displayName": "endIndex()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/UniqueArray/UniqueArray+ContainerOperations.swift",
+   "line": 57,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "UniqueArray",
+   "signature": "() -> Int"
+  },
+  "inverse": {
+   "displayName": "clone(capacity:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/UniqueArray/UniqueArray.swift",
+   "line": 322,
+   "parameterInternalNames": [
+    "capacity"
+   ],
+   "qualifiedTypeName": "UniqueArray",
+   "signature": "(Int) -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UniqueArray -> Int \u2194 Int -> UniqueArray",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (UniqueArray) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "RelativePath",
+  "corpus": "swift-package-manager",
+  "forward": {
+   "displayName": "appending(components:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-package-manager/Sources/Basics/FileSystem/RelativePath.swift",
+   "line": 118,
+   "parameterInternalNames": [
+    "components"
+   ],
+   "qualifiedTypeName": "RelativePath",
+   "signature": "(String) -> RelativePath"
+  },
+  "inverse": {
+   "displayName": "description()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-package-manager/Sources/Basics/FileSystem/RelativePath.swift",
+   "line": 153,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "RelativePath",
+   "signature": "() -> String"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> RelativePath \u2194 RelativePath -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "String.Index",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "_encodedOffset()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringIndex.swift",
+   "line": 115,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "String.Index",
+   "signature": "() -> Int"
+  },
+  "inverse": {
+   "displayName": "encoded(offsetBy:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringIndex.swift",
+   "line": 242,
+   "parameterInternalNames": [
+    "n"
+   ],
+   "qualifiedTypeName": "String.Index",
+   "signature": "(Int) -> String.Index"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String.Index -> Int \u2194 Int -> String.Index",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (String.Index) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "String.Index",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "_scalarAligned()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringIndex.swift",
+   "line": 320,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "String.Index",
+   "signature": "() -> String.Index"
+  },
+  "inverse": {
+   "displayName": "_encodingIndependent()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringIndex.swift",
+   "line": 481,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "String.Index",
+   "signature": "() -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String.Index -> String.Index \u2194 String.Index -> String.Index",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (String.Index) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "SQLExpression",
+  "corpus": "grdb",
+  "forward": {
+   "displayName": "not(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/QueryInterface/SQL/SQLExpression.swift",
+   "line": 881,
+   "parameterInternalNames": [
+    "expression"
+   ],
+   "qualifiedTypeName": "SQLExpression",
+   "signature": "(SQLExpression) -> Self"
+  },
+  "inverse": {
+   "displayName": "sqlExpression()",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/QueryInterface/SQL/SQLExpression.swift",
+   "line": 2285,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "SQLExpression",
+   "signature": "() -> SQLExpression"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: SQLExpression -> Self \u2194 Self -> SQLExpression",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (SQLExpression) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "_Bitmap",
+  "corpus": "swift-collections",
+  "forward": {
+   "displayName": "slot(of:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/HashTreeCollections/HashNode/_Bitmap.swift",
+   "line": 145,
+   "parameterInternalNames": [
+    "bucket"
+   ],
+   "qualifiedTypeName": "_Bitmap",
+   "signature": "(_Bucket) -> _HashSlot"
+  },
+  "inverse": {
+   "displayName": "bucket(at:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/HashTreeCollections/HashNode/_Bitmap.swift",
+   "line": 150,
+   "parameterInternalNames": [
+    "slot"
+   ],
+   "qualifiedTypeName": "_Bitmap",
+   "signature": "(_HashSlot) -> _Bucket"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _Bucket -> _HashSlot \u2194 _HashSlot -> _Bucket",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_Bitmap) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   },
+   {
+    "detail": "subject is judged impure with a witness (bucket) \u2014 a generated law would execute that impurity in-process",
+    "kind": "impureSubject",
+    "weight": -9223372036854775808
+   }
+  ],
+  "tier": "Suppressed"
+ },
+ {
+  "carrier": "_UnsafeBitSet._Word",
+  "corpus": "swift-collections",
+  "forward": {
+   "displayName": "complement()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/InternalCollectionsUtilities/UnsafeBitSet/_UnsafeBitSet+_Word.swift",
+   "line": 297,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_UnsafeBitSet._Word",
+   "signature": "() -> Self"
+  },
+  "inverse": {
+   "displayName": "intersection(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/InternalCollectionsUtilities/UnsafeBitSet/_UnsafeBitSet+_Word.swift",
+   "line": 317,
+   "parameterInternalNames": [
+    "other"
+   ],
+   "qualifiedTypeName": "_UnsafeBitSet._Word",
+   "signature": "(Self) -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _UnsafeBitSet._Word -> Self \u2194 Self -> _UnsafeBitSet._Word",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_UnsafeBitSet._Word) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "_UnsafeBitset.Word",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "intersecting(elementsBelow:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Bitset.swift",
+   "line": 283,
+   "parameterInternalNames": [
+    "bit"
+   ],
+   "qualifiedTypeName": "_UnsafeBitset.Word",
+   "signature": "(Int) -> _UnsafeBitset.Word"
+  },
+  "inverse": {
+   "displayName": "count()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Bitset.swift",
+   "line": 326,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_UnsafeBitset.Word",
+   "signature": "() -> Int"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Int -> _UnsafeBitset.Word \u2194 _UnsafeBitset.Word -> Int",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_UnsafeBitset.Word) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "ConvertServiceError",
+  "corpus": "extra:swift-docc",
+  "forward": {
+   "displayName": "errorDescription()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-docc/Sources/SwiftDocC/DocumentationService/Models/Services/Convert/ConvertServiceError.swift",
+   "line": 21,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "ConvertServiceError",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "invalidRequest(underlyingError:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-docc/Sources/SwiftDocC/DocumentationService/Models/Services/Convert/ConvertServiceError.swift",
+   "line": 40,
+   "parameterInternalNames": [
+    "underlyingError"
+   ],
+   "qualifiedTypeName": "ConvertServiceError",
+   "signature": "(String) -> ConvertServiceError"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: ConvertServiceError -> String \u2194 String -> ConvertServiceError",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (ConvertServiceError) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "Rotation",
+  "corpus": "extra:Euclid",
+  "forward": {
+   "displayName": "pitch(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/Euclid/Sources/Rotation.swift",
+   "line": 359,
+   "parameterInternalNames": [
+    "rotation"
+   ],
+   "qualifiedTypeName": "Rotation",
+   "signature": "(Angle) -> Rotation"
+  },
+  "inverse": {
+   "displayName": "roll()",
+   "file": "/Users/josephcursio/GitHub_projects/Euclid/Sources/Rotation.swift",
+   "line": 411,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Rotation",
+   "signature": "() -> Angle"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Angle -> Rotation \u2194 Rotation -> Angle",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (Rotation) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "_Pointer",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "successor()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Pointer.swift",
+   "line": 236,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_Pointer",
+   "signature": "() -> Self"
+  },
+  "inverse": {
+   "displayName": "predecessor()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Pointer.swift",
+   "line": 248,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_Pointer",
+   "signature": "() -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _Pointer -> Self \u2194 Self -> _Pointer",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_Pointer) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "SQLRelation",
+  "corpus": "grdb",
+  "forward": {
+   "displayName": "reversed()",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/QueryInterface/SQL/SQLRelation.swift",
+   "line": 268,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "SQLRelation",
+   "signature": "() -> Self"
+  },
+  "inverse": {
+   "displayName": "withStableOrder()",
+   "file": "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB/QueryInterface/SQL/SQLRelation.swift",
+   "line": 285,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "SQLRelation",
+   "signature": "() -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: SQLRelation -> Self \u2194 Self -> SQLRelation",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "UniqueArray",
+  "corpus": "swift-collections",
+  "forward": {
+   "displayName": "startIndex()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/UniqueArray/UniqueArray+ContainerOperations.swift",
+   "line": 49,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "UniqueArray",
+   "signature": "() -> Int"
+  },
+  "inverse": {
+   "displayName": "copy(capacity:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/UniqueArray/UniqueArray+Deprecated.swift",
+   "line": 251,
+   "parameterInternalNames": [
+    "capacity"
+   ],
+   "qualifiedTypeName": "UniqueArray",
+   "signature": "(Int) -> Self"
+  },
+  "klass": "TYPES-ONLY",
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UniqueArray -> Int \u2194 Int -> UniqueArray",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (UniqueArray) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "Date",
+  "corpus": "swift-foundation",
+  "forward": {
+   "displayName": "description()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/Date.swift",
+   "line": 281,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Date",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "parse(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/Formatting/Date+ISO8601FormatStyle.swift",
+   "line": 438,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "Date.ISO8601FormatStyle",
+   "signature": "(String) throws -> Date"
+  },
+  "klass": "NAMED",
+  "score": 50,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Date -> String \u2194 String -> Date",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Curated inverse name pair: parse/description",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Cross-type round-trip pair: forward in Date, reverse in Date.ISO8601FormatStyle \u2014 property cannot type-check across distinct containing types (cycle-1 calibration)",
+    "kind": "crossTypeRoundTripPair",
+    "weight": -25
+   },
+   {
+    "detail": "Value-semantic carrier (Date) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   },
+   {
+    "detail": "subject is judged impure with a witness (description) \u2014 a generated law would execute that impurity in-process",
+    "kind": "impureSubject",
+    "weight": -9223372036854775808
+   }
+  ],
+  "tier": "Suppressed"
+ },
+ {
+  "carrier": "_BridgeStorage",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "unflaggedNativeInstance()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 127,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "() -> Native"
+  },
+  "inverse": {
+   "displayName": "native(native:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 169,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "(Native) -> _BridgeStorage"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _BridgeStorage -> Native \u2194 Native -> _BridgeStorage",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'unflaggedNativeInstance' encodes the 'native' representation that `init(native:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "Path",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "rawValue(rawValue:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKitCore/Shared/Path.swift",
+   "line": 13,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "Path",
+   "signature": "(String) -> Path"
+  },
+  "inverse": {
+   "displayName": "rawValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKitCore/Shared/Path.swift",
+   "line": 30,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Shared.Path",
+   "signature": "() -> String"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> Path \u2194 Path -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'rawValue' encodes the 'rawValue' representation that `init(rawValue:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "Index",
+  "corpus": "swift-collections",
+  "forward": {
+   "displayName": "_offset(_offset:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/RigidSet/RigidSet+Index.swift",
+   "line": 23,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "Index",
+   "signature": "(UInt) -> Index"
+  },
+  "inverse": {
+   "displayName": "_offset()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/RigidSet/RigidSet+Index.swift",
+   "line": 47,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "RigidSet.Index",
+   "signature": "() -> UInt"
+  },
+  "klass": "NAMED",
+  "score": 75,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UInt -> Index \u2194 Index -> UInt",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: '_offset' encodes the '_offset' representation that `init(_offset:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Value-semantic carrier (Index) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Strong"
+ },
+ {
+  "carrier": "_BridgeStorage",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "objC(objC:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 27,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "(ObjC) -> _BridgeStorage"
+  },
+  "inverse": {
+   "displayName": "objCInstance()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 157,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "() -> ObjC"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: ObjC -> _BridgeStorage \u2194 _BridgeStorage -> ObjC",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'objCInstance' encodes the 'objC' representation that `init(objC:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "Bucket",
+  "corpus": "swift-collections",
+  "forward": {
+   "displayName": "offset(offset:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/HashTable/_HTable+Bucket.swift",
+   "line": 24,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "Bucket",
+   "signature": "(Int) -> Bucket"
+  },
+  "inverse": {
+   "displayName": "offset()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/BasicContainers/HashTable/_HTable+Bucket.swift",
+   "line": 53,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_HTable.Bucket",
+   "signature": "() -> Int"
+  },
+  "klass": "NAMED",
+  "score": 75,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Int -> Bucket \u2194 Bucket -> Int",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'offset' encodes the 'offset' representation that `init(offset:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Value-semantic carrier (Bucket) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Strong"
+ },
+ {
+  "carrier": "Int128",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "bitPattern(bitPattern:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Int128.swift",
+   "line": 18,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "Int128",
+   "signature": "(UInt128) -> Int128"
+  },
+  "inverse": {
+   "displayName": "bitPattern(bitPattern:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/UInt128.swift",
+   "line": 18,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "UInt128",
+   "signature": "(Int128) -> UInt128"
+  },
+  "klass": "NAMED",
+  "score": 50,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UInt128 -> Int128 \u2194 Int128 -> UInt128",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'bitPattern' encodes the 'bitPattern' representation that `init(bitPattern:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Cross-type round-trip pair: forward in Int128, reverse in UInt128 \u2014 property cannot type-check across distinct containing types (cycle-1 calibration)",
+    "kind": "crossTypeRoundTripPair",
+    "weight": -25
+   },
+   {
+    "detail": "Value-semantic carrier (Int128) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "InlineSlice",
+  "corpus": "swift-foundation",
+  "forward": {
+   "displayName": "capacity(capacity:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/Data/Representations/Data+InlineSlice.swift",
+   "line": 29,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "InlineSlice",
+   "signature": "(Int) -> InlineSlice"
+  },
+  "inverse": {
+   "displayName": "capacity()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/Data/Representations/Data+InlineSlice.swift",
+   "line": 118,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Data.InlineSlice",
+   "signature": "() -> Int"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Int -> InlineSlice \u2194 InlineSlice -> Int",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'capacity' encodes the 'capacity' representation that `init(capacity:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "Path",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "rawValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/JSONReference.swift",
+   "line": 203,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "JSONReference.Path",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "rawValue(rawValue:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKitCore/Shared/Path.swift",
+   "line": 13,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "Path",
+   "signature": "(String) -> Path"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Path -> String \u2194 String -> Path",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'rawValue' encodes the 'rawValue' representation that `init(rawValue:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "PathComponent",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "stringValue(stringValue:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/JSONReference.swift",
+   "line": 249,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "PathComponent",
+   "signature": "(String) -> PathComponent"
+  },
+  "inverse": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/JSONReference.swift",
+   "line": 249,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "JSONReference.PathComponent",
+   "signature": "() -> String"
+  },
+  "klass": "NAMED",
+  "score": 75,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> PathComponent \u2194 PathComponent -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'stringValue' encodes the 'stringValue' representation that `init(stringValue:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Value-semantic carrier (PathComponent) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Strong"
+ },
+ {
+  "carrier": "InputOrigin",
+  "corpus": "swift-argument-parser",
+  "forward": {
+   "displayName": "element(element:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-argument-parser/Sources/ArgumentParser/Parsing/InputOrigin.swift",
+   "line": 30,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "InputOrigin",
+   "signature": "(Element) -> InputOrigin"
+  },
+  "inverse": {
+   "displayName": "firstElement()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-argument-parser/Sources/ArgumentParser/Parsing/InputOrigin.swift",
+   "line": 66,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "InputOrigin",
+   "signature": "() -> Element"
+  },
+  "klass": "NAMED",
+  "score": 75,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Element -> InputOrigin \u2194 InputOrigin -> Element",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'firstElement' encodes the 'element' representation that `init(element:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Value-semantic carrier (InputOrigin) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   },
+   {
+    "detail": "subject is judged impure with a witness (firstElement) \u2014 a generated law would execute that impurity in-process",
+    "kind": "impureSubject",
+    "weight": -9223372036854775808
+   }
+  ],
+  "tier": "Suppressed"
+ },
+ {
+  "carrier": "PublicKey",
+  "corpus": "extra:jwt-kit",
+  "forward": {
+   "displayName": "pem(pem:)",
+   "file": "/Users/josephcursio/GitHub_projects/jwt-kit/Sources/JWTKit/ECDSA/ECDSA.swift",
+   "line": 21,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "PublicKey",
+   "signature": "(String) throws -> PublicKey"
+  },
+  "inverse": {
+   "displayName": "pemRepresentation()",
+   "file": "/Users/josephcursio/GitHub_projects/jwt-kit/Sources/JWTKit/RSA/RSA.swift",
+   "line": 31,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Insecure.RSA.PublicKey",
+   "signature": "() -> String"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> PublicKey \u2194 PublicKey -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'pemRepresentation' encodes the 'pem' representation that `init(pem:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "ContentType",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "rawValue(rawValue:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKitCore/Shared/ContentType.swift",
+   "line": 13,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "ContentType",
+   "signature": "(String) -> ContentType"
+  },
+  "inverse": {
+   "displayName": "rawValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKitCore/Shared/ContentType.swift",
+   "line": 36,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "Shared.ContentType",
+   "signature": "() -> String"
+  },
+  "klass": "NAMED",
+  "score": 75,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> ContentType \u2194 ContentType -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'rawValue' encodes the 'rawValue' representation that `init(rawValue:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Value-semantic carrier (ContentType) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Strong"
+ },
+ {
+  "carrier": "DynamicIndexCodingKey",
+  "corpus": "extra:swift-docc",
+  "forward": {
+   "displayName": "stringValue(stringValue:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-docc/Sources/SwiftDocC/Model/Rendering/Content/RenderBlockContent.swift",
+   "line": 917,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "DynamicIndexCodingKey",
+   "signature": "(String) -> DynamicIndexCodingKey"
+  },
+  "inverse": {
+   "displayName": "stringValue()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-docc/Sources/SwiftDocC/Model/Rendering/Content/RenderBlockContent.swift",
+   "line": 924,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "RenderBlockContent.Table.DynamicIndexCodingKey",
+   "signature": "() -> String"
+  },
+  "klass": "NAMED",
+  "score": 75,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> DynamicIndexCodingKey \u2194 DynamicIndexCodingKey -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'stringValue' encodes the 'stringValue' representation that `init(stringValue:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Value-semantic carrier (DynamicIndexCodingKey) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Strong"
+ },
+ {
+  "carrier": "_BridgeStorage",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "native(native:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 27,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "(Native) -> _BridgeStorage"
+  },
+  "inverse": {
+   "displayName": "unflaggedNativeInstance()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 127,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "() -> Native"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Native -> _BridgeStorage \u2194 _BridgeStorage -> Native",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'unflaggedNativeInstance' encodes the 'native' representation that `init(native:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "Path",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "rawValue(rawValue:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/JSONReference.swift",
+   "line": 207,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "Path",
+   "signature": "(String) -> Path"
+  },
+  "inverse": {
+   "displayName": "rawValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/JSONReference.swift",
+   "line": 203,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "JSONReference.Path",
+   "signature": "() -> String"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> Path \u2194 Path -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'rawValue' encodes the 'rawValue' representation that `init(rawValue:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "PrivateKey",
+  "corpus": "extra:jwt-kit",
+  "forward": {
+   "displayName": "pemRepresentation()",
+   "file": "/Users/josephcursio/GitHub_projects/jwt-kit/Sources/JWTKit/ECDSA/ECDSA.swift",
+   "line": 142,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "ECDSA.PrivateKey",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "pem(pem:)",
+   "file": "/Users/josephcursio/GitHub_projects/jwt-kit/Sources/JWTKit/EdDSA/EdDSA.swift",
+   "line": 95,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "PrivateKey",
+   "signature": "(String) throws -> PrivateKey"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: PrivateKey -> String \u2194 String -> PrivateKey",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'pemRepresentation' encodes the 'pem' representation that `init(pem:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "PathComponent",
+  "corpus": "extra:OpenAPIKit",
+  "forward": {
+   "displayName": "rawValue()",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit/JSONReference.swift",
+   "line": 252,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "JSONReference.PathComponent",
+   "signature": "() -> String"
+  },
+  "inverse": {
+   "displayName": "rawValue(rawValue:)",
+   "file": "/Users/josephcursio/GitHub_projects/OpenAPIKit/Sources/OpenAPIKit30/JSONReference.swift",
+   "line": 237,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "PathComponent",
+   "signature": "(String) -> PathComponent"
+  },
+  "klass": "NAMED",
+  "score": 75,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: PathComponent -> String \u2194 String -> PathComponent",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'rawValue' encodes the 'rawValue' representation that `init(rawValue:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   },
+   {
+    "detail": "Value-semantic carrier (PathComponent) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Strong"
+ },
+ {
+  "carrier": "PublicKey",
+  "corpus": "extra:jwt-kit",
+  "forward": {
+   "displayName": "pem(pem:)",
+   "file": "/Users/josephcursio/GitHub_projects/jwt-kit/Sources/JWTKit/ECDSA/ECDSA.swift",
+   "line": 21,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "PublicKey",
+   "signature": "(String) throws -> PublicKey"
+  },
+  "inverse": {
+   "displayName": "pemRepresentation()",
+   "file": "/Users/josephcursio/GitHub_projects/jwt-kit/Sources/JWTKit/ECDSA/ECDSA.swift",
+   "line": 39,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "ECDSA.PublicKey",
+   "signature": "() -> String"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> PublicKey \u2194 PublicKey -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'pemRepresentation' encodes the 'pem' representation that `init(pem:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "_BridgeStorage",
+  "corpus": "swiftlang-swift",
+  "forward": {
+   "displayName": "native(native:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 169,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "(Native) -> _BridgeStorage"
+  },
+  "inverse": {
+   "displayName": "unflaggedNativeInstance()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/BridgeStorage.swift",
+   "line": 214,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_BridgeStorage",
+   "signature": "() -> Native"
+  },
+  "klass": "NAMED",
+  "score": 70,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Native -> _BridgeStorage \u2194 _BridgeStorage -> Native",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Codec initializer label match: 'unflaggedNativeInstance' encodes the 'native' representation that `init(native:)` decodes",
+    "kind": "exactNameMatch",
+    "weight": 40
+   }
+  ],
+  "tier": "Likely"
+ },
+ {
+  "carrier": "SwiftFormatConfig",
+  "corpus": "swiftformat-rule-studio",
+  "forward": {
+   "displayName": "parse(_:)",
+   "file": "/Users/josephcursio/xcode_projects/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore/Sources/SwiftFormatRuleStudioCore/Config/SwiftFormatConfig.swift",
+   "line": 82,
+   "parameterInternalNames": [
+    "text"
+   ],
+   "qualifiedTypeName": "SwiftFormatConfig",
+   "signature": "(String) -> Self"
+  },
+  "inverse": {
+   "displayName": "serialized()",
+   "file": "/Users/josephcursio/xcode_projects/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore/Sources/SwiftFormatRuleStudioCore/Config/SwiftFormatConfig.swift",
+   "line": 127,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "SwiftFormatConfig",
+   "signature": "() -> String"
+  },
+  "klass": "DOCUMENTED",
+  "score": 50,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: String -> Self \u2194 Self -> String",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Docstring corroborates round-trip: 'round-trip'",
+    "kind": "docstringCorroboration",
+    "weight": 15
+   },
+   {
+    "detail": "Value-semantic carrier (SwiftFormatConfig) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Likely"
+ }
+]

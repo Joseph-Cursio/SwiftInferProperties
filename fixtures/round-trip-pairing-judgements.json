@@ -1,0 +1,246 @@
+{
+ "0": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "1": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "10": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "11": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "12": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "13": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "14": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "15": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "16": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "17": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "18": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "19": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "2": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "20": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "21": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "22": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "23": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "24": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "25": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "26": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "27": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "28": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "29": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "3": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "30": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "31": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "32": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "33": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "34": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "35": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "36": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "37": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "38": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "39": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "4": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "40": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "41": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "42": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "43": {
+  "bare_name_collision": false,
+  "judgement": "U"
+ },
+ "44": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "45": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "46": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "47": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "48": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "49": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "5": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "50": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "51": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "52": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "53": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "54": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "55": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "56": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "57": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "58": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "59": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "6": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "60": {
+  "bare_name_collision": false,
+  "judgement": "T"
+ },
+ "7": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ },
+ "8": {
+  "bare_name_collision": false,
+  "judgement": "F"
+ },
+ "9": {
+  "bare_name_collision": true,
+  "judgement": "F"
+ }
+}
