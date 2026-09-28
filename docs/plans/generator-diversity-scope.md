@@ -1,6 +1,6 @@
 # How often does a derived generator draw only a corner of its type?
 
-> **Status:** `proposed` · **As of:** 2026-09-27
+> **Status:** `shipped` · **As of:** 2026-09-27
 
 `mutation-reach.md` measured what one degenerate generator costs: `BigUInt(word:)` derived, compiled and
 ran, drew 1,000 different numbers — and every one was a single machine word, so multiplication's long
