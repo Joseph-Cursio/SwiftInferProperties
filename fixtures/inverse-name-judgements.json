@@ -1,0 +1,144 @@
+{
+ "0": {
+  "judgement": "DERIV",
+  "pair": [
+   "slot(of:)",
+   "bucket(at:)"
+  ],
+  "rules": [
+   "R4"
+  ]
+ },
+ "1": {
+  "judgement": "T",
+  "pair": [
+   "_successor()",
+   "_predecessor()"
+  ],
+  "rules": [
+   "R2"
+  ]
+ },
+ "10": {
+  "judgement": "DERIV",
+  "pair": [
+   "successor()",
+   "predecessor()"
+  ],
+  "rules": [
+   "R2"
+  ]
+ },
+ "11": {
+  "judgement": "T",
+  "pair": [
+   "_toUTF16Offset(_:)",
+   "_toUTF16Index(_:)"
+  ],
+  "rules": [
+   "R3"
+  ]
+ },
+ "12": {
+  "judgement": "DERIV",
+  "pair": [
+   "_toUTF16Offsets(_:)",
+   "_toUTF16Indices(_:)"
+  ],
+  "rules": [
+   "R3"
+  ]
+ },
+ "13": {
+  "judgement": "T",
+  "pair": [
+   "_toUTF16CodeUnit(_:)",
+   "_fromUTF16CodeUnit(_:)"
+  ],
+  "rules": [
+   "R2",
+   "R4"
+  ]
+ },
+ "2": {
+  "judgement": "T",
+  "pair": [
+   "objectiveCValue(for:)",
+   "value(for:)"
+  ],
+  "rules": [
+   "R4"
+  ]
+ },
+ "3": {
+  "judgement": "F",
+  "pair": [
+   "objectiveCValue(for:)",
+   "value(for:)"
+  ],
+  "rules": [
+   "R4"
+  ]
+ },
+ "4": {
+  "judgement": "F",
+  "pair": [
+   "value(for:)",
+   "objectiveCValue(for:)"
+  ],
+  "rules": [
+   "R4"
+  ]
+ },
+ "5": {
+  "judgement": "T",
+  "pair": [
+   "objectiveCValue(for:)",
+   "value(for:)"
+  ],
+  "rules": [
+   "R4"
+  ]
+ },
+ "6": {
+  "judgement": "F",
+  "pair": [
+   "capacity()",
+   "allocateStorage(capacity:)"
+  ],
+  "rules": [
+   "R4"
+  ]
+ },
+ "7": {
+  "judgement": "F",
+  "pair": [
+   "nextPowerOf2()",
+   "previousPowerOf2()"
+  ],
+  "rules": [
+   "R2"
+  ]
+ },
+ "8": {
+  "judgement": "DERIV",
+  "pair": [
+   "_bridgeObject(fromTagged:)",
+   "_bridgeObject(toTagged:)"
+  ],
+  "rules": [
+   "R1",
+   "R2"
+  ]
+ },
+ "9": {
+  "judgement": "T",
+  "pair": [
+   "_bridgeObject(fromNativeObject:)",
+   "_nativeObject(fromBridge:)"
+  ],
+  "rules": [
+   "R4"
+  ]
+ }
+}
