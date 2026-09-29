@@ -1,17 +1,21 @@
 # SwiftEffectInference — the shared leaf
 
-> **Status:** `reference` · **As of:** 2026-09-23
+> **Status:** `reference` · **As of:** 2026-09-29
 >
-> Written 2026-08-17; checkable claims re-verified 2026-09-23 — see the 2026-09-23 block below.
+> Written 2026-08-17; checkable claims re-verified 2026-09-23 and 2026-09-29 — see the dated blocks
+> below.
 
 
 **Repo:** `~/xcode_projects/SwiftEffectInference` (`github.com/Joseph-Cursio/SwiftEffectInference`) ·
 **Book home:** Appendix C; Chapter 26 §26.3 (the lattice), Chapter 22 §22.6 (clock-determinism).
 
-> **Counts verified 2026-08-06** against subject `SwiftEffectInference@6f45139` · observer
-> `SwiftInferProperties@2c599c0` · ⚠ **re-verified 2026-09-23** against subject
-> `SwiftEffectInference@a52117c` · pinned `1b62e764` · observer `SwiftInferProperties@79d4baab`
-> (source counts and citations only; §13 and census figures not re-taken)
+> **As of 2026-09-29** · subject `SwiftEffectInference@669428e` · pinned `1b62e764` (unmoved) ·
+> observer `SwiftInferProperties@16216624` (source counts and citations only; §13 and census
+> figures not re-taken)
+>
+> *Previous readings:* re-verified 2026-09-23 against subject `SwiftEffectInference@a52117c` ·
+> pinned `1b62e764` · observer `SwiftInferProperties@79d4baab` · counts verified 2026-08-06
+> against subject `SwiftEffectInference@6f45139` · observer `SwiftInferProperties@2c599c0`
 >
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
@@ -85,7 +89,19 @@
 > witness). Corrections are marked inline. **Not re-taken:** the §13 perf table and every census
 > figure, since both need a build or a test run; the table has no column at `1b62e764`.
 
-<!-- doc-provenance date=2026-09-23 subject=SwiftEffectInference@a52117c pinned=1b62e764bca74e727b0080f8aeaf85663877648b observer=SwiftInferProperties@79d4baab -->
+> **2026-09-29 — re-verified by reading, at SEI HEAD `669428e`; the pin has not moved.** Both
+> consumers still pin **`1b62e764`** in all four manifests. SEI HEAD is now **6 commits ahead of the
+> pin** — the four above plus `ee23734` *Widen private helpers so generated property tests can reach
+> them* and its merge `669428e`. `ee23734` is **access modifiers only**, 5 lines in 2 files:
+> `extractByQualifier`, `hasUnknownEffectDocComment`, `hasClockDeterministicDocComment` and a
+> `private extension Substring` in `EffectAnnotationParser.swift`, and `isAssignment(_:)` in
+> `PurityInferrer.swift`, all `private` → `internal`. Its message says *no behaviour change* and
+> *no API change outside the module*, and the diff agrees: pin → HEAD is now **18 `private` →
+> `internal` edits across the same 6 files**, nothing else. So every count below — 16 files / 4,927
+> lines, the 17-entry side-effect set, 11 public `PurityInferrer` methods, the per-file line counts —
+> is **unchanged at `669428e`**, and every observer citation re-checks identical at `16216624`.
+
+<!-- doc-provenance date=2026-09-29 subject=SwiftEffectInference@669428e pinned=1b62e764bca74e727b0080f8aeaf85663877648b observer=SwiftInferProperties@16216624 -->
 
 
 ```
@@ -97,7 +113,8 @@ SwiftProjectLint ──▶ SwiftInferProperties ──▶ SwiftPropertyLaws ─�
 The smallest package in the toolchain and the only one with **no CLI and no dependents below it** —
 15 source files, ~4,362 lines (re-counted 2026-08-16, after SEI #10/#11), depends on nothing in the
 set. ⚠ **Re-verified 2026-09-23: 16 files / 4,927 lines, identical at the pin `1b62e764` and at HEAD
-`a52117c`** (the 16th is `PurityRefutation.swift`, 201 lines; at `3ea25f2` it was 15 / 4,560). It is a library two other tools *embed*, which is the entire architectural point: **the linter and the inference engine consult one
+`a52117c`** (the 16th is `PurityRefutation.swift`, 201 lines; at `3ea25f2` it was 15 / 4,560).
+Still 16 / 4,927 at HEAD `669428e` (2026-09-29). It is a library two other tools *embed*, which is the entire architectural point: **the linter and the inference engine consult one
 purity oracle, so they cannot disagree about what is pure.**
 
 ### In and out, precisely
@@ -602,7 +619,7 @@ Progress against the ordered list this section used to carry:
 | | item | state |
 |---|---|---|
 | 1 | **SEI#1** — restore the cheap path | ✅ **done** (`6470222`) |
-| 2 | bump, re-running `make perf` before `make test` | ✅ **done** — budgets green (this repo reached HEAD 2026-08-07; 2 docs-only commits behind as of 2026-08-16) ⚠ **2026-09-23: pin `1b62e764` is 4 commits behind HEAD `a52117c` — not docs-only, but access-modifier-only source edits** |
+| 2 | bump, re-running `make perf` before `make test` | ✅ **done** — budgets green (this repo reached HEAD 2026-08-07; 2 docs-only commits behind as of 2026-08-16) ⚠ **2026-09-23: pin `1b62e764` is 4 commits behind HEAD `a52117c` — not docs-only, but access-modifier-only source edits** · **2026-09-29: 6 behind HEAD `669428e`, still access-modifier-only** |
 | 3 | pin-equality guard, phrased as *equality with the sibling consumer* | ⚠️ **half** — intra-repo guarded there, cross-repo unguarded ⚠ **Re-verified 2026-09-23: the cross-repo half exists** — `Tests/SwiftInferCLITests/SEICrossRepoPinTests.swift` (`pinMatchesSwiftProjectLint`), as § *The pin divergence* already records |
 | 4 | adopt `verdict(for:)` for `.pureButPartial` | ⚠️ **half — corrected 2026-08-16.** Adopted at the scan boundary; **no consumer reads the third state**, deliberately |
 | 5 | SwiftProjectLint may be paying the regression unmeasured | ✅ **moot** — its pin is past the fix |
