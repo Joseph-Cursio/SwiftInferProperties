@@ -1,6 +1,6 @@
 # Glossary
 
-> **Status:** `reference` · **As of:** 2026-08-12
+> **Status:** `reference` · **As of:** 2026-09-29
 
 
 Vocabulary used across this repo's source, docs, and CLI output. Terms are grouped by the
@@ -14,7 +14,23 @@ themselves sort for finding a word, not for learning the order.
 Every definition here is keyed to code. Where a term's authority is a specific type or file,
 it is named — prefer reading that over trusting this file, which is a map and not the territory.
 
-> **As of 2026-08-06** · `SwiftInferProperties@2c599c0`. The **definitions** here do not expire; the
+> **As of 2026-09-29** · subject `SwiftInferProperties@16216624` (`v1.156.0`) · observer
+> `SwiftInferProperties@16216624`
+>
+> *Previous reading: 2026-08-12 · subject and observer `SwiftInferProperties@718ca91`.*
+>
+> *Reading before that: 2026-08-06 · `SwiftInferProperties@2c599c0`.*
+>
+> **2026-09-29 — what this pass re-checked.** Every code pointer in the file, by grep over `Sources/`
+> and `Tests/` at `16216624`: all named types, functions, files and enum cases still exist under the
+> same names, with one caveat: `PBTSeedKind` is SwiftProjectLint's name; the local type is `SeedKind`
+> (`SeedManifest.swift`), whose `isAnalysable` still exists. Two *counts* had moved and are corrected
+> inline — `TemplateName` (20 → 21 cases, and `predicate` is now IN it) and the composer-supported set
+> (14 → 16). A decline case, `carrier-not-equatable`, was added to [Decline](#decline). Eight entries
+> for vocabulary the docs now use heavily were added, each keyed to its owner. **No measurement was
+> re-run**; every figure below keeps its date.
+>
+> The **definitions** here do not expire; the
 > **measurements embedded in them do**. Re-verify a number before citing it; the vocabulary around
 > it stands.
 >
@@ -31,7 +47,7 @@ it is named — prefer reading that over trusting this file, which is a map and 
 > corpus — the bottleneck moved from *template* reach to *carrier* reach. And the seed funnel
 > inverted into a flood: 1,738 rows on a seeded run against 30 `strong`+`likely`.
 
-<!-- doc-provenance date=2026-08-12 subject=SwiftInferProperties@718ca91 observer=SwiftInferProperties@718ca91 -->
+<!-- doc-provenance date=2026-09-29 subject=SwiftInferProperties@16216624 observer=SwiftInferProperties@16216624 -->
 
 > **2026-08-12 — scope of this re-verification.** Re-verified twice today; the second pass, at
 > `718ca91`, re-counted the template-file / enum-case ratio and found it **unmoved at 93/20**, and
@@ -217,6 +233,14 @@ score; it does not by itself propose.
 **`TestLifter` only corroborates.** Its detectors are keyed to existing templates, so
 hand-rolled random-input property tests and libFuzzer harnesses are invisible to it.
 
+### Held receiver
+An instance method's law stated with its receiver **fixed** rather than drawn:
+`codec.decode(codec.encode(x)) == x`. The receiver is configuration (a codec, a formatter); the law
+quantifies over the value. Spelled as the package tests' own construction, else one seeded draw of
+its generator. A receiver of the parameter's own type is an *operand*, not configuration, and is left
+alone. Authority: `HeldReceiver` (`Sources/SwiftInferCLI/HeldReceiver.swift`); measured in
+`docs/measurements/held-receiver-laws.md`.
+
 ### Lifted
 A `mutating` method on a carrier, or a method reachable only through one, re-expressed as the
 value-semantic `(T) -> T` shape a template needs. `idempotence-lifted` is the template; the
@@ -324,6 +348,12 @@ figures were 92/18 on 2026-08-06 and 89/17 three days before that — **the rati
 terms**, which is why the trap is stated as a ratio and not as a number to memorise. Three passes,
 three different pairs, and the same conclusion each time).
 
+**2026-09-29:** **~107** `*Template*.swift` files across `Sources/` (**100** inside `SwiftInferTemplates`, the count `swiftinferproperties.md` quotes) against **21** cases. The enum's shape changed, not
+only its size: it now holds the 16 `verifiable` templates plus five extras (`inverse-pair`,
+`identity-element`, `composition`, `invariant-preservation`, `replay-idempotence`), and **`predicate`
+is a case** — the example above is stale for that one name. `input-totality` and `filter-subset` are
+still live in the index and absent from the enum, so the trap stands.
+
 ### Tier
 Visibility band derived from score (`SwiftInferProperties/Sources/SwiftInferCore/Tier.swift`):
 
@@ -342,6 +372,18 @@ them explicitly, because score alone cannot know a verify outcome.
 **"Default tier" / "default surface"** in the docs means *what a plain run prints*:
 `likely` and above, plus whatever the refutability rescue pulls up.
 
+### Type-only pairing
+A cross-function pair (`FunctionPairing`, `forward: T -> U` with `reverse: U -> T`) whose only
+licence is **type symmetry** — the `typeSymmetrySignature` signal with no `exactNameMatch`, docstring
+or `@Discoverable` corroboration. Measured 2026-09-28 at **96%** of `round-trip` rows and **15% true**
+on a hand-check (`docs/measurements/round-trip-pairing-evidence.md`).
+
+**Pairing by resolved type name** is the pre-pairing step that stopped the worst of it: each bare
+type name is resolved to the innermost `<scope>.<Name>` visible from the function, as Swift's lookup
+would, so two unrelated `CodingKeys` no longer read as one type. Authority:
+`FunctionPairing.resolvingScopedNames` (`Sources/SwiftInferTemplates/FunctionPairing+ScopedTypeNames.swift`),
+the same move `resolvingSelf` makes for `Self`.
+
 ### Veto
 A rule that suppresses a firing the template would otherwise make. Vetoes have been the
 highest-yield catalog work in this repo — the stream-consumption veto took 53 false `likely`
@@ -351,6 +393,12 @@ Contrast with *additions*, which have moved single-digit row counts.
 ---
 
 ## Refutability
+
+### Characterisation law
+A law **read out of the subject's own body** — its guard, its rewrite — so a pass pins today's
+behaviour rather than proving it correct. Not a tautology: it catches an *edit* that changes the
+guarded answer. The emitted stub says which it is, so a green tick is not mistaken for correctness.
+Authority: `Refutability.characterisationTemplates` — `guard-domain`, `rewrite-postcondition`.
 
 ### Refutable
 A law some type-correct, plausible implementation would be **rejected** by. The scoring unit
@@ -449,6 +497,11 @@ binary-idempotence · homomorphism · multiplicative-homomorphism · measure-non
 predicate
 ```
 
+**2026-09-29: sixteen, not fourteen.** `TemplateName.verifiable` now also lists
+`differential-equivalence` (composed in `StrategistDispatchEmitter+Differential.swift`) and
+`role-postcondition` (`composeRolePostconditionPass`, which returns `nil` for eight of its ten roles
+— verifiable for `lowercased` / `uppercased` only). The list above is the 2026-08 fourteen.
+
 `predicate` joined on 2026-08-03 and routes through its **own** helper, not the algebraic one —
 it is in `verifiable` and deliberately excluded from `strategistAlgebraicLaws`, because the
 `unsupportedTemplate` error names that set and would otherwise advertise a template it cannot
@@ -488,6 +541,9 @@ running and passing. The `VerifyError` cases (`SwiftInferProperties/Sources/Swif
 | `build-failed` | the stub was composed and did not compile |
 | `runner-crashed` | the stub built and trapped |
 | `monotonicity-domain-not-comparable` | pre-flight: `a ≤ b ⟹ f(a) ≤ f(b)` needs an ordered domain |
+| `carrier-not-equatable` | pre-flight: the law needs `==` and the carrier is not `Equatable` (`UnverifiableCause`) |
+
+The strings are rendered in `VerifyCommand+AllFromIndexRecords.swift`; the cases live on `VerifyError`.
 
 **`unsupported-carrier` is nearly always the wrong suspect.** It reads like the obvious
 bottleneck and measures at ~4%. `supportedCarriers` — the constant that looks like the gate —
@@ -527,6 +583,12 @@ that date means *Pass 1 passed and Pass 2 was free*.
 `strong` + `measured-bothPass` → `verified`. The only path to the top tier; score alone never
 gets there.
 
+### Scoped alias
+A `typealias` declared inside a type (`SPMTargetDescription.Kind`), which a stored member may spell
+by its bare or qualified name. The generator resolver follows it to the underlying type; a name two
+declarations alias differently is dropped rather than guessed, and generic aliases are skipped.
+Authority: `TypeAliasMap` (`Sources/SwiftInferCore/TypeAliasMap.swift`, `resolvingNestedAliases`).
+
 ### Strategist / generator recipe
 `DerivationStrategist` (in SwiftPropertyLaws, **not** this repo) synthesizes a
 `Gen<YourType>` per carrier. The result is a `GeneratorRecipe`, whose `expression` is the
@@ -538,6 +600,12 @@ generator source as a **string**. This repo calls the strategist and never reimp
 The generated, compilable Swift package that actually runs a law. Built per suggestion in
 `.swiftinfer/verify-workdir/`. One full SwiftPM workdir *each* — an 85-entry survey left 3.4 GB
 behind, gitignored, accumulating silently. `make clean-temp` sweeps it.
+
+### Subject literals
+The plain string literals in a subject's own body, handed to the kit's `String` generators as
+`subjectTokens` so draws include the delimiters and entities the code branches on. Capped at 16,
+literals over 40 characters treated as prose and dropped. Authority: `SubjectLiterals`
+(`Sources/SwiftInferCore/SubjectLiterals.swift`); needs SwiftPropertyLaws ≥ 4.8.0.
 
 ---
 
@@ -614,6 +682,12 @@ Point the *finished* tools at real, already-fixed defects in mature public libra
 whether the loop would have caught each one **before** its fix. Stronger than a road test: a
 public fix commit predates the tools and was written by someone who never heard of them, so it
 removes the last degree of freedom a self-built answer key leaves open.
+
+### Behaviour pass / does-not-crash pass
+The funnel's split of `passed`. A **does-not-crash** pass is a law whose only check is that the call
+returned — `predicate`, `input-totality`, `determinism`; everything else is a **behaviour** pass.
+Quote both halves, never `passed` alone: the mutation check found totality catching almost nothing.
+Authority: `DOES_NOT_CRASH_TEMPLATES` in `scripts/corpus_funnel.py` (study tooling, not product).
 
 ### Border claim
 An assertion **about a repository this one cannot see**, whose failure is an absence. The
@@ -724,10 +798,23 @@ rather than hiding (`Discover.strongestFirst`) — which addresses burial but no
 `predicate-display-order.md` lists "is the score-20 volume itself a problem, now that it sorts
 last?" as still open, with the honest note that **nobody has asked a reader**.
 
+### Generator reach
+Whether the drawn inputs ever reach the code a mutant changed. A law cannot kill a mutant its
+generator never exercises, so UNEXERCISED counts measure the generator, not the law.
+`docs/measurements/mutation-reach.md` re-ran one frozen mutant set changing only the generator
+(`scripts/mutation_reach.py`). See [Mutation check](#mutation-check).
+
 ### Latent
 A shipped change verified on synthetic shapes that produces **zero delta on every measured
 corpus**. Not a failure — a genuine absence, recorded as such so nobody mistakes "no effect
 observed" for "not implemented."
+
+### Mutation check
+Plant a mutant in a subject behind a **passing** law and score it: **KILLED** (the law fails, traps or
+hangs), **DIVERGED** (the law passes but a same-seed probe shows the output changed — the law is
+blind), **UNEXERCISED** (the output never changed on the drawn inputs — the generator is blind). The
+kill rate is over exercised mutants only. Authority: `scripts/mutation_check.py`; first run in
+`docs/measurements/funnel-mutation-check.md`, mutants kept in `fixtures/mutation-check/`.
 
 ### Mutation corpus
 Hand-authored mutants (reversible patches) kept **standing** and re-run whenever the toolchain
