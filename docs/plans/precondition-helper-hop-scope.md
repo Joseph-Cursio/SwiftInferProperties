@@ -1,6 +1,6 @@
 # Should an initializer that calls a trapping helper count as stating a precondition?
 
-> **Status:** `proposed` · **As of:** 2026-09-29
+> **Status:** `shipped` · **As of:** 2026-09-29
 
 A derived generator must not call an initializer that rejects arbitrary arguments; the kit declines one
 whose body calls `assert` / `precondition` / `fatalError` / … (`InitializerPreconditionDetector`). The
