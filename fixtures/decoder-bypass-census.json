@@ -1,0 +1,1138 @@
+{
+ "flagged": [
+  {
+   "decoder": {
+    "file": "swift-nio/Sources/NIOCore/ByteBuffer-aux.swift",
+    "line": 873
+   },
+   "group": "manifest",
+   "subject": "swift-nio",
+   "type": "ByteBuffer",
+   "validating": [
+    {
+     "file": "swift-nio/Sources/NIOCore/ByteBuffer-core.swift",
+     "line": 724,
+     "signature": "init( takingOwnershipOf buffer: UnsafeMutableRawBufferPointer, allocator: ByteBufferAllocator, readerIndex: Int = 0, writerIndex: Int? = nil )"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/AttributedStringCodable.swift",
+    "line": 453
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "AttributeContainer",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+     "line": 145,
+     "signature": "init(dictionary, attributeTable: S.attributeKeyTypes()) } fileprivate init(_ dictionary: [NSAttributedString.Key : Any], attributeTable: [String : any AttributedStringKey.Type], options: _AttributeConversionOptions = []) throws"
+    },
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+     "line": 148,
+     "signature": "init(_ dictionary: [NSAttributedString.Key : Any], attributeTable: [String : any AttributedStringKey.Type], options: _AttributeConversionOptions = []) throws"
+    },
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+     "line": 149,
+     "signature": "init() for (key, value) in dictionary"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Decimal/Decimal+Conformances.swift",
+    "line": 586
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "Decimal",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Decimal/Decimal+Conformances.swift",
+     "line": 24,
+     "signature": "init?(string: __shared String, locale: __shared Locale? = nil)"
+    },
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Decimal/Decimal+Conformances.swift",
+     "line": 183,
+     "signature": "init(Int64(value)) } public init(_ value: Double)"
+    },
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Decimal/Decimal+Conformances.swift",
+     "line": 187,
+     "signature": "init(_ value: Double)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Predicate/Expressions/ExpressionEvaluation.swift",
+    "line": 62
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "ExpressionEvaluate",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Predicate/NSPredicateConversion.swift",
+     "line": 211,
+     "signature": "init()) else"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Predicate/Archiving/PredicateExpressionConstruction.swift",
+    "line": 86
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "ExpressionStructure",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Predicate/Archiving/PredicateExpressionConstruction.swift",
+     "line": 97,
+     "signature": "init(_ type: Type, with configuration: PredicateCodableConfiguration, path: [String] = []) throws"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Calendar/RecurrenceRule.swift",
+    "line": 435
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "Month",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Calendar/Calendar_Recurrence.swift",
+     "line": 32,
+     "signature": "init?(from comps: DateComponents)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Predicate/Expressions/PredicateEvaluation.swift",
+    "line": 64
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "PredicateEvaluate",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Predicate/NSPredicateConversion.swift",
+     "line": 199,
+     "signature": "init()) else"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Predicate/Expressions/Regex.swift",
+    "line": 73
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "PredicateRegex",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Predicate/Expressions/Regex.swift",
+     "line": 64,
+     "signature": "init?(_ component: some RegexComponent)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Predicate/Expressions/Range.swift",
+    "line": 66
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "Range",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+     "line": 517,
+     "signature": "init?<S: AttributedStringProtocol>(_ range: NSRange, in string: S)"
+    },
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+     "line": 560,
+     "signature": "init?( _range: Range<String.Index>, in attributedString: some AttributedStringProtocol )"
+    },
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+     "line": 624,
+     "signature": "init?( _range: Range<AttributedString.Index>, in string: Substring )"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Predicate/PredicateExpression.swift",
+    "line": 276
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "Value",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/AttributedString/FoundationAttributes.swift",
+     "line": 269,
+     "signature": "init(format: .automatic) } public init(from decoder: any Decoder) throws"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-foundation/Sources/FoundationEssentials/Calendar/RecurrenceRule.swift",
+    "line": 408
+   },
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "type": "Weekday",
+   "validating": [
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Locale/Locale+Components.swift",
+     "line": 643,
+     "signature": "init?(_ icuIndex: Int32)"
+    },
+    {
+     "file": "swift-foundation/Sources/FoundationEssentials/Locale/Locale+Components.swift",
+     "line": 651,
+     "signature": "init?(_ localePrefIndex: Int)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift/stdlib/public/core/Codable.swift",
+    "line": 5125
+   },
+   "group": "manifest",
+   "subject": "swiftlang-swift",
+   "type": "Bool",
+   "validating": [
+    {
+     "file": "swift/stdlib/public/core/Bool.swift",
+     "line": 207,
+     "signature": "init?(_ description: String)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift/stdlib/public/core/Codable.swift",
+    "line": 5399
+   },
+   "group": "manifest",
+   "subject": "swiftlang-swift",
+   "type": "Int",
+   "validating": [
+    {
+     "file": "swift/stdlib/public/core/Codable.swift",
+     "line": 6337,
+     "signature": "init?<T: CodingKey>(codingKey: T)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift/stdlib/public/core/Codable.swift",
+    "line": 5700
+   },
+   "group": "manifest",
+   "subject": "swiftlang-swift",
+   "type": "Int128",
+   "validating": [
+    {
+     "file": "swift/stdlib/public/core/Int128.swift",
+     "line": 149,
+     "signature": "init?<T>(exactly source: T) where T: BinaryInteger"
+    },
+    {
+     "file": "swift/stdlib/public/core/Int128.swift",
+     "line": 157,
+     "signature": "init<T>(_ source: T) where T: BinaryInteger"
+    },
+    {
+     "file": "swift/stdlib/public/core/Int128.swift",
+     "line": 166,
+     "signature": "init<T>(clamping source: T) where T: BinaryInteger"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift/stdlib/public/core/Codable.swift",
+    "line": 5185
+   },
+   "group": "manifest",
+   "subject": "swiftlang-swift",
+   "type": "String",
+   "validating": [
+    {
+     "file": "swift/stdlib/public/core/CString.swift",
+     "line": 79,
+     "signature": "init(_checkingCString bytes: UnsafeBufferPointer<UInt8>)"
+    },
+    {
+     "file": "swift/stdlib/public/core/CString.swift",
+     "line": 95,
+     "signature": "init(cString nullTerminatedUTF8: inout CChar)"
+    },
+    {
+     "file": "swift/stdlib/public/core/CString.swift",
+     "line": 148,
+     "signature": "init(cString nullTerminatedUTF8: inout UInt8)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift/stdlib/public/core/Codable.swift",
+    "line": 6065
+   },
+   "group": "manifest",
+   "subject": "swiftlang-swift",
+   "type": "UInt128",
+   "validating": [
+    {
+     "file": "swift/stdlib/public/core/UInt128.swift",
+     "line": 149,
+     "signature": "init?<T>(exactly source: T) where T: BinaryInteger"
+    },
+    {
+     "file": "swift/stdlib/public/core/UInt128.swift",
+     "line": 157,
+     "signature": "init<T>(_ source: T) where T: BinaryInteger"
+    },
+    {
+     "file": "swift/stdlib/public/core/UInt128.swift",
+     "line": 166,
+     "signature": "init<T>(clamping source: T) where T: BinaryInteger"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "Harmonize/Sources/Harmonize/Core/Config/Config.swift",
+    "line": 65
+   },
+   "group": "manifest",
+   "subject": "harmonize",
+   "type": "Config",
+   "validating": [
+    {
+     "file": "Harmonize/Sources/Harmonize/Core/Config/Config.swift",
+     "line": 75,
+     "signature": "init(content) } internal init(_ yaml: String) throws"
+    },
+    {
+     "file": "Harmonize/Sources/Harmonize/Core/Config/Config.swift",
+     "line": 78,
+     "signature": "init(_ yaml: String) throws"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/Indexing/Navigator/AvailabilityIndex+Ext.swift",
+    "line": 108
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "InterfaceLanguage",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Indexing/Navigator/AvailabilityIndex+Ext.swift",
+     "line": 141,
+     "signature": "init(_ name: String, id: String, mask: Int)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/Indexing/IndexingRecord.swift",
+    "line": 159
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "Kind",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/DocCCommon/JSONDecoding/SymbolGraph+FastJSONDecodable.swift",
+     "line": 360,
+     "signature": "init(rawValue: consume rawValue) } } extension SymbolGraph.Relationship.SourceOrigin: FastJSONDecodable"
+    },
+    {
+     "file": "swift-docc/Sources/DocCCommon/JSONDecoding/SymbolGraph+FastJSONDecodable.swift",
+     "line": 620,
+     "signature": "init(using decoder: inout FastSymbolGraphJSONDecoder) throws(DecodingError)"
+    },
+    {
+     "file": "swift-docc/Sources/DocCCommon/JSONDecoding/SymbolGraph+FastJSONDecodable.swift",
+     "line": 763,
+     "signature": "init(rawValue: consume rawValue)! } } extension SymbolGraph.LineList: FastJSONDecodable"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/Infrastructure/CoverageDataEntry.swift",
+    "line": 612
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "KindSpecificData",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Infrastructure/CoverageDataEntry.swift",
+     "line": 303,
+     "signature": "init?( documentationNode: DocumentationNode, renderNode: RenderNode, context: DocumentationContext ) throws"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/Indexing/IndexingRecord.swift",
+    "line": 124
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "Location",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/DocCCommon/JSONDecoding/SymbolGraph+FastJSONDecodable.swift",
+     "line": 1088,
+     "signature": "init(using decoder: inout FastSymbolGraphJSONDecoder) throws(DecodingError)"
+    },
+    {
+     "file": "swift-docc/Sources/DocCCommon/JSONDecoding/SymbolGraph+FastJSONDecodable.swift",
+     "line": 1118,
+     "signature": "init( uri: consume uri, position: consume position ) } } extension SymbolGraph.Symbol.Swift.Extension: FastJSONDecodable"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/Indexing/RenderIndexJSON/RenderIndex.swift",
+    "line": 191
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "Node",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Indexing/RenderIndexJSON/RenderIndex.swift",
+     "line": 244,
+     "signature": "init( title: String, path: String, pageType: NavigatorIndex.PageType?, isDeprecated: Bool, isExternal: Bool, isBeta: Bool, children: [Node], icon: RenderReferenceIdentifier? )"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/SwiftDocCMarkdownOutput/MarkdownOutputManifest.swift",
+    "line": 89
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "Relationship",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/DocCCommon/JSONDecoding/SymbolGraph+FastJSONDecodable.swift",
+     "line": 290,
+     "signature": "init(using decoder: inout FastSymbolGraphJSONDecoder) throws(DecodingError)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/Model/Rendering/SemanticVersion.swift",
+    "line": 45
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "SemanticVersion",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Semantics/Metadata/Availability.swift",
+     "line": 118,
+     "signature": "init?(rawDirectiveArgumentValue: String)"
+    },
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Semantics/Metadata/Availability.swift",
+     "line": 125,
+     "signature": "init(Self.separator), maxSplits: 2) guard !availabilityComponents.isEmpty else"
+    },
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Infrastructure/Symbol Graph/SymbolGraphLoader.swift",
+     "line": 355,
+     "signature": "init?(string: String)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "swift-docc/Sources/SwiftDocC/Model/Rendering/Variants/VariantCollection.swift",
+    "line": 40
+   },
+   "group": "unmet",
+   "subject": "swift-docc",
+   "type": "VariantCollection",
+   "validating": [
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Model/Rendering/Variants/VariantCollection+Symbol.swift",
+     "line": 99,
+     "signature": "init?( from traits: Set<DocumentationDataVariantsTrait>, fallbackDefaultValue: Value, transform: (DocumentationDataVariantsTrait) -> Value? )"
+    },
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Model/Rendering/Variants/VariantCollection+Symbol.swift",
+     "line": 131,
+     "signature": "init?<Value1, Value2>( from documentationDataVariants1: DocumentationDataVariants<Value1>, optionalValue documentationDataVariants2: DocumentationDataVariants<Value2>, transform: (DocumentationDataVariantsTrait, Value1, Value2?) -> Value )"
+    },
+    {
+     "file": "swift-docc/Sources/SwiftDocC/Model/Rendering/Variants/VariantCollection+Symbol.swift",
+     "line": 163,
+     "signature": "init?<Value1, Value2, Wrapped>( from documentationDataVariants1: DocumentationDataVariants<Value1>, optionalValue documentationDataVariants2: DocumentationDataVariants<Value2>, transform: (DocumentationDataVariantsTrait, Value1, Value2?) -> Value ) where Value == Wrapped?"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchemaContext.swift",
+    "line": 966
+   },
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "type": "ArrayContext",
+   "validating": [
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/DereferencedJSONSchema.swift",
+     "line": 184,
+     "signature": "init?(_ arrayContext: JSONSchema.ArrayContext)"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchema+Combining.swift",
+     "line": 489,
+     "signature": "init( items: newItems, maxItems: newMaxItems, minItems: newMinItesm, uniqueItems: newUniqueItesm ) } } extension JSONSchema.ObjectContext"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchema+Combining.swift",
+     "line": 660,
+     "signature": "init( items: items, maxItems: maxItems, minItems: _minItems, uniqueItems: _uniqueItems ) } } extension JSONSchema.ObjectContext"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "OpenAPIKit/Sources/OpenAPIKitCore/Shared/CallbackURL.swift",
+    "line": 62
+   },
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "type": "CallbackURL",
+   "validating": [
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKitCore/Shared/CallbackURL.swift",
+     "line": 40,
+     "signature": "init?(rawValue: String)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchemaContext.swift",
+    "line": 849
+   },
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "type": "NumericContext",
+   "validating": [
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchema+Combining.swift",
+     "line": 437,
+     "signature": "init( multipleOf: newMultipleOf, maximum: newMaximum, minimum: newMinimum ) } } extension JSONSchema.StringContext"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchema+Combining.swift",
+     "line": 620,
+     "signature": "init( multipleOf: multipleOf, maximum: maximum, minimum: validatedMinimum ) } } extension JSONSchema.StringContext"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit/Schema Object/JSONSchema+Combining.swift",
+     "line": 457,
+     "signature": "init( multipleOf: newMultipleOf, maximum: newMaximum, minimum: newMinimum ) } } extension JSONSchema.StringContext"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchemaContext.swift",
+    "line": 1007
+   },
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "type": "ObjectContext",
+   "validating": [
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/DereferencedJSONSchema.swift",
+     "line": 259,
+     "signature": "init?(_ objectContext: JSONSchema.ObjectContext)"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit/Schema Object/DereferencedJSONSchema.swift",
+     "line": 366,
+     "signature": "init?(_ objectContext: JSONSchema.ObjectContext)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "OpenAPIKit/Sources/OpenAPIKit/JSONReference.swift",
+    "line": 568
+   },
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "type": "Reference",
+   "validating": [
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit/JSONReference.swift",
+     "line": 473,
+     "signature": "init(jsonReference, summary: summary, description: description) } public func overriddenNonNil(description: String?) -> Self"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchemaContext.swift",
+    "line": 1077
+   },
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "type": "StringContext",
+   "validating": [
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchema+Combining.swift",
+     "line": 461,
+     "signature": "init( maxLength: newMaxLength, minLength: newMinLength, pattern: newPattern ) } } extension JSONSchema.ArrayContext"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit30/Schema Object/JSONSchema+Combining.swift",
+     "line": 640,
+     "signature": "init( maxLength: maxLength, minLength: Self._minLength(self), pattern: pattern ) } } extension JSONSchema.ArrayContext"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKit/Schema Object/JSONSchema+Combining.swift",
+     "line": 489,
+     "signature": "init( maxLength: newMaxLength, minLength: newMinLength, pattern: newPattern, contentMediaType: newContentMediaType, contentEncoding: newContentEncoding ) } } extension JSONSchema.ArrayContext"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "OpenAPIKit/Sources/OpenAPIKitCore/URLTemplate/URLTemplate.swift",
+    "line": 259
+   },
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "type": "URLTemplate",
+   "validating": [
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKitCore/URLTemplate/URLTemplate.swift",
+     "line": 101,
+     "signature": "init?(rawValue: String)"
+    },
+    {
+     "file": "OpenAPIKit/Sources/OpenAPIKitCore/URLTemplate/URLTemplate.swift",
+     "line": 103,
+     "signature": "init(templateString: rawValue) } catch"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "Harbeth/Sources/Basic/Geometry/Size.swift",
+    "line": 58
+   },
+   "group": "unmet",
+   "subject": "Harbeth",
+   "type": "C7Size",
+   "validating": [
+    {
+     "file": "Harbeth/Sources/Basic/Geometry/Size.swift",
+     "line": 43,
+     "signature": "init(width: cgImage.width, height: cgImage.height) } public init?(sampleBuffer: CMSampleBuffer)"
+    },
+    {
+     "file": "Harbeth/Sources/Basic/Geometry/Size.swift",
+     "line": 46,
+     "signature": "init?(sampleBuffer: CMSampleBuffer)"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "Harbeth/Sources/Basic/Matrix/Matrix3x3.swift",
+    "line": 24
+   },
+   "group": "unmet",
+   "subject": "Harbeth",
+   "type": "Matrix3x3",
+   "validating": [
+    {
+     "file": "Harbeth/Sources/Basic/Matrix/Matrix3x3.swift",
+     "line": 17,
+     "signature": "init(values: [Float])"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "Harbeth/Sources/Basic/Matrix/Matrix4x4.swift",
+    "line": 57
+   },
+   "group": "unmet",
+   "subject": "Harbeth",
+   "type": "Matrix4x4",
+   "validating": [
+    {
+     "file": "Harbeth/Sources/Basic/Matrix/Matrix4x4.swift",
+     "line": 17,
+     "signature": "init(values: [Float])"
+    },
+    {
+     "file": "Harbeth/Sources/Basic/Matrix/Matrix4x4.swift",
+     "line": 26,
+     "signature": "init(values: values) } public init(columnMajor values: [Float])"
+    },
+    {
+     "file": "Harbeth/Sources/Basic/Matrix/Matrix4x4.swift",
+     "line": 30,
+     "signature": "init(columnMajor values: [Float])"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "Harbeth/Sources/Basic/Matrix/Matrix4x5.swift",
+    "line": 38
+   },
+   "group": "unmet",
+   "subject": "Harbeth",
+   "type": "Matrix4x5",
+   "validating": [
+    {
+     "file": "Harbeth/Sources/Basic/Matrix/Matrix4x5.swift",
+     "line": 16,
+     "signature": "init(values: [Float])"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "Harbeth/Sources/Basic/Matrix/Vector3.swift",
+    "line": 30
+   },
+   "group": "unmet",
+   "subject": "Harbeth",
+   "type": "Vector3",
+   "validating": [
+    {
+     "file": "Harbeth/Sources/Basic/Matrix/Vector3.swift",
+     "line": 18,
+     "signature": "init(values: [Float])"
+    }
+   ]
+  },
+  {
+   "decoder": {
+    "file": "Harbeth/Sources/Basic/Matrix/Vector4.swift",
+    "line": 32
+   },
+   "group": "unmet",
+   "subject": "Harbeth",
+   "type": "Vector4",
+   "validating": [
+    {
+     "file": "Harbeth/Sources/Basic/Matrix/Vector4.swift",
+     "line": 20,
+     "signature": "init(values: [Float])"
+    }
+   ]
+  }
+ ],
+ "summary": [
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "LintStudioUI",
+   "swift_files": 28,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "MacCloud_client_MacOS",
+   "swift_files": 89,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "MacCloud_server",
+   "swift_files": 31,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "pbt-book",
+   "swift_files": 64,
+   "types_with_decoder": 3
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "pbt-workbook-corpus",
+   "swift_files": 16,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "pbt-workbook-grader",
+   "swift_files": 6,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "pbt-workbook-sampler",
+   "swift_files": 7,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "pbt-workbook",
+   "swift_files": 4,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftAssist",
+   "swift_files": 424,
+   "types_with_decoder": 6
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftCloneDetector",
+   "swift_files": 46,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftEffectInference",
+   "swift_files": 17,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftFormatRuleStudio",
+   "swift_files": 65,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftIdempotency",
+   "swift_files": 30,
+   "types_with_decoder": 1
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftLintRuleStudio",
+   "swift_files": 337,
+   "types_with_decoder": 2
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftLintRuleStudioTeam",
+   "swift_files": 49,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftMarkdownWiki",
+   "swift_files": 188,
+   "types_with_decoder": 1
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftProjectLint",
+   "swift_files": 535,
+   "types_with_decoder": 3
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftPropertyLaws",
+   "swift_files": 178,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "funnel",
+   "subject": "SwiftUMLStudio",
+   "swift_files": 247,
+   "types_with_decoder": 3
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-infer-core",
+   "swift_files": 184,
+   "types_with_decoder": 16
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-format",
+   "swift_files": 96,
+   "types_with_decoder": 2
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "grdb",
+   "swift_files": 334,
+   "types_with_decoder": 1
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-collections",
+   "swift_files": 575,
+   "types_with_decoder": 10
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-syntax",
+   "swift_files": 87,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 1,
+   "group": "manifest",
+   "subject": "swift-nio",
+   "swift_files": 71,
+   "types_with_decoder": 1
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-package-manager",
+   "swift_files": 78,
+   "types_with_decoder": 5
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-argument-parser",
+   "swift_files": 52,
+   "types_with_decoder": 1
+  },
+  {
+   "flagged": 10,
+   "group": "manifest",
+   "subject": "swift-foundation",
+   "swift_files": 249,
+   "types_with_decoder": 82
+  },
+  {
+   "flagged": 5,
+   "group": "manifest",
+   "subject": "swiftlang-swift",
+   "swift_files": 252,
+   "types_with_decoder": 33
+  },
+  {
+   "flagged": 1,
+   "group": "manifest",
+   "subject": "harmonize",
+   "swift_files": 48,
+   "types_with_decoder": 1
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-project-lint",
+   "swift_files": 539,
+   "types_with_decoder": 3
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-property-laws",
+   "swift_files": 100,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swift-effect-inference",
+   "swift_files": 16,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "maccloud-client-ios",
+   "swift_files": 28,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swiftlint-rule-studio",
+   "swift_files": 177,
+   "types_with_decoder": 2
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "swiftformat-rule-studio",
+   "swift_files": 42,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "planted-defect-arm",
+   "swift_files": 2,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "cycle27-surface",
+   "swift_files": 1,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "manifest",
+   "subject": "leaderboard-sort",
+   "swift_files": 4,
+   "types_with_decoder": 0
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "Euclid",
+   "swift_files": 56,
+   "types_with_decoder": 16
+  },
+  {
+   "flagged": 8,
+   "group": "unmet",
+   "subject": "swift-docc",
+   "swift_files": 584,
+   "types_with_decoder": 92
+  },
+  {
+   "flagged": 7,
+   "group": "unmet",
+   "subject": "OpenAPIKit",
+   "swift_files": 197,
+   "types_with_decoder": 49
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "jwt-kit",
+   "swift_files": 84,
+   "types_with_decoder": 14
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "swift-system",
+   "swift_files": 42,
+   "types_with_decoder": 2
+  },
+  {
+   "flagged": 6,
+   "group": "unmet",
+   "subject": "Harbeth",
+   "swift_files": 393,
+   "types_with_decoder": 22
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "JiraKit",
+   "swift_files": 894,
+   "types_with_decoder": 518
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "nocturne-swift",
+   "swift_files": 808,
+   "types_with_decoder": 4
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "Open-Jellycore",
+   "swift_files": 1075,
+   "types_with_decoder": 2
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "scale-codec-swift",
+   "swift_files": 296,
+   "types_with_decoder": 256
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "sora-ios-sdk",
+   "swift_files": 119,
+   "types_with_decoder": 36
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "StripeKit",
+   "swift_files": 1027,
+   "types_with_decoder": 774
+  },
+  {
+   "flagged": 0,
+   "group": "unmet",
+   "subject": "swift-codex",
+   "swift_files": 736,
+   "types_with_decoder": 723
+  }
+ ]
+}

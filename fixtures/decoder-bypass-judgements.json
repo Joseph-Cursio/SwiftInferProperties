@@ -1,0 +1,230 @@
+{
+ "0": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swift-nio",
+  "type": "ByteBuffer"
+ },
+ "1": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swift-foundation",
+  "type": "AttributeContainer"
+ },
+ "10": {
+  "judgement": "FALSE",
+  "reason": "artefact: bare-name type collision",
+  "subject": "swift-foundation",
+  "type": "Weekday"
+ },
+ "11": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swiftlang-swift",
+  "type": "Bool"
+ },
+ "12": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swiftlang-swift",
+  "type": "Int"
+ },
+ "13": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swiftlang-swift",
+  "type": "Int128"
+ },
+ "14": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swiftlang-swift",
+  "type": "String"
+ },
+ "15": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swiftlang-swift",
+  "type": "UInt128"
+ },
+ "16": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "harmonize",
+  "type": "Config"
+ },
+ "17": {
+  "judgement": "BENIGN",
+  "reason": "index vs stored bitmask; the decoder must admit the built-in masks",
+  "subject": "swift-docc",
+  "type": "InterfaceLanguage"
+ },
+ "18": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "swift-docc",
+  "type": "Kind"
+ },
+ "19": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swift-docc",
+  "type": "KindSpecificData"
+ },
+ "2": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swift-foundation",
+  "type": "Decimal"
+ },
+ "20": {
+  "judgement": "FALSE",
+  "reason": "artefact: bare-name type collision",
+  "subject": "swift-docc",
+  "type": "Location"
+ },
+ "21": {
+  "judgement": "FALSE",
+  "reason": "artefact: guard as control flow",
+  "subject": "swift-docc",
+  "type": "Node"
+ },
+ "22": {
+  "judgement": "FALSE",
+  "reason": "artefact: bare-name type collision",
+  "subject": "swift-docc",
+  "type": "Relationship"
+ },
+ "23": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swift-docc",
+  "type": "SemanticVersion"
+ },
+ "24": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swift-docc",
+  "type": "VariantCollection"
+ },
+ "25": {
+  "judgement": "FALSE",
+  "reason": "artefact: bare-name type collision",
+  "subject": "OpenAPIKit",
+  "type": "ArrayContext"
+ },
+ "26": {
+  "judgement": "FALSE",
+  "reason": "decoder validates through a nested type",
+  "subject": "OpenAPIKit",
+  "type": "CallbackURL"
+ },
+ "27": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "OpenAPIKit",
+  "type": "NumericContext"
+ },
+ "28": {
+  "judgement": "FALSE",
+  "reason": "artefact: bare-name type collision",
+  "subject": "OpenAPIKit",
+  "type": "ObjectContext"
+ },
+ "29": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "OpenAPIKit",
+  "type": "Reference"
+ },
+ "3": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "swift-foundation",
+  "type": "ExpressionEvaluate"
+ },
+ "30": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "OpenAPIKit",
+  "type": "StringContext"
+ },
+ "31": {
+  "judgement": "FALSE",
+  "reason": "decoder validates via a throwing construction",
+  "subject": "OpenAPIKit",
+  "type": "URLTemplate"
+ },
+ "32": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "Harbeth",
+  "type": "C7Size"
+ },
+ "33": {
+  "judgement": "TRUE",
+  "reason": "verified by execution: decode [1,2], to_factor() traps",
+  "subject": "Harbeth",
+  "type": "Matrix3x3"
+ },
+ "34": {
+  "judgement": "TRUE",
+  "reason": "same mechanism; to_factor() indexes 16 values",
+  "subject": "Harbeth",
+  "type": "Matrix4x4"
+ },
+ "35": {
+  "judgement": "FALSE",
+  "reason": "decoder builds through the validating inits",
+  "subject": "Harbeth",
+  "type": "Matrix4x5"
+ },
+ "36": {
+  "judgement": "TRUE",
+  "reason": "same mechanism; to_factor() indexes 3 values",
+  "subject": "Harbeth",
+  "type": "Vector3"
+ },
+ "37": {
+  "judgement": "TRUE",
+  "reason": "same mechanism; to_factor() indexes 4 values",
+  "subject": "Harbeth",
+  "type": "Vector4"
+ },
+ "4": {
+  "judgement": "BENIGN",
+  "reason": "allowlist skipped; a disallowed identifier fails at resolution",
+  "subject": "swift-foundation",
+  "type": "ExpressionStructure"
+ },
+ "5": {
+  "judgement": "FALSE",
+  "reason": "different concern",
+  "subject": "swift-foundation",
+  "type": "Month"
+ },
+ "6": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "swift-foundation",
+  "type": "PredicateEvaluate"
+ },
+ "7": {
+  "judgement": "FALSE",
+  "reason": "decoder validates via a throwing construction",
+  "subject": "swift-foundation",
+  "type": "PredicateRegex"
+ },
+ "8": {
+  "judgement": "FALSE",
+  "reason": "artefact: bare-name type collision",
+  "subject": "swift-foundation",
+  "type": "Range"
+ },
+ "9": {
+  "judgement": "FALSE",
+  "reason": "artefact: .init( call",
+  "subject": "swift-foundation",
+  "type": "Value"
+ }
+}
