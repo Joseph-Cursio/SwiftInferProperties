@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.157.0] — 2026-09-29
+
+Stubs import the right module when a package declares its target with its own `path:`. PR #608.
+
+### Fixed
+
+- **A stub's module comes from the package manifest before the file's path.** The accept path took the module from `Sources/<Module>/…`, which is a convention a target declared with its own `path:` breaks: a single target at `path: "Sources"` with files in `Sources/Basic/…` produced stubs importing `Basic`, a module that does not exist. The declared target containing each file now answers first — the longest directory wins, so a nested target is not mistaken for the one enclosing it — and the path convention remains the fallback for files no declared target contains. The same resolution now serves the stub's own `@testable import`, the generated `Sendable` shims, and the imports a stub adds for types it names.
+
+### Read before quoting a number
+
+- On `yangKJ/Harbeth`, whose one target is declared at `path: "Sources"`, compiled stubs go from 0 to 88 of 230, and 66 pass.
+- Across the 19 funnel repositories the change moves nothing: every figure is identical to the previous census, because no repository there has a target whose directory disagrees with the path convention.
+- The Harbeth run is written up in `docs/measurements/subject-harbeth.md`, including a latent decode crash it surfaced in that project (posted upstream as a hardening suggestion). A census of the same decoder shape across 52 codebases found it nowhere else (`docs/measurements/decoder-bypass-census.md`).
+- Suites at release: 6,457 = 6,233 fast + 224 in perf and the eight subprocess batches, from a full `make test`, green.
+
 ## [1.156.0] — 2026-09-29
 
 Round-trip pairs stop matching two different types that share a short name, and initializers carry the type they belong to. PRs #604, #605.
