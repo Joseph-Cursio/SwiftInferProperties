@@ -97,8 +97,12 @@ to delegate from the start; no issue in its tracker concerns decoding.
 
 ⚠ **LATENT, NOT LIVE**: nothing in Harbeth's `Sources/` decodes these types, and none of its 99 test
 files does. They are `Codable` for clients (filter parameters such as `C7ColorMatrix4x5.matrix` are
-`Matrix4x5`), so the crash is reachable by any client decoding one from outside data. **Not reported
-upstream**; an issue has been drafted for the maintainer of this repository to post or not.
+`Matrix4x5`), so the crash is reachable by any client decoding one from outside data. ✅ **Posted
+upstream 2026-09-29 as a hardening suggestion — [Harbeth Discussion #55](https://github.com/yangKJ/Harbeth/discussions/55)**
+(Ideas), not a bug report: it states that Harbeth itself never produces the malformed data, gives the
+reproduction on release 3.0.1 for all four types, proposes throwing a `DecodingError` from each decoder, offers
+a PR with a test per type, and discloses that the analysis was AI-assisted. Posted to Discussions because the
+repository's issue form is for rendering/runtime bugs and its README sends design tradeoffs there.
 
 ⚠ **Not a law refutation, so not in the tally.** The `codable-round-trip` law would pass on every valid
 value; a generator trap pointed at the invariant and a reader did the rest. It is recorded as surfaced by
