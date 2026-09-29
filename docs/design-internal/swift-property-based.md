@@ -1,14 +1,18 @@
 # swift-property-based — the engine underneath
 
-> **Status:** `reference` · **As of:** 2026-08-19
+> **Status:** `reference` · **As of:** 2026-09-29
 
 
 **Repo:** [`github.com/x-sheep/swift-property-based`](https://github.com/x-sheep/swift-property-based)
 (Lennard Sprong) · **Book home:** Appendix C's closing section; `.fixedSeed` in Chapter 28 §28.1.1.
 
-> **As of 2026-08-19** · subject `swift-property-based@f5b24d3` (**`2.0.0`**, the resolved pin) ·
-> observer `SwiftInferProperties@ff20c36`. **Third-party** — the subject moves on someone else's
-> schedule, and only a resolved version bump brings it here.
+> **As of 2026-09-29** · subject `swift-property-based@f5b24d3` (**`2.0.0`**, still the resolved
+> pin) · observer `SwiftInferProperties@16216624`. Upstream `origin/main` is one commit ahead at
+> `7d405e7`, tagged **`2.0.1`** — see the 2026-09-29 note below. **Third-party** — the subject moves
+> on someone else's schedule, and only a resolved version bump brings it here.
+>
+> *Previous reading:* as of 2026-08-19 · subject `swift-property-based@f5b24d3` (`2.0.0`) ·
+> observer `SwiftInferProperties@ff20c36`.
 >
 > **2.0.0 landed 2026-08-19 and is a BEHAVIOURAL break, not a signature one.** *"A generator that
 > doesn't produce valid results will now fail the test instead of spinning indefinitely."* Adds a
@@ -25,11 +29,24 @@
 > still exhaust 10,000 attempts; the remedy is the new trait, and the stub emitters here do not yet
 > thread it through. Nothing forces that until a corpus trips it.
 >
+> **2026-09-29 — `2.0.1` is out, and nothing here resolves it yet.** One commit, `7d405e7` *Fix crash
+> when coercing ClosedRange* (2026-09-25): the internal `ClosedRange.init(_: some RangeExpression)`
+> now returns a `ClosedRange` argument unchanged. Before, a closed range ending at `Bound.max` (say
+> `100...Int.max`) took the `relative(to: .min ..< .max)` branch and overflowed — a trap. It is
+> reachable only through the **generic** entry points, `Gen.value(in: some RangeExpression)` and
+> `shrink(within: some RangeExpression)`, with the range type-erased (the upstream regression test
+> uses `as any RangeExpression<Int>`); a concrete `ClosedRange` argument picks the `ClosedRange`
+> overload and never reached it. Neither `SwiftPropertyLaws/Sources` nor this repo's `Sources/`
+> mentions `RangeExpression`, and whether any emitted stub reaches that path was **not measured**.
+> SwiftPropertyLaws requires `from: "2.0.0"`, so `2.0.1` is in range and a fresh resolve would take
+> it — but both local `Package.resolved` files (gitignored in both repos) still record `2.0.0` /
+> `f5b24d3`, so every figure here describes `2.0.0`. Patch-level, no API change.
+>
 > Counts and measurements here are **dated and will rot**. Diagnoses, design rationale, and the
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
 
-<!-- doc-provenance date=2026-08-19 subject=swift-property-based@f5b24d3a0468d688934405a9cba9516cb17be2ec version=2.0.0 observer=SwiftInferProperties@ff20c363d1e4c9f7a8b5e2d6c0a91f4b8e7d3c25 -->
+<!-- doc-provenance date=2026-09-29 subject=swift-property-based@f5b24d3a0468d688934405a9cba9516cb17be2ec version=2.0.0 observer=SwiftInferProperties@1621662403a325fa40d2afdbbafe979885fd3b2a -->
 
 
 **Not ours.** The only package in the toolchain nobody here controls, and nothing above runs without
@@ -45,6 +62,9 @@ SwiftInferProperties ─── emits `import PropertyBased` into stubs ───
 
 **Pinned at `1.2.0`** (`edaffedc`) in `Package.resolved` — **re-verified 2026-08-06, unmoved**.
 ~3,745 lines across 32 files. Swift 6.2, built on swift-testing, Foundation-optional.
+⚠ **2026-09-29: resolved at `2.0.0` (`f5b24d3`)** in both this repo's and SwiftPropertyLaws'
+`Package.resolved`, as the header says — **34 files / 3,851 lines** under `Sources/` (3,854 at
+`2.0.1`). The 1.2.0 figures above and in *Appendix C's numbers, checked* were not re-taken.
 
 ### In and out, precisely
 
