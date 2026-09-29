@@ -17,7 +17,7 @@ through `scripts/screen_candidates.py`:
 
 | candidate | revision | hand-written `Codable` ∩ `Equatable` | note |
 |---|---|---:|---|
-| **`yangKJ/Harbeth`** | `6c01592` | **13** | Metal image filters; 0 C files; macOS `.v12`; unspent |
+| **`yangKJ/Harbeth`** | `6c01592` (census); decode crash also reproduced on release `3.0.1` (`b2e6ce6`) | **13** | Metal image filters; 0 C files; macOS `.v12`; unspent |
 | `ainame/swift-codex` | `47ca43f` | 3 | |
 | `shiguredo/sora-ios-sdk` | `f7ccd8d` | 3 | iOS WebRTC wrapper |
 | `SwiftDevJournal/JiraKit` | — | 1 | 556 `Codable`, 1 `Equatable` |
@@ -85,8 +85,8 @@ helper on another type.
 **But reading the trap found a real, latent defect in Harbeth.** `init(values:)` checks the count;
 **`init(from decoder:)` does not** — it decodes `[Float]` and stores it. That holds for **four** of the five
 types: `Matrix3x3`, `Matrix4x4`, `Vector3`, `Vector4`. And `to_factor()` indexes `values[0]` … unconditionally.
-**Verified by execution for all four** on the census tree (debug build): decoding `[1,2]` into each
-succeeds with `values.count == 2`, and `to_factor()` on it traps with *Index out of range* — an array bounds
+**Verified by execution for all four**, in debug builds, twice — on the census tree at `6c01592` and again
+on release `3.0.1` (`b2e6ce6`): decoding `[1,2]` into each succeeds with `values.count == 2`, and `to_factor()` on it traps with *Index out of range* — an array bounds
 check, which Swift keeps in optimised builds, unlike the DEBUG-only count check in `init(values:)`.
 
 ⚠ **Corrected 2026-09-29: `Matrix4x5` does not bypass** — its decoder builds through `Matrix4x4(values:)` and
