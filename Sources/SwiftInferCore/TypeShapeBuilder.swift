@@ -47,7 +47,10 @@ public enum TypeShapeBuilder {
     /// is also what makes the generated code correct: a nested type must be
     /// spelled `Enclosing.Nested` to be nameable from a verifier, and every
     /// emitter interpolates the name verbatim, so no emitter needed changing.
-    public static func shapes(from typeDecls: [TypeDecl]) -> [TypeShape] {
+    /// `trappingFunctions` (`ScannedCorpus.trappingFunctions`) marks an initializer that calls a
+    /// trapping helper as asserting a precondition — see `PreconditionHelperHop`. Empty keeps every
+    /// signature as scanned.
+    public static func shapes(from typeDecls: [TypeDecl], trappingFunctions: Set<String> = []) -> [TypeShape] {
         var byName: [String: [TypeDecl]] = [:]
         for decl in typeDecls {
             byName[decl.qualifiedName, default: []].append(decl)
@@ -56,7 +59,7 @@ public enum TypeShapeBuilder {
         return byName.keys
             .sorted()
             .compactMap { name in
-                shape(name: name, group: byName[name] ?? [], universe: qualifiedNames)
+                shape(name: name, group: byName[name] ?? [], universe: qualifiedNames, trapping: trappingFunctions)
             }
     }
 
@@ -150,7 +153,8 @@ public enum TypeShapeBuilder {
     private static func shape(
         name: String,
         group: [TypeDecl],
-        universe: Set<String>
+        universe: Set<String>,
+        trapping: Set<String> = []
     ) -> TypeShape? {
         guard let primary = group.first(where: { $0.kind != .extension }) else {
             // WS-4 — no primary decl: an external/opaque type referenced only via
@@ -187,7 +191,7 @@ public enum TypeShapeBuilder {
         // `IndexedTypeShape.Kind` if such a nested type was scanned.
         let unconditionalExtensionInits = group
             .filter { $0.kind == .extension && !$0.isConditionalExtension }
-            .flatMap(\.initializers)
+            .flatMap(Self.initializerRecords)
         let resolve = { (spelling: String) in
             Self.resolvedSpelling(spelling, enclosing: name, universe: universe)
         }
@@ -216,7 +220,7 @@ public enum TypeShapeBuilder {
             // `isConditionalExtension` records are excluded. swift-collections has 267
             // conditional extensions; an initializer from one may not apply to the
             // instantiation the emitter chose, and calling it would not compile.
-            initializers: (primary.initializers + unconditionalExtensionInits).map { signature in
+            initializers: (Self.initializerRecords(primary) + unconditionalExtensionInits).map { signature, callees in
                 InitializerSignature(
                     parameters: signature.parameters.map {
                         // Substituted HERE rather than at scan time: an extension record has
@@ -245,12 +249,22 @@ public enum TypeShapeBuilder {
                     // `Euclid.Plane` — a delegating initializer deriving and trapping. The
                     // guard is now `InitializerSignatureTransportTests`, which reflects over
                     // the kit type rather than trusting this comment.
-                    assertsPrecondition: signature.assertsPrecondition,
+                    // A precondition one hop through a helper counts as one stated inline.
+                    assertsPrecondition: signature.assertsPrecondition || !trapping.isDisjoint(with: callees),
                     delegatesToSelf: signature.delegatesToSelf
                 )
             },
             enumCases: mergedEnumCases
         )
+    }
+
+    /// A record's initializers with their callee keys; a record built without them (a fixture) pairs
+    /// each with none.
+    private static func initializerRecords(_ decl: TypeDecl) -> [(InitializerSignature, [String])] {
+        let callees = decl.initializerCallees.count == decl.initializers.count
+            ? decl.initializerCallees
+            : Array(repeating: [], count: decl.initializers.count)
+        return Array(zip(decl.initializers, callees))
     }
 }
 

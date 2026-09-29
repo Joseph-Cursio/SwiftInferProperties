@@ -139,10 +139,10 @@ extension SwiftInferCommand.Discover {
             ),
             summaries: artifacts.summaries
         )
-        let typeShapesByName = Dictionary(
-            uniqueKeysWithValues: TypeShapeBuilder.shapes(from: artifacts.typeDecls)
-                .map { ($0.name, $0) }
+        let shapes = TypeShapeBuilder.shapes(
+            from: artifacts.typeDecls, trappingFunctions: artifacts.trappingFunctions
         )
+        let typeShapesByName = Dictionary(uniqueKeysWithValues: shapes.map { ($0.name, $0) })
         return HintsAndShapes(
             equivalenceClassHints: equivalenceClassHints,
             chainHints: chainHints,

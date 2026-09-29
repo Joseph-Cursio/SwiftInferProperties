@@ -61,8 +61,8 @@ extension FunctionScannerVisitor {
         // struct-gated, so extension inits reach only the codable-round-trip
         // recogniser, which hard-filters to `Decoder`-typed inits.
         let genericParameters = Self.genericParameters(in: genericParameterClause)
-        let initializers = (kind == .struct || kind == .class || kind == .extension)
-            ? MemberBlockInspector.initializers(in: memberBlock)
+        let records = (kind == .struct || kind == .class || kind == .extension)
+            ? MemberBlockInspector.initializerRecords(in: memberBlock, owner: name)
             : []
         return TypeDecl(
             name: name,
@@ -73,7 +73,8 @@ extension FunctionScannerVisitor {
             storedMembers: storedMembers,
             hasUserInit: hasUserInit,
             enumCaseNames: enumCaseNames,
-            initializers: initializers,
+            initializers: records.map(\.signature),
+            initializerCallees: records.map(\.callees),
             enumCases: enumCases,
             // `typeStack` holds the enclosing types and is pushed *after* this
             // call, so it is exactly the prefix for the decl being built. An

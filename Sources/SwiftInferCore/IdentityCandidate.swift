@@ -65,18 +65,24 @@ public struct ScannedCorpus: Sendable, Equatable {
     /// spell differently is dropped rather than guessed (`TypeAliasMap.merged`).
     public let typeAliases: [String: String]
 
+    /// Every function whose body calls a precondition function, as `PreconditionHelperHop` keys it
+    /// (`Owner.name`, or `name` for a free function) — including `private` helpers the summaries skip.
+    public let trappingFunctions: Set<String>
+
     public init(
         summaries: [FunctionSummary],
         identities: [IdentityCandidate],
         typeDecls: [TypeDecl],
         restricted: [RestrictedFunction] = [],
-        typeAliases: [String: String] = [:]
+        typeAliases: [String: String] = [:],
+        trappingFunctions: Set<String> = []
     ) {
         self.summaries = summaries
         self.identities = identities
         self.typeDecls = typeDecls
         self.restricted = restricted
         self.typeAliases = typeAliases
+        self.trappingFunctions = trappingFunctions
     }
 
     public static let empty = Self(summaries: [], identities: [], typeDecls: [])

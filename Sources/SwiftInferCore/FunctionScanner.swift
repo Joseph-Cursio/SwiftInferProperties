@@ -57,7 +57,8 @@ public enum FunctionScanner {
             identities: visitor.identities,
             typeDecls: visitor.typeDecls,
             restricted: visitor.restricted,
-            typeAliases: TypeAliasMap.merged([visitor.typeAliases])
+            typeAliases: TypeAliasMap.merged([visitor.typeAliases]),
+            trappingFunctions: visitor.trappingFunctions
         )
     }
 
@@ -77,6 +78,7 @@ public enum FunctionScanner {
         var typeDecls: [TypeDecl] = []
         var restricted: [RestrictedFunction] = []
         var aliases: [[String: String]] = []
+        var trapping: Set<String> = []
         for fileURL in swiftFiles {
             let corpus = try scanCorpus(file: fileURL)
             summaries.append(contentsOf: corpus.summaries)
@@ -84,6 +86,7 @@ public enum FunctionScanner {
             typeDecls.append(contentsOf: corpus.typeDecls)
             restricted.append(contentsOf: corpus.restricted)
             aliases.append(corpus.typeAliases)
+            trapping.formUnion(corpus.trappingFunctions)
         }
         return ScannedCorpus(
             // The one-hop refuting callee join, applied HERE and deliberately not in
@@ -96,7 +99,8 @@ public enum FunctionScanner {
             identities: identities,
             typeDecls: typeDecls,
             restricted: restricted,
-            typeAliases: TypeAliasMap.merged(aliases)
+            typeAliases: TypeAliasMap.merged(aliases),
+            trappingFunctions: trapping
         )
     }
 }
@@ -112,6 +116,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
 
     /// Aliases this file declares, bare and qualified, before merging. See `ScannedCorpus.typeAliases`.
     var typeAliases: [String: String] = [:]
+    /// Functions whose body calls a precondition function — see `PreconditionHelperHop`.
+    var trappingFunctions: Set<String> = []
 
     override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
         recordAlias(node)
@@ -149,6 +155,10 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     }
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        // Recorded before any of the skips below: the helper that traps is often `private`.
+        if let body = node.body, PreconditionHelperHop.traps(body) {
+            trappingFunctions.insert(PreconditionHelperHop.trappingKey(name: node.name.text, owner: typeStack.last))
+        }
         // V1.57.A (cycle 54) — skip `private` / `fileprivate` helpers, which
         // can't be property-tested cross-module (cycles 53/54 — findings
         // pruned from the tree; read them at `31a347a`).
