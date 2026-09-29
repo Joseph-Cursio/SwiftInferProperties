@@ -1,6 +1,6 @@
 # Do decoders skip the validation their own initializers make?
 
-> **Status:** `proposed` · **As of:** 2026-09-29
+> **Status:** `shipped` · **As of:** 2026-09-29
 
 `subject-harbeth.md` found a real, latent defect by reading a generator trap: five Harbeth types check
 their element count in `init(values:)` and **not** in `init(from decoder:)`, so decoding `[1,2]` produces
