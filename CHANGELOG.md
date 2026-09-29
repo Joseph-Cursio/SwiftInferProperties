@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.156.0] — 2026-09-29
+
+Round-trip pairs stop matching two different types that share a short name, and initializers carry the type they belong to. PRs #604, #605.
+
+### Fixed
+
+- **A round trip is paired by the type a name means, not how it is spelled.** A nested type's bare name in a signature now resolves the way Swift's lookup does, from the function's own scope outward, before two functions are compared — as `Self` already did. Nested types sharing a name (a `CodingKeys` inside each of many types) no longer read as the same type, so `Document.CodingKeys.stringValue` is no longer proposed as the inverse of `Operation.CodingKeys.extendedKey(for:)`.
+- **An initializer used as a round trip's decode half carries its full type path.** An initializer on a nested type (`_HTable.Bucket`) was recorded as belonging to a top-level type of the same short name.
+
+### Read before quoting a number
+
+- Across the 20 manifest corpora and five further subjects, round-trip suggestions fall from 2,372 to 838 — almost entirely one subject, OpenAPIKit (1,686 → 166). The 20 manifest corpora move from 567 to 564.
+- No removed suggestion pairs two functions of the same type, and every true pairing in a 61-row hand-check survives; the 15 removed from that sample were all cross-type collisions.
+- Two ideas were measured and not built: requiring a name-based signal for a round trip (it drops 29% of true pairings) and four structural inverse-name rules (60% precision on 10 matches, against a 70% bar). The measurements are in `docs/measurements/round-trip-pairing-evidence.md` and `inverse-name-vocabulary.md`.
+- Suites at release: 6,453 = 6,229 fast + 224 in perf and the eight subprocess batches, from a full `make test`, green.
+
 ## [1.155.0] — 2026-09-28
 
 Arithmetic libraries now get their laws: type aliases reach the generator, operators are written as Swift, and a type offering both a single-element and a collection initializer is drawn through the collection. PRs #596, #598, #601.
