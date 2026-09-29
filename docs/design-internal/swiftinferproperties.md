@@ -1,14 +1,15 @@
 # SwiftInferProperties — the inference engine
 
-> **Status:** `reference` · **As of:** 2026-09-23
+> **Status:** `reference` · **As of:** 2026-09-29
 
 
 **Repo:** this one (`github.com/Joseph-Cursio/SwiftInferProperties`, binary `swift-infer`) ·
 **Book home:** Chapters 16–18; the interaction families of 23–24; `verify-value-semantics` in
 Chapter 9; `known-properties` in Appendix A.
 
-> **As of 2026-09-23** · subject **is** the observer: `SwiftInferProperties@79d4baab` (`v1.149.0`).
-> Previously verified at `SwiftInferProperties@21bc279`, 2026-08-12.
+> **As of 2026-09-29** · subject **is** the observer: `SwiftInferProperties@16216624` (`v1.156.0`).
+> Previous reading: `SwiftInferProperties@79d4baab` (`v1.149.0`), 2026-09-23; before that
+> `SwiftInferProperties@21bc279`, 2026-08-12.
 >
 > Counts and measurements here are **dated and will rot** — this is the doc most exposed to that,
 > since its file counts and stage order change with ordinary work. Diagnoses, design rationale, and
@@ -30,11 +31,18 @@ Chapter 9; `known-properties` in Appendix A.
 > revision respectively. The stage order, the extension points and the invariants all re-verify
 > unchanged against the code.
 >
+> **What the 2026-09-29 pass changed.** 40 source commits since `79d4baab` and **seven releases**,
+> `1.150.0` → `1.156.0` — the version string finally moved (`SwiftInferCommand.swift:24`). The
+> subcommand count held at **28**; the kit pin moved `4.8.0` → `4.9.3`; one template file was added
+> (`rewrite-postcondition`); +16 source files, ~+2,150 lines. The stage order, the extension points
+> and the invariants re-verify unchanged. What moved is behind the surface — accept-path stub
+> writers, generator reach, and round-trip pairing. See *Since 2026-09-23* under **Shape**.
+>
 > **The 2026-08-06 note said this is the fastest-rotting doc in the directory.** Six days later
 > every count in it was wrong again, so treat the table as a snapshot with a date rather than a
 > fact about the package.
 
-<!-- doc-provenance date=2026-09-23 subject=SwiftInferProperties@79d4baab observer=SwiftInferProperties@79d4baab -->
+<!-- doc-provenance date=2026-09-29 subject=SwiftInferProperties@16216624 observer=SwiftInferProperties@16216624 -->
 
 
 ```
@@ -79,6 +87,34 @@ second `executableTarget` beside `swift-infer` (`Package.swift`). **~108,700 lin
 (2026-09-23, at `0e16203f`, eight commits before `79d4baab`) — carried from there, not re-taken
 here.
 
+⚠ **Re-verified 2026-09-29 at `16216624`: `v1.156.0`**, still 9 source targets. **~110,900 lines of
+Swift** (719 `.swift` files under `Sources/`, was 703). **Tests: 6,453 = 6,229 fast + 224 in `perf`
+and the eight batches**, from the full `make test` recorded in the `1.156.0` CHANGELOG entry —
+carried from there, not re-taken here.
+
+**Since 2026-09-23** (`79d4baab..16216624`, 40 commits under `Sources/` + `Package.swift`; details
+in `CHANGELOG.md` `1.150.0`–`1.156.0`):
+
+- **`1.150.0`–`1.153.0`** — more stub writers on accept (`measure-non-negativity`, `involution`,
+  `role-postcondition`, `equivalence-relation`, `codable-round-trip`, `binary-idempotence`,
+  `dual-style-consistency`); generated `Sendable` shims; class generators; **held receivers**
+  (`codec.decode(codec.encode(x)) == x`, `docs/measurements/held-receiver-laws.md`); actor
+  receivers reached with `await`; class receivers from an empty initializer.
+- **`1.154.0`** — the **`rewrite-postcondition`** template (`RewritePostconditionTemplate.swift`,
+  a characterisation law in `Refutability`); **ternary `guard-domain`**; a top-level `[String]`
+  draws its elements like a `String` carrier; `guard-domain` stops reading words inside quotes as
+  free names.
+- **After `1.154.0`** — `guard-domain` counts an underscored identifier as a free name (23 laws
+  withdrawn over 33,150 functions, 0 added).
+- **`1.155.0`** — kit `4.9.2` / `4.9.3`; **type aliases reach the accept path's generator
+  resolver**, resolved in the scope of the declaring type (`SwiftInferCore/TypeAliasMap.swift`);
+  **operator subjects written as valid Swift** — called infix/prefix, named in words
+  (`CalleeReference.identifierName`), suite names spelling operator characters.
+- **`1.156.0`** — **round-trip pairing by the type a name resolves to**, not its spelling
+  (`SwiftInferTemplates/FunctionPairing+ScopedTypeNames.swift`), and synthetic initializer
+  summaries carrying their qualified type (`InitializerDecodeSynthesizer`). Round-trip rows
+  2,372 → 838 across 25 subjects, almost all OpenAPIKit; the 20 manifest corpora 567 → 564.
+
 | target | files | 2026-08-06 | 2026-08-03 | what it owns |
 |---|---|---|---|---|
 | `SwiftInferCore` | **156** | 148 | 137 | value types, scanners, scoring, the index, purity |
@@ -93,6 +129,11 @@ here.
 `SwiftInferCLI` **301**, owning **28** subcommands (`SwiftInferCommand.swift:25–53`; confirmed by
 the built binary's `--help`) · `SwiftInferTestLifter` **44** · `SwiftInferMacro` / `Impl` 1 / 3 ·
 `SwiftInferKitEvidence` 1 · plus `soundness-probe` 1 and `swift-infer` 1, not in the table.
+
+⚠ **Re-verified 2026-09-29 at `16216624`:** `SwiftInferCore` **184** · `SwiftInferTemplates` **177**
+(**100** `*Template*`, the addition being `RewritePostconditionTemplate.swift`) · `SwiftInferCLI`
+**307**, still **28** subcommands (`SwiftInferCommand.swift:25–53`; only the version line changed
+there) · `SwiftInferTestLifter` **44** · the small targets unchanged.
 
 **Six more days moved every count except the small targets** — +8 Core, +16 CLI, +2 templates,
 +2 lifter, +4,600 lines. `SwiftInferTestLifter` moved for the first time across three passes, which
@@ -118,6 +159,11 @@ was `3.28.0`; SwiftEffectInference is revision `1b62e764bca74e727b0080f8aeaf8566
 (`Package.swift:122`), was `50c5d3a`.** `VerifierWorkdir.swiftPropertyLawsRequirement` reads
 `"4.8.0"` (`VerifierWorkdir+KitPin.swift:64`), so the equal-pins rule holds. `swift-syntax`
 (`exact: "602.0.0"`, `:113`) and `swift-argument-parser` (`from: "1.5.0"`, `:114`) unchanged.
+
+⚠ **Re-verified 2026-09-29 at `16216624`: SwiftPropertyLaws is `from: "4.9.3"` (`Package.swift:112`),
+was `4.8.0`** — via `4.9.0`, `4.9.1`, `4.9.2`. `VerifierWorkdir.swiftPropertyLawsRequirement` reads
+`"4.9.3"` (`VerifierWorkdir+KitPin.swift:64`), so the equal-pins rule still holds. SEI stays at
+revision `1b62e764` (`:122`); `swift-syntax` and `swift-argument-parser` unchanged.
 
 **The CLI is the biggest target, and that is not an accident.** Most of the hard-won behaviour in
 this repo is about *what to show a reader and when* — the tier cut, the seed focus, the rescues, the
@@ -197,6 +243,7 @@ code OWES is never hidden. Fixed by **ordering**, not hiding. See `SwiftInferPro
 **1. A template** (`SwiftInferTemplates/*Template*.swift`) decides *whether it fires* and *what score
 it assigns*, and ships the "why suggested / why this might be wrong" pair. 89 files.
 ⚠ **Re-verified 2026-09-23 at `79d4baab`: 99 files match `*Template*` by filename** (93 at `21bc279`).
+⚠ **Re-verified 2026-09-29 at `16216624`: 100** — `RewritePostconditionTemplate.swift` added.
 
 > **Before adding one, run the §10 census A/B** — two binaries from the before/after commits, run on
 > **the same day over the same corpora**. Never today's run against a remembered count: a remembered
@@ -216,6 +263,8 @@ bounds verify reach**: 13 templates, and 62% of index entries decline `unsupport
 `TemplateName.verifiable` (`TemplateName.swift:136`), which `VerifyCommand.supportedTemplates`
 reads; it was 15 at `21bc279`, `role-postcondition` being the addition. The 62% is a measurement
 and was not re-taken.
+⚠ **Re-verified 2026-09-29 at `16216624`: still 16** — `rewrite-postcondition` is not verifiable; it
+reaches a test through the accept path's stub writer (`InteractiveTriage+AcceptEntailedLaws.swift`).
 
 **4. A signal** (`Signal+Kind.swift`) contributes weighted score. The file is capped at 400 lines and
 `Signal.Kind` is one enum Swift will not split across files, so it grows monotonically with the
@@ -277,6 +326,9 @@ in here without noticing:
   `predicate` IS in the enum** (`TemplateName.swift`; it was already present, as one of 20 cases,
   at `21bc279`). `input-totality` and `filter-subset` are still absent from it while live as
   templates (`InputTotalityTemplate.swift`, `FilterSubsetTemplate.swift`), so the trap stands.
+  ⚠ **Re-verified 2026-09-29 at `16216624`: 100 template files against the same 21 cases**
+  (`TemplateName.swift` unchanged since `79d4baab`); the new `rewrite-postcondition` joins the
+  templates absent from the enum.
 - **The glossary's mode table is one short.** It says "The 24 modes"; `SwiftInferCommand.subcommands`
   has **25** — `scaffold-kit-suites` is missing from the table. Same drift shape the repo has already
   paid for twice (`CuratedEntryRole` guarding the wrong join, `KitCoverageDriftTests` asserting at
@@ -285,6 +337,8 @@ in here without noticing:
   `glossary.md:72` now reads *"The 25 `swift-infer` modes"* and its table does list
   `scaffold-kit-suites` — but `SwiftInferCommand.subcommands` now has **28**, and the table's 25
   omit `survey-diff`, `corpus` and `census`. Same shape, three rows short this time.
+  ⚠ **Re-verified 2026-09-29 at `16216624`: closed again.** `glossary.md:72` reads *"The 28
+  `swift-infer` modes"*, matching the 28 registered; the trap's shape stands.
 - **Three "reach" numbers get conflated.** Discovery reach (bounded by the catalog), verify reach
   (bounded by the *composer* set), refutation reach (bounded by the generator). `unsupported-carrier`
   reads like the bottleneck and measures at ~4%.
