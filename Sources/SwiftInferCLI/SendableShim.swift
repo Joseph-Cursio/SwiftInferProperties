@@ -155,7 +155,7 @@ extension InteractiveTriage {
         let existing = try? String(contentsOf: url, encoding: .utf8)
         // Each type's DECLARING module, as the stubs resolve theirs, then the run's module.
         let modules = Set(shimmable.compactMap { name in
-            context.sourceFileByTypeName[name].flatMap(moduleName(fromSourceFile:))
+            context.sourceFileByTypeName[name].flatMap(context.sourceModules.module(forSourceFile:))
         } + [context.moduleUnderTest].compactMap(\.self))
         let merged = SendableShim.merged(existing: existing, adding: shimmable, modules: modules)
         guard merged != existing else { return }

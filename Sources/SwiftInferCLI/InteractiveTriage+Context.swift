@@ -141,6 +141,10 @@ extension InteractiveTriage {
         /// imports are then not resolved and the stub emits what it did before.
         public let packageRoot: URL?
 
+        /// Which module each source file belongs to, from the manifest first. See
+        /// `SourceModuleResolver`; built once, from `packageRoot`.
+        let sourceModules: SourceModuleResolver
+
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -178,6 +182,7 @@ extension InteractiveTriage {
             self.sourceFileByTypeName = sourceFileByTypeName
             self.inheritedTypesByName = inheritedTypesByName
             self.packageRoot = packageRoot
+            self.sourceModules = SourceModuleResolver(packageRoot: packageRoot)
         }
     }
 }

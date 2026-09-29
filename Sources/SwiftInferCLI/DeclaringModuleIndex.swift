@@ -32,6 +32,8 @@ enum DeclaringModuleIndex {
         guard let walker = FileManager.default.enumerator(at: root, includingPropertiesForKeys: keys) else {
             return []
         }
+        // The manifest first, the path convention for anything it does not cover (a nested package).
+        let resolver = SourceModuleResolver(packageRoot: root)
         var files: [(module: String, text: String)] = []
         for case let url as URL in walker {
             if skipped.contains(url.lastPathComponent) {
@@ -39,7 +41,7 @@ enum DeclaringModuleIndex {
                 continue
             }
             guard url.pathExtension == "swift",
-                  let module = InteractiveTriage.moduleName(fromSourceFile: url.path),
+                  let module = resolver.module(forSourceFile: url.path),
                   let text = try? String(contentsOf: url, encoding: .utf8) else { continue }
             files.append((module, text))
         }

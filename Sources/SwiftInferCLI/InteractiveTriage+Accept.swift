@@ -63,7 +63,8 @@ extension InteractiveTriage {
             suggestion: suggestion,
             moduleUnderTest: context.moduleUnderTest,
             fileName: fileName,
-            carrierImports: Self.carrierImports(for: context)
+            carrierImports: Self.carrierImports(for: context),
+            sourceModules: context.sourceModules
         )
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
