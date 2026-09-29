@@ -54,17 +54,17 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,457 tests — 6,233 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-09-29** at `d26a8cb1` on **swift-property-based
+Suites green at **6,460 tests — 6,236 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-29** at `b427ffff` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`** — every stage counted from that one run, and the
 run was UNPIPED (`make test > log 2>&1`, exit **0**):
-fast **6,233** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 224, every batch to the digit**, across resolving a stub's module from
-the manifest before its path.
-**The fast half moved 6,229 → 6,233, +4** (`SourceModuleResolverTests`, the only suite added since the
+fast **6,236** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across following a precondition one hop
+through a helper call — a change to which initializers the kit may derive through.
+**The fast half moved 6,233 → 6,236, +3** (`PreconditionHelperHopTests`, the only suite added since the
 previous reading).
-**Timings**: `batch3` 349s, back near the ~350s of earlier readings after one reading at 634s; `batch2`
-653s; `batch5` 1,338s; `batch1` 174s, `batch4` 174s, `batch6` 154s, `batch7` 201s, `batch8` 507s.
+**Timings**: `batch3` 357s; `batch2` 656s; `batch5` 1,340s; `batch1` 176s, `batch4` 175s, `batch6` 152s,
+`batch7` 202s, `batch8` 513s.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -257,6 +257,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does pairing by the type a name MEANS remove the bare-name collisions?** | `docs/measurements/bare-name-pairing.md` (scope: `docs/plans/bare-name-pairing-scope.md`) | **Yes, costing no true pairing: round-trip rows 2,372 → 838**, OpenAPIKit 1,686 → 166, manifest corpora 567 → 564, 0 same-type rows removed; all 21 true sample pairings kept, exactly the 15 collisions removed. ⚠ The first A/B lost 8 true pairings — synthetic initializer summaries dropped their qualified type; fixed. `make test` unchanged |
 | **Would structural name rules name the round trips the vocabulary misses?** | `docs/measurements/inverse-name-vocabulary.md` (scope: `docs/plans/inverse-name-vocabulary-scope.md`) | **Not at a usable precision — DECLINED.** Four rules (antonyms, from/to labels, `to`-conversions, named-after-result) match 14 of 763 type-only rows; outside the 4 they were derived from, **6 of 10 true (60%)** against a 70% bar. Even a perfect version names ~1 in 10 true type-only pairings. Found: pairing across constrained extensions (`where RawValue == Int` vs `String`) |
 | **Does a fresh subject turn up real defects — and what stops it?** | `docs/measurements/subject-harbeth.md` | **Harbeth** (13 hand-written `Codable` ∩ `Equatable`, top of an 8-candidate code-search screen) first compiled **0 of 230**: stubs imported subdirectories of a `path: "Sources"` target. **Fixed** (`SourceModuleResolver`, manifest before path): 0 → 88 compiled, funnel corpus unchanged to the digit. **8 failures, 0 real** (7 false laws, 1 over-quantified). ⚠ **A latent decode crash in Harbeth, found by reading a generator trap**: four matrix/vector types check their count in `init(values:)` but not in `init(from:)`, and `to_factor()` then traps on `[1,2]` — all four verified by execution (`Matrix4x5` delegates, so it is consistent though not safe in release); not a law refutation, not in the tally; posted as a hardening suggestion, [Harbeth Discussion #55](https://github.com/yangKJ/Harbeth/discussions/55) |
+| **Does following a precondition one hop through a helper stop the generator traps?** | `docs/measurements/precondition-helper-hop.md` (scope: `docs/plans/precondition-helper-hop-scope.md`) | **Yes, on Harbeth, and nowhere else in the funnel.** An initializer calling a trapping helper now counts as asserting a precondition, so the kit declines it: Harbeth traps **7 → 2**, passes 66 unchanged, exactly the five `codable-round-trip` stubs set aside; the 19 funnel repos identical to census 20. Across 20 manifest corpora **300 of 5,129 initializers marked, 5 types lose initializer derivation, 3 correctly**. ⚠ The 2 false declines (`Heap`, `BitSet.Counted`) are row 74's inactive-`#if` defect arriving through the hop |
 | **Do decoders skip the validation their own initializers make?** | `docs/measurements/decoder-bypass-census.md` (scope: `docs/plans/decoder-bypass-census-scope.md`) | **Only in Harbeth.** 38 types flagged over 20 manifest corpora, 19 funnel repos and 13 unmet subjects; hand-checked **4 TRUE (all Harbeth), 2 BENIGN, 32 FALSE** — 15 of the FALSE are instrument artefacts, and correcting them leaves 4 of 23, still all Harbeth. Not a route to a template; 2 of 4 predictions held |
 | **Would a PRECISE delegation gate recover generators?** | `docs/measurements/delegation-gate-census.md` | **Measured NO: DECLINED 2026-09-23.** The kit declines a delegating init when ANY init on the type asserts. Resolving `self.init(…)` by labels, following chains, over 20 corpora: the gate fires on 355 types, wrongly on 16, and **10 gain a generator, all in `swift-collections`, really 3 roots plus 7 iterators** (`SortedSet` is trait-gated, `BigSubstring` is in `_RopeModule`). Floor, not ceiling: 773 inits are same-label overloads only a type-aware resolver could split. ⚠ **The Euclid exhibit that motivated it was wrong**: `Path`'s target asserts and `LineSegment`'s clean path is failable, so on Euclid it recovers 0 |
 | **Did the emitted kit suites catch a real projection bug?** | `docs/measurements/kit-suite-backtest-arms-2-3.md` | **MISS** — but the laws are not structurally blind; it is a generator-domain failure, and this repo owns it. The baseline is not green |
