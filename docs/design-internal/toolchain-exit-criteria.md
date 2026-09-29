@@ -1,6 +1,6 @@
 # Exit criteria for "the toolchain is in shape"
 
-> **Status:** `open` · **As of:** 2026-08-24
+> **Status:** `open` · **As of:** 2026-09-29
 
 Open item 8 has said *"exit criteria are unwritten"* since the item list began. This
 scores the criteria that **were** written — on 2026-08-03, inside a decision note, where
@@ -11,7 +11,7 @@ nobody looked at them again — and asks for a decision on the ones that are mis
 criteria and their scoring; **§6 is the current standing, and supersedes any earlier
 statement of open work in this file.**
 
-<!-- doc-provenance date=2026-08-25 subject=SwiftInferProperties@4477c25f observer=SwiftInferProperties@4477c25fe23d12e28e905e1aac6dd6e6dc120b6a -->
+<!-- doc-provenance date=2026-09-29 subject=SwiftInferProperties@16216624 observer=SwiftInferProperties@16216624 -->
 
 > **Why this trailer arrived late.** `make docs-drift` reported this file as *no doc-provenance
 > trailer* — which its own header calls a **broken check, not a clean bill**: exit 1 is reserved
@@ -471,6 +471,32 @@ is only that **the bar never asked for it.**
 gating.** It is still the only route to A-quality *on that subject*, and §6.2 argues
 independently that having both halves on one subject is worth having. It is no longer a
 precondition for anything.
+
+### 6.4 Readings since, 2026-09-29 — planted mutants against emitted laws
+
+**Readings, not a re-scoring.** The bar ratified 2026-08-21 and split 2026-08-22 is unchanged, and
+nothing below declares A-quality met or unmet anew; the standing is the A-quality row in §5 as last
+written (basis contested 2026-08-30, `OpenAPIKit#509` ruled INTENDED). Four committed measurements
+have since aimed planted mutants at emitted laws, which is the route that row falls back to:
+
+- **`funnel-mutation-check.md`** (2026-09-22): 49 passing laws, 68 compiled mutants; 34 changed the
+  subject's output, and the laws caught **9 of 34**. Totality caught 1 of 18 (a trap); 1,000 trials
+  added **zero** kills. **Re-scored 2026-09-26 (§9): 14 of 34** are now caught by a law the tool
+  emits, the +5 all from body-derived laws (ternary `guard-domain`, `rewrite-postcondition`).
+- **`mutation-check-new-subjects.md`** (2026-09-26): four subjects outside the funnel corpus,
+  **3 of 20** output-changing mutants caught (15%); the relational stratum got 1 mutant from 5 laws.
+- **`mutation-check-arithmetic.md`** (2026-09-27): arithmetic-operator mutants on `Euclid` and
+  `BigInt` — relational laws killed **11 of 11** exercised mutants (7 by the law's own check, 4 by
+  trap); comparison laws 7 of 12, 2 of them by the law's own check.
+- **`mutation-reach.md`** (2026-09-27): one frozen set of 97 mutants against BigInt's 8 relational
+  laws, changing only the generator — kills **35 → 58**, exercised kill rate 85% → 95%, released
+  as SwiftPropertyLaws 4.9.3.
+
+⚠ **None of the four records whether the subject's own tests catch the mutant**, which is
+A-quality's second clause; and they plant across many laws rather than against the two
+`swift-system` laws §6 step 1 names. They bear on the planted-mutant route's *mechanism* — which
+laws can kill at all, and that reach rather than budget bounds it (contrast §5.3's kill at N=500) —
+and do not by themselves score the bar.
 
 ## 7. What this document used to ask for
 

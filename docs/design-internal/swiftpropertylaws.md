@@ -1,15 +1,18 @@
 # SwiftPropertyLaws — the law kit
 
-> **Status:** `reference` · **As of:** 2026-09-23
+> **Status:** `reference` · **As of:** 2026-09-29
 
 
 **Repo:** `~/xcode_projects/SwiftPropertyLaws` (`github.com/Joseph-Cursio/SwiftPropertyLaws`) ·
 **Book home:** Chapters 13–14, Appendix A; law families surface in nearly every chapter.
 
-> **As of 2026-09-23** · subject `SwiftPropertyLaws@004b1dd` (`v4.8.0`, equal to this repo's pin,
-> which resolves `004b1dde`) · observer `SwiftInferProperties@79d4baab`
+> **As of 2026-09-29** · subject `SwiftPropertyLaws@e0926a9` (`v4.9.3`, equal to this repo's pin,
+> which resolves `e0926a96`) · observer `SwiftInferProperties@16216624`
 >
-> *Previous reading: 2026-08-25 · subject `SwiftPropertyLaws@cd5d543` (`v4.2.0`) · observer
+> *Previous reading: 2026-09-23 · subject `SwiftPropertyLaws@004b1dd` (`v4.8.0`) · observer
+> `SwiftInferProperties@79d4baab`.*
+>
+> *Reading before that: 2026-08-25 · subject `SwiftPropertyLaws@cd5d543` (`v4.2.0`) · observer
 > `SwiftInferProperties@4477c25f`.*
 >
 > ⚠ **The line above read `v3.28.0`, "equal to this repo's pin", and that had become FALSE** — the
@@ -21,10 +24,19 @@
 > reasons a decision was made **do not expire** — they were true when recorded and stay checkable.
 > If the subject repo has moved, re-verify the numbers; don't re-litigate the prose.
 
-<!-- doc-provenance date=2026-09-23 subject=SwiftPropertyLaws@004b1dd version=4.8.0 observer=SwiftInferProperties@79d4baab -->
+<!-- doc-provenance date=2026-09-29 subject=SwiftPropertyLaws@e0926a9 version=4.9.3 observer=SwiftInferProperties@16216624 -->
 
-> **2026-09-23 — scope of this re-verification.** 41 subject commits (`cd5d543..004b1dd`, v4.2.0 →
-> v4.8.0). **Re-checked by reading source, nothing built or run:** the pin and its verifier twin,
+> **2026-09-29 — scope of this re-verification.** 6 subject commits (`004b1dd..e0926a9`, v4.8.0 →
+> v4.9.3; five merged PRs, #58–#62). **Re-checked by reading source and `git show`, nothing built or
+> run:** the pin and its verifier twin, the strategist's evaluation order (`DerivationStrategy.swift`
+> is byte-identical across the range, so its `file:line` citations hold), the product list (nine,
+> unchanged), and every citation into a file the range touched. No law-suite or generator file
+> changed — `PropertyLawKit` moved only under `Internal/` — so the 44 suites, `SetAlgebra`'s 19 and
+> the curated-generator list hold by construction rather than by recount. The derivation rules that
+> changed are in the dated note under *↑ Upstream*. **NOT re-taken**, same list as below.
+>
+> **2026-09-23 — scope of the previous re-verification.** 41 subject commits (`cd5d543..004b1dd`,
+> v4.2.0 → v4.8.0). **Re-checked by reading source, nothing built or run:** the pin and its verifier twin,
 > the product list, the `check…PropertyLaws` count, `SetAlgebra`'s law count, the Ring / deferral
 > claims, the `DerivationStrategy` cases and evaluation order, the arity limit, the curated
 > generators, every symbol and `file:line` citation, and the observer-side `ProtocolCoverageMap` /
@@ -90,7 +102,9 @@ that is the thing to hold onto. The pipeline diagram says "downstream" and the `
 
 **Pin:** `from: "3.28.0"` (`Package.swift:112`), resolving to `9a73903` / tag `v3.28.0` — currently
 **equal to the kit's `HEAD`**. ⚠ **Re-verified 2026-09-23: now `from: "4.8.0"` (`Package.swift:112`),
-resolving `004b1dde` / tag `v4.8.0`, which IS the kit's `HEAD` — equality holds again.** Read the pin from `Package.swift`, never from prose; this line has
+resolving `004b1dde` / tag `v4.8.0`, which IS the kit's `HEAD` — equality holds again.**
+✅ **Re-verified 2026-09-29: `from: "4.9.3"` (`Package.swift:112`), `Package.resolved` at `e0926a96` /
+tag `v4.9.3`, again the kit's `HEAD`.** Read the pin from `Package.swift`, never from prose; this line has
 been a full major version stale before.
 
 ### In and out, precisely
@@ -184,13 +198,40 @@ the source says why (a `rawRepresentable` filter can fail to terminate). The **s
 since the last reading (`0305bca`, v4.7.0): a memberless struct derives as `Gen.always(T())`, returned
 as `.initializerBased(arguments: [])` — no new case.
 
+> **2026-09-29 — three rule changes inside `initializerBased`, v4.9.0 → v4.9.3.** Still seven cases,
+> same order; what moved is which initializer that tier picks and which types reach it
+> (`InitializerBasedDerivation.swift`, `…+CollectionPreference.swift`).
+>
+> - **A `Sendable` class now derives through its initializer** (v4.9.0, `d6a9ec3`). The guard was
+>   `kind == .struct`; it is now `.struct || isSendableClass` (`TypeShape.swift`, bare or
+>   `@unchecked Sendable`), because `PropertyBackend.check` requires `Input: Sendable`. Each draw
+>   calls the init, so every trial gets a fresh instance. Actors and the stateless tier stay
+>   struct-only, and a non-`Sendable` class's `.todo` now names the missing conformance instead of
+>   *structs only*. Same release: `Substring` is a known value type (`091ad4d`).
+> - **A text-literal initializer is declined** (v4.9.2, `149cc2e`): one parameter labelled
+>   `unicodeScalarLiteral`, `extendedGraphemeClusterLiteral` or `stringLiteral` joins the
+>   `isDeclined` reasons. The compiler calls those with source text; `BigUInt`'s force-unwraps a
+>   decimal parse and trapped on nearly every draw. Integer, float and boolean literal inits are kept.
+>   Found here — `docs/measurements/mutation-check-new-subjects.md` (9 BigInt baselines and 14 census
+>   stubs trapped).
+> - **A collection initializer is preferred over its single-element form** (v4.9.3, `15e59fe`): when
+>   an accepted one-parameter `init(x: T)` has a *later* one-parameter `init(xs: [T])` (or
+>   `Array<T>`) that is not declined and derives, the collection form wins. Deliberately only that
+>   exact pair, so no other type's choice moves; a declined collection form leaves the scalar one.
+>   Measured here as a same-mutant-set A/B — `docs/measurements/mutation-reach.md`: BigInt's relational
+>   laws killed **35 → 58** of 97 mutants, and **0 of 943** funnel stub files changed.
+>
+> The tier-6 docstring still says it *"picks the first captured initializer"*, which v4.9.3 made
+> approximate — stale in the subject, not here.
+
 **The arity cliff is real and worth knowing:** memberwise derivation supports **1–10 members**, and
 11+ falls through to `.todo` — because `swift-property-based` ships `zip` overloads up to 10-arity.
 ⚠ **Re-verified 2026-09-23 by reading the source — the cliff is at 100, not 10**, and was already
 before the 2026-08-25 reading (`f137a4e`, an ancestor of `cd5d543`). `memberwiseMemberLimit =
 memberwiseArityLimit²` (`DerivationStrategy.swift:148`): 11–100 members compose by **nested** `zip`
 (`MemberwiseEmitter.swift:77`), the guard is `storedMembers.count <= memberwiseMemberLimit`
-(`DerivationStrategy.swift:265`), and 101+ is the `.todo` (`TodoReason.swift:118`). The 10-limit still
+(`DerivationStrategy.swift:265`), and 101+ is the `.todo` (`TodoReason.swift:118`; ⚠ **`:143` at
+`e0926a9`**, moved by the class branch in the note above). The 10-limit still
 binds **per enum-case payload** (`EnumPayloadDerivation.swift:55`). ⚠ The kit's own docstrings still say
 10 at `DerivationStrategy.swift:21` and `:242` — stale in the subject, not here.
 That is an engine limit surfacing as a kit limit surfacing as a `.todo` in your stub.
@@ -213,13 +254,20 @@ Two emitters generate calls **into** the kit:
 
 **1. Verify stubs.** `VerifierWorkdir` builds a throwaway SwiftPM package per suggestion, whose
 manifest carries `VerifierWorkdir.swiftPropertyLawsRequirement` — currently `"3.28.0"`
-(⚠ **2026-09-23: `"4.8.0"`, `VerifierWorkdir+KitPin.swift:64`, equal to `Package.swift:112`**),
+(⚠ **2026-09-23: `"4.8.0"`, `VerifierWorkdir+KitPin.swift:64`, equal to `Package.swift:112`**;
+✅ **2026-09-29: `"4.9.3"`, same line, still equal**),
 **equal to this package's own pin and guarded by `VerifierWorkdirKitPinTests`.**
 
 > **The verifier's kit pin must equal this package's own.** A `--corpus-module` survey resolves both
 > in one graph; disjoint major ranges make *every* entry report `measured-error: build-failed`, which
 > reads as an architectural limitation rather than a broken manifest. Never write the version as a
 > literal in a mode arm — that is exactly how it drifted a full major version.
+
+> **2026-09-29 — a budget below one trial is now refused** (v4.9.1, `7ff07de`). `.custom(trials: 0)`
+> used to run nothing and report `.passed`; a negative count trapped the backend's `0..<trials`.
+> Both law drivers now return a `.failed` result naming the budget (`Internal/CheckPreflight.swift`),
+> and the backend clamps to `max(trials, 0)`. Found by a `measure-non-negativity` law this repo
+> proposed for `trialCount` — the seam working in the ↓ direction and coming back ↑.
 
 **2. `scaffold-kit-suites`.** `KitSuiteEmitter` — the interesting one, because it exists to close a
 gap the veto created:
@@ -364,7 +412,7 @@ unseeded finite path and now says so at the call site.
 
 | question | file |
 |---|---|
-| the derivation tiers and the 10-member arity cliff | `SwiftPropertyLaws/Sources/PropertyLawCore/DerivationStrategy.swift` |
+| the derivation tiers and the 100-member arity cliff (10 per enum payload) | `SwiftPropertyLaws/Sources/PropertyLawCore/DerivationStrategy.swift` |
 | what a `.todo` tells the user | `…/PropertyLawCore/TodoReason.swift` |
 | the products and their dependency footprints | `SwiftPropertyLaws/Package.swift` |
 | the kit's own running notes (NaN seeding, codegen fixes) | `SwiftPropertyLaws/CLAUDE.md` |

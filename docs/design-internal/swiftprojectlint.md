@@ -1,14 +1,46 @@
 # SwiftProjectLint — the entry point
 
-> **Status:** `reference` · **As of:** 2026-09-23
+> **Status:** `reference` · **As of:** 2026-09-29
 
 
 **Repo:** `~/xcode_projects/SwiftProjectLint` (`github.com/Joseph-Cursio/SwiftProjectLint`) ·
 **Book home:** Appendix C, Chapter 15, and the seed hand-off in Chapters 12 and 16.
 
-> **Counts re-verified 2026-09-23 (eighth pass)** · subject `SwiftProjectLint@0d10011f` · observer
-> `SwiftInferProperties@79d4baab` *(third pass: 2026-08-06, `SwiftProjectLint@08a4b09` /
-> `SwiftInferProperties@2c599c0`)*
+> **Counts re-verified 2026-09-29 (ninth pass)** · subject `SwiftProjectLint@d87fb491` · observer
+> `SwiftInferProperties@16216624` *(previous reading: eighth pass, 2026-09-23,
+> `SwiftProjectLint@0d10011f` / `SwiftInferProperties@79d4baab`; third pass: 2026-08-06,
+> `SwiftProjectLint@08a4b09` / `SwiftInferProperties@2c599c0`)*
+>
+> **Ninth pass, 2026-09-29 — read-only re-verification against `d87fb491`, 12 source commits past
+> `0d10011f`; nothing built or run.** **The seam did not move.** `PBTSeedsFormatter`, the
+> `PBTSeed*` models and `Sources/CLI` are untouched, so the v2 schema, the seven-rule `seedKinds`
+> map, the three `role:`-passing visitors and the `pbt-seeds` CLI surface all hold; the consumer
+> side (`SeedManifest.swift`, `SeedField.swift`, `Discover+Seeds.swift`, the parity fixture) is
+> also unchanged `79d4baab..16216624`. **Both repos still pin SEI `1b62e764`** — root manifest
+> and both nested SEI-consuming packages. What did move:
+> - **`RuleIdentifier` 212 → 213 cases (211 selectable)**: `wideReachThrough` (`f1cde1bd`,
+>   opt-in, `Info`), in `architecture` (35 → 36). It does not seed. README (211, three places)
+>   and `RULES.md` (211) agree with `selectableRules.count`.
+> - **`SourcePatternDetector` no longer walks cross-file visitors** (`5b44a395`). They report only
+>   from `finalizeAnalysis()`, which only `CrossFileAnalysisEngine` calls, so the per-file walk was
+>   discarded work. Upstream measured no output change (SwiftInferProperties 3,298 findings).
+> - **The detector's test-file check is now by path component** (`82762625`), via
+>   `BasePatternVisitor.isTestOrFixturePath`, replacing `filePath.contains("Test")`. That governs
+>   seven noisy non-seeding rules only; upstream measured **+43 findings, 0 removed** on
+>   SwiftInferProperties (Missing Documentation, Multiple Types Per File). Report counts only.
+> - **`StateVariableVisitor` resolves lines through a `SourceLocationConverter`** (`c1ea42fc`),
+>   fixing multi-byte / CRLF drift; the visitor is test-only, so no linter output changes.
+> - **110 declarations widened from `private`/`fileprivate` to `internal`** (`caf4e18b`, #263,
+>   so `swift-infer`'s generated tests reach them; a diff grep, 15 of them nested or file-level
+>   type declarations). **This can move the seed kinds on SwiftProjectLint's own corpus** — a widened
+>   pure helper stops demoting to `restricted-function` — so the *27 of 349* figure below may be
+>   stale and was **not re-taken**.
+> - The rest is internal to rules nothing here reads: `PackageGraph` nodes answer for their own
+>   manifest (`72e9b284`, `64ed68a7`), the Demeter chain filter is extracted and shared
+>   (`9b2a9dd9`, `da5f1c9b`, `3012d6b1`), and a CLAUDE.md fix (`2853f290`).
+>
+> Seed counts, flood counts and restricted-seed ratios still need the CLI and keep their
+> `e06e39fc` values.
 >
 > **Eighth pass, 2026-09-23 — read-only re-verification against `0d10011f`, nothing built or run.**
 > `RuleIdentifier` grew **204 → 212** cases (210 selectable): eight new rules, spread over
@@ -107,7 +139,7 @@
 > the project. Both the checker and these numbers are fixed; the episode is why the checker now
 > resolves a project tip and reports a behind-by-N clone as its own fact.
 
-<!-- doc-provenance date=2026-09-23 subject=SwiftProjectLint@0d10011f observer=SwiftInferProperties@79d4baab -->
+<!-- doc-provenance date=2026-09-29 subject=SwiftProjectLint@d87fb491 observer=SwiftInferProperties@16216624 -->
 
 ---
 
@@ -177,7 +209,8 @@ deliberate sentinels. ⚠ **Re-verified 2026-09-23 at `0d10011f`: was 204, now 2
 selectable + the same 2 sentinels.** New: `undeclaredTargetDependency`, `unusedTargetDependency`,
 `layerDependency`, `forceCast`, `unconditionalTrap`, `implicitCodableRawValue`,
 `impureClosureInventory`, `contradictedClockDeterminism`; `extractablePureKernel` was renamed
-`extractableTotalKernel` (`6e652e0c`), not added.
+`extractableTotalKernel` (`6e652e0c`), not added. ⚠ **2026-09-29 at `d87fb491`: 213 cases —
+211 selectable + 2 sentinels.** New: `wideReachThrough` (`f1cde1bd`).
 
 > **2026-08-15 — and the count is no longer this doc's to keep.** +1 since the last pass:
 > `.navigationButtonShouldBeLink`, which lands in `accessibility` (taking that family to 21).
@@ -242,10 +275,12 @@ selectable + the same 2 sentinels.** New: `undeclaredTargetDependency`, `unusedT
 > `0d10011f`: was 175, now 183 distinct `ruleName:` identifiers (git-tracked `Packages` +
 > `Sources`), and a textual check still finds none absent from `name:`; the registry test itself
 > was not re-run.** `unregisteredByDesign` is still `[:]`
-> (`RuleRegistrationResidualTests.swift:39`).
+> (`RuleRegistrationResidualTests.swift:39`). ⚠ **2026-09-29 at `d87fb491`: 184 distinct, still
+> none absent from `name:`; `unregisteredByDesign` still `[:]` at the same line; not re-run.**
 >
 > So the current arithmetic is 204 = 202 registered + 2 sentinels — but **quote the test, not the
-> sum.** ⚠ **2026-09-23 at `0d10011f`: 212 = 210 + 2.** The sum was right three times while a rule sat dead behind it.
+> sum.** ⚠ **2026-09-23 at `0d10011f`: 212 = 210 + 2.** ⚠ **2026-09-29 at `d87fb491`: 213 = 211 + 2.**
+> The sum was right three times while a rule sat dead behind it.
 
 What has changed since: **the enum and the registry are now asserted to agree** (2026-08-15). This
 section previously closed on *"nothing asserts the enum and the registry agree — the catalogue
@@ -258,7 +293,9 @@ first run.
 > `.unknown`. (The 2026-08-06 figures were 195 / 198 / 193 / 192.) All four still overcount or
 > mislead, for the same reason, and none of them is the registry. ⚠ **Re-verified 2026-09-23 at
 > `0d10011f`, same scope (git-tracked `Packages` + `Sources`, which reproduces 222 / 218 / 204 at
-> `e06e39fc` exactly): now 230 / 226 / 212 / 211.**
+> `e06e39fc` exactly): now 230 / 226 / 212 / 211.** ⚠ **2026-09-29 at `d87fb491`, same scope (which
+> reproduces 230 / 226 / 212 / 211 at `0d10011f` exactly): 231 / 227 / 213 / 212.** The 8 `.unknown`
+> placeholders are still in 6 files.
 >
 > **First trap: `.build`.** The obvious `grep -r … Packages Sources` sweeps vendored
 > **swift-syntax checkouts**, which contribute **786 of 1,112** `name: \.` hits and answer a
@@ -301,6 +338,10 @@ first run.
 > 32 → 35, `testability` 10 → 12 (`impureClosureInventory`, `contradictedClockDeterminism`) — and
 > the total 204 → 212.** Every other row holds. Neither new testability rule seeds, so *7 of which
 > seed* is unchanged; *~12* was not re-derived.
+>
+> ⚠ **2026-09-29 at `d87fb491`: `architecture` 35 → 36 (`wideReachThrough`, added to the same
+> switch arm as `lawOfDemeter`), total 212 → 213.** Read off the one-line diff to
+> `RuleIdentifier+Category.swift` rather than a re-parse of the whole switch; no other cell moved.
 
 > **2026-08-15:** re-derived over all 204 cases at `e06e39fc` by parsing the `category` switch, so
 > it still partitions by construction — **204 distinct, no case classified twice, none missing**.
@@ -509,6 +550,12 @@ and a seed without it is byte-identical to one written before. Re-measured 2026-
 > the shipped CLI against the repo root, default flags. The stable numerator on the subject is
 > worth noting: `enclosing-type` tracks how many `private` *types* hold pure helpers, which does
 > not move when rules are added.
+>
+> ⚠ **2026-09-29 — the subject-side figure is now suspect and was NOT re-taken.** `caf4e18b`
+> (#263) widened 110 `private`/`fileprivate` declarations to `internal`, 15 of them type
+> declarations — exactly the thing the numerator tracks, and the denominator's `restricted-function`
+> demotion. Re-take with the CLI before quoting *27 of 349*. The SwiftInferProperties arm is not
+> affected by that commit.
 
 **That paragraph turned out to be a prediction, and it was right about this repo.** *"A consumer
 acting on the kind alone can emit a patch that unblocks nothing"* is not hypothetical —
@@ -911,6 +958,9 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
   docs to the registry"*) asserts its stated count equals its row count and that every selectable
   rule has a row. `Docs/rules/` holds **213** `.md` files (including `RULES.md`) against 210 rules;
   the file count itself is still in no test's scope.
+  ⚠ **2026-09-29 at `d87fb491`: README 211 at the same three lines, `RULES.md` *"all 211 lint
+  rules"*, and `Docs/rules/` holds 214 `.md` files against 211 rules** (`wide-reach-through.md`
+  added).
 - ~~**The 10-case gap is unexplained and untested.**~~ **Retracted 2026-08-06 — there is no gap, and
   this trap was itself the trap.** 202 = 199 referenced via `name:` across *all* packages + 1 via
   `ruleName:` + 2 sentinels. The "10" came from subtracting one package's registrations from the
@@ -938,7 +988,10 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
   the thing to remember: **three of the four seeding rules classify a role** — the two candidate
   rules and `ExtractableTotalKernelVisitor` — and `.idempotencyViolation` is the only one that does
   not. ⚠ **Re-verified 2026-09-23 at `0d10011f`: three of the SEVEN** — the same three visitors pass
-  `role:`; neither `.idempotencyViolation` nor the three `carrier` rules does. Kept struck-through rather than deleted because the *count* is what a reader needs and the
+  `role:`; neither `.idempotencyViolation` nor the three `carrier` rules does. Unchanged at
+  `d87fb491` — `PBTSeedsFormatter` untouched; `caf4e18b` widened helpers in one of those visitors
+  (`ExtractableTotalKernelVisitor`) and changed no `role:` call.
+  Kept struck-through rather than deleted because the *count* is what a reader needs and the
   trap is where they will look for it.
 - **A producer-side field ADDITION is silent on the consumer, and always will be.** `Codable`
   ignores unknown keys, so a new field arrives, decodes into nothing, and changes no output. That is
