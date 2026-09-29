@@ -83,16 +83,22 @@ initializer because its precondition detector does not follow a check routed thr
 helper on another type.
 
 **But reading the trap found a real, latent defect in Harbeth.** `init(values:)` checks the count;
-**`init(from decoder:)` does not** — it decodes `[Float]` and stores it. The same holds for all five
-types. And `to_factor()` indexes `values[0]` … `values[8]` unconditionally. **Verified by execution**
-on the census tree (debug build): decoding `[1,2]` into a `Matrix3x3` succeeds with `values.count == 2`,
-and `to_factor()` on it traps with *Index out of range* — an array bounds check, which Swift keeps in
-optimised builds, unlike the DEBUG-only count check in `init(values:)`.
+**`init(from decoder:)` does not** — it decodes `[Float]` and stores it. That holds for **four** of the five
+types: `Matrix3x3`, `Matrix4x4`, `Vector3`, `Vector4`. And `to_factor()` indexes `values[0]` … unconditionally.
+**Verified by execution for all four** on the census tree (debug build): decoding `[1,2]` into each
+succeeds with `values.count == 2`, and `to_factor()` on it traps with *Index out of range* — an array bounds
+check, which Swift keeps in optimised builds, unlike the DEBUG-only count check in `init(values:)`.
+
+⚠ **Corrected 2026-09-29: `Matrix4x5` does not bypass** — its decoder builds through `Matrix4x4(values:)` and
+`Vector4(values:)`, so decoding behaves exactly like constructing one directly. It is consistent, not
+safe: in release `HarbethError.failed` only logs, so an invalid component is still built on either path.
+Harbeth's history shows all five decoders arrived together in `5386e8a` (2026-03-13), `Matrix4x5`'s written
+to delegate from the start; no issue in its tracker concerns decoding.
 
 ⚠ **LATENT, NOT LIVE**: nothing in Harbeth's `Sources/` decodes these types, and none of its 99 test
 files does. They are `Codable` for clients (filter parameters such as `C7ColorMatrix4x5.matrix` are
 `Matrix4x5`), so the crash is reachable by any client decoding one from outside data. **Not reported
-upstream.**
+upstream**; an issue has been drafted for the maintainer of this repository to post or not.
 
 ⚠ **Not a law refutation, so not in the tally.** The `codable-round-trip` law would pass on every valid
 value; a generator trap pointed at the invariant and a reader did the rest. It is recorded as surfaced by

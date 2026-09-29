@@ -169,7 +169,7 @@
  },
  "34": {
   "judgement": "TRUE",
-  "reason": "same mechanism; to_factor() indexes 16 values",
+  "reason": "verified by execution: decode [1,2], to_factor() traps",
   "subject": "Harbeth",
   "type": "Matrix4x4"
  },
@@ -181,13 +181,13 @@
  },
  "36": {
   "judgement": "TRUE",
-  "reason": "same mechanism; to_factor() indexes 3 values",
+  "reason": "verified by execution: decode [1,2], to_factor() traps",
   "subject": "Harbeth",
   "type": "Vector3"
  },
  "37": {
   "judgement": "TRUE",
-  "reason": "same mechanism; to_factor() indexes 4 values",
+  "reason": "verified by execution: decode [1,2], to_factor() traps",
   "subject": "Harbeth",
   "type": "Vector4"
  },

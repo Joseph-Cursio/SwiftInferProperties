@@ -19,8 +19,7 @@ reason (`fixtures/decoder-bypass-judgements.json`).
 | unmet subjects (Euclid, swift-docc, OpenAPIKit, jwt-kit, swift-system, Harbeth, 7 screened) | 2,508 | 21 |
 
 **Hand-checked, all 38: 4 TRUE, 2 BENIGN, 32 FALSE — and all four TRUE are Harbeth's** (`Matrix3x3`,
-`Matrix4x4`, `Vector3`, `Vector4`; `Matrix3x3` verified by execution in `subject-harbeth.md`, the other three
-by the same `to_factor()` indexing). The two BENIGN: swift-foundation's `ExpressionStructure`, whose decoder
+`Matrix4x4`, `Vector3`, `Vector4`; all four verified by execution — decode `[1,2]`, then `to_factor()` traps). The two BENIGN: swift-foundation's `ExpressionStructure`, whose decoder
 skips the type allowlist but whose identifiers fail at resolution, and swift-docc's `InterfaceLanguage`,
 whose initializer takes a bit *index* restricted to 3–7 while the decoder must admit the built-in *masks*.
 
@@ -53,4 +52,4 @@ fixing the instrument for.** Harbeth's defect stands as a finding about Harbeth.
 ## What this does not answer
 
 A text census: a rejection hidden in a helper the initializer calls is invisible to it except by the
-failure-name rule. And TRUE rows beyond Harbeth's verified `Matrix3x3` are by reading.
+failure-name rule.
