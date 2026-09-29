@@ -11,7 +11,7 @@ nobody looked at them again — and asks for a decision on the ones that are mis
 criteria and their scoring; **§6 is the current standing, and supersedes any earlier
 statement of open work in this file.**
 
-<!-- doc-provenance date=2026-08-25 subject=SwiftInferProperties@4477c25f observer=SwiftInferProperties@4477c25fe23d12e28e905e1aac6dd6e6dc120b6a -->
+<!-- doc-provenance date=2026-09-29 subject=SwiftInferProperties@16216624 observer=SwiftInferProperties@16216624 -->
 
 > **Why this trailer arrived late.** `make docs-drift` reported this file as *no doc-provenance
 > trailer* — which its own header calls a **broken check, not a clean bill**: exit 1 is reserved

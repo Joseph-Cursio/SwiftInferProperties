@@ -62,7 +62,7 @@ conversation's residue does not evaporate.
 > 2026-09-22, were struck and kept. Four rows gained a dated one-line pointer to a measurement doc that names them
 > and that they did not cite (70, 72, 73, 74); no verdict, status or existing integer was changed.
 
-<!-- doc-provenance date=2026-08-27 subject=SwiftInferProperties@8a49a65c observer=SwiftInferProperties@8a49a65c -->
+<!-- doc-provenance date=2026-09-29 subject=SwiftInferProperties@16216624 observer=SwiftInferProperties@16216624 -->
 
 > **2026-08-12 — re-dated, NOT re-measured, and the distinction is the whole point of this note.**
 > 99 commits landed since the last pass. Every figure in this file comes from a survey stream or a
