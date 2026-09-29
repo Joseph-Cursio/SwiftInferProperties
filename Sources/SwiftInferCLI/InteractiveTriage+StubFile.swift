@@ -56,7 +56,8 @@ extension InteractiveTriage {
         suggestion: Suggestion,
         moduleUnderTest: String? = nil,
         fileName: String? = nil,
-        carrierImports: CarrierImports? = nil
+        carrierImports: CarrierImports? = nil,
+        sourceModules: SourceModuleResolver? = nil
     ) -> String {
         let location = suggestion.evidence.first?.location
         let sourceLine = location.map { loc in "// Source: \(loc)" } ?? ""
@@ -74,8 +75,12 @@ extension InteractiveTriage {
         // was the defect: 0 of 19 stubs named the module under test and nothing reported it, so
         // the failure arrived as an unresolved-symbol error in code the reader did not write
         // (#415).
-        let resolvedModule = location.flatMap { Self.moduleName(fromSourceFile: $0.file) }
-            ?? moduleUnderTest
+        // The manifest answers first (`SourceModuleResolver`): the path's `Sources/<Module>/` is a
+        // convention a target with its own `path:` breaks — Harbeth's `Sources/Basic/` is target
+        // `Harbeth`, and importing `Basic` compiled 0 of 230 stubs.
+        let resolvedModule = location.flatMap { loc in
+            sourceModules?.module(forSourceFile: loc.file) ?? Self.moduleName(fromSourceFile: loc.file)
+        } ?? moduleUnderTest
         let moduleImport = resolvedModule
             .map { "@testable import \($0)\n" }
             ?? "// TODO: no module resolved for this subject — add `@testable import <YourModule>`"

@@ -54,20 +54,17 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,453 tests — 6,229 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-09-28** at `0db3589e` on **swift-property-based
+Suites green at **6,457 tests — 6,233 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-29** at `d26a8cb1` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`** — every stage counted from that one run, and the
-run was UNPIPED (`make test > log 2>&1`, exit **0**, 74m12s):
-fast **6,229** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 224, every batch to the digit**, across pairing round trips by the type a
-name resolves to and synthetic initializers carrying their qualified path — both change which round-trip
-pairs discovery proposes, and no corpus baseline moved.
-**The fast half moved 6,224 → 6,229, +5, RECONCILED BY TEST ID**: `swift test list` against the previous
-reading's list — **5 added, 0 removed** (`FunctionPairingScopedTypeNameTests` 4, and the opt-in
-`RoundTripPairingEvidenceCensusTests` 1, which skips without its environment variable).
-**Timings**: ⚠ `batch3` **634s** and `batch2` **821s**, both ABOVE their ranges (380–483s, 679–801s) for the
-first time — one reading, recorded rather than explained; `batch5` 1,379s; `batch1` 233s, `batch4` 241s,
-`batch6` 213s, `batch7` 273s, `batch8` 559s.
+run was UNPIPED (`make test > log 2>&1`, exit **0**):
+fast **6,233** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across resolving a stub's module from
+the manifest before its path.
+**The fast half moved 6,229 → 6,233, +4** (`SourceModuleResolverTests`, the only suite added since the
+previous reading).
+**Timings**: `batch3` 349s, back near the ~350s of earlier readings after one reading at 634s; `batch2`
+653s; `batch5` 1,338s; `batch1` 174s, `batch4` 174s, `batch6` 154s, `batch7` 201s, `batch8` 507s.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -259,6 +256,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **What licenses a `round-trip` pairing?** | `docs/measurements/round-trip-pairing-evidence.md` (scope: `docs/plans/round-trip-pairing-evidence-scope.md`) | **Mostly nothing: 96% of 2,372 rows rest on type symmetry alone (89% without OpenAPIKit).** Hand-check: TYPES-ONLY 15% true, NAMED 70%. ⚠ **Row 70's third gate — require a name — is CLOSED**: it drops 87% of false pairings and 29% of true ones. **Found instead: pairing by BARE type name** — 15 of 39 false pairings, 0 true; 1,520 rows, all OpenAPIKit's nested `CodingKeys`. Unbuilt |
 | **Does pairing by the type a name MEANS remove the bare-name collisions?** | `docs/measurements/bare-name-pairing.md` (scope: `docs/plans/bare-name-pairing-scope.md`) | **Yes, costing no true pairing: round-trip rows 2,372 → 838**, OpenAPIKit 1,686 → 166, manifest corpora 567 → 564, 0 same-type rows removed; all 21 true sample pairings kept, exactly the 15 collisions removed. ⚠ The first A/B lost 8 true pairings — synthetic initializer summaries dropped their qualified type; fixed. `make test` unchanged |
 | **Would structural name rules name the round trips the vocabulary misses?** | `docs/measurements/inverse-name-vocabulary.md` (scope: `docs/plans/inverse-name-vocabulary-scope.md`) | **Not at a usable precision — DECLINED.** Four rules (antonyms, from/to labels, `to`-conversions, named-after-result) match 14 of 763 type-only rows; outside the 4 they were derived from, **6 of 10 true (60%)** against a 70% bar. Even a perfect version names ~1 in 10 true type-only pairings. Found: pairing across constrained extensions (`where RawValue == Int` vs `String`) |
+| **Does a fresh subject turn up real defects — and what stops it?** | `docs/measurements/subject-harbeth.md` | **Harbeth** (13 hand-written `Codable` ∩ `Equatable`, top of an 8-candidate code-search screen) first compiled **0 of 230**: stubs imported subdirectories of a `path: "Sources"` target. **Fixed** (`SourceModuleResolver`, manifest before path): 0 → 88 compiled, funnel corpus unchanged to the digit. **8 failures, 0 real** (7 false laws, 1 over-quantified). ⚠ **A latent decode crash in Harbeth, found by reading a generator trap**: five matrix/vector types check their count in `init(values:)` but not in `init(from:)`, and `to_factor()` then traps on `[1,2]` — verified by execution; not a law refutation, not in the tally, not reported |
 | **Would a PRECISE delegation gate recover generators?** | `docs/measurements/delegation-gate-census.md` | **Measured NO: DECLINED 2026-09-23.** The kit declines a delegating init when ANY init on the type asserts. Resolving `self.init(…)` by labels, following chains, over 20 corpora: the gate fires on 355 types, wrongly on 16, and **10 gain a generator, all in `swift-collections`, really 3 roots plus 7 iterators** (`SortedSet` is trait-gated, `BigSubstring` is in `_RopeModule`). Floor, not ceiling: 773 inits are same-label overloads only a type-aware resolver could split. ⚠ **The Euclid exhibit that motivated it was wrong**: `Path`'s target asserts and `LineSegment`'s clean path is failable, so on Euclid it recovers 0 |
 | **Did the emitted kit suites catch a real projection bug?** | `docs/measurements/kit-suite-backtest-arms-2-3.md` | **MISS** — but the laws are not structurally blind; it is a generator-domain failure, and this repo owns it. The baseline is not green |
 | **Are the property tests a codebase ALREADY has any good?** | `docs/plans/existing-property-test-audit-scope.md` | Scoped, **not built**. The cheap lint version measures 0 hits and would ship a green bill of health |
