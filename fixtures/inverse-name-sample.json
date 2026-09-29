@@ -1,0 +1,567 @@
+[
+ {
+  "carrier": "_Bitmap",
+  "corpus": "swift-collections",
+  "derivation": true,
+  "forward": {
+   "displayName": "slot(of:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/HashTreeCollections/HashNode/_Bitmap.swift",
+   "line": 145,
+   "parameterInternalNames": [
+    "bucket"
+   ],
+   "qualifiedTypeName": "_Bitmap",
+   "signature": "(_Bucket) -> _HashSlot"
+  },
+  "inverse": {
+   "displayName": "bucket(at:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/HashTreeCollections/HashNode/_Bitmap.swift",
+   "line": 150,
+   "parameterInternalNames": [
+    "slot"
+   ],
+   "qualifiedTypeName": "_Bitmap",
+   "signature": "(_HashSlot) -> _Bucket"
+  },
+  "rules": [
+   "R4"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _Bucket -> _HashSlot \u2194 _HashSlot -> _Bucket",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_Bitmap) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   },
+   {
+    "detail": "subject is judged impure with a witness (bucket) \u2014 a generated law would execute that impurity in-process",
+    "kind": "impureSubject",
+    "weight": -9223372036854775808
+   }
+  ],
+  "tier": "Suppressed"
+ },
+ {
+  "carrier": "_UnsafeBitSet.Index",
+  "corpus": "swift-collections",
+  "derivation": false,
+  "forward": {
+   "displayName": "_successor()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/InternalCollectionsUtilities/UnsafeBitSet/_UnsafeBitSet+Index.swift",
+   "line": 85,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_UnsafeBitSet.Index",
+   "signature": "() -> Self"
+  },
+  "inverse": {
+   "displayName": "_predecessor()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-collections/Sources/InternalCollectionsUtilities/UnsafeBitSet/_UnsafeBitSet+Index.swift",
+   "line": 90,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_UnsafeBitSet.Index",
+   "signature": "() -> Self"
+  },
+  "rules": [
+   "R2"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _UnsafeBitSet.Index -> Self \u2194 Self -> _UnsafeBitSet.Index",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_UnsafeBitSet.Index) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "ObjectiveCConvertibleAttributedStringKey",
+  "corpus": "swift-foundation",
+  "derivation": false,
+  "forward": {
+   "displayName": "objectiveCValue(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 78,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(Value) throws -> ObjectiveCValue"
+  },
+  "inverse": {
+   "displayName": "value(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 81,
+   "parameterInternalNames": [
+    "object"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(ObjectiveCValue) throws -> Value"
+  },
+  "rules": [
+   "R4"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Value -> ObjectiveCValue \u2194 ObjectiveCValue -> Value",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (ObjectiveCConvertibleAttributedStringKey) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "ObjectiveCConvertibleAttributedStringKey",
+  "corpus": "swift-foundation",
+  "derivation": false,
+  "forward": {
+   "displayName": "objectiveCValue(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 78,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(Value) throws -> ObjectiveCValue"
+  },
+  "inverse": {
+   "displayName": "value(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 94,
+   "parameterInternalNames": [
+    "object"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(ObjectiveCValue) throws -> Value"
+  },
+  "rules": [
+   "R4"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Value -> ObjectiveCValue \u2194 ObjectiveCValue -> Value",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (ObjectiveCConvertibleAttributedStringKey) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "ObjectiveCConvertibleAttributedStringKey",
+  "corpus": "swift-foundation",
+  "derivation": false,
+  "forward": {
+   "displayName": "value(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 81,
+   "parameterInternalNames": [
+    "object"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(ObjectiveCValue) throws -> Value"
+  },
+  "inverse": {
+   "displayName": "objectiveCValue(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 91,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(Value) throws -> ObjectiveCValue"
+  },
+  "rules": [
+   "R4"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: ObjectiveCValue -> Value \u2194 Value -> ObjectiveCValue",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (ObjectiveCConvertibleAttributedStringKey) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "ObjectiveCConvertibleAttributedStringKey",
+  "corpus": "swift-foundation",
+  "derivation": false,
+  "forward": {
+   "displayName": "objectiveCValue(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 91,
+   "parameterInternalNames": [
+    "value"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(Value) throws -> ObjectiveCValue"
+  },
+  "inverse": {
+   "displayName": "value(for:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/Conversion.swift",
+   "line": 94,
+   "parameterInternalNames": [
+    "object"
+   ],
+   "qualifiedTypeName": "ObjectiveCConvertibleAttributedStringKey",
+   "signature": "(ObjectiveCValue) throws -> Value"
+  },
+  "rules": [
+   "R4"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Value -> ObjectiveCValue \u2194 ObjectiveCValue -> Value",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (ObjectiveCConvertibleAttributedStringKey) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "_Storage",
+  "corpus": "swift-nio",
+  "derivation": false,
+  "forward": {
+   "displayName": "capacity()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-nio/Sources/NIOCore/ByteBuffer-core.swift",
+   "line": 364,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "ByteBuffer._Storage",
+   "signature": "() -> _Capacity"
+  },
+  "inverse": {
+   "displayName": "allocateStorage(capacity:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift-nio/Sources/NIOCore/ByteBuffer-core.swift",
+   "line": 403,
+   "parameterInternalNames": [
+    "capacity"
+   ],
+   "qualifiedTypeName": "ByteBuffer._Storage",
+   "signature": "(_Capacity) -> _Storage"
+  },
+  "rules": [
+   "R4"
+  ],
+  "score": 20,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _Storage -> _Capacity \u2194 _Capacity -> _Storage",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Reference-type carrier (_Storage) \u2014 class/actor; algebraic properties may be aliasing-sensitive (shared state through stored references)",
+    "kind": "referenceTypeCarrier",
+    "weight": -10
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "FixedWidthInteger",
+  "corpus": "swift-nio",
+  "derivation": false,
+  "forward": {
+   "displayName": "nextPowerOf2()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-nio/Sources/NIOCore/ByteBuffer-int.swift",
+   "line": 138,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "FixedWidthInteger",
+   "signature": "() -> Self"
+  },
+  "inverse": {
+   "displayName": "previousPowerOf2()",
+   "file": "/Users/josephcursio/GitHub_projects/swift-nio/Sources/NIOCore/ByteBuffer-int.swift",
+   "line": 147,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "FixedWidthInteger",
+   "signature": "() -> Self"
+  },
+  "rules": [
+   "R2"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: FixedWidthInteger -> Self \u2194 Self -> FixedWidthInteger",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (FixedWidthInteger) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "corpus": "swiftlang-swift",
+  "derivation": true,
+  "forward": {
+   "displayName": "_bridgeObject(fromTagged:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Builtin.swift",
+   "line": 561,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "signature": "(UInt) -> Builtin.BridgeObject"
+  },
+  "inverse": {
+   "displayName": "_bridgeObject(toTagged:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Builtin.swift",
+   "line": 598,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "signature": "(Builtin.BridgeObject) -> UInt"
+  },
+  "rules": [
+   "R1",
+   "R2"
+  ],
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UInt -> Builtin.BridgeObject \u2194 Builtin.BridgeObject -> UInt",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "corpus": "swiftlang-swift",
+  "derivation": false,
+  "forward": {
+   "displayName": "_bridgeObject(fromNativeObject:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Builtin.swift",
+   "line": 613,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "signature": "(Builtin.NativeObject) -> Builtin.BridgeObject"
+  },
+  "inverse": {
+   "displayName": "_nativeObject(fromBridge:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Builtin.swift",
+   "line": 636,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "signature": "(Builtin.BridgeObject) -> Builtin.NativeObject"
+  },
+  "rules": [
+   "R4"
+  ],
+  "score": 30,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Builtin.NativeObject -> Builtin.BridgeObject \u2194 Builtin.BridgeObject -> Builtin.NativeObject",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "_Pointer",
+  "corpus": "swiftlang-swift",
+  "derivation": true,
+  "forward": {
+   "displayName": "successor()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Pointer.swift",
+   "line": 236,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_Pointer",
+   "signature": "() -> Self"
+  },
+  "inverse": {
+   "displayName": "predecessor()",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Pointer.swift",
+   "line": 248,
+   "parameterInternalNames": [],
+   "qualifiedTypeName": "_Pointer",
+   "signature": "() -> Self"
+  },
+  "rules": [
+   "R2"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: _Pointer -> Self \u2194 Self -> _Pointer",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (_Pointer) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "StringProtocol",
+  "corpus": "swiftlang-swift",
+  "derivation": false,
+  "forward": {
+   "displayName": "_toUTF16Offset(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringBridge.swift",
+   "line": 865,
+   "parameterInternalNames": [
+    "idx"
+   ],
+   "qualifiedTypeName": "StringProtocol",
+   "signature": "(Index) -> Int"
+  },
+  "inverse": {
+   "displayName": "_toUTF16Index(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringBridge.swift",
+   "line": 872,
+   "parameterInternalNames": [
+    "offset"
+   ],
+   "qualifiedTypeName": "StringProtocol",
+   "signature": "(Int) -> Index"
+  },
+  "rules": [
+   "R3"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Index -> Int \u2194 Int -> Index",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (StringProtocol) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "StringProtocol",
+  "corpus": "swiftlang-swift",
+  "derivation": true,
+  "forward": {
+   "displayName": "_toUTF16Offsets(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringBridge.swift",
+   "line": 879,
+   "parameterInternalNames": [
+    "indices"
+   ],
+   "qualifiedTypeName": "StringProtocol",
+   "signature": "(Range<Index>) -> Range<Int>"
+  },
+  "inverse": {
+   "displayName": "_toUTF16Indices(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/StringBridge.swift",
+   "line": 896,
+   "parameterInternalNames": [
+    "range"
+   ],
+   "qualifiedTypeName": "StringProtocol",
+   "signature": "(Range<Int>) -> Range<Index>"
+  },
+  "rules": [
+   "R3"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: Range<Index> -> Range<Int> \u2194 Range<Int> -> Range<Index>",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (StringProtocol) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ },
+ {
+  "carrier": "UTF8.CodeUnit",
+  "corpus": "swiftlang-swift",
+  "derivation": false,
+  "forward": {
+   "displayName": "_toUTF16CodeUnit(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Unicode.swift",
+   "line": 618,
+   "parameterInternalNames": [
+    "x"
+   ],
+   "qualifiedTypeName": "UTF8.CodeUnit",
+   "signature": "(UTF8.CodeUnit) -> UTF16.CodeUnit"
+  },
+  "inverse": {
+   "displayName": "_fromUTF16CodeUnit(_:)",
+   "file": "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core/Unicode.swift",
+   "line": 624,
+   "parameterInternalNames": [
+    "utf16"
+   ],
+   "qualifiedTypeName": "UTF8.CodeUnit",
+   "signature": "(UTF16.CodeUnit) -> UTF8.CodeUnit"
+  },
+  "rules": [
+   "R2",
+   "R4"
+  ],
+  "score": 35,
+  "signals": [
+   {
+    "detail": "Type-symmetry signature: UTF8.CodeUnit -> UTF16.CodeUnit \u2194 UTF16.CodeUnit -> UTF8.CodeUnit",
+    "kind": "typeSymmetrySignature",
+    "weight": 30
+   },
+   {
+    "detail": "Value-semantic carrier (UTF8.CodeUnit) \u2014 algebraic property is well-defined under aliasing",
+    "kind": "valueSemanticCarrier",
+    "weight": 5
+   }
+  ],
+  "tier": "Possible"
+ }
+]
