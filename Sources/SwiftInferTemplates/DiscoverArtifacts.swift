@@ -57,9 +57,6 @@ public extension TemplateRegistry {
         /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
         public let typeAliases: [String: String]
 
-        /// The corpus's trapping functions, for `TypeShapeBuilder`. See `ScannedCorpus.trappingFunctions`.
-        public let trappingFunctions: Set<String>
-
         public init(
             suggestions: [Suggestion],
             inverseElementPairs: [InverseElementPair],
@@ -68,8 +65,7 @@ public extension TemplateRegistry {
             typeDecls: [TypeDecl] = [],
             effectAnnotations: [EffectAnnotationAdvice] = [],
             restrictedFunctions: [RestrictedFunction] = [],
-            typeAliases: [String: String] = [:],
-            trappingFunctions: Set<String> = []
+            typeAliases: [String: String] = [:]
         ) {
             self.suggestions = suggestions
             self.inverseElementPairs = inverseElementPairs
@@ -79,7 +75,6 @@ public extension TemplateRegistry {
             self.effectAnnotations = effectAnnotations
             self.restrictedFunctions = restrictedFunctions
             self.typeAliases = typeAliases
-            self.trappingFunctions = trappingFunctions
         }
     }
 }

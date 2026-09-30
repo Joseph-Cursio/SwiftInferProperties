@@ -231,4 +231,26 @@ public struct TypeDecl: Sendable, Equatable {
         self.enumCases = enumCases
         self.isVisibleToTestableImport = isVisibleToTestableImport
     }
+
+    /// This record with `initializers` replaced, every other field kept. Used by
+    /// `PreconditionHelperHop.applied(to:trapping:)`.
+    func replacingInitializers(_ initializers: [InitializerSignature]) -> Self {
+        Self(
+            name: name,
+            kind: kind,
+            inheritedTypes: inheritedTypes,
+            location: location,
+            hasUserGen: hasUserGen,
+            storedMembers: storedMembers,
+            hasUserInit: hasUserInit,
+            enumCaseNames: enumCaseNames,
+            initializers: initializers,
+            initializerCallees: initializerCallees,
+            enumCases: enumCases,
+            qualifiedName: qualifiedName,
+            genericParameters: genericParameters,
+            isConditionalExtension: isConditionalExtension,
+            isVisibleToTestableImport: isVisibleToTestableImport
+        )
+    }
 }
