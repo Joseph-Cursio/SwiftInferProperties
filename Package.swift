@@ -130,6 +130,8 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
+                // Evaluates `#if` against the package's build — `InactiveClauses`.
+                .product(name: "SwiftIfConfig", package: "swift-syntax"),
                 .product(name: "SwiftEffectInference", package: "SwiftEffectInference"),
                 // M3 dep wiring (M3.1) — `PropertyLawCore` exposes
                 // `DerivationStrategist` for the M4 generator-inference

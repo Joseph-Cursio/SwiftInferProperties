@@ -51,6 +51,7 @@ public enum FunctionScanner {
         let tree = Parser.parse(source: source)
         let converter = SourceLocationConverter(fileName: file, tree: tree)
         let visitor = FunctionScannerVisitor(file: file, converter: converter)
+        visitor.inactiveClauses = InactiveClauses.of(tree, conditions: InactiveClauses.conditions(forFile: file))
         visitor.walk(tree)
         return ScannedCorpus(
             summaries: visitor.summaries,
@@ -118,6 +119,13 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     var typeAliases: [String: String] = [:]
     /// Functions whose body calls a precondition function — see `PreconditionHelperHop`.
     var trappingFunctions: Set<String> = []
+
+    /// `#if` clauses the build does not compile — skipped, never scanned. See `InactiveClauses`.
+    var inactiveClauses: Set<SyntaxIdentifier> = []
+
+    override func visit(_ node: IfConfigClauseSyntax) -> SyntaxVisitorContinueKind {
+        inactiveClauses.contains(node.id) ? .skipChildren : .visitChildren
+    }
 
     override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
         recordAlias(node)
