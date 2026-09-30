@@ -35,7 +35,7 @@ What the configuration knows:
 | any custom condition when no manifest is found, or the manifest does not parse | **unknown** | swiftlang-swift, the Xcode-project corpora |
 | `os`, `arch`, `targetEnvironment`, `_runtime`, `_ptrauth`, endianness, pointer width | the host (macOS, arm64) | a law about Linux-only code cannot be run on the host that verifies it |
 | `canImport`, `hasFeature`, `hasAttribute` | **unknown** | depends on dependencies and compiler flags |
-| `compiler(…)`, `swift(…)` | the host compiler, 6.3 | |
+| `compiler(…)`, `swift(…)` | **unknown** (0 and 99) | pinning the host version would go stale when the toolchain moves |
 
 Commented-out `.define`s are trivia, so the syntax tree never sees them. That is correct: the census's
 `SQLITE_HAS_CODEC` is commented out.

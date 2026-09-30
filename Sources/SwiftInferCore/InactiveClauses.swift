@@ -58,8 +58,8 @@ private final class ManifestCache: @unchecked Sendable {
 }
 
 /// A macOS arm64 debug build: what the tool verifies on. Custom conditions come from the manifest; the
-/// questions nothing here can decide (`canImport`, `hasFeature`, `hasAttribute`, a custom condition with no
-/// manifest) are answered `unknown`, and the caller evaluates both answers.
+/// questions nothing here can decide (`canImport`, `hasFeature`, `hasAttribute`, `compiler(…)`, `swift(…)`,
+/// a custom condition with no manifest) are answered `unknown`, and the caller evaluates both answers.
 struct HostBuildConfiguration: BuildConfiguration {
     let conditions: ManifestConditions?
     let unknown: Bool
@@ -86,6 +86,8 @@ struct HostBuildConfiguration: BuildConfiguration {
     var targetPointerBitWidth: Int { 64 }
     var targetAtomicBitWidths: [Int] { [8, 16, 32, 64, 128] }
     var endianness: Endianness { .little }
-    var languageVersion: VersionTuple { VersionTuple(6, 3) }
-    var compilerVersion: VersionTuple { VersionTuple(6, 3) }
+    /// Unknown too, as the two extremes: pinning the host compiler here would silently misjudge every
+    /// `compiler(>=…)` block the day the toolchain moves.
+    var languageVersion: VersionTuple { unknown ? VersionTuple(99) : VersionTuple(0) }
+    var compilerVersion: VersionTuple { languageVersion }
 }
