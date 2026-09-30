@@ -1,0 +1,21 @@
+import Foundation
+@testable import SwiftInferCore
+import SwiftInferTemplates
+import Testing
+
+@Suite struct ZZRowDump {
+    @Test func dump() throws {
+        guard let out = ProcessInfo.processInfo.environment["ROW_DUMP"] else { return }
+        var lines: [String] = []
+        for corpus in CorpusManifest.available {
+            guard let scanned = try? FunctionScanner.scanCorpus(directory: corpus.primaryRoot) else { continue }
+            let discovered = TemplateRegistry.discover(
+                in: scanned.summaries, identities: scanned.identities, typeDecls: scanned.typeDecls)
+            for suggestion in discovered {
+                let where_ = suggestion.evidence.map { "\($0.location.file):\($0.location.line) \($0.displayName)" }
+                lines.append("\(corpus.id)\t\(suggestion.templateName)\t\(where_.joined(separator: " ; "))")
+            }
+        }
+        try lines.sorted().joined(separator: "\n").write(toFile: out, atomically: true, encoding: .utf8)
+    }
+}

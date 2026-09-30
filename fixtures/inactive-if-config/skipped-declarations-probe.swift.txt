@@ -1,0 +1,64 @@
+import Foundation
+import SwiftParser
+import SwiftSyntax
+@testable import SwiftInferCore
+import Testing
+
+/// Throwaway: declarations `InactiveClauses` skips, per manifest corpus, attributed by `#if` condition.
+@Suite struct ZZInactiveProbe {
+    final class Counter: SyntaxVisitor {
+        let inactive: Set<SyntaxIdentifier>
+        var byCondition: [String: Int] = [:]
+        var stack: [String] = []
+        init(inactive: Set<SyntaxIdentifier>) {
+            self.inactive = inactive
+            super.init(viewMode: .sourceAccurate)
+        }
+        override func visit(_ node: IfConfigClauseSyntax) -> SyntaxVisitorContinueKind {
+            guard inactive.contains(node.id) else { return .visitChildren }
+            let decl = node.parent?.as(IfConfigClauseListSyntax.self)
+            let first = decl?.first?.condition?.trimmedDescription ?? "?"
+            let label = node.condition.map { $0.trimmedDescription } ?? "else of \(first)"
+            stack.append(label)
+            return .visitChildren
+        }
+        override func visitPost(_ node: IfConfigClauseSyntax) {
+            if inactive.contains(node.id) { stack.removeLast() }
+        }
+        override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+            if let label = stack.first { byCondition[label, default: 0] += 1 }
+            return .skipChildren
+        }
+    }
+
+    @Test func probe() throws {
+        guard let path = ProcessInfo.processInfo.environment["HOP_DIRS"] else { return }
+        let lines = try String(contentsOfFile: path, encoding: .utf8).split(separator: "\n")
+        var out = ""
+        var grand = 0
+        var grandConditions: [String: Int] = [:]
+        for line in lines {
+            let parts = line.split(separator: "\t").map(String.init)
+            var total = 0, files = 0, withIf = 0
+            var byCondition: [String: Int] = [:]
+            for file in SwiftSourceFiles.sorted(in: URL(fileURLWithPath: parts[1])) {
+                files += 1
+                guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
+                let tree = Parser.parse(source: source)
+                let inactive = InactiveClauses.of(tree, conditions: InactiveClauses.conditions(forFile: file.path))
+                guard !inactive.isEmpty else { continue }
+                withIf += 1
+                let counter = Counter(inactive: inactive)
+                counter.walk(tree)
+                for (key, value) in counter.byCondition { byCondition[key, default: 0] += value; total += value }
+            }
+            grand += total
+            for (key, value) in byCondition { grandConditions["\(parts[0]): \(key)", default: 0] += value }
+            let top = byCondition.sorted { $0.value > $1.value }.prefix(8).map { "\($0.key)=\($0.value)" }
+            out += "\(parts[0])\t\(parts[1].split(separator: "/").suffix(2).joined(separator: "/"))\tfiles \(files)\twith-inactive \(withIf)\tfunctions-skipped \(total)\t\(top.joined(separator: " | "))\n"
+        }
+        out += "TOTAL functions skipped \(grand)\n"
+        for (key, value) in grandConditions.sorted(by: { $0.value > $1.value }) { out += "  \(value)\t\(key)\n" }
+        try out.write(toFile: path + ".inactive", atomically: true, encoding: .utf8)
+    }
+}

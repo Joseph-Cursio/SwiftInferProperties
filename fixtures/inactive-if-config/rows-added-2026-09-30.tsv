@@ -1,0 +1,11 @@
+swift-collections	measure-non-negativity	~/GitHub_projects/swift-collections/Sources/DequeModule/RigidDeque/RigidDeque.swift:213 count()
+swift-foundation	idempotence	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/Data/Representations/Data+LegacyRepresentation.swift:121 _Representation.stabilizeAddresses()
+swift-foundation	identity-element	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/AttributedString+_InternalRun.swift:109 AttributedString._InternalRun.Summary.add(_:) ; ~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/AttributedString+_InternalRun.swift:105 AttributedString._InternalRun.Summary.zero
+swift-foundation	identity-element	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/AttributedString+_InternalRun.swift:114 AttributedString._InternalRun.Summary.subtract(_:) ; ~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/AttributedString/AttributedString+_InternalRun.swift:105 AttributedString._InternalRun.Summary.zero
+swift-foundation	measure-non-negativity	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/ProcessInfo/ProcessInfo.swift:446 processorCount()
+swift-foundation	measure-non-negativity	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/ProcessInfo/ProcessInfo.swift:467 activeProcessorCount()
+swift-foundation	predicate	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/ProcessInfo/ProcessInfo.swift:420 isOperatingSystemAtLeast(_:)
+swift-foundation	predicate	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/ProgressManager/ProgressManager.swift:464 isCycle(reporter:visited:)
+swift-foundation	predicate	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/ProgressManager/ProgressManager.swift:483 isCycleInterop(reporter:visited:)
+swift-foundation	predicate	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/TimeZone/TimeZone_Autoupdating.swift:38 isDaylightSavingTime(for:)
+swift-foundation	predicate	~/GitHub_projects/swift-foundation/Sources/FoundationEssentials/TimeZone/TimeZone_GMT.swift:51 isDaylightSavingTime(for:)
