@@ -56,7 +56,7 @@ public enum FunctionScanner {
         return ScannedCorpus(
             summaries: visitor.summaries,
             identities: visitor.identities,
-            typeDecls: visitor.typeDecls,
+            typeDecls: PreconditionHelperHop.applied(to: visitor.typeDecls, trapping: visitor.trappingFunctions),
             restricted: visitor.restricted,
             typeAliases: TypeAliasMap.merged([visitor.typeAliases]),
             trappingFunctions: visitor.trappingFunctions
@@ -98,7 +98,8 @@ public enum FunctionScanner {
             // the wrong set. `PackagePurityJoin` carries the reasoning.
             summaries: PackagePurityJoin.applied(to: summaries),
             identities: identities,
-            typeDecls: typeDecls,
+            // Again at package scope: a helper in one file, an initializer in another (Harbeth).
+            typeDecls: PreconditionHelperHop.applied(to: typeDecls, trapping: trapping),
             restricted: restricted,
             typeAliases: TypeAliasMap.merged(aliases),
             trappingFunctions: trapping

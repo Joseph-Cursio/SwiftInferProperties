@@ -1,3 +1,4 @@
+import PropertyLawCore
 import PropertyLawSyntaxSupport
 import SwiftSyntax
 
@@ -11,10 +12,37 @@ import SwiftSyntax
 /// same-type method (`SystemString._invariantCheck()`).
 ///
 /// The scan records, in its one pass, which functions trap (`trappingKey`) and which functions each
-/// initializer calls (`calleeKeys`); `TypeShapeBuilder` joins them, so an initializer calling a trapping
-/// helper is declined by the kit's existing rule, exactly as if the check were written inline. **One hop,
-/// by name**: a helper calling another helper is not followed, and an owner is its last path component.
+/// initializer calls (`calleeKeys`); `applied(to:trapping:)` joins them as the scan assembles its
+/// records, so an initializer calling a trapping helper is declined by the kit's existing rule,
+/// exactly as if the check were written inline. **One hop, by name**: a helper calling another helper
+/// is not followed, and an owner is its last path component.
 enum PreconditionHelperHop {
+
+    /// `typeDecls` with every initializer that calls one of `trapping` marked `assertsPrecondition`.
+    /// Applied where the scan assembles its records, so every consumer of `typeDecls` sees the hop:
+    /// discover's generator annotation, the accept path, `index`, and dependency shapes alike. Until
+    /// 2026-09-30 it was applied by one `TypeShapeBuilder` caller, and `discover` could name a generator the
+    /// accept path then declined.
+    static func applied(to typeDecls: [TypeDecl], trapping: Set<String>) -> [TypeDecl] {
+        guard !trapping.isEmpty else { return typeDecls }
+        return typeDecls.map { decl in
+            guard decl.initializerCallees.count == decl.initializers.count,
+                  decl.initializerCallees.contains(where: { !trapping.isDisjoint(with: $0) }) else { return decl }
+            let marked = zip(decl.initializers, decl.initializerCallees).map { signature, callees in
+                guard !signature.assertsPrecondition, !trapping.isDisjoint(with: callees) else { return signature }
+                // Every field carried; `accessLevel` is not captured at all (see `MemberBlockInspector`).
+                return InitializerSignature(
+                    parameters: signature.parameters,
+                    isFailable: signature.isFailable,
+                    isThrowing: signature.isThrowing,
+                    assertsPrecondition: true,
+                    delegatesToSelf: signature.delegatesToSelf,
+                    accessLevel: signature.accessLevel
+                )
+            }
+            return decl.replacingInitializers(marked)
+        }
+    }
 
     /// Whether `body` calls one of the kit's precondition functions anywhere — including inside `#if DEBUG`,
     /// as the kit's own detector counts it.

@@ -20,7 +20,7 @@ before any code.
 
 `TypeShapeBuilder` joins the two, so an initializer that calls a trapping helper reaches the kit with
 `assertsPrecondition == true`. The kit's existing decline then applies unchanged, with no kit release.
-The hop goes one level only, and matches by name. It is wired where the accept path and `index` build
+The hop goes one level only, and matches by name. It was first wired where the accept path and `index` build
 their shapes (`Discover+Pipeline`).
 
 ## 2. Result: the three funnel measurements
@@ -67,7 +67,7 @@ it) scanned every manifest corpus and built each type's shapes with and without 
 
 **The 247 cost nothing.** `Syntax.forRoot` asserts on the arena, not on the caller's arguments, so for a
 syntax node the mark is wrong. But no syntax node derived through an initializer before, so no generator
-changes. The other 53 marks are spread over GRDB (12, mostly `GRDBPrecondition`, a free wrapper around
+changes. ⚠ *Corrected in §4: `TokenSyntax` did, and loses it.* The other 53 marks are spread over GRDB (12, mostly `GRDBPrecondition`, a free wrapper around
 `precondition`: Harbeth's own shape), swift-collections (29: `_checkInvariants`, and `append`/`insert`
 on fixed-capacity `Rigid*` types), and single digits elsewhere.
 
@@ -93,13 +93,36 @@ on 7 types, and every one of those marks is the inactive-branch case above. `Sys
 manifest. The ceiling was a count of candidate sites. The measured figure that matters is **5 types
 whose generator changes, 3 of them correctly**.
 
-## 4. What this does not answer
+## 4. Wired everywhere, 2026-09-30 — and what `discover` changed
+
+§1's join ran in one `TypeShapeBuilder` caller, so discover's own generator annotation, lifted
+suggestions, the shape-driven templates and dependency shapes all built shapes without it. A `discover`
+listing could therefore name an initializer-based generator that the accept path then declined. The join
+now runs in `FunctionScanner.scanCorpus`, once per file and again at package scope, so every consumer
+of `typeDecls` sees it, and the separate `trappingFunctions:` parameter path is gone.
+
+**Row-level A/B over the 20 manifest corpora** (the row-dump probe, extended to print each suggestion's
+generator; the hop was disabled in the before arm): **5,994 rows both sides, same row set, and 5
+suggestions change generator** (`fixtures/precondition-helper-hop/discover-generator-changes-2026-09-30.tsv`):
+
+| suggestion | carrier | before → after | |
+|---|---|---|---|
+| `_clearUTF16TrailingSurrogate` idempotence, `isAbove(_:)`, `isBelow(_:)` | `BigString.Index` | derived initializer → `.todo` | correct, a §3 decline |
+| `isMarked(index:)` | `CircularBuffer.Index` | derived composite → not computed | correct, a §3 decline |
+| `SyntaxRewriter.visit(_:)` idempotence | `TokenSyntax` | derived initializer → `.todo` | **false**: `init` goes through `Syntax.forRoot`, whose `precondition` checks the arena |
+
+⚠ **This corrects §3.** It said no syntax node lost derivation, because the probe asked the strategist
+about each shape in isolation, without the resolver context discover supplies. `TokenSyntax` derives
+only with that context, so the probe missed it. **Read §3's 5 types as a lower bound.** At the level
+that matters, suggestions whose generator changes, the count is 5 rows over 3 types: 2 correct and 1 false,
+and the false one is the `Syntax.forRoot` family §3 already named.
+
+The accept path is unchanged, because it already had the hop. Harbeth re-run: 83 compiled, 66 passed,
+2 trapped, identical.
+
+## 5. What this does not answer
 
 - Declining trades a trap for a `.todo`. The five Harbeth types still have no generator, because a
   generator honouring a count precondition is the kit's job.
-- **Discover's own generator annotation** (`SwiftInferTemplates.swift:116`, and
-  `LiftedSuggestionPipeline`) still builds shapes without the hop. So a `discover` listing can name an
-  initializer-based generator that the accept path then declines. This was left unwired deliberately,
-  because wiring it changes discovery output.
 - The hop matches by name, one level deep. A helper that traps only on paths the arguments cannot reach
   counts the same as one that always does, and `Syntax.forRoot` is the measured example.

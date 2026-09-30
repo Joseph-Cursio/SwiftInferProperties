@@ -1,3 +1,4 @@
+import Foundation
 import PropertyLawCore
 @testable import SwiftInferCore
 import Testing
@@ -21,14 +22,20 @@ struct PreconditionHelperHopTests {
         }
         """
 
-    private func shapes(_ sources: [String], hop: Bool) -> [TypeShape] {
-        let corpora = sources.enumerated().map { FunctionScanner.scanCorpus(source: $1, file: "f\($0).swift") }
-        let decls = corpora.flatMap(\.typeDecls)
-        let trapping = hop ? corpora.reduce(into: Set<String>()) { $0.formUnion($1.trappingFunctions) } : []
-        return TypeShapeBuilder.shapes(from: decls, trappingFunctions: trapping)
+    /// Scans `sources` as one package, each in its own file, the way `discover` scans a target — the hop
+    /// is applied where the scan assembles its records, so every `TypeShapeBuilder` caller sees it.
+    private func shapes(_ sources: [String]) throws -> [TypeShape] {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PreconditionHelperHopTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        for (index, source) in sources.enumerated() {
+            try source.write(to: root.appendingPathComponent("File\(index).swift"), atomically: true, encoding: .utf8)
+        }
+        return TypeShapeBuilder.shapes(from: try FunctionScanner.scanCorpus(directory: root).typeDecls)
     }
 
-    @Test("a check routed through another type's trapping helper is a precondition, and the kit declines it")
+    @Test("a check routed through another type's trapping helper, in another file, is a precondition")
     func harbethShapeIsDeclined() throws {
         let matrix = """
             public struct Matrix3x3: Equatable {
@@ -39,15 +46,15 @@ struct PreconditionHelperHopTests {
                 }
             }
             """
-        let with = try #require(shapes([Self.helper, matrix], hop: true).first { $0.name == "Matrix3x3" })
-        let without = try #require(shapes([Self.helper, matrix], hop: false).first { $0.name == "Matrix3x3" })
+        let with = try #require(try shapes([Self.helper, matrix]).first { $0.name == "Matrix3x3" })
+        let without = try #require(try shapes([matrix]).first { $0.name == "Matrix3x3" })
         #expect(with.initializers.first?.assertsPrecondition == true)
         #expect(without.initializers.first?.assertsPrecondition == false)
         if case .initializerBased = DerivationStrategist.strategy(for: with) {
             Issue.record("derived through an initializer whose helper traps")
         }
         guard case .initializerBased = DerivationStrategist.strategy(for: without) else {
-            Issue.record("control: without the hop the initializer should still derive")
+            Issue.record("control: with no trapping helper in scope the initializer should still derive")
             return
         }
     }
@@ -61,7 +68,7 @@ struct PreconditionHelperHopTests {
                 private func _invariantCheck() { precondition(!bytes.contains(0)) }
             }
             """
-        let shape = try #require(shapes([source], hop: true).first { $0.name == "SystemString" })
+        let shape = try #require(try shapes([source]).first { $0.name == "SystemString" })
         #expect(shape.initializers.first?.assertsPrecondition == true)
     }
 
@@ -73,7 +80,7 @@ struct PreconditionHelperHopTests {
                 public init(name: String) { HarbethError.note(name); self.name = name }
             }
             """
-        let shape = try #require(shapes([Self.helper, source], hop: true).first { $0.name == "Tag" })
+        let shape = try #require(try shapes([Self.helper, source]).first { $0.name == "Tag" })
         #expect(shape.initializers.first?.assertsPrecondition == false)
     }
 }
