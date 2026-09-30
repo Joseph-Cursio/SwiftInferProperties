@@ -1,0 +1,68 @@
+swift-infer-core	Sources/SwiftInferCore	files 187	with-inactive 0	functions-skipped 0	
+swift-format	Sources/SwiftFormat	files 96	with-inactive 3	functions-skipped 0	
+grdb	GRDB.swift/GRDB	files 167	with-inactive 59	functions-skipped 110	GRDBCUSTOMSQLITE || SQLITE_HAS_CODEC=92 | SQLITE_HAS_CODEC=10 | os(iOS)=6 | else of SQLITE_ENABLE_SNAPSHOT && !SQLITE_DISABLE_SNAPSHOT=2
+grdb	GRDB.swift/GRDB	files 167	with-inactive 59	functions-skipped 110	GRDBCUSTOMSQLITE || SQLITE_HAS_CODEC=92 | SQLITE_HAS_CODEC=10 | os(iOS)=6 | else of SQLITE_ENABLE_SNAPSHOT && !SQLITE_DISABLE_SNAPSHOT=2
+swift-collections	swift-collections/Sources	files 574	with-inactive 213	functions-skipped 850	compiler(>=6.4) && UnstableContainersPreview=295 | UnstableSortedCollections=257 | compiler(>=6.4) && UnstableHashedContainers=146 | UnstableContainersPreview=87 | false=22 | COLLECTIONS_INTERNAL_CHECKS=14 | compiler(>=6.4) && UnstableContainersPreview && UnstableHashedContainers=11 | UnstableHashedContainers=8
+swift-collections	Sources/Collections	files 1	with-inactive 0	functions-skipped 0	
+swift-syntax	Sources/SwiftSyntax	files 87	with-inactive 5	functions-skipped 2	else of DEBUG=2
+swift-nio	Sources/NIOCore	files 71	with-inactive 17	functions-skipped 19	os(Linux) || os(Android)=8 | os(Windows)=5 | os(Linux) || os(FreeBSD) || os(Android)=2 | os(Linux)=2 | else of DEBUG=2
+swift-package-manager	Sources/Basics	files 78	with-inactive 12	functions-skipped 6	os(Windows)=5 | os(Linux) || os(Windows) || os(Android) || os(OpenBSD) || os(FreeBSD)=1
+swift-argument-parser	Sources/ArgumentParser	files 52	with-inactive 2	functions-skipped 0	
+swift-foundation	Sources/FoundationEssentials	files 249	with-inactive 160	functions-skipped 733	FOUNDATION_FRAMEWORK=668 | os(Windows)=28 | !DATA_LEGACY_ABI=14 | FOUNDATION_FRAMEWORK && canImport(_FoundationICU)=6 | os(Linux)=5 | FOUNDATION_FRAMEWORK && !NO_CFPREFERENCES=5 | FOUNDATION_FRAMEWORK && !NO_FORMATTERS=3 | FOUNDATION_ICU_STRING_COMPARE=2
+swiftlang-swift	public/core	files 252	with-inactive 47	functions-skipped 45	!_runtime(_ObjC)=10 | !(os(Windows) || os(Android) || ($Embedded && !os(Linux) && !os(anyAppleOS))) && (arch(i386) || arch(x86_64))=9 | else of (arch(x86_64) && !os(Windows)) || arch(s390x) || (arch(arm64) && !(os(anyAppleOS) || os(Windows)))=6 | !(os(Windows) || os(Android) || ($Embedded && !os(Linux) && !(os(macOS) || os(iOS) || os(watchOS) || os(tvOS)))) && (arch(i386) || arch(x86_64))=4 | _ptrauth(_none)=4 | false=4 | _ptrauth(_arm64e)=4 | (os(macOS) || targetEnvironment(macCatalyst)) && arch(x86_64)=1
+harmonize	Sources/Harmonize	files 48	with-inactive 0	functions-skipped 0	
+swift-project-lint	SwiftProjectLint/Sources	files 49	with-inactive 0	functions-skipped 0	
+swift-project-lint	SwiftProjectLint/Packages	files 479	with-inactive 0	functions-skipped 0	
+swift-project-lint	Sources/Core	files 11	with-inactive 0	functions-skipped 0	
+swift-property-laws	Sources/PropertyLawKit	files 100	with-inactive 1	functions-skipped 0	
+swift-effect-inference	Sources/SwiftEffectInference	files 16	with-inactive 0	functions-skipped 0	
+maccloud-client-ios	MacCloud_client_iOS/MacCloud_client_iOS	files 28	with-inactive 0	functions-skipped 0	
+swiftlint-rule-studio	Sources/SwiftLintRuleStudioCore	files 74	with-inactive 0	functions-skipped 0	
+swiftlint-rule-studio	SwiftLintRuleStudio/UI	files 103	with-inactive 0	functions-skipped 0	
+swiftformat-rule-studio	SwiftFormatRuleStudio/SwiftFormatRuleStudioCore	files 71	with-inactive 0	functions-skipped 0	
+planted-defect-arm	Sources/PlantedDefectArm	files 2	with-inactive 0	functions-skipped 0	
+cycle27-surface	Sources/Cycle27SurfaceFixture	files 1	with-inactive 0	functions-skipped 0	
+leaderboard-sort	Sources/LeaderboardSort	files 4	with-inactive 0	functions-skipped 0	
+TOTAL functions skipped 1875
+  668	swift-foundation: FOUNDATION_FRAMEWORK
+  295	swift-collections: compiler(>=6.4) && UnstableContainersPreview
+  257	swift-collections: UnstableSortedCollections
+  184	grdb: GRDBCUSTOMSQLITE || SQLITE_HAS_CODEC
+  146	swift-collections: compiler(>=6.4) && UnstableHashedContainers
+  87	swift-collections: UnstableContainersPreview
+  28	swift-foundation: os(Windows)
+  22	swift-collections: false
+  20	grdb: SQLITE_HAS_CODEC
+  14	swift-collections: COLLECTIONS_INTERNAL_CHECKS
+  14	swift-foundation: !DATA_LEGACY_ABI
+  12	grdb: os(iOS)
+  11	swift-collections: compiler(>=6.4) && UnstableContainersPreview && UnstableHashedContainers
+  10	swiftlang-swift: !_runtime(_ObjC)
+  9	swiftlang-swift: !(os(Windows) || os(Android) || ($Embedded && !os(Linux) && !os(anyAppleOS))) && (arch(i386) || arch(x86_64))
+  8	swift-collections: COLLECTIONS_SINGLE_MODULE
+  8	swift-nio: os(Linux) || os(Android)
+  8	swift-collections: UnstableHashedContainers
+  6	swift-foundation: FOUNDATION_FRAMEWORK && canImport(_FoundationICU)
+  6	swiftlang-swift: else of (arch(x86_64) && !os(Windows)) || arch(s390x) || (arch(arm64) && !(os(anyAppleOS) || os(Windows)))
+  5	swift-foundation: FOUNDATION_FRAMEWORK && !NO_CFPREFERENCES
+  5	swift-foundation: os(Linux)
+  5	swift-package-manager: os(Windows)
+  5	swift-nio: os(Windows)
+  4	swiftlang-swift: _ptrauth(_none)
+  4	swiftlang-swift: false
+  4	grdb: else of SQLITE_ENABLE_SNAPSHOT && !SQLITE_DISABLE_SNAPSHOT
+  4	swiftlang-swift: _ptrauth(_arm64e)
+  4	swiftlang-swift: !(os(Windows) || os(Android) || ($Embedded && !os(Linux) && !(os(macOS) || os(iOS) || os(watchOS) || os(tvOS)))) && (arch(i386) || arch(x86_64))
+  3	swift-foundation: FOUNDATION_FRAMEWORK && !NO_FORMATTERS
+  2	swift-nio: else of DEBUG
+  2	swift-foundation: FOUNDATION_FRAMEWORK && !NO_PROCESS
+  2	swift-collections: compiler(>=6.4) && UnstableHashedContainers && UnstableContainersPreview
+  2	swift-nio: os(Linux)
+  2	swift-syntax: else of DEBUG
+  2	swift-nio: os(Linux) || os(FreeBSD) || os(Android)
+  2	swift-foundation: FOUNDATION_ICU_STRING_COMPARE
+  1	swiftlang-swift: os(iOS) && !os(visionOS)
+  1	swift-package-manager: os(Linux) || os(Windows) || os(Android) || os(OpenBSD) || os(FreeBSD)
+  1	swiftlang-swift: _pointerBitWidth(_32) || _pointerBitWidth(_16)
+  1	swiftlang-swift: (os(macOS) || targetEnvironment(macCatalyst)) && arch(x86_64)
+  1	swiftlang-swift: else of _runtime(_ObjC)

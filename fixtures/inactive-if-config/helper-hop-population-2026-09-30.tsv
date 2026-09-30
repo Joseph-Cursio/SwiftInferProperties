@@ -1,0 +1,41 @@
+KEYS swift-infer-core: 
+swift-infer-core	trapping-fns 0	inits 172	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS swift-format: 
+swift-format	trapping-fns 13	inits 46	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS grdb: GRDBPrecondition=16 SchedulingWatchdog.allowDatabase=2 SQLTableGenerator.makeForeignKeyGenerator=2 DatabaseRegion.union=2
+grdb	trapping-fns 107	inits 305	flipped 12	types 9	lost-initializer-strategy 1	DAO,DatabasePool,DatabaseRegionObservation,DropFirstCursor,Pool,RangeRowAdapter,SQLTableGenerator,SerializedDatabase,SuffixRowAdapter*[todo(reason: "Cannot derive a generator for `SuffixRowAdapter`: the type\'s user `init(...)` declarations don\'t support derivation — each is failable, throwing, access-restricted, parameterless, over 100 parameters, or unsafe to call with independently drawn arguments (a capacity hint, a private-storage label, or a stated precondition). Provide `static func gen() -> Generator<SuffixRowAdapter, some SendableSequenceType>`.")]
+KEYS swift-collections: RigidDeque.append=4 RigidArray.append=3 _HashTreeIterator._descendToLeftmostItem=1 OrderedSet._regenerateHashTable=1 _HTable.minimumCapacity=1 BitSet.insert=1 _HTable.minimumScale=1 Index._bitsForUTF8Offset=1 OrderedDictionary.updateValue=1 BitArray.append=1 _HTable.dynamicStorageParameters=1 TrailingArray._initializeTrailingElements=1
+swift-collections	trapping-fns 536	inits 351	flipped 12	types 9	lost-initializer-strategy 1	BigString.Index*[todo(reason: "Cannot derive a generator for `BigString.Index`: no user `init(...)` derives — `init(_raw:_rope:)` takes `_rope: _Rope.Index?`, which resolves to no generator because `_Rope.Index` does not. Provide `static func gen() -> Generator<BigString.Index, some SendableSequenceType>`.")],BitArray,BitSet,OrderedDictionary,OrderedSet,RigidArray,RigidDeque,TrailingArray,_HashTreeIterator
+KEYS swift-syntax: precondition=309 Syntax.forRoot=246 parseEditorPlaceholder=1 RawSyntax.makeMaterializedToken=1 SyntaxDataArena.slabSize=1 RawSyntax.parsedToken=1
+swift-syntax	trapping-fns 61	inits 1995	flipped 247	types 247	lost-initializer-strategy 0	ABIAttributeArgumentsSyntax,AccessorBlockFileSyntax,AccessorBlockSyntax,AccessorDeclSyntax,AccessorEffectSpecifiersSyntax,AccessorParametersSyntax,ActorDeclSyntax,ArrayElementSyntax,ArrayExprSyntax,ArrayTypeSyntax,ArrowExprSyntax,AsExprSyntax
+KEYS swift-nio: debugOnly=2
+swift-nio	trapping-fns 107	inits 186	flipped 2	types 2	lost-initializer-strategy 1	CircularBuffer.Index*[todo(reason: "Cannot derive a generator for `CircularBuffer.Index`: the type\'s user `init(...)` declarations don\'t support derivation — each is failable, throwing, access-restricted, parameterless, over 100 parameters, or unsafe to call with independently drawn arguments (a capacity hint, a private-storage label, or a stated precondition). Provide `static func gen() -> Generator<CircularBuffer.Index, some SendableSequenceType>`.")],EventLoopFuture
+KEYS swift-package-manager: 
+swift-package-manager	trapping-fns 16	inits 115	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS swift-argument-parser: Element.name=1 HelpGenerator.generateSections=1
+swift-argument-parser	trapping-fns 20	inits 101	flipped 1	types 1	lost-initializer-strategy 0	Flag
+KEYS swift-foundation: Data.append=1 String.utf8=1
+swift-foundation	trapping-fns 223	inits 497	flipped 1	types 1	lost-initializer-strategy 0	Data
+KEYS swiftlang-swift: _NativeSet._unsafeInsertNew=1 transcode=1 _debugPrint_unlocked=1 Duration.seconds=1 _NativeDictionary.mutatingFind=1 _print_unlocked=1
+swiftlang-swift	trapping-fns 123	inits 687	flipped 6	types 4	lost-initializer-strategy 0	Duration,String,_NativeDictionary,_NativeSet
+KEYS harmonize: 
+harmonize	trapping-fns 0	inits 17	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS swift-project-lint: 
+swift-project-lint	trapping-fns 2	inits 254	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS swift-property-laws: 
+swift-property-laws	trapping-fns 13	inits 36	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS swift-effect-inference: 
+swift-effect-inference	trapping-fns 0	inits 17	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS maccloud-client-ios: 
+maccloud-client-ios	trapping-fns 0	inits 11	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS swiftlint-rule-studio: 
+swiftlint-rule-studio	trapping-fns 2	inits 123	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS swiftformat-rule-studio: 
+swiftformat-rule-studio	trapping-fns 0	inits 31	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS planted-defect-arm: 
+planted-defect-arm	trapping-fns 0	inits 3	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS cycle27-surface: 
+cycle27-surface	trapping-fns 0	inits 0	flipped 0	types 0	lost-initializer-strategy 0	
+KEYS leaderboard-sort: 
+leaderboard-sort	trapping-fns 0	inits 3	flipped 0	types 0	lost-initializer-strategy 0	
+TOTAL	inits 4950	flipped 281	types 273	lost 3

@@ -1,6 +1,6 @@
 # Stop scanning declarations in `#if` branches the build does not compile
 
-> **Status:** `proposed` · **As of:** 2026-09-30
+> **Status:** `shipped` · **As of:** 2026-09-30
 
 `open-threads.md` row 74: `FunctionScanner` walks every `#if` branch `.sourceAccurate`, so a declaration
 in an inactive branch is scanned as live. `inactive-if-config-census.md` sized it at **138 rows of
