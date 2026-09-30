@@ -108,6 +108,11 @@ public struct TypeDecl: Sendable, Equatable {
     /// init is suppressed. Empty for non-structs and extension records.
     public let initializers: [InitializerSignature]
 
+    /// For each of `initializers`, in order, the keys of the functions it calls — joined against the
+    /// corpus's trapping functions by `TypeShapeBuilder` (`PreconditionHelperHop`). Empty for a record
+    /// built without a scan, which every hand-built fixture is.
+    public let initializerCallees: [[String]]
+
     /// Enum cases with associated values (primary enum decls). Feeds the
     /// Tier 4 `enumCases` derivation. Distinct from `enumCaseNames`, which is
     /// names-only for the M14 exhaustiveness detector.
@@ -201,6 +206,7 @@ public struct TypeDecl: Sendable, Equatable {
         hasUserInit: Bool = false,
         enumCaseNames: [String] = [],
         initializers: [InitializerSignature] = [],
+        initializerCallees: [[String]] = [],
         enumCases: [EnumCase] = [],
         qualifiedName: String? = nil,
         genericParameters: [GenericParameter] = [],
@@ -221,6 +227,7 @@ public struct TypeDecl: Sendable, Equatable {
         self.hasUserInit = hasUserInit
         self.enumCaseNames = enumCaseNames
         self.initializers = initializers
+        self.initializerCallees = initializerCallees
         self.enumCases = enumCases
         self.isVisibleToTestableImport = isVisibleToTestableImport
     }

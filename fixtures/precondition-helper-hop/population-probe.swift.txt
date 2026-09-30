@@ -1,0 +1,51 @@
+import Foundation
+import PropertyLawCore
+@testable import SwiftInferCore
+import Testing
+
+@Suite struct ZZHopPopulationProbe {
+    @Test func probe() throws {
+        guard let path = ProcessInfo.processInfo.environment["HOP_DIRS"] else { return }
+        let lines = try String(contentsOfFile: path, encoding: .utf8).split(separator: "\n")
+        var byCorpus: [String: [String]] = [:]
+        var order: [String] = []
+        for line in lines {
+            let parts = line.split(separator: "\t").map(String.init)
+            if byCorpus[parts[0]] == nil { order.append(parts[0]) }
+            byCorpus[parts[0], default: []].append(parts[1])
+        }
+        var out = ""
+        var totals = (inits: 0, flipped: 0, types: 0, lostStrategy: 0)
+        for corpus in order {
+            var decls: [TypeDecl] = []
+            var trapping = Set<String>()
+            for dir in byCorpus[corpus]! {
+                guard let scanned = try? FunctionScanner.scanCorpus(directory: URL(fileURLWithPath: dir)) else { continue }
+                decls += scanned.typeDecls
+                trapping.formUnion(scanned.trappingFunctions)
+            }
+            var keyCounts: [String: Int] = [:]
+            for decl in decls { for callees in decl.initializerCallees { for key in callees where trapping.contains(key) { keyCounts[key, default: 0] += 1 } } }
+            out += "KEYS \(corpus): " + keyCounts.sorted { $0.value > $1.value }.prefix(15).map { "\($0.key)=\($0.value)" }.joined(separator: " ") + "\n"
+            let before = Dictionary(TypeShapeBuilder.shapes(from: decls).map { ($0.name, $0) }) { first, _ in first }
+            let after = Dictionary(TypeShapeBuilder.shapes(from: decls, trappingFunctions: trapping).map { ($0.name, $0) }) { first, _ in first }
+            var inits = 0, flipped = 0, types = 0, lost = 0
+            var examples: [String] = []
+            for (name, shape) in after {
+                guard let old = before[name] else { continue }
+                inits += shape.initializers.count
+                let changed = zip(old.initializers, shape.initializers).filter { $0.assertsPrecondition != $1.assertsPrecondition }.count
+                guard changed > 0 else { continue }
+                flipped += changed; types += 1
+                var oldInit = false, newInit = false
+                if case .initializerBased = DerivationStrategist.strategy(for: old) { oldInit = true }
+                if case .initializerBased = DerivationStrategist.strategy(for: shape) { newInit = true }
+                if oldInit && !newInit { lost += 1; examples.append(name + "*[\(DerivationStrategist.strategy(for: shape))]") } else { examples.append(name) }
+            }
+            totals.inits += inits; totals.flipped += flipped; totals.types += types; totals.lostStrategy += lost
+            out += "\(corpus)\ttrapping-fns \(trapping.count)\tinits \(inits)\tflipped \(flipped)\ttypes \(types)\tlost-initializer-strategy \(lost)\t\(examples.sorted().prefix(12).joined(separator: ","))\n"
+        }
+        out += "TOTAL\tinits \(totals.inits)\tflipped \(totals.flipped)\ttypes \(totals.types)\tlost \(totals.lostStrategy)\n"
+        try out.write(toFile: path + ".out", atomically: true, encoding: .utf8)
+    }
+}

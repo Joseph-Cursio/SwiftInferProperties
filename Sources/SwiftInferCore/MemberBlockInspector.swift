@@ -125,7 +125,15 @@ enum MemberBlockInspector {
     /// into a synchronous fixed-arity generator. Mirrors the in-tree port
     /// the discovery plugin uses.
     static func initializers(in memberBlock: MemberBlockSyntax) -> [InitializerSignature] {
-        var result: [InitializerSignature] = []
+        initializerRecords(in: memberBlock, owner: nil).map(\.signature)
+    }
+
+    /// `initializers(in:)`, each with the keys of the functions it calls (`PreconditionHelperHop`),
+    /// built in the same loop so the two can never disagree about which initializers were kept.
+    static func initializerRecords(
+        in memberBlock: MemberBlockSyntax, owner: String?
+    ) -> [(signature: InitializerSignature, callees: [String])] {
+        var result: [(signature: InitializerSignature, callees: [String])] = []
         for member in memberBlock.members {
             guard let initDecl = member.decl.as(InitializerDeclSyntax.self) else { continue }
             // **A `private` initializer is not a candidate, and admitting one emits code
@@ -169,7 +177,7 @@ enum MemberBlockInspector {
             }
             if hasVariadic { continue }
 
-            result.append(InitializerSignature(
+            result.append((InitializerSignature(
                 parameters: parameters,
                 isFailable: initDecl.optionalMark != nil,
                 isThrowing: effects?.throwsClause != nil,
@@ -192,7 +200,7 @@ enum MemberBlockInspector {
                 // `MemberBlockInspector` has computed both flags all along; this port
                 // computed one.
                 delegatesToSelf: InitializerPreconditionDetector.delegatesToSelf(initDecl)
-            ))
+            ), PreconditionHelperHop.calleeKeys(in: initDecl, owner: owner)))
         }
         return result
     }
