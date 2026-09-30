@@ -2,6 +2,12 @@
 
 > **Status:** `measured` · **As of:** 2026-08-30
 
+✅ **Built 2026-09-30, with a real evaluator rather than the name heuristic this page declined:**
+`inactive-if-config.md`. Conditions are evaluated with `SwiftIfConfig` against the package's manifest, and
+unknowns keep their code. This page's 148 rows (at today's corpus size) go to 30: every condition confirmed
+inactive reads 0, and the measured-active and unresolved rows stay. The figures below are this page's own
+reading and are not re-taken.
+
 **`open-threads.md` row 74, sized.** `SwiftSyntax` parses every `#if` branch into the tree and
 `FunctionScanner` walks it `.sourceAccurate`, so a declaration inside an **inactive** branch is
 scanned as if it were live. Nothing in `Sources/` reads `IfConfigDeclSyntax`, `configuredRegions`
