@@ -125,6 +125,17 @@ struct OrderedCarrierDiscriminatorTests {
         #expect(verdict == .abstain(.notASequence))
     }
 
+    /// **Any one of the three sequence protocols on its own is a sequence.** The index holds the
+    /// protocols a type *declares*, not the ones they refine, so `struct Ring: Collection` arrives
+    /// as `["Collection"]` alone. Every other abstention case declares all three together, which is
+    /// why mutation testing could turn either `||` in the `isSequence` test into `&&` unnoticed.
+    @Test("A carrier declaring a single sequence protocol is a sequence, not a non-sequence",
+          arguments: ["Sequence", "Collection", "BidirectionalCollection"])
+    func singleSequenceProtocolAbstainsAsUnordered(conformance: String) {
+        let verdict = OrderedCarrierDiscriminator.verdict(forConformances: [conformance, "Equatable"])
+        #expect(verdict == .abstain(.orderNotEstablished))
+    }
+
     // MARK: - Ordering of the rule itself
 
     /// The veto must be checked BEFORE the positive signals, or an
