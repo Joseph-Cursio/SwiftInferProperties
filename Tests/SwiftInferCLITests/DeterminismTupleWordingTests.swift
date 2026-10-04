@@ -24,6 +24,19 @@ struct DeterminismTupleWordingTests {
         + "an input in the throwing domain collapses to `nil == nil` (never a false alarm), and only a value "
         + "difference on a non-throwing input falsifies it."
 
+    private static let elementwiseCaveat = "Every element of the returned tuple must be Equatable for the law "
+        + "to compile — Swift defines `==` on tuples of two to six Equatable elements, though a tuple itself "
+        + "never conforms to Equatable."
+
+    private static let throwingTupleCaveat = "No stub can state this law, so accepting it records the decision "
+        + "without writing a file: the function throws and returns a tuple, so the law would compare "
+        + "`try? f(x)` on both sides — two Optionals of the tuple — and an Optional has `==` only when its "
+        + "payload conforms to Equatable, which a tuple cannot."
+
+    private static let nestedTupleCaveat = "No stub can state this law, so accepting it records the decision "
+        + "without writing a file: the function returns a tuple with an element that is itself a tuple "
+        + "(or wraps one), and a tuple cannot conform to Equatable, so the outer tuple has no `==`."
+
     private static func law(returnType: String, isThrows: Bool = false) throws -> Suggestion {
         try DeterminismAcceptPathTests.law(for: DeterminismAcceptPathTests.summary(
             name: "prefix",
@@ -47,25 +60,36 @@ struct DeterminismTupleWordingTests {
         #expect(law.explainability.whyMightBeWrong == [Self.pureCaveat, Self.equatableCaveat, Self.throwsCaveat])
     }
 
-    @Test func aTupleResultsCaveatAsksForEquatableElements() throws {
-        let caveats = try Self.law(returnType: "(text: String, didTruncate: Bool)").explainability.whyMightBeWrong
-        #expect(caveats.contains(Self.equatableCaveat) == false)
-        #expect(caveats.contains { $0.hasPrefix("Every element of the returned tuple must be Equatable") })
-        #expect(caveats.contains { $0.contains("two to six") && $0.contains("never conforms") })
+    /// Pinned whole: the element-wise sentence replaces the conformance one, and nothing else moves.
+    @Test("a 2…6 tuple result asks for Equatable elements", arguments: [
+        "(text: String, didTruncate: Bool)",
+        "(Int, Int)!",
+        "sending (Int, Int)"
+    ])
+    func aTupleResultsCaveatAsksForEquatableElements(returnType: String) throws {
+        let caveats = try Self.law(returnType: returnType).explainability.whyMightBeWrong
+        #expect(caveats == [Self.pureCaveat, Self.elementwiseCaveat])
     }
 
-    /// The `try?` sentence would describe a stub that is never written, so it is replaced by why.
-    @Test func aThrowingTupleResultsCaveatSaysNoStubIsWritten() throws {
+    /// **One sentence, not two that disagree.** Element-wise advice says what to fix so the law
+    /// compiles; for a throwing tuple nothing will, because the law compares two `Optional`s of it.
+    /// Both used to be printed, the advice first — so the whole list is pinned, not a fragment.
+    @Test func aThrowingTupleResultsCaveatSaysOnlyThatNoStubIsWritten() throws {
         let caveats = try Self.law(returnType: "(json: String, prompt: String)", isThrows: true)
             .explainability.whyMightBeWrong
-        #expect(caveats.contains(Self.throwsCaveat) == false)
-        #expect(caveats.contains { $0.contains("no stub") && $0.contains("Optional") })
+        #expect(caveats == [Self.pureCaveat, Self.throwingTupleCaveat])
     }
 
     @Test func aTupleShapeWithNoEqualitySaysSoInItsCaveat() throws {
         let caveats = try Self.law(returnType: "(Int, (Int, Int))").explainability.whyMightBeWrong
-        #expect(caveats.contains(Self.equatableCaveat) == false)
-        #expect(caveats.contains { $0.hasPrefix("No stub can state this law") && $0.contains("tuple") })
+        #expect(caveats == [Self.pureCaveat, Self.nestedTupleCaveat])
+    }
+
+    /// A shape with no `==` has said why no stub is written; throwing adds no `try?` sentence about
+    /// a comparison that is never written.
+    @Test func aThrowingTupleShapeWithNoEqualityHasOneCaveatAboutIt() throws {
+        let caveats = try Self.law(returnType: "(Int, (Int, Int))", isThrows: true).explainability.whyMightBeWrong
+        #expect(caveats == [Self.pureCaveat, Self.nestedTupleCaveat])
     }
 
     // MARK: - The stub file's law-class line

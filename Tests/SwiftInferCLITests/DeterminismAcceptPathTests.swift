@@ -166,7 +166,8 @@ struct DeterminismAcceptPathTests {
 /// (`swiftlang-6.4.0.34.1`): a labelled 2-tuple and a 6-tuple compile; a 7-tuple, a nested
 /// tuple, `(Int, Int)?`, `[(Int, Int)]` and `[String: (Int, Int)]` each fail with *binary
 /// operator '==' cannot be applied*, and so does `(try? f(x)) == (try? f(x))` over a tuple —
-/// the form this law takes for a `throws` subject.
+/// the form this law takes for a `throws` subject. `(Int, Int)!` and `sending (Int, Int)` compile
+/// as the tuple they spell, and their `try?` forms fail as a plain tuple's does.
 extension DeterminismAcceptPathTests {
 
     /// **The shape the linter will seed** (`String.prefix(utf8Bytes:)` in SwiftAssist): a labelled
@@ -264,7 +265,12 @@ extension DeterminismAcceptPathTests {
         "(Int, (Int, Int))",
         "(Int, Int)?",
         "[(Int, Int)]",
-        "[String: (Int, Int)]"
+        "[String: (Int, Int)]",
+        "Swift.Optional<(Int, Int)>",
+        "Swift.Array<(Int, Int)>",
+        "ArraySlice<(Int, Int)>",
+        "ContiguousArray<(Int, Int)>",
+        "sending (Int, (Int, Int))"
     ])
     func aTupleShapeWithNoEqualityIsDeclined(returnType: String) throws {
         let law = try Self.law(for: Self.summary(
@@ -307,5 +313,66 @@ extension DeterminismAcceptPathTests {
         ))
         let reason = StubApplicationArity.declineReason(for: law) ?? ""
         #expect(reason.contains("tuple") == false)
+    }
+
+    /// **`(Int, Int)!` compares as the tuple**: once `Optional`'s `==` fails to type-check, Swift
+    /// force-unwraps both operands and resolves tuple `==` (`swiftc`, Swift 6.4). It was declined
+    /// as "a tuple inside an Optional", which the compiler contradicts; `sending` is an ownership
+    /// specifier and was never part of the comparison.
+    @Test("a tuple result spelled implicitly unwrapped or `sending` is written", arguments: [
+        "(Int, Int)!",
+        "sending (Int, Int)"
+    ])
+    func aTupleSpelledAnotherWayIsWritten(returnType: String) throws {
+        let stub = try Self.stub(for: Self.summary(
+            name: "corners",
+            parameters: [Self.parameter(nil, "Int")],
+            returnType: returnType,
+            isStatic: false,
+            containingType: nil
+        ))
+        #expect(stub.contains("{ value in corners(value) == corners(value) }"))
+    }
+
+    /// The throwing form of each is `try?` on both sides — two plain `Optional`s of the tuple,
+    /// which `swiftc` rejects for both spellings. `sending` hid the tuple from the classifier, so
+    /// that stub was written; `!` read it as wrapped, so the reason named the wrong cause.
+    @Test("a throwing tuple result spelled implicitly unwrapped or `sending` is declined as throwing", arguments: [
+        "(Int, Int)!",
+        "sending (Int, Int)"
+    ])
+    func aThrowingTupleSpelledAnotherWayIsDeclined(returnType: String) throws {
+        let law = try Self.law(for: Self.summary(
+            name: "corners",
+            parameters: [Self.parameter(nil, "Int")],
+            returnType: returnType,
+            isStatic: false,
+            containingType: nil,
+            isThrows: true
+        ))
+        #expect(InteractiveTriage.deterministicStub(for: law) == nil)
+        let reason = try #require(StubApplicationArity.declineReason(for: law))
+        #expect(reason.hasPrefix("corners(_:) throws and returns a tuple"))
+        #expect(reason.contains("Optional"))
+    }
+
+    /// **A throwing closure PARAMETER is not the subject throwing.** `" throws"` appears in this
+    /// signature only inside the closure's type, and reading it as the function's own made accept
+    /// say "applyPair(_:_:) throws and returns a tuple" — false, and contradicting the law's own
+    /// caveats, which read the scanner's `isThrows`. The subject is still declined, for the cause
+    /// it was declined for before tuples were looked at: the closure's `->` defeats the
+    /// parameter-type split, so the call cannot be spelled.
+    @Test func aThrowingClosureParameterIsNotTheSubjectThrowing() throws {
+        let law = try Self.law(for: Self.summary(
+            name: "applyPair",
+            parameters: [Self.parameter(nil, "@Sendable (Int) throws -> Int"), Self.parameter(nil, "Int")],
+            returnType: "(Int, Int)",
+            isStatic: false,
+            containingType: nil
+        ))
+        #expect(InteractiveTriage.deterministicStub(for: law) == nil)
+        let reason = try #require(StubApplicationArity.declineReason(for: law))
+        #expect(reason.contains("throws") == false)
+        #expect(reason.contains("argument label(s)"))
     }
 }

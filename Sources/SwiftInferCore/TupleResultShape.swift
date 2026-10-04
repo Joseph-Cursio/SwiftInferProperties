@@ -17,8 +17,18 @@ import SwiftSyntax
 /// - a tuple of seven or more elements,
 /// - a tuple with a tuple element, `(Int, (Int, Int))`,
 /// - a tuple inside an `Optional` or a collection — `(Int, Int)?`, `[(Int, Int)]`,
-///   `[String: (Int, Int)]` — each of which is `Equatable` only when its payload conforms,
+///   `[String: (Int, Int)]`, `ArraySlice<(Int, Int)>`, and the long forms qualified by their
+///   module, `Swift.Optional<(Int, Int)>` — each of which is `Equatable` only when its payload
+///   conforms,
 /// - and `(try? f(x)) == (try? f(x))` over a tuple, the same `Optional` case reached through `try?`.
+///
+/// ## Spellings that are their payload
+///
+/// Two spellings compare as what they wrap, and are read through: **`T!`**, which Swift
+/// force-unwraps once `Optional`'s `==` fails to type-check — so `f(x) == f(x)` over a
+/// `(Int, Int)!` compiles through tuple `==`, and a nil result traps as any force unwrap does —
+/// and **`sending T`**, an ownership specifier the scanner keeps in the return type's text. A
+/// throwing subject's `try?` turns either into a plain `Optional` of the tuple, which has no `==`.
 ///
 /// ## What it deliberately does not do
 ///
@@ -27,6 +37,14 @@ import SwiftSyntax
 /// is not a tuple even when both its parameter list and its own result are parenthesised —
 /// `(Int, Int) -> (Int, Int)` split at its first comma reads as two "components", which is why
 /// this parses with `SwiftParser` rather than splitting text.
+///
+/// ⚠ **A NAME for a tuple reads as that name.** `typealias Pair = (Int, Int)` spells `Pair`, so a
+/// result of `Pair` is `notATuple` here — and a throwing one's `(try? f(x)) == (try? f(x))` does not
+/// compile (*two 'Pair?' (aka 'Optional<(Int, Int)>') operands*). Resolving it takes the scanned
+/// alias table and the declaring scope: a bare-name lookup would read a type parameter called
+/// `Element` as some other type's `Element` alias. That belongs to an accept-time gate holding the
+/// scan — `UnequatableCarrierGate` asks the matching question of a scanned nominal type, though not
+/// yet of determinism's result, whose non-`Equatable` nominal returns fail to compile the same way.
 public enum TupleResultShape: Equatable, Sendable {
 
     /// Not a tuple and wraps none — nothing about `==` follows from the spelling. Also the answer
@@ -43,7 +61,8 @@ public enum TupleResultShape: Equatable, Sendable {
     /// A tuple with an element that is itself a tuple, or wraps one.
     case nestedTuple
 
-    /// Not a tuple, but one sits inside an `Optional`, `Array`, `Set` or `Dictionary`.
+    /// Not a tuple, but one sits inside an `Optional`, `Array`, `ArraySlice`, `ContiguousArray`,
+    /// `Set` or `Dictionary`.
     case wrappedTuple
 
     /// The shape of the type spelled `typeText`, e.g. `(text: String, didTruncate: Bool)`.
@@ -101,7 +120,10 @@ public enum TupleResultShape: Equatable, Sendable {
 
     // MARK: - Reading the spelling
 
-    private static func parsedType(_ text: String) -> TypeSyntax? {
+    /// `text` parsed as a type, or `nil` when the parser recovered from an error — it would
+    /// otherwise read `(Int, Int) junk` as the tuple it starts with. Shared with
+    /// `FunctionTypeEffects`, which reads the same signatures.
+    static func parsedType(_ text: String) -> TypeSyntax? {
         var parser = Parser(text)
         let type = TypeSyntax.parse(from: &parser)
         return type.hasError ? nil : type
@@ -117,8 +139,8 @@ public enum TupleResultShape: Equatable, Sendable {
             }
             return .tuple(arity: elements.count)
         }
-        if let parenthesised = parenthesisedType(type) {
-            return shape(of: parenthesised)
+        if let payload = payload(of: type) {
+            return shape(of: payload)
         }
         return wrappedTypes(of: type).contains(where: isOrWrapsTuple) ? .wrappedTuple : .notATuple
     }
@@ -129,30 +151,47 @@ public enum TupleResultShape: Equatable, Sendable {
         return tuple.elements.map(\.type)
     }
 
-    /// `(T)` is `T` in parentheses, not a tuple.
-    private static func parenthesisedType(_ type: TypeSyntax) -> TypeSyntax? {
-        guard let tuple = type.as(TupleTypeSyntax.self), tuple.elements.count == 1,
-              let only = tuple.elements.first, only.firstName == nil else { return nil }
-        return only.type
+    /// The type a spelling compares as, when that is not the spelling itself: `(T)` is `T` in
+    /// parentheses, not a tuple; `T!` is force-unwrapped to `T` once `Optional`'s `==` fails to
+    /// type-check (an element spelled `T!` is not legal Swift, so reading it the same way there
+    /// costs nothing); and `sending T` — or any attributed `T` — is `T`.
+    private static func payload(of type: TypeSyntax) -> TypeSyntax? {
+        if let tuple = type.as(TupleTypeSyntax.self), tuple.elements.count == 1,
+           let only = tuple.elements.first, only.firstName == nil {
+            return only.type
+        }
+        if let unwrapped = type.as(ImplicitlyUnwrappedOptionalTypeSyntax.self) { return unwrapped.wrappedType }
+        if let attributed = type.as(AttributedTypeSyntax.self) { return attributed.baseType }
+        return nil
     }
 
     private static func isOrWrapsTuple(_ type: TypeSyntax) -> Bool {
         if tupleElements(of: type) != nil { return true }
-        if let parenthesised = parenthesisedType(type) { return isOrWrapsTuple(parenthesised) }
+        if let payload = payload(of: type) { return isOrWrapsTuple(payload) }
         return wrappedTypes(of: type).contains(where: isOrWrapsTuple)
     }
 
     /// The payload types of the standard containers whose `Equatable` conformance is conditional
-    /// on them — sugar and long form alike. A function type wraps nothing: its parameters and
-    /// result are not values the comparison reaches.
+    /// on them — sugar, long form, and long form qualified by its module (`Swift.Array<…>`, a
+    /// member type rather than an identifier). Another module's `Array` is not the standard
+    /// library's and may define its own `==`, so it wraps nothing. A function type wraps nothing
+    /// either: its parameters and result are not values the comparison reaches.
     private static func wrappedTypes(of type: TypeSyntax) -> [TypeSyntax] {
         if let optional = type.as(OptionalTypeSyntax.self) { return [optional.wrappedType] }
-        if let unwrapped = type.as(ImplicitlyUnwrappedOptionalTypeSyntax.self) { return [unwrapped.wrappedType] }
         if let array = type.as(ArrayTypeSyntax.self) { return [array.element] }
         if let dictionary = type.as(DictionaryTypeSyntax.self) { return [dictionary.key, dictionary.value] }
-        guard let identifier = type.as(IdentifierTypeSyntax.self),
-              containerNames.contains(identifier.name.text),
-              let arguments = identifier.genericArgumentClause?.arguments else { return [] }
+        let named: (name: String, arguments: GenericArgumentClauseSyntax?)?
+        if let identifier = type.as(IdentifierTypeSyntax.self) {
+            named = (identifier.name.text, identifier.genericArgumentClause)
+        } else if let member = type.as(MemberTypeSyntax.self),
+                  member.baseType.as(IdentifierTypeSyntax.self)?.name.text == "Swift" {
+            named = (member.name.text, member.genericArgumentClause)
+        } else {
+            named = nil
+        }
+        guard let named, containerNames.contains(named.name), let arguments = named.arguments?.arguments else {
+            return []
+        }
         return arguments.compactMap { generic in
             guard case .type(let argument) = generic.argument else { return nil }
             return argument
