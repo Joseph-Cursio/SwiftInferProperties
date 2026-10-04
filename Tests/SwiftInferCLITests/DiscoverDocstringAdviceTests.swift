@@ -15,6 +15,12 @@ import Testing
 /// default run surfaced 2 of 10 hand-keyed kernels with a refutable law, and
 /// this advisory surfaced 8. See `Config.docstringAdvice` for the full framing,
 /// including what that number does and does not claim.
+///
+/// Every manifest here seeds every documented function, so these tests see only the full
+/// block. Under `--seeds` the advice is split in two — the full block for the functions the
+/// manifest names, and a compact "Documented contracts outside the seed focus" block for the
+/// rest — and that split is `DiscoverDocstringAdviceSeedFocusTests`'s subject. The 8 of 10 was
+/// measured without seeds.
 @Suite("Discover — reference definitions from docstrings")
 struct DiscoverDocstringAdviceTests {
 
@@ -190,8 +196,10 @@ struct DiscoverDocstringAdviceTests {
             seedManifest: manifest(),
             output: recording
         )
-        // `weighted`'s doc only narrates; it must not appear as a reference definition.
-        let block = recording.text.components(separatedBy: "Reference definitions from docstrings").last ?? ""
-        #expect(!block.contains("convenience helper"))
+        // `weighted`'s doc only narrates; it must not appear in either advice block — the
+        // full one or the compact one `--seeds` lists unnamed functions in.
+        let advice = DiscoverDocstringAdviceSeedFocusTests.adviceRegion(of: recording.text)
+        #expect(advice.contains("Reference definitions from docstrings"))
+        #expect(advice.contains("convenience helper") == false)
     }
 }

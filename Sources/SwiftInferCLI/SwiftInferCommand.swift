@@ -208,9 +208,12 @@ extension SwiftInferCommand {
             that sentence with the law it defines — the reference definition a \
             `predicate` law openly owes, the spec a lifted example test needs, or \
             the only refutable contract on a function the templates could offer \
-            nothing owed for. **On by default**: on the SwiftProjectLint road test \
-            it surfaced 8 of 10 hand-keyed kernels where the templates surfaced 2. \
-            Pass --no-docstring-advice to suppress it, or set \
+            nothing owed for. **On by default**: on the SwiftProjectLint road test, \
+            run without --seeds, it surfaced 8 of 10 hand-keyed kernels where the \
+            templates surfaced 2. Under --seeds, documented functions the manifest \
+            does not name are listed in brief in a second block, "Documented \
+            contracts outside the seed focus", never dropped. Pass \
+            --no-docstring-advice to suppress both blocks, or set \
             [discover].docstringAdvice in .swiftinfer/config.toml. The advice is \
             separate from property-test suggestions and never enters accept / verify.
             """
@@ -279,11 +282,12 @@ extension SwiftInferCommand {
             matched still earns the generic determinism law (f(x) == f(x)). \
             Focusing is not total: a law the code OWES, and one whose subject a \
             manifest could never name (a state machine's moves are impure), \
-            survive it — see `SeedFocus`. A missing or malformed file is an \
-            error. An EMPTY manifest does NOT focus, and returns what an \
-            unseeded run would: a manifest is whatever the linter happened to \
-            find, so "focus on zero functions" is what a producer with a blind \
-            spot looks like, not a request anyone makes.
+            survive it — see `SeedFocus`. Docstring advice for a function the \
+            manifest does not name is listed in brief, never dropped. A missing \
+            or malformed file is an error. An EMPTY manifest does NOT focus, and \
+            returns what an unseeded run would: a manifest is whatever the linter \
+            happened to find, so "focus on zero functions" is what a producer with \
+            a blind spot looks like, not a request anyone makes.
             """
         )
         public var seeds: String?

@@ -291,8 +291,12 @@ five-package toolchain.
 entire target, and then the surfaced suggestions are narrowed to functions named in the
 manifest. Two consequences worth knowing — a seeded pure function that **no template
 matched** still earns the generic determinism law `f(x) == f(x)`, synthesized downstream
-of the tier cut; and an empty manifest focuses to zero suggestions rather than to all of
-them. A missing or malformed file is an error, not a silent fallback.
+of the tier cut; and an empty manifest (or one holding only extractable-kernel seeds) does
+**not** focus — it returns what an unseeded run would, because "focus on zero functions" is
+what a producer with a blind spot looks like (`SeedFocus.filter`). Docstring advice is not
+narrowed away either: a documented function the manifest does not name is listed in a
+compact "Documented contracts outside the seed focus" block. A missing or malformed file is
+an error, not a silent fallback.
 
 **A seed is not a suggestion.** Re-measured 2026-08-06 on this repo, twice the same day — the
 second time at `38368c3` with the linter at `SwiftProjectLint@db4be6b6`, both arms from one release

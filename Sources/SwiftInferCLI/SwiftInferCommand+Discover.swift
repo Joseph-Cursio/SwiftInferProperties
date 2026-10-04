@@ -201,20 +201,28 @@ extension SwiftInferCommand.Discover {
         )
     }
 
-    /// The docstring advisory, or nothing when it is switched off.
+    /// The docstring advisory, or nothing when it is switched off — both halves, so
+    /// `--no-docstring-advice` and the config key silence the compact `--seeds` block too.
     ///
     /// The effective setting rides on `PipelineResult` rather than being re-read
     /// here, because the pipeline has already loaded the config — this keeps the
     /// CLI > config > default precedence in one place (`resolvePipelineSetup`)
     /// and saves a second `ConfigLoader.load`.
+    ///
+    /// `pipeline.suggestions` is what a run without seeds shows; the advice for a function the
+    /// manifest does not name is decided on it rather than on the focused `visible` list. See
+    /// `docstringAdvice(summaries:suggestions:unfocusedSuggestions:seedManifest:)`.
     private static func docstringAdviceIfEnabled(
         pipeline: PipelineResult,
         visible: [Suggestion],
         seedManifest: SeedManifest?
-    ) -> [DocstringAdviceItem] {
-        guard pipeline.docstringAdvice else { return [] }
+    ) -> DocstringAdvice {
+        guard pipeline.docstringAdvice else { return DocstringAdvice() }
         return docstringAdvice(
-            summaries: pipeline.summaries, suggestions: visible, seedManifest: seedManifest
+            summaries: pipeline.summaries,
+            suggestions: visible,
+            unfocusedSuggestions: pipeline.suggestions,
+            seedManifest: seedManifest
         )
     }
 
