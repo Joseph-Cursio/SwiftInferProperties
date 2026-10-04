@@ -304,6 +304,7 @@ extension SwiftInferCommand.Discover {
         )
         context.testVisibleTypeNames = pipeline.testVisibleTypeNames
         context.typeAliases = pipeline.typeAliases
+        context.equalityOutsideInheritance = pipeline.equalityOutsideInheritance
         context.syntaxCorpus = SyntaxCorpusSource(
             packageRoot: packageRoot,
             generatedRoot: destination.generatedRoot,

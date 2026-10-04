@@ -202,9 +202,14 @@ struct DeterminismCalleeEmitterTests {
         )
     ]
 
-    /// **The no-drift pin.** The determinism property is the agreement property with the subject
+    /// **The delegation pin.** The determinism property is the agreement property with the subject
     /// as its own oracle, for every call shape — so the reference oracle, which passes a different
     /// oracle to the same emitter, cannot spell the binding, `try?`, `await` or hop differently.
+    ///
+    /// ⚠ This pins that `deterministic` still goes through `agreementProperty`, NOT the text either
+    /// writes: a change to the shared emitter moves both sides at once and passes here. The text is
+    /// pinned by the `contains` rows above and, for the actor-instance and operator shapes, by the
+    /// whole-stub literals in `DeterminismFrozenStubTests`.
     @Test("the determinism property is the agreement property with itself", arguments: shapes.indices)
     func theDeterminismPropertyIsTheAgreementPropertyWithItself(row: Int) {
         let shape = Self.shapes[row]

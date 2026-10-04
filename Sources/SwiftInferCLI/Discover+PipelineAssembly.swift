@@ -110,6 +110,9 @@ extension SwiftInferCommand.Discover {
             consumerProducerChainHintsByIdentity: hints.chainHints,
             typeShapesByName: hints.typeShapesByName,
             inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: artifacts.typeDecls),
+            equalityOutsideInheritance: UnequatableResultGate.equalityOutsideInheritance(
+                typeDecls: artifacts.typeDecls, summaries: artifacts.summaries
+            ),
             genericParametersByName: genericParametersIndex(from: artifacts.typeDecls),
             visibleToTestableImportByName: visibleToTestableImportIndex(from: artifacts.typeDecls),
             testVisibleTypeNames: SendableShim.testVisibleTypeNames(from: artifacts.typeDecls),

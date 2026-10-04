@@ -97,23 +97,6 @@ extension InteractiveTriage {
         return (writable, stub)
     }
 
-    /// Build the lifted-test source text for `suggestion`.
-    ///
-
-    /// Determinism stub for a seeded pure function `f: (P0, …) -> U`. Builds one
-    /// generator per argument and emits `f(args) == f(args)`. Equality keys off
-    /// the return type. An `Int` argument uses a *bounded* generator (see
-    /// `boundedDeterminismGenerator`) so unchecked arithmetic in `f` doesn't trap
-    /// on overflow.
-    ///
-    /// **Spelled through `CalleeReference`, like every other arm (#465).** This arm took the bare
-    /// function name and so wrote `tokenizeLine(value)` for a member of `SwiftTokenizer`; across
-    /// the corpus funnel census all 33 determinism stubs that compiled were free functions. A
-    /// static member is now qualified, and an instance method draws its receiver from the
-    /// declaring type ahead of its parameters — the argument list the totality arm draws
-    /// (`arityFreeArgumentTypes`), read through `SubjectCallPlan`, which also owns every
-    /// determinism decline. Internal rather than private so the accept path's behaviour can be
-    /// tested without writing files.
     /// A bounded generator for a numeric parameter type in a *determinism* stub,
     /// or `nil` for non-numeric types (the caller then chooses normally).
     ///

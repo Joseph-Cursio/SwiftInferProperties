@@ -1,4 +1,5 @@
 import Foundation
+import PropertyLawCore
 @testable import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
@@ -25,35 +26,76 @@ struct DeterminismStubCompiledWitnessTests {
         return try String(contentsOf: url, encoding: .utf8)
     }
 
-    /// The namespaced stub accept writes for `owner.name`, exactly as `wrappedFileContents` places it.
-    static func acceptWrittenStub(owner: String, name: String, in source: String) throws -> String {
+    /// The witness file scanned the way discover scans a target.
+    struct Scanned {
+        let corpus: ScannedCorpus
+        let shapes: [String: TypeShape]
+    }
+
+    static func scanned(_ source: String) -> Scanned {
         let corpus = FunctionScanner.scanCorpus(source: source, file: witnessFile)
-        let summary = try #require(corpus.summaries.first { $0.name == name && $0.containingTypeName == owner })
+        let folded = TypeShapeBuilder.shapes(from: corpus.typeDecls)
+        return Scanned(corpus: corpus, shapes: Dictionary(uniqueKeysWithValues: folded.map { ($0.name, $0) }))
+    }
+
+    /// The determinism law a seed on `owner.name` synthesizes.
+    static func law(owner: String, name: String, in scanned: Scanned) throws -> Suggestion {
+        let summary = try #require(scanned.corpus.summaries.first { $0.name == name && $0.containingTypeName == owner })
         let manifest = SeedManifest(seeds: [
             SeedManifest.Seed(file: witnessFile, line: summary.location.line, symbol: name, kind: .pureFunction)
         ])
         let laws = SwiftInferCommand.Discover.synthesizeGenericLaws(
             for: manifest, summaries: [summary], covered: [], diagnostics: SilentDiagnostics()
         )
-        let law = try #require(laws.first { $0.templateName == "determinism" })
-        let folded = TypeShapeBuilder.shapes(from: corpus.typeDecls)
-        let shapes = Dictionary(uniqueKeysWithValues: folded.map { ($0.name, $0) })
-        let resolver = InteractiveTriage.projectTypeGenerator(
-            types: InteractiveTriage.presentedShapes(typeShapesByName: shapes, visible: Set(shapes.keys))
+        return try #require(laws.first { $0.templateName == "determinism" })
+    }
+
+    /// The namespaced stub accept writes for `owner.name`, exactly as `wrappedFileContents` places it.
+    static func acceptWrittenStub(owner: String, name: String, in source: String) throws -> String {
+        let scanned = Self.scanned(source)
+        let law = try Self.law(owner: owner, name: name, in: scanned)
+        let presented = InteractiveTriage.presentedShapes(
+            typeShapesByName: scanned.shapes, visible: Set(scanned.shapes.keys)
         )
+        let resolver = InteractiveTriage.projectTypeGenerator(types: presented)
         let stub = try #require(InteractiveTriage.deterministicStub(for: law, customGenerator: resolver))
         let fileName = try #require(InteractiveTriage.stubFileName(for: law))
         return InteractiveTriage.namespaced(stub, suiteName: InteractiveTriage.suiteName(forStubFileName: fileName))
     }
 
+    /// The subjects whose stubs `UnequatableResultGate` used to withdraw although they compile.
+    static let misreadResults: [(String, String)] = [
+        ("DeterminismWitnessColumns", "sortKey"),
+        ("DeterminismWitnessColumns", "rowID"),
+        ("DeterminismWitnessBank", "credit"),
+        ("DeterminismWitnessBank", "read")
+    ]
+
     @Test("the witness holds the stub accept writes", arguments: [
         ("DeterminismWitnessGauge", "scale"),
         ("DeterminismWitnessPoint", "merge")
-    ])
+    ] + misreadResults)
     func theWitnessHoldsTheAcceptWrittenStub(owner: String, name: String) throws {
         let witness = try Self.witnessText()
         let stub = try Self.acceptWrittenStub(owner: owner, name: name, in: witness)
         #expect(witness.contains(stub), "regenerate the witness; accept now writes:\n\(stub)")
+    }
+
+    /// The gate, fed this file the way discover feeds it a target, lets each of these through —
+    /// and the witness holding their stubs, which builds, is the proof that was right.
+    @Test("the result gate lets the misread results through", arguments: misreadResults)
+    func theResultGateLetsTheMisreadResultsThrough(owner: String, name: String) throws {
+        let scanned = Self.scanned(try Self.witnessText())
+        let law = try Self.law(owner: owner, name: name, in: scanned)
+        let reason = UnequatableResultGate.declineReason(
+            for: law,
+            typeShapesByName: scanned.shapes,
+            inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: scanned.corpus.typeDecls),
+            equalityOutsideInheritance: UnequatableResultGate.equalityOutsideInheritance(
+                typeDecls: scanned.corpus.typeDecls, summaries: scanned.corpus.summaries
+            )
+        )
+        #expect(reason == nil)
     }
 
     /// What the two witnesses changed, read off the accept-written text.

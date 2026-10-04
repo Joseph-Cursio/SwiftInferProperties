@@ -10,16 +10,27 @@ import SwiftInferTemplates
 /// template, and it dispatches ahead of the template switch.
 extension InteractiveTriage {
 
-    /// The determinism stub for a suggestion, or `nil` when its subject cannot be called.
+    /// The determinism stub for a seeded pure function `f: (P0, …) -> U` — `f(args) == f(args)`
+    /// over one generator per argument, with equality keyed off the return type — or `nil` when
+    /// its subject cannot be called.
     ///
     /// **Whether it can be called is `SubjectCallPlan`'s answer, not this function's.** The plan
     /// is the one place the call is shaped and declined, and `StubApplicationArity.declineReason`
     /// reads the same `Outcome` — so a stub is written exactly when no reason is given, by
     /// construction rather than by two lists kept in step.
     ///
+    /// **Spelled through `CalleeReference`, like every other arm (#465).** This arm took the bare
+    /// function name and so wrote `tokenizeLine(value)` for a member of `SwiftTokenizer`; across
+    /// the corpus funnel census all 33 determinism stubs that compiled were free functions. A
+    /// static member is now qualified, and an instance method draws its receiver from the
+    /// declaring type ahead of its parameters — the argument list the totality arm draws
+    /// (`arityFreeArgumentTypes`), read through the plan.
+    ///
     /// The plan is built with an empty type universe, so a parameter's nested type keeps the
     /// spelling it had; threading the scanned universe into accept is a separate change. Each
-    /// argument draws `boundedDeterminismGenerator` first, then the accept path's resolver.
+    /// argument draws `boundedDeterminismGenerator` first — an `Int` is bounded so unchecked
+    /// arithmetic in `f` cannot trap on overflow — then the accept path's resolver. Internal
+    /// rather than private so the accept path's behaviour can be tested without writing files.
     static func deterministicStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)? = nil

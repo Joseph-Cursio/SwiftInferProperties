@@ -20,24 +20,34 @@ import SwiftInferCore
 ///
 /// ## It declines only on positive evidence
 ///
-/// Each identifier in the result spelling is looked up among the scanned types — after `Self` is
-/// read as the declaring type and nested names are qualified the way a test file must write them.
-/// A scanned declaration is let through when:
+/// The result is spelled the way a test file must write it — `Self` read as the declaring type,
+/// nested names qualified — and only the types its `==` actually compares are judged
+/// (`operandTypeNames(in:)`): the result itself, and the arguments of the standard wrappers whose
+/// `==` needs theirs (`T?`, `[T]`, `[K: V]`, `Set`, `Result`, a tuple's members). Any other generic
+/// is judged by its own name: `KeyPath<Row, String>` is `Hashable` whatever `Row` is, and so is a
+/// phantom-tagged `Tagged<User, Int>`. A judged type is let through when it was never scanned, or:
 ///
-/// - it is an enum whose cases all have no payload, which Swift makes `Equatable` without being
-///   asked (`UnequatableCarrierGate`'s header predates this and does not say so); or
-/// - its own inheritance clause, or the cross-file conformance index under its qualified or its
-///   bare name, reaches `Equatable` or a protocol refining it. Both names are needed because
-///   `inheritedTypesByName` is keyed by `TypeDecl.name`, which is bare for a nested declaration,
-///   while `typeShapesByName` is keyed by the qualified one; or
+/// - it is an enum the scan shows no payload for (`isImplicitlyEquatable`); or
+/// - a chain of its conformances reaches `Equatable` or a protocol refining it — its own clause,
+///   and the conformance index under its qualified AND its bare name, at every link. Both are
+///   needed because `inheritedTypesByName` is keyed by `TypeDecl.name`, bare for a nested
+///   declaration, while `typeShapesByName` and a clause naming `Ledger.Entry` use the qualified
+///   one; or
 /// - a chain leaves what the scan can see — a superclass or protocol from another module that is
 ///   not known to stop short of `Equatable`. `NSObject` is `Equatable`, and so is anything
 ///   conforming to `AdditiveArithmetic`, and neither is on `UnequatableCarrierGate`'s refiner
-///   list; reading such a name as *not Equatable* would withdraw stubs that compile, which is the
-///   one thing this gate must not do (both checked with `swiftc`, Swift 6.4).
+///   list (both checked with `swiftc`, Swift 6.4); or
+/// - the scan saw `==` arrive without a clause (`equalityOutsideInheritance(typeDecls:summaries:)`):
+///   a hand-written `static func ==`, which operator lookup finds with no conformance at all, or
+///   an attribute that may be a macro — SwiftData's `@Model` conforms a class to `PersistentModel`,
+///   which refines `Hashable`.
 ///
-/// Anything else that was scanned declines. A type the scan never saw — the standard library,
-/// another module, a protocol — never does: *not in the index* is not *not Equatable*.
+/// ⚠ **What it cannot see.** Only the scanned target is indexed, so an
+/// `extension FixResult: Equatable {}` written in the TEST target the stub lands in is invisible,
+/// and the stub is withdrawn although it would compile there. `UnequatableCarrierGate` and
+/// `UnorderedCarrierGate` share that blind spot; reading the destination target is one change for
+/// all three. A conditional conformance (`extension Box: Equatable where T: Equatable`) is read as
+/// unconditional, which errs toward writing the stub.
 enum UnequatableResultGate {
 
     /// Why the determinism stub for this suggestion cannot compare its results, or `nil`.
@@ -47,7 +57,8 @@ enum UnequatableResultGate {
     static func declineReason(
         for suggestion: Suggestion,
         typeShapesByName: [String: TypeShape],
-        inheritedTypesByName: [String: Set<String>]
+        inheritedTypesByName: [String: Set<String>],
+        equalityOutsideInheritance: Set<String> = []
     ) -> String? {
         guard suggestion.templateName == "determinism",
               let evidence = suggestion.evidence.first,
@@ -58,41 +69,48 @@ enum UnequatableResultGate {
             returnTypeText: plan.returnTypeText,
             owner: evidence.qualifiedTypeName,
             typeShapesByName: typeShapesByName,
-            inheritedTypesByName: inheritedTypesByName
+            inheritedTypesByName: inheritedTypesByName,
+            equalityOutsideInheritance: equalityOutsideInheritance
         )
     }
 
     /// Why `display`'s result, spelled `returnTypeText` inside `owner`, has no `==`, or `nil`.
     ///
-    /// - Parameter typeUniverse: the qualified names nested spellings are resolved against;
-    ///   `nil` means the scanned types' own keys.
+    /// - Parameters:
+    ///   - typeUniverse: the qualified names nested spellings are resolved against; `nil` means
+    ///     the scanned types' own keys.
+    ///   - equalityOutsideInheritance: the names the scan saw get `==` without an inheritance
+    ///     clause saying so; empty for a caller that has no scan to read it from.
     static func declineReason(
         display: String,
         returnTypeText: String,
         owner: String?,
         typeShapesByName: [String: TypeShape],
         inheritedTypesByName: [String: Set<String>],
-        typeUniverse: Set<String>? = nil
+        typeUniverse: Set<String>? = nil,
+        equalityOutsideInheritance: Set<String> = []
     ) -> String? {
-        let scanned = Set(typeShapesByName.keys)
+        let scan = EqualityScan(
+            shapes: typeShapesByName, inherited: inheritedTypesByName, outside: equalityOutsideInheritance
+        )
         let selfless = owner.map { SubjectCallPlan.replacingSelf(in: returnTypeText, with: $0) } ?? returnTypeText
         let spelled = TypeShapeBuilder.resolvedSpelling(
-            selfless, enclosing: owner ?? "", universe: typeUniverse ?? scanned
+            selfless, enclosing: owner ?? "", universe: typeUniverse ?? Set(typeShapesByName.keys)
         )
-        let unequatable = identifiers(in: spelled).first { name in
-            guard let shape = typeShapesByName[name], shape.hasPrimaryDeclaration else { return false }
-            if isImplicitlyEquatable(shape) { return false }
-            return declaresEquatable(name, shape: shape, scanned: scanned, inheritedTypesByName: inheritedTypesByName)
-                == false
-        }
-        guard let unequatable else { return nil }
+        guard let unequatable = operandTypeNames(in: spelled).first(where: scan.lacksEquality) else { return nil }
         return "\(display) returns \(returnTypeText), and no scanned declaration makes \(unequatable) "
             + "Equatable, so `==` cannot compare two results"
     }
 
-    /// An enum whose every case is payload-free: Swift synthesises `Equatable` (and `Hashable`)
-    /// for it without a declaration. An enum whose cases were not captured counts too, which
-    /// errs toward writing the stub.
+    /// An enum the scan shows no payload for: Swift synthesises `Equatable` (and `Hashable`) for an
+    /// enum whose cases are all payload-free, without a declaration.
+    ///
+    /// ⚠ **A caseless enum counts too, though Swift gives it no `==`.** The scan reads an enum's
+    /// direct members only (`MemberBlockInspector.enumCases`), so an enum whose cases all sit inside
+    /// `#if` shows none — and that one IS `Equatable`. The two cannot be told apart here, and
+    /// declining both would withdraw a stub that compiles; letting both through costs nothing real,
+    /// because a function returning an uninhabited type never returns. A payload case inside `#if`
+    /// is missed the same way, and errs the same way.
     static func isImplicitlyEquatable(_ shape: TypeShape) -> Bool {
         shape.kind == .enum && shape.enumCases.allSatisfy(\.associatedValues.isEmpty)
     }
@@ -107,38 +125,55 @@ enum UnequatableResultGate {
         "CustomReflectable", "TextOutputStreamable", "AnyObject", "Copyable", "Escapable", "BitwiseCopyable"
     ]
 
-    /// Whether some declaration the scan saw makes `name` `Equatable`, or a chain of its
-    /// conformances leaves what the scan can see.
-    ///
-    /// Walks every inheritance chain from the shape's own clause and from the conformance index
-    /// under both spellings of its name, stepping through any name the index holds.
-    private static func declaresEquatable(
-        _ name: String,
-        shape: TypeShape,
-        scanned: Set<String>,
-        inheritedTypesByName: [String: Set<String>]
-    ) -> Bool {
-        let bare = name.split(separator: ".").last.map(String.init) ?? name
-        var pending = shape.inheritedTypes
-            + Array(inheritedTypesByName[name] ?? []) + Array(inheritedTypesByName[bare] ?? [])
-        var seen: Set<String> = [name, bare]
-        while let next = pending.popLast() {
-            let names = conformanceNames(next)
-            if names.count > 1 {
-                pending.append(contentsOf: names)
-                continue
-            }
-            let current = names.first ?? next
-            guard seen.insert(current).inserted else { continue }
-            if UnequatableCarrierGate.equatableRefiners.contains(current) { return true }
-            if knownNotEquatable.contains(current) { continue }
-            if let inherited = inheritedTypesByName[current] {
-                pending.append(contentsOf: inherited)
-            } else if scanned.contains(current) == false {
-                return true
-            }
+    /// What the scan knows about where a type's `==` comes from.
+    struct EqualityScan {
+        let shapes: [String: TypeShape]
+        let inherited: [String: Set<String>]
+        let outside: Set<String>
+
+        /// Whether `name` is a scanned declaration with no `==` the scan can see.
+        func lacksEquality(_ name: String) -> Bool {
+            guard let shape = shapes[name], shape.hasPrimaryDeclaration else { return false }
+            return UnequatableResultGate.isImplicitlyEquatable(shape) == false && mayBeEquatable(name) == false
         }
-        return false
+
+        /// Whether some chain of conformances from `name` reaches `Equatable`, or reaches a link
+        /// the scan cannot rule `==` out for. Every link is read the same way, the first included.
+        func mayBeEquatable(_ name: String) -> Bool {
+            var pending = [name]
+            var seen: Set<String> = []
+            while let entry = pending.popLast() {
+                let names = UnequatableResultGate.conformanceNames(entry)
+                guard names.count == 1, let current = names.first else {
+                    pending.append(contentsOf: names)
+                    continue
+                }
+                guard seen.insert(current).inserted,
+                      UnequatableResultGate.knownNotEquatable.contains(current) == false
+                else { continue }
+                if UnequatableCarrierGate.equatableRefiners.contains(current) { return true }
+                guard let onward = conformances(of: current) else { return true }
+                pending.append(contentsOf: onward)
+            }
+            return false
+        }
+
+        /// The conformances to walk on from `name`, or `nil` when the scan cannot rule `==` out:
+        /// the scan saw `==` arrive without a clause, or `name` left the scan (neither scanned nor
+        /// indexed under its own spelling).
+        ///
+        /// A scanned name is read under its qualified AND its bare spelling, plus its shape's own
+        /// clause. An unscanned one is read under its own spelling only: its last component may be
+        /// an unrelated scanned type (`SomeKit.Item` beside a project `Item`), and reading through
+        /// that would turn *left the scan* into evidence of no `==`.
+        func conformances(of name: String) -> [String]? {
+            guard let shape = shapes[name] else {
+                return outside.contains(name) ? nil : inherited[name].map(Array.init)
+            }
+            let bare = name.split(separator: ".").last.map(String.init) ?? name
+            guard outside.isDisjoint(with: [name, bare]) else { return nil }
+            return shape.inheritedTypes + Array(inherited[name] ?? []) + Array(inherited[bare] ?? [])
+        }
     }
 
     /// The protocol or class names an inheritance entry spells: `Swift.Hashable` → `Hashable`,
@@ -149,14 +184,5 @@ enum UnequatableResultGate {
             let last = words.last.map(String.init) ?? String(part)
             return last.hasPrefix("Swift.") ? String(last.dropFirst("Swift.".count)) : last
         }
-    }
-
-    /// The type names in a spelling, dotted paths kept whole, in order of first appearance.
-    private static func identifiers(in spelling: String) -> [String] {
-        let identifier = /[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*/
-        var seen: Set<String> = []
-        return spelling.matches(of: identifier)
-            .map { String($0.output) }
-            .filter { seen.insert($0).inserted }
     }
 }

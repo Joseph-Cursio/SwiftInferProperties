@@ -2,12 +2,12 @@ import Foundation
 import PropertyLawKit
 import Testing
 
-// A COMPILED witness for the determinism stubs accept now writes where it used to write ones that
-// could not compile. `DeterminismStubCompiledWitnessTests` scans the two subjects below out of this
-// very file, has accept write each stub, and checks this file holds that text byte for byte — so
-// the test target building is the proof the emitted text compiles, and the stubs running green is
-// the proof the law passes a deterministic subject. Keep the subjects at the top: the seed is
-// derived from the law's identity, which names the subject's location.
+// A COMPILED witness for the determinism stubs accept writes. `DeterminismStubCompiledWitnessTests`
+// scans the subjects below out of this very file, has accept write each stub, and checks this file
+// holds that text byte for byte — so the test target building is the proof the emitted text
+// compiles, and the stubs running green is the proof the law passes a deterministic subject. Keep
+// the subjects at the top, and add new ones after the old: the seed is derived from the law's
+// identity, which names the subject's location.
 
 /// `approximatelyEqual` used to be called and never declared: *cannot find 'approximatelyEqual'
 /// in scope*.
@@ -21,6 +21,58 @@ struct DeterminismWitnessPoint: Equatable {
     let value: Int
 
     static func merge(_ lhs: Self, _ rhs: Self) -> Self { Self(value: Swift.max(lhs.value, rhs.value)) }
+}
+
+// The two above used to be written and could not compile. The ones below compile, and
+// `UnequatableResultGate` used to withdraw them — each a result whose `==` the gate misread.
+
+/// A scanned type with no `Equatable`, named only as a `KeyPath` root and a phantom tag.
+struct DeterminismWitnessRow {
+    let name: String
+    let title: String
+}
+
+/// `Hashable` whatever its phantom tag is.
+struct DeterminismWitnessTagged<Tag, Raw: Hashable>: Hashable {
+    let raw: Raw
+}
+
+/// `KeyPath<Row, String>` and `Tagged<Row, Int>` used to decline on `Row`.
+enum DeterminismWitnessColumns {
+    static func sortKey(_ index: Int) -> KeyPath<DeterminismWitnessRow, String> {
+        index.isMultiple(of: 2) ? \.name : \.title
+    }
+
+    static func rowID(_ raw: Int) -> DeterminismWitnessTagged<DeterminismWitnessRow, Int> {
+        DeterminismWitnessTagged(raw: raw)
+    }
+}
+
+/// `Equatable` reached through a superclass the subclass names by its qualified, nested spelling.
+enum DeterminismWitnessLedger {
+    class Entry: Equatable {
+        let amount: Int
+
+        init(amount: Int) { self.amount = amount }
+
+        static func == (lhs: Entry, rhs: Entry) -> Bool { lhs.amount == rhs.amount }
+    }
+}
+
+final class DeterminismWitnessCredit: DeterminismWitnessLedger.Entry {}
+
+/// A hand-written `==` and no `Equatable`: operator lookup finds the member.
+struct DeterminismWitnessReading {
+    let value: Int
+
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.value == rhs.value }
+}
+
+/// The superclass link and the hand-written `==` used to decline too.
+enum DeterminismWitnessBank {
+    static func credit(_ amount: Int) -> DeterminismWitnessCredit { DeterminismWitnessCredit(amount: amount) }
+
+    static func read(_ raw: Int) -> DeterminismWitnessReading { DeterminismWitnessReading(value: raw) }
 }
 
 // WITNESS-BEGIN — emitted text, verbatim; the rules below are the ones it trips.
@@ -82,6 +134,102 @@ struct DeterminismWitnessPoint_merge_determinismTests {
         if case let .failed(_, _, input, error) = result {
             Issue.record(
                 "DeterminismWitnessPoint.merge(_:_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+            )
+        }
+    }
+}
+
+struct DeterminismWitnessColumns_sortKey_determinismTests {
+
+    @Test func sortKey_isDeterministic() async {
+        let backend = SwiftPropertyBasedBackend()
+        let seed = Seed(
+            stateA: 0xD7271E13E6E9C14D,
+            stateB: 0x766AC1594948DF51,
+            stateC: 0x8046983798D6D2E5,
+            stateD: 0x1BEB2C74A8445C8D
+        )
+        let result = await backend.check(
+            trials: 100,
+            seed: seed,
+            sample: { rng in (Gen<Int>.int(in: -10_000 ... 10_000)).run(using: &rng) },
+            property: { value in DeterminismWitnessColumns.sortKey(value) == DeterminismWitnessColumns.sortKey(value) }
+        )
+        if case let .failed(_, _, input, error) = result {
+            Issue.record(
+                "DeterminismWitnessColumns.sortKey(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+            )
+        }
+    }
+}
+
+struct DeterminismWitnessColumns_rowID_determinismTests {
+
+    @Test func rowID_isDeterministic() async {
+        let backend = SwiftPropertyBasedBackend()
+        let seed = Seed(
+            stateA: 0x00C91CBAB9BD7C6E,
+            stateB: 0x96CC85781051F7E5,
+            stateC: 0x590A3CD028F0AD94,
+            stateD: 0x4004B8B8658AC410
+        )
+        let result = await backend.check(
+            trials: 100,
+            seed: seed,
+            sample: { rng in (Gen<Int>.int(in: -10_000 ... 10_000)).run(using: &rng) },
+            property: { value in DeterminismWitnessColumns.rowID(value) == DeterminismWitnessColumns.rowID(value) }
+        )
+        if case let .failed(_, _, input, error) = result {
+            Issue.record(
+                "DeterminismWitnessColumns.rowID(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+            )
+        }
+    }
+}
+
+struct DeterminismWitnessBank_credit_determinismTests {
+
+    @Test func credit_isDeterministic() async {
+        let backend = SwiftPropertyBasedBackend()
+        let seed = Seed(
+            stateA: 0xEB60D1CD37CB0FD6,
+            stateB: 0x165DEE3FF7080F7A,
+            stateC: 0x1E81C7EC7BAE245B,
+            stateD: 0xA6EBDF23F5894CDE
+        )
+        let result = await backend.check(
+            trials: 100,
+            seed: seed,
+            sample: { rng in (Gen<Int>.int(in: -10_000 ... 10_000)).run(using: &rng) },
+            property: { value in DeterminismWitnessBank.credit(value) == DeterminismWitnessBank.credit(value) }
+        )
+        if case let .failed(_, _, input, error) = result {
+            Issue.record(
+                "DeterminismWitnessBank.credit(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+            )
+        }
+    }
+}
+
+struct DeterminismWitnessBank_read_determinismTests {
+
+    @Test func read_isDeterministic() async {
+        let backend = SwiftPropertyBasedBackend()
+        let seed = Seed(
+            stateA: 0x50F1DAC950B3EFAF,
+            stateB: 0xC293B5C4484143DC,
+            stateC: 0x71E90C4082A73335,
+            stateD: 0x7F018C27BF71F770
+        )
+        let result = await backend.check(
+            trials: 100,
+            seed: seed,
+            sample: { rng in (Gen<Int>.int(in: -10_000 ... 10_000)).run(using: &rng) },
+            property: { value in DeterminismWitnessBank.read(value) == DeterminismWitnessBank.read(value) }
+        )
+        if case let .failed(_, _, input, error) = result {
+            Issue.record(
+                "DeterminismWitnessBank.read(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
             )
         }
     }

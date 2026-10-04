@@ -193,7 +193,8 @@ extension InteractiveTriage {
             ?? UnequatableResultGate.declineReason(
                 for: suggestion,
                 typeShapesByName: context.typeShapesByName,
-                inheritedTypesByName: context.inheritedTypesByName
+                inheritedTypesByName: context.inheritedTypesByName,
+                equalityOutsideInheritance: context.equalityOutsideInheritance
             )
     }
 

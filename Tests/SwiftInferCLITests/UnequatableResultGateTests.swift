@@ -94,16 +94,30 @@ struct UnequatableResultGateTests {
         #expect(Self.reason("[Key]", in: scan) == nil)
     }
 
-    /// The conformance index is keyed by `TypeDecl.name`, bare for a nested declaration, while the
-    /// shapes are keyed by the qualified name — both must be read.
+    /// The conformance index is keyed by the name a declaration or extension SPELLS, while the
+    /// shapes are keyed by the qualified name — so both must be read. `extension Outer.Inner` is
+    /// indexed under `Outer.Inner`, and a nested declaration's own clause is in its shape; the bare
+    /// read is for an extension written through a file-scope alias, which Swift accepts (`swiftc`,
+    /// Swift 6.4) and the index records under the alias's name alone. (A bare
+    /// `extension Inner: Equatable {}` with no alias does not compile: *cannot find type 'Inner'*.)
     @Test func aConformanceRecordedUnderTheBareNestedNameCounts() {
         let scan = Self.scan([
             "Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}",
-            "Inner+Equatable.swift": "extension Inner: Equatable {}"
+            "Inner+Equatable.swift": "typealias Inner = Outer.Inner\nextension Inner: Equatable {}"
         ])
         #expect(scan.inherited["Inner"]?.contains("Equatable") == true)
         #expect(scan.inherited["Outer.Inner"] == nil)
         #expect(Self.reason("Inner", owner: "Outer", in: scan) == nil)
+    }
+
+    /// The qualified extension needs no bare read: the index records it under `Outer.Inner`.
+    @Test func aConformanceOnTheQualifiedExtensionCounts() {
+        let scan = Self.scan([
+            "Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}",
+            "Inner+Equatable.swift": "extension Outer.Inner: Equatable {}"
+        ])
+        #expect(scan.inherited["Outer.Inner"]?.contains("Equatable") == true)
+        #expect(Self.reason("[Inner]", owner: "Outer", in: scan) == nil)
     }
 
     /// Swift synthesises `Equatable` for an enum without payloads; no declaration says so.

@@ -85,6 +85,12 @@ extension SwiftInferCommand.Discover {
         /// `BitSet+X.swift` files, so the shape-derived map sees none of them.
         public let inheritedTypesByName: [String: Set<String>]
 
+        /// Names the scan saw get `==` without an inheritance clause saying so — a hand-written
+        /// `static func ==`, or an attribute that may be a macro adding `Equatable`. Read by
+        /// `UnequatableResultGate`, which must not count those types as having no `==`; see
+        /// `UnequatableResultGate.equalityOutsideInheritance(typeDecls:summaries:)`.
+        public let equalityOutsideInheritance: Set<String>
+
         /// Generic parameters per type name, for callers that must NAME a carrier in emitted
         /// source. `TypeShape` does not carry them and `TypeDecl.name` is the bare
         /// identifier, so before 2026-08-02 a generic carrier was indistinguishable from a
@@ -164,6 +170,7 @@ extension SwiftInferCommand.Discover {
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             inheritedTypesByName: [String: Set<String>] = [:],
+            equalityOutsideInheritance: Set<String> = [],
             genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
             visibleToTestableImportByName: [String: Bool] = [:],
             testVisibleTypeNames: Set<String> = [],
@@ -190,6 +197,7 @@ extension SwiftInferCommand.Discover {
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.typeShapesByName = typeShapesByName
             self.inheritedTypesByName = inheritedTypesByName
+            self.equalityOutsideInheritance = equalityOutsideInheritance
             self.genericParametersByName = genericParametersByName
             self.visibleToTestableImportByName = visibleToTestableImportByName
             self.testVisibleTypeNames = testVisibleTypeNames
