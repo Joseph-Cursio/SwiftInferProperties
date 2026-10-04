@@ -62,4 +62,15 @@ struct ActorReceiverTests {
         let callee = CalleeReference(bareName: "f", isolation: "MainActor")
         #expect(callee.isolated("f(x)") == "await MainActor.run { f(x) }")
     }
+
+    /// The row form the docstring advisory needs marks exactly as the suggestion form does,
+    /// which now maps over it.
+    @Test("one row is marked as the suggestion's row is", arguments: ["normalized", "label", "shared"])
+    func aRowIsMarkedAsItsSuggestionIs(name: String) throws {
+        let row = try #require(Self.corpus.summaries.first { $0.name == name }).inferenceEvidence
+        let marked = ActorReceiver.marking(row, actorTypeNames: Self.actorNames)
+        #expect(marked.globalActor == (name == "normalized" ? CalleeReference.actorReceiverIsolation : nil))
+        let suggestion = SubjectCallPlanBothSidesTests.suggestion(for: row)
+        #expect(ActorReceiver.marking(suggestion, actorTypeNames: Self.actorNames).evidence == [marked])
+    }
 }

@@ -62,12 +62,18 @@ extension SwiftInferCommand.Discover {
         /// the `DomainHint` for the writeout.
         public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
 
-        /// V1.47.C — type declarations the discover pass saw, keyed by
-        /// bare type name (no generic argument list). `IndexCommand`
-        /// reads this to populate `SemanticIndexEntry.typeShape` so the
-        /// verify pipeline can call `DerivationStrategist.strategy(for:)`
-        /// without re-parsing the user's source. Empty for code paths
-        /// that don't need it (the renderer / interactive flows).
+        /// V1.47.C — type declarations the discover pass saw, keyed by the
+        /// shape's own `name` (no generic argument list), which
+        /// `TypeShapeBuilder.shapes` emits **qualified**: a nested type is
+        /// `Outer.Inner`, not `Inner`. `IndexCommand` reads this to populate
+        /// `SemanticIndexEntry.typeShape` so the verify pipeline can call
+        /// `DerivationStrategist.strategy(for:)` without re-parsing the user's
+        /// source. Empty for code paths that don't need it (the renderer /
+        /// interactive flows).
+        ///
+        /// ⚠ **Not keyed like `inheritedTypesByName`**, which uses `TypeDecl.name` —
+        /// bare for a nested declaration. A caller joining the two for a nested type
+        /// must try both spellings (`UnequatableResultGate`).
         public let typeShapesByName: [String: PropertyLawCore.TypeShape]
 
         /// Conformances keyed by type name, with **cross-file extension records merged**

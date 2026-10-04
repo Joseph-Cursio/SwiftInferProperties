@@ -10,39 +10,37 @@ import SwiftInferTemplates
 /// template, and it dispatches ahead of the template switch.
 extension InteractiveTriage {
 
+    /// The determinism stub for a suggestion, or `nil` when its subject cannot be called.
+    ///
+    /// **Whether it can be called is `SubjectCallPlan`'s answer, not this function's.** The plan
+    /// is the one place the call is shaped and declined, and `StubApplicationArity.declineReason`
+    /// reads the same `Outcome` — so a stub is written exactly when no reason is given, by
+    /// construction rather than by two lists kept in step.
+    ///
+    /// The plan is built with an empty type universe, so a parameter's nested type keeps the
+    /// spelling it had; threading the scanned universe into accept is a separate change. Each
+    /// argument draws `boundedDeterminismGenerator` first, then the accept path's resolver.
     static func deterministicStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)? = nil
     ) -> String? {
         guard let evidence = suggestion.evidence.first,
-              determinismResultDeclineReason(for: evidence) == nil,
-              let callee = CalleeReference(evidence: evidence),
-              let argumentTypes = arityFreeArgumentTypes(callee: callee, evidence: evidence) else {
+              case let .plan(plan) = SubjectCallPlan.outcome(for: evidence) else {
             return nil
         }
-        // Async / throwing candidates render as `(P0) async throws -> U` (Swift
-        // order) in the evidence signature — detect the markers, then strip them
-        // so the return-type extraction stays untouched. The emitter reassembles
-        // the effect prefix (`await` / `try?`) on the call.
-        let (isAsync, isThrows) = determinismEffects(in: evidence.signature)
-        let signature = evidence.signature
-            .replacingOccurrences(of: " async throws ->", with: " ->")
-            .replacingOccurrences(of: " async ->", with: " ->")
-            .replacingOccurrences(of: " throws ->", with: " ->")
-        guard let returnTypeText = returnType(from: signature) else { return nil }
-        let generators = argumentTypes.map { typeName in
+        let generators = plan.argumentTypes.map { typeName in
             boundedDeterminismGenerator(forTypeName: typeName)
                 ?? chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)
         }
         return LiftedTestEmitter.deterministic(
-            callee: callee,
+            callee: plan.callee,
             generators: generators,
             seed: SamplingSeed.derive(from: suggestion.identity),
-            equalityKind: equalityKind(forTypeText: returnTypeText),
-            isAsync: isAsync,
-            isThrows: isThrows,
+            equalityKind: plan.equalityKind,
+            isAsync: plan.isAsync,
+            isThrows: plan.isThrows,
             // #498 — the types were already in hand here and the emitter never saw them.
-            argumentTypes: argumentTypes
+            argumentTypes: plan.argumentTypes
         )
     }
 
@@ -80,15 +78,16 @@ extension InteractiveTriage {
     ///
     /// ⚠ **"The spelling" is the limit.** A `typealias` for a tuple reads as its name
     /// (`TupleResultShape`), so a throwing `-> Pair` still gets the `try?` stub, which does not
-    /// compile — as a non-`Equatable` nominal result's stub does not. Both need the scan at accept.
+    /// compile. A non-`Equatable` NOMINAL result is declined at accept by `UnequatableResultGate`,
+    /// which holds the scan; an alias for a tuple would need the alias table too, and is not read.
     ///
     /// **The law is still synthesized** (`qualifiesForDeterminism` does not look at the result):
     /// it is tautological, so declining its stub costs no refutable law, while dropping it would
     /// also drop the docstring advice's reference-oracle scaffold, which takes its seed from it.
     ///
-    /// Read by `StubApplicationArity.declineReason`, so `accept` names this cause rather than
-    /// "no stub writeout available" (#456), and by `deterministicStub`, which declines exactly
-    /// these — `DeterminismAcceptPathTests` pins both sides.
+    /// The first question `SubjectCallPlan` asks, so `accept` names this cause rather than
+    /// "no stub writeout available" (#456). The sentence names no law: the docstring advisory's
+    /// reference oracle compares `try?` on both sides too, and is declined by the same plan.
     static func determinismResultDeclineReason(for evidence: Evidence) -> String? {
         let shape = TupleResultShape(signature: evidence.signature)
         if let obstacle = shape.equalityObstacle {
@@ -96,7 +95,7 @@ extension InteractiveTriage {
         }
         guard shape.involvesTuple, determinismEffects(in: evidence.signature).isThrows else { return nil }
         let name = evidence.displayName.prefix { $0 != "(" }
-        return "\(evidence.displayName) throws and returns a tuple, so the determinism law would compare "
+        return "\(evidence.displayName) throws and returns a tuple, so the law would compare "
             + "`try? \(name)(…)` on both sides — and an Optional of a tuple has no `==`, because a tuple "
             + "cannot conform to Equatable"
     }

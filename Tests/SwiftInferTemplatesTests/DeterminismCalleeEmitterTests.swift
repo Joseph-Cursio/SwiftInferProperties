@@ -1,5 +1,5 @@
 import SwiftInferCore
-import SwiftInferTemplates
+@testable import SwiftInferTemplates
 import Testing
 
 /// The determinism stub, spelled through `CalleeReference` (#465).
@@ -126,5 +126,131 @@ struct DeterminismCalleeEmitterTests {
         let callee = CalleeReference(bareName: "combine", argumentLabels: [nil, "with"])
         let byCallee = Self.emit(callee, generators: generators)
         #expect(byName == byCallee)
+    }
+
+    // MARK: - The approximate helper
+
+    /// A floating-point result compares through `approximatelyEqual`, which this arm called and
+    /// never declared — *cannot find 'approximatelyEqual' in scope*. It is now appended, once.
+    @Test func approximateEqualityAppendsTheHelperOnce() {
+        let stub = Self.emit(
+            CalleeReference(bareName: "scale", qualifier: "Geometry", argumentLabels: [nil]),
+            generators: ["Gen<Double>.double(in: -1 ... 1)"],
+            equalityKind: .approximate
+        )
+        #expect(stub.components(separatedBy: "private func approximatelyEqual").count == 2)
+        #expect(stub.hasSuffix(LiftedTestEmitter.approximateEqualityHelper))
+    }
+
+    /// A throwing subject compares `Optional`s with `==`, so it neither uses nor declares the helper.
+    @Test func aThrowingApproximateStubHasNoHelper() {
+        let stub = Self.emit(
+            CalleeReference(bareName: "scale", qualifier: "Geometry", argumentLabels: [nil]),
+            generators: ["Gen<Double>.double(in: -1 ... 1)"],
+            equalityKind: .approximate,
+            isThrows: true
+        )
+        #expect(stub.contains("(try? Geometry.scale(value)) == (try? Geometry.scale(value))"))
+        #expect(stub.contains("approximatelyEqual") == false)
+    }
+
+    // MARK: - One agreement emitter
+
+    struct Shape: Sendable {
+        let callee: CalleeReference
+        let generators: [String]
+        var isAsync = false
+        var isThrows = false
+    }
+
+    static let shapes: [Shape] = [
+        Shape(
+            callee: CalleeReference(bareName: "tokenize", qualifier: "Lexer", argumentLabels: [nil]),
+            generators: ["G.int()"]
+        ),
+        Shape(
+            callee: CalleeReference(bareName: "render", argumentLabels: ["line"], isInstanceMethod: true),
+            generators: ["R.gen()", "S.gen()"]
+        ),
+        Shape(
+            callee: CalleeReference(
+                bareName: "count", argumentLabels: ["of"], isolation: "actor", isInstanceMethod: true
+            ),
+            generators: ["L.gen()", "S.gen()"],
+            isThrows: true
+        ),
+        Shape(
+            callee: CalleeReference(
+                bareName: "title", qualifier: "Sidebar", argumentLabels: ["for"], isolation: "MainActor"
+            ),
+            generators: ["G.int()"]
+        ),
+        Shape(
+            callee: CalleeReference(bareName: "load", qualifier: "Loader", argumentLabels: [nil]),
+            generators: ["G.int()"],
+            isAsync: true,
+            isThrows: true
+        ),
+        Shape(
+            callee: CalleeReference(bareName: "parse", qualifier: "Report", argumentLabels: ["from"]),
+            generators: ["G.int()"],
+            isThrows: true
+        ),
+        Shape(
+            callee: CalleeReference(bareName: "+", qualifier: "Money", argumentLabels: [nil, nil]),
+            generators: ["M.gen()", "M.gen()"]
+        )
+    ]
+
+    /// **The no-drift pin.** The determinism property is the agreement property with the subject
+    /// as its own oracle, for every call shape — so the reference oracle, which passes a different
+    /// oracle to the same emitter, cannot spell the binding, `try?`, `await` or hop differently.
+    @Test("the determinism property is the agreement property with itself", arguments: shapes.indices)
+    func theDeterminismPropertyIsTheAgreementPropertyWithItself(row: Int) {
+        let shape = Self.shapes[row]
+        let types = shape.generators.indices.map { "T\($0)" }
+        let stub = LiftedTestEmitter.deterministic(
+            callee: shape.callee,
+            generators: shape.generators,
+            seed: Self.seed,
+            isAsync: shape.isAsync,
+            isThrows: shape.isThrows,
+            argumentTypes: types
+        )
+        let property = LiftedTestEmitter.agreementProperty(LiftedTestEmitter.AgreementLaw(
+            subject: shape.callee,
+            oracle: shape.callee,
+            argumentTypes: types,
+            argumentCount: shape.generators.count,
+            equalityKind: .strict,
+            isAsync: shape.isAsync,
+            isThrows: shape.isThrows
+        ))
+        #expect(stub.contains("property: \(property)\n"))
+        #expect(stub.contains("sample: \(LiftedTestEmitter.argumentSample(generators: shape.generators)),\n"))
+    }
+
+    /// The oracle is the right-hand side, inside the same hop and behind the same effects.
+    @Test func theOracleIsComparedInsideTheSameEffectsAndHop() {
+        let subject = CalleeReference(
+            bareName: "title", qualifier: "Sidebar", argumentLabels: ["for"], isolation: "MainActor"
+        )
+        let oracle = CalleeReference(bareName: "title_reference", qualifier: "Sidebar", argumentLabels: ["for"])
+        let law = { (isThrows: Bool) in
+            LiftedTestEmitter.agreementProperty(LiftedTestEmitter.AgreementLaw(
+                subject: subject, oracle: oracle, argumentTypes: ["Int"], argumentCount: 1,
+                equalityKind: .approximate, isAsync: false, isThrows: isThrows
+            ))
+        }
+        #expect(law(false) == "{ value in await MainActor.run { "
+            + "approximatelyEqual(Sidebar.title(for: value), Sidebar.title_reference(for: value)) } }")
+        #expect(law(true) == "{ value in await MainActor.run { "
+            + "(try? Sidebar.title(for: value)) == (try? Sidebar.title_reference(for: value)) } }")
+    }
+
+    @Test func anUnresolvedGeneratorIsRecognisedByEitherMarker() {
+        #expect(LiftedTestEmitter.isUnresolvedGenerator(LiftedTestEmitter.defaultGenerator(for: "Widget")))
+        #expect(LiftedTestEmitter.isUnresolvedGenerator("Gen<Widget>.todo"))
+        #expect(LiftedTestEmitter.isUnresolvedGenerator("Gen<Int>.int()") == false)
     }
 }

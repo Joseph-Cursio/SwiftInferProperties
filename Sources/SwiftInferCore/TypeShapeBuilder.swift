@@ -72,7 +72,12 @@ public enum TypeShapeBuilder {
     /// Substitution is whole-word so composite spellings carry through:
     /// `[StoredMember]` becomes `[IndexedTypeShape.StoredMember]`, and
     /// `[String: Kind]` rewrites only the `Kind`.
-    static func resolvedSpelling(
+    ///
+    /// Public because a test file has no enclosing scope either: the CLI spells a subject's
+    /// argument and result types the way a test must write them (`SubjectCallPlan`,
+    /// `UnequatableResultGate`), and this is the one qualifier that already resolves them as
+    /// Swift does. An empty `universe` returns `spelling` unchanged.
+    public static func resolvedSpelling(
         _ spelling: String,
         enclosing: String,
         universe: Set<String>
