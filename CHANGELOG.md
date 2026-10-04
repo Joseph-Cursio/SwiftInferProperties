@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.158.0] — 2026-10-04
+
+Under `--seeds`, docstring advice lists the documented contracts it used to hide, and accept no longer writes a determinism stub over a tuple result Swift has no `==` for. PRs #620, #621.
+
+### Changed
+
+- **Under `discover --seeds`, a documented contract the manifest does not name is listed, not dropped.** Functions the manifest names keep the full advisory entry, scaffold included. Every other documented function a plain `discover` would advise on goes into a compact second block, "Documented contracts outside the seed focus": two lines each, no scaffold, decided against the unfocused suggestions. The two blocks together name what a run without seeds names. Without a manifest the output is unchanged. The restriction this replaces dates from when the advice was opt-in; it was turned on by default on a road-test figure measured without `--seeds`.
+- **A seed key for docstring advice is an analysable, non-carrier seed**, mirroring `SeedFocus`. A kernel seed names the impure method its kernel sits in, so it no longer counts as seeding that method.
+
+### Fixed
+
+- **Accept no longer writes a determinism stub that cannot compile over a tuple result.** A throwing or async-throwing function returning a tuple got `(try? f(x)) == (try? f(x))`, which compares two Optionals of a tuple, and a tuple cannot conform to Equatable. That stub, and any tuple of more than six elements, a nested tuple, or a tuple inside an Optional, Array, Set or Dictionary, is now declined with the reason named. A non-throwing tuple of two to six Equatable elements is still written. The result's shape is read the way swiftc reads it: `T!` as its payload, attributed types such as `sending` read through, `Swift.`-qualified containers recognised.
+- **Throws is read off the function type, not the signature text**, so a throwing closure parameter no longer makes a non-throwing function read as throwing.
+- **Tuple wording.** The determinism caveat, the reference-oracle note and the TAUTOLOGY header no longer say a tuple result must be Equatable; they say each element must be, and say why when no stub can be written. Text for non-tuple results is unchanged.
+- **An empty or kernel-only seed manifest no longer suppresses all docstring advice**; like the suggestion focus, it does not narrow.
+
+### Read before quoting a number
+
+- On SwiftAssist @52823df with a SwiftProjectLint b45bdc34 manifest (749 seeds), `--seeds` printed 113 docstring entries and hid 173 of the 286 a run without seeds prints. It now prints 97 full + 189 compact = 286, the same functions. With a manifest from SwiftProjectLint #269 (34ed4921) the split is 99 + 187 = 286. Runs without seeds are line-identical to before.
+- The determinism decline is inert until tuple-returning functions are seeded. SwiftProjectLint #269 now seeds non-throwing ones (6,111 → 6,161 seeds over 14 repositories, none removed), so corpus-funnel and nothing-proposed figures taken before and after it are not comparable.
+- A typealiased tuple result (`typealias Pair = (Int, Int)`, `throws -> Pair`) is still read by its name, so its throwing stub is still written and does not compile, as a non-Equatable nominal result's stub already does.
+- Verified on Xcode 27 / Swift 6.4 (swiftlang-6.4.0.34.1); the swift.org 6.3.3 toolchain the Makefile prefers was not installed on the machine that ran it.
+- Suites at release: 6,525 = 6,301 fast + 224 in perf and the eight subprocess batches, at 6dd3a697 (this release only versions it). A full `make -k test` passed every stage except three batch2 controls, which scan `fixtures/cycle27-surface/.build/checkouts`: gitignored, so absent on a fresh clone until `swift package resolve` is run in that fixture. With it resolved, batch2 passed in full (111) on its own. That fixture resolved swift-collections 1.7.1, so measured counts over it can differ from earlier runs (advisable OrderedCollections functions: 341, against 356 recorded).
+
 ## [1.157.0] — 2026-09-29
 
 Stubs import the right module when a package declares its target with its own `path:`. PR #608.
