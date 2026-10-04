@@ -26,31 +26,49 @@ extension SwiftInferCommand.Discover {
         let runnableScaffold: String?
     }
 
-    /// The two halves of the docstring advisory under `--seeds`. Together they list exactly the
-    /// functions an unseeded run advises on.
+    /// The two halves of the docstring advisory under `--seeds`. Together they list the functions
+    /// an unseeded run advises on — near-exactly; see `docstringAdvice` for what that rests on.
     struct DocstringAdvice {
-        /// Full entries: functions the manifest names, or every function when there is no focus.
+        /// Full entries: functions the manifest names as analysable seeds, or every function when
+        /// there is no focus.
         var seeded: [DocstringAdviceItem] = []
-        /// Compact entries: documented contracts the manifest does not name. No scaffold.
+        /// Compact entries: every other documented contract, including a function only a kernel
+        /// seed names. No scaffold.
         var unseeded: [DocstringAdviceItem] = []
     }
 
     /// Compute docstring advice for the documented functions in the run, split by whether the seed
-    /// manifest names them.
+    /// manifest names them as functions to analyse.
     ///
-    /// **The parity invariant:** `seeded` and `unseeded` together name exactly the functions a run
-    /// without seeds advises on. A manifest decides which functions get the full entry — the
-    /// linter's picks stay first, with their scaffolds — and never which get none. Until this
-    /// split, the advice for every function the manifest did not name was dropped, and dropped
-    /// silently: the advisory went on by default on the strength of a road test run WITHOUT seeds
-    /// (8 of 10 hand-keyed kernels), and on SwiftAssist @52823df `--seeds` hid 173 of 286 entries.
+    /// **The parity rule:** a manifest decides which functions get the full entry — the linter's
+    /// picks stay first, with their scaffolds — and never which get none, so `seeded` and
+    /// `unseeded` together name the functions a run without seeds advises on. Until this split,
+    /// the advice for every function the manifest did not name was dropped, and dropped silently:
+    /// the advisory went on by default on the strength of a road test run WITHOUT seeds (8 of 10
+    /// hand-keyed kernels), and on SwiftAssist @52823df `--seeds` hid 173 of 286 entries.
+    ///
+    /// **Near-exact, and not guaranteed here.** The split drops nothing, so the halves match a
+    /// plain run whenever the advisor gives each function the same arm with and without seeds —
+    /// which rests on code outside this function. As that code stands the arm cannot move:
+    ///
+    /// - the manifest reaches the pipeline only through `SeedEffectResolver`, whose effects feed
+    ///   the `idempotence` template (a conjecture, which no arm reads), and
+    ///   `SeedRestrictionResolver`, whose access reasons feed caveats and the determinism fallback;
+    /// - the tier cut shows every role-entailed law it does not suppress as refuted, and the focus
+    ///   keeps them all (`keepRoleEntailedLaws`), so nothing the focus, `promoteTierHiddenLaws` or
+    ///   `guardFinalAnswer` does can add or drop one.
+    ///
+    /// Rendered text can still differ — a red herring, or the suggestion a scaffold draws from. On
+    /// SwiftAssist @52823df the halves matched a plain run name for name: 97 full + 189 compact =
+    /// 286.
     ///
     /// Which seeds focus mirrors `SeedFocus.filter`: the analysable, non-carrier ones.
     ///
     /// - A **kernel** seed does not vouch for its enclosing function. Its symbol names the impure
     ///   method the kernel is trapped in, which is not a function worth a property test.
     /// - An **empty or kernel-only** manifest does not narrow at all, as `SeedFocus` and the
-    ///   `--seeds` help text promise: everything goes to `seeded`. It used to suppress every entry.
+    ///   `--seeds` help text promise: everything goes to `seeded`. An empty manifest used to
+    ///   suppress every entry, and a kernel-only one narrowed the advice to the kernels' hosts.
     /// - A **carrier** seed names a type, not a function, so it adds no key; a carrier-only manifest
     ///   still focuses, and every documented function goes to `unseeded`.
     ///
@@ -60,9 +78,15 @@ extension SwiftInferCommand.Discover {
     ///     advice is decided on it, so a law hidden by the tier cut does not count as "already
     ///     served", and the synthesized determinism law stays available as a scaffold source.
     ///   - unfocusedSuggestions: what a run without seeds would show (`pipeline.suggestions`).
-    ///     Unseeded advice is decided on it, and must be: the focus drops a lifted law whose
-    ///     subject the scan declared, so on the focused list a function the advisor would answer
-    ///     from its lifted law (arm 2) can fall through to "already served" (arm 5) and vanish.
+    ///     Unseeded advice is decided on it, so each compact entry carries the advisory a plain
+    ///     run computes. Today the focused list would give every unseeded function the same ARM:
+    ///     it holds the same role-entailed laws (see above), and arm 2 never fires through this
+    ///     join — a lifted law's evidence names its test file (`LiftedSuggestionPromotion.site`),
+    ///     never the production function. The focus drops only conjectures, which a fallback
+    ///     names as red herrings and the compact block does not print. It stops being cosmetic if
+    ///     lifted laws ever join their subject: the focus drops a lifted law on a declared,
+    ///     unseeded subject, so a function answered from arm 2 would fall to arm 5 on the focused
+    ///     list and vanish.
     ///   - seedManifest: the manifest, or `nil` for no focus.
     static func docstringAdvice(
         summaries: [FunctionSummary],

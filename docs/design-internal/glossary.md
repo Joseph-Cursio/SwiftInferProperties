@@ -294,9 +294,10 @@ matched** still earns the generic determinism law `f(x) == f(x)`, synthesized do
 of the tier cut; and an empty manifest (or one holding only extractable-kernel seeds) does
 **not** focus — it returns what an unseeded run would, because "focus on zero functions" is
 what a producer with a blind spot looks like (`SeedFocus.filter`). Docstring advice is not
-narrowed away either: a documented function the manifest does not name is listed in a
-compact "Documented contracts outside the seed focus" block. A missing or malformed file is
-an error, not a silent fallback.
+narrowed away either: a documented function the manifest does not name as one to analyse
+(one only a kernel seed names, for instance) is listed in a compact "Documented contracts
+outside the seed focus" block. A missing or malformed file is an error, not a silent
+fallback.
 
 **A seed is not a suggestion.** Re-measured 2026-08-06 on this repo, twice the same day — the
 second time at `38368c3` with the linter at `SwiftProjectLint@db4be6b6`, both arms from one release

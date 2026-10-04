@@ -18,9 +18,9 @@ import Testing
 ///
 /// Every manifest here seeds every documented function, so these tests see only the full
 /// block. Under `--seeds` the advice is split in two — the full block for the functions the
-/// manifest names, and a compact "Documented contracts outside the seed focus" block for the
-/// rest — and that split is `DiscoverDocstringAdviceSeedFocusTests`'s subject. The 8 of 10 was
-/// measured without seeds.
+/// manifest names as functions to analyse, and a compact "Documented contracts outside the seed
+/// focus" block for the rest — and that split is `DiscoverDocstringAdviceSeedFocusTests`'s
+/// subject. The 8 of 10 was measured without seeds.
 @Suite("Discover — reference definitions from docstrings")
 struct DiscoverDocstringAdviceTests {
 
@@ -196,8 +196,9 @@ struct DiscoverDocstringAdviceTests {
             seedManifest: manifest(),
             output: recording
         )
-        // `weighted`'s doc only narrates; it must not appear in either advice block — the
-        // full one or the compact one `--seeds` lists unnamed functions in.
+        // `weighted`'s doc only narrates; it must not appear in the advice. `manifest()` seeds
+        // every function, so only the full block is rendered here. The compact block is checked
+        // for the same thing by `unseededContractIsListedNotHidden`, where `weighted` is unseeded.
         let advice = DiscoverDocstringAdviceSeedFocusTests.adviceRegion(of: recording.text)
         #expect(advice.contains("Reference definitions from docstrings"))
         #expect(advice.contains("convenience helper") == false)

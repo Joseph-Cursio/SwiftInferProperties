@@ -4,52 +4,36 @@ import Foundation
 import Testing
 
 /// `Discover.docstringAdvice(summaries:suggestions:unfocusedSuggestions:seedManifest:)` takes TWO
-/// suggestion lists, and each half of the advice must be decided on its own one.
+/// suggestion lists, and each half of the advice is decided on its own one.
 ///
-/// - An **unseeded** function is decided on the UNFOCUSED list — what a run without seeds sees.
-///   The focus keeps a role-entailed law for a function it does not name but drops a law lifted
-///   from a test whose subject the scan declared, so on the focused list the advisor can fall
-///   from arm 2 (lifted → reference definition) to arm 5 (served → no advisory) and the entry
-///   vanishes: the very silent drop the compact block exists to prevent.
 /// - A **seeded** function is decided on the FOCUSED list, because that is where the synthesized
 ///   determinism law lives — the source its runnable scaffold is drawn from.
+/// - An **unseeded** function is decided on the UNFOCUSED list, so its advisory is the value a run
+///   without seeds computes. Today the two lists give an unseeded function the same advisory
+///   *arm*: every role-entailed law survives the focus (`keepRoleEntailedLaws`) and the tier cut,
+///   and a lifted law never joins a production function (its evidence names the test file). They
+///   differ in the conjectures the focus drops, which a fallback names as its red herrings. The
+///   compact block prints none of that, so these tests read the advisory, not the text.
 ///
-/// Neither half may be "simplified" onto the other's list; one test pins each direction.
+/// Neither half may be "simplified" onto the other's list. One test pins each direction on the
+/// function, and one pins the discover path's call site, where the lists are chosen.
 @Suite("Discover — each half of the docstring advice is decided on its own list")
 struct DocstringAdviceSplitTests {
 
     private static let file = "/fixture/Source.swift"
+    private static let backoffDoc = "Delay is capped at the ceiling and never negative."
+    private static let clampDoc = "Returns the value clamped to the range, never negative."
 
-    @Test("an unseeded function's advice is decided on the unfocused suggestions")
-    func unseededAdviceIsDecidedOnUnfocusedSuggestions() {
-        let doc = "Returns the value clamped to the range, never negative."
-        let summary = Self.summary(name: "clampedValue", doc: doc)
-        let owed = Self.suggestion(template: "guard-domain", function: "clampedValue(_:)")
-        let lifted = Self.lifted(Self.suggestion(template: "idempotence", function: "clampedValue(_:)"))
-
-        // The premise: on what the focus keeps, the advisor says nothing at all.
-        #expect(DocstringAdvisor.advisory(forFunctionWith: doc, suggestions: [owed]) == nil)
-
-        let advice = SwiftInferCommand.Discover.docstringAdvice(
-            summaries: [summary],
-            suggestions: [owed],
-            unfocusedSuggestions: [owed, lifted],
-            seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "elsewhere")])
-        )
-
-        #expect(advice.seeded.isEmpty)
-        #expect(advice.unseeded.map(\.displayName) == ["clampedValue(_:)"])
-        #expect(advice.unseeded.first?.advisory == .referenceDefinition(
-            .init(docComment: doc, template: "idempotence", fromLiftedTest: true)
-        ))
-        #expect(advice.unseeded.first?.runnableScaffold == nil)
-    }
-
+    /// The conjecture is reachable: the focus drops it, because the manifest does not name
+    /// `backoffDelay` and `monotonicity` is not role-entailed, so nothing puts it back.
     @Test("an unseeded function's red herrings come from the unfocused suggestions")
     func unseededRedHerringsComeFromUnfocusedSuggestions() {
-        let doc = "Delay is capped at the ceiling and never negative."
-        let summary = Self.summary(name: "backoffDelay", doc: doc)
+        let summary = Self.summary(name: "backoffDelay", doc: Self.backoffDoc)
         let guess = Self.suggestion(template: "monotonicity", function: "backoffDelay(_:)")
+
+        // The premise: on what the focus keeps, the fallback names no red herring.
+        let onFocused = DocstringAdvisor.advisory(forFunctionWith: Self.backoffDoc, suggestions: [])
+        #expect(onFocused == .fallbackContract(.init(docComment: Self.backoffDoc, redHerrings: [])))
 
         let advice = SwiftInferCommand.Discover.docstringAdvice(
             summaries: [summary],
@@ -58,14 +42,16 @@ struct DocstringAdviceSplitTests {
             seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "elsewhere")])
         )
 
+        #expect(advice.seeded.isEmpty)
         #expect(advice.unseeded.first?.advisory == .fallbackContract(
-            .init(docComment: doc, redHerrings: ["monotonicity"])
+            .init(docComment: Self.backoffDoc, redHerrings: ["monotonicity"])
         ))
+        #expect(advice.unseeded.first?.runnableScaffold == nil)
     }
 
     @Test("a seeded function keeps the scaffold the focused list's determinism law supplies")
     func seededAdviceIsDecidedOnFocusedSuggestions() {
-        let summary = Self.summary(name: "backoffDelay", doc: "Delay is capped at the ceiling and never negative.")
+        let summary = Self.summary(name: "backoffDelay", doc: Self.backoffDoc)
         let determinism = Self.suggestion(template: "determinism", function: "backoffDelay(_:)")
 
         let advice = SwiftInferCommand.Discover.docstringAdvice(
@@ -80,9 +66,38 @@ struct DocstringAdviceSplitTests {
         #expect(advice.seeded.first?.runnableScaffold?.contains("backoffDelay_reference") == true)
     }
 
+    /// The call site is where the lists are chosen, and swapping either argument there changes
+    /// no rendered line on any fixture or on SwiftAssist — so only a test that reads the
+    /// advisory can see it.
+    @Test("the discover path hands the unseeded half pipeline.suggestions and the seeded half visible")
+    func discoverPathHandsEachHalfItsOwnList() {
+        let pipeline = SwiftInferCommand.Discover.PipelineResult(
+            suggestions: [Self.suggestion(template: "monotonicity", function: "backoffDelay(_:)")],
+            packageRoot: nil,
+            summaries: [
+                Self.summary(name: "backoffDelay", doc: Self.backoffDoc),
+                Self.summary(name: "clampedValue", doc: Self.clampDoc)
+            ],
+            docstringAdvice: true
+        )
+
+        let advice = SwiftInferCommand.Discover.docstringAdviceIfEnabled(
+            pipeline: pipeline,
+            visible: [Self.suggestion(template: "determinism", function: "clampedValue(_:)")],
+            seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 3, symbol: "clampedValue")])
+        )
+
+        #expect(advice.unseeded.map(\.displayName) == ["backoffDelay(_:)"])
+        #expect(advice.unseeded.first?.advisory == .fallbackContract(
+            .init(docComment: Self.backoffDoc, redHerrings: ["monotonicity"])
+        ))
+        #expect(advice.seeded.map(\.displayName) == ["clampedValue(_:)"])
+        #expect(advice.seeded.first?.runnableScaffold?.contains("clampedValue_reference") == true)
+    }
+
     @Test("with no manifest everything is seeded, decided on the focused list")
     func noManifestPutsEverythingInTheSeededHalf() {
-        let summary = Self.summary(name: "backoffDelay", doc: "Delay is capped at the ceiling and never negative.")
+        let summary = Self.summary(name: "backoffDelay", doc: Self.backoffDoc)
 
         let advice = SwiftInferCommand.Discover.docstringAdvice(
             summaries: [summary],
@@ -93,7 +108,7 @@ struct DocstringAdviceSplitTests {
 
         #expect(advice.unseeded.isEmpty)
         #expect(advice.seeded.first?.advisory == .fallbackContract(
-            .init(docComment: "Delay is capped at the ceiling and never negative.", redHerrings: [])
+            .init(docComment: Self.backoffDoc, redHerrings: [])
         ))
     }
 
@@ -101,7 +116,7 @@ struct DocstringAdviceSplitTests {
     /// a carrier-only manifest focuses, and every documented function lands outside it.
     @Test("a carrier-only manifest focuses, and names no function")
     func carrierOnlyManifestNamesNoFunction() {
-        let summary = Self.summary(name: "backoffDelay", doc: "Delay is capped at the ceiling and never negative.")
+        let summary = Self.summary(name: "backoffDelay", doc: Self.backoffDoc)
 
         let advice = SwiftInferCommand.Discover.docstringAdvice(
             summaries: [summary],
@@ -149,14 +164,5 @@ struct DocstringAdviceSplitTests {
             explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
             identity: SuggestionIdentity(canonicalInput: "\(template)|\(function)")
         )
-    }
-
-    private static func lifted(_ suggestion: Suggestion) -> Suggestion {
-        var lifted = suggestion
-        lifted.liftedOrigin = LiftedOrigin(
-            testMethodName: "testClamp",
-            sourceLocation: SourceLocation(file: "SourceTests.swift", line: 10, column: 1)
-        )
-        return lifted
     }
 }

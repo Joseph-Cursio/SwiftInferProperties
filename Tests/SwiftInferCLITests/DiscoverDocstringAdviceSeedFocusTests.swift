@@ -15,9 +15,11 @@ import Testing
 ///
 /// The rule these tests pin: under a manifest the seeded advice stays in full, and every other
 /// documented function a plain `discover` would advise on is listed in a compact second block,
-/// "Documented contracts outside the seed focus". The two blocks together name exactly what a run
-/// without seeds names. Which seeds focus mirrors `SeedFocus.filter`: analysable, non-carrier
-/// seeds, and an empty or kernel-only manifest does not narrow at all.
+/// "Documented contracts outside the seed focus". On these fixtures the two blocks together name
+/// exactly what a run without seeds names. In general that is near-exact rather than guaranteed
+/// by the split: it rests on the manifest not moving any function's advisory arm upstream, which
+/// `Discover.docstringAdvice` spells out. Which seeds focus mirrors `SeedFocus.filter`:
+/// analysable, non-carrier seeds, and an empty or kernel-only manifest does not narrow at all.
 @Suite("Discover — docstring advice outside the seed focus")
 struct DiscoverDocstringAdviceSeedFocusTests {
 
@@ -214,6 +216,9 @@ struct DiscoverDocstringAdviceSeedFocusTests {
 
     /// A kernel seed's symbol names the impure method the kernel is trapped in (`SeedFocus`), so
     /// it says nothing about whether that method is worth a property test.
+    ///
+    /// The manifest still NAMES `backoffDelay` — the same run's stderr reports the kernel inside
+    /// it — so the compact block must not say the manifest names none of its entries.
     @Test("an extractable-kernel seed does not vouch for its enclosing function")
     func kernelSeedDoesNotVouchForItsEnclosingFunction() throws {
         let manifest = SeedManifest(seeds: [
@@ -223,7 +228,10 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         let text = try run("DocAdviceKernelSeed", manifest: manifest)
 
         #expect(Self.mainBlock(of: text).contains("backoffDelay") == false)
-        #expect(Self.compactBlock(of: text).contains("backoffDelay(_:_:)"))
+        let compact = Self.compactBlock(of: text)
+        #expect(compact.contains("backoffDelay(_:_:)"))
+        #expect(compact.contains("does not name these as functions to analyse"))
+        #expect(compact.contains("extractable-kernel seed names only the method its kernel sits in"))
     }
 
     @Test("the opt-out and --stats-only suppress both blocks")

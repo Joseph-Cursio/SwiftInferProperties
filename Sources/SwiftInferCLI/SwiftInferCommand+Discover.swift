@@ -209,10 +209,14 @@ extension SwiftInferCommand.Discover {
     /// CLI > config > default precedence in one place (`resolvePipelineSetup`)
     /// and saves a second `ConfigLoader.load`.
     ///
-    /// `pipeline.suggestions` is what a run without seeds shows; the advice for a function the
-    /// manifest does not name is decided on it rather than on the focused `visible` list. See
+    /// `pipeline.suggestions` is what a run without seeds shows; the advice for a function outside
+    /// the seed focus is decided on it rather than on the focused `visible` list. See
     /// `docstringAdvice(summaries:suggestions:unfocusedSuggestions:seedManifest:)`.
-    private static func docstringAdviceIfEnabled(
+    ///
+    /// Internal rather than `private` so a test can pin which list each half gets HERE. Handing the
+    /// unseeded half `visible` instead changed no rendered line on SwiftAssist @52823df, so no
+    /// output test can see that swap.
+    static func docstringAdviceIfEnabled(
         pipeline: PipelineResult,
         visible: [Suggestion],
         seedManifest: SeedManifest?
