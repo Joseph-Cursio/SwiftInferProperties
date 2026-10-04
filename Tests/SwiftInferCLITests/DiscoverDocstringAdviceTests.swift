@@ -178,6 +178,45 @@ struct DiscoverDocstringAdviceTests {
         ))
     }
 
+    /// **A tuple seed's scaffold.** With tuple-returning functions seeded, the synthesized
+    /// determinism law is the source suggestion the fallback-contract scaffold needs, so a
+    /// documented tuple function gains a reference oracle. It must declare the tuple as its return,
+    /// compare by tuple `==`, and say what a tuple needs — not that the tuple "must be Equatable",
+    /// which no tuple can be. The `Int`-returning neighbour is the control: its note is unchanged.
+    @Test("a tuple-returning seed's reference oracle declares the tuple and says what it needs")
+    func tupleReturningFallbackContract() throws {
+        let source = """
+        /// The clipped text never exceeds the byte budget.
+        func clip(_ text: String, _ budget: Int) -> (text: String, didTruncate: Bool) {
+            (String(text.prefix(budget)), text.count > budget)
+        }
+
+        /// Delay is capped at the ceiling and never negative.
+        func backoffDelay(_ attempt: Int, _ ceiling: Int) -> Int { min(max(attempt * attempt, 0), ceiling) }
+        """
+        let directory = try writeDPFixture(name: "DocAdviceTuple", contents: source)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            includePossible: true,
+            docstringAdvice: true,
+            seedManifest: SeedManifest(seeds: [
+                .init(file: "Source.swift", line: 2, symbol: "clip"),
+                .init(file: "Source.swift", line: 7, symbol: "backoffDelay")
+            ]),
+            output: recording
+        )
+        #expect(recording.text.contains("Reference definitions from docstrings"))
+        #expect(recording.text.contains(
+            "func clip_reference(_ text: String, _ budget: Int) -> (text: String, didTruncate: Bool)"
+        ))
+        #expect(recording.text.contains("clip(tuple.0, tuple.1) == clip_reference(tuple.0, tuple.1)"))
+        #expect(recording.text.contains("every element of the returned tuple must be Equatable"))
+        #expect(recording.text.contains("(text: String, didTruncate: Bool) must be Equatable") == false)
+        #expect(recording.text.contains("// (the return type Int must be Equatable for this to compile)"))
+    }
+
     @Test("a narrating docstring is not surfaced")
     func narrationIsNotSurfaced() throws {
         let directory = try writeDPFixture(name: "DocAdviceNarration", contents: Self.source)

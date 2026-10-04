@@ -92,7 +92,11 @@ extension LiftedTestEmitter {
             // `try? f(x)` on both sides. An input in the throwing domain collapses
             // to `nil == nil` (no false positive); only a value difference — the
             // hidden nondeterminism the law targets — falsifies it. Strict `==` on
-            // the resulting optional; the caveat already requires `Equatable`.
+            // the resulting optional, which needs the result to CONFORM to
+            // `Equatable` — and a tuple never does, so `Optional<(A, B)>` has no
+            // `==` even when `A` and `B` are Equatable. The accept path declines a
+            // throwing tuple subject before reaching here
+            // (`InteractiveTriage.determinismResultDeclineReason`).
             let prefix = isAsync ? "try? await " : "try? "
             let call = "(\(prefix)\(invocation))"
             property = "\(call) == \(call)"

@@ -25,6 +25,11 @@ import SwiftInferCore
 /// *non-idempotent* or merely *partial* — a semantic choice the repository has not made, and one no
 /// emitter should make silently.
 ///
+/// `determinism`'s `try?` form has one exception, a **tuple** result: an `Optional` of a tuple has
+/// no `==`, because a tuple cannot conform to `Equatable`. That decline is keyed on the result
+/// rather than on the arm, so it lives beside the arm's own writer
+/// (`InteractiveTriage.determinismResultDeclineReason`) and not in this list.
+///
 /// ## ⚠ The list is of arms that ARE gated, and the polarity is the whole design
 ///
 /// This gate was first written with an EXEMPT list — every arm gated unless named — and it

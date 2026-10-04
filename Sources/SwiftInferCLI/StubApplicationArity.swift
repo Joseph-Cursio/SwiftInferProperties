@@ -96,7 +96,10 @@ enum StubApplicationArity {
             return "\(evidence.displayName) has no parameter and no enclosing type, so there is "
                 + "no value for the law to quantify over"
         }
-        guard let arity else { return arityFreeDeclineReason(callee: callee, evidence: evidence) }
+        guard let arity else {
+            return resultDeclineReason(for: suggestion, evidence: evidence)
+                ?? arityFreeDeclineReason(callee: callee, evidence: evidence)
+        }
         // A paired template needs both halves. One evidence row means the pair was never
         // resolved, which is a fact about the SUBJECT rather than about the emitter.
         if ["round-trip", "inverse-pair", "identity-element"].contains(suggestion.templateName),
@@ -121,11 +124,25 @@ enum StubApplicationArity {
             + "but '\(suggestion.templateName)' applies \(arity)"
     }
 
+    /// Why an arity-free law's `==` cannot be written over the subject's RESULT, or `nil`.
+    ///
+    /// `determinism` is the one law here whose spelling depends on the result: it compares two
+    /// results with `==`, and over a tuple only some shapes of that comparison exist — the
+    /// throwing form's `Optional` of a tuple has no `==` at all. Asked before the argument
+    /// questions below, and kept in step with the writer the same way they are: it is one
+    /// function, `InteractiveTriage.determinismResultDeclineReason`, which `deterministicStub`
+    /// also calls.
+    private static func resultDeclineReason(for suggestion: Suggestion, evidence: Evidence) -> String? {
+        guard suggestion.templateName == "determinism" else { return nil }
+        return InteractiveTriage.determinismResultDeclineReason(for: evidence)
+    }
+
     /// Why a totality subject cannot be written, or `nil` when it can — the questions an
     /// arity-free law still has to ask once the number is gone.
     ///
     /// Kept in step with `InteractiveTriage.arityFreeArgumentTypes`, which declines exactly these;
-    /// `ArityFreeTotalityTests` and `DeterminismAcceptPathTests` pin both sides of every row.
+    /// `ArityFreeTotalityTests` and `DeterminismAcceptPathTests` pin both sides of every row —
+    /// including `determinism`'s result-type rule, asked just before this (`resultDeclineReason`).
     private static func arityFreeDeclineReason(callee: CalleeReference, evidence: Evidence) -> String? {
         // A static computed property or a static nullary function is called with nothing, so
         // there is no input for "every input" to range over.

@@ -202,6 +202,11 @@ extension InteractiveTriage {
     /// impurity**, because it does not: the emitter compares strictly unless the return type is
     /// itself floating-point, so a pure function returning `[Double]` that holds a NaN fails
     /// (`[Double.nan] == [Double.nan]` is false), as does a result whose `==` compares identity.
+    /// **A tuple result is compared strictly too**, element by element through the standard
+    /// library's tuple `==` — `(Double, Double)` is not a floating-point type name, and the
+    /// approximate helper is generic over `FloatingPoint`, which no tuple is — so a NaN in any
+    /// slot fails it the same way. The line says "or tuple" for a tuple result only, so every
+    /// other file's header is unchanged.
     ///
     /// ## A scaffold is not a law at all (#466)
     ///
@@ -221,11 +226,13 @@ extension InteractiveTriage {
             """
         }
         if Refutability.isRefutable(suggestion) == false {
+            let resultShape = TupleResultShape(signature: suggestion.evidence.first?.signature ?? "")
+            let container = resultShape.involvesTuple ? "collection or tuple" : "collection"
             return """
             // Law class: TAUTOLOGY — true of any pure implementation, so a pass only means no hidden
             //            state showed up in the trials drawn. A failure means either the subject
             //            is not pure, or its result's `==` is not reflexive (a NaN inside a
-            //            collection, an identity comparison).
+            //            \(container), an identity comparison).
 
             """
         }
