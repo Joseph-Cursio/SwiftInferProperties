@@ -7,7 +7,8 @@ import SwiftInferCore
 /// Like `EffectAnnotationRenderer`, this is a deliberately separate renderer:
 /// the advice is not a scored property-test candidate but a pairing of a
 /// documented sentence with the law it defines, so it gets its own labelled
-/// block beneath the suggestions.
+/// block beneath the suggestions. Under `--seeds` a second, compact block follows it
+/// (`renderOutsideFocus`) for the documented functions outside the seed focus.
 enum DocstringAdvisoryRenderer {
 
     /// Returns a rendered advisory block, or the empty string when there is no
@@ -38,6 +39,55 @@ enum DocstringAdvisoryRenderer {
             }
         }
         return lines.joined(separator: "\n")
+    }
+
+    /// Renders the compact "Documented contracts outside the seed focus" block that
+    /// `discover --seeds` lists the documented functions in that the manifest does not name as
+    /// functions to analyse, or the empty string when there are none.
+    ///
+    /// Two lines a function: who it is, and the sentence. Deliberately **none** of `render`'s
+    /// per-arm prose, and no scaffold. That prose describes suggestions this reader is not shown —
+    /// the focus narrowed them away — and the fallback arm's "only a determinism tautology" is
+    /// false here, because no determinism law is synthesized for a function outside the focus.
+    /// The block also must not presuppose the full block above it, which can be empty, and must
+    /// not call these a linter gap: some return `Void`, which no seed rule admits.
+    ///
+    /// **Nor may it say the manifest does not name them.** A function named only by an
+    /// extractable-kernel seed lands here — that seed names the impure method its kernel sits in,
+    /// which is not a function to analyse — and the same run's stderr names that method in the
+    /// refactor-pending report.
+    static func renderOutsideFocus(_ items: [SwiftInferCommand.Discover.DocstringAdviceItem]) -> String {
+        guard !items.isEmpty else { return "" }
+
+        let noun = items.count == 1 ? "function" : "functions"
+        var lines = [
+            "Documented contracts outside the seed focus (\(items.count) \(noun)):",
+            [
+                "  The seed manifest does not name these as functions to analyse — an",
+                "extractable-kernel seed names only the method its kernel sits in — so --seeds lists",
+                "them in brief instead of with the full advisory. Each docstring states a checkable",
+                "contract; run discover without --seeds for the full entry."
+            ].joined(separator: " ")
+        ]
+        for item in items {
+            lines.append("  • \(item.displayName)  \(item.signature)  —  \(item.location)")
+            lines.append("      \"\(docComment(of: item.advisory))\"")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    /// The documented sentence, whichever shape the advisory took.
+    private static func docComment(of advisory: DocstringAdvisory) -> String {
+        switch advisory {
+        case let .referenceDefinition(reference):
+            reference.docComment
+
+        case let .complementaryContract(contract):
+            contract.docComment
+
+        case let .fallbackContract(contract):
+            contract.docComment
+        }
     }
 
     /// The per-item body, tailored to which of the two shapes fired.

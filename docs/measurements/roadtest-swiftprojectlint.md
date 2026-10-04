@@ -37,6 +37,20 @@ Of 10 keyed candidates, reached **with a refutable law**:
 
 The pre-logged prediction was 3. The default run gave 2.
 
+> **Note, 2026-10-04 — the 8 was measured WITHOUT `--seeds`.** The regenerate commands
+> (`SwiftProjectLint/Docs/roadtest/output/README.md`) run `discover --sources … --include-possible`,
+> and the table gives `--seeds` its own row. Until the change that added the compact
+> "Documented contracts outside the seed focus" block, `--seeds` *dropped* the docstring
+> advice for every function the manifest did not name, silently. On this key that would have
+> kept at most 4 of the 8 — K1, K5, K6, K9, the docstring hits the manifest row also reached
+> (inferred from the README rows, not measured). Measured on SwiftAssist @52823df the same
+> restriction hid 173 of 286 entries: `swift-infer` 1.157.0 @d174adb6,
+> `discover --target SwiftAssist --include-possible`, with and without `--seeds` naming a
+> 749-seed manifest from SwiftProjectLint @b45bdc34 (`--format pbt-seeds`). `--seeds` now lists
+> those functions in brief; re-measured on the change's own build with the same manifest, the
+> two blocks held 97 + 189 entries, the same 286 names a run without seeds lists. The 8 itself
+> is unchanged.
+
 **The finding is the spread, not the 2.** Every configuration in that table was
 already shipping. The candidates were not out of catalog and not out of reach —
 they were behind a flag nobody passes.

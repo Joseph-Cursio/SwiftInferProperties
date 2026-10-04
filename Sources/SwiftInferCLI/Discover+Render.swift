@@ -21,7 +21,7 @@ extension SwiftInferCommand.Discover {
         statsOnly: Bool,
         evidenceByIdentity: [String: VerifyEvidence],
         effectAnnotations: [EffectAnnotationAdvice] = [],
-        docstringAdvice: [DocstringAdviceItem] = [],
+        docstringAdvice: DocstringAdvice = DocstringAdvice(),
         refutedLaws: [Suggestion] = [],
         coverage: CoverageSummary = CoverageSummary(
             lawCount: 0, carrierCount: 0, evidenceState: .noEvidence
@@ -67,9 +67,14 @@ extension SwiftInferCommand.Discover {
             if !adviceBlock.isEmpty {
                 rendered += "\n\n" + adviceBlock
             }
-            let docstringBlock = DocstringAdvisoryRenderer.render(docstringAdvice)
+            let docstringBlock = DocstringAdvisoryRenderer.render(docstringAdvice.seeded)
             if !docstringBlock.isEmpty {
                 rendered += "\n\n" + docstringBlock
+            }
+            // Empty without a manifest, so a run without seeds is byte-identical to before.
+            let outsideFocusBlock = DocstringAdvisoryRenderer.renderOutsideFocus(docstringAdvice.unseeded)
+            if !outsideFocusBlock.isEmpty {
+                rendered += "\n\n" + outsideFocusBlock
             }
         }
 
