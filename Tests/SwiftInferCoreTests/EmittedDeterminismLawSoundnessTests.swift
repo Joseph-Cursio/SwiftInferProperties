@@ -81,6 +81,69 @@ struct EmittedDeterminismLawSoundnessTests {
         }
     }
 
+    // MARK: - Tuple result: `f(value) == f(value)` over a labelled tuple
+
+    /// The emitted law over a **tuple** result, as written for a seed like
+    /// `String.prefix(utf8Bytes:) -> (text: String, didTruncate: Bool)`.
+    ///
+    /// **This is a compile witness as much as a soundness one.** A tuple never conforms to
+    /// `Equatable`; the standard library defines `==` on tuples of two to six `Equatable` elements
+    /// instead, and the labelled tuple converts to that unlabelled overload. That only resolves
+    /// because the `property` closure is not a generic context — the backend is generic over
+    /// `Input` alone — so this suite failing to build is the signal that the shape stopped
+    /// type-checking on the pinned toolchain. A string test of the emitter cannot say that.
+    ///
+    /// The throwing form, `(try? f(value)) == (try? f(value))`, cannot be witnessed here: over a
+    /// tuple it is the form that does NOT compile — `Optional`'s `==` needs `Wrapped: Equatable`
+    /// (measured with `swiftc`, Swift 6.4) — which is why accept declines it rather than writing it.
+    private static func checkTupleDeterminism(
+        of transform: @escaping @Sendable (Int) -> (text: String, didTruncate: Bool)
+    ) async -> BackendCheckResult<Int> {
+        await SwiftPropertyBasedBackend().check(
+            trials: 200,
+            seed: seed,
+            sample: { rng in Int.random(in: -10_000 ... 10_000, using: &rng) },
+            property: { value in
+                // Identical operands are the point — see `checkThrowingDeterminism`.
+                // swiftlint:disable:next identical_operands
+                transform(value) == transform(value)
+            }
+        )
+    }
+
+    @Test
+    func tupleLaw_passes_deterministicFunctions() async {
+        let corpus: [(name: String, transform: @Sendable (Int) -> (text: String, didTruncate: Bool))] = [
+            ("clipDigits", { value in
+                let digits = String(value)
+                return (String(digits.prefix(3)), digits.count > 3)
+            }),
+            ("constant", { _ in ("", false) })
+        ]
+        for entry in corpus {
+            let result = await Self.checkTupleDeterminism(of: entry.transform)
+            let passed: Bool = if case .passed = result { true } else { false }
+            #expect(passed, "Deterministic tuple '\(entry.name)' should pass the emitted law; got \(result)")
+        }
+    }
+
+    @Test
+    func tupleLaw_fails_nondeterministicFunctions() async {
+        // Each element read from the system RNG in turn — the law must notice a difference in
+        // either slot, so neither is held constant.
+        let corpus: [(name: String, transform: @Sendable (Int) -> (text: String, didTruncate: Bool))] = [
+            ("randomText", { value in (String(value &+ Int.random(in: 1 ... 1_000_000_000)), false) }),
+            ("randomFlag", { value in
+                (String(value), Int.random(in: Int.min ... Int.max).isMultiple(of: 2))
+            })
+        ]
+        for entry in corpus {
+            let result = await Self.checkTupleDeterminism(of: entry.transform)
+            let failed: Bool = if case .failed = result { true } else { false }
+            #expect(failed, "Nondeterministic tuple '\(entry.name)' should fail the emitted law; got \(result)")
+        }
+    }
+
     // MARK: - Throwing form: `(try? f(value)) == (try? f(value))`
 
     private struct SampleError: Error {}

@@ -113,6 +113,15 @@ extension SwiftInferCommand.Discover {
     /// so an input in the throwing domain collapses to `nil == nil` and only a *value* difference —
     /// the hidden nondeterminism this law exists to catch — can falsify it. No false positives.
     ///
+    /// **Tuple results qualify**, whatever their shape, and so do throwing ones. Over a tuple of
+    /// two to six `Equatable` elements the non-throwing law compiles through the standard
+    /// library's tuple `==`; a throwing tuple subject's `(try? f(x)) == (try? f(x))` does not,
+    /// because a tuple cannot conform to `Equatable` and so its `Optional` has no `==`. That is
+    /// declined at **accept** (`InteractiveTriage.determinismResultDeclineReason`), not here: the
+    /// law is tautological, so withholding its stub costs no refutable law, whereas withholding
+    /// the law would also take the docstring advice's reference-oracle scaffold, which draws its
+    /// seed from it — and would repeat the confident zero the throws relaxation above reversed.
+    ///
     /// **Async relaxation (collections/async workplan Phase 4):** an `async`
     /// function qualifies only when it carries the clock-determinism claim
     /// (`/// @lint.determinism clock_deterministic` / `@ClockDeterministic`)
@@ -156,25 +165,17 @@ extension SwiftInferCommand.Discover {
                 weight: 30,
                 detail: "Lint-seeded pure function — a pure function is deterministic: f(x) == f(x)"
             )
-        let whyMightBeWrong = summary.isAsync
-            ? [
-                "Holds only if time is genuinely injected — a wall-clock read, Task.sleep "
+        let resultShape = TupleResultShape(signature: evidence.signature)
+        let whyMightBeWrong = [
+            summary.isAsync
+                ? "Holds only if time is genuinely injected — a wall-clock read, Task.sleep "
                     + "on the continuous clock, or any await on shared mutable state would "
-                    + "falsify the @ClockDeterministic claim, which is exactly what the test catches.",
-                "The return type must be Equatable for the law to compile."
-            ]
-            : [
-                "Holds only if the function is genuinely pure — a hidden global read or "
+                    + "falsify the @ClockDeterministic claim, which is exactly what the test catches."
+                : "Holds only if the function is genuinely pure — a hidden global read or "
                     + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
-                "The return type must be Equatable for the law to compile."
-            ]
-        let throwsCaveat = summary.isThrows
-            ? [
-                "The function throws, so the law compares `try? f(x)` on both sides: an input in the "
-                + "throwing domain collapses to `nil == nil` (never a false alarm), and only a value "
-                + "difference on a non-throwing input falsifies it."
-            ]
-            : []
+            equatableCaveat(for: resultShape, isThrows: summary.isThrows)
+        ]
+        let throwsCaveat = summary.isThrows && resultShape.involvesTuple == false ? [Self.tryOnBothSidesCaveat] : []
         // Same opening as `withAccessRestrictionCaveats`, verbatim and deliberately: a reader
         // grepping their output for the remedy should not have to know whether the law they are
         // looking at came from a template or from this fallback.
@@ -196,6 +197,49 @@ extension SwiftInferCommand.Discover {
             carrier: summary.containingTypeName
         )
     }
+
+    /// What the result type needs for `f(x) == f(x)` to compile — or, when nothing would make it,
+    /// that no stub is written and why.
+    ///
+    /// **"The return type must be Equatable" is false for a tuple twice over**: a tuple never is,
+    /// yet the law over one compiles through the standard library's tuple `==`; and for a throwing
+    /// subject every element being `Equatable` is still not enough, because the law compares two
+    /// `Optional`s of the tuple. So a 2…6 tuple gets the element-wise sentence, and a shape no `==`
+    /// exists for — a throwing tuple among them — gets ONLY the reason no stub is written, which is
+    /// the reason `accept` gives (`InteractiveTriage.determinismResultDeclineReason`). Telling a
+    /// reader which elements to make `Equatable` "for the law to compile", beside a sentence saying
+    /// nothing will, was the contradiction `DeterminismTupleWordingTests` now pins whole.
+    ///
+    /// Every other result keeps the sentence it always had, byte for byte. Caveats are not part of
+    /// the suggestion's identity (`canonicalInput`), so no decision record moves.
+    private static func equatableCaveat(for resultShape: TupleResultShape, isThrows: Bool) -> String {
+        if let obstacle = resultShape.equalityObstacle {
+            return noStubCaveat(because: "the function returns \(obstacle)")
+        }
+        guard resultShape.involvesTuple else {
+            return "The return type must be Equatable for the law to compile."
+        }
+        guard isThrows == false else {
+            return noStubCaveat(
+                because: "the function throws and returns a tuple, so the law would compare `try? f(x)` on "
+                    + "both sides — two Optionals of the tuple — and an Optional has `==` only when its "
+                    + "payload conforms to Equatable, which a tuple cannot"
+            )
+        }
+        return "Every element of the returned tuple must be Equatable for the law to compile — "
+            + "\(TupleResultShape.elementwiseEqualityClause)."
+    }
+
+    private static func noStubCaveat(because reason: String) -> String {
+        "No stub can state this law, so accepting it records the decision without writing a file: \(reason)."
+    }
+
+    /// How a throwing subject's law handles the throw. Only for a result the spelling does not
+    /// involve a tuple in: over any tuple the `try?` form is never written, and `equatableCaveat`
+    /// has already said so.
+    private static let tryOnBothSidesCaveat = "The function throws, so the law compares `try? f(x)` on both "
+        + "sides: an input in the throwing domain collapses to `nil == nil` (never a false alarm), and only "
+        + "a value difference on a non-throwing input falsifies it."
 
     /// The access signal a template row gets from `withAccessRestrictionCaveats`, for a law that
     /// pass never sees.

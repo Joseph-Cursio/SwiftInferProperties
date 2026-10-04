@@ -18,11 +18,11 @@ struct ThrowingDeterminismSynthesisTests {
 
     private static let loc = SourceLocation(file: "Config.swift", line: 1, column: 1)
 
-    private func throwingSummary() -> FunctionSummary {
+    private func throwingSummary(returnType: String = "String") -> FunctionSummary {
         FunctionSummary(
             name: "serialize",
             parameters: [Parameter(label: nil, internalName: "config", typeText: "YAMLConfig", isInout: false)],
-            returnTypeText: "String",
+            returnTypeText: returnType,
             isThrows: true,
             isAsync: false,
             isMutating: false,
@@ -61,5 +61,21 @@ struct ThrowingDeterminismSynthesisTests {
         let determinism = try #require(result.first { $0.templateName == "determinism" })
         // The accept path reads this marker to emit a `try?` stub, not a bare call.
         #expect(determinism.evidence.first?.signature.contains("throws") == true)
+    }
+
+    /// **A throwing tuple result still earns the law; it is the stub that is declined, at
+    /// accept.** `(try? f(x)) == (try? f(x))` over a tuple does not compile, but gating here would
+    /// repeat the confident zero this suite exists to prevent — and the law is also the source
+    /// suggestion the docstring advice's reference-oracle scaffold draws its seed from.
+    @Test("a seeded throwing function returning a tuple still earns the determinism law")
+    func aThrowingTupleSeedStillEarnsTheLaw() throws {
+        let result = SwiftInferCommand.Discover.synthesizeGenericLaws(
+            for: manifest(),
+            summaries: [throwingSummary(returnType: "(json: String, prompt: String)")],
+            covered: [],
+            diagnostics: SilentDiagnostics()
+        )
+        let determinism = try #require(result.first { $0.templateName == "determinism" })
+        #expect(determinism.evidence.first?.signature == "(YAMLConfig) throws -> (json: String, prompt: String)")
     }
 }

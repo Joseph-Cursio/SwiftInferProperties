@@ -28,7 +28,9 @@ extension LiftedTestEmitter {
     }
 
     /// Emit the reference-oracle stub + property for a documented function
-    /// `funcName: (T...) -> R` of any arity whose return `R` is `Equatable`.
+    /// `funcName: (T...) -> R` of any arity whose return `R` is `Equatable` — or, for a tuple
+    /// `R`, has `==` through its elements: a tuple never conforms to `Equatable`, and Swift
+    /// defines `==` on tuples of two to six `Equatable` elements instead (`TupleResultShape`).
     ///
     /// This is the runnable form of a reference definition — a `<name>_reference`
     /// the reader writes from the docstring, checked against the code by
@@ -62,8 +64,7 @@ extension LiftedTestEmitter {
         let paramClause = parameters
             .map { parameterClause(label: $0.label, name: $0.internalName, typeText: $0.typeText) }
             .joined(separator: ", ")
-        let equatableNote = returnTypeText == "Bool" ? "" :
-            "// (the return type \(returnTypeText) must be Equatable for this to compile)\n"
+        let equatableNote = returnTypeText == "Bool" ? "" : equatableNote(forReturnType: returnTypeText)
 
         let stub = """
         // Fill in the reference definition below — your docstring already states it:
@@ -90,6 +91,23 @@ extension LiftedTestEmitter {
                 + "disagrees with its documented reference definition"
         )
         return stub + "\n" + test
+    }
+
+    /// What `R` needs for `f(x) == f_reference(x)` to compile, as a comment above the stub.
+    ///
+    /// "The return type must be Equatable" is right for every nominal `R` and wrong for a tuple,
+    /// which never is — so a tuple gets the element-wise sentence, and a tuple shape with no `==`
+    /// at all says that instead. Every non-tuple `R` keeps its note byte for byte.
+    private static func equatableNote(forReturnType returnTypeText: String) -> String {
+        let shape = TupleResultShape(typeText: returnTypeText)
+        if let obstacle = shape.equalityObstacle {
+            return "// (this cannot compile as written: the function returns \(obstacle))\n"
+        }
+        guard shape.involvesTuple else {
+            return "// (the return type \(returnTypeText) must be Equatable for this to compile)\n"
+        }
+        return "// (every element of the returned tuple must be Equatable for this to compile — "
+            + "\(TupleResultShape.elementwiseEqualityClause))\n"
     }
 
     /// The sample closure and the name its produced value binds to. One

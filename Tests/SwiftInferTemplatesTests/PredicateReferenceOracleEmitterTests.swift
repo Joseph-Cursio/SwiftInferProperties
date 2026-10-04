@@ -109,4 +109,68 @@ struct PredicateReferenceOracleEmitterTests {
         // The Int `places` is edge-biased to include the negative boundary the bug hides at.
         #expect(source.contains("[0, -1, 1] as [Int]"))
     }
+
+    /// A tuple is never `Equatable`, so "the return type must be Equatable" asks for a
+    /// conformance that cannot exist — while `f(x) == f_reference(x)` over a tuple of `Equatable`
+    /// elements compiles, through the standard library's tuple `==`.
+    @Test("fallback contract: a tuple return gets the element-wise note, not the conformance one")
+    func tupleReturn() {
+        let source = LiftedTestEmitter.referenceOracle(
+            funcName: "clip",
+            arguments: [
+                Self.argument(name: "text", type: "String", generator: "Gen<String>.string()"),
+                Self.argument(name: "budget", type: "Int", generator: "Gen<Int>.int()")
+            ],
+            returnTypeText: "(text: String, didTruncate: Bool)",
+            docComment: "The result never exceeds the byte budget.",
+            seed: Self.seed
+        )
+        #expect(source.contains(
+            "func clip_reference(_ text: String, _ budget: Int) -> (text: String, didTruncate: Bool)"
+        ))
+        #expect(source.contains("must be Equatable for this to compile)") == false)
+        #expect(source.contains("every element of the returned tuple must be Equatable"))
+        #expect(source.contains("clip(tuple.0, tuple.1) == clip_reference(tuple.0, tuple.1)"))
+    }
+
+    /// The note above a reference stub whose `R` is `returnTypeText`, for a one-`Int` subject.
+    private static func note(forReturnType returnTypeText: String) -> String {
+        let source = LiftedTestEmitter.referenceOracle(
+            funcName: "pairs",
+            arguments: [Self.argument(name: "count", type: "Int", generator: "Gen<Int>.int()")],
+            returnTypeText: returnTypeText,
+            docComment: "Pairs each index with its square.",
+            seed: Self.seed
+        )
+        return source.split(separator: "\n").first { $0.hasPrefix("// (") }.map(String.init) ?? ""
+    }
+
+    /// **A tuple shape Swift has no `==` for gets no conformance advice**: no element being
+    /// `Equatable` would make `f(x) == f_reference(x)` compile, so the note says it cannot.
+    /// Checked with `swiftc` on Swift 6.4 for each spelling, as the result of both functions.
+    @Test("fallback contract: a tuple shape with no `==` says the comparison cannot compile", arguments: [
+        ("(Int, (Int, Int))", "itself a tuple"),
+        ("Swift.Optional<(Int, Int)>", "inside an Optional or a collection"),
+        ("(Int, Int, Int, Int, Int, Int, Int)", "at most six")
+    ])
+    func tupleShapeWithNoEquality(returnTypeText: String, obstacle: String) {
+        let note = Self.note(forReturnType: returnTypeText)
+        #expect(note.hasPrefix("// (this cannot compile as written: the function returns "))
+        #expect(note.contains(obstacle))
+        #expect(note.contains("must be Equatable") == false)
+    }
+
+    /// `(Int, Int)!` is force-unwrapped once `Optional`'s `==` fails to type-check, and
+    /// `sending` is not part of the type — so `pairs(value) == pairs_reference(value)` compiles
+    /// over both through tuple `==` (`swiftc`, Swift 6.4), and the element-wise note is the one
+    /// that is true.
+    @Test("fallback contract: an implicitly unwrapped or `sending` tuple gets the element-wise note", arguments: [
+        "(Int, Int)!",
+        "sending (Int, Int)"
+    ])
+    func tupleSpelledAnotherWay(returnTypeText: String) {
+        #expect(Self.note(forReturnType: returnTypeText).hasPrefix(
+            "// (every element of the returned tuple must be Equatable for this to compile"
+        ))
+    }
 }
