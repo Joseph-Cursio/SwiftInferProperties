@@ -25,7 +25,10 @@ census of what discover prints before and after, on the same two subjects with t
 
 **Printed + declined equals the baseline's printed count in all four runs**, and discover's stdout
 outside the scaffold blocks is byte-identical before and after. No scaffold appeared and none
-vanished; each one either compiles now or was replaced by a named reason.
+vanished. Each one now compiles or was replaced by a named reason, except **3 per-run items that are
+printed and still fail**: `WorkspaceIndexer.encodeSnapshot(_:)` in SwiftAssist's seeded run, an open
+resolver defect (*Open, not decided*, below), and `Verbatim.prettyPrintingLength(maximum:)` in both
+swift-format runs, the Swift 5 language-mode exception.
 
 ## Read before quoting a number
 
@@ -41,9 +44,12 @@ vanished; each one either compiles now or was replaced by a named reason.
   Then all that passed were built together through SwiftPM. After the change, 69 of 69 built
   together, in one batch, first round.
 - ⚠ **swift-format's 0 of 1 is the sanctioned exception, not a spelling defect.** Its one printed
-  scaffold, `Verbatim.prettyPrintingLength(maximum:)`, fails only on *'oneOf' is unavailable in
-  Swift*: the package builds in Swift 5 language mode (see *Out of scope*). On swift-format the
-  number to read is the decline count. 32 of its 35 seeded subjects are `private`.
+  scaffold, `Verbatim.prettyPrintingLength(maximum:)`, fails with two errors of one cause: *'oneOf'
+  is unavailable in Swift* and *'frequency' is unavailable in Swift*, the edge-biased draws of its
+  `String` and `Int` arguments. The package builds in Swift 5 language mode (see *Out of scope*);
+  with the census arguments' `-swift-version 5` changed to `6`, the same file compiles (exit 0).
+  On swift-format the number to read is the decline count. 32 of its 35 seeded subjects are
+  `private`.
 - ⚠ **Several emitted shapes have no population here.** No scaffold printed on either subject
   awaits an actor member, hops to `MainActor`, or calls an operator. All 6 async or actor-isolated
   SwiftAssist subjects declined: 5 because no generator derives their receiver, 1 as `private`.
@@ -56,10 +62,19 @@ vanished; each one either compiles now or was replaced by a named reason.
 - ⚠ **The type-check-timeout count is the compiler's.** It is a deterministic solver limit, but it
   is per compiler version. Every run here used Xcode 27's Swift 6.4 (`swiftlang-6.4.0.34.1`); the
   swift.org 6.3.3 toolchain the Makefile prefers was not installed.
-- ⚠ **Counts move with the seed manifest.** Both manifests came from SwiftProjectLint 1.0.0 and are
-  pinned in `fixtures/reference-oracle-scaffold-census/`. Seeds produce MORE scaffolds, not fewer
-  (88 against 48). A scaffold needs a surviving suggestion to take its generator and seed from, and
-  the determinism law synthesized for a seeded pure function supplies one.
+- ⚠ **Counts move with the seed manifest, and not in one direction.** Both manifests came from
+  SwiftProjectLint 1.0.0 and are pinned in `fixtures/reference-oracle-scaffold-census/`. Seeds gave
+  SwiftAssist MORE scaffolds (88 against 48) and swift-format FEWER (35 against 43). Two effects pull
+  opposite ways. A scaffold needs a surviving suggestion to take its generator and seed from, and the
+  determinism law synthesized for a seeded pure function supplies one. But the seed focus also narrows
+  the documented functions that can get a scaffold at all: 289 → 97 on SwiftAssist, 174 → 42 on
+  swift-format.
+- ⚠ **Dependency versions are pinned by the Package.resolved fixtures, not by any manifest.** The
+  census target asks for SwiftPropertyLaws `from: "4.7.0"` and swift-property-based `from: "2.0.0"`
+  (the funnel's `KIT_DEPENDENCY` and `ENGINE_DEPENDENCY`), swift-format asks for swift-syntax
+  `branch: "main"`, and both subjects gitignore their Package.resolved. swift-format's verdict rests
+  directly on swift-property-based's `@available(swift 6.2)`. A run without `--resolved` resolves
+  whatever is newest, and is a different measurement.
 - The test-file header does not move the result. The harness adds the declaring file's imports to
   stand in for accept's carrier imports. Re-run with only the fixed imports (`--bare-imports`),
   SwiftAssist gives the same 66 of 67 and 33 of 33.
@@ -93,24 +108,43 @@ vanished; each one either compiles now or was replaced by a named reason.
    probes* that repair the call mechanically (qualify it, add `try`/`await`, hoist generators) and
    compile again, to show what each first blocker was hiding. Probes are not what discover printed.
    After the change they are a regression check. A probe that compiles where the printed scaffold
-   does not is an emitter defect: **0 found**, with 68 skipped as references in an extension.
+   does not is an emitter defect: **0 found, of 2 checked** (the 2 free functions). The other 68
+   distinct scaffolds declare their reference in an extension, which the repairs cannot rewrite, so
+   they are not checked and the zero says nothing about them; the compile census above is their
+   evidence. The `call-repaired` probes that compiled alone are also built together through
+   SwiftPM, as step 6 builds the scaffolds.
 
-**Why one file at a time.** The first design built one census target holding all 93 scaffolds to a
-fixpoint, and it reported 4–7 files per round. The build stops at the first failed compile job, and
-`-continue-building-after-errors` did not change that. A declaration-level error in ANY file, such as
-*cannot find type 'Citation'* in a reference signature, also stops the frontend from type-checking
-every body, even under `-wmo`. Twelve rounds measured 45 of 93 files. Compiling per file with SwiftPM's
-own arguments, and then confirming in the package, avoids both. The two agreed both times: before
-the change, the 42 distinct call-repaired probes that compiled alone also built together in the
-first round; after it, all 69 did.
+**Why one file at a time.** The first design built one census target to a fixpoint, holding one
+file per distinct function name: 93, since the 99 distinct before-scaffolds share 93 names and a
+module cannot declare two file-scope `<name>_reference` functions. It reported 4–7 files per round.
+The build stops at the first failed compile job, and `-continue-building-after-errors` did not change
+that. A declaration-level error in ANY file, such as *cannot find type 'Citation'* in a reference
+signature, also stops the frontend from type-checking every body, even under `-wmo`. Twelve rounds
+measured 45 of 93 files. Compiling per file with SwiftPM's own arguments, and then confirming in the
+package, avoids both. **The two agreed both times, and the harness re-checks that on every run.**
+Before the change no scaffold compiled alone, so the check falls to the probes: the 42 distinct
+`call-repaired` probes that compiled alone also built together, 42 of 42, in two batches of one
+round each (39 and 3 files: three function names, `parse`, `makeID` and `extractKeywords`, appear
+twice). After it, all 69 scaffolds that compiled alone built together in one round, and so did the
+2 probes the regression check compiled.
 
 **Pinned:** SwiftAssist @ `a89e6e46d40e765e965544a0e96934ad6becd686`, target `SwiftAssist`.
 swift-format @ `b15dd59fad`, target `SwiftFormat`. Seeds: `SwiftAssist-seeds.json` (707 rows) and
-`swift-format-seeds.json` (118 rows). Both census targets resolved SwiftPropertyLaws 4.9.3 and
-swift-property-based 2.0.1. The funnel's `KIT_DEPENDENCY` still reads `from: "4.7.0"` while
-`VerifierWorkdir` pins 4.9.3; resolution chose 4.9.3 either way. Every item's before and after is
-in `fixtures/reference-oracle-scaffold-census/items-2026-10-04.tsv` (214 rows: subject, run,
-function, location, shape, access, before cause, after outcome, decline reason).
+`swift-format-seeds.json` (118 rows). Dependencies: `SwiftAssist-Package.resolved` and
+`swift-format-Package.resolved`, the files both census targets built against, passed with
+`--resolved`. They hold SwiftPropertyLaws 4.9.3 and swift-property-based 2.0.1, and swift-format's
+`branch: "main"` swift-syntax at `0f7a57c588`. The funnel's `KIT_DEPENDENCY` still reads
+`from: "4.7.0"` while `VerifierWorkdir` pins 4.9.3; the fixture is what holds 4.9.3. Binaries, which
+report only `1.158.0 (unattributable build)`: before, sha256 `243d2659c7793215…`, a release build of
+`f87bb241`; after, `aea96bb835d2eaa6…`, a release build of `a45ea19c`'s sources. Each run's
+results.json records the full hash and the checkout the binary sits in.
+
+Every item's before and after is in `fixtures/reference-oracle-scaffold-census/items-2026-10-04.tsv`,
+written by `scripts/reference_oracle_scaffold_rows.py` from the two runs' results.json. It has 214
+rows and these columns: `subject`, `run`, `function`, `location`, `shape`, `access`, `before`
+(`compiles` or `fails:<first blocker>`), `before_causes` (every cause the compiler reported),
+`after` (`compiles`, `fails:<first blocker>` or `declined:<category>`) and `after_detail` (the
+decline reason, or every compiler error of a printed scaffold that fails).
 
 ## SwiftAssist
 
@@ -151,11 +185,12 @@ Unseeded, the 48 split: static 28 → 23 compile, 3 access, 1 generator, 1 equat
   line and name: all 43 seeded, all 19 unseeded.
 - **The `private` subjects all decline as access, with the remedy:** 13 seeded (10 static, 3
   instance; one through a `private` enclosing type) and 6 unseeded.
-- **The 27 seeded scaffolds that carried a `.gen() /* TODO */` placeholder**: 13 now derive every
-  draw and compile, 7 decline as access, 6 decline as generator, and 1 derives a generator that does
-  not type-check. Every scaffold with a placeholder over a type the scan does not declare
-  (`Range<Int>`, `String.Index`, `[[Any]]`, `[String: Any]`, a labelled-tuple array) now declines:
-  as generator, or as access when the subject is `private`.
+- **The 27 seeded scaffolds that carried a `.gen() /* TODO */` placeholder** (the table's 19 are
+  those the compiler reported it for; each of the other 8 reported a type-check timeout instead):
+  13 now derive every draw and compile, 7 decline as access, 6 decline as generator, and 1 derives a
+  generator that does not type-check. Every scaffold with a placeholder over a type the scan does
+  not declare (`Range<Int>`, `String.Index`, `[[Any]]`, `[String: Any]`, a labelled-tuple array)
+  now declines: as generator, or as access when the subject is `private`.
 - **Effects** (all in the unseeded run; the seeded subjects need none): the 3 subjects that throw
   and are neither async nor actor-isolated print with `try?` and compile
   (`CoverageReport.parse(from:)`, `WorkspaceJail.resolve(_:)`,
@@ -163,12 +198,15 @@ Unseeded, the 48 split: static 28 → 23 compile, 3 access, 1 generator, 1 equat
   as above.
 
 **The one printed scaffold that fails: `WorkspaceIndexer.encodeSnapshot(_:)`.** It fails with *no
-exact matches in call to initializer*, inside the generator for `SemanticMap.FileSymbolInfo`. The
-resolver derived `SemanticMap.SymbolSummary` through `init(from symbol: Symbol)`, where `Symbol` is
-SwiftSourceKitClient's type. It spelled that `Symbol` as `XcodeDocument.Symbol`, the only scanned
-type of that name. This generator comes from the accept path's resolver (`projectTypeGenerator`), so
-accept draws the same text. It is a resolver defect shared with accept, not a scaffold spelling, and
-`docs/user/reference.md` lists it among the `--docstring-advice` exceptions.
+exact matches in call to initializer*, its only error, inside the generator for
+`SemanticMap.FileSymbolInfo`. The resolver derived `SemanticMap.SymbolSummary` through
+`init(from symbol: Symbol)`, where `Symbol` is SwiftSourceKitClient's type (`SemanticMap.swift`
+imports that module). It spelled that `Symbol` as `XcodeDocument.Symbol`, the only scanned type of
+that name. This generator comes from the accept path's resolver (`projectTypeGenerator`, over
+SwiftPropertyLaws' `GeneratorResolver`), so accept draws the same text. It is a resolver defect
+shared with accept, not a scaffold spelling. **It is open, not out of scope** (see *Open, not
+decided*): `docs/user/reference.md` lists it among the `--docstring-advice` known exceptions, and
+`docs/design-internal/open-threads.md` row 78 tracks the fix.
 
 **Declines, after:**
 
@@ -209,15 +247,26 @@ printed, 42 declined (access 36, generator 5, plan 1).
   and 170). swift-format declares
   `swiftLanguageModes: [.v5]` (its `Package.swift:150`), so any scaffold drawing a numeric or
   `String` edge-biased value fails there. Every generator recipe shares this, and so does accept's
-  determinism stub; it is the one printed-but-failing cause allowed by design.
+  determinism stub. Of the printed-but-failing causes the design put out of scope, it is the only one
+  with a member in this census.
 - **SwiftSyntax node generators.** The accept path draws SwiftSyntax nodes from `SyntaxCorpusSource`,
   which needs a support file only `accept` writes. The scaffold does not, so a SwiftSyntax receiver
   or argument declines as generator. 31 of swift-format's 32 seeded placeholders were over
   SwiftSyntax types before the change.
 - Shared with accept and documented beside `--docstring-advice` in `docs/user/reference.md`: a
-  receiver of a global-actor-isolated type built through its isolated initializer, a
-  `.defaultIsolation(MainActor)` target, and the resolver's bare-name match above. Pasting several
-  scaffolds into one file can declare `approximatelyEqual` or a Sendable shim twice.
+  receiver of a global-actor-isolated type built through its isolated initializer, and a
+  `.defaultIsolation(MainActor)` target. Pasting several scaffolds into one file can declare
+  `approximatelyEqual` or a Sendable shim twice.
+
+## Open, not decided
+
+- **`encodeSnapshot(_:)`'s generator** (SwiftAssist, seeded; *The one printed scaffold that fails*,
+  above) is a defect awaiting an owner call, tracked as row 78 of
+  `docs/design-internal/open-threads.md`. Nobody put it out of scope. The rewire was built to
+  *everything printed must compile*, and the design's out-of-scope list (Swift 5 mode, SwiftSyntax
+  generators, global-actor receivers and `.defaultIsolation(MainActor)` targets, `@_spi` names,
+  pasted duplicates, among others) names no resolver mis-derivation. That accept draws the same text
+  makes it a shared defect, not an accepted one.
 
 ## Predictions, and what happened
 
@@ -226,28 +275,31 @@ facts.
 
 | # | prediction | result | |
 |---|---|---|---|
-| 1 | SwiftAssist seeded compiles a value in [43, 75], equal to the number printed | **66**, of 67 printed | in range ✅; equal ❌ (`encodeSnapshot`, the shared resolver defect) |
+| 1 | SwiftAssist seeded compiles a value in [43, 75], equal to the number printed | **66**, of 67 printed | in range ✅; equal ❌ (`encodeSnapshot`: an open resolver defect shared with accept, open-threads row 78) |
 | 2 | the 43 visible, placeholder-free static scaffolds the probe compiled all compile, by name | 43 of 43 | ✅ |
 | 3 | the 13 `private` subjects decline as access (10 static, 3 instance) | 13 (10, 3) | ✅ |
 | 4 | the foreign-only placeholders (`Range<Int>`, `String.Index`, `[[Any]]`) decline | all decline | ✅ |
 | 5 | the 9 seeded fallback items with no scaffold render unchanged | byte-identical | ✅ |
 | 6 | unseeded compiles ≥ 19 (with `CoverageReport.parse(from:)` under `try?`), equal to printed; 6 access | 33 of 33; 6 | ✅ |
-| 7 | swift-format seeded: access ≥ 32, generator ≥ 1, at most 2 printed, failing only on Swift 5 mode | 32, 2, 1 printed, `'oneOf' is unavailable` | ✅ |
+| 7 | swift-format seeded: access ≥ 32, generator ≥ 1, at most 2 printed, failing only on Swift 5 mode | 32, 2, 1 printed, `'oneOf'` and `'frequency'` unavailable | ✅ |
 | 8 | swift-format unseeded: about 36 access | 36 | ✅ |
 
 ## Cost of the harness
 
 | | before (`f87bb241`) | after (`a45ea19c`) |
 |---|---|---|
-| SwiftAssist run, wall | ~94 s | 29 s |
+| SwiftAssist run, wall | ~94 s; 115 s and 101 s on the re-runs, which add the probe package build | 29 s; 26 s on both re-runs |
 | — per-file compiles | 99 files in ~49 s at 9 parallel; median 0.9 s, max 11.7 s | 70 files in ~2 s; median 0.3 s, max 0.5 s |
-| — package confirm | nothing compiled alone | 69 files, one round, 9.5 s |
+| — package confirm | nothing compiled alone | 69 files, one round: 9.5 s; 6.1 s and 5.7 s on the re-runs |
 | — repair probes | 297 compiles, ~35 s | 6 compiles, ~1 s |
-| swift-format run, wall | ~27 s | 7 s |
+| — probe package build | 42 probes in two batches: 11 s and 5 s, then 5 s and 4 s | 2 probes, 5 s |
+| swift-format run, wall | ~27 s; 29 s and 27 s on the re-runs | 7 s; 5 s and 4 s on the re-runs |
 
-These are warm runs. Before the first run: the release `swift-infer` build takes about 157 s. The
-census target's first build of SwiftAssist and its dependencies took 1 min 26 s. The two build
-worktrees take 3.3 GB. Discover itself takes about 3 s per SwiftAssist run and 1.3 s per
+These are warm runs. There were two re-runs, both with the pinned Package.resolved files and the
+probe package build: one on 2026-10-04, and one on 2026-10-05 with the harness exactly as committed.
+Each reproduced every count. Before the first run: the release `swift-infer` build takes about
+157 s. The census target's first build of SwiftAssist and its dependencies took 1 min 26 s. The two
+build worktrees take 3.3 GB. Discover itself takes about 3 s per SwiftAssist run and 1.3 s per
 swift-format run.
 
 ## Reproduce
@@ -255,17 +307,27 @@ swift-format run.
 From this repository, after `swift build -c release --product swift-infer`:
 
 ```
+F=fixtures/reference-oracle-scaffold-census
 scripts/reference_oracle_scaffold_census.py --swift-infer .build/release/swift-infer \
     --subject <SwiftAssist checkout> --ref a89e6e46d40e765e965544a0e96934ad6becd686 \
-    --target SwiftAssist --seeds fixtures/reference-oracle-scaffold-census/SwiftAssist-seeds.json \
-    --out <work dir> --label after
+    --target SwiftAssist --seeds $F/SwiftAssist-seeds.json \
+    --resolved $F/SwiftAssist-Package.resolved --out <work dir> --label after
 scripts/reference_oracle_scaffold_census.py --swift-infer .build/release/swift-infer \
     --subject <swift-format checkout> --ref b15dd59fad --target SwiftFormat \
-    --seeds fixtures/reference-oracle-scaffold-census/swift-format-seeds.json \
-    --out <work dir> --label after
+    --seeds $F/swift-format-seeds.json \
+    --resolved $F/swift-format-Package.resolved --out <work dir> --label after
+scripts/reference_oracle_scaffold_rows.py --out <work dir> --before baseline --after after \
+    SwiftAssist swift-format > items.tsv
 ```
 
 Each run writes `runs/<label>-<Name>/summary.txt` and `results.json` under the work directory. A run
 labelled `baseline` in the same work directory, made with a `f87bb241` binary, is what the
-*printed + declined* check compares against. Re-running with the `a45ea19c` binary reproduced every
-count above, and discover's stdout byte for byte.
+*printed + declined* check compares against (`--baseline-label` names another). Re-running both
+binaries through the committed harness with `--resolved` on 2026-10-05 reproduced every count above,
+discover's stdout byte for byte, and the items table byte for byte. A run without `--resolved`
+builds against whatever the subject checkout last resolved, which is not this measurement.
+
+The subject repositories are not edited, but each run registers two worktrees in them
+(`<work dir>/subjects/<Name>` and `<work dir>/build/<Name>`). Remove them with
+`git -C <checkout> worktree remove` when done. `--reclassify` re-attributes a saved run at the
+revision it measured, and refuses a `--ref` that names another.

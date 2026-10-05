@@ -134,13 +134,19 @@ test: lint test-fast perf batch1 batch2 batch3 batch4 batch5 batch6 batch7 batch
 # Raise it when the suite legitimately grows; do not silence it.
 FAST_BUDGET_SECONDS ?= 240
 
-measurement-selftest: ## Guard the shared measurement primitives (corpus scope, detector reach)
+measurement-selftest: ## Guard the shared measurement primitives (corpus scope, detector reach) and the scaffold census harness
 # Wired into `test-fast` deliberately, which makes it the FIRST thing in `scripts/` that
 # `make test` runs. The convention until 2026-08-23 was that scripts/ is study tooling and
 # the suite does not touch it — and that convention is exactly why six measurement
 # instruments returned a wrong number in one cycle with nothing to catch them. The
 # self-test found three silently-zero corpora on its first run. It costs ~0.3s.
+#
+# The reference-oracle scaffold census's two scripts joined 2026-10-05, after review found
+# `--reclassify` re-reading a moved subject HEAD under the measured run's SHA. Theirs need git,
+# no compiler, and cost ~0.4s more.
 	@python3 scripts/measurement.py --self-test
+	@python3 scripts/reference_oracle_scaffold_census.py --self-test
+	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \

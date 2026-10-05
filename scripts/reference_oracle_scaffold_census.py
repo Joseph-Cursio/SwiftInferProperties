@@ -4,32 +4,54 @@ r"""Measure how many reference-oracle scaffolds `swift-infer discover` prints ac
 Usage:
 
   scripts/reference_oracle_scaffold_census.py --swift-infer BIN --subject REPO --target MODULE \
-      --out DIR (--seeds FILE | --lint-cli BIN | --no-seeds) [--ref REF] [--label L]
-      [--baseline-label L] [--sources DIR] [--swift SWIFT] [--jobs N] [--no-probes]
-      [--no-compile] [--reclassify] [--bare-imports]
+      --out DIR (--seeds FILE | --lint-cli BIN | --no-seeds) [--resolved FILE] [--ref REF]
+      [--label L] [--baseline-label L] [--sources DIR] [--swift SWIFT] [--jobs N] [--no-probes]
+      [--no-compile] [--bare-imports]
+  scripts/reference_oracle_scaffold_census.py --reclassify --subject REPO --target MODULE \
+      --out DIR [--label L] [--ref REF]
+  scripts/reference_oracle_scaffold_census.py --self-test
 
-  BIN      a release `swift-infer` binary (`swift build -c release --product swift-infer`)
-  REPO     the subject's git repository; it is only read, through `git worktree add`
+  BIN      a release `swift-infer` binary (`swift build -c release --product swift-infer`).
+           results.json records its sha256 and the HEAD of the checkout it sits in, since the
+           binary itself reports `unattributable` (`BuildIdentity`)
+  REPO     the subject's git repository. Its files are never edited, but it is not untouched:
+           both worktrees below are REGISTERED in it (`git worktree add`), a worktree found at
+           another commit is removed with `git worktree remove --force` and re-added, and the
+           registrations outlive the run — `git -C REPO worktree remove DIR/subjects/<Name>`
+           and `DIR/build/<Name>` when done
   MODULE   the module `discover --target` scans, and that `@testable import` names
   DIR      the work directory: `subjects/<Name>` (a pristine worktree discover runs in),
            `build/<Name>` (a worktree whose manifest gains a census test target) and
            `runs/<label>-<Name>/` (summary.txt, results.json, the compiled files)
   --seeds  a pinned `pbt-seeds` manifest; `--lint-cli` makes one with SwiftProjectLint instead.
            With seeds, discover runs twice (seeded and unseeded); `--no-seeds` runs it once.
+  --resolved  a Package.resolved the census target builds against, copied over the build
+           worktree's on every run. It is what pins the kit (`from: "4.7.0"`), the engine
+           (`from: "2.0.0"`) and the subject's own dependencies (swift-format's swift-syntax is
+           `branch: "main"`). Without it the subject checkout's own Package.resolved is copied
+           once — gitignored in both census subjects, so it floats with whatever that checkout
+           last resolved. Either way results.json records every pin the build resolved.
+  --reclassify  re-attributes a saved run (`runs/<label>-<Name>/results.json`): no discover, no
+           build. It re-reads the declarations at the revision the run MEASURED (results.json's
+           `subject_sha`) and refuses a `--ref` that names another one.
 
   The census in `docs/measurements/reference-oracle-scaffold-census.md` is, per subject, with the
-  seed manifests pinned beside it in `fixtures/reference-oracle-scaffold-census/`:
+  seed manifests and Package.resolved files pinned beside it in
+  `fixtures/reference-oracle-scaffold-census/`:
 
     scripts/reference_oracle_scaffold_census.py --swift-infer .build/release/swift-infer \
         --subject <SwiftAssist> --ref a89e6e46d40e765e965544a0e96934ad6becd686 \
-        --target SwiftAssist --seeds <fixtures>/SwiftAssist-seeds.json --out <DIR> --label after
+        --target SwiftAssist --seeds <fixtures>/SwiftAssist-seeds.json \
+        --resolved <fixtures>/SwiftAssist-Package.resolved --out <DIR> --label after
     scripts/reference_oracle_scaffold_census.py --swift-infer .build/release/swift-infer \
         --subject <swift-format> --ref b15dd59fad --target SwiftFormat \
-        --seeds <fixtures>/swift-format-seeds.json --out <DIR> --label after
+        --seeds <fixtures>/swift-format-seeds.json \
+        --resolved <fixtures>/swift-format-Package.resolved --out <DIR> --label after
 
   A before/after comparison needs the SAME seed manifest and the same --out: a run whose label is
   not --baseline-label (default `baseline`) checks its printed + declined count against that run's.
-  The second run onwards reuses both worktrees and the census target's build.
+  The second run onwards reuses both worktrees and the census target's build. The per-item
+  before/after table is `scripts/reference_oracle_scaffold_rows.py`, over two such runs.
 
 What it does. `discover`'s docstring advisory prints, per documented function, either a runnable
 reference-oracle scaffold (`DocstringAdvisoryRenderer`, built by `referenceOracleOutcome` in
@@ -58,15 +80,18 @@ reference-oracle scaffold (`DocstringAdvisoryRenderer`, built by `referenceOracl
      "compiles" is a package build, not only a frontend run;
   7. attributes every compiler error to a cause and prints the histograms. Three counterfactual
      probes (mechanical call repair, generator hoisting, repair without try/await) say what a
-     bare-call scaffold's first blocker hides. They are NOT what discover prints. Since the
-     scaffold declares a member's reference in `extension Owner`, they are a regression check:
-     such a scaffold is skipped, and a scaffold whose `call-repaired` probe compiles while the
-     scaffold does not is reported as an emitter defect.
+     bare-call scaffold's first blocker hides. They are NOT what discover prints. The
+     `call-repaired` probes that compiled alone are built together through SwiftPM as well
+     (`confirm_probes_in_package`), the same check step 6 makes of the scaffolds. Since the
+     scaffold declares a member's reference in `extension Owner`, the probes are also a
+     regression check: such a scaffold is skipped, a scaffold whose `call-repaired` probe compiles
+     while the scaffold does not is reported as an emitter defect, and the summary states how
+     many scaffolds the check covered, not only how many it found.
 
 Why one file at a time: see the note above `census_compile_args`. In short, a census target
-holding all scaffolds reported 4-7 files per round (the build stops at the first failed job, and
-a declaration-level error anywhere stops body type-checking everywhere), so a fixpoint over 93
-files measured 45 in twelve rounds.
+holding one file per distinct function name reported 4-7 files per round (the build stops at the
+first failed job, and a declaration-level error anywhere stops body type-checking everywhere), so
+a fixpoint over those 93 files measured 45 in twelve rounds.
 """
 import argparse
 import collections
@@ -79,6 +104,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 XCODE_SWIFT = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"
@@ -115,7 +141,9 @@ def resolve_ref(repo, ref):
 
 
 def ensure_worktree(repo, destination, sha):
-    """A detached worktree at `sha`. Re-created when it sits at another commit."""
+    """A detached worktree at `sha`, registered in `repo`. Re-created when it sits at another
+    commit: removed with `git worktree remove --force` and added again. Returns (path, fresh);
+    the caller places its Package.resolved (`place_resolved`)."""
     if os.path.isdir(destination):
         head = subprocess.run(["git", "-C", destination, "rev-parse", "HEAD"],
                               capture_output=True, text=True).stdout.strip()
@@ -126,12 +154,66 @@ def ensure_worktree(repo, destination, sha):
     os.makedirs(os.path.dirname(destination), exist_ok=True)
     subprocess.run(["git", "-C", repo, "worktree", "add", "-q", "--detach", destination, sha],
                    check=True, capture_output=True)
-    # A gitignored Package.resolved does not come with the worktree; copy the real one so the
-    # build resolves what the subject resolves.
-    real_resolved = os.path.join(repo, "Package.resolved")
-    if os.path.exists(real_resolved) and not os.path.exists(os.path.join(destination, "Package.resolved")):
-        shutil.copy(real_resolved, destination)
     return destination, True
+
+
+def place_resolved(tree, repo, resolved):
+    """The Package.resolved `tree` builds against, and where it came from.
+
+    A pinned file (`--resolved`) is copied over whatever is there, every time, so a build worktree
+    left from an earlier run cannot keep other pins. Without one, a gitignored Package.resolved
+    does not come with the worktree, so the subject checkout's own is copied once — which pins
+    nothing: it is whatever that checkout last resolved, and a `from:` or `branch:` requirement
+    drifts with it."""
+    destination = os.path.join(tree, "Package.resolved")
+    if resolved:
+        shutil.copy(resolved, destination)
+        return {"from": os.path.realpath(resolved), "pinned": True}
+    live = os.path.join(repo, "Package.resolved")
+    if os.path.exists(live) and not os.path.exists(destination):
+        shutil.copy(live, destination)
+        return {"from": live, "pinned": False}
+    return {"from": destination if os.path.exists(destination) else None, "pinned": False}
+
+
+def resolved_pins(tree):
+    """{identity: version, or `branch@revision` / the revision} of every package the build resolved."""
+    path = os.path.join(tree, "Package.resolved")
+    if not os.path.exists(path):
+        return {}
+    pins = {}
+    for pin in json.load(open(path, encoding="utf-8")).get("pins", []):
+        state = pin.get("state", {})
+        revision = state.get("revision", "")[:10]
+        if state.get("version"):
+            pins[pin["identity"]] = state["version"]
+        elif state.get("branch"):
+            pins[pin["identity"]] = f"{state['branch']}@{revision}"
+        else:
+            pins[pin["identity"]] = revision
+    return pins
+
+
+def binary_identity(path):
+    """What names the swift-infer binary a run measured. `--version` cannot (a plain build
+    reports `unattributable`), so: its sha256, and the HEAD of the git checkout it sits in, read
+    now, with whether that checkout has tracked changes. A binary built before that HEAD moved
+    reads as the newer commit; the sha256 is what tells two binaries apart."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    identity = {"sha256": digest.hexdigest(), "checkout": None, "checkout_head": None,
+                "checkout_dirty": None}
+    folder = os.path.dirname(path)
+    head = subprocess.run(["git", "-C", folder, "rev-parse", "HEAD"], capture_output=True, text=True)
+    if head.returncode == 0:
+        top = subprocess.run(["git", "-C", folder, "rev-parse", "--show-toplevel"],
+                             capture_output=True, text=True).stdout.strip()
+        dirty = subprocess.run(["git", "-C", folder, "status", "--porcelain", "--untracked-files=no"],
+                               capture_output=True, text=True).stdout.strip()
+        identity.update(checkout=top, checkout_head=head.stdout.strip(), checkout_dirty=bool(dirty))
+    return identity
 
 
 def make_seeds(lint_cli, tree, out):
@@ -564,13 +646,16 @@ def append_census_target(manifest, target, external, stage5):
     open(manifest, "w", encoding="utf-8").write(text)
 
 
-def ensure_build_tree(repo, build_root, sha, target, swift, stage5):
-    """A second worktree whose manifest carries the census test target.
+def ensure_build_tree(repo, build_root, sha, target, swift, stage5, resolved=None):
+    """A second worktree whose manifest carries the census test target, and where its
+    Package.resolved came from (`place_resolved`).
 
     The funnel's `rewrite_manifest` first (drop every test target, add the kit + engine, add the
     census target), verified by its `verify_manifest`; when that cannot parse the manifest, the
-    append fallback, verified the same way."""
+    append fallback, verified the same way. A pinned Package.resolved goes in before either, so
+    `verify_manifest`'s resolve already reads it."""
     tree, fresh = ensure_worktree(repo, os.path.join(build_root, os.path.basename(repo)), sha)
+    provenance = place_resolved(tree, repo, resolved)
     stamp = os.path.join(tree, ".scaffold-census-manifest")
     census = os.path.join(tree, CENSUS_DIR)
     if fresh or not os.path.exists(stamp):
@@ -590,7 +675,7 @@ def ensure_build_tree(repo, build_root, sha, target, swift, stage5):
             stage5.verify_manifest(tree, swift)
             how = "appended census target"
         open(stamp, "w").write(f"{sha} {target} {how}\n")
-    return tree
+    return tree, provenance
 
 
 FIXED_IMPORTS = ["import Foundation", "import Testing", "import PropertyBased", "import PropertyLawKit"]
@@ -686,8 +771,10 @@ def build_batch_to_fixpoint(tree, swift, files, max_rounds=40):
 
 # ⚠ **Why each scaffold is compiled ALONE, with SwiftPM's own flags, and not as one target.**
 #
-# Measured on SwiftAssist 2026-10-04: one census target holding all 93 scaffolds, built to a
-# fixpoint, set aside only 4-7 files a round — the build system stops at the first failed
+# Measured on SwiftAssist 2026-10-04 (the `f87bb241` baseline): one census target holding one
+# file per distinct function name — 93, since the 99 distinct scaffolds share 93 names and a
+# module cannot declare two file-scope `<name>_reference` functions — built to a fixpoint, set
+# aside only 4-7 files a round. The build system stops at the first failed
 # compile job (`-continue-building-after-errors` does not change it), and a declaration-level
 # error in ANY file (`cannot find type 'Citation'` in a reference signature) stops the frontend
 # before it type-checks a single body, even under `-wmo`. Twelve rounds measured 45 of 93. So the
@@ -1013,6 +1100,36 @@ def confirm_in_package(tree, swift, scaffolds):
     return {"files": len(clean), "batches": log_rows}
 
 
+PACKAGE_PROBE = "call-repaired"
+
+
+def probe_stand_ins(scaffolds, probe=PACKAGE_PROBE):
+    """Each scaffold whose `probe` compiled alone, as an entry `confirm_in_package` can build:
+    the probe's text in place of the scaffold's, everything else (header, the names `partition`
+    keeps apart) the scaffold's own. Copies — the scaffolds themselves are not touched."""
+    stand_ins = {}
+    for key, entry in scaffolds.items():
+        found = entry.get("probes", {}).get(probe)
+        if found and found["compiled"]:
+            stand_ins[f"{key}__{probe}"] = dict(entry, scaffold=found["text"], compiled_alone=True,
+                                                compiled=True, errors=[])
+    return stand_ins
+
+
+def confirm_probes_in_package(tree, swift, scaffolds, probe=PACKAGE_PROBE):
+    """The `probe` texts that compiled alone, built together through SwiftPM — the same check
+    `confirm_in_package` makes of the printed scaffolds. Before the rewire no scaffold compiled,
+    so this is the only package-level evidence that the per-file compile agrees with SwiftPM."""
+    stand_ins = probe_stand_ins(scaffolds, probe)
+    outcome = confirm_in_package(tree, swift, stand_ins)
+    outcome.update(
+        probe=probe,
+        built_together=sorted(k for k, v in stand_ins.items() if v["compiled"] is True),
+        failed_only_in_package=sorted(k for k, v in stand_ins.items() if v["compiled"] is False),
+        unmeasured=sorted(k for k, v in stand_ins.items() if v["compiled"] is None))
+    return outcome
+
+
 def partition(scaffolds):
     """Batches in which no two files declare the same thing: the `@Test func` (owner-prefixed for a
     member, bare for a free function, so it also stands for the `_reference` it calls)
@@ -1265,20 +1382,25 @@ def latent_needs(entry):
 # main
 # ---------------------------------------------------------------------------------------------
 
-def main(argv):
+def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--swift-infer", required=True, help="the swift-infer binary to measure")
-    parser.add_argument("--subject", required=True, help="the subject's git repository (read only)")
+    parser.add_argument("--swift-infer", help="the swift-infer binary to measure (not --reclassify)")
+    parser.add_argument("--subject", required=True,
+                        help="the subject's git repository: files never edited, worktrees registered")
     parser.add_argument("--target", required=True, help="the module discover scans (--target)")
     parser.add_argument("--out", required=True,
                         help="work directory: subjects/, build/ and runs/<label>-<Name>/ land here")
     parser.add_argument("--sources", help="pass --sources <subject-relative dir> instead of --target")
-    parser.add_argument("--ref", default="HEAD", help="the subject revision to measure")
+    parser.add_argument("--ref", help="the subject revision to measure (default HEAD); with "
+                                      "--reclassify, only checked against the saved run's")
     parser.add_argument("--label", default="baseline", help="names this run's directory")
-    seeds = parser.add_mutually_exclusive_group(required=True)
+    seeds = parser.add_mutually_exclusive_group()
     seeds.add_argument("--seeds", help="a pinned pbt-seeds manifest (compare runs on the same one)")
     seeds.add_argument("--lint-cli", help="a SwiftProjectLint CLI binary that writes the manifest")
     seeds.add_argument("--no-seeds", action="store_true", help="run discover unseeded only")
+    parser.add_argument("--resolved", help="a Package.resolved the census target builds against "
+                                           "(pins the kit, the engine and the subject's own "
+                                           "dependencies); default: the subject checkout's own")
     parser.add_argument("--swift", default=XCODE_SWIFT if os.path.exists(XCODE_SWIFT) else "swift",
                         help="the toolchain that builds the subject and compiles the scaffolds")
     parser.add_argument("--no-compile", action="store_true",
@@ -1288,54 +1410,50 @@ def main(argv):
     parser.add_argument("--jobs", type=int, default=max(2, (os.cpu_count() or 4) // 2),
                         help="scaffolds compiled at once (default: half the cores)")
     parser.add_argument("--reclassify", action="store_true",
-                        help="re-attribute the saved results.json of this label; no discover, no build")
+                        help="re-attribute the saved results.json of this label at the revision it "
+                             "measured; no discover, no build")
     parser.add_argument("--baseline-label", default="baseline",
                         help="the run whose printed-scaffold count printed + declined must equal")
     parser.add_argument("--bare-imports", action="store_true",
                         help="header = the accept path's fixed imports + @testable only, without "
                              "the declaring file's imports")
     args = parser.parse_args(argv[1:])
+    if not args.reclassify:
+        if not args.swift_infer:
+            parser.error("the following arguments are required: --swift-infer")
+        if not (args.seeds or args.lint_cli or args.no_seeds):
+            parser.error("one of the arguments --seeds --lint-cli --no-seeds is required")
+    return args
 
-    subject = os.path.realpath(os.path.expanduser(args.subject))
+
+def reclassify(args, subject, run_dir, out_dir):
+    """Re-attribute a saved run at the revision it MEASURED. Every scaffold's location is an
+    absolute path into `subjects/<Name>`, so the pristine worktree is put back at the saved
+    `subject_sha` before any declaration is re-read; a `--ref` naming another revision would
+    re-derive the facts from code the run never compiled under the run's own SHA, so it is
+    refused rather than resolved."""
+    results = json.load(open(os.path.join(run_dir, "results.json"), encoding="utf-8"))
+    sha = results["subject_sha"]
+    if args.ref is not None and resolve_ref(subject, args.ref) != sha:
+        raise SystemExit(f"--reclassify re-reads the revision the run measured ({sha[:10]}); "
+                         f"--ref {args.ref} names another. Drop --ref, or measure that revision.")
     name = os.path.basename(subject)
-    sha = resolve_ref(subject, args.ref)
-    infer = os.path.realpath(os.path.abspath(os.path.expanduser(args.swift_infer)))
-    out_dir = os.path.realpath(os.path.expanduser(args.out))
-    run_dir = os.path.join(out_dir, "runs", f"{args.label}-{name}")
-    os.makedirs(run_dir, exist_ok=True)
-    version = subprocess.run([infer, "--version"], capture_output=True, text=True).stdout.strip()
-    # The type-check timeout is the solver's scope limit: deterministic, but per compiler version.
-    compiler = subprocess.run([args.swift, "--version"], capture_output=True, text=True,
-                              env=env_for(args.swift)).stdout.strip().split("\n")[0]
-    log(f"swift-infer {version} ({infer}); subject {name} @ {sha[:10]}; run dir {run_dir}")
-    log(f"compiler: {compiler}")
-
     tree, _ = ensure_worktree(subject, os.path.join(out_dir, "subjects", name), sha)
     sources = os.path.join(tree, args.sources) if args.sources else None
-
-    # Types are looked up in the scanned module only: a same-named type elsewhere in the tree
-    # (a sibling package) is not visible to the scaffold and must not read as in scope.
     target_sources = sources or os.path.join(tree, "Sources", args.target)
+    cache = {}
+    for entry in results["scaffolds"]:  # facts too: the reader may have changed since
+        if entry.get("file"):
+            entry["facts"] = decl_facts(entry["file"], entry["line"], entry["func"], cache)
+    attribute(results["scaffolds"], target_sources)
+    json.dump(results, open(os.path.join(run_dir, "results.json"), "w"), indent=2)
+    report(results, run_dir)
+    return 0
 
-    if args.reclassify:
-        results = json.load(open(os.path.join(run_dir, "results.json")))
-        cache = {}
-        for entry in results["scaffolds"]:  # facts too: the reader may have changed since
-            if entry.get("file"):
-                entry["facts"] = decl_facts(entry["file"], entry["line"], entry["func"], cache)
-        attribute(results["scaffolds"], target_sources)
-        json.dump(results, open(os.path.join(run_dir, "results.json"), "w"), indent=2)
-        report(results, run_dir)
-        return 0
 
-    manifest = None
-    if args.seeds:
-        manifest = os.path.realpath(os.path.expanduser(args.seeds))
-    elif args.lint_cli:
-        manifest = os.path.join(run_dir, f"{name}-seeds.json")
-        count = make_seeds(args.lint_cli, tree, manifest)
-        log(f"seeds: {count} rows from {args.lint_cli}")
-
+def run_modes(args, infer, tree, sources, manifest, run_dir):
+    """discover once per mode (seeded when there is a manifest, then unseeded), and every item
+    extracted: `runs` per mode, `scaffolds` keyed by distinct text."""
     modes = [("seeded", manifest)] if manifest else []
     modes.append(("unseeded", None))
     runs, scaffolds, cache = {}, {}, {}
@@ -1355,28 +1473,103 @@ def main(argv):
         log(f"{mode}: {extracted['functions']} documented functions, {len(with_scaffold)} scaffolds, "
             f"{len(declined)} declined ({meta['seconds']}s)")
         for item in with_scaffold:
-            func_match = _FUNC_NAME.search(item["scaffold"])
-            func = func_match.group(1) if func_match else item["display"].split("(")[0]
-            digest = hashlib.sha1(item["scaffold"].encode()).hexdigest()[:10]
-            file_id = f"S_{func}_{digest}"
+            file_id = scaffold_entry(item, mode, scaffolds, cache)
             runs[mode]["ids"].append(file_id)
-            if file_id in scaffolds:
-                scaffolds[file_id]["modes"].append(mode)
-                continue
-            owner = _EXTENSION_REFERENCE.search(item["scaffold"])
-            scaffolds[file_id] = {
-                "id": file_id, "func": func, "display": item["display"],
-                "reference_in_extension": owner.group(1) if owner else None,
-                "test_name": (_TEST_NAME.search(item["scaffold"]) or [None, func])[1],
-                "shims": _SHIM.findall(item["scaffold"]),
-                "signature": item["signature"], "file": item.get("file"),
-                "line": item.get("line"), "scaffold": item["scaffold"], "modes": [mode],
-                "facts": decl_facts(item["file"], item["line"], func, cache)
-                if item.get("file") else {"found": False, "why": "no location"},
-            }
     for entry in scaffolds.values():
         entry["latent_needs"] = latent_needs(entry)
         entry["header"] = stub_header(args.target, entry.get("file"), not args.bare_imports)
+    return runs, scaffolds
+
+
+def scaffold_entry(item, mode, scaffolds, cache):
+    """Record one printed scaffold under its distinct-text id, and return the id."""
+    func_match = _FUNC_NAME.search(item["scaffold"])
+    func = func_match.group(1) if func_match else item["display"].split("(")[0]
+    digest = hashlib.sha1(item["scaffold"].encode()).hexdigest()[:10]
+    file_id = f"S_{func}_{digest}"
+    if file_id in scaffolds:
+        scaffolds[file_id]["modes"].append(mode)
+        return file_id
+    owner = _EXTENSION_REFERENCE.search(item["scaffold"])
+    scaffolds[file_id] = {
+        "id": file_id, "func": func, "display": item["display"],
+        "reference_in_extension": owner.group(1) if owner else None,
+        "test_name": (_TEST_NAME.search(item["scaffold"]) or [None, func])[1],
+        "shims": _SHIM.findall(item["scaffold"]),
+        "signature": item["signature"], "file": item.get("file"),
+        "line": item.get("line"), "scaffold": item["scaffold"], "modes": [mode],
+        "facts": decl_facts(item["file"], item["line"], func, cache)
+        if item.get("file") else {"found": False, "why": "no location"},
+    }
+    return file_id
+
+
+def compile_all(args, subject, out_dir, sha, run_dir, scaffolds, target_sources, results):
+    """Steps 4-7: the census target, every scaffold alone, the clean ones together, the probes
+    (and the clean `call-repaired` probes together), then attribution."""
+    stage5 = import_stage5()
+    build_tree, provenance = ensure_build_tree(subject, os.path.join(out_dir, "build"), sha,
+                                               args.target, args.swift, stage5, args.resolved)
+    results["resolved"] = provenance
+    log(f"building the census target (sentinel only) in {build_tree}; Package.resolved "
+        f"{'pinned from' if provenance['pinned'] else 'NOT pinned, from'} {provenance['from']}")
+    compile_args = census_compile_args(build_tree, args.swift)
+    results["resolved"]["pins"] = resolved_pins(build_tree)
+    json.dump(compile_args, open(os.path.join(run_dir, "census-swiftc-args.json"), "w"), indent=1)
+    log(f"compiling {len(scaffolds)} distinct scaffolds one file each ({args.jobs} at a time)")
+    compile_each(scaffolds, compile_args, os.path.join(run_dir, "files"), args.jobs)
+    alone = sum(1 for v in scaffolds.values() if v.get("compiled_alone"))
+    log(f"{alone} compiled alone; confirming them together in the package")
+    results["package_confirm"] = confirm_in_package(build_tree, args.swift, scaffolds)
+    if not args.no_probes:
+        log("counterfactual probes: call-repaired, +hoisted, qualified-no-effects+hoisted")
+        run_probes(scaffolds, compile_args, os.path.join(run_dir, "probe-files"), args.jobs,
+                   target_sources)
+        log("confirming the call-repaired probes that compiled alone together in the package")
+        results["probe_package_confirm"] = confirm_probes_in_package(build_tree, args.swift,
+                                                                     scaffolds)
+    attribute(scaffolds.values(), target_sources)
+
+
+def main(argv):
+    if "--self-test" in argv[1:]:
+        return self_test()
+    args = parse_arguments(argv)
+    subject = os.path.realpath(os.path.expanduser(args.subject))
+    name = os.path.basename(subject)
+    out_dir = os.path.realpath(os.path.expanduser(args.out))
+    run_dir = os.path.join(out_dir, "runs", f"{args.label}-{name}")
+    if args.reclassify:
+        return reclassify(args, subject, run_dir, out_dir)
+
+    sha = resolve_ref(subject, args.ref or "HEAD")
+    infer = os.path.realpath(os.path.abspath(os.path.expanduser(args.swift_infer)))
+    os.makedirs(run_dir, exist_ok=True)
+    version = subprocess.run([infer, "--version"], capture_output=True, text=True).stdout.strip()
+    identity = binary_identity(os.path.abspath(os.path.expanduser(args.swift_infer)))
+    # The type-check timeout is the solver's scope limit: deterministic, but per compiler version.
+    compiler = subprocess.run([args.swift, "--version"], capture_output=True, text=True,
+                              env=env_for(args.swift)).stdout.strip().split("\n")[0]
+    log(f"swift-infer {version} ({infer}, sha256 {identity['sha256'][:12]}, checkout "
+        f"{(identity['checkout_head'] or '?')[:10]}); subject {name} @ {sha[:10]}; run dir {run_dir}")
+    log(f"compiler: {compiler}")
+
+    tree, fresh = ensure_worktree(subject, os.path.join(out_dir, "subjects", name), sha)
+    if fresh:
+        place_resolved(tree, subject, args.resolved)
+    sources = os.path.join(tree, args.sources) if args.sources else None
+    # Types are looked up in the scanned module only: a same-named type elsewhere in the tree
+    # (a sibling package) is not visible to the scaffold and must not read as in scope.
+    target_sources = sources or os.path.join(tree, "Sources", args.target)
+
+    manifest = None
+    if args.seeds:
+        manifest = os.path.realpath(os.path.expanduser(args.seeds))
+    elif args.lint_cli:
+        manifest = os.path.join(run_dir, f"{name}-seeds.json")
+        count = make_seeds(args.lint_cli, tree, manifest)
+        log(f"seeds: {count} rows from {args.lint_cli}")
+    runs, scaffolds = run_modes(args, infer, tree, sources, manifest, run_dir)
 
     baseline = {}
     baseline_path = os.path.join(out_dir, "runs", f"{args.baseline_label}-{name}", "results.json")
@@ -1385,29 +1578,14 @@ def main(argv):
         baseline = {"label": args.baseline_label,
                     "scaffolds": {m: r["scaffolds"] for m, r in baseline_runs.items()},
                     "items": {m: r["items_parsed"] for m, r in baseline_runs.items()}}
-    results = {"swift_infer": version, "swift_infer_path": infer, "compiler": compiler,
-               "subject": name,
+    results = {"swift_infer": version, "swift_infer_path": infer, "swift_infer_identity": identity,
+               "compiler": compiler, "subject": name,
                "subject_sha": sha, "target": args.target, "seeds": manifest, "runs": runs,
                "baseline": baseline,
                "distinct_scaffolds": len(scaffolds),
                "imports": "fixed" if args.bare_imports else "fixed + declaring file's"}
     if not args.no_compile and scaffolds:
-        stage5 = import_stage5()
-        build_tree = ensure_build_tree(subject, os.path.join(out_dir, "build"), sha,
-                                       args.target, args.swift, stage5)
-        log(f"building the census target (sentinel only) in {build_tree}")
-        compile_args = census_compile_args(build_tree, args.swift)
-        json.dump(compile_args, open(os.path.join(run_dir, "census-swiftc-args.json"), "w"), indent=1)
-        log(f"compiling {len(scaffolds)} distinct scaffolds one file each ({args.jobs} at a time)")
-        compile_each(scaffolds, compile_args, os.path.join(run_dir, "files"), args.jobs)
-        alone = sum(1 for v in scaffolds.values() if v.get("compiled_alone"))
-        log(f"{alone} compiled alone; confirming them together in the package")
-        results["package_confirm"] = confirm_in_package(build_tree, args.swift, scaffolds)
-        if not args.no_probes:
-            log("counterfactual probes: call-repaired, +hoisted, qualified-no-effects+hoisted")
-            run_probes(scaffolds, compile_args, os.path.join(run_dir, "probe-files"), args.jobs,
-                       target_sources)
-        attribute(scaffolds.values(), target_sources)
+        compile_all(args, subject, out_dir, sha, run_dir, scaffolds, target_sources, results)
 
     results["scaffolds"] = list(scaffolds.values())
     json.dump(results, open(os.path.join(run_dir, "results.json"), "w"), indent=2)
@@ -1459,15 +1637,107 @@ def attribute(scaffolds, tree):
             probe["causes"] = sorted({e["cause"] for e in probe["errors"]})
 
 
+def report_probes(results, scaffolds, by_id, out):
+    """The counterfactual probes: per mode, the regression check, and the probe package build."""
+    out.append("")
+    out.append("== counterfactual probes (NOT what discover prints — what the next blocker is)")
+    for mode, run in results["runs"].items():
+        ids = run["ids"]
+        for probe in ("call-repaired", "call-repaired+hoisted", "qualified-no-effects+hoisted"):
+            rows = [by_id[i]["probes"][probe] for i in ids if probe in by_id[i].get("probes", {})]
+            if not rows:
+                continue
+            ok = sum(1 for r in rows if r["compiled"])
+            multi = collections.Counter(c for r in rows if not r["compiled"] for c in r["causes"])
+            out.append(f"   {mode} / {probe}: COMPILE {ok} / {len(rows)}; any cause: "
+                       + ", ".join(f"{k} {v}" for k, v in multi.most_common()))
+            combos = collections.Counter(
+                " + ".join(c for c in r["causes"] if not c.startswith(("other:", "harness:")))
+                or "(other only)" for r in rows if not r["compiled"])
+            out.append(f"      still failing, by cause combination: "
+                       + "; ".join(f"{k}: {v}" for k, v in combos.most_common()))
+    # The regression check: a mechanical repair of the printed call compiling where the printed
+    # scaffold does not means the emitter still spells something the repair fixes. Its
+    # denominator is the scaffolds it could check — after the rewire, the free functions only —
+    # so the line says how many it checked and skipped, not only how many it found.
+    checked = [s for s in scaffolds if "call-repaired" in s.get("probes", {})]
+    regressions = [s for s in checked
+                   if s.get("compiled") is False and s["probes"]["call-repaired"]["compiled"]]
+    skipped = sum(1 for s in scaffolds if s.get("probes_skipped"))
+    out.append(f"   regression check: {len(regressions)} of {len(checked)} checked scaffolds have a "
+               f"call-repaired probe that compiles while the scaffold does not (emitter defects); "
+               f"{skipped} of {len(scaffolds)} not checked (reference in an extension, nothing to "
+               f"repair)")
+    for s in regressions:
+        out.append(f"      EMITTER DEFECT: {s['display']}  {s.get('file')}:{s.get('line')}")
+    confirm = results.get("probe_package_confirm")
+    if confirm is not None:
+        out.append(package_line(f"{confirm['probe']} probes", confirm,
+                                len(confirm["built_together"]),
+                                len(confirm["failed_only_in_package"]), len(confirm["unmeasured"])))
+    probe_failing = [(s, s["probes"]["call-repaired"]) for s in scaffolds
+                     if s.get("probes") and not s["probes"]["call-repaired"]["compiled"]]
+    seen = collections.defaultdict(list)
+    for s, probe in probe_failing:
+        for e in probe["errors"]:
+            if e["cause"] in ("missing-receiver:instance-method",):
+                continue
+            if len(seen[e["cause"]]) < 3 and all(x[0]["id"] != s["id"] for x in seen[e["cause"]]):
+                seen[e["cause"]].append((s, e))
+    out.append("   examples exposed by call-repaired (receiver failures omitted):")
+    for cause, rows in sorted(seen.items(), key=lambda kv: -len(kv[1])):
+        out.append(f"   -- {cause}")
+        for s, e in rows:
+            out.append(f"      {s['display']}  [{s['facts'].get('shape')}]: {e['message'][:200]}")
+            out.append(f"         line {e['line']}: {e['source'][:180]}")
+
+
+def report_header(results, run_dir, out):
+    """Which subject, binary, compiler and dependency pins the run measured."""
+    out.append(f"subject {results['subject']} @ {results['subject_sha'][:10]}, target "
+               f"{results['target']}; swift-infer {results['swift_infer']}")
+    identity = results.get("swift_infer_identity")
+    if identity:
+        where = (f"checkout {identity['checkout']} @ {identity['checkout_head'][:10]}"
+                 + (" with tracked changes" if identity["checkout_dirty"] else "")
+                 if identity.get("checkout_head") else "not inside a git checkout")
+        out.append(f"swift-infer binary: sha256 {identity['sha256'][:16]}; {where}")
+    out.append(f"results: {os.path.join(run_dir, 'results.json')}; stub imports: {results['imports']}")
+    if results.get("compiler"):
+        out.append(f"compiler: {results['compiler']}")
+    resolved = results.get("resolved")
+    if resolved:
+        out.append(f"Package.resolved: {'pinned' if resolved['pinned'] else 'NOT PINNED'}, from "
+                   f"{resolved['from']}")
+        out.append("   resolved: " + ", ".join(f"{k} {v}" for k, v in sorted(resolved.get("pins", {}).items())))
+
+
+def plural(count, one, many):
+    return f"{count} {one if count == 1 else many}"
+
+
+def package_line(what, confirm, built, failed, unmeasured):
+    """One line for a `confirm_in_package` outcome: how many built together, out of how many."""
+    batches = confirm.get("batches", [])
+    rounds = [len(b["rounds"]) for b in batches]
+    return (f"   {what} that compiled alone, built together through SwiftPM: {built} of "
+            f"{confirm['files']} ({plural(len(batches), 'batch', 'batches')}, rounds per batch "
+            f"{rounds or '-'}); failed "
+            f"only in the package {failed}; unmeasured {unmeasured}")
+
+
 def report(results, run_dir):
     scaffolds = results["scaffolds"]
     by_id = {s["id"]: s for s in scaffolds}
     out = []
-    out.append(f"subject {results['subject']} @ {results['subject_sha'][:10]}, target "
-               f"{results['target']}; swift-infer {results['swift_infer']}")
-    out.append(f"results: {os.path.join(run_dir, 'results.json')}; stub imports: {results['imports']}")
-    if results.get("compiler"):
-        out.append(f"compiler: {results['compiler']}")
+    report_header(results, run_dir, out)
+    if results.get("package_confirm") is not None:
+        alone = [s for s in scaffolds if s.get("compiled_alone")]
+        out.append("")
+        out.append(package_line("scaffolds", results["package_confirm"],
+                                sum(1 for s in alone if s.get("compiled") is True),
+                                sum(1 for s in alone if s.get("failed_only_in_package")),
+                                sum(1 for s in alone if s.get("compiled") is None)))
     for mode, run in results["runs"].items():
         ids = run["ids"]
         measured = [by_id[i] for i in ids if by_id[i].get("compiled") is not None]
@@ -1515,54 +1785,14 @@ def report(results, run_dir):
         out.append(f"   declaration says the call needs (all scaffolds, compiler-independent): "
                    + ", ".join(f"{k} {v}" for k, v in latent.most_common()))
         for entry in failing:
-            first = entry["errors"][0] if entry["errors"] else {"message": "?", "line": 0, "source": ""}
+            # Every error, not the first: a first-error quote reads as the only one.
+            messages = "; ".join(f"line {e['line']}: {e['message'][:160]}" for e in entry["errors"])
             out.append(f"   PRINTED BUT FAILS: {entry['display']}  {entry.get('file', '?')}:{entry.get('line')}"
-                       f"  [{entry.get('primary')}] {first['message'][:200]}")
+                       f"  [{entry.get('primary')}] {plural(len(entry['errors']), 'error', 'errors')}: {messages or '?'}")
         for row in declined:
             out.append(f"   declined [{row['category']}] {row['display']}: {row['reason'][:220]}")
     if any(s.get("probes") or s.get("probes_skipped") for s in scaffolds):
-        out.append("")
-        out.append("== counterfactual probes (NOT what discover prints — what the next blocker is)")
-        for mode, run in results["runs"].items():
-            ids = run["ids"]
-            for probe in ("call-repaired", "call-repaired+hoisted", "qualified-no-effects+hoisted"):
-                rows = [by_id[i]["probes"][probe] for i in ids if probe in by_id[i].get("probes", {})]
-                if not rows:
-                    continue
-                ok = sum(1 for r in rows if r["compiled"])
-                multi = collections.Counter(c for r in rows if not r["compiled"] for c in r["causes"])
-                out.append(f"   {mode} / {probe}: COMPILE {ok} / {len(rows)}; any cause: "
-                           + ", ".join(f"{k} {v}" for k, v in multi.most_common()))
-                combos = collections.Counter(
-                    " + ".join(c for c in r["causes"] if not c.startswith(("other:", "harness:")))
-                    or "(other only)" for r in rows if not r["compiled"])
-                out.append(f"      still failing, by cause combination: "
-                           + "; ".join(f"{k}: {v}" for k, v in combos.most_common()))
-        # The regression check: a mechanical repair of the printed call compiling where the printed
-        # scaffold does not means the emitter still spells something the repair fixes.
-        regressions = [s for s in scaffolds if s.get("compiled") is False and s.get("probes")
-                       and s["probes"]["call-repaired"]["compiled"]]
-        skipped = sum(1 for s in scaffolds if s.get("probes_skipped"))
-        out.append(f"   regression check: {len(regressions)} scaffolds whose call-repaired probe compiles "
-                   f"while the scaffold does not (emitter defects); {skipped} skipped (reference in "
-                   f"an extension, nothing to repair)")
-        for s in regressions:
-            out.append(f"      EMITTER DEFECT: {s['display']}  {s.get('file')}:{s.get('line')}")
-        probe_failing = [(s, s["probes"]["call-repaired"]) for s in scaffolds
-                         if s.get("probes") and not s["probes"]["call-repaired"]["compiled"]]
-        seen = collections.defaultdict(list)
-        for s, probe in probe_failing:
-            for e in probe["errors"]:
-                if e["cause"] in ("missing-receiver:instance-method",):
-                    continue
-                if len(seen[e["cause"]]) < 3 and all(x[0]["id"] != s["id"] for x in seen[e["cause"]]):
-                    seen[e["cause"]].append((s, e))
-        out.append("   examples exposed by call-repaired (receiver failures omitted):")
-        for cause, rows in sorted(seen.items(), key=lambda kv: -len(kv[1])):
-            out.append(f"   -- {cause}")
-            for s, e in rows:
-                out.append(f"      {s['display']}  [{s['facts'].get('shape')}]: {e['message'][:200]}")
-                out.append(f"         line {e['line']}: {e['source'][:180]}")
+        report_probes(results, scaffolds, by_id, out)
     failing = [s for s in scaffolds if s.get("compiled") is False]
     out.append("")
     out.append("== examples (3 per cause, all distinct scaffolds)")
@@ -1585,6 +1815,185 @@ def report(results, run_dir):
     text = "\n".join(out) + "\n"
     open(os.path.join(run_dir, "summary.txt"), "w").write(text)
     print(text)
+
+
+# ---------------------------------------------------------------------------------------------
+# self-test — the parts of the harness a census number rests on that need no compiler: which
+# revision `--reclassify` re-reads, which Package.resolved a build gets, how a binary is named,
+# and the summary lines that carry a denominator. `make measurement-selftest` runs it.
+# ---------------------------------------------------------------------------------------------
+
+def _git(repo, *arguments):
+    done = subprocess.run(["git", "-C", repo, "-c", "user.name=census", "-c",
+                           "user.email=census@example.invalid", "-c", "commit.gpgsign=false",
+                           *arguments], capture_output=True, text=True, check=True)
+    return done.stdout.strip()
+
+
+def _commit(repo, relative_path, text):
+    path = os.path.join(repo, relative_path)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    open(path, "w", encoding="utf-8").write(text)
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", relative_path)
+    return _git(repo, "rev-parse", "HEAD")
+
+
+def _saved_run(out, name, sha, run_label):
+    """A results.json as a measuring run leaves it: one scaffold, at line 2 of Sources/M/F.swift."""
+    run_dir = os.path.join(out, "runs", f"{run_label}-{name}")
+    os.makedirs(run_dir, exist_ok=True)
+    entry = {"id": "S_twice_0", "func": "twice", "display": "twice(_:)",
+             "file": os.path.join(out, "subjects", name, "Sources", "M", "F.swift"), "line": 2,
+             "scaffold": "func twice_reference(_ value: Int) -> Int { fatalError() }",
+             "compiled": True, "errors": [], "modes": ["seeded"], "facts": {}}
+    results = {"swift_infer": "self-test", "imports": "fixed", "subject": name, "subject_sha": sha,
+               "target": "M", "baseline": {}, "scaffolds": [entry],
+               "runs": {"seeded": {"ids": ["S_twice_0"], "section_functions": 1, "scaffolds": 1,
+                                   "items_parsed": 1, "declined": []}}}
+    json.dump(results, open(os.path.join(run_dir, "results.json"), "w"))
+    return run_dir
+
+
+def _selftest_reclassify(scratch, check):
+    """The subject's HEAD moved after the run: `--reclassify` must re-read the MEASURED revision,
+    keep the worktree there, and refuse a `--ref` naming the new one."""
+    import contextlib
+    import io
+    repo, out = os.path.join(scratch, "repo"), os.path.join(scratch, "out")
+    os.makedirs(repo)
+    _git(repo, "init", "-q")
+    measured = _commit(repo, "Sources/M/F.swift",
+                       "enum Box {\n    static func twice(_ value: Int) -> Int { value * 2 }\n}\n")
+    tree, _ = ensure_worktree(repo, os.path.join(out, "subjects", "repo"), measured)
+    moved = _commit(repo, "Sources/M/F.swift",
+                    "// moved\nfunc twice(_ value: Int) throws -> Int { value * 2 }\n")
+    run_dir = _saved_run(out, "repo", measured, "x")
+    base = ["census", "--reclassify", "--subject", repo, "--target", "M", "--out", out, "--label", "x"]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            main(base)
+    except SystemExit as stop:
+        check("reclassify runs without --swift-infer or a seeds choice", False, f"exited: {stop}")
+        return
+    entry = json.load(open(os.path.join(run_dir, "results.json")))["scaffolds"][0]
+    check("reclassify reads the declaration at the measured revision",
+          entry["facts"].get("shape") == "static-member" and "try" not in entry["latent_needs"],
+          f"facts {entry['facts'].get('shape')}, needs {entry['latent_needs']}")
+    check("reclassify leaves the worktree at the measured revision",
+          _git(tree, "rev-parse", "HEAD") == measured, _git(tree, "rev-parse", "HEAD")[:10])
+    summary = open(os.path.join(run_dir, "summary.txt")).read().split("\n")[0]
+    check("the summary names the measured revision", measured[:10] in summary, summary)
+    refused = None
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            main(base + ["--ref", moved])
+    except SystemExit as stop:
+        refused = str(stop)
+    check("reclassify refuses a --ref naming another revision",
+          refused is not None and "measured" in refused, f"exit: {refused}")
+
+
+def _selftest_resolved(scratch, check):
+    """A pinned Package.resolved replaces whatever the build tree holds, every run; without one,
+    the checkout's own is copied only into a tree that has none, and says it is not pinned."""
+    repo, tree = os.path.join(scratch, "r-repo"), os.path.join(scratch, "r-tree")
+    os.makedirs(repo)
+    os.makedirs(tree)
+    pinned = os.path.join(scratch, "pinned.resolved")
+    open(os.path.join(repo, "Package.resolved"), "w").write("live")
+    open(pinned, "w").write("pinned")
+    first = place_resolved(tree, repo, None)
+    check("an unpinned tree gets the checkout's own, flagged unpinned",
+          open(os.path.join(tree, "Package.resolved")).read() == "live" and not first["pinned"],
+          str(first))
+    second = place_resolved(tree, repo, pinned)
+    check("a pinned file replaces an existing one",
+          open(os.path.join(tree, "Package.resolved")).read() == "pinned" and second["pinned"],
+          str(second))
+    json.dump({"pins": [{"identity": "kit", "state": {"version": "4.9.3", "revision": "e0926a966b00"}},
+                        {"identity": "syntax", "state": {"branch": "main", "revision": "0f7a57c588aa"}}]},
+              open(os.path.join(tree, "Package.resolved"), "w"))
+    pins = resolved_pins(tree)
+    check("pins read as versions, and a branch pin keeps its revision",
+          pins == {"kit": "4.9.3", "syntax": "main@0f7a57c588"}, str(pins))
+
+
+def _selftest_identity(scratch, check):
+    repo = os.path.join(scratch, "repo")
+    binary = os.path.join(repo, ".build", "release", "tool")
+    os.makedirs(os.path.dirname(binary))
+    open(binary, "wb").write(b"binary")
+    identity = binary_identity(binary)
+    check("a binary is named by its sha256 and its checkout's HEAD",
+          identity["sha256"] == hashlib.sha256(b"binary").hexdigest()
+          and identity["checkout_head"] == _git(repo, "rev-parse", "HEAD"), str(identity))
+
+
+def _selftest_report(scratch, check):
+    """The regression check states what it checked, a failing scaffold lists every error, and the
+    probe package build says how many built together out of how many."""
+    def entry(file_id, compiled, probe_compiled=None, errors=()):
+        made = {"id": file_id, "func": file_id, "display": f"{file_id}()", "file": None, "line": 1,
+                "scaffold": "", "compiled": compiled, "compiled_alone": compiled,
+                "errors": [dict(e, cause="other:x", source="") for e in errors],
+                "causes": ["other:x"] if errors else [], "primary": None if compiled else "other:x",
+                "latent_needs": [], "facts": {"shape": "free-function"}, "todo_types": []}
+        if probe_compiled is None:
+            made["probes_skipped"] = "reference declared in an extension"
+        else:
+            made["probes"] = {"call-repaired": {"compiled": probe_compiled, "errors": [],
+                                                "causes": [], "text": "probe"}}
+        return made
+    two = [{"line": 26, "message": "'oneOf' is unavailable"}, {"line": 32, "message": "'frequency' is unavailable"}]
+    scaffolds = [entry("a", True, True), entry("b", False, True, two), entry("c", True)]
+    results = {"subject": "s", "subject_sha": "0" * 40, "target": "M", "swift_infer": "t",
+               "imports": "fixed", "scaffolds": scaffolds,
+               "runs": {"seeded": {"ids": ["a", "b", "c"], "section_functions": 3, "scaffolds": 3,
+                                   "items_parsed": 3, "declined": []}},
+               "probe_package_confirm": {"probe": "call-repaired", "files": 2, "batches": [],
+                                         "built_together": ["a"], "failed_only_in_package": [],
+                                         "unmeasured": ["b"]}}
+    import contextlib
+    import io
+    with contextlib.redirect_stdout(io.StringIO()):
+        report(results, scratch)
+    text = open(os.path.join(scratch, "summary.txt")).read()
+    check("the regression check states its denominator",
+          "1 of 2 checked scaffolds" in text and "1 of 3 not checked" in text, text[-900:])
+    check("a printed scaffold that fails lists every error",
+          "'oneOf' is unavailable" in text and "'frequency' is unavailable" in text, "")
+    check("the probe package build states built of attempted",
+          "call-repaired probes that compiled alone, built together through SwiftPM: 1 of 2" in text, "")
+    # `d`'s probe was compiled and failed: it must not be built in the package as if it passed.
+    with_failed_probe = {s["id"]: s for s in scaffolds} | {"d": entry("d", False, False)}
+    stand_ins = probe_stand_ins(with_failed_probe)
+    check("probe stand-ins carry the probe text, only for probes that compiled alone",
+          sorted(stand_ins) == ["a__call-repaired", "b__call-repaired"]
+          and all(v["scaffold"] == "probe" for v in stand_ins.values())
+          and scaffolds[1]["scaffold"] == "", str(sorted(stand_ins)))
+
+
+def self_test():
+    failures = []
+
+    def check(name, condition, detail):
+        if not condition:
+            failures.append(f"{name}: {detail}")
+    with tempfile.TemporaryDirectory() as scratch:
+        scratch = os.path.realpath(scratch)
+        _selftest_reclassify(scratch, check)
+        _selftest_identity(scratch, check)
+        _selftest_resolved(scratch, check)
+        _selftest_report(scratch, check)
+    for failure in failures:
+        print("FAIL", failure)
+    if failures:
+        print(f"{len(failures)} self-test failure(s)")
+        return 1
+    print("reference_oracle_scaffold_census.py self-test OK  (reclassify revision, Package.resolved "
+          "pinning, binary identity, summary denominators)")
+    return 0
 
 
 if __name__ == "__main__":
