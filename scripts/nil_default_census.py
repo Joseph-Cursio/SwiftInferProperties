@@ -8,6 +8,7 @@ same `D` each time, is a SHAPE row when the declaration has a value to compare (
 
   controls                 run the scope's six controls and exit non-zero if any fails
   run <out.json>           census the same 53 subjects as the budgeted-truncation census
+  mixed-sample <out.json>  a seeded 60 of the MIXED parameters with a value to compare, for the recall probe
 """
 import json
 import os
@@ -193,6 +194,7 @@ def declarations(text):
                     "owner": owner[2] if owner else "", "param": name, "reads": len(reads),
                     "default": default, "default_kind": default_kind(default, names) if same else "",
                     "result": result if kind == "func" else (owner[2] if owner else ""),
+                    "has_value": has_value,
                     "visibility": visibility[-1] if visibility else (owner[3] if owner else ""),
                     "doc": doc_comment(lines, line) if category == "SHAPE" else "",
                 })
@@ -286,11 +288,38 @@ def run(out_path):
     return 0
 
 
+def mixed_sample(out_path, size=60):
+    """A seeded sample of MIXED parameters (read other than through one `??`) whose declaration has a value to
+    compare: the recall probe classifies each by how it reads `p`, to see what a `??`-only template misses."""
+    found, _ = population.subjects()
+    seen, mixed = set(), []
+    for group, name, root, roots in found:
+        for scan_root in roots:
+            for path in population.swift_files(scan_root):
+                try:
+                    text = open(path, encoding="utf-8", errors="ignore").read()
+                except OSError:
+                    continue
+                for row in declarations(text):
+                    key = (os.path.realpath(path), row["line"], row["param"])
+                    if row["category"] == "MIXED" and row["has_value"] and key not in seen:
+                        seen.add(key)
+                        mixed.append(dict(row, group=group, subject=name, file=os.path.relpath(path, root)))
+    sample = random.Random(SEED + 1).sample(mixed, min(size, len(mixed)))
+    for index, row in enumerate(sorted(sample, key=lambda r: (r["subject"], r["file"], r["line"], r["param"]))):
+        row["check_id"] = f"M{index + 1:03d}"
+    json.dump({"population": len(mixed), "rows": sample}, open(out_path, "w"), indent=1, sort_keys=True)
+    print(f"MIXED with a value: {len(mixed)}; sampled {len(sample)}")
+    return 0
+
+
 def main(argv):
     if len(argv) > 1 and argv[1] == "controls":
         return 0 if controls() else 1
     if len(argv) > 2 and argv[1] == "run":
         return run(argv[2])
+    if len(argv) > 2 and argv[1] == "mixed-sample":
+        return mixed_sample(argv[2])
     raise SystemExit(__doc__)
 
 
