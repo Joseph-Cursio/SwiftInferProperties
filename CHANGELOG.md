@@ -37,6 +37,7 @@ Two censuses of laws that SwiftAssist's mutation testing suggested. Each asks wh
 - **Neither census builds anything.** Each reports against the 36 exact sites over 11 corpora that the shipped role route was built on. "Not a template route" is the budgeted-truncation census's reading against that bar. 3 of 6 and 5 of 7 predictions held.
 - **The subjects were read at fresh clones.** The 13 unmet subjects and 4 manifest corpora were cloned on 2026-10-05 and read at HEAD. Harbeth, StripeKit, scale-codec-swift, Open-Jellycore and nocturne-swift are at the revisions `subject-harbeth.md` recorded; the other unmet subjects are later. `swiftlang-swift` is the one subject not on the machine. Every revision is recorded in the census fixtures.
 - **Toolchain.** Both censuses are Python and need no Swift toolchain. The only Swift change in this release is the version string. The suite below ran on Xcode 27 / Swift 6.4 (swiftlang-6.4.0.34.1), because the swift.org 6.3.3 toolchain the Makefile prefers was not installed on the machine that ran it.
+- Suites at release: 6,671 = 6,447 fast + 224 in perf and the eight subprocess batches, from a full `make test`, green in one unpiped run at 3dd3914a. That is identical to 1.159.0's reading, so CLAUDE.md keeps that reading. The commit after it only records this line.
 
 ## [1.159.0] — 2026-10-05
 
