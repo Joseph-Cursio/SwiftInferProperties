@@ -206,7 +206,8 @@ that name. This generator comes from the accept path's resolver (`projectTypeGen
 SwiftPropertyLaws' `GeneratorResolver`), so accept draws the same text. It is a resolver defect
 shared with accept, not a scaffold spelling. **It is open, not out of scope** (see *Open, not
 decided*): `docs/user/reference.md` lists it among the `--docstring-advice` known exceptions, and
-`docs/design-internal/open-threads.md` row 78 tracks the fix.
+`docs/design-internal/open-threads.md` row 78 tracks the fix. It is filed upstream as
+Joseph-Cursio/SwiftPropertyLaws#63.
 
 **Declines, after:**
 
@@ -262,7 +263,7 @@ printed, 42 declined (access 36, generator 5, plan 1).
 
 - **`encodeSnapshot(_:)`'s generator** (SwiftAssist, seeded; *The one printed scaffold that fails*,
   above) is a defect awaiting an owner call, tracked as row 78 of
-  `docs/design-internal/open-threads.md`. Nobody put it out of scope. The rewire was built to
+  `docs/design-internal/open-threads.md` and upstream as Joseph-Cursio/SwiftPropertyLaws#63. Nobody put it out of scope. The rewire was built to
   *everything printed must compile*, and the design's out-of-scope list (Swift 5 mode, SwiftSyntax
   generators, global-actor receivers and `.defaultIsolation(MainActor)` targets, `@_spi` names,
   pasted duplicates, among others) names no resolver mis-derivation. That accept draws the same text
