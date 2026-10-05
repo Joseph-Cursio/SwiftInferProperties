@@ -48,8 +48,10 @@ Three groups, reported separately and then deduplicated by file for a total:
 - the **13 unmet subjects** (Euclid, swift-docc, OpenAPIKit, jwt-kit, swift-system, Harbeth and the seven
   screened in `subject-harbeth.md`), at the HEAD of a 2026-10-05 clone.
 
-`measurement.EXCLUDED_DIRS` applies (no `Tests`, `.build`, `checkouts`). Every subject's revision is
-recorded. `swiftlang-swift` (the stdlib) is not on this machine and stays in the denominator as missing.
+`measurement.EXCLUDED_DIRS` applies (no `Tests`, `.build`, `checkouts`), and so does one addition:
+hidden directories are skipped. A dry run of the instrument on SwiftAssist, before any population was
+read, counted each function up to five times, because the checkout's `.claude/worktrees` holds whole
+copies of its sources. Every subject's revision is recorded. `swiftlang-swift` (the stdlib) is not on this machine and stays in the denominator as missing.
 
 **Controls, asserted before the population is read:** SwiftAssist's `prefix(utf8Bytes:)`, verbatim, is a
 CANDIDATE with both cues; a `truncated(to:)` over `prefix(limit)` is a CANDIDATE; `repeated(_ times: Int)
