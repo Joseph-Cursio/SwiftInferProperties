@@ -69,7 +69,10 @@ struct PredicateReferenceOracleEmitterTests {
         #expect(!source.contains("Gen<Int>.int()"))
     }
 
-    @Test("multi param: draws a tuple, indexes it, and preserves labels in both calls")
+    /// Several arguments are drawn one `let` per argument and bound through the #498 annotation —
+    /// the shape the determinism law writes. The one-line tuple of draws and the bare `tuple`
+    /// binding were what timed out on SwiftAssist (`SandboxLedger.SourceKind.fileName`).
+    @Test("multi param: draws each argument in its own let, binds the annotated tuple, keeps labels")
     func multiParameter() {
         let source = LiftedTestEmitter.referenceOracle(
             funcName: "canReach",
@@ -82,9 +85,19 @@ struct PredicateReferenceOracleEmitterTests {
             seed: Self.seed
         )
         #expect(source.contains("func canReach_reference(from origin: Int, to target: Int) -> Bool"))
-        #expect(source.contains("{ tuple in"))
+        #expect(source.contains("{ tuple in") == false)
+        #expect(source.contains("""
+            sample: { rng in
+                                let arg0 = (Gen.frequency((3.0, Gen<Int>.boundedForArithmetic()), \
+            (2.0, Gen<Int?>.element(of: [0, -1, 1] as [Int]).map { $0! }))).run(using: &rng)
+                                let arg1 = (Gen.frequency((3.0, Gen<Int>.boundedForArithmetic()), \
+            (2.0, Gen<Int?>.element(of: [0, -1, 1] as [Int]).map { $0! }))).run(using: &rng)
+                                return (arg0, arg1)
+                            },
+            """))
         #expect(source.contains(
-            "canReach(from: tuple.0, to: tuple.1) == canReach_reference(from: tuple.0, to: tuple.1)"
+            "{ (args: (Int, Int)) in canReach(from: args.0, to: args.1) == "
+                + "canReach_reference(from: args.0, to: args.1) }"
         ))
         #expect(source.contains("[0, -1, 1] as [Int]"))
     }
@@ -104,8 +117,12 @@ struct PredicateReferenceOracleEmitterTests {
         #expect(source.contains("func roundToPlaces_reference(_ value: Double, places: Int) -> Double"))
         #expect(source.contains("(the return type Double must be Equatable for this to compile)"))
         #expect(source.contains(
-            "roundToPlaces(tuple.0, places: tuple.1) == roundToPlaces_reference(tuple.0, places: tuple.1)"
+            "{ (args: (Double, Int)) in "
+                + "roundToPlaces(args.0, places: args.1) == roundToPlaces_reference(args.0, places: args.1) }"
         ))
+        // This entry point compares strictly unless asked, so its goldens are unchanged by the
+        // approximate comparison `discover` now passes for a floating-point result.
+        #expect(source.contains("approximatelyEqual") == false)
         // The Int `places` is edge-biased to include the negative boundary the bug hides at.
         #expect(source.contains("[0, -1, 1] as [Int]"))
     }
@@ -130,7 +147,9 @@ struct PredicateReferenceOracleEmitterTests {
         ))
         #expect(source.contains("must be Equatable for this to compile)") == false)
         #expect(source.contains("every element of the returned tuple must be Equatable"))
-        #expect(source.contains("clip(tuple.0, tuple.1) == clip_reference(tuple.0, tuple.1)"))
+        #expect(source.contains(
+            "{ (args: (String, Int)) in clip(args.0, args.1) == clip_reference(args.0, args.1) }"
+        ))
     }
 
     /// The note above a reference stub whose `R` is `returnTypeText`, for a one-`Int` subject.

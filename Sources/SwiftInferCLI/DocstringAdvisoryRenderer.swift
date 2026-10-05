@@ -36,6 +36,9 @@ enum DocstringAdvisoryRenderer {
                 for line in scaffold.split(separator: "\n", omittingEmptySubsequences: false) {
                     lines.append("    \(line)")
                 }
+            } else if let decline = item.oracleDecline {
+                // One line in place of a scaffold that could not compile, naming the obstacle.
+                lines.append("    ── no runnable reference oracle: \(decline)")
             }
         }
         return lines.joined(separator: "\n")

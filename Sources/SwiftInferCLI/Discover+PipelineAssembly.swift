@@ -117,6 +117,7 @@ extension SwiftInferCommand.Discover {
             visibleToTestableImportByName: visibleToTestableImportIndex(from: artifacts.typeDecls),
             testVisibleTypeNames: SendableShim.testVisibleTypeNames(from: artifacts.typeDecls),
             typeAliases: artifacts.typeAliases,
+            protocolNames: Set(artifacts.typeDecls.filter { $0.kind == .protocol }.map(\.qualifiedName)),
             sourceFileByTypeName: sourceFileIndex(from: artifacts.typeDecls),
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,

@@ -18,12 +18,19 @@ extension SwiftInferCommand.Discover {
         let signature: String
         let location: SourceLocation
         let advisory: DocstringAdvisory
-        /// B25 (issue #1) — for a single-parameter documented predicate, the
-        /// runnable reference-oracle scaffold: the `<name>_reference` stub plus
-        /// the predicate-vs-oracle property. `nil` for every other case. The
-        /// reader fills the one boolean the docstring dictates; the generator
-        /// then finds the input where the code disagrees with its documentation.
+        /// B25 (issue #1) — the runnable reference-oracle scaffold: the `<name>_reference` stub
+        /// plus the property checking the function against it, for a predicate, a comparator or
+        /// a fallback / complementary contract of any arity. The reader fills the one definition
+        /// the docstring dictates; the generator then finds the input where the code disagrees
+        /// with its documentation. `nil` when the advisory offers none, or when it cannot compile
+        /// and `oracleDecline` says why.
         let runnableScaffold: String?
+
+        /// Why no scaffold is printed although the advisory offers one — the call cannot be
+        /// spelled, the subject is `private`, nothing derives an argument, and so on — rendered
+        /// as `── no runnable reference oracle: <reason>`. At most one of this and
+        /// `runnableScaffold` is set.
+        var oracleDecline: String?
     }
 
     /// The two halves of the docstring advisory under `--seeds`. Together they list the functions
@@ -88,11 +95,14 @@ extension SwiftInferCommand.Discover {
     ///     unseeded subject, so a function answered from arm 2 would fall to arm 5 on the focused
     ///     list and vanish.
     ///   - seedManifest: the manifest, or `nil` for no focus.
+    ///   - oracleContext: the scan the reference oracle resolves generators and gates over;
+    ///     `.unscanned` resolves no project type, so such an oracle is declined.
     static func docstringAdvice(
         summaries: [FunctionSummary],
         suggestions: [Suggestion],
         unfocusedSuggestions: [Suggestion],
-        seedManifest: SeedManifest?
+        seedManifest: SeedManifest?,
+        oracleContext: ReferenceOracleContext = .unscanned
     ) -> DocstringAdvice {
         let seedKeys = docstringSeedKeys(seedManifest)
         let focused = suggestionsByFunction(suggestions)
@@ -105,12 +115,12 @@ extension SwiftInferCommand.Discover {
             guard !seen.contains(key), summary.docComment != nil else { continue }
             if seedKeys?.contains(key) ?? true {
                 guard let item = adviceItem(
-                    for: summary, suggestions: focused[key] ?? [], withScaffold: true
+                    for: summary, suggestions: focused[key] ?? [], oracleContext: oracleContext
                 ) else { continue }
                 advice.seeded.append(item)
             } else {
                 guard let item = adviceItem(
-                    for: summary, suggestions: unfocused[key] ?? [], withScaffold: false
+                    for: summary, suggestions: unfocused[key] ?? [], oracleContext: nil
                 ) else { continue }
                 advice.unseeded.append(item)
             }
@@ -150,95 +160,32 @@ extension SwiftInferCommand.Discover {
         return grouped
     }
 
-    /// The advice for one documented function, or `nil` when the advisor has none. The runnable
-    /// scaffold is attached only when `withScaffold` — the compact block prints none.
+    /// The advice for one documented function, or `nil` when the advisor has none. The reference
+    /// oracle is attached only with an `oracleContext` — the compact block prints none.
     private static func adviceItem(
         for summary: FunctionSummary,
         suggestions: [Suggestion],
-        withScaffold: Bool
+        oracleContext: ReferenceOracleContext?
     ) -> DocstringAdviceItem? {
         guard let advisory = DocstringAdvisor.advisory(
             forFunctionWith: summary.docComment,
             suggestions: suggestions
         ) else { return nil }
+        let oracle = oracleContext.flatMap { context in
+            referenceOracleOutcome(for: summary, advisory: advisory, suggestions: suggestions, context: context)
+        }
         return DocstringAdviceItem(
             displayName: displayName(for: summary),
             signature: signature(for: summary),
             location: summary.location,
             advisory: advisory,
-            runnableScaffold: withScaffold
-                ? referenceOracleScaffold(for: summary, advisory: advisory, suggestions: suggestions)
-                : nil
-        )
-    }
-
-    /// Templates whose reference-definition advisory carries a runnable
-    /// oracle stub: a `predicate` (the docstring IS the boolean law) and a
-    /// `comparator` (the docstring is the ordering KEY the strict-weak-ordering
-    /// law can't capture). Both are Bool-returning functions the emitter handles
-    /// uniformly — a comparator is just a two-argument predicate on ordering.
-    private static let oracleStubTemplates: Set<String> = ["predicate", "comparator"]
-
-    /// The runnable reference-oracle scaffold for a documented function, or `nil`
-    /// when it does not apply. Three shapes: a `predicate` / `comparator`
-    /// reference definition (return `Bool`), and the determinism-fallback
-    /// contract (the return is the value type, the reference a from-the-spec
-    /// re-implementation). Handles any arity — scalar draw for one parameter,
-    /// tuple for several.
-    private static func referenceOracleScaffold(
-        for summary: FunctionSummary,
-        advisory: DocstringAdvisory,
-        suggestions: [Suggestion]
-    ) -> String? {
-        guard !summary.parameters.isEmpty, let docComment = summary.docComment else {
-            return nil
-        }
-
-        let returnTypeText: String
-        let sourceSuggestion: Suggestion?
-        switch advisory {
-        case let .referenceDefinition(reference):
-            guard oracleStubTemplates.contains(reference.template), !reference.fromLiftedTest else {
-                return nil
-            }
-            returnTypeText = "Bool"
-            sourceSuggestion = suggestions.first { $0.templateName == reference.template }
-
-        case .fallbackContract, .complementaryContract:
-            // The docstring is the contract the templates could not name — either because
-            // nothing role-entailed fired at all, or because what fired is unreachable by
-            // realistic input and so checks something else. Both want the same scaffold: make
-            // the sentence runnable as a from-the-spec reference implementation, which needs a
-            // concrete, non-Void return to compare against.
-            guard let returned = summary.returnTypeText, returned != "Void", returned != "()" else {
-                return nil
-            }
-            returnTypeText = returned
-            // Any surviving pick (determinism / red herring) gives a stable seed
-            // and generator source; the fallback fired because none was owed.
-            sourceSuggestion = suggestions.first
-        }
-        guard let suggestion = sourceSuggestion else {
-            return nil
-        }
-
-        let arguments = summary.parameters.map { parameter in
-            LiftedTestEmitter.ReferenceOracleArgument(
-                parameter: parameter,
-                generator: InteractiveTriage.chooseGenerator(for: suggestion, typeName: parameter.typeText)
-            )
-        }
-        return LiftedTestEmitter.referenceOracle(
-            funcName: summary.name,
-            arguments: arguments,
-            returnTypeText: returnTypeText,
-            docComment: docComment,
-            seed: SamplingSeed.derive(from: suggestion.identity)
+            runnableScaffold: oracle?.scaffold,
+            oracleDecline: oracle?.decline
         )
     }
 
     /// `name(label:)` — the labelled display form, matching the evidence renderer.
-    private static func displayName(for summary: FunctionSummary) -> String {
+    static func displayName(for summary: FunctionSummary) -> String {
         let labels = summary.parameters.map { "\($0.label ?? "_"):" }.joined()
         return "\(summary.name)(\(labels))"
     }

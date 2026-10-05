@@ -130,8 +130,16 @@ struct DiscoverDocstringAdviceTests {
         // B25 (issue #1) — the runnable reference-oracle scaffold: a stub the
         // reader fills and the predicate-vs-oracle property the machine runs.
         #expect(recording.text.contains("runnable reference oracle"))
-        #expect(recording.text.contains("func isValidName_reference(_ name: String) -> Bool"))
-        #expect(recording.text.contains("isValidName(value) == isValidName_reference(value)"))
+        // `isValidName` is an instance method, so its reference is declared on `Files` and the
+        // property draws a `Files` receiver — stateless, so it derives as `Gen.always(Files())`.
+        #expect(recording.text.contains("""
+                extension Files {
+                    func isValidName_reference(_ name: String) -> Bool {
+            """))
+        #expect(recording.text.contains(
+            "{ (args: (Files, String)) in args.0.isValidName(args.1) == args.0.isValidName_reference(args.1) }"
+        ))
+        #expect(recording.text.contains("let arg0 = (Gen.always(Files())).run(using: &rng)"))
     }
 
     @Test("a function the templates can only tautologize gets its docstring as the fallback contract")
@@ -180,7 +188,7 @@ struct DiscoverDocstringAdviceTests {
         // The ordering-key oracle stub + the comparator-vs-oracle property (two operands).
         #expect(recording.text.contains("func precedes_reference(_ lhs: Entry, _ rhs: Entry) -> Bool"))
         #expect(recording.text.contains(
-            "precedes(tuple.0, tuple.1) == precedes_reference(tuple.0, tuple.1)"
+            "{ (args: (Entry, Entry)) in precedes(args.0, args.1) == precedes_reference(args.0, args.1) }"
         ))
     }
 
@@ -217,7 +225,9 @@ struct DiscoverDocstringAdviceTests {
         #expect(recording.text.contains(
             "func clip_reference(_ text: String, _ budget: Int) -> (text: String, didTruncate: Bool)"
         ))
-        #expect(recording.text.contains("clip(tuple.0, tuple.1) == clip_reference(tuple.0, tuple.1)"))
+        #expect(recording.text.contains(
+            "{ (args: (String, Int)) in clip(args.0, args.1) == clip_reference(args.0, args.1) }"
+        ))
         #expect(recording.text.contains("every element of the returned tuple must be Equatable"))
         #expect(recording.text.contains("(text: String, didTruncate: Bool) must be Equatable") == false)
         #expect(recording.text.contains("// (the return type Int must be Equatable for this to compile)"))
