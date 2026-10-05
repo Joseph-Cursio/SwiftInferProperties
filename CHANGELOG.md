@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.159.0] — 2026-10-05
+
+The reference-oracle scaffold that docstring advice prints is now built the way accept builds a determinism stub. Where it meets a shape known not to compile, it prints the reason instead. On SwiftAssist, 66 of 67 printed scaffolds compile, against 0 of 88 before. Accept stops writing six determinism stub shapes that never compiled. PRs #623, #624, #625.
+
+### Changed
+
+- **The reference-oracle scaffold calls the subject the way accept does.** Before, it called the subject by its bare name, drew generators without the project-type resolver, and sampled every argument in one tuple expression. So a static member had no qualifier, a method had no receiver, and the sample could time out the type checker. Now the call is qualified (`Owner.member(…)`), and an instance member is called on a drawn receiver. `try?` and `await` are added where the subject needs them. An actor instance member is awaited, and a synchronous global-actor one is hopped to; an async one is awaited, never hopped. Arguments come from accept's project-type resolver, so `[Item]` and a memberwise receiver derive. When there are two or more, each is drawn by its own `let`. A suggestion's mock now answers only for its own type. SwiftSyntax node types are not drawn here, though accept draws them from the package's test snippets; they decline.
+- **A member's reference is declared in an extension of its type.** `<name>_reference` goes in `extension <Owner>`. It is `static` unless the subject is an instance member, and `nonisolated` when the subject is. Its parameter and result types are qualified against the scan (`NS.Inner`, `Account.ID`). A member operator's reference is a named static (`Money.plus_reference`). A member's test is named `<Owner>_<name>_matchesReferenceDefinition`, with each run of characters an identifier cannot hold folded to one `_` (`[Bead]` → `Bead`, `Dictionary<String, Int>` → `Dictionary_String_Int`). Its failure message names the member as `Owner.name(_:)`.
+- **A floating-point result is compared approximately, and a throwing subject through `try?`.** For a non-throwing subject returning `Double`, `Float`, `CGFloat` or another floating-point type, the scaffold compares through `approximatelyEqual` and appends the helper. A throwing subject compares `try?` on both sides with `==`, so throwing on the same input counts as agreeing, whatever the error; a comment in the scaffold says so. When the check needs a project type to be `Sendable`, the scaffold adds an `extension T: @unchecked Sendable {}` line, under a comment to declare it once per test target.
+- **Where the scaffold meets a shape known not to compile, the item prints `── no runnable reference oracle: <reason>` instead.** The reasons:
+  - a subject a test file cannot reach (`private`, `fileprivate`, or a member of a private type), with the remedy named;
+  - an initializer, or a generic subject;
+  - a tuple result with no `==`, or a `mutating` subject;
+  - an `inout` or closure parameter;
+  - nothing to compare, or a function-typed result;
+  - a type a test file cannot name;
+  - an opaque or existential result, or a scanned result type that nothing makes Equatable;
+  - a static member of a protocol extension, or of a constrained extension of a generic standard-library type;
+  - an argument no generator derives. This line names the type where the draw stops (`Item` in `[Item]`) and the resolver's reason. It offers `static func gen()` only for a type the scan shaped, and otherwise says to write the check by hand.
+- **A printed scaffold is meant to compile once pasted into a test file** that `@testable import`s the module and imports Foundation, Testing, PropertyBased and PropertyLawKit, plus any module the subject's file imports for a type in its signature, with its one `fatalError` line replaced. Pasting several scaffolds into one file can declare the helper or a `Sendable` shim twice. `docs/user/reference.md` lists the declines and the known exceptions.
+- Unchanged: items that printed no scaffold; the compact block of documented contracts outside the seed focus; and any scaffold none of the above touches. A test freezes `isValidQuantity(_: Double) -> Bool`, a visible, synchronous, non-throwing one-parameter free function, whose scaffold prints byte-identical text.
+
+### Fixed
+
+- **Accept stops writing six determinism stub shapes that never compiled.** Each one was type-checked with swiftc before and after.
+  - A non-throwing floating-point result's stub called `approximatelyEqual` without declaring it. The helper is now appended.
+  - A `Self` parameter (`static func merge(_: Self, _: Self) -> Self`) drew `Self.gen()`, which inside the test suite named the suite. `Self` is now spelled as the declaring type, and the resolver draws it.
+  - A scanned `inout` parameter was passed a drawn `let`, because the check read an `inout ` prefix that the scanner strips. It now reads the parameter evidence and declines.
+  - A closure parameter, alone or last, produced a generator for `(Int`. Followed by another parameter, it read as a label-count mismatch. Both now decline and name the closure.
+  - A function-typed result was compared with `==`. It now declines.
+  - A result that is a scanned type nothing makes Equatable was compared with `==`. It now declines. The check reads only the types `==` compares, so `KeyPath<Row, String>` and a phantom-tagged `Tagged<User, Int>` pass. It follows a conformance chain under qualified and bare names. A hand-written `==`, or an attribute that may be a macro (`@Model`), counts as supplying one. An unscanned type is never declined.
+- **Accept and its decline table plan the determinism call in one place**, so they can no longer disagree. The `inout` check above is the drift this ends. Three decline notes now read differently: a throwing tuple ("the law would compare"), a `mutating` method ("cannot be called on a drawn receiver"), and a closure parameter, now named as one.
+
+### Read before quoting a number
+
+- **SwiftAssist @a89e6e46.** Before, none of the printed scaffolds compiled: 0 of 88 in a run with a seed manifest (SwiftProjectLint 1.0.0, 707 seeds) and 0 of 48 in a run without one. Now 66 of 67 and 33 of 33 compile, and 21 and 15 items decline with a reason.
+- **swift-format @b15dd59f.** Before, 0 of 35 and 0 of 43 compiled. Now one scaffold prints in each run and fails, because swift-format builds in Swift 5 language mode, where `Gen.oneOf` and `Gen.frequency` are unavailable.
+- **Rows moved; none were added.** In all four runs, printed plus declined equals the before count, and discover's output outside the scaffold blocks is byte-identical. The counts are per run, so never add the seeded and unseeded figures. A compiled scaffold still holds a `fatalError` the reader replaces, and nothing here ran a law.
+- **Where the census lives.** The write-up is `docs/measurements/reference-oracle-scaffold-census.md`. The harness is `scripts/reference_oracle_scaffold_census.py`: pass `--resolved` with the pinned Package.resolved files to reproduce, and note that each run registers worktrees in the subject repositories. `scripts/reference_oracle_scaffold_rows.py` writes the per-item table. The pinned inputs are in `fixtures/reference-oracle-scaffold-census/`.
+- **A printed scaffold still fails in three documented cases, as accept's determinism stub does:**
+  - a Swift 5 language-mode package;
+  - a receiver of a global-actor-isolated type built through its isolated initializer, or any `.defaultIsolation(MainActor)` target;
+  - a parameter whose bare type name the generator resolver matches to a different scanned type. That is `WorkspaceIndexer.encodeSnapshot(_:)` on SwiftAssist, where SwiftSourceKitClient's `Symbol` is spelled as the scanned `XcodeDocument.Symbol` (Joseph-Cursio/SwiftPropertyLaws#63).
+- **Untested by the census.** No printed scaffold in it awaits an actor member, hops to `MainActor` or calls an operator. Those shapes rest on the compiled witnesses in the test target.
+- **Accept's written stubs changed only where the old stub failed swiftc, with one exception.** The Equatable check can withdraw a stub that would compile, because it cannot see two sources of `==`. One is an `extension T: Equatable {}` written in the test target, since only the scanned target is indexed. The other is a free `==` that names the type only through a generic parameter or an Optional.
+- **Accept still writes failing determinism stubs** for an existential result, for a static member of a protocol extension (only the scaffold declines these two), and for a typealiased throwing tuple (as in 1.158.0).
+- **Toolchain.** Verified on Xcode 27 / Swift 6.4 (swiftlang-6.4.0.34.1). The swift.org 6.3.3 toolchain the Makefile prefers was not installed on the machine that ran it.
+
 ## [1.158.0] — 2026-10-04
 
 Under `--seeds`, docstring advice lists the documented contracts it used to hide, and accept no longer writes a determinism stub over a tuple result Swift has no `==` for. PRs #620, #621.
