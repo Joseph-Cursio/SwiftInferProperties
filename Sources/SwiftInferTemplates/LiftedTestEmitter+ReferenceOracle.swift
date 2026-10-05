@@ -22,11 +22,13 @@ import SwiftInferCore
 /// ## Where the reference lives
 ///
 /// A free function's reference is a free function, exactly as before. A member's is declared in
-/// `extension <Owner> { … }`, where `Self`, the owner's nested types and its isolation all
+/// `extension <Owner> { … }`, where `Self`, the owner's own nested types and its isolation all
 /// resolve as they do for the subject — a file-scope `-> Self?` was *global function cannot
-/// return 'Self'*. The reference copies `static` and `nonisolated` from the subject: a
-/// `nonisolated` actor member compared with an isolated reference fails with *actor-isolated
-/// instance method cannot be called from outside of the actor*.
+/// return 'Self'*. A type nested in an enclosing type of the owner does NOT resolve there, so
+/// the caller passes `ReferenceOracleSubject.parameters` and `returnTypeText` already qualified.
+/// The reference copies `static` and `nonisolated` from the subject: a `nonisolated` actor member
+/// compared with an isolated reference fails with *actor-isolated instance method cannot be
+/// called from outside of the actor*.
 extension LiftedTestEmitter {
 
     /// The function a reference oracle checks, spelled as accept spells it.
@@ -38,10 +40,12 @@ extension LiftedTestEmitter {
         /// The declaring type's qualified name, or `nil` for a free function.
         public let owner: String?
 
-        /// The declared parameters, receiver excluded, as the reference declaration repeats them.
+        /// The declared parameters, receiver excluded, as the reference declaration repeats them —
+        /// each type spelled so it resolves inside `extension <Owner>`, which sees the owner's own
+        /// nested names and file-scope ones, not those of the owner's enclosing types.
         public let parameters: [Parameter]
 
-        /// The declared result, effects stripped.
+        /// The declared result, effects stripped, spelled for `extension <Owner>` the same way.
         public let returnTypeText: String
 
         public let isAsync: Bool
@@ -85,10 +89,17 @@ extension LiftedTestEmitter {
 
         /// `<id>_matchesReferenceDefinition`, prefixed with the owner for a member: SwiftAssist
         /// alone prints three `resolve` scaffolds, on three types.
+        ///
+        /// The owner is written as an identifier fragment, each run of characters an identifier
+        /// cannot hold becoming one `_` with none leading or trailing: `NS.Outer` → `NS_Outer`,
+        /// `[Bead]` → `Bead`, `Dictionary<String, Int>` → `Dictionary_String_Int`. Replacing `.`
+        /// alone printed `@Test func [Bead]_totalWeight_…()` for a member of `extension [Bead]`,
+        /// which does not parse.
         var testFunctionName: String {
             let name = "\(callee.identifierName)_matchesReferenceDefinition"
             guard let owner else { return name }
-            return "\(owner.replacingOccurrences(of: ".", with: "_"))_\(name)"
+            let fragment = owner.split { !($0.isLetter || $0.isNumber || $0 == "_") }.joined(separator: "_")
+            return "\(fragment)_\(name)"
         }
 
         /// The subject as a reader greps for it — qualified with its owner, receiver or not.

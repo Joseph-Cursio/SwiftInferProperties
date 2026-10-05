@@ -69,8 +69,9 @@ struct SubjectCallPlan: Equatable {
 
     /// The plan for `evidence`, or the first reason it cannot be called.
     ///
-    /// - Parameter typeUniverse: the scanned types' qualified names, against which a parameter's
-    ///   nested spelling is qualified (`Inner` inside `Outer` is `Outer.Inner` in a test file).
+    /// - Parameter typeUniverse: the qualified names against which a parameter's nested spelling
+    ///   is qualified (`Inner` inside `Outer` is `Outer.Inner` in a test file) — the scanned
+    ///   types, and for the reference oracle the aliases nested in them too (`Account.ID`).
     ///   Empty leaves every spelling as written, which is what accept passes today.
     static func outcome(for evidence: Evidence, typeUniverse: Set<String> = []) -> Outcome {
         if let reason = InteractiveTriage.determinismResultDeclineReason(for: evidence) {

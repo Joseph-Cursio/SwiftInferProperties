@@ -35,6 +35,35 @@ final class OracleDiscoverTally {
     func adding(_ amount: Int) -> Int { total &+ amount }
 }
 
+enum OracleDiscoverLibrary {
+    struct Book: Equatable {
+        let pages: Int
+    }
+
+    enum Shelf {
+        /// Returns the book with its page count doubled, wrapping on overflow.
+        static func thickened(_ book: Book) -> Book { Book(pages: book.pages &* 2) }
+    }
+}
+
+struct OracleDiscoverAccount {
+    typealias OwnerID = Int
+
+    let owner: Int
+
+    /// Returns whether the id owns the account, exactly when the two match.
+    func isOwned(by id: OwnerID) -> Bool { owner == id }
+}
+
+struct OracleDiscoverBead {
+    let weight: Int
+}
+
+extension [OracleDiscoverBead] {
+    /// Returns the total weight plus the bonus, wrapping on overflow.
+    func totalWeight(plus bonus: Int) -> Int { reduce(bonus) { $0 &+ $1.weight } }
+}
+
 // WITNESS-BEGIN — printed text, verbatim; the rules below are the ones it trips.
 // swiftlint:disable closure_end_indentation identifier_name line_length
 // Fill in the reference definition below — your docstring already states it:
@@ -45,7 +74,7 @@ final class OracleDiscoverTally {
 // Inputs must be Sendable. Declare each of these once per test target, and delete it if SwiftInferSendableShims.swift or another scaffold already does:
 extension OracleDiscoverInbox.Message: @unchecked Sendable {}
 extension OracleDiscoverInbox {
-    static func largest_reference(in messages: [Message]) -> Int? {
+    static func largest_reference(in messages: [OracleDiscoverInbox.Message]) -> Int? {
         messages.map(\.size).max()
     }
 }
@@ -143,6 +172,115 @@ extension OracleDiscoverTally {
     if case let .failed(_, _, input, error) = result {
         Issue.record(
             "OracleDiscoverTally.adding(_:) disagrees with its documented reference definition at input \(input). \(error?.message ?? "")"
+        )
+    }
+}
+
+// Fill in the reference definition below — your docstring already states it:
+//   "Returns the book with its page count doubled, wrapping on overflow."
+// Then run the test: the generator finds the input where the code disagrees
+// with its own documentation.
+// (the return type OracleDiscoverLibrary.Book must be Equatable for this to compile)
+// Inputs must be Sendable. Declare each of these once per test target, and delete it if SwiftInferSendableShims.swift or another scaffold already does:
+extension OracleDiscoverLibrary.Book: @unchecked Sendable {}
+extension OracleDiscoverLibrary.Shelf {
+    static func thickened_reference(_ book: OracleDiscoverLibrary.Book) -> OracleDiscoverLibrary.Book {
+        OracleDiscoverLibrary.Book(pages: book.pages &* 2)
+    }
+}
+
+@Test func OracleDiscoverLibrary_Shelf_thickened_matchesReferenceDefinition() async {
+    let backend = SwiftPropertyBasedBackend()
+    let seed = Seed(
+        stateA: 0x0173A8192105121D,
+        stateB: 0xE60F5D2A77DB7D01,
+        stateC: 0xBF5947150161D9DC,
+        stateD: 0xC574236278A5865B
+    )
+    let result = await backend.check(
+        trials: 100,
+        seed: seed,
+        sample: { rng in (Gen<Int>.int().map { OracleDiscoverLibrary.Book(pages: $0) }).run(using: &rng) },
+        property: { value in OracleDiscoverLibrary.Shelf.thickened(value) == OracleDiscoverLibrary.Shelf.thickened_reference(value) }
+    )
+    if case let .failed(_, _, input, error) = result {
+        Issue.record(
+            "OracleDiscoverLibrary.Shelf.thickened(_:) disagrees with its documented reference definition at input \(input). \(error?.message ?? "")"
+        )
+    }
+}
+
+// Fill in the reference definition below — your docstring already states it:
+//   "Returns whether the id owns the account, exactly when the two match."
+// Then run the test: the generator finds the input where the code disagrees
+// with its own documentation.
+// Inputs must be Sendable. Declare each of these once per test target, and delete it if SwiftInferSendableShims.swift or another scaffold already does:
+extension OracleDiscoverAccount: @unchecked Sendable {}
+extension OracleDiscoverAccount {
+    func isOwned_reference(by id: OracleDiscoverAccount.OwnerID) -> Bool {
+        id == owner
+    }
+}
+
+@Test func OracleDiscoverAccount_isOwned_matchesReferenceDefinition() async {
+    let backend = SwiftPropertyBasedBackend()
+    let seed = Seed(
+        stateA: 0xDD899EE9AD5520A1,
+        stateB: 0x80BA439A1E8FA619,
+        stateC: 0x99530609D1ABC64C,
+        stateD: 0x531EF36F765E1C03
+    )
+    let result = await backend.check(
+        trials: 100,
+        seed: seed,
+        sample: { rng in
+                    let arg0 = (Gen<Int>.int().map { OracleDiscoverAccount(owner: $0) }).run(using: &rng)
+                    let arg1 = (Gen<Int>.int()).run(using: &rng)
+                    return (arg0, arg1)
+                },
+        property: { (args: (OracleDiscoverAccount, OracleDiscoverAccount.OwnerID)) in args.0.isOwned(by: args.1) == args.0.isOwned_reference(by: args.1) }
+    )
+    if case let .failed(_, _, input, error) = result {
+        Issue.record(
+            "OracleDiscoverAccount.isOwned(by:) disagrees with its documented reference definition at input \(input). \(error?.message ?? "")"
+        )
+    }
+}
+
+// Fill in the reference definition below — your docstring already states it:
+//   "Returns the total weight plus the bonus, wrapping on overflow."
+// Then run the test: the generator finds the input where the code disagrees
+// with its own documentation.
+// (the return type Int must be Equatable for this to compile)
+// Inputs must be Sendable. Declare each of these once per test target, and delete it if SwiftInferSendableShims.swift or another scaffold already does:
+extension OracleDiscoverBead: @unchecked Sendable {}
+extension [OracleDiscoverBead] {
+    func totalWeight_reference(plus bonus: Int) -> Int {
+        map(\.weight).reduce(bonus, &+)
+    }
+}
+
+@Test func OracleDiscoverBead_totalWeight_matchesReferenceDefinition() async {
+    let backend = SwiftPropertyBasedBackend()
+    let seed = Seed(
+        stateA: 0xABC7634FA75748CB,
+        stateB: 0xA9BA628FAD929CBB,
+        stateC: 0x199DAAF8495AEA37,
+        stateD: 0x942FD316EBAA6B56
+    )
+    let result = await backend.check(
+        trials: 100,
+        seed: seed,
+        sample: { rng in
+                    let arg0 = (Gen<Int>.int().map { OracleDiscoverBead(weight: $0) }.array(of: 0...8)).run(using: &rng)
+                    let arg1 = (Gen.frequency((3.0, Gen<Int>.boundedForArithmetic()), (2.0, Gen<Int?>.element(of: [0, -1, 1] as [Int]).map { $0! }))).run(using: &rng)
+                    return (arg0, arg1)
+                },
+        property: { (args: ([OracleDiscoverBead], Int)) in args.0.totalWeight(plus: args.1) == args.0.totalWeight_reference(plus: args.1) }
+    )
+    if case let .failed(_, _, input, error) = result {
+        Issue.record(
+            "[OracleDiscoverBead].totalWeight(plus:) disagrees with its documented reference definition at input \(input). \(error?.message ?? "")"
         )
     }
 }

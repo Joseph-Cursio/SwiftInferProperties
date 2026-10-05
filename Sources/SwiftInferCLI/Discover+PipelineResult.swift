@@ -110,6 +110,12 @@ extension SwiftInferCommand.Discover {
         /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
         public let typeAliases: [String: String]
 
+        /// Qualified names of the scanned protocols. `typeShapesByName` holds none — a protocol is
+        /// not a generator target — so this is the only way to tell `-> Shape` (an existential no
+        /// `==` compares) and a static member of `extension Shape` (which no call can name on the
+        /// protocol itself) from a concrete type the scan merely did not shape.
+        public let protocolNames: Set<String>
+
         /// The file each type is **declared** in, keyed by bare type name.
         ///
         /// Third sidecar map, and here for the same reason as the two above: `TypeShape` belongs
@@ -175,6 +181,7 @@ extension SwiftInferCommand.Discover {
             visibleToTestableImportByName: [String: Bool] = [:],
             testVisibleTypeNames: Set<String> = [],
             typeAliases: [String: String] = [:],
+            protocolNames: Set<String> = [],
             sourceFileByTypeName: [String: String] = [:],
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
@@ -202,6 +209,7 @@ extension SwiftInferCommand.Discover {
             self.visibleToTestableImportByName = visibleToTestableImportByName
             self.testVisibleTypeNames = testVisibleTypeNames
             self.typeAliases = typeAliases
+            self.protocolNames = protocolNames
             self.sourceFileByTypeName = sourceFileByTypeName
             self.mockGeneratorsByType = mockGeneratorsByType
             self.summaries = summaries

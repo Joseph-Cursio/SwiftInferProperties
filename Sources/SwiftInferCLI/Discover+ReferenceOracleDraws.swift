@@ -109,6 +109,12 @@ extension SwiftInferCommand.Discover {
     /// The decline for an argument nothing derives for, naming the type the draw stops at: a
     /// scanned type inside the spelling that does not derive on its own (`Item` in `[Item]`), or
     /// the spelling itself.
+    ///
+    /// The remedy is `static func gen()` only where there is a declaration to put it on: a type
+    /// the scan shaped (or any type, with no scan to say otherwise). A foreign type
+    /// (`Range<Int>`), a structural one (`[(version: String, remediation: String?)]`), an
+    /// existential or a bare generic owner (`Array`) has none in the scanned sources, so the
+    /// reader is told to write that check by hand instead.
     private static func generatorDecline(
         typeName: String,
         role: String,
@@ -122,9 +128,12 @@ extension SwiftInferCommand.Discover {
         }
         let blocked = inner ?? typeName
         let because = context.failureReason?(blocked).map { " (\($0))" } ?? ""
+        let remedy = context.typeUniverse.contains(blocked) || context.hasScan == false
+            ? "supply `static func gen()` on `\(blocked)`, then re-run discover"
+            : "`\(blocked)` is not a concrete type the scanned sources declare, so there is no declaration to "
+                + "give a `static func gen()`; write this check by hand"
         return ReferenceOracleDecline(
-            reason: "no generator derives for `\(blocked)`\(because), so the oracle cannot draw \(role) — supply "
-                + "`static func gen()` on `\(blocked)`, then re-run discover"
+            reason: "no generator derives for `\(blocked)`\(because), so the oracle cannot draw \(role) — \(remedy)"
         )
     }
 
