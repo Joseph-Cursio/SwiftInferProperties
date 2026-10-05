@@ -54,18 +54,21 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,465 tests — 6,241 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-09-30** at `5dd4e88f` on **swift-property-based
-2.0 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`** — every stage counted from that one run, and the
-run was UNPIPED (`make test > log 2>&1`, exit **0**):
-fast **6,241** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 224, every batch to the digit**, across evaluating `#if` before scanning
-(279 discovery rows withdrawn) and moving the helper hop into the scan — ⚠ **but the corpus-surveying
-batches assert floors (`> 1_000` rows), so 224 green is not an A/B; the row dumps in `fixtures/` are.**
-**The fast half moved 6,236 → 6,241, +5** (`InactiveClausesTests`, the only suite added since the
-previous reading).
-**Timings**: `batch3` 396s; `batch2` 627s; `batch5` 1,173s; `batch1` 211s, `batch4` 191s, `batch6` 157s,
-`batch7` 204s, `batch8` 468s.
+Suites green at **6,671 tests — 6,447 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-10-05** at `186bb8b8` (the 1.159.0 release branch)
+on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`**, Xcode 27 / Swift 6.4 —
+every stage counted from that one run, and the run was UNPIPED (`make test > log 2>&1`, exit **0**):
+fast **6,447** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across everything merged since
+`5dd4e88f`: tuple determinism declines, docstring advice outside the seed focus, and the
+reference-oracle scaffold rebuilt on accept's call plan — ⚠ **but the corpus-surveying batches assert
+floors (`> 1_000` rows), so 224 green is not an A/B; the row dumps in `fixtures/` are.**
+**The fast half moved 6,241 → 6,447, +206**: +60 up to 1.158.0, then +75 (#623, the shared
+determinism call plan) and +71 (#624, the reference-oracle scaffold); #625 is docs, scripts and
+fixtures.
+**Timings** (an M5 Pro; batch boundaries read off the log every 5 s): `batch3` 112s; `batch2` 342s;
+`batch5` 695s; `batch1` 106s, `batch4` 86s, `batch6` 50s, `batch7` 81s, `batch8` 287s; fast suite 84s,
+whole run 1,865s.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands

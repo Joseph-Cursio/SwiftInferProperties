@@ -51,6 +51,7 @@ The reference-oracle scaffold that docstring advice prints is now built the way 
 - **Accept's written stubs changed only where the old stub failed swiftc, with one exception.** The Equatable check can withdraw a stub that would compile, because it cannot see two sources of `==`. One is an `extension T: Equatable {}` written in the test target, since only the scanned target is indexed. The other is a free `==` that names the type only through a generic parameter or an Optional.
 - **Accept still writes failing determinism stubs** for an existential result, for a static member of a protocol extension (only the scaffold declines these two), and for a typealiased throwing tuple (as in 1.158.0).
 - **Toolchain.** Verified on Xcode 27 / Swift 6.4 (swiftlang-6.4.0.34.1). The swift.org 6.3.3 toolchain the Makefile prefers was not installed on the machine that ran it.
+- Suites at release: 6,671 = 6,447 fast + 224 in perf and the eight subprocess batches, from a full `make test`, green in one unpiped run at 186bb8b8. The commit after it only records this reading.
 
 ## [1.158.0] — 2026-10-04
 
