@@ -1,0 +1,967 @@
+{
+  "seeds" : [
+    {
+      "file" : "Package.swift",
+      "kind" : "extractable-kernel",
+      "line" : 127,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "compactMap"
+    },
+    {
+      "file" : "Package.swift",
+      "kind" : "extractable-kernel",
+      "line" : 131,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "filter"
+    },
+    {
+      "file" : "Package.swift",
+      "kind" : "pure-function",
+      "line" : 164,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasEnvironmentVariable"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Configuration.swift",
+      "kind" : "pure-function",
+      "line" : 262,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isNever"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Configuration.swift",
+      "kind" : "pure-function",
+      "line" : 266,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isAlways"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Configuration.swift",
+      "kind" : "restricted-function",
+      "line" : 288,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "toMultilineStringReflowBehavior"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Indent.swift",
+      "kind" : "pure-function",
+      "line" : 73,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "count"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Selection.swift",
+      "kind" : "extractable-kernel",
+      "line" : 52,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "resolved"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Selection.swift",
+      "kind" : "extractable-kernel",
+      "line" : 71,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "contains"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Selection.swift",
+      "kind" : "extractable-kernel",
+      "line" : 82,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "overlapsOrTouches"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/Selection.swift",
+      "kind" : "extractable-kernel",
+      "line" : 96,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isInsideSelection"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/API\/SwiftFormatError.swift",
+      "kind" : "pure-function",
+      "line" : 37,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/Attributes+Convenience.swift",
+      "kind" : "extractable-kernel",
+      "line" : 23,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "hasAttribute"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/DocumentationCommentText.swift",
+      "kind" : "restricted-function",
+      "line" : 157,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "indentationDistance"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/DocumentationCommentText.swift",
+      "kind" : "restricted-function",
+      "line" : 166,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "contiguousWhitespace"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/DocumentationCommentText.swift",
+      "kind" : "restricted-function",
+      "line" : 185,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "asciiArtLength"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/LazySplitSequence.swift",
+      "kind" : "pure-function",
+      "line" : 25,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "underestimatedCount"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/ModifierListSyntax+Convenience.swift",
+      "kind" : "pure-function",
+      "line" : 31,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "contains"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/RuleBasedFindingCategory.swift",
+      "kind" : "pure-function",
+      "line" : 23,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/RuleMask.swift",
+      "kind" : "extractable-kernel",
+      "line" : 81,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "ruleState"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/RuleMask.swift",
+      "kind" : "extractable-kernel",
+      "line" : 85,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "ruleState"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/RuleMask.swift",
+      "kind" : "pure-function",
+      "line" : 107,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/RuleMask.swift",
+      "kind" : "extractable-kernel",
+      "line" : 245,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "ruleStatusDirectiveMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/RuleMask.swift",
+      "kind" : "restricted-function",
+      "line" : 256,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "loneLineComments"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/Trivia+Convenience.swift",
+      "kind" : "extractable-kernel",
+      "line" : 29,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "hasLineComment"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Core\/Trivia+Convenience.swift",
+      "kind" : "restricted-function",
+      "line" : 42,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isWhitespace"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Comment.swift",
+      "kind" : "pure-function",
+      "line" : 53,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "prefixLength"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Comment.swift",
+      "kind" : "pure-function",
+      "line" : 62,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "prefix"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Comment.swift",
+      "kind" : "extractable-kernel",
+      "line" : 119,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "print"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Comment.swift",
+      "kind" : "extractable-kernel",
+      "line" : 125,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "print"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Indent+Length.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "character"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Indent+Length.swift",
+      "kind" : "pure-function",
+      "line" : 25,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "length"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/PrettyPrint.swift",
+      "kind" : "restricted-function",
+      "line" : 67,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "configuration"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/PrettyPrint.swift",
+      "kind" : "extractable-kernel",
+      "line" : 157,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "currentIndentation"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/PrettyPrint.swift",
+      "kind" : "restricted-function",
+      "line" : 747,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "shouldHandleCommaDelimitedRegion"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/PrettyPrintFindingCategory.swift",
+      "kind" : "pure-function",
+      "line" : 21,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 2066,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isLastKeyPathComponent"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3204,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "areBracesCompletelyEmpty"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3225,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "areBracesCompletelyEmpty"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3246,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "areBracesCompletelyEmpty"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3452,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "argumentListConsistency"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3458,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "genericRequirementListConsistency"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3709,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isBreakMoreRecentThanNonbreakingContent"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3776,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "breakAllowsCommentMerge"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3840,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "startsWithOpenDelimiter"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3899,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "shouldInsertNewline"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 3963,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isAssigningOperator"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 4208,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "shouldRequireWhitespace"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 4409,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isNestedInPostfixIfConfig"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 4571,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isFormatterIgnorePresent"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 4604,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "shouldFormatterIgnore"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 4615,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "shouldFormatterIgnore"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/TokenStreamCreator.swift",
+      "kind" : "restricted-function",
+      "line" : 4626,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isFormatterIgnored"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Verbatim.swift",
+      "kind" : "pure-function",
+      "line" : 83,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "prettyPrintingLength"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Verbatim.swift",
+      "kind" : "pure-function",
+      "line" : 93,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "print"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/Verbatim.swift",
+      "kind" : "restricted-function",
+      "line" : 117,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "numberOfLeadingSpaces"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/WhitespaceFindingCategory.swift",
+      "kind" : "pure-function",
+      "line" : 36,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/WhitespaceLinter.swift",
+      "kind" : "extractable-kernel",
+      "line" : 125,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "compareWhitespace"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/WhitespaceLinter.swift",
+      "kind" : "restricted-function",
+      "line" : 423,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "diagnosticDescription"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/PrettyPrint\/WhitespaceLinter.swift",
+      "kind" : "restricted-function",
+      "line" : 438,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "diagnosticDescription"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/AlwaysUseLowerCamelCase.swift",
+      "kind" : "restricted-function",
+      "line" : 203,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "identifierDescription"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/DoNotUseSemicolons.swift",
+      "kind" : "restricted-function",
+      "line" : 110,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isCodeBlockItem"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/FileScopedDeclarationPrivacy.swift",
+      "kind" : "extractable-kernel",
+      "line" : 145,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "rewrittenDecl"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/FullyIndirectEnum.swift",
+      "kind" : "extractable-kernel",
+      "line" : 49,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "visit"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/GroupNumericLiterals.swift",
+      "kind" : "restricted-function",
+      "line" : 71,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "digits"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/NoCasesWithOnlyFallthrough.swift",
+      "kind" : "restricted-function",
+      "line" : 91,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "canMergeWithPreviousCases"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/NoCasesWithOnlyFallthrough.swift",
+      "kind" : "restricted-function",
+      "line" : 96,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "containsValueBindingPattern"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/NoCasesWithOnlyFallthrough.swift",
+      "kind" : "restricted-function",
+      "line" : 106,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "containsValueBindingPattern"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/NoCasesWithOnlyFallthrough.swift",
+      "kind" : "restricted-function",
+      "line" : 122,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isMergeableFallthroughOnly"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/NoPlaygroundLiterals.swift",
+      "kind" : "restricted-function",
+      "line" : 59,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isLiteralMacroCall"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OmitExplicitReturns.swift",
+      "kind" : "extractable-kernel",
+      "line" : 91,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "transformAccessorBlock"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OneCasePerLine.swift",
+      "kind" : "extractable-kernel",
+      "line" : 133,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "visit"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OneVariableDeclarationPerLine.swift",
+      "kind" : "restricted-function",
+      "line" : 65,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "codeBlockItemHasMultipleVariableBindings"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OnlyOneTrailingClosureArgument.swift",
+      "kind" : "extractable-kernel",
+      "line" : 23,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "visit"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "extractable-kernel",
+      "line" : 158,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "orderImports"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "extractable-kernel",
+      "line" : 356,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "formatImports"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "restricted-function",
+      "line" : 397,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "leadingNewlineCount"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "pure-function",
+      "line" : 536,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "extractable-kernel",
+      "line" : 603,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "type"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "restricted-function",
+      "line" : 621,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "fullyQualifiedImport"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "restricted-function",
+      "line" : 638,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parsedImportPath"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "restricted-function",
+      "line" : 662,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "importType"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "extractable-kernel",
+      "line" : 737,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "map"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "restricted-function",
+      "line" : 746,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "<"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "restricted-function",
+      "line" : 750,
+      "restriction" : "enclosing-type",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "=="
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/OrderedImports.swift",
+      "kind" : "restricted-function",
+      "line" : 754,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/ReturnVoidInsteadOfEmptyTuple.swift",
+      "kind" : "restricted-function",
+      "line" : 98,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasNonWhitespaceTrivia"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseEarlyExits.swift",
+      "kind" : "restricted-function",
+      "line" : 94,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "codeBlockEndsWithEarlyExit"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseExplicitNilCheckInConditions.swift",
+      "kind" : "restricted-function",
+      "line" : 72,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isDiscardedAssignmentPattern"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseSynthesizedInitializer.swift",
+      "kind" : "extractable-kernel",
+      "line" : 73,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "visit"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseSynthesizedInitializer.swift",
+      "kind" : "restricted-function",
+      "line" : 108,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "matchesPropertyList"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseSynthesizedInitializer.swift",
+      "kind" : "restricted-function",
+      "line" : 144,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "matchesAssignmentBody"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseSynthesizedInitializer.swift",
+      "kind" : "restricted-function",
+      "line" : 217,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "synthesizedInitAccessLevel"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseSynthesizedInitializer.swift",
+      "kind" : "extractable-kernel",
+      "line" : 221,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "synthesizedInitAccessLevel"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/UseSynthesizedInitializer.swift",
+      "kind" : "extractable-kernel",
+      "line" : 224,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "synthesizedInitAccessLevel"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/ValidateDocumentationComments.swift",
+      "kind" : "restricted-function",
+      "line" : 153,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "funcParametersIdentifiers"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Rules\/ValidateDocumentationComments.swift",
+      "kind" : "restricted-function",
+      "line" : 167,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parametersAreEqual"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/FileIterator.swift",
+      "kind" : "extractable-kernel",
+      "line" : 175,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "nextInDirectory"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "pure-function",
+      "line" : 38,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "pure-function",
+      "line" : 91,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "matches"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 119,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "advancedMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 150,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "doubleAsteriskMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 204,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "shouldSuffixMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 214,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "simpleMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 230,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "wildcardMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 235,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "globMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 248,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "globMatchRecursive"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/GitIgnorePattern.swift",
+      "kind" : "restricted-function",
+      "line" : 326,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "questionMarkMatch"
+    },
+    {
+      "file" : "Sources\/SwiftFormat\/Utilities\/IgnoreManager.swift",
+      "kind" : "restricted-function",
+      "line" : 167,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "getRelativePath"
+    },
+    {
+      "file" : "Sources\/_GenerateSwiftFormat\/PipelineGenerator.swift",
+      "kind" : "pure-function",
+      "line" : 26,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "generateContent"
+    },
+    {
+      "file" : "Sources\/_GenerateSwiftFormat\/RuleDocumentationGenerator.swift",
+      "kind" : "pure-function",
+      "line" : 27,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "generateContent"
+    },
+    {
+      "file" : "Sources\/_GenerateSwiftFormat\/RuleDocumentationGenerator.swift",
+      "kind" : "restricted-function",
+      "line" : 60,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "ruleFormatSupportDescription"
+    },
+    {
+      "file" : "Sources\/_GenerateSwiftFormat\/RuleNameCacheGenerator.swift",
+      "kind" : "pure-function",
+      "line" : 26,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "generateContent"
+    },
+    {
+      "file" : "Sources\/_GenerateSwiftFormat\/RuleRegistryGenerator.swift",
+      "kind" : "pure-function",
+      "line" : 26,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "generateContent"
+    },
+    {
+      "file" : "Sources\/swift-format\/Frontend\/Frontend.swift",
+      "kind" : "extractable-kernel",
+      "line" : 74,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "checkForUnrecognizedRules"
+    },
+    {
+      "file" : "Sources\/swift-format\/Utilities\/StderrDiagnosticPrinter.swift",
+      "kind" : "restricted-function",
+      "line" : 81,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/swift-format\/Utilities\/StderrDiagnosticPrinter.swift",
+      "kind" : "restricted-function",
+      "line" : 90,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "ansiSGR"
+    },
+    {
+      "file" : "Sources\/swift-format\/Utilities\/TTY.swift",
+      "kind" : "pure-function",
+      "line" : 20,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isTTY"
+    }
+  ],
+  "version" : 2
+}

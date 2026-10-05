@@ -34,7 +34,7 @@ import SwiftInferTemplates
 /// the nonisolated `sample` closure, and a `.defaultIsolation(MainActor)` target; and a parameter
 /// whose bare type name SwiftPropertyLaws' `GeneratorResolver` matches to a different scanned type
 /// of the same name (its leaf index; `encodeSnapshot(_:)` on SwiftAssist draws
-/// `XcodeDocument.Symbol` for SwiftSourceKitClient's `Symbol`).
+/// `XcodeDocument.Symbol` for SwiftSourceKitClient's `Symbol`; filed as SwiftPropertyLaws#63).
 extension SwiftInferCommand.Discover {
 
     /// What the reference oracle reads from the scan. Built once per `discover` run; the resolver

@@ -1,0 +1,5400 @@
+{
+  "seeds" : [
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentConversation.swift",
+      "kind" : "pure-function",
+      "line" : 13,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "render"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentPermission.swift",
+      "kind" : "pure-function",
+      "line" : 20,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "contains"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRun.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isTerminal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRun.swift",
+      "kind" : "pure-function",
+      "line" : 17,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "label"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRun.swift",
+      "kind" : "pure-function",
+      "line" : 54,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "iterationCount"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRunner+Completion.swift",
+      "kind" : "pure-function",
+      "line" : 12,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRunner+Completion.swift",
+      "kind" : "pure-function",
+      "line" : 33,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "joinedThinking"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRunner+Completion.swift",
+      "kind" : "pure-function",
+      "line" : 64,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "failedPartwayThrough"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRunner+Helpers.swift",
+      "kind" : "extractable-kernel",
+      "line" : 343,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "renderObservations"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentRunner+Helpers.swift",
+      "kind" : "pure-function",
+      "line" : 349,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "makeTerminalOutcome"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentSystemPrompt.swift",
+      "kind" : "pure-function",
+      "line" : 33,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "render"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentSystemPrompt.swift",
+      "kind" : "restricted-function",
+      "line" : 114,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "renderGuidanceSection"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentTool.swift",
+      "kind" : "pure-function",
+      "line" : 47,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "projectPath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentTool.swift",
+      "kind" : "pure-function",
+      "line" : 79,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "name"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/AgentTool.swift",
+      "kind" : "extractable-kernel",
+      "line" : 104,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "descriptors"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "pure-function",
+      "line" : 54,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "fileName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "pure-function",
+      "line" : 59,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "fileName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 63,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "withoutHFSIgnorables"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "extractable-kernel",
+      "line" : 64,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "withoutHFSIgnorables"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "pure-function",
+      "line" : 80,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isSwift"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "pure-function",
+      "line" : 85,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "unauditableChange"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "pure-function",
+      "line" : 140,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "unauditableChange"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "extractable-kernel",
+      "line" : 145,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "unauditableChange"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 206,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "restOfManifest"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 235,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "text"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 239,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "starts"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 246,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "follows"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 252,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "targetCallEnd"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 283,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "harmlessArgumentEnd"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 291,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "balancedEnd"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger+SourceKind.swift",
+      "kind" : "restricted-function",
+      "line" : 307,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "valueEnd"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/SandboxLedger.swift",
+      "kind" : "pure-function",
+      "line" : 43,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "blocksExecution"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/ToolCall.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "string"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/ToolCall.swift",
+      "kind" : "pure-function",
+      "line" : 19,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "int"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/ToolCall.swift",
+      "kind" : "pure-function",
+      "line" : 24,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "bool"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/ToolObservation.swift",
+      "kind" : "pure-function",
+      "line" : 21,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "success"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/ToolObservation.swift",
+      "kind" : "pure-function",
+      "line" : 25,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "failure"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/AppleDocsTools.swift",
+      "kind" : "restricted-function",
+      "line" : 92,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "formatResult"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/CappedList.swift",
+      "kind" : "pure-function",
+      "line" : 96,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "wasTruncated"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/CappedList.swift",
+      "kind" : "pure-function",
+      "line" : 102,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "droppedCount"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/CappedList.swift",
+      "kind" : "pure-function",
+      "line" : 112,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "countForDisplay"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/EditTools.swift",
+      "kind" : "extractable-kernel",
+      "line" : 122,
+      "role" : "normalizer",
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/ExecTools.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "formatExecResult"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/ExecTools.swift",
+      "kind" : "pure-function",
+      "line" : 51,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sandboxGateFailure"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/ExecTools.swift",
+      "kind" : "pure-function",
+      "line" : 124,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "appendingSandboxAdvisories"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/FilesystemTools.swift",
+      "kind" : "pure-function",
+      "line" : 234,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/FilesystemTools.swift",
+      "kind" : "pure-function",
+      "line" : 296,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "translate"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/ReadWindow.swift",
+      "kind" : "pure-function",
+      "line" : 37,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "resolve"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/ReadWindow.swift",
+      "kind" : "pure-function",
+      "line" : 63,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayRange"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/SCIPTools.swift",
+      "kind" : "extractable-kernel",
+      "line" : 72,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/SourceKitTools.swift",
+      "kind" : "pure-function",
+      "line" : 155,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "encode"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/TerminationTools.swift",
+      "kind" : "pure-function",
+      "line" : 21,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/TerminationTools.swift",
+      "kind" : "pure-function",
+      "line" : 44,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/Tools\/ToolProcess.swift",
+      "kind" : "pure-function",
+      "line" : 20,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/WorkspaceJail.swift",
+      "kind" : "pure-function",
+      "line" : 72,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "relative"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/WorkspaceJail.swift",
+      "kind" : "pure-function",
+      "line" : 90,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "relativizingLeadingPath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/XMLToolCallProtocol.swift",
+      "kind" : "pure-function",
+      "line" : 21,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "renderToolCatalog"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/XMLToolCallProtocol.swift",
+      "kind" : "pure-function",
+      "line" : 60,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "renderObservation"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Agent\/XMLToolCallProtocol.swift",
+      "kind" : "restricted-function",
+      "line" : 170,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "endsInsideToolCall"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/AssistSeverity.swift",
+      "kind" : "restricted-function",
+      "line" : 21,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "ordinal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/AssistSeverity.swift",
+      "kind" : "pure-function",
+      "line" : 30,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "<"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Beads\/BeadKind+DisplayName.swift",
+      "kind" : "pure-function",
+      "line" : 5,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Beads\/BeadKind+DisplayName.swift",
+      "kind" : "pure-function",
+      "line" : 35,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Bootstrap\/SkillGapDetector.swift",
+      "kind" : "extractable-kernel",
+      "line" : 167,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "simpleSlug"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/CI\/CIAdapter.swift",
+      "kind" : "pure-function",
+      "line" : 31,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "occurrenceTime"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/CI\/CIAdapter.swift",
+      "kind" : "extractable-kernel",
+      "line" : 175,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "parseGHRunListJSON"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/CI\/CIRunResult.swift",
+      "kind" : "pure-function",
+      "line" : 35,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor+Diagnostics.swift",
+      "kind" : "pure-function",
+      "line" : 21,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isConcurrencyDiagnostic"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor+Diagnostics.swift",
+      "kind" : "extractable-kernel",
+      "line" : 25,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isConcurrencyDiagnostic"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor+Diagnostics.swift",
+      "kind" : "pure-function",
+      "line" : 38,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isSwift6OrLater"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "pure-function",
+      "line" : 13,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "category"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "pure-function",
+      "line" : 24,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "detail"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "pure-function",
+      "line" : 65,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "audit"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "restricted-function",
+      "line" : 128,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "checkMutableSharedState"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "extractable-kernel",
+      "line" : 136,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "checkMutableSharedState"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "restricted-function",
+      "line" : 140,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "checkGlobalMutable"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "restricted-function",
+      "line" : 156,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "checkUnsafeNonisolated"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "restricted-function",
+      "line" : 161,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "checkDispatchQueueMain"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Concurrency\/Swift6ConcurrencyAuditor.swift",
+      "kind" : "restricted-function",
+      "line" : 166,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "checkMissingSendableClosure"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ChunkAnnotator.swift",
+      "kind" : "pure-function",
+      "line" : 10,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "annotate"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ChunkAnnotator.swift",
+      "kind" : "restricted-function",
+      "line" : 16,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "buildAnnotationLines"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ChunkAnnotator.swift",
+      "kind" : "pure-function",
+      "line" : 78,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isEmpty"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ContextBudgetManager.swift",
+      "kind" : "pure-function",
+      "line" : 44,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "contextWindow"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ContextBudgetManager.swift",
+      "kind" : "extractable-kernel",
+      "line" : 123,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "trimFragments"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ContextBudgetManager.swift",
+      "kind" : "extractable-kernel",
+      "line" : 148,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "trimFragments"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ContextBudgetManager.swift",
+      "kind" : "pure-function",
+      "line" : 161,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "leadingItems"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/ContextFragment.swift",
+      "kind" : "pure-function",
+      "line" : 20,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "<"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/DeploymentFilter.swift",
+      "kind" : "pure-function",
+      "line" : 20,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isAvailable"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/DeploymentFilter.swift",
+      "kind" : "extractable-kernel",
+      "line" : 28,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isAvailable"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/DeploymentFilter.swift",
+      "kind" : "pure-function",
+      "line" : 49,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "deprecationPenalty"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/DeploymentFilter.swift",
+      "kind" : "restricted-function",
+      "line" : 66,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "compareVersions"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/DeploymentFilter.swift",
+      "kind" : "pure-function",
+      "line" : 85,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalizePlatformName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/PromptBuilder.swift",
+      "kind" : "pure-function",
+      "line" : 6,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "build"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/PromptBuilder.swift",
+      "kind" : "pure-function",
+      "line" : 62,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sectionHeader"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/CurrentFileContextSource.swift",
+      "kind" : "restricted-function",
+      "line" : 26,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "centerAroundOffset"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/PolicyContextSource.swift",
+      "kind" : "pure-function",
+      "line" : 28,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "formatPrompt"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/RAGContextSource.swift",
+      "kind" : "extractable-kernel",
+      "line" : 63,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "gather"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/RAGContextSource.swift",
+      "kind" : "extractable-kernel",
+      "line" : 70,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "gather"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/RAGContextSource.swift",
+      "kind" : "pure-function",
+      "line" : 154,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sourceLabel"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/RAGContextSource.swift",
+      "kind" : "extractable-kernel",
+      "line" : 166,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "trustRerank"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/SkillGuidance.swift",
+      "kind" : "pure-function",
+      "line" : 13,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "render"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/SkillGuidance.swift",
+      "kind" : "restricted-function",
+      "line" : 52,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "headingText"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/SkillGuidance.swift",
+      "kind" : "restricted-function",
+      "line" : 58,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "headingLevel"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Context\/Sources\/SkillGuidance.swift",
+      "kind" : "restricted-function",
+      "line" : 64,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isPlaceholder"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageAnalyser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 191,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractPercent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport+Parse.swift",
+      "kind" : "restricted-function",
+      "line" : 41,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseFiles"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport+Parse.swift",
+      "kind" : "extractable-kernel",
+      "line" : 42,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "parseFiles"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport+Parse.swift",
+      "kind" : "restricted-function",
+      "line" : 56,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseSummary"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport+Parse.swift",
+      "kind" : "restricted-function",
+      "line" : 64,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseMetric"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport+Parse.swift",
+      "kind" : "restricted-function",
+      "line" : 78,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseSegments"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport.swift",
+      "kind" : "pure-function",
+      "line" : 36,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "linePercent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport.swift",
+      "kind" : "pure-function",
+      "line" : 37,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "functionPercent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport.swift",
+      "kind" : "pure-function",
+      "line" : 38,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "regionPercent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport.swift",
+      "kind" : "pure-function",
+      "line" : 101,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "gaps"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport.swift",
+      "kind" : "extractable-kernel",
+      "line" : 102,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "gaps"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Coverage\/CoverageReport.swift",
+      "kind" : "pure-function",
+      "line" : 106,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "suggestTestSkill"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorAction.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "assistTask"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorAction.swift",
+      "kind" : "pure-function",
+      "line" : 28,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorAction.swift",
+      "kind" : "pure-function",
+      "line" : 38,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "replacesSelection"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorAction.swift",
+      "kind" : "pure-function",
+      "line" : 50,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "systemPromptPrefix"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorCommandError.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorCommandError.swift",
+      "kind" : "restricted-function",
+      "line" : 35,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "timeoutDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorCommandError.swift",
+      "kind" : "restricted-function",
+      "line" : 47,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "list"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorOutput.swift",
+      "kind" : "pure-function",
+      "line" : 10,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "code"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorOutput.swift",
+      "kind" : "pure-function",
+      "line" : 23,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "commentText"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorOutput.swift",
+      "kind" : "extractable-kernel",
+      "line" : 26,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "commentText"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorOutput.swift",
+      "kind" : "extractable-kernel",
+      "line" : 27,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "commentText"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorOutput.swift",
+      "kind" : "pure-function",
+      "line" : 39,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "annotatedCommentText"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorOutput.swift",
+      "kind" : "restricted-function",
+      "line" : 45,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isFence"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorOutput.swift",
+      "kind" : "extractable-kernel",
+      "line" : 46,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isFence"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Extension\/EditorRequest.swift",
+      "kind" : "pure-function",
+      "line" : 46,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "selectionStartOffset"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Formatting\/Plural.swift",
+      "kind" : "pure-function",
+      "line" : 7,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "count"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Formatting\/Plural.swift",
+      "kind" : "pure-function",
+      "line" : 12,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "word"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Formatting\/SwiftFormatRunner.swift",
+      "kind" : "pure-function",
+      "line" : 73,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "swiftBlockBodies"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Formatting\/SwiftFormatRunner.swift",
+      "kind" : "restricted-function",
+      "line" : 102,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "locateOpenFence"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Formatting\/SwiftFormatRunner.swift",
+      "kind" : "restricted-function",
+      "line" : 127,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "locateCloseFence"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Formatting\/SwiftFormatRunner.swift",
+      "kind" : "pure-function",
+      "line" : 148,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isAtLineStart"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Formatting\/SwiftFormatRunner.swift",
+      "kind" : "restricted-function",
+      "line" : 154,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalizeTrailingNewline"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Git\/GitCommit.swift",
+      "kind" : "pure-function",
+      "line" : 35,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Git\/GitCommit.swift",
+      "kind" : "restricted-function",
+      "line" : 73,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "header"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Git\/GitHistoryAnalyser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 279,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "buildCoChangeMatrix"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/AppleDocsIngester+CrawlState.swift",
+      "kind" : "pure-function",
+      "line" : 19,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "rootPath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/AppleDocsIngester+CrawlState.swift",
+      "kind" : "pure-function",
+      "line" : 26,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "scopePath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/AppleDocsIngester+CrawlState.swift",
+      "kind" : "pure-function",
+      "line" : 32,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sourceKey"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/AppleDocsIngester+CrawlState.swift",
+      "kind" : "pure-function",
+      "line" : 36,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isInScope"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/AppleDocsIngester.swift",
+      "kind" : "extractable-kernel",
+      "line" : 214,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "crawlFramework"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/AppleDocsIngester.swift",
+      "kind" : "extractable-kernel",
+      "line" : 268,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "unvisited"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "restricted-function",
+      "line" : 30,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "buildProseText"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "pure-function",
+      "line" : 101,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isCMacro"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "restricted-function",
+      "line" : 107,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "renderContentSection"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "restricted-function",
+      "line" : 144,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "renderContentItem"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "restricted-function",
+      "line" : 179,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "renderInlineContent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "pure-function",
+      "line" : 234,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isAsyncSymbol"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "extractable-kernel",
+      "line" : 236,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isAsyncSymbol"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "extractable-kernel",
+      "line" : 244,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractConformances"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCChunker.swift",
+      "kind" : "pure-function",
+      "line" : 259,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "demangleProtocolName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCModels+Convenience.swift",
+      "kind" : "pure-function",
+      "line" : 52,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "encodeAvailability"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/DocCModels.swift",
+      "kind" : "pure-function",
+      "line" : 257,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/RemoteDocCFetcher.swift",
+      "kind" : "extractable-kernel",
+      "line" : 100,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "discoverFrameworks"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/RemoteDocCFetcher.swift",
+      "kind" : "restricted-function",
+      "line" : 105,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalizePath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "extractable-kernel",
+      "line" : 48,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "locateDatabase"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "extractable-kernel",
+      "line" : 49,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "locateDatabase"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "extractable-kernel",
+      "line" : 111,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "discoverFrameworks"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "extractable-kernel",
+      "line" : 122,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "discoverFrameworks"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "pure-function",
+      "line" : 151,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalizePath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "extractable-kernel",
+      "line" : 173,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "response"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "pure-function",
+      "line" : 227,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "docCSymbolKind"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/AppleDocs\/XcodeDocumentationFetcher.swift",
+      "kind" : "pure-function",
+      "line" : 233,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "linkTargets"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/BookTitle.swift",
+      "kind" : "pure-function",
+      "line" : 17,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "byline"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/BookTitle.swift",
+      "kind" : "restricted-function",
+      "line" : 60,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isYear"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/BookTitle.swift",
+      "kind" : "restricted-function",
+      "line" : 64,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "firstYear"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/BookTitle.swift",
+      "kind" : "restricted-function",
+      "line" : 87,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "restoreColons"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "pure-function",
+      "line" : 18,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "fenceCode"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "extractable-kernel",
+      "line" : 33,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "fenceCode"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "restricted-function",
+      "line" : 46,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "runEnd"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "extractable-kernel",
+      "line" : 93,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "prefix"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "pure-function",
+      "line" : 99,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "classify"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "restricted-function",
+      "line" : 106,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasCodeShape"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "restricted-function",
+      "line" : 117,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isCodeStatement"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "restricted-function",
+      "line" : 128,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "proseOrNeutral"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "extractable-kernel",
+      "line" : 135,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "proseOrNeutral"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "pure-function",
+      "line" : 148,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "reindent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CodeBlockFormatter.swift",
+      "kind" : "restricted-function",
+      "line" : 179,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "strippingStringsAndComments"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CorpusIndexer+SwiftEvolution.swift",
+      "kind" : "pure-function",
+      "line" : 18,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isSwiftEvolutionClone"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CorpusIndexer+SwiftEvolution.swift",
+      "kind" : "pure-function",
+      "line" : 26,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "indexesProposal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CorpusIndexer+SwiftEvolution.swift",
+      "kind" : "pure-function",
+      "line" : 100,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "withoutMetadata"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CorpusIndexer.swift",
+      "kind" : "pure-function",
+      "line" : 45,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/CorpusIndexer.swift",
+      "kind" : "pure-function",
+      "line" : 55,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sourceKey"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/GitCloneHelper.swift",
+      "kind" : "pure-function",
+      "line" : 45,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "repoName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/GitCloneHelper.swift",
+      "kind" : "pure-function",
+      "line" : 51,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "qualifiedPath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/GitCloneHelper.swift",
+      "kind" : "extractable-kernel",
+      "line" : 63,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "qualifiedPath"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/GitCloneHelper.swift",
+      "kind" : "extractable-kernel",
+      "line" : 98,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "runGit"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/GitCloneHelper.swift",
+      "kind" : "pure-function",
+      "line" : 125,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isExcluded"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/GitCloneHelper.swift",
+      "kind" : "extractable-kernel",
+      "line" : 148,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "listSwiftFiles"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/IndexingError+Description.swift",
+      "kind" : "pure-function",
+      "line" : 7,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/IndexingError+Description.swift",
+      "kind" : "pure-function",
+      "line" : 41,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/IndexingHelpers.swift",
+      "kind" : "extractable-kernel",
+      "line" : 88,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "truncateOversizedChunks"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "strip"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "extractable-kernel",
+      "line" : 17,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "strip"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "extractable-kernel",
+      "line" : 30,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "strip"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "extractable-kernel",
+      "line" : 32,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "strip"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "extractable-kernel",
+      "line" : 35,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "strip"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "restricted-function",
+      "line" : 45,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "edges"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "pure-function",
+      "line" : 53,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalize"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "restricted-function",
+      "line" : 62,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isCandidate"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/PageFurnitureStripper.swift",
+      "kind" : "restricted-function",
+      "line" : 66,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isPageNumber"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/RecommendedRepos.swift",
+      "kind" : "pure-function",
+      "line" : 70,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "matchKey"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/SCIPIndexer.swift",
+      "kind" : "pure-function",
+      "line" : 238,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "symbolKind"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/SCIPIndexer.swift",
+      "kind" : "pure-function",
+      "line" : 243,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isDefinition"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/SCIPIndexer.swift",
+      "kind" : "pure-function",
+      "line" : 248,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isReference"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/SCIPIndexer.swift",
+      "kind" : "pure-function",
+      "line" : 255,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "enclosingSymbol"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/SCIPIndexer.swift",
+      "kind" : "pure-function",
+      "line" : 292,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/SwiftSyntaxChunker.swift",
+      "kind" : "restricted-function",
+      "line" : 329,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractActorIsolation"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/SwiftSyntaxChunker.swift",
+      "kind" : "restricted-function",
+      "line" : 344,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractConformances"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Indexing\/TokenEstimator.swift",
+      "kind" : "pure-function",
+      "line" : 6,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "estimateTokens"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/InsightQuery.swift",
+      "kind" : "pure-function",
+      "line" : 47,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/InsightsEngine.swift",
+      "kind" : "extractable-kernel",
+      "line" : 68,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "analyze"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/CoChangeHotspotQuery.swift",
+      "kind" : "extractable-kernel",
+      "line" : 14,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/CoChangeHotspotQuery.swift",
+      "kind" : "pure-function",
+      "line" : 47,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isSameType"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/CoChangeHotspotQuery.swift",
+      "kind" : "restricted-function",
+      "line" : 55,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "type"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/CoChangeHotspotQuery.swift",
+      "kind" : "restricted-function",
+      "line" : 60,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "subject"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/CoChangeHotspotQuery.swift",
+      "kind" : "extractable-kernel",
+      "line" : 63,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "subject"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/CoChangeHotspotQuery.swift",
+      "kind" : "restricted-function",
+      "line" : 67,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isTestStem"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/CoChangeHotspotQuery.swift",
+      "kind" : "restricted-function",
+      "line" : 72,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "stem"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/ErrorPatternQuery.swift",
+      "kind" : "extractable-kernel",
+      "line" : 17,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/ErrorPatternQuery.swift",
+      "kind" : "extractable-kernel",
+      "line" : 32,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "execute"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Insights\/Queries\/EvolutionWatchdogQuery.swift",
+      "kind" : "pure-function",
+      "line" : 59,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "makeInsight"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "pure-function",
+      "line" : 12,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "pure-function",
+      "line" : 18,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "pure-function",
+      "line" : 49,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "problems"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "pure-function",
+      "line" : 61,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "citedProposalIDs"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "extractable-kernel",
+      "line" : 63,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "citedProposalIDs"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "restricted-function",
+      "line" : 66,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "problem"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "pure-function",
+      "line" : 90,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "citations"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "restricted-function",
+      "line" : 114,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parenthesized"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "restricted-function",
+      "line" : 125,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isRelease"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "restricted-function",
+      "line" : 129,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isWordCharacter"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "pure-function",
+      "line" : 140,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "titlesMatch"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "restricted-function",
+      "line" : 149,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "significantWords"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "extractable-kernel",
+      "line" : 152,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "significantWords"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionCitationChecker.swift",
+      "kind" : "restricted-function",
+      "line" : 157,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalized"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 16,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "parse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 19,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "parse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 42,
+      "role" : "normalizer",
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "proposals"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "pure-function",
+      "line" : 59,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "field"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "pure-function",
+      "line" : 70,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "proposalID"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "pure-function",
+      "line" : 82,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "status"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 84,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "status"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "pure-function",
+      "line" : 90,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "swiftVersion"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 93,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "swiftVersion"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "pure-function",
+      "line" : 98,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "firstCodeSpan"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "pure-function",
+      "line" : 105,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "languageMode"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 109,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "languageMode"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionProposal.swift",
+      "kind" : "pure-function",
+      "line" : 42,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "plainTitle"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionProposal.swift",
+      "kind" : "pure-function",
+      "line" : 48,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "corpusLabel"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionProposal.swift",
+      "kind" : "pure-function",
+      "line" : 58,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isCorpusChunk"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionProposal.swift",
+      "kind" : "pure-function",
+      "line" : 62,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "corpusHeader"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionProposal.swift",
+      "kind" : "pure-function",
+      "line" : 98,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "proposal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionSnapshot+Bundled.swift",
+      "kind" : "pure-function",
+      "line" : 10,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionSnapshot+Bundled.swift",
+      "kind" : "pure-function",
+      "line" : 37,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "requireProposal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionSnapshot+Bundled.swift",
+      "kind" : "pure-function",
+      "line" : 47,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "bundledProblems"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/Evolution\/SwiftEvolutionSnapshot+Bundled.swift",
+      "kind" : "pure-function",
+      "line" : 70,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "notes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/GraphSchema.swift",
+      "kind" : "pure-function",
+      "line" : 19,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "nodeTableName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/InMemoryGraphDatabase.swift",
+      "kind" : "extractable-kernel",
+      "line" : 107,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "deleteEdge"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/InMemoryGraphDatabase.swift",
+      "kind" : "extractable-kernel",
+      "line" : 122,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchNodes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/InMemoryGraphDatabase.swift",
+      "kind" : "extractable-kernel",
+      "line" : 123,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchNodes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/InMemoryGraphDatabase.swift",
+      "kind" : "extractable-kernel",
+      "line" : 135,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchRelated"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/InMemoryGraphDatabase.swift",
+      "kind" : "extractable-kernel",
+      "line" : 149,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchReverseRelated"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/InMemoryGraphDatabase.swift",
+      "kind" : "extractable-kernel",
+      "line" : 195,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchEdges"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/KnowledgeGraphBuilder+EdgeCatalogs.swift",
+      "kind" : "extractable-kernel",
+      "line" : 144,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "distinct"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/KnowledgeGraphBuilder+SeedCatalogs.swift",
+      "kind" : "extractable-kernel",
+      "line" : 63,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "seedProposals"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/KnowledgeGraphBuilder.swift",
+      "kind" : "pure-function",
+      "line" : 126,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "seedModelTiers"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SCIPGraphStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 51,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "symbolsByName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SCIPGraphStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 62,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "symbolsByNameFuzzy"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SCIPGraphStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 67,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "symbolsByNameFuzzy"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SCIPGraphStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 165,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "uncoveredSymbols"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SQLiteGraphDatabase+Queries.swift",
+      "kind" : "extractable-kernel",
+      "line" : 18,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchNodes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SQLiteGraphDatabase+Queries.swift",
+      "kind" : "extractable-kernel",
+      "line" : 19,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchNodes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SQLiteGraphDatabase+Queries.swift",
+      "kind" : "extractable-kernel",
+      "line" : 104,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matchEdges"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SQLiteGraphDatabase.swift",
+      "kind" : "pure-function",
+      "line" : 209,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "encodeProperties"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SQLiteGraphDatabase.swift",
+      "kind" : "pure-function",
+      "line" : 227,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "decodeProperties"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SQLiteGraphDatabase.swift",
+      "kind" : "restricted-function",
+      "line" : 236,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "decodeValue"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SkillCoverageGap.swift",
+      "kind" : "pure-function",
+      "line" : 6,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SkillGraphStore+ErrorProvenance.swift",
+      "kind" : "extractable-kernel",
+      "line" : 10,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "errorsByPattern"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SkillGraphStore+Queries.swift",
+      "kind" : "restricted-function",
+      "line" : 109,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "visit"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SkillGraphStore+Queries.swift",
+      "kind" : "extractable-kernel",
+      "line" : 133,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "conceptsByName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SkillGraphStore+Queries.swift",
+      "kind" : "extractable-kernel",
+      "line" : 140,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "skillsByName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SkillGraphStore+Recipes.swift",
+      "kind" : "extractable-kernel",
+      "line" : 16,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractedRecipes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/SkillGraphStore+Recipes.swift",
+      "kind" : "extractable-kernel",
+      "line" : 38,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "recipeSteps"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Knowledge\/TargetGraphStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 55,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "platformRequirements"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/AntiPatternStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 131,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "patterns"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/BeadCorrelation.swift",
+      "kind" : "pure-function",
+      "line" : 32,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "correlation"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/ConfidenceScorer+SignalFactories.swift",
+      "kind" : "extractable-kernel",
+      "line" : 12,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "sandboxSignal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/ConfidenceScorer+SignalFactories.swift",
+      "kind" : "extractable-kernel",
+      "line" : 89,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "antiPatternSignal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/ConfidenceScorer+SignalFactories.swift",
+      "kind" : "extractable-kernel",
+      "line" : 288,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "profileSignal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/ConfidenceScorer.swift",
+      "kind" : "pure-function",
+      "line" : 35,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "level"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/ConfidenceScorer.swift",
+      "kind" : "extractable-kernel",
+      "line" : 71,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "score"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/SkillHealthStore+Helpers.swift",
+      "kind" : "pure-function",
+      "line" : 97,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseOutcomeRows"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Learning\/SkillHealthStore+Queries.swift",
+      "kind" : "extractable-kernel",
+      "line" : 105,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isRegressionFlagged"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/LintReflectionRunner.swift",
+      "kind" : "pure-function",
+      "line" : 116,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "buildRevisionPrompt"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/LintReflectionRunner.swift",
+      "kind" : "pure-function",
+      "line" : 141,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractCodeBlock"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/LintViolation.swift",
+      "kind" : "pure-function",
+      "line" : 45,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/SwiftLintConfigParser.swift",
+      "kind" : "restricted-function",
+      "line" : 99,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "stringArray"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/SwiftLintProcessRunner.swift",
+      "kind" : "extractable-kernel",
+      "line" : 83,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "parseViolations"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/SwiftLintRunner.swift",
+      "kind" : "pure-function",
+      "line" : 64,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isEmpty"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/SwiftLintRunner.swift",
+      "kind" : "pure-function",
+      "line" : 65,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasErrors"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/SwiftLintRunner.swift",
+      "kind" : "pure-function",
+      "line" : 66,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorCount"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/SwiftLintRunner.swift",
+      "kind" : "pure-function",
+      "line" : 67,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "warningCount"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Linting\/SwiftLintRunner.swift",
+      "kind" : "pure-function",
+      "line" : 71,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "revisionPromptSummary"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/MCP\/XcodeMCPClient.swift",
+      "kind" : "extractable-kernel",
+      "line" : 143,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "callText"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "pure-function",
+      "line" : 59,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "thinkingBudget"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "pure-function",
+      "line" : 103,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "unlisted"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "pure-function",
+      "line" : 178,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "promptWindow"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "extractable-kernel",
+      "line" : 224,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "editorRoles"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "pure-function",
+      "line" : 296,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "builtIn"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "pure-function",
+      "line" : 375,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "spec"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "pure-function",
+      "line" : 382,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "resolveAlias"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "extractable-kernel",
+      "line" : 388,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "resolveAlias"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelCatalog.swift",
+      "kind" : "extractable-kernel",
+      "line" : 391,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "resolveAlias"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "restricted-function",
+      "line" : 50,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "intValue"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "extractable-kernel",
+      "line" : 66,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "filter"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 97,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "warning"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 98,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "error"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 124,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "summary"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 143,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "fixed"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 149,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "gibibytes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 164,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "defaultStackID"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 170,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "resolve"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "restricted-function",
+      "line" : 221,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "applyTiers"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "restricted-function",
+      "line" : 260,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "applyEditorTiers"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "restricted-function",
+      "line" : 283,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "applyTimeoutMultiplier"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "extractable-kernel",
+      "line" : 293,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "applyTimeoutMultiplier"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/ModelStackResolver.swift",
+      "kind" : "pure-function",
+      "line" : 344,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "describe"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Models\/PromptTokenEstimate.swift",
+      "kind" : "pure-function",
+      "line" : 4,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "conservative"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Ollama\/OllamaModelMatching.swift",
+      "kind" : "pure-function",
+      "line" : 17,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isInstalled"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 90,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parsePlatforms"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 97,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parsePlatformEntry"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 117,
+      "restriction" : "enclosing-type",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractPlatformName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 134,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractVersionString"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 147,
+      "restriction" : "enclosing-type",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "versionEnumToString"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 159,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseTargets"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 166,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseTargetEntry"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 197,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "targetTypeFromCallee"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 207,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseTargetDependencies"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 214,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseTargetDependencyEntry"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 240,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parsePackageDependencies"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 248,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseLocalPackagePaths"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 252,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "parseLocalPackagePaths"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 257,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parsePackageDependencyEntry"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 297,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "stringLiteral"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 299,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "stringLiteral"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/PackageSwift\/PackageSwiftParser.swift",
+      "kind" : "restricted-function",
+      "line" : 307,
+      "restriction" : "enclosing-type",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "derivePackageName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/BuildErrorInterpreter.swift",
+      "kind" : "pure-function",
+      "line" : 100,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "buildContextForRevision"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/BuildErrorInterpreter.swift",
+      "kind" : "restricted-function",
+      "line" : 142,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "buildSummary"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/BuildRunner.swift",
+      "kind" : "pure-function",
+      "line" : 82,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "testArguments"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/BuildRunner.swift",
+      "kind" : "pure-function",
+      "line" : 90,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseDiagnostics"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/BuildRunner.swift",
+      "kind" : "restricted-function",
+      "line" : 130,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractGroup"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/BuildRunner.swift",
+      "kind" : "pure-function",
+      "line" : 183,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "removingTerminalEscapes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/CritiqueSchema.swift",
+      "kind" : "extractable-kernel",
+      "line" : 41,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "hasCriticalIssues"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "pure-function",
+      "line" : 11,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "buildCritiquePrompt"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "pure-function",
+      "line" : 130,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "diagnosticLines"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "extractable-kernel",
+      "line" : 131,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "diagnosticLines"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "pure-function",
+      "line" : 144,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "codeSection"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "pure-function",
+      "line" : 149,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isMarkdown"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "pure-function",
+      "line" : 156,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isMarkdownDocument"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "extractable-kernel",
+      "line" : 157,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isMarkdownDocument"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "restricted-function",
+      "line" : 165,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isHeading"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "restricted-function",
+      "line" : 172,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "longestBacktickRun"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "pure-function",
+      "line" : 186,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "focusAreasSection"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Reflection\/SelfReflectionEngine+Prompts.swift",
+      "kind" : "pure-function",
+      "line" : 231,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "stripMarkdownFences"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Resources\/PressureLevel.swift",
+      "kind" : "pure-function",
+      "line" : 31,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "availableFraction"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Resources\/ResourceGovernor.swift",
+      "kind" : "pure-function",
+      "line" : 135,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "classify"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Resources\/SwiftAssistPaths.swift",
+      "kind" : "pure-function",
+      "line" : 20,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "path"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Routing\/AssistTask.swift",
+      "kind" : "pure-function",
+      "line" : 75,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "usesReasoning"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Routing\/ModelRouter.swift",
+      "kind" : "pure-function",
+      "line" : 29,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "deadline"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Routing\/ModelRouter.swift",
+      "kind" : "pure-function",
+      "line" : 75,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "backgroundDeadline"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Routing\/StructuredFailure.swift",
+      "kind" : "pure-function",
+      "line" : 26,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "userMessage"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Markdown.swift",
+      "kind" : "pure-function",
+      "line" : 76,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "segments"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Markdown.swift",
+      "kind" : "extractable-kernel",
+      "line" : 113,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "opening"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Markdown.swift",
+      "kind" : "extractable-kernel",
+      "line" : 119,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "opening"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Markdown.swift",
+      "kind" : "extractable-kernel",
+      "line" : 120,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "opening"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Markdown.swift",
+      "kind" : "restricted-function",
+      "line" : 125,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "closes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Markdown.swift",
+      "kind" : "extractable-kernel",
+      "line" : 126,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "closes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Markdown.swift",
+      "kind" : "extractable-kernel",
+      "line" : 129,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "closes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "pure-function",
+      "line" : 12,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "admits"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "restricted-function",
+      "line" : 62,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "identifier"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "pure-function",
+      "line" : 277,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "startsWithLabel"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "pure-function",
+      "line" : 300,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "startsWithProcessInfoMember"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "pure-function",
+      "line" : 372,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isReadOnlyWorkspaceUse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "extractable-kernel",
+      "line" : 374,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isReadOnlyWorkspaceUse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "extractable-kernel",
+      "line" : 375,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isReadOnlyWorkspaceUse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox+Patterns.swift",
+      "kind" : "extractable-kernel",
+      "line" : 379,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "isReadOnlyWorkspaceUse"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "extractable-kernel",
+      "line" : 32,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "audit"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 50,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "key"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 59,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "inSourceOrder"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "extractable-kernel",
+      "line" : 65,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "sortedBySource"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 97,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "requirementMet"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "extractable-kernel",
+      "line" : 99,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "requirementMet"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 108,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "matches"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "extractable-kernel",
+      "line" : 120,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "matches"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "restricted-function",
+      "line" : 127,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "accepts"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 137,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "occurrences"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 160,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isWriteInsideProject"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 186,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "callArgumentRange"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "extractable-kernel",
+      "line" : 187,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "callArgumentRange"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 202,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "plainStringContent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "extractable-kernel",
+      "line" : 206,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "plainStringContent"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 214,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "stripComments"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/CodeSandbox.swift",
+      "kind" : "pure-function",
+      "line" : 220,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractStringLiteral"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SandboxViolation.swift",
+      "kind" : "pure-function",
+      "line" : 10,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "category"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SandboxViolation.swift",
+      "kind" : "pure-function",
+      "line" : 20,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "detail"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SandboxViolation.swift",
+      "kind" : "pure-function",
+      "line" : 39,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "blocksExecution"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SandboxViolation.swift",
+      "kind" : "pure-function",
+      "line" : 65,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "violations"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "pure-function",
+      "line" : 42,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalizeLineEndings"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "pure-function",
+      "line" : 47,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isIdentifierCharacter"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "pure-function",
+      "line" : 86,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extendedLength"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "pure-function",
+      "line" : 112,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "bareLength"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "restricted-function",
+      "line" : 121,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "mayStartOperand"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "restricted-function",
+      "line" : 141,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isPostfix"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "restricted-function",
+      "line" : 151,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "identifier"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "restricted-function",
+      "line" : 162,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "closingSlash"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "restricted-function",
+      "line" : 192,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isBlank"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner+Support.swift",
+      "kind" : "restricted-function",
+      "line" : 196,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hashRun"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner.swift",
+      "kind" : "pure-function",
+      "line" : 54,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "needsUnlexedMatch"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner.swift",
+      "kind" : "pure-function",
+      "line" : 65,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "reportsUnlexedMatch"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner.swift",
+      "kind" : "extractable-kernel",
+      "line" : 144,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "output"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner.swift",
+      "kind" : "pure-function",
+      "line" : 214,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hashRun"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner.swift",
+      "kind" : "pure-function",
+      "line" : 262,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "escapesPreservedKeyword"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Security\/SwiftSourceScanner.swift",
+      "kind" : "restricted-function",
+      "line" : 272,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "keyword"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternCrossReferenceLinker.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "link"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternCrossReferenceLinker.swift",
+      "kind" : "pure-function",
+      "line" : 30,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "skillID"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternCrossReferenceLinker.swift",
+      "kind" : "restricted-function",
+      "line" : 38,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "linkEntry"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "pure-function",
+      "line" : 47,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractSections"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "pure-function",
+      "line" : 77,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractSkillIDs"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "pure-function",
+      "line" : 150,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractTier"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "pure-function",
+      "line" : 158,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractBool"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "pure-function",
+      "line" : 166,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractValue"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "pure-function",
+      "line" : 172,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractKeywords"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "pure-function",
+      "line" : 181,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractSERefs"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Authoring\/PatternMarkdownParser.swift",
+      "kind" : "extractable-kernel",
+      "line" : 184,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractSERefs"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictDetector+Pipeline.swift",
+      "kind" : "pure-function",
+      "line" : 64,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "classifySeverity"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictDetector+Pipeline.swift",
+      "kind" : "extractable-kernel",
+      "line" : 113,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "tier3MergeProposal"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictDetector+Pipeline.swift",
+      "kind" : "pure-function",
+      "line" : 127,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "comparisonPrompt"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictDetector+Pipeline.swift",
+      "kind" : "pure-function",
+      "line" : 146,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "mergePrompt"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictDetector+Pipeline.swift",
+      "kind" : "pure-function",
+      "line" : 191,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "formatConflictBead"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictDetector.swift",
+      "kind" : "pure-function",
+      "line" : 173,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "cosineSimilarity"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictTypes.swift",
+      "kind" : "pure-function",
+      "line" : 25,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Conflict\/SkillConflictTypes.swift",
+      "kind" : "pure-function",
+      "line" : 56,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Core\/SkillLocalStore.swift",
+      "kind" : "pure-function",
+      "line" : 24,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Core\/SkillLocalStore.swift",
+      "kind" : "pure-function",
+      "line" : 123,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isValidID"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Core\/SkillRegistry.swift",
+      "kind" : "extractable-kernel",
+      "line" : 144,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "skillsReferencingSymbol"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Core\/SkillValidator.swift",
+      "kind" : "pure-function",
+      "line" : 75,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "trustLevel"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Core\/SkillValidator.swift",
+      "kind" : "restricted-function",
+      "line" : 242,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "problem"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Core\/TrustLevel.swift",
+      "kind" : "pure-function",
+      "line" : 7,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "<"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Core\/TrustLevel.swift",
+      "kind" : "restricted-function",
+      "line" : 11,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sortOrder"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/LintTypes.swift",
+      "kind" : "pure-function",
+      "line" : 10,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "<"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/LintTypes.swift",
+      "kind" : "pure-function",
+      "line" : 85,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasErrors"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/LintTypes.swift",
+      "kind" : "pure-function",
+      "line" : 86,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isClean"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinter.swift",
+      "kind" : "extractable-kernel",
+      "line" : 91,
+      "role" : "normalizer",
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "lintAll"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer+TextEdit.swift",
+      "kind" : "pure-function",
+      "line" : 13,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "setting"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer+TextEdit.swift",
+      "kind" : "extractable-kernel",
+      "line" : 26,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "setting"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer+TextEdit.swift",
+      "kind" : "pure-function",
+      "line" : 37,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "jsonLiteral"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer+TextEdit.swift",
+      "kind" : "restricted-function",
+      "line" : 49,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "topLevelKey"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer+TextEdit.swift",
+      "kind" : "restricted-function",
+      "line" : 59,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "valueEnd"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer.swift",
+      "kind" : "restricted-function",
+      "line" : 60,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "edited"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer.swift",
+      "kind" : "restricted-function",
+      "line" : 77,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isEqual"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Linting\/SkillLinterFixer.swift",
+      "kind" : "restricted-function",
+      "line" : 82,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "reserialized"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Matching\/SkillMatcher.swift",
+      "kind" : "restricted-function",
+      "line" : 75,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "computeKeywordScore"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Matching\/SkillMatcher.swift",
+      "kind" : "extractable-kernel",
+      "line" : 113,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "computeKGConceptScore"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Matching\/SkillMatcher.swift",
+      "kind" : "pure-function",
+      "line" : 129,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractKeywords"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Matching\/SkillScoring.swift",
+      "kind" : "pure-function",
+      "line" : 22,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "keywordScore"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Matching\/SkillScoring.swift",
+      "kind" : "pure-function",
+      "line" : 30,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "conceptScore"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Matching\/SkillScoring.swift",
+      "kind" : "pure-function",
+      "line" : 39,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "confidence"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Migration\/MigrationSuggestion.swift",
+      "kind" : "pure-function",
+      "line" : 5,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Migration\/SkillMigrator.swift",
+      "kind" : "pure-function",
+      "line" : 193,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sortOrder"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillPackage.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "declaredFileHashes"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillPackage.swift",
+      "kind" : "pure-function",
+      "line" : 18,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "minSwiftVersion"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillPackageError+Description.swift",
+      "kind" : "pure-function",
+      "line" : 7,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillPackageError+Description.swift",
+      "kind" : "pure-function",
+      "line" : 36,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillSigner.swift",
+      "kind" : "pure-function",
+      "line" : 34,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "publicKeyBase64"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillSigner.swift",
+      "kind" : "pure-function",
+      "line" : 61,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "verify"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillSigner.swift",
+      "kind" : "pure-function",
+      "line" : 104,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sha256"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Skills\/Packaging\/SkillSigner.swift",
+      "kind" : "pure-function",
+      "line" : 109,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sha256"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalysis.swift",
+      "kind" : "pure-function",
+      "line" : 62,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isHighUncertainty"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "pure-function",
+      "line" : 12,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "analyze"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "pure-function",
+      "line" : 82,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "countMatches"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "restricted-function",
+      "line" : 93,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "occurrenceCount"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "pure-function",
+      "line" : 108,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isWordBoundary"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "restricted-function",
+      "line" : 114,
+      "restriction" : "declaration",
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isWordBoundary"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "pure-function",
+      "line" : 124,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractRejectedApproaches"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "extractable-kernel",
+      "line" : 134,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractRejectedApproaches"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "restricted-function",
+      "line" : 145,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "firstLeadIn"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "pure-function",
+      "line" : 159,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "splitIntoSentences"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAnalyzer.swift",
+      "kind" : "pure-function",
+      "line" : 186,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "combineUncertainty"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAntiPatternIngester.swift",
+      "kind" : "extractable-kernel",
+      "line" : 66,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "detectRecurrences"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAntiPatternIngester.swift",
+      "kind" : "extractable-kernel",
+      "line" : 70,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "detectRecurrences"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAntiPatternIngester.swift",
+      "kind" : "extractable-kernel",
+      "line" : 73,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "detectRecurrences"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAntiPatternIngester.swift",
+      "kind" : "pure-function",
+      "line" : 85,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "makeID"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAntiPatternIngester.swift",
+      "kind" : "pure-function",
+      "line" : 100,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractKeywords"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingAntiPatternIngester.swift",
+      "kind" : "extractable-kernel",
+      "line" : 105,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractKeywords"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "pure-function",
+      "line" : 46,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extract"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "pure-function",
+      "line" : 62,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractNumberedSteps"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "restricted-function",
+      "line" : 98,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "stripNumberedPrefix"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "pure-function",
+      "line" : 136,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractSequencedSteps"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "extractable-kernel",
+      "line" : 149,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractSequencedSteps"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "restricted-function",
+      "line" : 174,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "startingLeadIn"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "restricted-function",
+      "line" : 193,
+      "restriction" : "declaration",
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "trimStep"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeExtractor.swift",
+      "kind" : "pure-function",
+      "line" : 200,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "deriveName"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingRecipeIngester.swift",
+      "kind" : "pure-function",
+      "line" : 97,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "makeID"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Thinking\/ThinkingTrace.swift",
+      "kind" : "pure-function",
+      "line" : 16,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isEmpty"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/SemanticMap.swift",
+      "kind" : "extractable-kernel",
+      "line" : 140,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "entries"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/SemanticMap.swift",
+      "kind" : "extractable-kernel",
+      "line" : 144,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "entries"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/SemanticMap.swift",
+      "kind" : "extractable-kernel",
+      "line" : 216,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "contextSummary"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/WorkspaceIndexer+Incremental.swift",
+      "kind" : "pure-function",
+      "line" : 82,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "encodeSnapshot"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/WorkspaceIndexer+Incremental.swift",
+      "kind" : "extractable-kernel",
+      "line" : 148,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "enumerateSwiftFiles"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/WorkspaceIndexer+PackageScope.swift",
+      "kind" : "pure-function",
+      "line" : 63,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "normalized"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/WorkspaceIndexer+PackageScope.swift",
+      "kind" : "pure-function",
+      "line" : 96,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "belongsToPackage"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/WorkspaceIndexer+PackageScope.swift",
+      "kind" : "extractable-kernel",
+      "line" : 99,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "belongsToPackage"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/WorkspaceIndexer+Parsing.swift",
+      "kind" : "pure-function",
+      "line" : 5,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseImports"
+    },
+    {
+      "file" : "Sources\/SwiftAssist\/Workspace\/WorkspaceIndexer.swift",
+      "kind" : "extractable-kernel",
+      "line" : 278,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "findMatchingSCIPSymbol"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Beads\/BeadKindBadge.swift",
+      "kind" : "restricted-function",
+      "line" : 17,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Beads\/BeadsView.swift",
+      "kind" : "pure-function",
+      "line" : 70,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "noMatchDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Beads\/BeadsViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 69,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "applyFilters"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Beads\/BeadsViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 75,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "applyFilters"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Chat\/ChatViewModel+Pipeline.swift",
+      "kind" : "extractable-kernel",
+      "line" : 97,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "buildContextRequest"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Chat\/ConfidenceBadgeView.swift",
+      "kind" : "pure-function",
+      "line" : 24,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "label"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Chat\/ConfidenceBadgeView.swift",
+      "kind" : "restricted-function",
+      "line" : 28,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "accessibilityText"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Chat\/ConfidenceBadgeView.swift",
+      "kind" : "restricted-function",
+      "line" : 32,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "helpText"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Chat\/SandboxWarningView.swift",
+      "kind" : "pure-function",
+      "line" : 19,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "summary"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Chat\/ServiceError.swift",
+      "kind" : "pure-function",
+      "line" : 6,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusBooksSection.swift",
+      "kind" : "extractable-kernel",
+      "line" : 79,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "bookList"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusLoader.swift",
+      "kind" : "pure-function",
+      "line" : 29,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "load"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusLoader.swift",
+      "kind" : "pure-function",
+      "line" : 49,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "reload"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusLoader.swift",
+      "kind" : "pure-function",
+      "line" : 80,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sourceID"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusLoader.swift",
+      "kind" : "pure-function",
+      "line" : 89,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "name"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusLoader.swift",
+      "kind" : "pure-function",
+      "line" : 98,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "corpus"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusLoader.swift",
+      "kind" : "pure-function",
+      "line" : 106,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "repoDisplayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusLoader.swift",
+      "kind" : "pure-function",
+      "line" : 256,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusSourceRow+Actions.swift",
+      "kind" : "restricted-function",
+      "line" : 37,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "loadHelp"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusSourceRow+Actions.swift",
+      "kind" : "restricted-function",
+      "line" : 63,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "reloadMessage"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusSourceRow.swift",
+      "kind" : "restricted-function",
+      "line" : 91,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "iconName"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusSourceRow.swift",
+      "kind" : "restricted-function",
+      "line" : 110,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "statusLabel"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusSourceStatus.swift",
+      "kind" : "pure-function",
+      "line" : 21,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel+Loading.swift",
+      "kind" : "pure-function",
+      "line" : 12,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "loadJob"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel+Loading.swift",
+      "kind" : "pure-function",
+      "line" : 29,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "reloadJob"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel+Loading.swift",
+      "kind" : "extractable-kernel",
+      "line" : 63,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "reloadableBooks"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel+Summary.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel+Summary.swift",
+      "kind" : "pure-function",
+      "line" : 17,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "title"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel+Summary.swift",
+      "kind" : "restricted-function",
+      "line" : 74,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "chunks"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel+Summary.swift",
+      "kind" : "pure-function",
+      "line" : 82,
+      "role" : "predicate",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isAppleRepo"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 43,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "otherProse"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 49,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "thirdPartyCode"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 53,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "unloadedThirdPartyRepos"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 58,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "unloadedRepos"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 82,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "withRepo"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 111,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "loadSources"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "pure-function",
+      "line" : 138,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "framework"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 141,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "framework"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 180,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "unloadedFrameworks"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 218,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "unloadedSwiftEvolution"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 247,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "scanBooks"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Corpus\/CorpusViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 266,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "scanBooks"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/AutonomousLoopSection.swift",
+      "kind" : "restricted-function",
+      "line" : 172,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/CIFailuresView.swift",
+      "kind" : "pure-function",
+      "line" : 75,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/CIFailuresView.swift",
+      "kind" : "pure-function",
+      "line" : 97,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/ConflictWarningView.swift",
+      "kind" : "pure-function",
+      "line" : 80,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/DegradedContextSection.swift",
+      "kind" : "restricted-function",
+      "line" : 66,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "failureSummary"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/HealthViewModel.swift",
+      "kind" : "pure-function",
+      "line" : 37,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/HealthViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 117,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "loadSkillMetrics"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/HealthViewModel.swift",
+      "kind" : "pure-function",
+      "line" : 198,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parseFailedSources"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/InferenceBackendSection.swift",
+      "kind" : "restricted-function",
+      "line" : 85,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "activeChoice"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/InferenceBackendSection.swift",
+      "kind" : "pure-function",
+      "line" : 98,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "text"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/InferenceBackendSection.swift",
+      "kind" : "pure-function",
+      "line" : 113,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/InferenceBackendSection.swift",
+      "kind" : "pure-function",
+      "line" : 127,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "notice"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Health\/MigrationWarningView.swift",
+      "kind" : "pure-function",
+      "line" : 66,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Insights\/InsightCardView.swift",
+      "kind" : "pure-function",
+      "line" : 63,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "copyText"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Insights\/InsightsDashboardView.swift",
+      "kind" : "pure-function",
+      "line" : 78,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Insights\/InsightsViewModel.swift",
+      "kind" : "pure-function",
+      "line" : 41,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Insights\/InsightsViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 57,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "groupedByQuery"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Insights\/InsightsViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 60,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "groupedByQuery"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Navigation\/NavigationDestination.swift",
+      "kind" : "pure-function",
+      "line" : 13,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Navigation\/NavigationDestination.swift",
+      "kind" : "pure-function",
+      "line" : 15,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "label"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Navigation\/NavigationDestination.swift",
+      "kind" : "pure-function",
+      "line" : 28,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "icon"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Navigation\/ProjectPickerView.swift",
+      "kind" : "pure-function",
+      "line" : 65,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "title"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Navigation\/ProjectPickerView.swift",
+      "kind" : "pure-function",
+      "line" : 69,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "subtitle"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Patterns\/PatternViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 28,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "sortedCategories"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Patterns\/PatternViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 29,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "sortedCategories"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Patterns\/PatternViewModel.swift",
+      "kind" : "restricted-function",
+      "line" : 124,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "inferCategory"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Patterns\/PatternViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 142,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "inferCategory"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Patterns\/PatternViewModel.swift",
+      "kind" : "extractable-kernel",
+      "line" : 142,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "inferCategory"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Services\/AppState+Project.swift",
+      "kind" : "pure-function",
+      "line" : 9,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "errorDescription"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Services\/InferenceBackendSelection.swift",
+      "kind" : "pure-function",
+      "line" : 16,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "displayName"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Services\/InferenceBackendSelection.swift",
+      "kind" : "pure-function",
+      "line" : 23,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "detail"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Services\/ProjectSettings.swift",
+      "kind" : "pure-function",
+      "line" : 19,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "current"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Services\/ProjectSettings.swift",
+      "kind" : "pure-function",
+      "line" : 24,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "recents"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Services\/ProjectSettings.swift",
+      "kind" : "pure-function",
+      "line" : 40,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "initialProject"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Services\/ProjectSettings.swift",
+      "kind" : "pure-function",
+      "line" : 57,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "value"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "kindName"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "pure-function",
+      "line" : 27,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "projectNode"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "extractable-kernel",
+      "line" : 52,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "searchProjectSymbols"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "extractable-kernel",
+      "line" : 54,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "searchProjectSymbols"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "pure-function",
+      "line" : 200,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "linksFailureMessage"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "pure-function",
+      "line" : 263,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "relative"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "pure-function",
+      "line" : 272,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "realPath"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "pure-function",
+      "line" : 283,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "node"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "extractable-kernel",
+      "line" : 308,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "declaration"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "extractable-kernel",
+      "line" : 309,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "declaration"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "pure-function",
+      "line" : 315,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "enclosingNode"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "extractable-kernel",
+      "line" : 318,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "enclosingNode"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolBrowserViewModel+Project.swift",
+      "kind" : "extractable-kernel",
+      "line" : 322,
+      "role" : "comparator",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "enclosingNode"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolReferencesPanel.swift",
+      "kind" : "pure-function",
+      "line" : 18,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "emptyMessage"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolReferencesPanel.swift",
+      "kind" : "restricted-function",
+      "line" : 104,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "groupedByRelationship"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolSearchPanel.swift",
+      "kind" : "pure-function",
+      "line" : 131,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "noProjectSymbolsMessage"
+    },
+    {
+      "file" : "Sources\/SwiftAssistApp\/Symbols\/SymbolSearchPanel.swift",
+      "kind" : "pure-function",
+      "line" : 139,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "projectSearchPrompt"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/BaselineDiff.swift",
+      "kind" : "pure-function",
+      "line" : 36,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isRegression"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/BaselineDiff.swift",
+      "kind" : "pure-function",
+      "line" : 40,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "isImprovement"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/BaselineDiff.swift",
+      "kind" : "extractable-kernel",
+      "line" : 132,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "judgeScoreDrops"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/BaselineDiff.swift",
+      "kind" : "pure-function",
+      "line" : 139,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasRegressions"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/BaselineDiff.swift",
+      "kind" : "pure-function",
+      "line" : 145,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasModelMismatch"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalMetricsStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 188,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "recentRuns"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalMetricsStore.swift",
+      "kind" : "extractable-kernel",
+      "line" : 218,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "history"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalMetricsStore.swift",
+      "kind" : "pure-function",
+      "line" : 242,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "readInt"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalMetricsStore.swift",
+      "kind" : "restricted-function",
+      "line" : 249,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "readBool"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalMetricsStore.swift",
+      "kind" : "pure-function",
+      "line" : 258,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalResult.swift",
+      "kind" : "pure-function",
+      "line" : 107,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "passed"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalResult.swift",
+      "kind" : "pure-function",
+      "line" : 130,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "totalCount"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalRunner+Agent.swift",
+      "kind" : "restricted-function",
+      "line" : 319,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "parsePermissions"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalRunner+Inference.swift",
+      "kind" : "extractable-kernel",
+      "line" : 19,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "reflect"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalRunner.swift",
+      "kind" : "extractable-kernel",
+      "line" : 99,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "requestedTier"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/EvalRunner.swift",
+      "kind" : "extractable-kernel",
+      "line" : 258,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "maybeBuild"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "assistTask"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 26,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "editorAction"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "extractable-kernel",
+      "line" : 27,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "editorAction"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 186,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "userQuery"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 214,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "requestText"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 218,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "currentFileContent"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 222,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sourceNames"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 226,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "wantsReflection"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 237,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hasTests"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 244,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "id"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 247,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "task"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 250,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "assistTask"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "pure-function",
+      "line" : 257,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "description"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Fixture.swift",
+      "kind" : "extractable-kernel",
+      "line" : 301,
+      "role" : "normalizer",
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "loadFixture"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Grader.swift",
+      "kind" : "pure-function",
+      "line" : 68,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "codeMarkdown"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Grader.swift",
+      "kind" : "pure-function",
+      "line" : 85,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "requiresBuild"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/AgentSummaryKeywordsGrader.swift",
+      "kind" : "extractable-kernel",
+      "line" : 42,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "grade"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/AgentUsedToolsGrader.swift",
+      "kind" : "extractable-kernel",
+      "line" : 29,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "grade"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/CompilesGrader.swift",
+      "kind" : "pure-function",
+      "line" : 9,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "requiresBuild"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/ForbiddenPhrasesGrader.swift",
+      "kind" : "extractable-kernel",
+      "line" : 18,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "grade"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/JudgeGrader.swift",
+      "kind" : "extractable-kernel",
+      "line" : 57,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "evaluate"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/JudgeGrader.swift",
+      "kind" : "restricted-function",
+      "line" : 122,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "buildPrompt"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/JudgeGrader.swift",
+      "kind" : "restricted-function",
+      "line" : 186,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractJSONCandidates"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/JudgeGrader.swift",
+      "kind" : "pure-function",
+      "line" : 212,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "clampScore"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/KeywordsGrader.swift",
+      "kind" : "extractable-kernel",
+      "line" : 18,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "grade"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/LintCleanGrader.swift",
+      "kind" : "restricted-function",
+      "line" : 43,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "uniqueRuleIDs"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/SwiftFormatCleanGrader.swift",
+      "kind" : "pure-function",
+      "line" : 28,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "failureRationale"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/SwiftFormatCleanGrader.swift",
+      "kind" : "restricted-function",
+      "line" : 91,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "excerpt"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/Graders\/TestsPassGrader.swift",
+      "kind" : "pure-function",
+      "line" : 9,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "requiresBuild"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/JudgeResult.swift",
+      "kind" : "pure-function",
+      "line" : 39,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "dispersion"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/RegressionDetector.swift",
+      "kind" : "extractable-kernel",
+      "line" : 45,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "diff"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/RegressionDetector.swift",
+      "kind" : "restricted-function",
+      "line" : 106,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "diffJudge"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/SwiftBlockExtractor.swift",
+      "kind" : "pure-function",
+      "line" : 8,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extract"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/SwiftBlockExtractor.swift",
+      "kind" : "pure-function",
+      "line" : 16,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "markdown"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness+Sandbox.swift",
+      "kind" : "pure-function",
+      "line" : 18,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "sandboxBlockMessage"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness.swift",
+      "kind" : "extractable-kernel",
+      "line" : 99,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "buildFailureOutput"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness.swift",
+      "kind" : "extractable-kernel",
+      "line" : 155,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "runTests"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness.swift",
+      "kind" : "restricted-function",
+      "line" : 200,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "packageManifest"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness.swift",
+      "kind" : "restricted-function",
+      "line" : 229,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "renderDiagnostic"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness.swift",
+      "kind" : "pure-function",
+      "line" : 264,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractFailingTestNames"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness.swift",
+      "kind" : "extractable-kernel",
+      "line" : 281,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractFailingTestNames"
+    },
+    {
+      "file" : "Sources\/SwiftAssistEval\/TempProjectHarness.swift",
+      "kind" : "restricted-function",
+      "line" : 284,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "extractQuoted"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/BenchCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 33,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "tokensPerSecond"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/BenchCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 96,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "makePrompt"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/BenchCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 129,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "score"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/BenchCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 141,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "extractSwiftCode"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/BenchCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 198,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "printSummary"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/BenchCompiler.swift",
+      "kind" : "restricted-function",
+      "line" : 113,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "firstError"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/BenchCompiler.swift",
+      "kind" : "extractable-kernel",
+      "line" : 116,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "firstError"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CLIOptionValues.swift",
+      "kind" : "pure-function",
+      "line" : 14,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "indexHint"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CLIOptionValues.swift",
+      "kind" : "pure-function",
+      "line" : 25,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "databaseName"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CorpusStatusCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 23,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "run"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CorpusStatusCommand.swift",
+      "kind" : "pure-function",
+      "line" : 73,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "formatDate"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CoverageCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 42,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "run"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CoverageCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 62,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "relative"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CoverageCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 64,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "relative"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/CoverageCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 68,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "percent"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/DemoCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 58,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "prepareModels"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/DoctorCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 135,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "hintForBinary"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/DoctorCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 242,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "summary"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/DoctorCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 277,
+      "restriction" : "enclosing-type",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "render"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/LintSkillsCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 112,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "filterReports"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/LintSkillsCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 113,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "filterReports"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/LintSkillsCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 168,
+      "role" : "transform",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "printJSON"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/MLXModelLookup.swift",
+      "kind" : "pure-function",
+      "line" : 27,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "resolve"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/MLXModelLookup.swift",
+      "kind" : "pure-function",
+      "line" : 31,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "noMLXBuildMessage"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/MLXRunCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 73,
+      "rule" : "Extractable Total Kernel",
+      "symbol" : "run"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/MLXValidateCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 143,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "format"
+    },
+    {
+      "file" : "Sources\/swift-assist-cli\/Commands\/MLXValidateCommand.swift",
+      "kind" : "pure-function",
+      "line" : 147,
+      "role" : "normalizer",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "preview"
+    },
+    {
+      "file" : "Sources\/swift-assist-eval\/Commands\/HistoryCommand.swift",
+      "kind" : "restricted-function",
+      "line" : 45,
+      "restriction" : "declaration",
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "formatBuild"
+    },
+    {
+      "file" : "Sources\/swift-assist-eval\/Commands\/RunCommand.swift",
+      "kind" : "extractable-kernel",
+      "line" : 89,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "loadFilteredFixtures"
+    },
+    {
+      "file" : "Sources\/swift-assist-eval\/Helpers\/FormatHelpers.swift",
+      "kind" : "pure-function",
+      "line" : 6,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "resultLine"
+    },
+    {
+      "file" : "Sources\/swift-assist-eval\/Helpers\/FormatHelpers.swift",
+      "kind" : "pure-function",
+      "line" : 95,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "columns"
+    },
+    {
+      "file" : "Sources\/swift-assist-eval\/Helpers\/ReportIO.swift",
+      "kind" : "extractable-kernel",
+      "line" : 44,
+      "role" : "predicate",
+      "rule" : "Pure Closure Property-Test Candidate",
+      "symbol" : "newestReport"
+    },
+    {
+      "file" : "XcodeExtension\/SwiftAssistExtension.swift",
+      "kind" : "pure-function",
+      "line" : 18,
+      "rule" : "Pure Function Property-Test Candidate",
+      "symbol" : "commandDefinitions"
+    }
+  ],
+  "skippedPackages" : [
+    "SwiftInferenceBackends",
+    "SwiftInferenceProtocol",
+    "SwiftSourceKitClient",
+    "SwiftVectorStore",
+    "workspace"
+  ],
+  "version" : 2
+}
