@@ -30,9 +30,14 @@ import SwiftInferCore
 /// `.unknown` rather than `.notEquatable`, which CLAUDE.md records as the reason that component
 /// could not carry this.
 ///
-/// ⚠ **Swift synthesises `Equatable` only where it is DECLARED.** A struct whose every member is
-/// `Equatable` is not itself `Equatable` until it says so, so there is no member walk here and
-/// adding one would make the gate wrong in the direction that costs laws.
+/// ⚠ **Swift synthesises `Equatable` only where it is DECLARED** — with one exception. A struct
+/// whose every member is `Equatable` is not itself `Equatable` until it says so, so there is no
+/// member walk here and adding one would make the gate wrong in the direction that costs laws.
+/// **The exception is an enum with at least one case, none of which carries a payload**, which
+/// Swift makes `Equatable` and `Hashable` without being asked — a caseless enum gets no `==`. This
+/// gate does not read cases and can decline one such carrier wrongly; `UnequatableResultGate`,
+/// which asks the same question of a RESULT, reads the cases first (and why it lets a caseless
+/// enum through anyway is in its `isImplicitlyEquatable`).
 enum UnequatableCarrierGate {
 
     /// `Equatable` and the standard protocols that refine it.

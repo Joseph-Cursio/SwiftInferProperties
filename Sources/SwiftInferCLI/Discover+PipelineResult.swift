@@ -62,12 +62,18 @@ extension SwiftInferCommand.Discover {
         /// the `DomainHint` for the writeout.
         public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
 
-        /// V1.47.C — type declarations the discover pass saw, keyed by
-        /// bare type name (no generic argument list). `IndexCommand`
-        /// reads this to populate `SemanticIndexEntry.typeShape` so the
-        /// verify pipeline can call `DerivationStrategist.strategy(for:)`
-        /// without re-parsing the user's source. Empty for code paths
-        /// that don't need it (the renderer / interactive flows).
+        /// V1.47.C — type declarations the discover pass saw, keyed by the
+        /// shape's own `name` (no generic argument list), which
+        /// `TypeShapeBuilder.shapes` emits **qualified**: a nested type is
+        /// `Outer.Inner`, not `Inner`. `IndexCommand` reads this to populate
+        /// `SemanticIndexEntry.typeShape` so the verify pipeline can call
+        /// `DerivationStrategist.strategy(for:)` without re-parsing the user's
+        /// source. Empty for code paths that don't need it (the renderer /
+        /// interactive flows).
+        ///
+        /// ⚠ **Not keyed like `inheritedTypesByName`**, which uses `TypeDecl.name` —
+        /// bare for a nested declaration. A caller joining the two for a nested type
+        /// must try both spellings (`UnequatableResultGate`).
         public let typeShapesByName: [String: PropertyLawCore.TypeShape]
 
         /// Conformances keyed by type name, with **cross-file extension records merged**
@@ -78,6 +84,12 @@ extension SwiftInferCommand.Discover {
         /// with a bare inheritance clause and declares all eleven conformances in separate
         /// `BitSet+X.swift` files, so the shape-derived map sees none of them.
         public let inheritedTypesByName: [String: Set<String>]
+
+        /// Names the scan saw get `==` without an inheritance clause saying so — a hand-written
+        /// `static func ==`, or an attribute that may be a macro adding `Equatable`. Read by
+        /// `UnequatableResultGate`, which must not count those types as having no `==`; see
+        /// `UnequatableResultGate.equalityOutsideInheritance(typeDecls:summaries:)`.
+        public let equalityOutsideInheritance: Set<String>
 
         /// Generic parameters per type name, for callers that must NAME a carrier in emitted
         /// source. `TypeShape` does not carry them and `TypeDecl.name` is the bare
@@ -158,6 +170,7 @@ extension SwiftInferCommand.Discover {
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
             typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
             inheritedTypesByName: [String: Set<String>] = [:],
+            equalityOutsideInheritance: Set<String> = [],
             genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
             visibleToTestableImportByName: [String: Bool] = [:],
             testVisibleTypeNames: Set<String> = [],
@@ -184,6 +197,7 @@ extension SwiftInferCommand.Discover {
             self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
             self.typeShapesByName = typeShapesByName
             self.inheritedTypesByName = inheritedTypesByName
+            self.equalityOutsideInheritance = equalityOutsideInheritance
             self.genericParametersByName = genericParametersByName
             self.visibleToTestableImportByName = visibleToTestableImportByName
             self.testVisibleTypeNames = testVisibleTypeNames

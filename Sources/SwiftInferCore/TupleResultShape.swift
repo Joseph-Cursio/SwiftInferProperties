@@ -43,8 +43,8 @@ import SwiftSyntax
 /// compile (*two 'Pair?' (aka 'Optional<(Int, Int)>') operands*). Resolving it takes the scanned
 /// alias table and the declaring scope: a bare-name lookup would read a type parameter called
 /// `Element` as some other type's `Element` alias. That belongs to an accept-time gate holding the
-/// scan — `UnequatableCarrierGate` asks the matching question of a scanned nominal type, though not
-/// yet of determinism's result, whose non-`Equatable` nominal returns fail to compile the same way.
+/// scan — `UnequatableResultGate` asks the matching question of determinism's scanned nominal
+/// result, and `UnequatableCarrierGate` of a carrier, but neither reads the alias table yet.
 public enum TupleResultShape: Equatable, Sendable {
 
     /// Not a tuple and wraps none — nothing about `==` follows from the spelling. Also the answer

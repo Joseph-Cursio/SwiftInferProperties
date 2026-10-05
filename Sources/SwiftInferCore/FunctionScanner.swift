@@ -270,7 +270,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.classKeyword,
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
-            modifiers: node.modifiers
+            modifiers: node.modifiers, attributes: node.attributes
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
@@ -288,7 +288,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.structKeyword,
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
-            modifiers: node.modifiers
+            modifiers: node.modifiers, attributes: node.attributes
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
@@ -306,7 +306,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.enumKeyword,
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
-            modifiers: node.modifiers
+            modifiers: node.modifiers, attributes: node.attributes
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
@@ -324,7 +324,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.actorKeyword,
             memberBlock: node.memberBlock, genericParameterClause: node.genericParameterClause,
-            modifiers: node.modifiers
+            modifiers: node.modifiers, attributes: node.attributes
         ))
         typeStack.append(node.name.text)
         enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
@@ -342,7 +342,8 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             kind: .extension,
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.extensionKeyword,
-            memberBlock: node.memberBlock, isConditionalExtension: node.genericWhereClause != nil
+            memberBlock: node.memberBlock, isConditionalExtension: node.genericWhereClause != nil,
+            attributes: node.attributes
         ))
         typeStack.append(extendedTypeText)
         enclosingTypeAccess.append(EnclosingTypeContext(modifiers: node.modifiers, attributes: node.attributes))
@@ -379,7 +380,7 @@ final class FunctionScannerVisitor: SyntaxVisitor {
             inheritanceClause: node.inheritanceClause,
             keywordToken: node.protocolKeyword,
             memberBlock: node.memberBlock,
-            modifiers: node.modifiers
+            modifiers: node.modifiers, attributes: node.attributes
         ))
         return .skipChildren
     }

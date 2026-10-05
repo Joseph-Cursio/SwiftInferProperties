@@ -183,6 +183,16 @@ public struct TypeDecl: Sendable, Equatable {
     /// conditional extensions, so the distinction is not hypothetical.
     public let isConditionalExtension: Bool
 
+    /// The attributes written on the declaration, by name, without `@` or arguments:
+    /// `@MainActor @Model final class Item` gives `["MainActor", "Model"]`. An attribute list
+    /// entry inside `#if` is recorded as `#if`, since which branch applies is not known here.
+    ///
+    /// **Captured for `UnequatableResultGate`**, which must not read *no inheritance clause reaches
+    /// `Equatable`* as *no `==`* when a macro may add the conformance: SwiftData's `@Model`
+    /// conforms its class to `PersistentModel`, which refines `Hashable`, and nothing in the source
+    /// text says so. Empty for every record built without a scan.
+    public let attributeNames: [String]
+
     /// One generic parameter and the constraint written on it, if any.
     public struct GenericParameter: Sendable, Equatable {
         public let name: String
@@ -211,7 +221,8 @@ public struct TypeDecl: Sendable, Equatable {
         qualifiedName: String? = nil,
         genericParameters: [GenericParameter] = [],
         isConditionalExtension: Bool = false,
-        isVisibleToTestableImport: Bool = true
+        isVisibleToTestableImport: Bool = true,
+        attributeNames: [String] = []
     ) {
         // Defaulted to `name` so the many hand-built test fixtures — and any
         // caller that has no enclosing-type context — keep working unchanged.
@@ -219,6 +230,7 @@ public struct TypeDecl: Sendable, Equatable {
         self.name = name
         self.genericParameters = genericParameters
         self.isConditionalExtension = isConditionalExtension
+        self.attributeNames = attributeNames
         self.kind = kind
         self.inheritedTypes = inheritedTypes
         self.location = location
@@ -250,7 +262,8 @@ public struct TypeDecl: Sendable, Equatable {
             qualifiedName: qualifiedName,
             genericParameters: genericParameters,
             isConditionalExtension: isConditionalExtension,
-            isVisibleToTestableImport: isVisibleToTestableImport
+            isVisibleToTestableImport: isVisibleToTestableImport,
+            attributeNames: attributeNames
         )
     }
 }

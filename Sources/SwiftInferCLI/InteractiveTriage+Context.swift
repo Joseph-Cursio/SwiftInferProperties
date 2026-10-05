@@ -122,6 +122,11 @@ extension InteractiveTriage {
         /// `monotonicity` carrier can be ordered at all (`UnorderedCarrierGate`).
         public let inheritedTypesByName: [String: Set<String>]
 
+        /// Names the scan saw get `==` without an inheritance clause (`PipelineResult`'s field of
+        /// the same name), so `UnequatableResultGate` does not withdraw a stub over them. Empty for
+        /// every caller that does not supply it, which reads clauses alone.
+        var equalityOutsideInheritance: Set<String> = []
+
         /// Generators for SwiftSyntax node parameters, from snippets the package's tests parse.
         /// `nil` for every caller that does not supply one, which keeps the explained `.todo`.
         /// Set after construction because the type is internal and the initializer is public.

@@ -12,13 +12,17 @@ enum ActorReceiver {
     static func marking(_ suggestion: Suggestion, actorTypeNames: Set<String>) -> Suggestion {
         guard !actorTypeNames.isEmpty else { return suggestion }
         var copy = suggestion
-        copy.evidence = suggestion.evidence.map { row in
-            guard row.isInstanceMethod, row.globalActor == nil, !row.declaresNonisolated,
-                  let owner = row.qualifiedTypeName, actorTypeNames.contains(owner)
-            else { return row }
-            return row.withGlobalActor(CalleeReference.actorReceiverIsolation)
-        }
+        copy.evidence = suggestion.evidence.map { marking($0, actorTypeNames: actorTypeNames) }
         return copy
+    }
+
+    /// One row, marked the same way — for a caller that holds a function's own row
+    /// (`FunctionSummary.inferenceEvidence`) rather than a suggestion.
+    static func marking(_ row: Evidence, actorTypeNames: Set<String>) -> Evidence {
+        guard row.isInstanceMethod, row.globalActor == nil, !row.declaresNonisolated,
+              let owner = row.qualifiedTypeName, actorTypeNames.contains(owner)
+        else { return row }
+        return row.withGlobalActor(CalleeReference.actorReceiverIsolation)
     }
 
     /// The names the accept path's scanned shapes declare as actors, under both the key and the

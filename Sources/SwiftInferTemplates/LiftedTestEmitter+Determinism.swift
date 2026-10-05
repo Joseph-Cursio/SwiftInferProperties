@@ -70,8 +70,16 @@ extension LiftedTestEmitter {
     /// instance method, exactly as the totality arm takes them. One draws `value`; several draw a
     /// tuple and call with `args.0`, `args.1`, ….
     ///
-    /// A synchronous isolated callee gets one hop around the whole equality; an async one is
-    /// awaited instead, because `MainActor.run` cannot contain an `await` (#432).
+    /// The property is `agreementProperty` with the subject as its own oracle. A reference oracle
+    /// states the same law against `<name>_reference`, so one written through that emitter cannot
+    /// spell the binding, `try?`, `await` or actor hop differently from this one.
+    ///
+    /// ## The approximate helper is appended, which it never used to be
+    ///
+    /// A `Double` result compares through `approximatelyEqual`, and this arm wrote the call
+    /// without the helper every other caller of `equalityExpression` appends — so a
+    /// floating-point determinism stub failed with *cannot find 'approximatelyEqual' in scope*.
+    /// A throwing subject compares `Optional`s strictly and gets no helper.
     public static func deterministic(
         callee: CalleeReference,
         generators: [String],
@@ -81,49 +89,22 @@ extension LiftedTestEmitter {
         isThrows: Bool = false,
         argumentTypes: [String] = []
     ) -> String {
-        let isTuple = generators.count > 1
-        let bind = isTuple
-            ? Self.tupleBinding(argumentTypes: argumentTypes, count: generators.count)
-            : "value"
-        let invocation = callee.call(isTuple ? generators.indices.map { "args.\($0)" } : ["value"])
-        let property: String
-        if isThrows {
-            // A throwing pure function is deterministic over `Result`: compare
-            // `try? f(x)` on both sides. An input in the throwing domain collapses
-            // to `nil == nil` (no false positive); only a value difference — the
-            // hidden nondeterminism the law targets — falsifies it. Strict `==` on
-            // the resulting optional, which needs the result to CONFORM to
-            // `Equatable` — and a tuple never does, so `Optional<(A, B)>` has no
-            // `==` even when `A` and `B` are Equatable. The accept path declines a
-            // throwing tuple subject before reaching here
-            // (`InteractiveTriage.determinismResultDeclineReason`).
-            let prefix = isAsync ? "try? await " : "try? "
-            let call = "(\(prefix)\(invocation))"
-            property = "\(call) == \(call)"
-        } else {
-            let call = isAsync ? "(await \(invocation))" : invocation
-            property = equalityExpression(lhs: call, rhs: call, kind: equalityKind)
-        }
-        return makeTestStubExpression(
+        let law = AgreementLaw(
+            subject: callee,
+            oracle: callee,
+            argumentTypes: argumentTypes,
+            argumentCount: generators.count,
+            equalityKind: equalityKind,
+            isAsync: isAsync,
+            isThrows: isThrows
+        )
+        let stub = makeTestStubExpression(
             testFunctionName: "\(callee.identifierName)_isDeterministic",
             seed: seed,
-            sampleExpression: determinismSample(generators: generators),
-            propertyExpression: "{ \(bind) in \(isAsync ? property : callee.isolated(property)) }",
+            sampleExpression: argumentSample(generators: generators),
+            propertyExpression: agreementProperty(law),
             failureLabel: "\(callee.displaySignature) is not deterministic — same input produced different output"
         )
-    }
-
-    /// One draw for a single generator; for several, a tuple of draws in argument order (the
-    /// multi-line sample shape `monotonic`/`commutative` use).
-    private static func determinismSample(generators: [String]) -> String {
-        guard generators.count > 1 else {
-            return "{ rng in (\(generators.first ?? "")).run(using: &rng) }"
-        }
-        let draws = generators.indices.map { index in
-            "                    let arg\(index) = (\(generators[index])).run(using: &rng)"
-        }
-        let slots = generators.indices.map { "arg\($0)" }.joined(separator: ", ")
-        let tupleReturn = "                    return (\(slots))"
-        return (["{ rng in"] + draws + [tupleReturn, "                }"]).joined(separator: "\n")
+        return withApproximateEqualityHelper(stub, kind: law.effectiveEqualityKind)
     }
 }

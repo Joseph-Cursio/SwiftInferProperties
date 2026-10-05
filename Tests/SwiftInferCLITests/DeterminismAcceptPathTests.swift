@@ -359,9 +359,9 @@ extension DeterminismAcceptPathTests {
     /// **A throwing closure PARAMETER is not the subject throwing.** `" throws"` appears in this
     /// signature only inside the closure's type, and reading it as the function's own made accept
     /// say "applyPair(_:_:) throws and returns a tuple" — false, and contradicting the law's own
-    /// caveats, which read the scanner's `isThrows`. The subject is still declined, for the cause
-    /// it was declined for before tuples were looked at: the closure's `->` defeats the
-    /// parameter-type split, so the call cannot be spelled.
+    /// caveats, which read the scanner's `isThrows`. The subject is still declined, and now for its
+    /// real cause: no generator draws a function. It used to read as a label-count mismatch,
+    /// because the closure's `->` defeats the parameter-type split (`SubjectCallPlan`).
     @Test func aThrowingClosureParameterIsNotTheSubjectThrowing() throws {
         let law = try Self.law(for: Self.summary(
             name: "applyPair",
@@ -372,7 +372,7 @@ extension DeterminismAcceptPathTests {
         ))
         #expect(InteractiveTriage.deterministicStub(for: law) == nil)
         let reason = try #require(StubApplicationArity.declineReason(for: law))
-        #expect(reason.contains("throws") == false)
-        #expect(reason.contains("argument label(s)"))
+        #expect(reason.contains("throws and returns") == false)
+        #expect(reason.contains("function-typed parameter"))
     }
 }

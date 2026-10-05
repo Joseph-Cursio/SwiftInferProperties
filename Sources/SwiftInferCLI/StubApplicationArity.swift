@@ -66,10 +66,7 @@ enum StubApplicationArity {
     /// templates — so the one message was wrong every time it fired.
     static func declineReason(for suggestion: Suggestion) -> String? {
         if suggestion.templateName == "comparator", let evidence = suggestion.evidence.first {
-            guard let callee = CalleeReference(evidence: evidence) else {
-                return "\(evidence.displayName) is a mutating method, so it returns no value for the law to compare"
-            }
-            return InteractiveTriage.comparatorDeclineReason(callee: callee, evidence: evidence)
+            return comparatorDeclineReason(for: evidence)
         }
         // `guard-domain`'s law is source text the tool did not write, so what defeats it is a NAME
         // in the author's own scope rather than an arity. Saying which name is the whole
@@ -78,6 +75,13 @@ enum StubApplicationArity {
         if suggestion.templateName == "guard-domain",
            let reason = InteractiveTriage.guardDomainDeclineReason(for: suggestion) {
             return reason
+        }
+        // `determinism` is answered by the plan its writer builds from, whole: the result shape,
+        // the call shape and the arguments, in one order (`SubjectCallPlan`). Reading the same
+        // `Outcome` as `deterministicStub` is what makes "a reason exactly when no stub" hold by
+        // construction instead of by two lists kept in step.
+        if suggestion.templateName == "determinism", let evidence = suggestion.evidence.first {
+            return SubjectCallPlan.declineReason(for: evidence)
         }
         let isArityFree = arityFreeTemplates.contains(suggestion.templateName)
         let arity = forTemplate(suggestion.templateName)
@@ -97,8 +101,7 @@ enum StubApplicationArity {
                 + "no value for the law to quantify over"
         }
         guard let arity else {
-            return resultDeclineReason(for: suggestion, evidence: evidence)
-                ?? arityFreeDeclineReason(callee: callee, evidence: evidence)
+            return arityFreeDeclineReason(callee: callee, evidence: evidence)
         }
         // A paired template needs both halves. One evidence row means the pair was never
         // resolved, which is a fact about the SUBJECT rather than about the emitter.
@@ -124,25 +127,28 @@ enum StubApplicationArity {
             + "but '\(suggestion.templateName)' applies \(arity)"
     }
 
-    /// Why an arity-free law's `==` cannot be written over the subject's RESULT, or `nil`.
-    ///
-    /// `determinism` is the one law here whose spelling depends on the result: it compares two
-    /// results with `==`, and over a tuple only some shapes of that comparison exist — the
-    /// throwing form's `Optional` of a tuple has no `==` at all. Asked before the argument
-    /// questions below, and kept in step with the writer the same way they are: it is one
-    /// function, `InteractiveTriage.determinismResultDeclineReason`, which `deterministicStub`
-    /// also calls.
-    private static func resultDeclineReason(for suggestion: Suggestion, evidence: Evidence) -> String? {
-        guard suggestion.templateName == "determinism" else { return nil }
-        return InteractiveTriage.determinismResultDeclineReason(for: evidence)
+    /// Why a `comparator` subject cannot be written, or `nil` — its own rule, asked whatever the
+    /// arity table says.
+    private static func comparatorDeclineReason(for evidence: Evidence) -> String? {
+        guard let callee = CalleeReference(evidence: evidence) else {
+            return "\(evidence.displayName) is a mutating method, so it returns no value for the law to compare"
+        }
+        return InteractiveTriage.comparatorDeclineReason(callee: callee, evidence: evidence)
     }
 
     /// Why a totality subject cannot be written, or `nil` when it can — the questions an
     /// arity-free law still has to ask once the number is gone.
     ///
     /// Kept in step with `InteractiveTriage.arityFreeArgumentTypes`, which declines exactly these;
-    /// `ArityFreeTotalityTests` and `DeterminismAcceptPathTests` pin both sides of every row —
-    /// including `determinism`'s result-type rule, asked just before this (`resultDeclineReason`).
+    /// `ArityFreeTotalityTests` pins both sides of every row. `determinism` no longer reaches
+    /// here: it is answered above by `SubjectCallPlan`, which asks these questions too, plus the
+    /// ones only a law that compares results has (its result's shape, a function-typed
+    /// parameter, and `inout` read from `Evidence.inoutParameterIndices`).
+    ///
+    /// ⚠ **The `inout` row below is dead for scanner-built rows** — the scanner strips the
+    /// specifier from the type it renders — and is deliberately left alone: totality reaches an
+    /// `inout` subject through a `var` copy and writes it correctly, so declining here would
+    /// withdraw stubs that compile.
     private static func arityFreeDeclineReason(callee: CalleeReference, evidence: Evidence) -> String? {
         // A static computed property or a static nullary function is called with nothing, so
         // there is no input for "every input" to range over.

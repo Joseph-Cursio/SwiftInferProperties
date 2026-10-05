@@ -18,16 +18,23 @@ extension InteractiveTriage {
     /// #493's gate and #498's argument types both landed in it.
     static func customGenerator(for context: Context) -> (String) -> String? {
         let corpus = context.syntaxCorpus
-        // A class a shim will make `Sendable` is presented to the kit as `@unchecked Sendable`, so
-        // it derives through its initializer (kit 4.9.0). Only test-visible classes: those are the
-        // only ones a shim may name, and so the only ones the stub can then draw.
         return projectTypeGenerator(
-            types: SendableShim.presentingShimmableClasses(
-                Array(context.typeShapesByName.values), visible: context.testVisibleTypeNames
-            ),
+            types: presentedShapes(typeShapesByName: context.typeShapesByName, visible: context.testVisibleTypeNames),
             aliases: context.typeAliases,
             syntaxNode: corpus.map { source in { source.generator(for: $0) } }
         )
+    }
+
+    /// The type universe the resolver derives over: every scanned shape, with each class a shim
+    /// will make `Sendable` presented to the kit as `@unchecked Sendable`, so it derives through
+    /// its initializer (kit 4.9.0). Only test-visible classes: those are the only ones a shim may
+    /// name, and so the only ones a stub can then draw.
+    ///
+    /// One expression for every caller — the resolver and its failure reason here, and any other
+    /// command that builds the same resolver from its own scan — so a reason never describes a
+    /// derivation other than the one that ran.
+    static func presentedShapes(typeShapesByName: [String: TypeShape], visible: Set<String>) -> [TypeShape] {
+        SendableShim.presentingShimmableClasses(Array(typeShapesByName.values), visible: visible)
     }
 
     /// `customGenerator(for:)` over an explicit type universe, so the choice can be tested
@@ -107,9 +114,7 @@ extension InteractiveTriage {
         // The same universe `customGenerator(for:)` resolves over, so a reason never describes a
         // derivation other than the one that ran.
         generatorFailureReason(
-            types: SendableShim.presentingShimmableClasses(
-                Array(context.typeShapesByName.values), visible: context.testVisibleTypeNames
-            ),
+            types: presentedShapes(typeShapesByName: context.typeShapesByName, visible: context.testVisibleTypeNames),
             aliases: context.typeAliases
         )
     }
@@ -168,9 +173,10 @@ extension InteractiveTriage {
     ///
     /// Every gate withdraws a stub that could never compile whatever the generator, import or
     /// budget: one names a type parameter (#493), one orders a `monotonicity` pair over a type
-    /// nothing makes `Comparable`, one compares results with `==` over a type nothing makes
-    /// `Equatable`, and one splices a bare call to a `throws` subject into a property closure
-    /// that cannot propagate. Lifted out of `handleAccept` for its body-length cap.
+    /// nothing makes `Comparable`, one compares carriers with `==` over a type nothing makes
+    /// `Equatable`, one splices a bare call to a `throws` subject into a property closure that
+    /// cannot propagate, and one compares a `determinism` subject's RESULTS with `==` over a type
+    /// nothing makes `Equatable`. Lifted out of `handleAccept` for its body-length cap.
     static func gateDeclineReason(for suggestion: Suggestion, context: Context) -> String? {
         GenericSubjectGate.declineReason(
             for: suggestion,
@@ -184,6 +190,12 @@ extension InteractiveTriage {
             scannedTypeNames: Set(context.typeShapesByName.keys),
             inheritedTypesByName: context.inheritedTypesByName
         ) ?? ThrowingSubjectGate.declineReason(for: suggestion)
+            ?? UnequatableResultGate.declineReason(
+                for: suggestion,
+                typeShapesByName: context.typeShapesByName,
+                inheritedTypesByName: context.inheritedTypesByName,
+                equalityOutsideInheritance: context.equalityOutsideInheritance
+            )
     }
 
     /// Say why no stub was written, naming the cause rather than the template where it can.

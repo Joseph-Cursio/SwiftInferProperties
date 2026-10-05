@@ -16,7 +16,8 @@ extension FunctionScannerVisitor {
         memberBlock: MemberBlockSyntax,
         genericParameterClause: GenericParameterClauseSyntax? = nil,
         isConditionalExtension: Bool = false,
-        modifiers: DeclModifierListSyntax? = nil
+        modifiers: DeclModifierListSyntax? = nil,
+        attributes: AttributeListSyntax? = nil
     ) -> TypeDecl {
         let inheritedTypes = inheritanceClause?.inheritedTypes.map(\.type.trimmedDescription) ?? []
         let position = keywordToken.positionAfterSkippingLeadingTrivia
@@ -90,8 +91,18 @@ extension FunctionScannerVisitor {
             // `@testable` raises `internal` to public and leaves `private`/`fileprivate` alone,
             // so only `.notVisibleToTests` answers no.
             isVisibleToTestableImport: modifiers
-                .map { Self.access(of: $0) != .notVisibleToTests } ?? true
+                .map { Self.access(of: $0) != .notVisibleToTests } ?? true,
+            attributeNames: Self.attributeNames(in: attributes)
         )
+    }
+
+    /// The names `TypeDecl.attributeNames` records: each attribute as written, without `@` or
+    /// arguments, and `#if` for an entry the build configuration decides.
+    static func attributeNames(in attributes: AttributeListSyntax?) -> [String] {
+        attributes?.map { element in
+            guard case let .attribute(attribute) = element else { return "#if" }
+            return attribute.attributeName.trimmedDescription
+        } ?? []
     }
 
     /// The parameters a `<…>` clause binds, as written. Shared by the type path and the function

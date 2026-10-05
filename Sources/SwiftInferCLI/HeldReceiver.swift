@@ -1,5 +1,6 @@
 import Foundation
 import SwiftInferCore
+import SwiftInferTemplates
 
 /// A law over an instance method whose receiver is a separate object, stated with that receiver
 /// held fixed: `codec.decode(codec.encode(x)) == x`.
@@ -104,7 +105,7 @@ enum HeldReceiver {
             // Either unresolved spelling means the receiver cannot be built: the `.todo` member,
             // or the block-comment marker, which census 13 found inside a derived generator.
             guard let generator = customGenerator?(typeName),
-                  !generator.contains(".todo"), !generator.contains("no generator derived") else {
+                  LiftedTestEmitter.isUnresolvedGenerator(generator) == false else {
                 return nil
             }
             if let only = singleValue(of: generator) { return only }

@@ -49,6 +49,23 @@ enum GenericSubjectGate {
         genericParametersByName: [String: [TypeDecl.GenericParameter]]
     ) -> String? {
         guard let evidence = suggestion.evidence.first else { return nil }
+        return declineReason(
+            for: evidence,
+            owner: evidence.qualifiedTypeName ?? suggestion.carrier,
+            genericParametersByName: genericParametersByName
+        )
+    }
+
+    /// The same rule over one evidence row, for a caller that holds a function's own row
+    /// (`FunctionSummary.inferenceEvidence`) rather than a suggestion.
+    ///
+    /// - Parameter owner: the declaring type whose generic parameters the subject may name. The
+    ///   suggestion form passes `qualifiedTypeName`, falling back to the suggestion's carrier.
+    static func declineReason(
+        for evidence: Evidence,
+        owner: String?,
+        genericParametersByName: [String: [TypeDecl.GenericParameter]]
+    ) -> String? {
         let display = evidence.displayName
         // The function's own `<C>` first: it needs no owner and no map, which is why a top-level
         // generic function slipped both guards below (#497).
@@ -58,9 +75,7 @@ enum GenericSubjectGate {
         if let reason = opaqueParameterReason(for: evidence, display: display) {
             return reason
         }
-        guard !genericParametersByName.isEmpty,
-              let owner = evidence.qualifiedTypeName ?? suggestion.carrier
-        else { return nil }
+        guard !genericParametersByName.isEmpty, let owner else { return nil }
 
         let bound = boundParameters(of: owner, in: genericParametersByName)
         guard !bound.isEmpty else { return nil }
