@@ -208,7 +208,11 @@ extension SwiftInferCommand {
             that sentence with the law it defines — the reference definition a \
             `predicate` law openly owes, the spec a lifted example test needs, or \
             the only refutable contract on a function the templates could offer \
-            nothing owed for. **On by default**: on the SwiftProjectLint road test, \
+            nothing owed for. Its runnable reference-oracle scaffold spells the call \
+            the way `accept` does (a qualified static call, a drawn receiver for a \
+            method, try?/await/actor hop, and the member's <name>_reference declared \
+            in an extension of its type), and otherwise prints "no runnable reference \
+            oracle:" with the reason. **On by default**: on the SwiftProjectLint road test, \
             run without --seeds, it surfaced 8 of 10 hand-keyed kernels where the \
             templates surfaced 2. Under --seeds, documented functions the manifest \
             does not name as functions to analyse (one only an extractable-kernel \

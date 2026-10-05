@@ -226,7 +226,8 @@ extension SwiftInferCommand.Discover {
             summaries: pipeline.summaries,
             suggestions: visible,
             unfocusedSuggestions: pipeline.suggestions,
-            seedManifest: seedManifest
+            seedManifest: seedManifest,
+            oracleContext: ReferenceOracleContext(pipeline: pipeline)
         )
     }
 

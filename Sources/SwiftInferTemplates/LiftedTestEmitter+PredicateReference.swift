@@ -14,6 +14,11 @@ import SwiftInferCore
 /// (the part the reader skipped by hand — five of six walk-10 readers named the
 /// contract and never ran it). Point, don't synthesize — pushed one stage on, so
 /// the pointed-at sentence becomes executable.
+///
+/// This file keeps the free-function entry point and the pieces the scaffold shares: the
+/// result note, the numeric edge bias and the parameter clause. The scaffold itself —
+/// a member's reference declared in `extension <Owner>`, and the comparison written through the
+/// determinism law's own `agreementProperty` — is `LiftedTestEmitter+ReferenceOracle.swift`.
 extension LiftedTestEmitter {
 
     /// One parameter of a reference oracle paired with the `Gen<T>` it draws from.
@@ -27,23 +32,15 @@ extension LiftedTestEmitter {
         }
     }
 
-    /// Emit the reference-oracle stub + property for a documented function
+    /// Emit the reference-oracle stub + property for a documented FREE function
     /// `funcName: (T...) -> R` of any arity whose return `R` is `Equatable` — or, for a tuple
     /// `R`, has `==` through its elements: a tuple never conforms to `Equatable`, and Swift
     /// defines `==` on tuples of two to six `Equatable` elements instead (`TupleResultShape`).
     ///
-    /// This is the runnable form of a reference definition — a `<name>_reference`
-    /// the reader writes from the docstring, checked against the code by
-    /// `f(x) == f_reference(x)`. It serves three callers: a `predicate` and a
-    /// `comparator` (`R == Bool`, the docstring is the boolean law / the ordering
-    /// key), and the determinism-fallback contract (`R` is the value type, the
-    /// docstring is the computation the templates could not name — the reference
-    /// is a from-the-spec re-implementation, differential testing).
-    ///
-    /// A single parameter draws one `value`; two or more draw a `tuple` the
-    /// property indexes (`tuple.0`, `tuple.1`, …) — the commutativity arm's pair
-    /// shape. Argument labels are preserved in both calls, so a `canReach(from:to:)`
-    /// compares against a `canReach_reference(from:to:)` of the same signature.
+    /// The free-function form of `referenceOracle(subject:draws:equalityKind:docComment:seed:)`,
+    /// kept for callers that hold only a name and its parameters. It spells the call bare, which
+    /// is right only for a function at file scope; `discover` builds the subject from the
+    /// function's own evidence row instead, so a member is qualified or drawn a receiver.
     ///
     /// - Parameters:
     ///   - funcName: the function's base name (e.g. `isValidQuantity`).
@@ -51,46 +48,32 @@ extension LiftedTestEmitter {
     ///   - returnTypeText: the return type `R` (`"Bool"` for predicate/comparator).
     ///   - docComment: the reflowed docstring — shown verbatim as the definition.
     ///   - seed: sampling seed (derive from the suggestion identity for stability).
+    ///   - equalityKind: how two results compare; strict unless the caller asks otherwise.
     public static func referenceOracle(
         funcName: String,
         arguments: [ReferenceOracleArgument],
         returnTypeText: String,
         docComment: String,
-        seed: SamplingSeed.Value
+        seed: SamplingSeed.Value,
+        equalityKind: EqualityKind = .strict
     ) -> String {
         guard !arguments.isEmpty else { return "" }
         let parameters = arguments.map(\.parameter)
-        let referenceName = "\(funcName)_reference"
-        let paramClause = parameters
-            .map { parameterClause(label: $0.label, name: $0.internalName, typeText: $0.typeText) }
-            .joined(separator: ", ")
-        let equatableNote = returnTypeText == "Bool" ? "" : equatableNote(forReturnType: returnTypeText)
-
-        let stub = """
-        // Fill in the reference definition below — your docstring already states it:
-        //   "\(docComment)"
-        // Then run the test: the generator finds the input where the code disagrees
-        // with its own documentation.
-        \(equatableNote)func \(referenceName)(\(paramClause)) -> \(returnTypeText) {
-            fatalError("state the reference definition from the docstring, then replace this line")
-        }
-        """
-
-        let biased = arguments.map { edgeBiasedGenerator(forTypeText: $0.parameter.typeText, fallback: $0.generator) }
-        let (closureParam, sample) = sampleClause(generators: biased)
-        let callArgs = callArguments(parameters: parameters, boundTo: closureParam)
-        let property = "{ \(closureParam) in "
-            + "\(funcName)(\(callArgs)) == \(referenceName)(\(callArgs)) }"
-
-        let test = makeTestStubExpression(
-            testFunctionName: "\(funcName)_matchesReferenceDefinition",
-            seed: seed,
-            sampleExpression: sample,
-            propertyExpression: property,
-            failureLabel: "\(funcName)\(labelSelector(parameters)) "
-                + "disagrees with its documented reference definition"
+        let subject = ReferenceOracleSubject(
+            callee: CalleeReference(bareName: funcName, argumentLabels: parameters.map(\.label)),
+            owner: nil,
+            parameters: parameters,
+            returnTypeText: returnTypeText,
+            isAsync: false,
+            isThrows: false
         )
-        return stub + "\n" + test
+        let draws = ReferenceOracleDraws(
+            generators: arguments.map(\.generator),
+            argumentTypes: parameters.map(\.typeText)
+        )
+        return referenceOracle(
+            subject: subject, draws: draws, equalityKind: equalityKind, docComment: docComment, seed: seed
+        )
     }
 
     /// What `R` needs for `f(x) == f_reference(x)` to compile, as a comment above the stub.
@@ -98,7 +81,7 @@ extension LiftedTestEmitter {
     /// "The return type must be Equatable" is right for every nominal `R` and wrong for a tuple,
     /// which never is — so a tuple gets the element-wise sentence, and a tuple shape with no `==`
     /// at all says that instead. Every non-tuple `R` keeps its note byte for byte.
-    private static func equatableNote(forReturnType returnTypeText: String) -> String {
+    static func equatableNote(forReturnType returnTypeText: String) -> String {
         let shape = TupleResultShape(typeText: returnTypeText)
         if let obstacle = shape.equalityObstacle {
             return "// (this cannot compile as written: the function returns \(obstacle))\n"
@@ -108,35 +91,6 @@ extension LiftedTestEmitter {
         }
         return "// (every element of the returned tuple must be Equatable for this to compile — "
             + "\(TupleResultShape.elementwiseEqualityClause))\n"
-    }
-
-    /// The sample closure and the name its produced value binds to. One
-    /// parameter yields a scalar bound to `value`; several yield a tuple bound
-    /// to `tuple`, drawn component-wise.
-    private static func sampleClause(generators: [String]) -> (closureParam: String, sample: String) {
-        if generators.count == 1 {
-            return ("value", "{ rng in (\(generators[0])).run(using: &rng) }")
-        }
-        let draws = generators.map { "(\($0)).run(using: &rng)" }.joined(separator: ", ")
-        return ("tuple", "{ rng in (\(draws)) }")
-    }
-
-    /// The argument list for a call to the predicate / its reference, binding
-    /// each parameter to `value` (single) or `tuple.<i>` (multi), with labels.
-    private static func callArguments(parameters: [Parameter], boundTo closureParam: String) -> String {
-        let arguments = parameters.enumerated().map { index, parameter -> String in
-            let valueExpression = parameters.count == 1 ? closureParam : "\(closureParam).\(index)"
-            if let label = parameter.label {
-                return "\(label): \(valueExpression)"
-            }
-            return valueExpression
-        }
-        return arguments.joined(separator: ", ")
-    }
-
-    /// `(_:)`, `(from:to:)` — the labelled selector for the failure message.
-    private static func labelSelector(_ parameters: [Parameter]) -> String {
-        "(" + parameters.map { "\($0.label ?? "_"):" }.joined() + ")"
     }
 
     /// Wrap a numeric generator to mix a uniform baseline (weight 3) with the
@@ -152,7 +106,7 @@ extension LiftedTestEmitter {
     /// bound (`2^(bitWidth/4)`, ~65k for `Int`) keeps loops fast while still
     /// reaching the boundary via the edge arm. Floats keep the fallback (already
     /// bounded to ±1e6). Non-numeric types return the fallback unchanged.
-    private static func edgeBiasedGenerator(forTypeText typeText: String, fallback: String) -> String {
+    static func edgeBiasedGenerator(forTypeText typeText: String, fallback: String) -> String {
         let edges: String
         let uniform: String
         switch typeText {
@@ -182,7 +136,7 @@ extension LiftedTestEmitter {
 
     /// Reconstruct a Swift parameter clause from its label / name / type.
     /// `_ quantity: Double`, `name value: T`, or `value: T` when label == name.
-    private static func parameterClause(
+    static func parameterClause(
         label: String?,
         name: String,
         typeText: String
