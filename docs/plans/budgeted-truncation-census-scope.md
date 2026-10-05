@@ -1,6 +1,6 @@
 # Is budgeted truncation a role with a population?
 
-> **Status:** `open` · **As of:** 2026-10-05
+> **Status:** `shipped` · **As of:** 2026-10-05
 
 SwiftAssist's `String.prefix(utf8Bytes:)` returns the longest prefix of a string that fits a UTF-8 byte
 budget without splitting a character, plus whether anything was dropped. Mutation testing gave it four
@@ -92,7 +92,7 @@ rule 2). Its finds are counted by reason, not added to the population.
 | 5 | the SHAPE-ONLY sample holds **≤ 2** STRICT or WEAK rows |
 | 6 | if STRICT ≥ 5, one container holds **≥ 40%** of them |
 
-This census reports against §4 of `postcondition-law-declined.md`; it does not decide.
+This census reports against §4 of `postcondition-law-declined.md`; it does not decide. Result: `docs/measurements/budgeted-truncation-census.md`.
 
 ## 5. The generator half
 
