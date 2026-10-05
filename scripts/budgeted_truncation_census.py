@@ -377,6 +377,8 @@ def run(out_path):
         row["check_id"] = f"C{index + 1:03d}"
     for index, row in enumerate(sorted(sample, key=lambda r: (r["realpath"], r["line"]))):
         row["check_id"] = f"S{index + 1:03d}"
+    for row in report["rows"]:
+        del row["realpath"]  # used to deduplicate; a machine's home path does not belong in a fixture
     report["totals"] = {"subjects": len(found), "missing": len(missing),
                         "unique_candidates": len(unique["CANDIDATE"]),
                         "unique_shape_only": len(unique["SHAPE-ONLY"]),
