@@ -1,6 +1,6 @@
 # Does "nil means the default" have a population?
 
-> **Status:** `open` · **As of:** 2026-10-05
+> **Status:** `shipped` · **As of:** 2026-10-05
 
 SwiftAssist's `ReadWindow.resolve(lineCount:startLine:maxLines:cap:)` reads two optional parameters through
 `??`: `startLine ?? 1` and `maxLines ?? cap`. A hand-applied mutant of the second default survived the whole
@@ -87,7 +87,7 @@ are counted by form, to see how much of "nil means the default" a `??`-only temp
 | 6 | **no corpus** holds ≥ 40% of the HOLDS rows |
 | 7 | a doc comment states the default for **≥ 20%** of the HOLDS rows, and **≥ 1** contradicts its code |
 
-This census reports against §4 of `postcondition-law-declined.md`; it does not decide.
+This census reports against §4 of `postcondition-law-declined.md`; it does not decide. Result: `docs/measurements/nil-default-census.md`.
 
 ## 5. What this does not answer
 
