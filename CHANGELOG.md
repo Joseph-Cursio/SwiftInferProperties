@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.160.0] — 2026-10-05
+
+Two censuses of laws that SwiftAssist's mutation testing suggested. Each asks whether the law has a population before a template is built for it. Neither changes what the tool does. PRs #627, #628.
+
+### Added
+
+- **The budgeted-truncation census** (`docs/measurements/budgeted-truncation-census.md`, scope in `docs/plans/budgeted-truncation-census-scope.md`). It asks whether "the longest prefix that fits a budget" (prefix, fits, maximal) has a population comparable to the 36 exact sites the role route was built on. Its instrument is `scripts/budgeted_truncation_census.py`, with four controls. The rows were frozen before judging (`fixtures/budgeted-truncation-census.json`), and every verdict is recorded with its reason (`fixtures/budgeted-truncation-judgements.json`).
+- **The nil-default census** (`docs/measurements/nil-default-census.md`, scope in `docs/plans/nil-default-census-scope.md`). It asks whether `f(…, p: nil, …) == f(…, p: D, …)` has a population, for an optional parameter read only as `p ?? D`. Its instrument is `scripts/nil_default_census.py`, with six controls and a `mixed-sample` command. It reads the same subjects as the first census. Two sets were frozen before judging (`fixtures/nil-default-census.json`, `fixtures/nil-default-mixed-sample.json`): the rows, and a seeded sample of parameters read some other way. The verdicts are in `fixtures/nil-default-judgements.json`.
+
+### Fixed
+
+- **Two claims in the census write-ups that the release review found overstated.**
+  - The nil-default census credited the law with catching Euclid's `cone` edit. Before that commit, the parameter was shadowed, a form the instrument reads as MIXED, so a `??`-only template would not have proposed the law.
+  - Its recall searches counted 9 functions twice. The count is 67 distinct, of which the law holds for 60, not 68.
+- Both write-ups now name all five repositories that are both a manifest corpus and a funnel repository, and say which unmet subjects are at previously recorded revisions.
+
+### Read before quoting a number
+
+- **Budgeted truncation is not a template route.** 183 candidates were judged, over 53 subject entries; five repositories are both a manifest corpus and a funnel repository, and rows are deduplicated. They came out 20 STRICT, 1 WEAK, 7 MARKER and 155 OTHER. A seeded 40 of the rows without a truncation cue were all OTHER.
+  - 15 of the 20 STRICT rows truncate an unsafe buffer, a `Span` or a `BufferView`, 13 of them in swift-collections. A sixteenth truncates an `Enumeration` that holds closures. No generator draws these inputs.
+  - 4 take inputs a test can draw, and 3 of those are in SwiftAssist, the subject the census came from. The 4 share no name, and the role route keys on exact names.
+  - Among the rows that truncate, only `prefix(utf8Bytes:)` measures in a multibyte unit. This census therefore gives a multibyte `String` generator one truncation subject. Whether multibyte input matters for other laws is a separate question.
+- **"Nil means the default" has a population, but a thin usable one.**
+  - Of 296 parameters read only through `??`: 64 HOLDS, 110 INCOMPARABLE, 110 IMPURE, 3 UNSPELLABLE, 9 INSTRUMENT.
+  - The 64 HOLDS rows sit in 18 corpora, the largest share 17%. I re-read a seeded 40 of them and agree with 38.
+  - Of those 40, 9 are reachable from a test with inputs a generator draws today, and 12 more need derived generators for project or Foundation types. Scaled to the 64, that is about 14 sites today and about 34 with those generators. Drawability was judged by reading; no generator was run.
+  - The law holds by construction, so its value is catching edits.
+  - Three docs contradict their default. Euclid's `Mesh.cone` says a nil `poleDetail` derives a value automatically, while the code has passed a fixed `3` since d9eb83a (2023). That is the kind of edit the law catches, although the shadowed pre-edit code would not have produced the law.
+  - A free search capped at about 25 finds per group found 67 distinct functions that treat nil as a default without using `??`: through `guard let`/`if let`, `p?.x ?? D`/`p.map(…) ?? D`, or `switch`/`== nil`. The law would hold for 60 of them. A `??`-only template does not read any of them.
+- **Most verdicts were not checked by hand.** In both censuses the verdicts come from agent judges: two independent passes per row, and a third where they disagreed. Only the 21 STRICT and WEAK rows and a seeded 40 of the HOLDS rows were re-read by hand.
+- **Neither census builds anything.** Each reports against the 36 exact sites over 11 corpora that the shipped role route was built on. "Not a template route" is the budgeted-truncation census's reading against that bar. 3 of 6 and 5 of 7 predictions held.
+- **The subjects were read at fresh clones.** The 13 unmet subjects and 4 manifest corpora were cloned on 2026-10-05 and read at HEAD. Harbeth, StripeKit, scale-codec-swift, Open-Jellycore and nocturne-swift are at the revisions `subject-harbeth.md` recorded; the other unmet subjects are later. `swiftlang-swift` is the one subject not on the machine. Every revision is recorded in the census fixtures.
+- **Toolchain.** Both censuses are Python and need no Swift toolchain. The only Swift change in this release is the version string. The suite below ran on Xcode 27 / Swift 6.4 (swiftlang-6.4.0.34.1), because the swift.org 6.3.3 toolchain the Makefile prefers was not installed on the machine that ran it.
+
 ## [1.159.0] — 2026-10-05
 
 The reference-oracle scaffold that docstring advice prints is now built the way accept builds a determinism stub. Where it meets a shape known not to compile, it prints the reason instead. On SwiftAssist, 66 of 67 printed scaffolds compile, against 0 of 88 before. Accept stops writing six determinism stub shapes that never compiled. PRs #623, #624, #625.
