@@ -48,7 +48,8 @@ came from.**
 ## Read before quoting a number
 
 - ⚠ **Per-group function and SHAPE counts are not deduplicated**. SwiftProjectLint, SwiftPropertyLaws,
-  SwiftEffectInference and SwiftLintRuleStudio are both manifest corpora and funnel repositories. CANDIDATE
+  SwiftEffectInference, SwiftLintRuleStudio and SwiftFormatRuleStudio are both manifest corpora and funnel
+  repositories, so "53 subjects" counts those five twice. CANDIDATE
   and verdict counts are deduplicated by file and line.
 - ⚠ **The verdicts come from agent judges**: two independent passes per row with different instructions,
   one describing what the body does and one arguing against truncation, and a third pass on
@@ -58,8 +59,10 @@ came from.**
   laws by reading (`min(maxLength, count)` behind a precondition), and nothing here drew one.
 - Units of the 20 STRICT rows: elements 18, UTF-8 bytes 1 (`prefix(utf8Bytes:)`), estimated tokens 1
   (`leadingItems`, by word count).
-- The unmet subjects are at the HEAD of a 2026-10-05 clone, not the revisions earlier censuses pinned. All
-  revisions are in the census fixture. `swiftlang-swift` (the stdlib) is not on this machine and is the one
+- The unmet subjects are at the HEAD of a 2026-10-05 clone. Harbeth, StripeKit, scale-codec-swift,
+  Open-Jellycore and nocturne-swift are at the revisions `subject-harbeth.md` recorded; Euclid, swift-docc,
+  OpenAPIKit, jwt-kit, swift-system, swift-codex and sora-ios-sdk are later. All revisions are in the census
+  fixture. `swiftlang-swift` (the stdlib) is not on this machine and is the one
   missing subject. The stdlib's `Collection.prefix(_:)` is the textbook element-count case, and it would
   add to the element-count rows, not the drawable ones.
 

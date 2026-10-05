@@ -73,7 +73,9 @@ derived generators come through**. The role route was built on 36 sites, and `no
   infers purity, so neither gate starts from nothing. How precise the template is depends on those gates,
   since 220 of the 296 rows fail one of them.
 - Harbeth holds 94 SHAPE rows (32%) but only 8 HOLDS. Most of its rows build Metal objects.
-- The unmet subjects are at the HEAD of a 2026-10-05 clone. All revisions are in the census fixture.
+- The unmet subjects are at the HEAD of a 2026-10-05 clone. Harbeth, StripeKit, scale-codec-swift,
+  Open-Jellycore and nocturne-swift are at the revisions `subject-harbeth.md` recorded; the other seven are
+  later. All revisions are in the census fixture.
 
 ## The defaults and their docs
 
@@ -84,9 +86,11 @@ derived generators come through**. The role route was built on 36 sites, and `no
   - **Euclid's `Mesh.cone`** says *"The default `nil` value for poleDetail will derive value
     automatically"*. The code passes a fixed `3`. Euclid's history shows the cause. Until d9eb83a
     (2023-07-30, "Default cone's poleDetail to 3 instead of sqrt(slices)") the code read
-    `poleDetail ?? Int(sqrt(Double(slices)))`, and the note was not updated. **This is the edit the law exists
-    to catch.** A nil-default law written before that commit would have failed on it, and pointed at the
-    doc.
+    `poleDetail ?? Int(sqrt(Double(slices)))`, and the note was not updated. **This is the kind of edit the
+    law exists to catch.** A nil-default law written before that commit would have failed on it, and pointed
+    at the doc. But the template would not have written that law. Before d9eb83a the parameter was
+    shadowed (`let poleDetail = poleDetail ?? …`, then `poleDetail: poleDetail`), which this instrument reads
+    as MIXED, not SHAPE.
   - **swift-collections' `UniqueArray.init(capacity:copying:)` ×2** says nil means *"allocate just enough
     capacity to store the contents"*. The code starts at capacity `0` and lets appending grow it, while the
     sibling `RigidArray` uses `contents.count`. `==` ignores capacity, so the law cannot see this one.
@@ -107,17 +111,18 @@ derived generators come through**. The role route was built on 36 sites, and `no
   Only 4 mean "nil is a default", and the law would hold for 2 of them. The MIXED population is 27,941,
   mostly generated DTOs and syntax nodes (StripeKit, nocturne-swift, swift-syntax, JiraKit), so 2 of 60 is
   too few to scale with confidence.
-- **The free searches hit their cap of 25 finds in all three groups**, so these are lower bounds:
+- **The free searches hit their cap of 25 finds in all three groups**, so these are lower bounds. The funnel
+  search also covered some manifest and unmet subjects, so 9 of its 76 finds repeat another group's. The
+  counts below are the 67 distinct functions:
 
   | form | the law would hold | would not | unclear |
   |---|---:|---:|---:|
-  | `guard let` / `if let … else` | 49 | 3 | 2 |
-  | `p?.x ?? D` / `p.map(…) ?? D` | 12 | 1 | 1 |
+  | `guard let` / `if let … else` | 44 | 2 | 2 |
+  | `p?.x ?? D` / `p.map(…) ?? D` | 10 | 1 | 1 |
   | `switch` / `p == nil ? D : …` | 6 | 1 | |
-  | other | 1 | | |
 
-  **At least 68 functions mean "nil is a default" through syntax a `??`-only template does not read**, about
-  as many as the 64 it does. Those forms are not true by construction. The template would have to show that
+  **At least 67 functions mean "nil is a default" through syntax a `??`-only template does not read, and the
+  law would hold for 60 of them**, about as many as the 64 the template does read. Those forms are not true by construction. The template would have to show that
   the nil branch equals the `D` branch. That is harder, and it is also where such a law could find a present
   bug.
 
