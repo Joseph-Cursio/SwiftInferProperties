@@ -40,6 +40,21 @@ Suites green at **5,576 tests** (5,493 fast + 83 across `perf` and the eight bat
 
 Moved out of CLAUDE.md's *Current state* on 2026-09-19: every suite-count reading older than the current one, verbatim and newest first. It had grown to ~265 lines of a file loaded every session. **Read for what each verdict was decided on, never for a current count** — CLAUDE.md carries the current reading, and the next re-take moves the one it supersedes to the top of this list.
 
+**The prior reading — 6,465 = 6,241 fast + 224, taken 2026-09-30 at `5dd4e88f` — follows, and
+everything below it is SUPERSEDED HISTORY.**
+**PRIOR READING — 6,465 tests — 6,241 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-09-30** at `5dd4e88f` on **swift-property-based
+2.0 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`** — every stage counted from that one run, and the
+run was UNPIPED (`make test > log 2>&1`, exit **0**):
+fast **6,241** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across evaluating `#if` before scanning
+(279 discovery rows withdrawn) and moving the helper hop into the scan — ⚠ **but the corpus-surveying
+batches assert floors (`> 1_000` rows), so 224 green is not an A/B; the row dumps in `fixtures/` are.**
+**The fast half moved 6,236 → 6,241, +5** (`InactiveClausesTests`, the only suite added since the
+previous reading).
+**Timings**: `batch3` 396s; `batch2` 627s; `batch5` 1,173s; `batch1` 211s, `batch4` 191s, `batch6` 157s,
+`batch7` 204s, `batch8` 468s.
+
 **The prior reading — 6,460 = 6,236 fast + 224, taken 2026-09-29 at `b427ffff` — follows, and
 everything below it is SUPERSEDED HISTORY.**
 **PRIOR READING — 6,460 tests — 6,236 fast + 224 across `perf` and the eight batches**
