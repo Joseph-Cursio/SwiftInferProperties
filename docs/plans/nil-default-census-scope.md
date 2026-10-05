@@ -30,7 +30,9 @@ as an identifier: not after `.`, and not before `:`. The parameter makes a **SHA
 3. **There is a value to compare**: a `func` with a non-`Void` result, or an `init`.
 
 Each row records `D` and a guessed **default kind**: literal, enum case or static member (`.zero`,
-`Self.limit`), another parameter, an expression of parameters, instance state, or a call. It also records the
+`Self.limit`), another parameter, an expression of parameters, instance state, or a call or closure. Two
+extraction faults were fixed after a dry run on SwiftAssist, before the population was read: a closure default
+(`?? { _ in }`) was cut at its brace, and an identifier inside a string literal was read as instance state. It also records the
 read count and the doc comment above the declaration. The parameters that fail rule 1 (**MIXED**) and the
 `Void` functions that pass 1 and 2 (**VOID**) are counted, not judged.
 
