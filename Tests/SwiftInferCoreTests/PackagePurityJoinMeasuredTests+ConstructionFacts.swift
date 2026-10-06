@@ -35,8 +35,28 @@ extension PackagePurityJoinMeasuredTests {
         var moved: Int { movedDirect.count + movedViaJoin.count }
     }
 
-    static let constructionArms: [ConstructionArm] = CorpusManifest.available.flatMap { corpus in
-        corpus.roots.compactMap { root in try? constructionArm(corpus: corpus.id, root: root) }
+    /// Every available root's arm, or why it has none. Kept as a `Result`, never `try?`-dropped:
+    /// `MisalignedArms` is the guard that makes the row-by-row comparison sound, and a root it
+    /// rejected — or whose scan threw — used to vanish from the census and from
+    /// `constructionFactsNeverPromote` alike, shrinking the population with no signal.
+    static let constructionResults: [(label: String, result: Result<ConstructionArm, any Error>)] =
+        CorpusManifest.available.flatMap { corpus in
+            corpus.roots.map { root in
+                let label = "\(corpus.id)/\(root.lastPathComponent)"
+                return (label, Result { try constructionArm(corpus: corpus.id, root: root) })
+            }
+        }
+
+    static var constructionArms: [ConstructionArm] {
+        constructionResults.compactMap { try? $0.result.get() }
+    }
+
+    /// The roots the A/B could not compare, with the reason — `failed.isEmpty` is asserted.
+    static var constructionFailures: [String] {
+        constructionResults.compactMap { entry in
+            guard case let .failure(error) = entry.result else { return nil }
+            return "\(entry.label): \(error)"
+        }
     }
 
     static func constructionArm(corpus: String, root: URL) throws -> ConstructionArm {
@@ -105,6 +125,8 @@ extension PackagePurityJoinMeasuredTests {
     @Test("construction facts never promote a row on any manifest corpus")
     func constructionFactsNeverPromote() {
         #expect(!Self.constructionArms.isEmpty, "no manifest corpus scanned — every figure here is vacuous")
+        let failed = Self.constructionFailures
+        #expect(failed.isEmpty, "roots dropped from the A/B; every figure is over a smaller population: \(failed)")
         for arm in Self.constructionArms {
             #expect(arm.promoted.isEmpty, "\(arm.corpus)/\(arm.scanPath): promoted \(arm.promoted)")
         }
@@ -143,6 +165,7 @@ extension PackagePurityJoinMeasuredTests {
             lines += arm.movedViaJoin.prefix(12).map { "    join:   \($0)" }
             if arm.movedViaJoin.count > 12 { lines.append("    join:   … and \(arm.movedViaJoin.count - 12) more") }
         }
+        lines += Self.constructionFailures.map { "NOT COMPARED: \($0)" }
         let total = Self.constructionArms.reduce(0) { $0 + $1.moved }
         lines.append("total moved: \(total) over \(Self.constructionArms.count) scan roots")
         print(lines.joined(separator: "\n"))

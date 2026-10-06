@@ -106,21 +106,29 @@ struct SoundPurityTests {
     // MARK: - Configured with construction facts
 
     /// Every answer goes through the one configured inferrer — the whole-domain question as well
-    /// as the verdict. `make` names nothing impure; the `UUID` it mints is in `Item`'s stored
-    /// default, which only the table can see.
+    /// as the verdict, and the getter's verdict too. `make` and `sample` name nothing impure; the
+    /// `UUID` they mint is in `Item`'s stored default, which only the table can see.
     @Test
     func constructionFacts_refuteEveryAnswer() throws {
         let tree = Parser.parse(source: """
         struct Item { let id = UUID(); let title: String }
         func make(_ title: String) -> Item { Item(title: title) }
+        struct Shelf { let title: String; var sample: Item { Item(title: title) } }
         """)
         let function = try #require(tree.statements.lazy.compactMap { $0.item.as(FunctionDeclSyntax.self) }.first)
+        let shelf = try #require(tree.statements.lazy.compactMap { $0.item.as(StructDeclSyntax.self) }.last)
+        let getters = shelf.memberBlock.members.compactMap {
+            $0.decl.as(VariableDeclSyntax.self)?.bindings.first?.accessorBlock
+        }
+        let getter = try #require(getters.first)
         let configured = SoundPurity(constructionFacts: .build(from: [tree]))
 
         #expect(SoundPurity.unconfigured.isPure(function), "control: without the table `make` reads pure")
         #expect(configured.inferredEffect(for: function) == nil)
         #expect(!configured.isPure(function))
         #expect(configured.verdict(for: function) == .refuted)
+        #expect(SoundPurity.unconfigured.verdict(forGetter: getter) == .pure, "control: the getter alone reads pure")
+        #expect(configured.verdict(forGetter: getter) == .refuted, "the getter is judged without the table")
         #expect(configured.constructionFacts.refutedTypeNames == ["Item"])
     }
 }

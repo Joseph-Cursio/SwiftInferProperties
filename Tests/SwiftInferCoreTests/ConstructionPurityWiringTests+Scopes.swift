@@ -4,9 +4,38 @@ import Testing
 
 @testable import SwiftInferCore
 
-/// The wiring beyond the function verdict: the scans that must NOT build a table, and the guard
-/// that keeps an empty scan from parsing a package.
+/// The wiring beyond the function verdict: the getter path, the scans that must NOT build a
+/// table, and the guard that keeps an empty scan from parsing a package.
 extension ConstructionPurityWiringTests {
+
+    // MARK: - The getter path
+
+    /// A computed property is a nullary `self -> T` map to the templates, and it is judged by
+    /// `SoundPurity.verdict(forGetter:)`, not `verdict(for:)`. Every other wiring fixture's subject
+    /// is a function, so a getter path that kept the unconfigured inferrer survived the whole suite
+    /// — while swift-foundation's 21 moved rows include 12 getters.
+    @Test("a computed property constructing a sibling target's refuted type is refuted")
+    func getterConstructingASiblingTypeIsRefuted() throws {
+        let root = try Self.makePackage([
+            "Sources/Model/Item.swift": Self.item,
+            "Sources/Lib/Shelf.swift": """
+            public struct Shelf {
+                public let name: String
+                public var sample: Item { Item(title: name) }
+            }
+            """
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let lib = root.appendingPathComponent("Sources/Lib")
+        let summaries = try FunctionScanner.scanCorpus(directory: lib).summaries
+        let sample = try #require(summaries.first { $0.name == "sample" })
+        #expect(sample.isComputedProperty)
+        #expect(sample.purityVerdict == .refuted, "the getter path judged without the package's table")
+        #expect(!sample.isInferredPure)
+        // The control: the file alone cannot see `Item`, so the getter reads pure.
+        let alone = try FunctionScanner.scanCorpus(file: lib.appendingPathComponent("Shelf.swift"))
+        #expect(Self.verdict("sample", in: alone) == .pure)
+    }
 
     // MARK: - Scans that build no table
 

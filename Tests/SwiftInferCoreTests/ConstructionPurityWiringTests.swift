@@ -128,18 +128,20 @@ struct ConstructionPurityWiringTests {
     /// SEI types an assignment by the enclosing declaration's own property, matched by NODE
     /// identity. Judged on a re-parse that match fails and every same-named declaration's property
     /// is a candidate — so `reset` would be refuted by the other target's `A`.
+    static let nodeIdentityPackage = [
+        "Sources/One/A.swift": """
+        struct Token { let x: Int; init() { x = 0 } }
+        struct A { var value: Token; mutating func reset() { value = .init() } }
+        """,
+        "Sources/Two/A.swift": """
+        struct Stamp { let id = UUID() }
+        struct A { var value: Stamp }
+        """
+    ]
+
     @Test("the scan judges the very trees the facts were built from")
     func scanJudgesOnTheFactsOwnNodes() throws {
-        let root = try Self.makePackage([
-            "Sources/One/A.swift": """
-            struct Token { let x: Int; init() { x = 0 } }
-            struct A { var value: Token; mutating func reset() { value = .init() } }
-            """,
-            "Sources/Two/A.swift": """
-            struct Stamp { let id = UUID() }
-            struct A { var value: Stamp }
-            """
-        ])
+        let root = try Self.makePackage(Self.nodeIdentityPackage)
         defer { try? FileManager.default.removeItem(at: root) }
         let one = root.appendingPathComponent("Sources/One")
         let purity = PackagePurity.forScan(of: one)
@@ -154,20 +156,25 @@ struct ConstructionPurityWiringTests {
         #expect(Self.verdict("reset", in: reparsed) == .refuted)
     }
 
+    /// The node-identity subject above, through BOTH directory overloads — the default one the CLI
+    /// calls, which builds its own purity, and the one handed a purity. Only the very node the facts
+    /// were built from types `reset`'s `value = .init()` as `One`'s `Token`; a re-parse makes every
+    /// `A.value` a candidate, `Two`'s identity-minting `Stamp` among them. So `.pure` here IS the
+    /// reuse, observed — a tree merely present in the universe would not show it.
     @Test("every judged file in the universe is judged on the universe's tree")
     func scanReusesTheFactsTrees() throws {
-        let root = try Self.makePackage([
-            "Sources/Lib/Item.swift": Self.item,
-            "Sources/Lib/Make.swift": Self.make
-        ])
+        let root = try Self.makePackage(Self.nodeIdentityPackage)
         defer { try? FileManager.default.removeItem(at: root) }
-        let lib = root.appendingPathComponent("Sources/Lib")
-        let purity = PackagePurity.forScan(of: lib)
-        #expect(purity.universe == ["Sources/Lib/Item.swift", "Sources/Lib/Make.swift"])
-        for file in SwiftSourceFiles.sorted(in: lib) {
+        let one = root.appendingPathComponent("Sources/One")
+        let purity = PackagePurity.forScan(of: one)
+        #expect(purity.universe == ["Sources/One/A.swift", "Sources/Two/A.swift"])
+        for file in SwiftSourceFiles.sorted(in: one) {
             #expect(purity.tree(for: file) != nil, "\(file.path) would be re-parsed")
         }
-        #expect(Self.verdict("make", in: try FunctionScanner.scanCorpus(directory: lib, purity: purity)) == .refuted)
+        let viaDefault = try FunctionScanner.scanCorpus(directory: one)
+        #expect(Self.verdict("reset", in: viaDefault) == .pure, "scanCorpus(directory:) judged a re-parse")
+        let viaPurity = try FunctionScanner.scanCorpus(directory: one, purity: purity)
+        #expect(Self.verdict("reset", in: viaPurity) == .pure, "scanCorpus(directory:purity:) judged a re-parse")
     }
 
     @Test("one source is its own package — its own types, and nobody else's")
