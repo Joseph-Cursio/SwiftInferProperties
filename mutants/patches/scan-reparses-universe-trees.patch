@@ -1,0 +1,14 @@
+diff --git a/Sources/SwiftInferCore/FunctionScanner+Package.swift b/Sources/SwiftInferCore/FunctionScanner+Package.swift
+index 96b073f9..14fd1fb2 100644
+--- a/Sources/SwiftInferCore/FunctionScanner+Package.swift
++++ b/Sources/SwiftInferCore/FunctionScanner+Package.swift
+@@ -65,9 +65,6 @@ extension FunctionScanner {
+     /// its facts were built from; a file outside it (a test file in a scan that reaches `Tests/`)
+     /// is read and parsed here, and judged under the same table.
+     public static func scanCorpus(file: URL, purity: PackagePurity) throws -> ScannedCorpus {
+-        if let tree = purity.tree(for: file) {
+-            return scanCorpus(tree: tree, file: file.path, purity: purity.oracle)
+-        }
+         let source = try String(contentsOf: file, encoding: .utf8)
+         return scanCorpus(tree: Parser.parse(source: source), file: file.path, purity: purity.oracle)
+     }

@@ -1,6 +1,6 @@
 {
   "kind": "spm",
-  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Two families: mutants in the IdempotenceWitnessDetector's own name-classifier, and mutants that undo a name-only-position guard (a key-path component's or a member's name read as a test-local). Each is killed by its own code's unit tests, which pin both what it should and should not do. Run via `swift test --filter`. Not a scored benchmark.",
+  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Three families: mutants in the IdempotenceWitnessDetector's own name-classifier; mutants that undo a name-only-position guard (a key-path component's or a member's name read as a test-local); and mutants that undo one piece of the construction-facts wiring (the scan dropping its table, re-parsing the trees the table was built from, the universe admitting test targets, a test-directory scan walking up, the census replica going blind to the construction witness). Each is killed by its own code's unit tests, which pin both what it should and should not do. Run via `swift test --filter`. Not a scored benchmark.",
   "mutants": [
     {
       "id": "witness-drops-reset",
@@ -97,6 +97,46 @@
       "expected": "killed",
       "test": "keyPathSubscriptArgumentIsInlined",
       "label": "ReceiverConstructionHarvester's inliner skips everything inside a key path — `Sorter(by: \\.[index])` keeps the test-local"
+    },
+    {
+      "id": "scan-drops-construction-facts",
+      "patch": "patches/scan-drops-construction-facts.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "siblingTargetConstructionRefutes|ConstructionFactsPipelineTests",
+      "label": "the package scan builds its ConstructionFacts and hands the visitor the unconfigured oracle — the table is built and dropped on the way, and a sibling target's `let id = UUID()` no longer refutes its constructor"
+    },
+    {
+      "id": "scan-reparses-universe-trees",
+      "patch": "patches/scan-reparses-universe-trees.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "scanJudgesOnTheFactsOwnNodes",
+      "label": "the scan re-parses every judged file instead of reusing the universe's tree — SEI types an assignment by node identity, so `reset` is refuted by another target's same-named `A`"
+    },
+    {
+      "id": "universe-admits-tests",
+      "patch": "patches/universe-admits-tests.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "testFileNamesakeDoesNotRefute",
+      "label": "the universe predicate stops rejecting `Tests` / `*Tests` directories — a test target's `struct Item { let id = UUID() }` refutes a production `make() -> Item`"
+    },
+    {
+      "id": "test-dir-scan-walks-up",
+      "patch": "patches/test-dir-scan-walks-up.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "testDirectoryScanIsSelfContained",
+      "label": "a scan under `Tests/Fixtures/X` walks up to the enclosing package — whose rule drops the fixture's own files, so its types never reach its table"
+    },
+    {
+      "id": "census-replica-blind-to-construction",
+      "patch": "patches/census-replica-blind-to-construction.patch",
+      "shape": "census-replica",
+      "expected": "killed",
+      "test": "classificationAgreesWithSEIWitness",
+      "label": "the census replica stops consulting SEI's construction witness — 0 verdicts move on Sources/, so verdictAgreesWithSoundPurity stays green while 2 re-witnessed rows are filed as ignorance"
     }
   ]
 }

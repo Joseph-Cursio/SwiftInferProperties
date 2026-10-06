@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 0bd570fb..d5857c18 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -82,7 +82,7 @@ public enum ConstructionUniverse {
+ 
+     /// A directory component the predicate rejects — everything under it is out.
+     static func isRejectedDirectory(_ name: String) -> Bool {
+-        isTestTargetDirectory(name) || name.hasPrefix(".") || prunedDirectoryNames.contains(name)
++        name.hasPrefix(".") || prunedDirectoryNames.contains(name)
+     }
+ 
+     /// The root a scan of `directory` builds its table from — see the type's doc. One spelling
