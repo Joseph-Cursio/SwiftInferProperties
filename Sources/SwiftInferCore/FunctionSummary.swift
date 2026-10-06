@@ -209,25 +209,25 @@ public struct FunctionSummary: Sendable, Equatable {
     /// side-effect-free but raises its own errors, so it is pure over the inputs
     /// it accepts and simply not total.
     ///
-    /// Measured 2026-08-04 on this repo: 2,206 `.pure`, **35 `.pureButPartial`**,
-    /// 259 `.refuted` of 2,500. Small, and previously invisible — `isPure`
-    /// answered `false` for all 294 non-pure functions alike, so nothing
-    /// downstream could tell "reads the clock" from "throws its own error".
+    /// **Computed under the project's construction facts** (`PackagePurity`) since 2026-10-06, so a type
+    /// declared in another file — another target, a nested package — can refute a constructor here; the
+    /// body fingerprint cannot see that edit, which is why the index's staleness probe watches the universe.
     ///
-    /// **A warning before you count `.refuted` rows.** It is still three cases
-    /// wearing one: re-measured 2026-08-17, **54% of it names nothing in the
-    /// source at all** and is the analyzer reporting its own blindness rather
-    /// than evidence (`docs/measurements/purity-refuted-bucket-census.md`). A
-    /// count of `.refuted` is not a count of findings.
+    /// Measured 2026-08-04 on this repo: 2,206 `.pure`, **35 `.pureButPartial`**, 259 `.refuted` of
+    /// 2,500. Small, and previously invisible — `isPure` answered `false` for all 294 non-pure
+    /// functions alike, so nothing downstream could tell "reads the clock" from "throws its own error".
     ///
-    /// *"`.refuted` for a summary nobody computed one for"* above **used to be
-    /// the larger half of that bucket in practice** and is now genuinely the
-    /// edge case it reads as. Until 2026-08-17
-    /// `makeSummary(fromComputedProperty:)` passed no verdict, so all 180
-    /// read-only computed properties under `Sources/` landed here by default
-    /// while carrying `isInferredPure == true` — the exact combination this
-    /// field's first paragraph says cannot happen — and the bucket a consumer
-    /// read was 464 rather than 284. Both routes now compute a verdict
+    /// **A warning before you count `.refuted` rows.** It is still three cases wearing one:
+    /// re-measured 2026-08-17, **54% of it names nothing in the source at all** and is the analyzer
+    /// reporting its own blindness rather than evidence (`docs/measurements/purity-refuted-bucket-census.md`).
+    /// A count of `.refuted` is not a count of findings.
+    ///
+    /// *"`.refuted` for a summary nobody computed one for"* above **used to be the larger half of
+    /// that bucket in practice** and is now genuinely the edge case it reads as. Until 2026-08-17
+    /// `makeSummary(fromComputedProperty:)` passed no verdict, so all 180 read-only computed
+    /// properties under `Sources/` landed here by default while carrying `isInferredPure == true` —
+    /// the exact combination this field's first paragraph says cannot happen — and the bucket a
+    /// consumer read was 464 rather than 284. Both routes now compute a verdict
     /// (`SoundPurity.verdict(forGetter:)`), so no filtering is required.
     /// Free-shape callee names this body reaches, sorted.
     ///

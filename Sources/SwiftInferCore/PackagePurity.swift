@@ -1,0 +1,151 @@
+import Foundation
+import SwiftEffectInference
+import SwiftParser
+import SwiftSyntax
+
+/// One project's purity oracle, built once and handed to everything that judges purity in it.
+///
+/// SEI's `PurityInferrer` judges one declaration at a time; `ConstructionFacts` is what a
+/// declaration cannot see from where it stands — what constructing each of the project's types
+/// runs. SEI's doc is explicit that one table goes to **every** inferrer in a run, because one left
+/// at `.empty` silently disagrees with the configured ones. This value is how that holds here: the
+/// scanner's directory path builds one (`FunctionScanner.scanCorpus(directory:)`), and every file
+/// the scan judges is judged by its `oracle`.
+///
+/// ## It owns the trees, and that is not an optimisation
+///
+/// The scan must judge the very trees the facts were built from. SEI types an assignment's target
+/// by **node identity** (`ConstructionChecker.assignmentTargets`), so a re-parse of the same text
+/// answers more refutingly than the original — `scanJudgesOnTheFactsOwnNodes` pins it. So a file in
+/// the universe is parsed exactly once, here, and `FunctionScanner` looks its tree up rather than
+/// reading the file again. The trees live as long as this value does; `ScannedCorpus` does not keep
+/// one, so a scan's trees die when the scan returns.
+///
+/// ## Which universe
+///
+/// `ConstructionUniverse` — the cross-repo rule shared with SwiftProjectLint. Parsed in parallel,
+/// each tree written to its own slot, so the build sees the universe's fixed order whatever order
+/// the parses finish in.
+public struct PackagePurity: Sendable {
+
+    /// The root the universe was taken from; `nil` for a self-contained or unconfigured value,
+    /// which covers no directory.
+    public let root: URL?
+    /// Root-relative paths that fed `ConstructionFacts.build(from:)`, in the order they fed it.
+    public let universe: [String]
+    /// The meet of `ReducerPurityAnalyzer` and a facts-configured `PurityInferrer`.
+    public let oracle: SoundPurity
+    /// Every parsed universe tree, by resolved absolute path.
+    let trees: [String: SourceFileSyntax]
+
+    /// The table `oracle` consults.
+    public var constructionFacts: ConstructionFacts { oracle.constructionFacts }
+
+    /// The project a scan of `directory` belongs to, parsed and its table built.
+    public static func forScan(of directory: URL) -> Self {
+        forScan(of: directory) { parseInParallel($0) }
+    }
+
+    /// `forScan(of:)` with the parse injected, so a test can make the parses complete out of
+    /// order and check the build order does not follow them.
+    static func forScan(of directory: URL, parse: ([URL]) -> [SourceFileSyntax?]) -> Self {
+        let members = ConstructionUniverse.files(forScanOf: directory)
+        let parsed = parse(members.map(\.url))
+        var trees: [String: SourceFileSyntax] = [:]
+        var ordered: [SourceFileSyntax] = []
+        var used: [String] = []
+        for (member, tree) in zip(members, parsed) {
+            // A universe file that cannot be read as UTF-8 cannot compile either, so it declares
+            // no production type; skipping it is not a confident zero. A JUDGED file that cannot
+            // be read still throws — `FunctionScanner` reads it again and reports the failure.
+            guard let tree else { continue }
+            trees[member.key] = tree
+            ordered.append(tree)
+            used.append(member.relativePath)
+        }
+        return Self(
+            root: ConstructionUniverse.root(forScanOf: directory),
+            universe: used,
+            oracle: SoundPurity(constructionFacts: .build(from: ordered)),
+            trees: trees
+        )
+    }
+
+    /// One source that is its own package — what a single-file scan is.
+    public static func selfContained(_ tree: SourceFileSyntax) -> Self {
+        Self(root: nil, universe: [], oracle: SoundPurity(constructionFacts: .build(from: [tree])), trees: [:])
+    }
+
+    /// No facts and no trees. **`internal`**: tests reach it through `@testable import`, and no
+    /// production file names it (`PurityConfigurationInventoryTests`).
+    static let unconfigured = Self(root: nil, universe: [], oracle: .unconfigured, trees: [:])
+
+    /// The same root and the same trees, judged with no facts — the A/B arm a census needs to say
+    /// what the table moved on IDENTICAL input. `internal` for the same reason as `unconfigured`.
+    var withoutConstructionFacts: Self {
+        Self(root: root, universe: universe, oracle: .unconfigured, trees: trees)
+    }
+
+    /// The tree this value parsed for `url`, when `url` is in the universe.
+    public func tree(for url: URL) -> SourceFileSyntax? {
+        trees[ConstructionUniverse.resolved(url).path]
+    }
+
+    /// Whether this value is the one a scan of `directory` would build its table from — the same
+    /// root, so the same universe. A value built for another project is FOREIGN, and judging with
+    /// it would be the silent disagreement this type exists to prevent.
+    public func covers(_ directory: URL) -> Bool {
+        guard let root else { return false }
+        return root.path == ConstructionUniverse.root(forScanOf: directory).path
+    }
+
+    /// Every refuted type with its witness — a structural digest, because `ConstructionFacts ==`
+    /// compares node identity and two parses of one package are never equal. The same form
+    /// SwiftProjectLint computes, so the two can be compared as text.
+    public var refutedTypes: [String] {
+        constructionFacts.refutedTypeNames.map { name in
+            "\(name): \(constructionFacts.refutation(constructing: name)?.description ?? "?")"
+        }
+    }
+
+    // MARK: - Parsing
+
+    /// One slot per file, written once each from `concurrentPerform`.
+    private final class Slots: @unchecked Sendable {
+        private let lock = NSLock()
+        private var values: [SourceFileSyntax?]
+
+        init(count: Int) { values = Array(repeating: nil, count: count) }
+
+        func set(_ index: Int, _ tree: SourceFileSyntax?) {
+            lock.lock()
+            values[index] = tree
+            lock.unlock()
+        }
+
+        var all: [SourceFileSyntax?] {
+            lock.lock()
+            defer { lock.unlock() }
+            return values
+        }
+    }
+
+    /// Parses every file, in parallel, into slots indexed by input position — so the result is in
+    /// input order whatever order the parses complete in. Measured necessary: a serial parse of a
+    /// 600-file universe in a debug build costs seconds, and the §13 DequeModule row pays it.
+    ///
+    /// `beforeParsing` runs on the worker before slot `index` is parsed — a test hook for making
+    /// completions arrive out of order; production passes nothing.
+    static func parseInParallel(
+        _ urls: [URL],
+        beforeParsing: @Sendable (Int) -> Void = { _ in /* no hook */ }
+    ) -> [SourceFileSyntax?] {
+        let slots = Slots(count: urls.count)
+        DispatchQueue.concurrentPerform(iterations: urls.count) { index in
+            beforeParsing(index)
+            let tree = (try? String(contentsOf: urls[index], encoding: .utf8)).map { Parser.parse(source: $0) }
+            slots.set(index, tree)
+        }
+        return slots.all
+    }
+}

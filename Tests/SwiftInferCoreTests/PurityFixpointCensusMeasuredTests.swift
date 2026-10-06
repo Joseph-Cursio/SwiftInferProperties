@@ -313,8 +313,9 @@ struct PurityFixpointCensusMeasuredTests {
     /// advisory. Guards the claim that this direction has a consumer today.
     @Test("every retraction costs an advisory, because the population is .pure only")
     func everyRetractionCostsAnAdvisory() {
+        // The configured oracle the population itself was judged with.
         let allPure = Self.calls.allSatisfy { row in
-            SoundPurity.verdict(for: row.subject.function) == .pure
+            CensusPurity.oracle.verdict(for: row.subject.function) == .pure
         }
         #expect(allPure, "the population contains a non-.pure subject; retractions would be free")
     }

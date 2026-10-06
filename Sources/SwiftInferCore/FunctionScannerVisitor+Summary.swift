@@ -75,7 +75,7 @@ extension FunctionScannerVisitor {
         // One call, both answers — `isInferredPure` is this verdict's two-state
         // collapse, so computing them separately would walk the body twice and
         // could drift.
-        let purityVerdict = SoundPurity.verdict(for: node)
+        let purityVerdict = purity.verdict(for: node)
         let claims = effectClaims(of: node)
         // The leading doc comment — carried on the summary as a candidate
         // reference definition for the docstring advisory. Unclassified here.
@@ -147,7 +147,7 @@ extension FunctionScannerVisitor {
         // verdict at all — so every computed property claimed purity while
         // taking the `.refuted` default, and the `@lint.effect pure` advisory
         // (which filters on exactly this Bool) advised all of them unchecked.
-        let purityVerdict = SoundPurity.verdict(forGetter: accessorBlock)
+        let purityVerdict = purity.verdict(forGetter: accessorBlock)
         return FunctionSummary(
             name: pattern.identifier.text,
             parameters: [],

@@ -42,7 +42,8 @@ struct OwnershipPremiseCensusMeasuredTests {
         let tree = Parser.parse(source: source)
         let finder = OwnershipFunctionFinder(viewMode: .sourceAccurate)
         finder.walk(tree)
-        return finder.found.first.map { SoundPurity.verdict(for: $0) }
+        // A snippet is its own package, as `scanCorpus(source:file:)` treats it.
+        return finder.found.first.map { CensusPurity.snippetOracle(tree).verdict(for: $0) }
     }
 
     /// Ten shapes, each naming what it is testing. Ownership and `inout` shapes

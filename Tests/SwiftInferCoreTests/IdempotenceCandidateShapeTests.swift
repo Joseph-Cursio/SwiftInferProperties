@@ -95,7 +95,9 @@ struct IdempotenceCandidateShapeTests {
     private static func summarize(_ source: String, named: String) -> FunctionSummary? {
         let tree = Parser.parse(source: source)
         let converter = SourceLocationConverter(fileName: "Fixture.swift", tree: tree)
-        let visitor = FunctionScannerVisitor(file: "Fixture.swift", converter: converter)
+        let visitor = FunctionScannerVisitor(
+            file: "Fixture.swift", converter: converter, purity: PackagePurity.selfContained(tree).oracle
+        )
         visitor.walk(tree)
         return visitor.summaries.first { $0.name == named }
     }

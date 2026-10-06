@@ -1,9 +1,15 @@
 /// Consults the purity verdict this analyzer already computed for a callee.
 ///
-/// `SoundPurity.verdict(for:)` decides each declaration alone, so
-/// `DrainedProcess.standardOutputViaEnv` — whose one-line body calls a `standardOutput`
-/// that spawns a subprocess and drains two pipes on a global queue — reads as `.pure`.
-/// The callee's verdict is computed and then never consulted. This consults it.
+/// `SoundPurity.verdict(for:)` decides each declaration from its own syntax plus the
+/// project's construction table (`PackagePurity`) — it never consults another FUNCTION's
+/// verdict, so `DrainedProcess.standardOutputViaEnv` — whose one-line body calls a
+/// `standardOutput` that spawns a subprocess and drains two pipes on a global queue — reads
+/// as `.pure`. The callee's verdict is computed and then never consulted. This consults it.
+///
+/// **The table and this join compose, and that is how the motivating case is refuted.**
+/// SwiftLintRuleStudio's `generateRecommendations` constructs nothing itself; it calls four
+/// `inout` helpers that each construct a `HealthRecommendation` minting a `UUID`. The table
+/// refutes the helpers, and this join carries that one hop to the caller — neither alone does.
 ///
 /// **Measured before it was built**: `docs/measurements/purity-refuting-fixpoint-census.md`
 /// — 18 rows retracted at one hop over 2,396 `.pure` subjects, 29 at fixpoint over six
@@ -21,14 +27,23 @@
 /// every callee a body reaches, including the ones this toolchain cannot resolve; an
 /// inferred refutation is a claim about *one* callee it did resolve.
 ///
-/// ## Only evidence propagates, established from public API alone
+/// ## Only evidence propagates, established from the summary alone
 ///
-/// `PurityVerdict` carries no witness and SEI's refutation reason is `private` — which is
-/// open item 31's complaint arriving as a constraint rather than a wish. So the witness
-/// is established indirectly, and soundly: `propagatedTry` requires a `throws` clause by
-/// definition, and `noBody` is structurally unreachable here because the scanner skips
-/// protocol requirements. **A `.refuted` declaration that does not throw therefore cannot
-/// be an ignorance-only refutation.**
+/// `PurityVerdict` carries no witness, and a `FunctionSummary` carries only the verdict. SEI's
+/// first witness IS public now (`PurityInferrer.refutation(for:)`, surfaced here as
+/// `SoundPurity.inferrerRefutation(for:)`), but it is not on the summary this join reads — so
+/// the witness is still established indirectly, and soundly: `propagatedTry` requires a
+/// `throws` clause by definition, and `noBody` is structurally unreachable here because the
+/// scanner skips protocol requirements. **A `.refuted` declaration that does not throw
+/// therefore cannot be an ignorance-only refutation.**
+///
+/// **The `!isThrows` proxy is kept deliberately, and it is now visibly narrow.** Construction
+/// facts give a THROWING function a witness the proxy cannot see: on this repo two rows
+/// (`dispatchSideOrchestrator`, `runInteractiveBranch`) changed their first witness from
+/// `propagatedTry` to a construction, and neither seeds this join. Carrying SEI's witness on
+/// the summary would let them seed — which retracts more rows, a verdict-moving change of its
+/// own, so it is its own A/B and not part of the wiring that exposed it
+/// (`docs/measurements/construction-facts-wiring.md`).
 ///
 /// Spreading ignorance would retract advice on the grounds that something *might* be
 /// impure, which is the opposite of this repo's conservative posture. The cost is

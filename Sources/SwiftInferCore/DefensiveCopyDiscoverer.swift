@@ -47,6 +47,14 @@ public enum DefensiveCopyDiscoverer {
         return discover(typeDecls: corpus.typeDecls, functions: corpus.summaries)
     }
 
+    /// The same, under a purity the caller already built for this directory's project — so a
+    /// caller running several discoverers over one directory parses its universe once. A value
+    /// built for another project is rejected (`FunctionScanner.ScanError.foreignPurity`).
+    public static func discover(directory: URL, purity: PackagePurity) throws -> [DefensiveCopyCandidate] {
+        let corpus = try FunctionScanner.scanCorpus(directory: directory, purity: purity)
+        return discover(typeDecls: corpus.typeDecls, functions: corpus.summaries)
+    }
+
     // MARK: - Signals
 
     /// The name of the class's copy method: a non-`static` curated copy-verb

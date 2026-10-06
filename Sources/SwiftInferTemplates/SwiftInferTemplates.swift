@@ -200,7 +200,8 @@ public enum TemplateRegistry {
         crossValidationFromTestLifter: Set<CrossValidationKey> = [],
         crossValidationOriginsFromTestLifter: [CrossValidationKey: LiftedOrigin] = [:],
         counterSignalsFromTestLifter: Set<CrossValidationKey> = [],
-        templateFilter: Set<String>? = nil
+        templateFilter: Set<String>? = nil,
+        purity: PackagePurity? = nil
     ) throws -> [Suggestion] {
         try discoverArtifacts(
             in: directory,
@@ -209,7 +210,8 @@ public enum TemplateRegistry {
             crossValidationFromTestLifter: crossValidationFromTestLifter,
             crossValidationOriginsFromTestLifter: crossValidationOriginsFromTestLifter,
             counterSignalsFromTestLifter: counterSignalsFromTestLifter,
-            templateFilter: templateFilter
+            templateFilter: templateFilter,
+            purity: purity
         ).suggestions
     }
 
@@ -254,6 +256,10 @@ public enum TemplateRegistry {
     ///   public other half, which requires it in the analysed set; but `summaries` also
     ///   feeds `EffectAnnotationAdvice`, and quietly emitting pure-effect advice for
     ///   private functions is a different change that nobody asked for.
+    /// - Parameter purity: the project's purity, when the caller already built it — reuse only,
+    ///   for a caller scanning several directories of one project. `nil` builds the one
+    ///   `FunctionScanner.scanCorpus(directory:)` would; a value built for another project is
+    ///   rejected (`FunctionScanner.ScanError.foreignPurity`), never used.
     public static func discoverArtifacts(
         in directory: URL,
         vocabulary: Vocabulary = .empty,
@@ -264,9 +270,11 @@ public enum TemplateRegistry {
         templateFilter: Set<String>? = nil,
         rescuedRestrictedSymbols: Set<String> = [],
         resolveEffects: Bool = false,
-        seedManifest: SeedManifest? = nil
+        seedManifest: SeedManifest? = nil,
+        purity: PackagePurity? = nil
     ) throws -> DiscoverArtifacts {
-        let corpus = try FunctionScanner.scanCorpus(directory: directory)
+        let corpus = try purity.map { try FunctionScanner.scanCorpus(directory: directory, purity: $0) }
+            ?? FunctionScanner.scanCorpus(directory: directory)
         let skipHashes = try SkipMarkerScanner.skipHashes(in: directory)
         // Privacy no longer gates discovery: every access-restricted function already enters
         // `corpus.summaries` at the scan, so the former seed-*rescue* merge (which pulled

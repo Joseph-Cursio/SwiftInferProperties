@@ -78,17 +78,18 @@ struct BlindSpotBaseRateCensusMeasuredTests {
         var anywhere = 0
         let root = PurityRefutationCensusMeasuredTests.packageSourcesRoot
         let packageRoot = PurityRefutationCensusMeasuredTests.packageRoot
+        // The configured oracle on the facts' own trees — the population the scan judges.
         for file in SwiftSourceFiles.sorted(in: root) {
-            guard let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            guard let tree = CensusPurity.tree(for: file) else { continue }
             let relative = file.path.replacingOccurrences(of: packageRoot.path + "/", with: "")
             let collector = ReceiverAwareFunctionCollector(viewMode: .sourceAccurate)
-            collector.walk(Parser.parse(source: text))
+            collector.walk(tree)
             for entry in collector.entries {
                 let writer = SelfWriteChecker(viewMode: .sourceAccurate)
                 if let body = entry.function.body { writer.walk(body) }
                 guard writer.writesSelf else { continue }
                 anywhere += 1
-                guard SoundPurity.verdict(for: entry.function) == .pure else { continue }
+                guard CensusPurity.oracle.verdict(for: entry.function) == .pure else { continue }
                 found.append(
                     SelfWrite(file: relative, name: entry.function.name.text, kind: entry.kind)
                 )
@@ -120,16 +121,15 @@ struct BlindSpotBaseRateCensusMeasuredTests {
         let root = PurityRefutationCensusMeasuredTests.packageSourcesRoot
         let packageRoot = PurityRefutationCensusMeasuredTests.packageRoot
         for file in SwiftSourceFiles.sorted(in: root) {
-            guard let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            guard let tree = CensusPurity.tree(for: file) else { continue }
             let relative = file.path.replacingOccurrences(of: packageRoot.path + "/", with: "")
-            let tree = Parser.parse(source: text)
             let unordered = UnorderedPropertyCollector(viewMode: .sourceAccurate)
             unordered.walk(tree)
             guard !unordered.names.isEmpty else { continue }
             let collector = ReceiverAwareFunctionCollector(viewMode: .sourceAccurate)
             collector.walk(tree)
             for entry in collector.entries {
-                guard SoundPurity.verdict(for: entry.function) == .pure,
+                guard CensusPurity.oracle.verdict(for: entry.function) == .pure,
                       let body = entry.function.body else { continue }
                 let renderer = UnorderedRenderChecker(unordered: unordered.names, viewMode: .sourceAccurate)
                 renderer.walk(body)

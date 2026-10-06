@@ -40,6 +40,14 @@ public enum StableIdentityDiscoverer {
         return discover(typeDecls: corpus.typeDecls, functions: corpus.summaries)
     }
 
+    /// The same, under a purity the caller already built for this directory's project — so a
+    /// caller running several discoverers over one directory parses its universe once. A value
+    /// built for another project is rejected (`FunctionScanner.ScanError.foreignPurity`).
+    public static func discover(directory: URL, purity: PackagePurity) throws -> [StableIdentityCandidate] {
+        let corpus = try FunctionScanner.scanCorpus(directory: directory, purity: purity)
+        return discover(typeDecls: corpus.typeDecls, functions: corpus.summaries)
+    }
+
     // MARK: - Signals
 
     /// Class names that list `Hashable` in some decl's inheritance clause

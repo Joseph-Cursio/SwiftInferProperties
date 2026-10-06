@@ -66,11 +66,14 @@ public enum ValueSemanticVerifier {
         moduleName: String,
         testable: Bool
     ) throws -> [VerifyJob] {
-        let valueSemantic = try ValueSemanticDiscoverer.discover(directory: targetDirectory)
+        // One project purity for the three scans of one directory: each scan would otherwise
+        // parse the whole construction universe again.
+        let purity = PackagePurity.forScan(of: targetDirectory)
+        let valueSemantic = try ValueSemanticDiscoverer.discover(directory: targetDirectory, purity: purity)
             .map { valueSemanticJob($0, moduleName: moduleName, testable: testable) }
-        let defensiveCopy = try DefensiveCopyDiscoverer.discover(directory: targetDirectory)
+        let defensiveCopy = try DefensiveCopyDiscoverer.discover(directory: targetDirectory, purity: purity)
             .map { defensiveCopyJob($0, moduleName: moduleName, testable: testable) }
-        let stableIdentity = try StableIdentityDiscoverer.discover(directory: targetDirectory)
+        let stableIdentity = try StableIdentityDiscoverer.discover(directory: targetDirectory, purity: purity)
             .map { stableIdentityJob($0, moduleName: moduleName, testable: testable) }
         return valueSemantic + defensiveCopy + stableIdentity
     }

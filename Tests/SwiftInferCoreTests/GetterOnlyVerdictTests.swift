@@ -78,7 +78,7 @@ struct GetterOnlyVerdictTests {
         SEI's accessor oracle now admits a block containing a non-`get` accessor. The \
         narrowing in `verdict(forGetter:)` stops being inert the moment that happens.
         """)
-        #expect(SoundPurity.verdict(forGetter: block) == .refuted, """
+        #expect(SoundPurity.unconfigured.verdict(forGetter: block) == .refuted, """
         The verdict moved. That is the outcome the inertness claim rules out, so re-take \
         the A/B before trusting item 50's "no population" close.
         """)
@@ -88,7 +88,7 @@ struct GetterOnlyVerdictTests {
     @Test("an implicit getter is unaffected")
     func implicitGetterIsUnchanged() throws {
         let block = try Self.block("struct S { var projection: Int { 1 } }")
-        #expect(SoundPurity.verdict(forGetter: block) == .pure)
+        #expect(SoundPurity.unconfigured.verdict(forGetter: block) == .pure)
     }
 
     /// The impurity that IS the getter's own must still refute — the narrowing must not
@@ -101,7 +101,7 @@ struct GetterOnlyVerdictTests {
             var projection: Int { get { S.cache = 9; return 1 } }
         }
         """)
-        #expect(SoundPurity.verdict(forGetter: block) == .refuted, """
+        #expect(SoundPurity.unconfigured.verdict(forGetter: block) == .refuted, """
         A getter writing static state read as pure. The narrowing has made the oracle \
         blind rather than precise, which is worse than the misreading it replaced.
         """)
