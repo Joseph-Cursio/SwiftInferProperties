@@ -140,9 +140,11 @@ struct PurityBacktestMeasuredTests {
         let tree = Parser.parse(source: "struct Harness {\n\(source)\n}")
         let finder = BacktestDeclarationFinder(viewMode: .sourceAccurate)
         finder.walk(tree)
-        if let function = finder.functions.first { return SoundPurity.verdict(for: function) }
+        // A snippet is its own package, as `scanCorpus(source:file:)` treats it.
+        let oracle = CensusPurity.snippetOracle(tree)
+        if let function = finder.functions.first { return oracle.verdict(for: function) }
         if let accessor = finder.accessors.first {
-            return PurityInferrer().isPure(accessor) ? .pure : .refuted
+            return PurityInferrer(constructionFacts: oracle.constructionFacts).isPure(accessor) ? .pure : .refuted
         }
         return nil
     }

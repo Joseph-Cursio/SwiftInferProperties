@@ -69,6 +69,14 @@ public enum ValueSemanticDiscoverer {
         return discover(typeDecls: corpus.typeDecls, functions: corpus.summaries)
     }
 
+    /// The same, under a purity the caller already built for this directory's project — so a
+    /// caller running several discoverers over one directory parses its universe once. A value
+    /// built for another project is rejected (`FunctionScanner.ScanError.foreignPurity`).
+    public static func discover(directory: URL, purity: PackagePurity) throws -> [ValueSemanticCandidate] {
+        let corpus = try FunctionScanner.scanCorpus(directory: directory, purity: purity)
+        return discover(typeDecls: corpus.typeDecls, functions: corpus.summaries)
+    }
+
     // MARK: - Reference-backed classification
 
     /// Classify a stored member as reference-backed, or `nil` if it is a value

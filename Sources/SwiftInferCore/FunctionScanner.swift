@@ -47,10 +47,21 @@ public enum FunctionScanner {
     /// emit `TypeDecl` records for M3.3's `EquatableResolver`. Keeps
     /// the §13 perf budget intact by avoiding a second pass over the
     /// source tree.
+    ///
+    /// **One source is its own package**: its construction facts are built from its own tree, so a
+    /// `struct Item { let id = UUID() }` beside `func make() -> Item { Item() }` refutes `make`
+    /// here exactly as it would in a directory holding only this file.
     public static func scanCorpus(source: String, file: String) -> ScannedCorpus {
         let tree = Parser.parse(source: source)
+        return scanCorpus(tree: tree, file: file, purity: PackagePurity.selfContained(tree).oracle)
+    }
+
+    /// One already-parsed file judged by `purity` — the body every per-file path shares, unjoined
+    /// like each of them. Pass the tree the facts were built from, never a re-parse
+    /// (`PackagePurity`'s doc says why).
+    static func scanCorpus(tree: SourceFileSyntax, file: String, purity: SoundPurity) -> ScannedCorpus {
         let converter = SourceLocationConverter(fileName: file, tree: tree)
-        let visitor = FunctionScannerVisitor(file: file, converter: converter)
+        let visitor = FunctionScannerVisitor(file: file, converter: converter, purity: purity)
         visitor.inactiveClauses = InactiveClauses.of(tree, conditions: InactiveClauses.conditions(forFile: file))
         visitor.walk(tree)
         return ScannedCorpus(
@@ -63,48 +74,16 @@ public enum FunctionScanner {
         )
     }
 
-    /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
+    /// Scan a single `.swift` file on disk. Reads the file as UTF-8. Self-contained, like
+    /// `scanCorpus(source:file:)`: a file alone is not a package. To judge it as part of one, use
+    /// `scanCorpus(file:purity:)`.
     public static func scanCorpus(file: URL) throws -> ScannedCorpus {
         let source = try String(contentsOf: file, encoding: .utf8)
         return scanCorpus(source: source, file: file.path)
     }
 
-    /// Recursively scan every `.swift` file under `directory`. Files are
-    /// visited in deterministic (sorted-path) order so the merged output
-    /// is stable across runs.
-    public static func scanCorpus(directory: URL) throws -> ScannedCorpus {
-        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
-        var summaries: [FunctionSummary] = []
-        var identities: [IdentityCandidate] = []
-        var typeDecls: [TypeDecl] = []
-        var restricted: [RestrictedFunction] = []
-        var aliases: [[String: String]] = []
-        var trapping: Set<String> = []
-        for fileURL in swiftFiles {
-            let corpus = try scanCorpus(file: fileURL)
-            summaries.append(contentsOf: corpus.summaries)
-            identities.append(contentsOf: corpus.identities)
-            typeDecls.append(contentsOf: corpus.typeDecls)
-            restricted.append(contentsOf: corpus.restricted)
-            aliases.append(corpus.typeAliases)
-            trapping.formUnion(corpus.trappingFunctions)
-        }
-        return ScannedCorpus(
-            // The one-hop refuting callee join, applied HERE and deliberately not in
-            // `scanCorpus(source:file:)`. A single file is not a package: the join needs
-            // every declaration's verdict before it can say a name is settled impure, and
-            // running it per-file would let a name resolve against a fraction of its
-            // declarations — the unanimity rule it depends on would be checked against
-            // the wrong set. `PackagePurityJoin` carries the reasoning.
-            summaries: PackagePurityJoin.applied(to: summaries),
-            identities: identities,
-            // Again at package scope: a helper in one file, an initializer in another (Harbeth).
-            typeDecls: PreconditionHelperHop.applied(to: typeDecls, trapping: trapping),
-            restricted: restricted,
-            typeAliases: TypeAliasMap.merged(aliases),
-            trappingFunctions: trapping
-        )
-    }
+    // `scanCorpus(directory:)`, the other package-scope entry points and the package-scope
+    // merge are in `FunctionScanner+Package.swift`, split out for the 400-line file cap.
 }
 
 // MARK: - Visitor
@@ -157,9 +136,14 @@ final class FunctionScannerVisitor: SyntaxVisitor {
     /// same discipline is how the pairing drifts.
     var enclosingTypeAccess: [EnclosingTypeContext] = []
 
-    init(file: String, converter: SourceLocationConverter) {
+    /// The oracle every summary in this walk is judged by. Required, with no default: a visitor
+    /// judging without the table its scan built is the silent `.empty` SEI warns about.
+    let purity: SoundPurity
+
+    init(file: String, converter: SourceLocationConverter, purity: SoundPurity) {
         self.file = file
         self.converter = converter
+        self.purity = purity
         super.init(viewMode: .sourceAccurate)
     }
 

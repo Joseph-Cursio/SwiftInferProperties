@@ -1,6 +1,10 @@
 # What do the backtest's blind spots cost this corpus?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **Both buckets unchanged, with and without
+> the table:** bucket 1 is 0, bucket 2 is 5 (a lower bound, the same five functions). The `.pure`
+> population is 2,821 → 2,839 by new code only.
 
 Re-derivable at any time — `BlindSpotBaseRateCensusMeasuredTests` *is* the harness,
 and `make batch2` runs it.

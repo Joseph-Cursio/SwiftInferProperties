@@ -1,7 +1,11 @@
 # What would a purity veto cost?
 
-> **Status:** `measured` · **As of:** 2026-09-17
+> **Status:** `measured` · **As of:** 2026-10-06
 > ⚠ **Re-taken 2026-09-17 — read that section first.** The broad arm re-prices; **the witness-scoped arm can no longer be priced by any survey**, so its verdict below stands as a dated 2026-08-18 result, and the suite now prices the COMPLEMENT — the rows scoping spares — which is fully recorded ([#514](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/514), resolved 2026-09-18).
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **No arm moved with the table** — configured
+> and unconfigured agree on every figure. New code only: the broad arm removes 24 → 25, the
+> witness-scoped arm 11 → 12 (still unpriceable post-veto).
 
 Re-derivable at any time — `PurityVetoPrecisionMeasuredTests` *is* the harness, and
 `make batch2` runs it.

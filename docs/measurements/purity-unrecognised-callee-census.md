@@ -1,6 +1,14 @@
 # What does an unrecognised callee cost?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **Verdict unchanged.** The table flips no
+> verdict here, so the population (`.pure` subjects blocked by an unrecognised callee: 1,866 of
+> 2,821 at main, 1,877 of 2,839 at head) moves only by the PR's new code. Distinct unrecognised
+> callees: 582 at main → 588 head unconfigured → **590 configured**; the +2 is classification, the
+> two re-witnessed rows' names leaving the blocked set (the allowlist deciles move by one at 80% and
+> 90%). The free-shape base rate is 21 → 23, all new code. Full record:
+> `docs/measurements/construction-facts-wiring.md`.
 
 Re-derivable at any time — `PurityAllowlistCensusMeasuredTests` *is* the harness,
 and `make batch2` runs it.

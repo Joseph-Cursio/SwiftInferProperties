@@ -90,13 +90,15 @@ extension PurityRefutationCensusMeasuredTests {
         let computedKeys = Set(summaries.filter(\.isComputedProperty).map {
             "\(URL(fileURLWithPath: $0.location.file).lastPathComponent)#\($0.name)"
         })
-        let inferrer = PurityInferrer()
+        // The configured inferrer, on the facts' own trees: the oracle a getter is put through
+        // in production since construction facts were wired in, not the unconfigured one.
+        let inferrer = CensusPurity.inferrer
         var matched: Set<String> = []
         var refutedByOracle: [String] = []
         for file in SwiftSourceFiles.sorted(in: Self.packageSourcesRoot) {
-            guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            guard let tree = CensusPurity.tree(for: file) else { continue }
             let collector = CensusFunctionCollector(viewMode: .sourceAccurate)
-            collector.walk(Parser.parse(source: source))
+            collector.walk(tree)
             for (name, accessor) in collector.accessorsByName {
                 let key = "\(file.lastPathComponent)#\(name)"
                 guard computedKeys.contains(key) else { continue }

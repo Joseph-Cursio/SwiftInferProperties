@@ -74,13 +74,16 @@ extension PurityHigherOrderCensusMeasuredTests {
     /// The item 29 census replicates because the function-level refuters are
     /// `private`; the closure oracle is published precisely so a caller can ask
     /// this, so replicating it here would invent a drift trap for nothing.
+    ///
+    /// The configured inferrer on the facts' own trees (`CensusPurity`) — the closure oracle as
+    /// the scan would consult it, not the unconfigured one.
     static let closureArguments: [ClosureArgument] = {
-        let inferrer = PurityInferrer()
+        let inferrer = CensusPurity.inferrer
         var found: [ClosureArgument] = []
         for file in SwiftSourceFiles.sorted(in: PurityRefutationCensusMeasuredTests.packageSourcesRoot) {
-            guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            guard let tree = CensusPurity.tree(for: file) else { continue }
             let collector = CensusClosureArgumentCollector(viewMode: .sourceAccurate)
-            collector.walk(Parser.parse(source: source))
+            collector.walk(tree)
             let relative = file.lastPathComponent
             found.append(contentsOf: collector.passed.map {
                 ClosureArgument(

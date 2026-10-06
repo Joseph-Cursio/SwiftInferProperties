@@ -136,7 +136,7 @@ extension PurityAllowlistCensusMeasuredTests {
         let refutedWithImpureDefault = zip(Self.corpus, Self.verdicts)
             .filter { $0.1 == .refuted }
             .filter { subject, _ in
-                PurityRefutationCensusMeasuredTests.Attributor()
+                PurityRefutationCensusMeasuredTests.Attributor(inferrer: CensusPurity.inferrer)
                     .causes(of: subject.function)
                     .contains(.markerInDefault)
             }

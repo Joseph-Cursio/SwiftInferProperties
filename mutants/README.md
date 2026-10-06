@@ -1,7 +1,7 @@
 # Mutation / regression corpus (private)
 
 A hand-authored mutant corpus for **sharpening the inference engine itself**
-(Chapter 30 §30.4.4). Two families:
+(Chapter 30 §30.4.4). Three families:
 
 - **Idempotence witnesses.** Mutants in the `IdempotenceWitnessDetector`'s pure
   name-classifier — the logic that decides whether an action name (`reset`, `setColor`,
@@ -9,6 +9,9 @@ A hand-authored mutant corpus for **sharpening the inference engine itself**
 - **Name-only positions.** Each mutant undoes one guard that keeps a key-path
   component's name (`\.name`) or a member's name (`job.name`, `.red`) from being read
   as a test-local binding (`DeclReferenceExprSyntax+NameOnlyPosition`).
+- **Construction facts.** Each mutant undoes one piece of wiring SEI's `ConstructionFacts`
+  into the scan — the table, the trees it was built from, the universe rule, the census
+  replica's construction witness.
 
 Each is killed by its own code's unit tests, which pin both what it *should* do and what
 it *should not*. Not a scored benchmark — no frozen answer key.
@@ -65,6 +68,24 @@ test target declares, and the verifier stub it is pasted into fails to build; on
 reads `Self` as a type keeps `Self.Fixture()`. A rewriter that skips everything inside
 a key path stops substituting `\.[id]`, whose argument is evaluated. All nine verified
 killed.
+
+| id | shape | expected | killer |
+|---|---|---|---|
+| `scan-drops-construction-facts` | construction-facts | killed | `siblingTargetConstructionRefutes` · `ConstructionFactsPipelineTests` |
+| `scan-reparses-universe-trees` | construction-facts | killed | `scanJudgesOnTheFactsOwnNodes` |
+| `universe-admits-tests` | construction-universe | killed | `testFileNamesakeDoesNotRefute` |
+| `test-dir-scan-walks-up` | construction-universe | killed | `testDirectoryScanIsSelfContained` |
+| `census-replica-blind-to-construction` | census-replica | killed | `classificationAgreesWithSEIWitness` |
+
+The construction-facts family (2026-10-06) undoes one piece of the wiring each. The first
+builds the project's table and hands the visitor the unconfigured oracle anyway — a table
+built and dropped, which no type checker objects to. The second re-parses every judged file;
+SEI types an assignment by node identity, so `reset` in one target is refuted by another
+target's same-named `A`. The third lets a test target's `Item` into the production table; the
+fourth walks a `Tests/Fixtures/X` scan up to the package, whose rule drops the fixture's own
+files. The last blinds the census replica to SEI's construction witness: 0 verdicts move on
+`Sources/`, so `verdictAgreesWithSoundPurity` stays green, and only the classification guard
+sees the 2 re-witnessed rows filed as ignorance. All five verified killed.
 
 ## Adding a mutant
 

@@ -1,6 +1,12 @@
 # Does purity propagate through a higher-order call?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **The decline stands; the table moved
+> nothing here.** 0 of 1,625 closure literals flip, and the probe's ten shapes answer as before
+> (snippets are judged as their own package now). Between main and head, by the PR's new code
+> only: closure literals 1,614 → 1,625, refuted 23 → 25, handed to a conditionally-pure function
+> 8 → 12 (a new `forEach` matched by name), functions with a function-typed parameter 61 → 62.
 
 Re-derivable at any time — `PurityHigherOrderCensusMeasuredTests` *is* the
 harness, and `make batch2` runs it.

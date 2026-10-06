@@ -89,7 +89,7 @@ struct PurityAllowlistCensusMeasuredTests {
     }
 
     static let declaredNames: DeclaredNames = {
-        let attributor = PurityRefutationCensusMeasuredTests.Attributor()
+        let attributor = PurityRefutationCensusMeasuredTests.Attributor(inferrer: CensusPurity.inferrer)
         var witnessedByName: [String: [Bool]] = [:]
         var causesByName: [String: Set<PurityRefutationCensusMeasuredTests.RefutationCause>] = [:]
         for (subject, verdict) in zip(corpus, verdicts) {

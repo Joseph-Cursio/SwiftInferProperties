@@ -18,6 +18,12 @@ import Testing
 /// unanimity rule the join depends on would be checked against a fraction of a name's
 /// declarations. Merging the per-file results is therefore the honest "before", and it
 /// exercises the real API rather than a test-only switch.
+///
+/// **Both arms judge under the SAME `PackagePurity`** — one universe, one table, the same tree
+/// nodes. Since construction facts were wired in (2026-10-06) the directory path builds a table
+/// and the self-contained per-file path does not, so a per-file "before" that built its own
+/// would credit every construction flip to the join, and `bothPathsSeeTheSameCorpus` could not
+/// see it: the summaries would match one for one and only their verdicts would differ.
 @Suite("Join — what consulting the callee's verdict retracts", .serialized)
 struct PackagePurityJoinMeasuredTests {
 
@@ -31,14 +37,18 @@ struct PackagePurityJoinMeasuredTests {
 
     static let corpora = PartialPurityConsumerMeasuredTests.corpora
 
-    /// Merged per-file scan — every summary the package produces, with no join applied.
-    static func unjoined(_ root: URL) throws -> [FunctionSummary] {
-        try SwiftSourceFiles.sorted(in: root).flatMap { try FunctionScanner.scanCorpus(file: $0).summaries }
+    /// Merged per-file scan — every summary the package produces, with no join applied, judged
+    /// under the project purity the joined arm uses.
+    static func unjoined(_ root: URL, purity: PackagePurity) throws -> [FunctionSummary] {
+        try SwiftSourceFiles.sorted(in: root).flatMap {
+            try FunctionScanner.scanCorpus(file: $0, purity: purity).summaries
+        }
     }
 
     static let measured: [Arm] = corpora.compactMap { corpus in
-        guard let before = try? unjoined(corpus.root),
-              let after = try? FunctionScanner.scanCorpus(directory: corpus.root).summaries else {
+        let purity = CensusPurity.purity(forScanOf: corpus.root)
+        guard let before = try? unjoined(corpus.root, purity: purity),
+              let after = try? FunctionScanner.scanCorpus(directory: corpus.root, purity: purity).summaries else {
             return nil
         }
         return Arm(
@@ -54,8 +64,9 @@ struct PackagePurityJoinMeasuredTests {
     @Test("control — the joined and unjoined scans see the same declarations")
     func bothPathsSeeTheSameCorpus() throws {
         for corpus in Self.corpora {
-            let before = try Self.unjoined(corpus.root)
-            let after = try FunctionScanner.scanCorpus(directory: corpus.root).summaries
+            let purity = CensusPurity.purity(forScanOf: corpus.root)
+            let before = try Self.unjoined(corpus.root, purity: purity)
+            let after = try FunctionScanner.scanCorpus(directory: corpus.root, purity: purity).summaries
             #expect(before.count == after.count, """
             \(corpus.name): \(before.count) summaries per-file against \(after.count) \
             per-directory. The join must not add or drop a declaration.

@@ -1,0 +1,17 @@
+diff --git a/Sources/SwiftInferCore/FunctionScanner+Package.swift b/Sources/SwiftInferCore/FunctionScanner+Package.swift
+index 96b073f9..ad50ceb3 100644
+--- a/Sources/SwiftInferCore/FunctionScanner+Package.swift
++++ b/Sources/SwiftInferCore/FunctionScanner+Package.swift
+@@ -66,10 +66,10 @@ extension FunctionScanner {
+     /// is read and parsed here, and judged under the same table.
+     public static func scanCorpus(file: URL, purity: PackagePurity) throws -> ScannedCorpus {
+         if let tree = purity.tree(for: file) {
+-            return scanCorpus(tree: tree, file: file.path, purity: purity.oracle)
++            return scanCorpus(tree: tree, file: file.path, purity: .unconfigured)
+         }
+         let source = try String(contentsOf: file, encoding: .utf8)
+-        return scanCorpus(tree: Parser.parse(source: source), file: file.path, purity: purity.oracle)
++        return scanCorpus(tree: Parser.parse(source: source), file: file.path, purity: .unconfigured)
+     }
+ 
+     /// The package-scope merge of per-file corpora — the post-passes that need every

@@ -1,6 +1,13 @@
 # Does taking the `pure` advice change anything?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **Still zero suggestions moved by taking
+> the advice.** The functions the advisory would annotate are 3,026 / 341 / 435 at main and
+> 3,047 / 341 / 435 at head, identical with and without the table on these three corpora. The
+> table DOES withdraw advice elsewhere — 299 → 288 on SwiftLintRuleStudio's Core, 2,117 → 1,899 on
+> SwiftProjectLint's `Packages` (`docs/measurements/construction-facts-wiring.md`) — which shrinks
+> the population this census grants and cannot move its zero.
 
 Re-derivable at any time — `PureAdvisoryRoundTripMeasuredTests` *is* the harness,
 and `make batch2` runs it.

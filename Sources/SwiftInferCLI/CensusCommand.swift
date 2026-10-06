@@ -131,10 +131,16 @@ extension SwiftInferCommand {
             }
 
             var rows: [String: Int] = [:]
+            // One project purity per root, reused across the entry's scan paths when they share
+            // one (`SwiftLintRuleStudio`'s Core and UI) and rebuilt when they do not. Cost only:
+            // a value that does not cover a path would be rejected, never used.
+            var purity: PackagePurity?
             for scanPath in scanPaths {
+                if purity?.covers(scanPath) != true { purity = PackagePurity.forScan(of: scanPath) }
                 let result = try Discover.collectVisibleSuggestions(
                     directory: scanPath,
                     includePossible: includePossible,
+                    purity: purity,
                     diagnostics: SilentDiagnostics()
                 )
                 for suggestion in result.suggestions {

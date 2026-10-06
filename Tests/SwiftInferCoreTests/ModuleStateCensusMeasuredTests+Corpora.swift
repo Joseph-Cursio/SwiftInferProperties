@@ -85,18 +85,23 @@ struct ModuleStateCorpusCensusMeasuredTests {
         var globals: Set<String> { stored.union(computed) }
         let fileCount: Int
         let functions: [(file: String, decl: FunctionDeclSyntax)]
+        /// The root's project purity — the oracle `discover` would judge these functions with.
+        let purity: PackagePurity
     }
 
     /// Pass 1 must complete before pass 2: a write can precede its declaration's
     /// file in sort order, so collecting globals lazily would miss it.
+    ///
+    /// Each root is judged under its own project's construction facts, built once per root for
+    /// the process (`CensusPurity`), on the facts' own trees.
     private static func scanRoot(_ root: URL) -> RootScan {
         var stored: Set<String> = []
         var computed: Set<String> = []
         var functions: [(file: String, decl: FunctionDeclSyntax)] = []
         var fileCount = 0
+        let purity = CensusPurity.purity(forScanOf: root)
         for file in SwiftSourceFiles.sorted(in: root) {
-            guard let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
-            let tree = Parser.parse(source: text)
+            guard let tree = CensusPurity.tree(for: file, in: purity) else { continue }
             fileCount += 1
             let collector = FileScopeVarCollector(viewMode: .sourceAccurate)
             collector.walk(tree)
@@ -106,7 +111,9 @@ struct ModuleStateCorpusCensusMeasuredTests {
             functionCollector.walk(tree)
             functions.append(contentsOf: functionCollector.functions.map { (file.lastPathComponent, $0) })
         }
-        return RootScan(stored: stored, computed: computed, fileCount: fileCount, functions: functions)
+        return RootScan(
+            stored: stored, computed: computed, fileCount: fileCount, functions: functions, purity: purity
+        )
     }
 
     /// Split out of the `map` closure only for the closure-body length cap; the
@@ -141,7 +148,7 @@ struct ModuleStateCorpusCensusMeasuredTests {
                         function: entry.decl.name.text,
                         written: written,
                         memberCalled: called,
-                        verdict: SoundPurity.verdict(for: entry.decl)
+                        verdict: scan.purity.oracle.verdict(for: entry.decl)
                     )
                 )
             }

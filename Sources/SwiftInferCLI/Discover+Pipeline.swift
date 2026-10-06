@@ -24,6 +24,7 @@ extension SwiftInferCommand.Discover {
         seedManifest: SeedManifest? = nil,
         requireCorroboration: Bool = false,
         resolveEffects: Bool = false,
+        purity: PackagePurity? = nil,
         diagnostics: any DiagnosticOutput
     ) throws -> PipelineResult {
         // A run over an empty corpus must not be mistaken for a run that found nothing in your
@@ -61,7 +62,11 @@ extension SwiftInferCommand.Discover {
             templateFilter: setup.templateFilter,
             rescuedRestrictedSymbols: rescuableRestrictedKeys(from: seedManifest),
             resolveEffects: resolveEffects,
-            seedManifest: seedManifest
+            seedManifest: seedManifest,
+            // Reuse only. There is no scope flag: the engine decides the construction universe
+            // (`ConstructionUniverse`), so `--target` / `--sources` narrow what is judged and
+            // never what feeds the table.
+            purity: purity
         )
         // TestLifter M3.2 — promote LiftedSuggestions, share TemplateEngine's
         // GeneratorSelection pass, suppress duplicates already covered by

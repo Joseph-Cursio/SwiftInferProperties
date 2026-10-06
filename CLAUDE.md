@@ -54,21 +54,25 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,671 tests — 6,447 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-10-05** at `186bb8b8` (the 1.159.0 release branch)
-on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`**, Xcode 27 / Swift 6.4 —
+Suites green at **6,724 tests — 6,491 fast + 233 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-10-06** at `5b6a6ac4` (the `construction-facts-wiring`
+branch) on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `f2ea8d6`**, Xcode 27 / Swift 6.4 —
 every stage counted from that one run, and the run was UNPIPED (`make test > log 2>&1`, exit **0**):
-fast **6,447** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 224, every batch to the digit**, across everything merged since
-`5dd4e88f`: tuple determinism declines, docstring advice outside the seed focus, and the
-reference-oracle scaffold rebuilt on accept's call plan — ⚠ **but the corpus-surveying batches assert
-floors (`> 1_000` rows), so 224 green is not an A/B; the row dumps in `fixtures/` are.**
-**The fast half moved 6,241 → 6,447, +206**: +60 up to 1.158.0, then +75 (#623, the shared
-determinism call plan) and +71 (#624, the reference-oracle scaffold); #625 is docs, scripts and
-fixtures.
-**Timings** (an M5 Pro; batch boundaries read off the log every 5 s): `batch3` 112s; `batch2` 342s;
-`batch5` 695s; `batch1` 106s, `batch4` 86s, `batch6` 50s, `batch7` 81s, `batch8` 287s; fast suite 84s,
-whole run 1,865s.
+fast **6,491** · perf 9 · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half moved 224 → 233, and every move is named**: perf +1 (the construction-facts §13
+row) and batch 2 +8 (the census's construction arms: the classification guard, its two controls, the
+same-trees A/B and its no-promotion check, the per-manifest-corpus A/B and its two pins); every other
+batch stood still to the digit — ⚠ **and the corpus-surveying batches assert floors (`> 1_000` rows),
+so green is not an A/B; the row dumps in `fixtures/` and the census arms are.**
+**The fast half moved 6,447 → 6,491, +44**: +26 are this branch's (wiring 14, universe table 3,
+configuration inventory 5, pipeline 2, `SoundPurity` 1, the cross-repo universe-table clause 1); the
+other +18 are main's merges since `186bb8b8` (inferred — the branch removes no test).
+**Timings** (an M5 Pro; swift-testing's own per-stage durations, which EXCLUDE the build, so not
+comparable to earlier readings' log-boundary times): `batch3` 127s; `batch2` 416s; `batch5` 772s;
+`batch1` 96s, `batch4` 86s, `batch6` 55s, `batch7` 86s, `batch8` 339s; fast suite 81s (the Makefile's
+own clock), whole run **2,107s** wall. Batch 2 shared the machine with this session's own CLI diff runs
+and batch 3 with another session's SwiftProjectLint build (load peaked at 121), so read the times as
+loaded.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -77,10 +81,16 @@ under load — rerun before diagnosing.
 
 **Both repos pin SEI `9d0bf6d` (bumped 2026-10-06, jointly with SwiftProjectLint), and
 `SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
-SwiftProjectLint's, so green means they agree, and the figures below were taken at `3ea25f2`.
+SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
-oracle, and that guard is the only thing that can say so.
+oracle, and that guard is the only thing that can say so. **⚠ Since construction facts were wired
+in (2026-10-06), an equal pin is NECESSARY and no longer SUFFICIENT: one oracle needs an equal pin
+AND an equal universe.** Each consumer configures SEI with a `ConstructionFacts` table built from
+its file universe, and one pin over two universes is one oracle configured two ways. The rule is
+written twice (`ConstructionUniverse` here and its SwiftProjectLint twin) and pinned by one
+byte-identical `docs/construction-universe.tsv`; the guard's table clause skips loudly where the
+sibling carries none, and until SwiftProjectLint's side lands the two knowingly disagree.
 
 **`3ea25f2` is the first SEI bump that MOVES VERDICTS in this repo** — every earlier one
 was additive. It closes the non-throwing half of the I/O hole (`FileHandle` / `Process` /
@@ -97,10 +107,18 @@ extrapolate them. **`f2ea8d6` is the second that moves verdicts:** SEI #22 match
 only where it is code (an identifier, not a key-path component), so a function refuted only
 by string-literal text is pure. The guard named 2 mismatches (`defaultValueLiteral`,
 `baseValues`); the replica gained `Attributor.isMarkerPosition`, which every census token
-scan now goes through. **`9d0bf6d` moves nothing here:** SEI #23 changes only
-`ConstructionFacts` — a typealias means every alias it may mean, and a decode is judged by
-every `init(from:)` — which nothing on `main` builds; `make batch2` stayed green with the
-replica guard naming no mismatch.
+scan now goes through. **Construction facts are the THIRD verdict-moving step, and the first by
+CONFIGURATION, not by a bump** (`docs/measurements/construction-facts-wiring.md`): no pin moved,
+the scan started building SEI's table. It flipped 0 verdicts here and re-witnessed 2 rows — so the
+verdict guard stayed GREEN while an unchanged replica would have misfiled both. A refuter that
+fires only on already-refuted rows is invisible to `verdictAgreesWithSoundPurity`;
+`classificationAgreesWithSEIWitness` is the guard that sees it. Re-take with the table on AND off
+over the same trees, or new code and the table cannot be told apart. **`9d0bf6d` changes only
+`ConstructionFacts`** (SEI #23): a typealias means every alias it may mean, and a decode is judged
+by every `init(from:)`. On `main`, which builds no table, it moved nothing — `make batch2` stayed
+green with the replica guard naming no mismatch. With the table wired in it moved nothing either:
+re-taken at `9d0bf6d`, every construction figure in `docs/measurements/construction-facts-wiring.md`
+— the `Sources/` delta and all 21 scan roots — came out identical.
 
 ## Where to look
 
@@ -127,10 +145,11 @@ decline, because the hook states the verdict and the annotation states what was 
 | **The verify edge pass** (why `bothPass` used to under-claim) | `docs/design/verify-edge-pass.md` | Pass 2 was a zero-trial sentinel; boundary values belong in an **advisory** pass, swapped at the rendered expression |
 | **Why is 88% of `discover`'s default output `predicate`?** | `docs/design/predicate-display-order.md` | Fixed by **ordering**, not hiding — a law the code owes is never hidden |
 | **Why does `verify` decline so much?** | `docs/measurements/verify-carrier-reach-census.md` | **Not** carrier support: carrier is ~4% of declines, template reach is 65% |
-| **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured no — a subprocess spawn is judged `.pure`**, but the allowlist fix costs 65% of `.pure`. Verdict unchanged at SEI `3ea25f2` |
-| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45%, now 43%** — check which SEI pin a figure belongs to. Rankable ceiling **133**; it has been 152 and 135. Every refuter added anywhere shrinks this bucket |
-| **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over** — 13–31 rows of leverage behind 133, landing in a tier nothing reads |
-| **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **BUILT as `PackagePurityJoin` (retracts 16); the loop itself is unbuilt.** 18 rows at one hop, 29 at fixpoint; a hand-check killed the first answer |
+| **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured no — a subprocess spawn is judged `.pure`**, but the allowlist fix costs 65% of `.pure`. Verdict unchanged at SEI `f2ea8d6` with construction facts |
+| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45%, 43%, now 35% (with construction facts)** — check which pin and which configuration a figure belongs to. Rankable ceiling **118**; it has been 152, 135 and 133. Every refuter added anywhere shrinks this bucket |
+| **What did wiring SEI's construction facts move — and do the two consumers still consult one oracle?** | `docs/measurements/construction-facts-wiring.md` | **0 verdicts on this repo; 266 rows over 21 manifest roots, 215 of them one hop from SwiftProjectLint's `addIssue`.** One oracle now needs an equal pin AND an equal universe |
+| **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over** — 13–31 rows of leverage behind 118, landing in a tier nothing reads |
+| **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **BUILT as `PackagePurityJoin` (retracts 22 here; it amplifies construction facts elsewhere); the loop itself is unbuilt.** 18 rows at one hop, 29 at fixpoint; a hand-check killed the first answer |
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through. The real gap is a 26-row over-claim; item 42 closed |
 | **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |

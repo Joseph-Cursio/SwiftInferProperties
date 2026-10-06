@@ -1,6 +1,15 @@
 # What would a refuting-direction fixpoint retract?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **The fixpoint retracts 28 of 2,839 `.pure`
+> at head, configured or not** (26 of 2,821 at main; the +2 is new code), in the same 2 hops.
+> Witness-bearing refuting names: 103 → 106 unconfigured → **107** configured — the re-witnessed
+> rows are now evidence, but both throw, so the shipped `PackagePurityJoin` (`!isThrows` proxy)
+> cannot seed from them: its own A/B on this repo is `.pure` 3,074 → 3,052 (**−22**) at head in
+> both arms, −20 at main. The construction table moves the join on OTHER corpora, and amplifies
+> there — 215 of SwiftProjectLint's 218 moved rows are one-hop retractions
+> (`docs/measurements/construction-facts-wiring.md`).
 
 Re-derivable at any time — `PurityFixpointCensusMeasuredTests` *is* the
 harness, and `make batch2` runs it.

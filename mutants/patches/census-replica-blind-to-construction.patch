@@ -1,0 +1,16 @@
+diff --git a/Tests/SwiftInferCoreTests/PurityRefutationCensusMeasuredTests+Support.swift b/Tests/SwiftInferCoreTests/PurityRefutationCensusMeasuredTests+Support.swift
+index 76704828..49989a20 100644
+--- a/Tests/SwiftInferCoreTests/PurityRefutationCensusMeasuredTests+Support.swift
++++ b/Tests/SwiftInferCoreTests/PurityRefutationCensusMeasuredTests+Support.swift
+@@ -136,10 +136,7 @@ extension PurityRefutationCensusMeasuredTests {
+         /// default value. Every other witness answers `false`, so a drifted marker set still
+         /// surfaces as a verdict mismatch rather than being consulted away.
+         func constructionWitness(of function: FunctionDeclSyntax) -> Bool {
+-            switch inferrer.refutation(for: function) {
+-            case .refutingConstruction, .refutingDefaultArgument(_, cause: .refutingConstruction): true
+-            default: false
+-            }
++            false
+         }
+ 
+         /// Every cause that holds of `function`, independent of the order the

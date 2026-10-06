@@ -199,8 +199,10 @@ struct ModuleStateCensusMeasuredTests {
     /// than a finding about a function already refuted.
     @Test("every hit is a .pure verdict, so every hit is a false one")
     func everyHitIsPure() {
+        // The same configured oracle the population was filtered with — a guard asking a
+        // different oracle from the one that built its population cannot fail usefully.
         let allPure = Self.hits.allSatisfy {
-            SoundPurity.verdict(for: $0.subject.function) == .pure
+            CensusPurity.oracle.verdict(for: $0.subject.function) == .pure
         }
         #expect(allPure, "a non-`.pure` subject reached the hit list; the population filter is wrong")
     }

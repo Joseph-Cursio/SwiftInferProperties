@@ -29,8 +29,8 @@ struct SoundPurityTests {
     @Test
     func transparentFunction_isPure() throws {
         let function = try #require(parse("func add(_ a: Int, _ b: Int) -> Int { a + b }"))
-        #expect(SoundPurity.inferredEffect(for: function) == .pure)
-        #expect(SoundPurity.isPure(function))
+        #expect(SoundPurity.unconfigured.inferredEffect(for: function) == .pure)
+        #expect(SoundPurity.unconfigured.isPure(function))
     }
 
     // MARK: - The soundness cases — ReducerPurity.pure, but NOT Effect.pure
@@ -48,7 +48,7 @@ struct SoundPurityTests {
         """
         let function = try #require(parse(source))
         #expect(ReducerPurityAnalyzer.analyze(function) == .pure)   // narrow analyzer: "pure"
-        #expect(SoundPurity.inferredEffect(for: function) == nil)   // sound mapping: refuted
+        #expect(SoundPurity.unconfigured.inferredEffect(for: function) == nil)   // sound mapping: refuted
     }
 
     @Test
@@ -60,7 +60,7 @@ struct SoundPurityTests {
         """
         let function = try #require(parse(source))
         #expect(ReducerPurityAnalyzer.analyze(function) == .pure)
-        #expect(SoundPurity.inferredEffect(for: function) == nil)
+        #expect(SoundPurity.unconfigured.inferredEffect(for: function) == nil)
     }
 
     @Test
@@ -71,7 +71,7 @@ struct SoundPurityTests {
         """
         let function = try #require(parse(source))
         #expect(ReducerPurityAnalyzer.analyze(function) == .pure)
-        #expect(SoundPurity.inferredEffect(for: function) == nil)
+        #expect(SoundPurity.unconfigured.inferredEffect(for: function) == nil)
     }
 
     // MARK: - ReducerPurity refutes (effect-bearing / hidden mutation)
@@ -87,7 +87,7 @@ struct SoundPurityTests {
         // ReducerPurity sees `await` → effectBearing; and async refutes in
         // PurityInferrer too. Either way, not pure.
         #expect(ReducerPurityAnalyzer.analyze(function) != .pure)
-        #expect(SoundPurity.inferredEffect(for: function) == nil)
+        #expect(SoundPurity.unconfigured.inferredEffect(for: function) == nil)
     }
 
     @Test
@@ -100,6 +100,27 @@ struct SoundPurityTests {
         """
         let function = try #require(parse(source))
         #expect(ReducerPurityAnalyzer.analyze(function) == .hiddenMutability)
-        #expect(SoundPurity.inferredEffect(for: function) == nil)
+        #expect(SoundPurity.unconfigured.inferredEffect(for: function) == nil)
+    }
+
+    // MARK: - Configured with construction facts
+
+    /// Every answer goes through the one configured inferrer — the whole-domain question as well
+    /// as the verdict. `make` names nothing impure; the `UUID` it mints is in `Item`'s stored
+    /// default, which only the table can see.
+    @Test
+    func constructionFacts_refuteEveryAnswer() throws {
+        let tree = Parser.parse(source: """
+        struct Item { let id = UUID(); let title: String }
+        func make(_ title: String) -> Item { Item(title: title) }
+        """)
+        let function = try #require(tree.statements.lazy.compactMap { $0.item.as(FunctionDeclSyntax.self) }.first)
+        let configured = SoundPurity(constructionFacts: .build(from: [tree]))
+
+        #expect(SoundPurity.unconfigured.isPure(function), "control: without the table `make` reads pure")
+        #expect(configured.inferredEffect(for: function) == nil)
+        #expect(!configured.isPure(function))
+        #expect(configured.verdict(for: function) == .refuted)
+        #expect(configured.constructionFacts.refutedTypeNames == ["Item"])
     }
 }

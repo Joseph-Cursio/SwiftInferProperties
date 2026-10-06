@@ -110,18 +110,9 @@ extension SwiftInferCommand {
                 // Recognition only (slice 1): no invariant is emitted — see
                 // docs/design/rule-visitor-carrier-scoping.md.
                 let ruleVisitors = try RuleVisitorDiscoverer.discover(directory: directory)
-                // PROTOTYPE — also surface value-semantics carriers: structs
-                // holding reference-backed storage (a closure / mutable
-                // container / corpus class), through which a "value" can leak
-                // shared mutable state. Recognition only (slice 2): no invariant
-                // is emitted yet — see docs/archive/valuesemantic-build-plan.md.
-                let valueSemantics = try ValueSemanticDiscoverer.discover(directory: directory)
-                // PROTOTYPE — also surface defensive-copy carriers: classes that
-                // vend a copy()/clone() (Ch. 9 §9.3). Recognition only.
-                let defensiveCopies = try DefensiveCopyDiscoverer.discover(directory: directory)
-                // PROTOTYPE — also surface identity-stability carriers: Hashable
-                // classes whose == / hash may read mutable state (Ch. 9 §9.3.3).
-                let stableIdentities = try StableIdentityDiscoverer.discover(directory: directory)
+                // PROTOTYPE — value-semantics, defensive-copy and identity-stability
+                // carriers, scanned under one project purity. See `TypeShapeCarriers`.
+                let shapes = try TypeShapeCarriers(directory: directory)
                 // PROTOTYPE — also surface convention-recognized VIPER/MVP roles
                 // (`*Presenter` / `*Interactor`): a presenter is a view model
                 // minus @Observable — stored state + mutating methods + injected
@@ -131,9 +122,9 @@ extension SwiftInferCommand {
                 return renderSummary(candidates: candidates)
                     + "\n" + renderViewModelSummary(viewModels)
                     + "\n" + renderRuleVisitorSummary(ruleVisitors)
-                    + "\n" + renderValueSemanticSummary(valueSemantics)
-                    + "\n" + renderDefensiveCopySummary(defensiveCopies)
-                    + "\n" + renderStableIdentitySummary(stableIdentities)
+                    + "\n" + renderValueSemanticSummary(shapes.valueSemantics)
+                    + "\n" + renderDefensiveCopySummary(shapes.defensiveCopies)
+                    + "\n" + renderStableIdentitySummary(shapes.stableIdentities)
                     + "\n" + renderConventionRoleSummary(conventionRoles)
             }
             let pin = try ReducerPin.parse(pinRaw)

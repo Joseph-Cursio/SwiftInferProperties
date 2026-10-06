@@ -1,4 +1,5 @@
 import Foundation
+import SwiftEffectInference
 import SwiftParser
 import SwiftSyntax
 
@@ -116,6 +117,11 @@ extension PurityRefactoringReachMeasuredTests {
         /// `.pure` for these. Before open item 43 shipped, a `.refuted` subject always
         /// carried at least one local cause, so an empty cause set is unambiguous.
         ///
+        /// **It stays unambiguous with construction facts wired in only because the
+        /// attributor consults the SAME facts the scan judged with, on the SAME trees.** A
+        /// construction-only refutation has no local *syntax* cause the replica can see; read
+        /// with an unconfigured attributor it would land here, filed as a join retraction.
+        ///
         /// **Bucketing these as ignorance-only would invert their meaning**, which is
         /// what this census did for one run after the join landed.
         let joined: [String]
@@ -137,9 +143,11 @@ extension PurityRefactoringReachMeasuredTests {
     /// `FunctionScannerVisitor.funcKeywordLocation` exactly, and the file comes from the
     /// location itself rather than from a second corpus walk — so the classifier cannot
     /// drift from the summaries it is classifying.
-    static func witnessSplit(for subjects: [Subject]) -> WitnessSplit {
+    static func witnessSplit(for subjects: [Subject], purity: PackagePurity) -> WitnessSplit {
         var cache: [String: [Int: FunctionDeclSyntax]] = [:]
-        let attributor = PurityRefutationCensusMeasuredTests.Attributor()
+        let attributor = PurityRefutationCensusMeasuredTests.Attributor(
+            inferrer: PurityInferrer(constructionFacts: purity.constructionFacts)
+        )
 
         var propertyCache: [String: Set<Int>] = [:]
         var witness: [String] = []
@@ -151,7 +159,7 @@ extension PurityRefactoringReachMeasuredTests {
         for subject in subjects {
             let file = URL(fileURLWithPath: subject.location.file).lastPathComponent
             let label = "\(subject.name) @ \(file):\(subject.location.line)"
-            let functions = parsedFunctions(inFile: subject.location.file, cache: &cache)
+            let functions = parsedFunctions(inFile: subject.location.file, purity: purity, cache: &cache)
             guard let function = functions[subject.location.line] else {
                 let properties = parsedPropertyLines(inFile: subject.location.file, cache: &propertyCache)
                 if properties.contains(subject.location.line) {
@@ -202,14 +210,16 @@ extension PurityRefactoringReachMeasuredTests {
         return found
     }
 
+    /// The scan's own tree for `path` when it has one — judged by node identity, a re-parse
+    /// would answer differently from the scan it is classifying.
     private static func parsedFunctions(
         inFile path: String,
+        purity: PackagePurity,
         cache: inout [String: [Int: FunctionDeclSyntax]]
     ) -> [Int: FunctionDeclSyntax] {
         if let hit = cache[path] { return hit }
         var found: [Int: FunctionDeclSyntax] = [:]
-        if let source = try? String(contentsOfFile: path, encoding: .utf8) {
-            let tree = Parser.parse(source: source)
+        if let tree = CensusPurity.tree(for: URL(fileURLWithPath: path), in: purity) {
             let converter = SwiftSyntax.SourceLocationConverter(fileName: path, tree: tree)
             let collector = CensusFunctionCollector(viewMode: .sourceAccurate)
             collector.walk(tree)
@@ -238,7 +248,8 @@ extension PurityRefactoringReachMeasuredTests {
     }
 
     static func arms(for corpus: PartialPurityConsumerMeasuredTests.Corpus) throws -> Arms {
-        let scanned = try FunctionScanner.scanCorpus(directory: corpus.root)
+        let purity = CensusPurity.purity(forScanOf: corpus.root)
+        let scanned = try FunctionScanner.scanCorpus(directory: corpus.root, purity: purity)
         let summaries = scanned.summaries
 
         func suggestions(_ input: [FunctionSummary]) -> [Suggestion] {
@@ -264,7 +275,7 @@ extension PurityRefactoringReachMeasuredTests {
             subjectsPartial: summaries.filter { $0.purityVerdict == .pureButPartial }.count,
             subjectsRefuted: summaries.filter { $0.purityVerdict == .refuted }.count,
             join: joined,
-            split: witnessSplit(for: joined.subjects)
+            split: witnessSplit(for: joined.subjects, purity: purity)
         )
     }
 

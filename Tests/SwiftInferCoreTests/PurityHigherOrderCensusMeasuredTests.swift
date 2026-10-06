@@ -83,7 +83,8 @@ struct PurityHigherOrderCensusMeasuredTests {
         let tree = Parser.parse(source: source)
         guard let function = tree.statements.lazy
             .compactMap({ $0.item.as(FunctionDeclSyntax.self) }).first else { return nil }
-        return SoundPurity.verdict(for: function)
+        // A snippet is its own package, as `scanCorpus(source:file:)` treats it.
+        return CensusPurity.snippetOracle(tree).verdict(for: function)
     }
 
     /// **The premise, falsified.** Nine of the ten shapes reach `.pure`,

@@ -13,6 +13,12 @@
 > observer `SwiftInferProperties@16216624` (source counts and citations only; §13 and census
 > figures not re-taken)
 >
+> **2026-10-06 — pin `f2ea8d6` (bumped in `cf64e337`), construction facts wired in, §13 re-taken.**
+> This repo now builds SEI's `ConstructionFacts` and judges with `PurityInferrer(constructionFacts:)`
+> (`docs/measurements/construction-facts-wiring.md`); the §13 table below gains two columns and four
+> rows. SEI's own counts were NOT re-verified, so the `doc-provenance` trailer keeps its 2026-09-29
+> reading rather than claiming a check that was not made.
+>
 > *Previous readings:* re-verified 2026-09-23 against subject `SwiftEffectInference@a52117c` ·
 > pinned `1b62e764` · observer `SwiftInferProperties@79d4baab` · counts verified 2026-08-06
 > against subject `SwiftEffectInference@6f45139` · observer `SwiftInferProperties@2c599c0`
@@ -506,13 +512,17 @@ implements the remedy proposed below verbatim: `inferredEffect(for:)` stops dele
 **Re-measured on this repo, 2026-08-06, at pin `6f45139`** — a full `make test` run, the §13 perf
 target in its own isolated step:
 
-| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` | at `22342ca` | at `8127f26` | at `3ea25f2` |
-|---|---|---|---|---|---|---|---|---|
-| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | 4.310s ✅ | 3.573s ✅ | 3.535s ✅ | **3.551s** ✅ |
-| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | 0.690s ✅ | 0.560s ✅ | 0.566s ✅ | **0.566s** ✅ |
-| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | 0.960s ✅ | 0.752s ✅ | 0.746s ✅ | **0.746s** ✅ |
-| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | 2.406s ✅ | 1.827s ✅ | 1.812s ✅ | **1.814s** ✅ |
-| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | 245.6 MB ✅ | 256.0 MB ✅ | 257.7 MB ✅ | **257.8 MB** ✅ |
+| §13 perf test | budget | at `1f2265a0` | at `097181aa` (regressed) | at `6f45139` | at `bc084fb` | at `22342ca` | at `8127f26` | at `3ea25f2` | at `f2ea8d6` (main `67f77e54`) | at `f2ea8d6` + construction facts |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Discover pipeline, 100 test files | 6.0s | 3.389s | **6.777s** ❌ | 4.219s ✅ | 4.310s ✅ | 3.573s ✅ | 3.535s ✅ | **3.551s** ✅ | 2.639s ✅ | **2.667s** ✅ |
+| TestLifter.discover, 100 files | 4.0s | 0.502s | 1.036s | 0.669s ✅ | 0.690s ✅ | 0.560s ✅ | 0.566s ✅ | **0.566s** ✅ | 0.419s ✅ | **0.447s** ✅ |
+| Discover, 50-file corpus | 2.0s | 0.671s | 1.356s | 0.916s ✅ | 0.960s ✅ | 0.752s ✅ | 0.746s ✅ | **0.746s** ✅ | 0.518s ✅ | **0.476s** ✅ |
+| …with decisions-load active | — | 1.660s | 3.652s | 2.238s ✅ | 2.406s ✅ | 1.827s ✅ | 1.812s ✅ | **1.814s** ✅ | 1.672s ✅ | **1.656s** ✅ |
+| 500-file corpus, peak RSS delta | 800 MB | — | — | 234.1 MB ✅ | 245.6 MB ✅ | 256.0 MB ✅ | 257.7 MB ✅ | **257.8 MB** ✅ | 357.3 MB ✅ | **373.1 MB** ✅ |
+| **NEW** 50-file package, refuting constructions | 2.0s | — | — | — | — | — | — | — | — | **0.722s** ✅ |
+| swift-collections DequeModule (worktree beside a `swift-collections` link) | 4.0s | — | — | — | — | — | — | — | 1.325s ✅ | **2.070s** ✅ |
+| Drift re-run after one-file change | 0.5s | — | — | — | — | — | — | — | 0.454s ✅ | **0.465s** ✅ |
+| `--interactive` first prompt | 1.0s | — | — | — | — | — | — | — | 0.753s ✅ | **0.770s** ✅ |
 
 The `bc084fb` column was taken 2026-08-07 by `make perf` (serial, alone, 22.1s, 8 tests). Every row
 is within noise of `6f45139` — the anchor work adds a field to `BodyInference` and does not change
@@ -524,6 +534,20 @@ split this repo does not call. **There is deliberately no `c66fceb` column.** Th
 `7dad9f5` without a perf run at that revision, and an unmeasured column inferred from the one beside
 it is the precise thing the `097181aa` row exists to warn against — the regression that produced it
 was *reasoned* to be free. The table stops where the measurements stop.
+
+**The `f2ea8d6` columns were taken 2026-10-06**, on Xcode 27 / Swift 6.4 on an M5 Pro — a different
+machine and compiler from every column to their left, so compare them with each other, never across.
+`f2ea8d6` (main `67f77e54`) is `make perf` alone at load 1.6; `+ construction facts` is the branch
+head (`84d7d187`, code as of `c432f691`) at load 2.7. Both near idle, not idle: another session was
+benchmarking SwiftProjectLint on the same machine. A loaded run (load 5.2, a `swift-frontend` at
+100%, at `1191b052`, before the parse moved off GCD) read within 70 ms of these on every row.
+**DequeModule is skipped in-repo here** — the sibling checkout is not at `../swift-collections` — so
+both of its cells come from worktrees beside a link to `swift-collections@98ef3c98`, at load 3–4;
+two runs each read 1.245 / 1.325s at main and 2.065 / 2.070s with facts. **That is the real cost of
+the wiring: +0.75s,** because a DequeModule scan now parses its project's whole construction universe
+(612 production files against 46 judged), in parallel on large-stack threads; serially it was the
+risk the plan named. The new row is the only one whose table is non-empty, so the only one paying
+the construction pass on every verdict; the peak-RSS row's +16 MB is the scan holding its trees.
 
 ⚠ **2026-09-23: there is no `1b62e764` column either** — the pin moved there (`44a23e1c`) and this
 doc records no perf run at that revision; not re-taken in the re-verification pass, which did not build.

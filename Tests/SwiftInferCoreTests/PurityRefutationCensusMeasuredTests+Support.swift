@@ -46,6 +46,21 @@ extension PurityRefutationCensusMeasuredTests {
         /// which is the opposite of what they are.
         case markerInDefault
 
+        /// Constructing a type whose construction runs a refuter — a stored property's default,
+        /// an initializer's body or omitted default, a superclass's construction — in the body or
+        /// in a default value. **Witness**: it names the type and the line that runs
+        /// (SEI `ConstructionFacts`, wired in 2026-10-06).
+        ///
+        /// **Consulted, not re-derived**, on `NondeterminismSources`' precedent: the resolution
+        /// is internal to SEI (`refutation(constructingIn:)`), and ~1,400 lines re-derived would be
+        /// the drift this file exists to catch. So it is read off SEI's **first** witness — and
+        /// that makes this cause's tally a **LOWER BOUND**. SEI checks construction after the
+        /// markers, the file reads and the nondeterminism classifier, so a function that both
+        /// reads the clock and constructs a refuted type is counted under `marker` alone. The
+        /// witness/ignorance SPLIT stays exact: a construction hidden behind another witness is
+        /// a row that is witness-bearing either way.
+        case construction
+
         /// `throws`, and the body `try`s into a callee this leaf cannot see.
         /// **Ignorance, actionable** — there is a callee to name.
         case propagatedTry
@@ -53,8 +68,11 @@ extension PurityRefutationCensusMeasuredTests {
         /// Does this cause point at something in the source?
         var isWitness: Bool {
             switch self {
-            case .reducerEffect, .asyncSignature, .marker, .nonTotal, .markerInDefault: return true
-            case .noBody, .propagatedTry: return false
+            case .reducerEffect, .asyncSignature, .marker, .nonTotal, .markerInDefault, .construction:
+                return true
+
+            case .noBody, .propagatedTry:
+                return false
             }
         }
 
@@ -102,8 +120,26 @@ extension PurityRefutationCensusMeasuredTests {
         /// Injected so the control can truncate it.
         let markers: Set<String>
 
-        init(markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers)) {
+        /// The census's configured inferrer, consulted for the construction cause only.
+        /// **Required**: an Attributor with no table would file every construction-refuted row as
+        /// ignorance while `verdictAgreesWithSoundPurity` stayed green — the guard is blind to a
+        /// refuter that only fires on already-refuted rows, which is what
+        /// `constructionBlindReplicaIsDetected` demonstrates.
+        let inferrer: PurityInferrer
+
+        init(markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers), inferrer: PurityInferrer) {
             self.markers = markers
+            self.inferrer = inferrer
+        }
+
+        /// Whether SEI's first witness for `function` is a construction — in the body, or in a
+        /// default value. Every other witness answers `false`, so a drifted marker set still
+        /// surfaces as a verdict mismatch rather than being consulted away.
+        func constructionWitness(of function: FunctionDeclSyntax) -> Bool {
+            switch inferrer.refutation(for: function) {
+            case .refutingConstruction, .refutingDefaultArgument(_, cause: .refutingConstruction): true
+            default: false
+            }
         }
 
         /// Every cause that holds of `function`, independent of the order the
@@ -121,6 +157,7 @@ extension PurityRefutationCensusMeasuredTests {
             if hasMarker(in: body) { causes.insert(.marker) }
             if !isTotal(body) { causes.insert(.nonTotal) }
             if hasRefutingDefault(function.signature) { causes.insert(.markerInDefault) }
+            if constructionWitness(of: function) { causes.insert(.construction) }
             if function.signature.effectSpecifiers?.throwsClause != nil, sawTry(in: body) {
                 causes.insert(.propagatedTry)
             }
@@ -136,7 +173,8 @@ extension PurityRefutationCensusMeasuredTests {
             guard let body = function.body else { return .refuted }
             guard function.signature.effectSpecifiers?.asyncSpecifier == nil else { return .refuted }
             guard !hasMarker(in: body), isTotal(body),
-                  !hasRefutingDefault(function.signature) else { return .refuted }
+                  !hasRefutingDefault(function.signature),
+                  !constructionWitness(of: function) else { return .refuted }
             guard function.signature.effectSpecifiers?.throwsClause != nil else { return .pure }
             return sawTry(in: body) ? .refuted : .pureButPartial
         }

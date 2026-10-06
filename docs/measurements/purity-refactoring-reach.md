@@ -1,6 +1,13 @@
 # Would refactoring toward purity put more code within a law's reach?
 
-> **Status:** `measured` · **As of:** 2026-08-18
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **Still zero suggestions moved.** Every arm
+> is identical configured and unconfigured on all three corpora — OrderedCollections' and
+> SwiftPropertyLaws' universes refute no type, and this repo's flips no verdict. Between main and
+> head, new code only: this repo's baseline 936 → 944 suggestions, witness-refuted subjects behind
+> a suggestion 11 → 12. The witness split now consults the scan's own facts and trees, without
+> which a construction-only refutation would be misfiled as a join retraction.
 
 **Re-taken the same day it was first written** — open item 43's one-hop join landed between
 the two readings and moved arm 2's population. Every table below is the second reading.

@@ -93,12 +93,16 @@ struct PurityRefutationCensusMeasuredTests {
     /// (`visit(FunctionDeclSyntax)` returns `.skipChildren`). Matching those
     /// rules is what makes this denominator the same population the shipped scan
     /// produces `purityVerdict` for.
+    ///
+    /// **Walked on the trees the construction facts were built from** (`CensusPurity`), not on
+    /// a re-parse: SEI types an assignment by node identity, so a census judging a re-parse
+    /// would measure an oracle the scan never consults.
     static let corpus: [Subject] = {
         var subjects: [Subject] = []
         for file in SwiftSourceFiles.sorted(in: packageSourcesRoot) {
-            guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            guard let tree = CensusPurity.tree(for: file) else { continue }
             let collector = CensusFunctionCollector(viewMode: .sourceAccurate)
-            collector.walk(Parser.parse(source: source))
+            collector.walk(tree)
             let relative = file.path.replacingOccurrences(of: packageRoot.path + "/", with: "")
             subjects.append(contentsOf: collector.functions.map {
                 Subject(function: $0, file: relative, name: $0.name.text)
@@ -114,14 +118,15 @@ struct PurityRefutationCensusMeasuredTests {
 
     static let packageSourcesRoot: URL = packageRoot.appendingPathComponent("Sources")
 
-    /// `SoundPurity.verdict(for:)` once per subject, in corpus order. Every test
-    /// below reads this rather than recomputing — the verdict walks the body, so
-    /// three tests asking separately is three body walks per function.
-    static let verdicts: [PurityVerdict] = corpus.map { SoundPurity.verdict(for: $0.function) }
+    /// `SoundPurity.verdict(for:)` once per subject, in corpus order, under the configured
+    /// oracle the scan judges `Sources/` with. Every test below reads this rather than
+    /// recomputing — the verdict walks the body, so three tests asking separately is three
+    /// body walks per function.
+    static let verdicts: [PurityVerdict] = corpus.map { CensusPurity.oracle.verdict(for: $0.function) }
 
     /// The refuted subjects, each with the full set of causes that hold of it.
     static let refuted: [(subject: Subject, causes: Set<RefutationCause>)] = {
-        let attributor = Attributor()
+        let attributor = Attributor(inferrer: CensusPurity.inferrer)
         return zip(corpus, verdicts)
             .filter { $0.1 == .refuted }
             .map { ($0.0, attributor.causes(of: $0.0.function)) }
@@ -136,7 +141,7 @@ struct PurityRefutationCensusMeasuredTests {
     /// voids the census rather than silently misattributing a cause.
     @Test("the replicated refuters reproduce SoundPurity on every function in Sources/")
     func verdictAgreesWithSoundPurity() {
-        let attributor = Attributor()
+        let attributor = Attributor(inferrer: CensusPurity.inferrer)
         var mismatches: [String] = []
         for (subject, real) in zip(Self.corpus, Self.verdicts) {
             let replicated = attributor.reassembledVerdict(of: subject.function)
@@ -160,7 +165,7 @@ struct PurityRefutationCensusMeasuredTests {
     @Test("a truncated marker set is detected as a mismatch")
     func truncatedMarkerSetIsDetected() {
         let full = Attributor.sideEffectMarkers.union(Attributor.nondeterministicMarkers)
-        let truncated = Attributor(markers: full.subtracting(["print"]))
+        let truncated = Attributor(markers: full.subtracting(["print"]), inferrer: CensusPurity.inferrer)
         let mismatches = zip(Self.corpus, Self.verdicts).filter {
             $0.1 != truncated.reassembledVerdict(of: $0.0.function)
         }

@@ -24,22 +24,60 @@ import SwiftSyntax
 /// On the effect lattice a sound inference only ever over-approximates (never
 /// claims an effect below the true one); when in doubt this returns `nil`
 /// (refuted) rather than risk an unsound `.pure`.
-public enum SoundPurity {
+///
+/// ## A value, configured with one package's construction facts
+///
+/// SEI's `PurityInferrer` judges one declaration at a time, so `func make() -> Item { Item() }`
+/// reads as pure while `Item` declares `let id = UUID()` in another file. SEI's
+/// `ConstructionFacts` is the table that closes that: what constructing each of the package's
+/// types runs. Its doc is explicit that **every** inferrer in a run gets the same table, because
+/// one left at `.empty` silently disagrees with the configured ones.
+///
+/// That is why this is a value and not a namespace. Until 2026-10-06 it was an `enum` that built a
+/// fresh unconfigured inferrer on every call — three call sites, each at `.empty` — so the table
+/// had nowhere to go. Now one `PurityInferrer` is built in `init(constructionFacts:)` and every
+/// answer below goes through it. The scanner gets one only from `PackagePurity`, which builds the
+/// table from the package's production sources (`ConstructionUniverse`); there is deliberately no
+/// default, and the unconfigured oracle is `internal`, so no production caller can opt out
+/// without saying so. See `docs/measurements/construction-facts-wiring.md`.
+public struct SoundPurity: Sendable {
+
+    /// What constructing each of the package's types runs. Read-only: a `SoundPurity` is built
+    /// from one table and keeps it, so two verdicts from one value cannot disagree about it.
+    public let constructionFacts: ConstructionFacts
+
+    /// The configured second refuter. One instance, not one per call: a `PurityInferrer` is an
+    /// immutable value, and building it per call was how the table had nowhere to go.
+    private let inferrer: PurityInferrer
+
+    /// The oracle for one package: `constructionFacts` built once, from that package's
+    /// production sources in a fixed order — `PackagePurity` is what does that.
+    public init(constructionFacts: ConstructionFacts) {
+        self.constructionFacts = constructionFacts
+        self.inferrer = PurityInferrer(constructionFacts: constructionFacts)
+    }
+
+    /// No construction facts — the oracle exactly as it answered before the table existed.
+    ///
+    /// **`internal`, and that is the guard.** A public `.unconfigured` would be the silent
+    /// `.empty` default SEI warns about, spelled differently. Tests reach it through
+    /// `@testable import`; no production file names it (`PurityConfigurationInventoryTests`).
+    static let unconfigured = Self(constructionFacts: .empty)
 
     /// Returns `.pure` iff **both** analyzers agree the function is pure;
     /// otherwise `nil` (purity refuted — the caller must not emit a `pure`
     /// claim, e.g. a `/// @lint.effect pure` suggestion).
-    public static func inferredEffect(for function: FunctionDeclSyntax) -> Effect? {
+    public func inferredEffect(for function: FunctionDeclSyntax) -> Effect? {
         // First refuter: TCA effects / hidden mutation. Cheap, and the common
         // reason a reducer is not pure.
         guard ReducerPurityAnalyzer.analyze(function) == .pure else { return nil }
         // Second refuter: I/O / nondeterminism / partiality. Catches exactly
         // what ReducerPurity is blind to — this is what makes the mapping sound.
-        return PurityInferrer().inferredEffect(for: function)
+        return inferrer.inferredEffect(for: function)
     }
 
     /// Convenience boolean form of `inferredEffect(for:)`.
-    public static func isPure(_ function: FunctionDeclSyntax) -> Bool {
+    public func isPure(_ function: FunctionDeclSyntax) -> Bool {
         inferredEffect(for: function) == .pure
     }
 
@@ -47,10 +85,13 @@ public enum SoundPurity {
     /// is: `ReducerPurityAnalyzer` refutes first, and only then does the
     /// syntactic inferrer get to distinguish partial from refuted.
     ///
-    /// **What is in the `.refuted` third is now measured, and it is mostly not
-    /// evidence.** Re-taken 2026-08-17 over `Sources/`: 284 refutations, of which
-    /// **132 carry a witness and 152 name nothing in the source at all** — a
-    /// `throws` whose `try` reaches a callee this leaf cannot resolve.
+    /// **What is in the `.refuted` third is measured, and a third of it is not
+    /// evidence.** Re-taken 2026-10-06 over `Sources/`, with construction facts:
+    /// 341 refutations of 3,217 functions, of which **223 carry a witness and 118
+    /// name nothing in the source at all** — a `throws` whose `try` reaches a
+    /// callee this leaf cannot resolve. (First taken 2026-08-17: 152 of 284, the
+    /// majority. The construction table moved 2 rows out of that half, re-witnessed
+    /// as constructions, and flipped no verdict.)
     /// `docs/measurements/purity-refuted-bucket-census.md` has the split, and
     /// one thing a caller reading this should know before counting it: the
     /// *"could not be inspected at all"* half of `PurityVerdict.refuted`'s own
@@ -61,7 +102,8 @@ public enum SoundPurity {
     ///
     /// **Nothing consumes `.pureButPartial` yet, and that is deliberate.**
     /// Measured on this repo 2026-08-04: of 2,500 functions, 2,206 are `.pure`,
-    /// **35 are `.pureButPartial`**, 259 refuted. The single consumer of the
+    /// **35 are `.pureButPartial`**, 259 refuted (re-taken 2026-10-06: 2,839 / 37 /
+    /// 341 of 3,217). The single consumer of the
     /// purity signal is the `/// @lint.effect pure` advisory, and a partial
     /// function cannot honestly take that annotation — SEI defines the tier as
     /// "no side effects, deterministic, **and total**", and the lattice has no
@@ -81,9 +123,9 @@ public enum SoundPurity {
     /// `FileHandle`/SQLite at once"). It is not: `.pureButPartial` requires the
     /// body contain **no `try` at all**, so a throw propagated from a dependency
     /// still refutes. Only a function raising its own errors qualifies.
-    public static func verdict(for function: FunctionDeclSyntax) -> PurityVerdict {
+    public func verdict(for function: FunctionDeclSyntax) -> PurityVerdict {
         guard ReducerPurityAnalyzer.analyze(function) == .pure else { return .refuted }
-        return PurityInferrer().verdict(for: function)
+        return inferrer.verdict(for: function)
     }
 
     /// The same verdict for a **read-only computed property's getter**, which
@@ -121,9 +163,19 @@ public enum SoundPurity {
     /// unasked question rather than a bug fix with a victim — and it is exactly
     /// why the shape it admits (`var now: Date { Date() }`, advised `pure`) is
     /// pinned by a test rather than left to the next corpus to discover.
-    public static func verdict(forGetter accessor: AccessorBlockSyntax) -> PurityVerdict {
-        guard ReducerPurityAnalyzer.analyze(getterOnly(of: accessor)) == .pure else { return .refuted }
-        return PurityInferrer().isPure(accessor) ? .pure : .refuted
+    public func verdict(forGetter accessor: AccessorBlockSyntax) -> PurityVerdict {
+        guard ReducerPurityAnalyzer.analyze(Self.getterOnly(of: accessor)) == .pure else { return .refuted }
+        return inferrer.isPure(accessor) ? .pure : .refuted
+    }
+
+    /// SEI's first witness for `function` under this value's facts — `refutation(for:)` on the
+    /// same configured inferrer `verdict(for:)` asks, so the two cannot disagree about the table.
+    ///
+    /// The SEI half only: `ReducerPurityAnalyzer` names no witness, so a function it refutes can
+    /// still answer `nil` here. `nil` otherwise means SEI did not refute (`.pure`, or a
+    /// `.pureButPartial` raising only its own errors).
+    public func inferrerRefutation(for function: FunctionDeclSyntax) -> PurityRefutation? {
+        inferrer.refutation(for: function)
     }
 
     /// The getter's statements, not the whole accessor block.
