@@ -85,10 +85,13 @@ public struct SoundPurity: Sendable {
     /// is: `ReducerPurityAnalyzer` refutes first, and only then does the
     /// syntactic inferrer get to distinguish partial from refuted.
     ///
-    /// **What is in the `.refuted` third is now measured, and it is mostly not
-    /// evidence.** Re-taken 2026-08-17 over `Sources/`: 284 refutations, of which
-    /// **132 carry a witness and 152 name nothing in the source at all** — a
-    /// `throws` whose `try` reaches a callee this leaf cannot resolve.
+    /// **What is in the `.refuted` third is measured, and a third of it is not
+    /// evidence.** Re-taken 2026-10-06 over `Sources/`, with construction facts:
+    /// 341 refutations of 3,217 functions, of which **223 carry a witness and 118
+    /// name nothing in the source at all** — a `throws` whose `try` reaches a
+    /// callee this leaf cannot resolve. (First taken 2026-08-17: 152 of 284, the
+    /// majority. The construction table moved 2 rows out of that half, re-witnessed
+    /// as constructions, and flipped no verdict.)
     /// `docs/measurements/purity-refuted-bucket-census.md` has the split, and
     /// one thing a caller reading this should know before counting it: the
     /// *"could not be inspected at all"* half of `PurityVerdict.refuted`'s own
@@ -99,7 +102,8 @@ public struct SoundPurity: Sendable {
     ///
     /// **Nothing consumes `.pureButPartial` yet, and that is deliberate.**
     /// Measured on this repo 2026-08-04: of 2,500 functions, 2,206 are `.pure`,
-    /// **35 are `.pureButPartial`**, 259 refuted. The single consumer of the
+    /// **35 are `.pureButPartial`**, 259 refuted (re-taken 2026-10-06: 2,839 / 37 /
+    /// 341 of 3,217). The single consumer of the
     /// purity signal is the `/// @lint.effect pure` advisory, and a partial
     /// function cannot honestly take that annotation — SEI defines the tier as
     /// "no side effects, deterministic, **and total**", and the lattice has no
