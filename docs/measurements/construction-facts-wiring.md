@@ -131,6 +131,22 @@ discover --sources …/SwiftLintRuleStudioCore --effect-annotations` printed *Pu
 annotations (299 functions)* at main and **(288 functions)** at the head, the 11 rows above and
 no others; neither `generateRecommendations` nor `analyze(config:knownRules:)` is advised.
 
+**What the table does to SUGGESTIONS, not only to advice.** The impure-subject veto suppresses
+a suggestion whose subject is witness-refuted, so a moved row can also withdraw a law. Measured
+with the two CLIs back to back (`discover --sources <root> --include-possible`, main `67f77e54`
+against head `c432f691`): **swift-package-manager `Basics` 164 → 163** (idempotence over
+`InMemoryFileSystem.copy()`, whose construction runs a `DispatchQueue` default) and
+**SwiftProjectLint `Packages` 526 → 523** (two `guard-domain` laws and one `predicate` over
+visitor methods the join retracted for calling `addIssue`). Every other root measured is
+byte-identical in its suggestions: SwiftLintRuleStudio Core (its 11 moved rows are advice only),
+swiftformat-rule-studio, Harmonize, swift-foundation, swift-nio, swift-argument-parser, GRDB,
+swift-format, and this repo's `SwiftInferCore` — and on this repo the table moves no verdict in
+any target, so the veto it feeds cannot move either. **So the committed survey row dumps cannot
+move by the table**: `fixtures/verify-runs` (`SwiftInferCore`, GRDB, `SwiftFormat`) and
+`fixtures/whole-corpus-survey` (this repo's library targets) are over subjects whose suggestions
+it leaves unchanged. They were not re-run; a re-run would measure the PR's new code, not the
+table.
+
 **The join amplifies, and it is reported apart for that reason.** SwiftProjectLint's 218 rows are
 3 direct — `addIssue` twice and `applyOverrides`, each constructing `LintIssue` (`id = UUID()`) —
 and 215 visitor methods retracted one hop away because they call `addIssue`. One refuted helper

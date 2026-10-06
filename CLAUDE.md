@@ -54,21 +54,25 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,671 tests — 6,447 fast + 224 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-10-05** at `186bb8b8` (the 1.159.0 release branch)
-on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`**, Xcode 27 / Swift 6.4 —
+Suites green at **6,724 tests — 6,491 fast + 233 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-10-06** at `5b6a6ac4` (the `construction-facts-wiring`
+branch) on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `f2ea8d6`**, Xcode 27 / Swift 6.4 —
 every stage counted from that one run, and the run was UNPIPED (`make test > log 2>&1`, exit **0**):
-fast **6,447** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 224, every batch to the digit**, across everything merged since
-`5dd4e88f`: tuple determinism declines, docstring advice outside the seed focus, and the
-reference-oracle scaffold rebuilt on accept's call plan — ⚠ **but the corpus-surveying batches assert
-floors (`> 1_000` rows), so 224 green is not an A/B; the row dumps in `fixtures/` are.**
-**The fast half moved 6,241 → 6,447, +206**: +60 up to 1.158.0, then +75 (#623, the shared
-determinism call plan) and +71 (#624, the reference-oracle scaffold); #625 is docs, scripts and
-fixtures.
-**Timings** (an M5 Pro; batch boundaries read off the log every 5 s): `batch3` 112s; `batch2` 342s;
-`batch5` 695s; `batch1` 106s, `batch4` 86s, `batch6` 50s, `batch7` 81s, `batch8` 287s; fast suite 84s,
-whole run 1,865s.
+fast **6,491** · perf 9 · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half moved 224 → 233, and every move is named**: perf +1 (the construction-facts §13
+row) and batch 2 +8 (the census's construction arms: the classification guard, its two controls, the
+same-trees A/B and its no-promotion check, the per-manifest-corpus A/B and its two pins); every other
+batch stood still to the digit — ⚠ **and the corpus-surveying batches assert floors (`> 1_000` rows),
+so green is not an A/B; the row dumps in `fixtures/` and the census arms are.**
+**The fast half moved 6,447 → 6,491, +44**: +26 are this branch's (wiring 14, universe table 3,
+configuration inventory 5, pipeline 2, `SoundPurity` 1, the cross-repo universe-table clause 1); the
+other +18 are main's merges since `186bb8b8` (inferred — the branch removes no test).
+**Timings** (an M5 Pro; swift-testing's own per-stage durations, which EXCLUDE the build, so not
+comparable to earlier readings' log-boundary times): `batch3` 127s; `batch2` 416s; `batch5` 772s;
+`batch1` 96s, `batch4` 86s, `batch6` 55s, `batch7` 86s, `batch8` 339s; fast suite 81s (the Makefile's
+own clock), whole run **2,107s** wall. Batch 2 shared the machine with this session's own CLI diff runs
+and batch 3 with another session's SwiftProjectLint build (load peaked at 121), so read the times as
+loaded.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands

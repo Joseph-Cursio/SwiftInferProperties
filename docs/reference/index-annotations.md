@@ -40,8 +40,25 @@ Suites green at **5,576 tests** (5,493 fast + 83 across `perf` and the eight bat
 
 Moved out of CLAUDE.md's *Current state* on 2026-09-19: every suite-count reading older than the current one, verbatim and newest first. It had grown to ~265 lines of a file loaded every session. **Read for what each verdict was decided on, never for a current count** — CLAUDE.md carries the current reading, and the next re-take moves the one it supersedes to the top of this list.
 
-**The prior reading — 6,465 = 6,241 fast + 224, taken 2026-09-30 at `5dd4e88f` — follows, and
+**The prior reading — 6,671 = 6,447 fast + 224, taken 2026-10-05 at `186bb8b8` — follows, and
 everything below it is SUPERSEDED HISTORY.**
+**PRIOR READING — 6,671 tests — 6,447 fast + 224 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-10-05** at `186bb8b8` (the 1.159.0 release branch)
+on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`**, Xcode 27 / Swift 6.4 —
+every stage counted from that one run, and the run was UNPIPED (`make test > log 2>&1`, exit **0**):
+fast **6,447** · perf 8 · batches 4 · 111 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 224, every batch to the digit**, across everything merged since
+`5dd4e88f`: tuple determinism declines, docstring advice outside the seed focus, and the
+reference-oracle scaffold rebuilt on accept's call plan — ⚠ **but the corpus-surveying batches assert
+floors (`> 1_000` rows), so 224 green is not an A/B; the row dumps in `fixtures/` are.**
+**The fast half moved 6,241 → 6,447, +206**: +60 up to 1.158.0, then +75 (#623, the shared
+determinism call plan) and +71 (#624, the reference-oracle scaffold); #625 is docs, scripts and
+fixtures.
+**Timings** (an M5 Pro; batch boundaries read off the log every 5 s): `batch3` 112s; `batch2` 342s;
+`batch5` 695s; `batch1` 106s, `batch4` 86s, `batch6` 50s, `batch7` 81s, `batch8` 287s; fast suite 84s,
+whole run 1,865s.
+
+**The reading before that — 6,465 = 6,241 fast + 224, taken 2026-09-30 at `5dd4e88f` — follows.**
 **PRIOR READING — 6,465 tests — 6,241 fast + 224 across `perf` and the eight batches**
 (**a genuine full `make test`, verified green 2026-09-30** at `5dd4e88f` on **swift-property-based
 2.0 / SwiftPropertyLaws 4.9.3 / SEI `1b62e764`** — every stage counted from that one run, and the
