@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index c87ac61f..18a1719b 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -65,7 +65,7 @@ extension ConstructionUniverse {
+                 guard let resolved = resolve(literal, from: directory, rootPath: rootPath),
+                       nestedPackages.contains(resolved),
+                       reached.insert(resolved).inserted else { continue }
+-                pending.append(resolved)
++                _ = resolved
+             }
+         }
+         return reached

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index c762ac0d..77a2e730 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -279,7 +279,7 @@ public enum ConstructionUniverse {
+ 
+         init(forScanOf directory: URL) {
+             let given = directory.standardizedFileURL
+-            for scanned in [given, ConstructionUniverse.resolved(directory)] {
++            for scanned in [ConstructionUniverse.resolved(given)] {
+                 guard let package = DirectoryAncestors.nearest(from: scanned, where: hasManifest) else { continue }
+                 let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))
+                 let selfContained = below.contains(where: isRejectedDirectory)

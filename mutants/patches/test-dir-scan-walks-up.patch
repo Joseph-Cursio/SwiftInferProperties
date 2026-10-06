@@ -1,14 +1,13 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
-index 0bd570fb..dd7552a6 100644
+index c762ac0d..9e501006 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
-@@ -94,7 +94,8 @@ public enum ConstructionUniverse {
-             return URL(fileURLWithPath: scanned.path)
-         }
-         let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))
--        return URL(fileURLWithPath: (below.contains(where: isRejectedDirectory) ? scanned : package).path)
-+        _ = below
-+        return URL(fileURLWithPath: package.path)
-     }
- 
-     /// Every production file a scan of `directory` builds its table from, in the fixed order.
+@@ -282,7 +282,7 @@ public enum ConstructionUniverse {
+             for scanned in [given, ConstructionUniverse.resolved(directory)] {
+                 guard let package = DirectoryAncestors.nearest(from: scanned, where: hasManifest) else { continue }
+                 let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))
+-                let selfContained = below.contains(where: isRejectedDirectory)
++                let selfContained = below.contains(where: isRejectedDirectory) && false
+                 let root = selfContained ? scanned : package
+                 self.resolved = URL(fileURLWithPath: ConstructionUniverse.resolved(root).path)
+                 self.scannedPathBelowRoot = selfContained ? "" : below.joined(separator: "/")

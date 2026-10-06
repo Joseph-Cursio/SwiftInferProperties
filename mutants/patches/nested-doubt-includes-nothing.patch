@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index c87ac61f..a598c5b3 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -60,7 +60,7 @@ extension ConstructionUniverse {
+         var pending = [""]
+         while let directory = pending.popLast() {
+             guard let text = manifest(directory),
+-                  let dependencies = localPackageDependencies(manifest: text) else { return nestedPackages }
++                  let dependencies = localPackageDependencies(manifest: text) else { return reached }
+             for literal in dependencies {
+                 guard let resolved = resolve(literal, from: directory, rootPath: rootPath),
+                       nestedPackages.contains(resolved),

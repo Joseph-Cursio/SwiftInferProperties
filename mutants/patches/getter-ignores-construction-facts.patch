@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/SoundPurity.swift b/Sources/SwiftInferCore/SoundPurity.swift
+index c489f5ac..20011adc 100644
+--- a/Sources/SwiftInferCore/SoundPurity.swift
++++ b/Sources/SwiftInferCore/SoundPurity.swift
+@@ -165,7 +165,7 @@ public struct SoundPurity: Sendable {
+     /// pinned by a test rather than left to the next corpus to discover.
+     public func verdict(forGetter accessor: AccessorBlockSyntax) -> PurityVerdict {
+         guard ReducerPurityAnalyzer.analyze(Self.getterOnly(of: accessor)) == .pure else { return .refuted }
+-        return inferrer.isPure(accessor) ? .pure : .refuted
++        return PurityInferrer().isPure(accessor) ? .pure : .refuted
+     }
+ 
+     /// SEI's first witness for `function` under this value's facts — `refutation(for:)` on the

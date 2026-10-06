@@ -1,0 +1,14 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index c762ac0d..e69adb2a 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -174,7 +174,8 @@ public enum ConstructionUniverse {
+             try? String(contentsOf: manifestURL(of: directory, under: root), encoding: .utf8)
+         }
+         let bounded = members.filter { member in
+-            owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains) ?? true
++            _ = owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains)
++            return true
+         }
+         let manifests = (rootHasManifest ? [""] : []) + walk.nestedPackages.sorted()
+         return Universe(

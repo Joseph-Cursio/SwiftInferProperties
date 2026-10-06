@@ -1,6 +1,6 @@
 {
   "kind": "spm",
-  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Three families: mutants in the IdempotenceWitnessDetector's own name-classifier; mutants that undo a name-only-position guard (a key-path component's or a member's name read as a test-local); and mutants that undo one piece of the construction-facts wiring (the scan dropping its table, re-parsing the trees the table was built from, the universe admitting test targets, a test-directory scan walking up, the census replica going blind to the construction witness). Each is killed by its own code's unit tests, which pin both what it should and should not do. Run via `swift test --filter`. Not a scored benchmark.",
+  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Three families: mutants in the IdempotenceWitnessDetector's own name-classifier; mutants that undo a name-only-position guard (a key-path component's or a member's name read as a test-local); and mutants that undo one piece of the construction-facts wiring (the scan dropping its table or re-parsing the trees it was built from, the getter path judging without it, the universe admitting test targets, a test-directory scan walking up, the universe rule's shared-spec amendments — the nested-package bound, the manifest reader, smallest-path dedup, strict UTF-8, the root found from the path as given, the String < build order — the scans that must build no table, the speculative snapshot's universe, the staleness probe's manifests, and the census replica going blind to the construction witness). Each is killed by its own code's unit tests, which pin both what it should and should not do. Run via `swift test --filter`. Not a scored benchmark.",
   "mutants": [
     {
       "id": "witness-drops-reset",
@@ -111,7 +111,7 @@
       "patch": "patches/scan-reparses-universe-trees.patch",
       "shape": "construction-facts",
       "expected": "killed",
-      "test": "scanJudgesOnTheFactsOwnNodes",
+      "test": "scanJudgesOnTheFactsOwnNodes|scanReusesTheFactsTrees",
       "label": "the scan re-parses every judged file instead of reusing the universe's tree — SEI types an assignment by node identity, so `reset` is refuted by another target's same-named `A`"
     },
     {
@@ -137,6 +137,110 @@
       "expected": "killed",
       "test": "classificationAgreesWithSEIWitness",
       "label": "the census replica stops consulting SEI's construction witness — 0 verdicts move on Sources/, so verdictAgreesWithSoundPurity stays green while 2 re-witnessed rows are filed as ignorance"
+    },
+    {
+      "id": "getter-ignores-construction-facts",
+      "patch": "patches/getter-ignores-construction-facts.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "getterConstructingASiblingTypeIsRefuted|constructionFacts_refuteEveryAnswer",
+      "label": "the getter path judges with a fresh unconfigured PurityInferrer — a computed property constructing a sibling target's UUID-minting `Item` reads pure; every fixture subject was a function, so this survived both halves of the suite"
+    },
+    {
+      "id": "universe-order-not-string-lt",
+      "patch": "patches/universe-order-not-string-lt.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "universeOrderIsStringLessThan|buildOrderIsTheSharedOrder",
+      "label": "buildOrder sorts with localizedStandardCompare (case-insensitive, numeric) instead of String < — `a` before `B`, `F2` before `F10`, so SEI reports a different first witness and the two consumers' tables disagree"
+    },
+    {
+      "id": "universe-takes-every-nested-package",
+      "patch": "patches/universe-takes-every-nested-package.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "unreferencedNestedPackageIsOutside|nearestManifestDecides",
+      "label": "the nested-package bound is computed and ignored — an unrelated `Demo/` package's `Row` refutes the root's own `make(n:)`, which main advised pure"
+    },
+    {
+      "id": "manifest-reader-reads-every-path-argument",
+      "patch": "patches/manifest-reader-reads-every-path-argument.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestCasesHold",
+      "label": "localPackageDependencies takes any member call's `path:` — a target's `.target(name:path:)` reads as a local package dependency"
+    },
+    {
+      "id": "universe-dedup-keeps-first-seen",
+      "patch": "patches/universe-dedup-keeps-first-seen.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "deduplicationKeepsTheSmallestPath",
+      "label": "two spellings of one file keep whichever the walk met first — the build order and the first witness follow directory-listing order, not the paths"
+    },
+    {
+      "id": "universe-admits-non-utf8",
+      "patch": "patches/universe-admits-non-utf8.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "nonUTF8FileIsNotInTheUniverse",
+      "label": "the universe parse reads leniently, detecting UTF-16 by its byte-order mark — a file no compiler reads refutes `make`"
+    },
+    {
+      "id": "universe-root-found-resolved",
+      "patch": "patches/universe-root-found-resolved.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "symlinkedTargetSeesItsRealSiblings|linkIntoAnotherPackageIsJudgedWhereTheLinkIs",
+      "label": "the root is found from the RESOLVED scanned path — a symlinked `Sources/Lib` is judged at its destination, without the real sibling target whose `Item` refutes `make`"
+    },
+    {
+      "id": "purity-built-for-empty-judged-set",
+      "patch": "patches/purity-built-for-empty-judged-set.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "purityIsBuiltOnlyForAJudgedSet",
+      "label": "forJudging builds a purity for a directory with no Swift file — an empty scan parses the whole universe (1.30 s / 379 MB against 0.03 s / 12 MB)"
+    },
+    {
+      "id": "declarations-scan-skips-cross-file-hop",
+      "patch": "patches/declarations-scan-skips-cross-file-hop.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "declarationsOnlyScanMatchesTheFullScan",
+      "label": "the declarations-only scan drops the directory-wide PreconditionHelperHop — a helper in one file no longer marks an initializer in another, and its typeDecls differ from the full scan's"
+    },
+    {
+      "id": "staleness-ignores-universe-manifests",
+      "patch": "patches/staleness-ignores-universe-manifests.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "unreferencedNestedPackageIsNotWatched",
+      "label": "the staleness probe stops watching the manifests that decide the nested-package bound — adding `.package(path:)` leaves the index fresh"
+    },
+    {
+      "id": "speculative-snapshot-copies-sources-only",
+      "patch": "patches/speculative-snapshot-copies-sources-only.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "customPathTargetStaysInTheSnapshot|examplesNamesakeStaysInTheSnapshot",
+      "label": "the speculative snapshot copies only Package.swift and Sources/ — a refuting `Core/` target or `Examples/` namesake vetoes laws in the baseline and not in the copy, so an unrelated widening is credited with them"
+    },
+    {
+      "id": "nested-doubt-includes-nothing",
+      "patch": "patches/nested-doubt-includes-nothing.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "doubtIncludesAll|doubtfulRootIncludesEveryNestedPackage",
+      "label": "a computed `path:` in the closure includes no nested package rather than every one — doubt under-refutes, the direction the spec forbids"
+    },
+    {
+      "id": "nested-closure-stops-at-one-hop",
+      "patch": "patches/nested-closure-stops-at-one-hop.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "transitiveClosure|referencedNestedPackageIsInside",
+      "label": "the closure follows the root's own path dependencies but not theirs — a package the root reaches through another is dropped, and its `Row` no longer refutes"
     }
   ]
 }
