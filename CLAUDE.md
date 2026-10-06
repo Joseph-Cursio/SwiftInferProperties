@@ -75,8 +75,8 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `f2ea8d6` (bumped 2026-10-06, jointly with SwiftProjectLint), and
-`SEICrossRepoPinTests` is green as of that day's full run** — the guard compares this manifest against
+**Both repos pin SEI `9d0bf6d` (bumped 2026-10-06, jointly with SwiftProjectLint), and
+`SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
 SwiftProjectLint's, so green means they agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
@@ -97,7 +97,10 @@ extrapolate them. **`f2ea8d6` is the second that moves verdicts:** SEI #22 match
 only where it is code (an identifier, not a key-path component), so a function refuted only
 by string-literal text is pure. The guard named 2 mismatches (`defaultValueLiteral`,
 `baseValues`); the replica gained `Attributor.isMarkerPosition`, which every census token
-scan now goes through.
+scan now goes through. **`9d0bf6d` moves nothing here:** SEI #23 changes only
+`ConstructionFacts` — a typealias means every alias it may mean, and a decode is judged by
+every `init(from:)` — which nothing on `main` builds; `make batch2` stayed green with the
+replica guard naming no mismatch.
 
 ## Where to look
 
