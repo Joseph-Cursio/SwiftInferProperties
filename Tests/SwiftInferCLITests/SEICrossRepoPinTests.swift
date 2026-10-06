@@ -9,6 +9,16 @@ import Testing
 /// about the **oracle they compile against**, not about the repository — so it
 /// holds only while the pins are equal, and nothing checked that until now.
 ///
+/// **An equal pin is NECESSARY, and since 2026-10-06 it is not SUFFICIENT.** Both
+/// consumers now configure the oracle with SEI's `ConstructionFacts`, a table built
+/// from a *file universe* — and the same pin over two universes is the same oracle
+/// configured two ways, answering differently about the same function. So one
+/// oracle needs an equal pin **and** an equal universe. The universe rule is written
+/// twice (here `ConstructionUniverse`, there its SwiftProjectLint twin), and what keeps
+/// the two from drifting is a byte-identical answer key both repos assert their
+/// predicate over: `universeTableMatchesSwiftProjectLint` below is the cross-repo half
+/// of that, and skips as loudly as the pin check when the sibling's copy is absent.
+///
 /// SwiftProjectLint's own `SEIPinAgreementTests` guards its three manifests
 /// against each other, and says plainly what it cannot reach: *"This test cannot
 /// see that cross-repo gap; nothing in a single repository can."* That is true of
@@ -138,6 +148,41 @@ struct SEICrossRepoPinTests {
         }
     }
 
+    // MARK: - The shared universe table
+
+    /// Where SwiftProjectLint keeps its copy of the shared construction-universe table.
+    static let linterUniverseTablePath = "Docs/construction-universe.tsv"
+
+    /// This package's copy.
+    static var ownUniverseTable: URL {
+        packageRoot.appendingPathComponent("docs/construction-universe.tsv")
+    }
+
+    /// The sibling's copy, when the sibling is checked out and carries one. A sibling on a
+    /// revision from before the table existed has none, and that is a skip, not a pass.
+    static var linterUniverseTable: URL? {
+        guard let root = swiftProjectLintRoot else { return nil }
+        let table = root.appendingPathComponent(linterUniverseTablePath)
+        return FileManager.default.fileExists(atPath: table.path) ? table : nil
+    }
+
+    @Test(
+        "This package and SwiftProjectLint carry the same construction-universe table",
+        .enabled(if: linterUniverseTable != nil)
+    )
+    func universeTableMatchesSwiftProjectLint() throws {
+        let theirs = try #require(Self.linterUniverseTable, "guarded by .enabled(if:) — unreachable")
+        let ownBytes = try Data(contentsOf: Self.ownUniverseTable)
+        let theirBytes = try Data(contentsOf: theirs)
+        #expect(ownBytes == theirBytes, """
+        The two consumers' construction-universe tables differ, so the predicate each asserts \
+        over its own copy is no longer pinned to one answer key — equal SEI pins over different \
+        universes are one oracle configured two ways. Make the files byte-identical:
+          \(Self.ownUniverseTable.path)
+          \(theirs.path)
+        """)
+    }
+
     // MARK: - The guard
 
     @Test(
@@ -234,6 +279,20 @@ struct SEICrossRepoPinTests {
             let pinIsHex = pin.allSatisfy(\.isHexDigit)
             #expect(pin.count == 40, "SwiftProjectLint/\(manifest) → \(pin)")
             #expect(pinIsHex, "SwiftProjectLint/\(manifest) → \(pin)")
+        }
+
+        // The universe-table clause's own capability: this package's copy must always be
+        // readable, and a sibling without one is said, for the same reason as the skip above.
+        let ownTableExists = FileManager.default.fileExists(atPath: Self.ownUniverseTable.path)
+        #expect(ownTableExists, "docs/construction-universe.tsv is missing")
+        if Self.linterUniverseTable == nil {
+            print(
+                """
+                NOTE — cross-repo construction-universe comparison SKIPPED: SwiftProjectLint at \
+                \(linterRoot.path) carries no \(Self.linterUniverseTablePath). Equal SEI pins over \
+                unequal universes are one oracle configured two ways, and this run did not check.
+                """
+            )
         }
     }
 }
