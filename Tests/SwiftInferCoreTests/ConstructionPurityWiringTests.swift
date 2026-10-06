@@ -278,6 +278,37 @@ extension ConstructionPurityWiringTests {
         #expect(Self.verdict("make", in: try FunctionScanner.scanCorpus(directory: lib, purity: sibling)) == .refuted)
     }
 
+    /// **The stack-depth trap, closed for the universe parse.** A parse recurses about ten frames
+    /// per nesting level; a GCD worker or a swift-testing thread has ~512 KB, and overflowing it is
+    /// `SIGBUS` — the whole process, not one test. The first parallel parse used
+    /// `concurrentPerform` and the batch-2 census died exactly so. The hook records the stack of
+    /// every thread that parses; the deep sibling file is the realistic witness (nesting 19, just
+    /// under a debug parser's limit of 20), and it is parsed and built from, never judged here.
+    @Test("the universe is parsed on large-stack threads, deep source included")
+    func universeIsParsedOnLargeStacks() throws {
+        var deep = "Item()"
+        for _ in 0..<9 { deep = "f({ g(\(deep)) })" }
+        let root = try Self.makePackage([
+            "Sources/Model/Item.swift": "struct Item { let id = UUID() }",
+            "Sources/Model/Deep.swift": """
+            func f(_ x: () -> Any) -> Any { x() }
+            func g(_ x: Any) -> Any { x }
+            let deep = \(deep)
+            """,
+            "Sources/Lib/Make.swift": "func make() -> Item { Item() }"
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let lib = root.appendingPathComponent("Sources/Lib")
+        let stacks = StackSizes()
+        let purity = PackagePurity.forScan(of: lib) { urls in
+            PackagePurity.parseInParallel(urls) { _ in stacks.record(Thread.current.stackSize) }
+        }
+        #expect(stacks.all.count == 3)
+        #expect(stacks.all.allSatisfy { $0 >= LargeStackWorkers.stackSize }, "parsed on \(stacks.all) byte stacks")
+        #expect(purity.universe.contains("Sources/Model/Deep.swift"))
+        #expect(Self.verdict("make", in: try FunctionScanner.scanCorpus(directory: lib, purity: purity)) == .refuted)
+    }
+
     /// The parse is parallel; the build is not allowed to notice. SEI's alias resolution takes
     /// the first target, so two same-named aliases make the table order-sensitive — which is
     /// what makes this fixture able to fail.
@@ -319,5 +350,23 @@ extension ConstructionPurityWiringTests {
             #expect(run.universe == baseline.universe)
             #expect(witnesses(run) == witnesses(baseline))
         }
+    }
+}
+
+/// Thread stack sizes seen by the parse hook, from whichever worker ran it.
+private final class StackSizes: @unchecked Sendable {
+    private let lock = NSLock()
+    private var sizes: [Int] = []
+
+    func record(_ size: Int) {
+        lock.lock()
+        sizes.append(size)
+        lock.unlock()
+    }
+
+    var all: [Int] {
+        lock.lock()
+        defer { lock.unlock() }
+        return sizes
     }
 }

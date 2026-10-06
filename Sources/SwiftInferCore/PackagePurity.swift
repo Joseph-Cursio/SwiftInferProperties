@@ -63,10 +63,12 @@ public struct PackagePurity: Sendable {
             ordered.append(tree)
             used.append(member.relativePath)
         }
+        // The build walks every tree, so it gets the parse's stack (`LargeStackWorkers`).
+        let facts = LargeStackWorkers.run { [ordered] in ConstructionFacts.build(from: ordered) }
         return Self(
             root: ConstructionUniverse.root(forScanOf: directory),
             universe: used,
-            oracle: SoundPurity(constructionFacts: .build(from: ordered)),
+            oracle: SoundPurity(constructionFacts: facts),
             trees: trees
         )
     }
@@ -110,7 +112,7 @@ public struct PackagePurity: Sendable {
 
     // MARK: - Parsing
 
-    /// One slot per file, written once each from `concurrentPerform`.
+    /// One slot per file, written once each by a parsing worker.
     private final class Slots: @unchecked Sendable {
         private let lock = NSLock()
         private var values: [SourceFileSyntax?]
@@ -134,14 +136,17 @@ public struct PackagePurity: Sendable {
     /// input order whatever order the parses complete in. Measured necessary: a serial parse of a
     /// 600-file universe in a debug build costs seconds, and the §13 DequeModule row pays it.
     ///
+    /// On `LargeStackWorkers`, never on GCD: a parse recurses as deep as the source nests, and a
+    /// 512 KB worker stack `SIGBUS`es on ordinary deep Swift — measured, on this very call.
+    ///
     /// `beforeParsing` runs on the worker before slot `index` is parsed — a test hook for making
     /// completions arrive out of order; production passes nothing.
     static func parseInParallel(
         _ urls: [URL],
-        beforeParsing: @Sendable (Int) -> Void = { _ in /* no hook */ }
+        beforeParsing: @escaping @Sendable (Int) -> Void = { _ in /* no hook */ }
     ) -> [SourceFileSyntax?] {
         let slots = Slots(count: urls.count)
-        DispatchQueue.concurrentPerform(iterations: urls.count) { index in
+        LargeStackWorkers.forEach(urls.count) { index in
             beforeParsing(index)
             let tree = (try? String(contentsOf: urls[index], encoding: .utf8)).map { Parser.parse(source: $0) }
             slots.set(index, tree)
