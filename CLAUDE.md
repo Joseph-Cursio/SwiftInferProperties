@@ -79,7 +79,7 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `9d0bf6d` (bumped 2026-10-06, jointly with SwiftProjectLint), and
+**Both repos pin SEI `64a905c` (bumped 2026-10-06, jointly with SwiftProjectLint), and
 `SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
 SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
@@ -118,7 +118,14 @@ over the same trees, or new code and the table cannot be told apart. **`9d0bf6d`
 by every `init(from:)`. On `main`, which builds no table, it moved nothing — `make batch2` stayed
 green with the replica guard naming no mismatch. With the table wired in it moved nothing either:
 re-taken at `9d0bf6d`, every construction figure in `docs/measurements/construction-facts-wiring.md`
-— the `Sources/` delta and all 21 scan roots — came out identical.
+— the `Sources/` delta and all 21 scan roots — came out identical. **`64a905c` moves nothing
+either** (SEI #24): it changes how the table is computed, not what it says — lookups kept per
+scope, decodes, body walks and shape guesses per pass — and ends a lookup that looped through
+`Self` (swift-collections' `typealias SubSequence = Self`), which overflowed the stack on any
+universe holding swift-collections and a refuting package. Re-taken at `64a905c`, the `Sources/`
+delta and all 21 scan roots came out identical again, `make batch2` green with the replica guard
+naming no mismatch, and an interleaved `make perf` A/B against `9d0bf6d` moved no §13 row past
+run-to-run noise.
 
 ## Where to look
 
