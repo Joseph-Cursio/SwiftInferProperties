@@ -15,8 +15,10 @@ import SwiftSyntax
 /// asked about — judging each on the very tree the table was built from.
 ///
 /// What is JUDGED is unchanged: `SwiftSourceFiles.sorted(in: directory)`. What feeds the table is
-/// `ConstructionUniverse`, which is wider (a `--target` scan sees its sibling targets) and stricter
-/// (a test file's namesake never refutes a production constructor).
+/// `ConstructionUniverse`, which is wider (a `--target` scan sees its sibling targets — the
+/// package's own real targets, found from the path as given, so a symlinked target sees them too —
+/// and the nested packages the root compiles) and stricter (a test file's namesake never refutes a
+/// production constructor, and neither does a nested package the root never compiles).
 extension FunctionScanner {
 
     /// A purity was handed to a directory scan it was not built for.

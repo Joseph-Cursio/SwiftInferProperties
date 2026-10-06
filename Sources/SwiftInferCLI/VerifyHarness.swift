@@ -245,13 +245,16 @@ public enum VerifyHarness {
     }
 
     /// Every file whose edit can change what the index says: each `.swift` file under `Sources`,
-    /// and every file of the construction universe a scan of `Sources` builds its table from.
+    /// every file of the construction universe a scan of `Sources` builds its table from, and the
+    /// manifests that decided which nested packages are in it.
     ///
     /// **The second half is new, and verdicts are why.** With construction facts wired in, a
-    /// summary's purity verdict depends on files outside `Sources/` — a nested local package, a
-    /// `fixtures/*/Sources` target — because a type declared there can refute a constructor here.
-    /// An index judged fresh against `Sources/` alone would keep a verdict its facts no longer
-    /// support. `ConstructionFactsPipelineTests` pins the nested-package case.
+    /// summary's purity verdict depends on files outside `Sources/` — a custom-path target, a
+    /// nested local package the root compiles — because a type declared there can refute a
+    /// constructor here. An index judged fresh against `Sources/` alone would keep a verdict its
+    /// facts no longer support. A nested package the root does NOT compile is outside the universe
+    /// and is not watched; adding the `.package(path:)` that brings it in is a manifest edit, which
+    /// is. `ConstructionFactsPipelineTests` pins all three.
     private static func stalenessCandidates(
         _ enumerator: FileManager.DirectoryEnumerator,
         packageRoot: URL
@@ -260,8 +263,8 @@ public enum VerifyHarness {
         for case let fileURL as URL in enumerator where fileURL.pathExtension == "swift" {
             files.append(fileURL)
         }
-        let universe = ConstructionUniverse.files(forScanOf: packageRoot.appendingPathComponent("Sources"))
-        return files + universe.map(\.url)
+        let universe = ConstructionUniverse.universe(forScanOf: packageRoot.appendingPathComponent("Sources"))
+        return files + universe.members.map(\.url) + universe.manifests
     }
 
     /// The `Sources` walker, or `nil` with the reason reported.

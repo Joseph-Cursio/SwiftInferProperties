@@ -49,24 +49,27 @@ public struct PackagePurity: Sendable {
     /// `forScan(of:)` with the parse injected, so a test can make the parses complete out of
     /// order and check the build order does not follow them.
     static func forScan(of directory: URL, parse: ([URL]) -> [SourceFileSyntax?]) -> Self {
-        let members = ConstructionUniverse.files(forScanOf: directory)
+        let universe = ConstructionUniverse.universe(forScanOf: directory)
+        let members = universe.members
         let parsed = parse(members.map(\.url))
         var trees: [String: SourceFileSyntax] = [:]
         var ordered: [SourceFileSyntax] = []
         var used: [String] = []
         for (member, tree) in zip(members, parsed) {
-            // A universe file that cannot be read as UTF-8 cannot compile either, so it declares
-            // no production type; skipping it is not a confident zero. A JUDGED file that cannot
-            // be read still throws — `FunctionScanner` reads it again and reports the failure.
+            // A universe file that cannot be read as strict UTF-8 cannot compile either, so it
+            // declares no production type (the shared spec's amendment C); skipping it is not a
+            // confident zero. A JUDGED file that cannot be read still throws — `FunctionScanner`
+            // reads it again and reports the failure.
             guard let tree else { continue }
             trees[member.key] = tree
             ordered.append(tree)
             used.append(member.relativePath)
         }
-        // The build walks every tree, so it gets the parse's stack (`LargeStackWorkers`).
+        // In `members`' order, which is `ConstructionUniverse.buildOrder` — the shared order. The
+        // build walks every tree, so it gets the parse's stack (`LargeStackWorkers`).
         let facts = LargeStackWorkers.run { [ordered] in ConstructionFacts.build(from: ordered) }
         return Self(
-            root: ConstructionUniverse.root(forScanOf: directory),
+            root: universe.root,
             universe: used,
             oracle: SoundPurity(constructionFacts: facts),
             trees: trees

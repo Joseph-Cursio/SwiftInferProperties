@@ -183,6 +183,45 @@ struct SEICrossRepoPinTests {
         """)
     }
 
+    /// Where SwiftProjectLint keeps its copy of the shared cases file — amendment E of the shared
+    /// spec: the manifest reader's cases and the build order, beside the predicate's table.
+    static let linterUniverseCasesPath = "Docs/construction-universe-cases.json"
+
+    /// This package's copy.
+    static var ownUniverseCases: URL {
+        packageRoot.appendingPathComponent("docs/construction-universe-cases.json")
+    }
+
+    /// The sibling's copy, when the sibling is checked out and carries one — absent on a revision
+    /// from before amendment E, which is a skip, not a pass.
+    static var linterUniverseCases: URL? {
+        guard let root = swiftProjectLintRoot else { return nil }
+        let cases = root.appendingPathComponent(linterUniverseCasesPath)
+        return FileManager.default.fileExists(atPath: cases.path) ? cases : nil
+    }
+
+    /// The `.tsv` pins the predicate and nothing else: the two consumers once carried identical
+    /// tables while one bounded nested packages and the other took them all, deduplicated a
+    /// symlinked file by a different rule, and so built different tables from one root. The cases
+    /// file pins the manifest reader that decides the bound and the order the facts are built in;
+    /// each repo asserts its implementation over its own copy, and this keeps the copies one.
+    @Test(
+        "This package and SwiftProjectLint carry the same construction-universe cases",
+        .enabled(if: linterUniverseCases != nil)
+    )
+    func universeCasesMatchSwiftProjectLint() throws {
+        let theirs = try #require(Self.linterUniverseCases, "guarded by .enabled(if:) — unreachable")
+        let ownBytes = try Data(contentsOf: Self.ownUniverseCases)
+        let theirBytes = try Data(contentsOf: theirs)
+        #expect(ownBytes == theirBytes, """
+        The two consumers' construction-universe cases differ, so each asserts its manifest reader \
+        and build order against a different answer key — one root, two universes. Make the files \
+        byte-identical:
+          \(Self.ownUniverseCases.path)
+          \(theirs.path)
+        """)
+    }
+
     // MARK: - The guard
 
     @Test(
@@ -291,6 +330,17 @@ struct SEICrossRepoPinTests {
                 NOTE — cross-repo construction-universe comparison SKIPPED: SwiftProjectLint at \
                 \(linterRoot.path) carries no \(Self.linterUniverseTablePath). Equal SEI pins over \
                 unequal universes are one oracle configured two ways, and this run did not check.
+                """
+            )
+        }
+        let ownCasesExist = FileManager.default.fileExists(atPath: Self.ownUniverseCases.path)
+        #expect(ownCasesExist, "docs/construction-universe-cases.json is missing")
+        if Self.linterUniverseCases == nil {
+            print(
+                """
+                NOTE — cross-repo construction-universe CASES comparison SKIPPED: SwiftProjectLint \
+                at \(linterRoot.path) carries no \(Self.linterUniverseCasesPath). The two manifest \
+                readers and build orders were not compared on this run.
                 """
             )
         }
