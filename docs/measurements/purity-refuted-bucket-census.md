@@ -1,6 +1,33 @@
 # What is actually inside `PurityVerdict.refuted`?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in — read this block first.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin)
+>
+> **Current reading: 223 witness / 118 ignorance of 341** — ignorance 35%, all of it actionable,
+> `noBody` still 0. **The rankable ceiling is 118.** The taxonomy gains **`construction`**
+> [witness]: constructing a type whose construction runs a refuter (SEI `ConstructionFacts`). It
+> is **consulted, not re-derived** — SEI's first witness — so its tally (**2**) is a **lower
+> bound**; the witness/ignorance split stays exact. A new guard,
+> `classificationAgreesWithSEIWitness`, compares the replica's filing with SEI's own witness row
+> by row, because `verdictAgreesWithSoundPurity` cannot see a refuter that only fires on rows
+> already refuted — and this one moved 0 verdicts and 2 classifications.
+>
+> | | `f2ea8d6`, main | head, unconfigured | head, configured |
+> |---|---:|---:|---:|
+> | functions | 3,189 | 3,217 | 3,217 |
+> | `.pure` / `.pureButPartial` / `.refuted` | 2,821 / 37 / 331 | 2,839 / 37 / 341 | 2,839 / 37 / 341 |
+> | witness / ignorance | 215 / 116 | 221 / 120 | **223 / 118** |
+> | marker · markerInDefault · nonTotal · async · reducer | 167 · 35 · 8 · 31 · 27 | 171 · 35 · 9 · 31 · 28 | 171 · 35 · 9 · 31 · 28 |
+> | `propagatedTry` (any) · `construction` | 222 · — | 227 · 0 | 227 · 2 |
+> | bucket a consumer reads | 335 | 345 | 345 |
+>
+> The left column is the `f2ea8d6` reading that until now lived only in `cf64e337`'s commit
+> message. Main → unconfigured head is the PR's own new code; unconfigured → configured, on the
+> same trees, is the table: `dispatchSideOrchestrator` and `runInteractiveBranch` change their
+> first witness from `propagatedTry` to a construction (a defaulted `Date` in
+> `InteractionInteractiveTriage.Inputs` / `InteractiveTriage.Context`). Full record:
+> `docs/measurements/construction-facts-wiring.md`.
 
 Re-derivable at any time — `PurityRefutationCensusMeasuredTests` *is* the
 harness, and `make batch2` runs it.
@@ -14,7 +41,7 @@ taken on `22342ca`; item 41 landed hours later on `c66fceb` and moved the split;
 the top. **Do not quote a figure from this document without checking which pin it
 belongs to** — the headline reversed once already.
 
-> **Current reading, pin `3ea25f2`: 174 witness / 133 ignorance of 307.** Ignorance is
+> **Reading at pin `3ea25f2` (superseded — see the block above): 174 witness / 133 ignorance of 307.** Ignorance is
 > 43%, all of it actionable, `noBody` still structurally 0. The surviving claim is the
 > weak one — *ignorance is not a rounding error* — not the original *ignorance is the
 > majority*, which was true only at `22342ca`.

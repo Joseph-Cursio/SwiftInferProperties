@@ -1,6 +1,10 @@
 # Is there anything for a `.pureButPartial` consumer to consume?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **The ceiling is still 2.** No arm moved with
+> the table. New code only: this repo's baseline 936 → 944 suggestions, partial-masked +1 and
+> all-throwing-masked +2 as before; throwing functions 263 → 268.
 
 Re-derivable at any time — `PartialPurityConsumerMeasuredTests` *is* the
 harness, and `make batch2` runs it.

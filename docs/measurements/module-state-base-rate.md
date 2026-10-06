@@ -1,6 +1,14 @@
 # How often is a module-state mutation judged pure?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **Home arm still 0; cross-corpus base rate
+> 0 of 20,779 on this machine** (0 of 20,746 at main) — `swiftlang-swift`, which held all five
+> earlier hits, is absent here, so the zero is *these 19 corpora*, not a correction of the 5. Two
+> `.pure` swift-foundation functions call a member on a global, and 6 touching a global are already
+> refuted, identically with and without the table: construction facts never refute a module-state
+> write, and every corpus judges under its own project's table now. The function total moved by
+> this repo's new code and by SwiftProjectLint's working tree, not by the table.
 
 Re-derivable at any time — `ModuleStateCensusMeasuredTests` *is* the harness, and
 `make batch2` runs it.

@@ -77,10 +77,16 @@ under load — rerun before diagnosing.
 
 **Both repos pin SEI `f2ea8d6` (bumped 2026-10-06, jointly with SwiftProjectLint), and
 `SEICrossRepoPinTests` is green as of that day's full run** — the guard compares this manifest against
-SwiftProjectLint's, so green means they agree, and the figures below were taken at `3ea25f2`.
+SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
-oracle, and that guard is the only thing that can say so.
+oracle, and that guard is the only thing that can say so. **⚠ Since construction facts were wired
+in (2026-10-06), an equal pin is NECESSARY and no longer SUFFICIENT: one oracle needs an equal pin
+AND an equal universe.** Each consumer configures SEI with a `ConstructionFacts` table built from
+its file universe, and one pin over two universes is one oracle configured two ways. The rule is
+written twice (`ConstructionUniverse` here and its SwiftProjectLint twin) and pinned by one
+byte-identical `docs/construction-universe.tsv`; the guard's table clause skips loudly where the
+sibling carries none, and until SwiftProjectLint's side lands the two knowingly disagree.
 
 **`3ea25f2` is the first SEI bump that MOVES VERDICTS in this repo** — every earlier one
 was additive. It closes the non-throwing half of the I/O hole (`FileHandle` / `Process` /
@@ -97,7 +103,13 @@ extrapolate them. **`f2ea8d6` is the second that moves verdicts:** SEI #22 match
 only where it is code (an identifier, not a key-path component), so a function refuted only
 by string-literal text is pure. The guard named 2 mismatches (`defaultValueLiteral`,
 `baseValues`); the replica gained `Attributor.isMarkerPosition`, which every census token
-scan now goes through.
+scan now goes through. **Construction facts are the THIRD verdict-moving step, and the first by
+CONFIGURATION, not by a bump** (`docs/measurements/construction-facts-wiring.md`): no pin moved,
+the scan started building SEI's table. It flipped 0 verdicts here and re-witnessed 2 rows — so the
+verdict guard stayed GREEN while an unchanged replica would have misfiled both. A refuter that
+fires only on already-refuted rows is invisible to `verdictAgreesWithSoundPurity`;
+`classificationAgreesWithSEIWitness` is the guard that sees it. Re-take with the table on AND off
+over the same trees, or new code and the table cannot be told apart.
 
 ## Where to look
 
@@ -124,10 +136,11 @@ decline, because the hook states the verdict and the annotation states what was 
 | **The verify edge pass** (why `bothPass` used to under-claim) | `docs/design/verify-edge-pass.md` | Pass 2 was a zero-trial sentinel; boundary values belong in an **advisory** pass, swapped at the rendered expression |
 | **Why is 88% of `discover`'s default output `predicate`?** | `docs/design/predicate-display-order.md` | Fixed by **ordering**, not hiding — a law the code owes is never hidden |
 | **Why does `verify` decline so much?** | `docs/measurements/verify-carrier-reach-census.md` | **Not** carrier support: carrier is ~4% of declines, template reach is 65% |
-| **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured no — a subprocess spawn is judged `.pure`**, but the allowlist fix costs 65% of `.pure`. Verdict unchanged at SEI `3ea25f2` |
-| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45%, now 43%** — check which SEI pin a figure belongs to. Rankable ceiling **133**; it has been 152 and 135. Every refuter added anywhere shrinks this bucket |
-| **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over** — 13–31 rows of leverage behind 133, landing in a tier nothing reads |
-| **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **BUILT as `PackagePurityJoin` (retracts 16); the loop itself is unbuilt.** 18 rows at one hop, 29 at fixpoint; a hand-check killed the first answer |
+| **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured no — a subprocess spawn is judged `.pure`**, but the allowlist fix costs 65% of `.pure`. Verdict unchanged at SEI `f2ea8d6` with construction facts |
+| **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45%, 43%, now 35% (with construction facts)** — check which pin and which configuration a figure belongs to. Rankable ceiling **118**; it has been 152, 135 and 133. Every refuter added anywhere shrinks this bucket |
+| **What did wiring SEI's construction facts move — and do the two consumers still consult one oracle?** | `docs/measurements/construction-facts-wiring.md` | **0 verdicts on this repo; 266 rows over 21 manifest roots, 215 of them one hop from SwiftProjectLint's `addIssue`.** One oracle now needs an equal pin AND an equal universe |
+| **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over** — 13–31 rows of leverage behind 118, landing in a tier nothing reads |
+| **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **BUILT as `PackagePurityJoin` (retracts 22 here; it amplifies construction facts elsewhere); the loop itself is unbuilt.** 18 rows at one hop, 29 at fixpoint; a hand-check killed the first answer |
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through. The real gap is a 26-row over-claim; item 42 closed |
 | **Is there anything for a `.pureButPartial` consumer to consume?** | `docs/measurements/partial-purity-consumer-declined.md` | **Measured NO — ceiling is 2 suggestions over 363 throwing functions.** No template gates on `purityVerdict`; closes items 31–34 |
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |

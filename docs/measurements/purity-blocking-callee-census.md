@@ -1,6 +1,12 @@
 # What blocks a verdict, and who would read the answer?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **The DECLINE stands.** The ignorance-only
+> denominator is 116 at main → 120 head unconfigured → **118 configured** (the two re-witnessed
+> rows leave it); what a join would free does not move — 13 / 27 conservative and 17 / 31
+> optimistic, one hop / fixpoint — and every freed row still lands on `.pureButPartial`. Blocked by
+> a foreign callee: 15 → 19 → 18. Full record: `docs/measurements/construction-facts-wiring.md`.
 
 Re-derivable at any time — `PurityBlockingCalleeCensusMeasuredTests` *is* the
 harness, and `make batch2` runs it.

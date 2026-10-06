@@ -1,6 +1,10 @@
 # Does the purity oracle flag real historical purity bugs?
 
-> **Status:** `measured` · **As of:** 2026-08-17
+> **Status:** `measured` · **As of:** 2026-10-06
+
+> ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **Still 0 hits of 3, 0 false alarms.** Each
+> case is judged as its own package now (the snippet's own construction facts); none of the three
+> constructs a refuted type, so no verdict moved.
 
 Re-derivable at any time — `PurityBacktestMeasuredTests` *is* the harness, and
 `make batch2` runs it.
