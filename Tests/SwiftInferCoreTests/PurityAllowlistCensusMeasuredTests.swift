@@ -179,7 +179,11 @@ struct PurityAllowlistCensusMeasuredTests {
         return profiles.compactMap { profile in
             let found = profile.subject.function.signature.parameterClause.parameters
                 .compactMap(\.defaultValue?.value)
-                .flatMap { $0.tokens(viewMode: .sourceAccurate).map(\.text) }
+                .flatMap {
+                    $0.tokens(viewMode: .sourceAccurate)
+                        .filter(PurityRefutationCensusMeasuredTests.Attributor.isMarkerPosition)
+                        .map(\.text)
+                }
                 .filter(markers.contains)
             return found.isEmpty ? nil : (profile.subject, Array(Set(found)).sorted())
         }

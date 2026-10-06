@@ -75,8 +75,8 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `1b62e764` (bumped 2026-09-12, `44a23e1c`), and `SEICrossRepoPinTests`
-is green as of the 2026-09-17 full run** — the guard compares this manifest against
+**Both repos pin SEI `f2ea8d6` (bumped 2026-10-06, jointly with SwiftProjectLint), and
+`SEICrossRepoPinTests` is green as of that day's full run** — the guard compares this manifest against
 SwiftProjectLint's, so green means they agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
@@ -93,7 +93,11 @@ refuters to attribute causes. `verdictAgreesWithSoundPurity` is the guard —
 **a drifted replica voids the census rather than misattributing quietly**, and it caught
 this bump with 8 named mismatches before any figure was touched. Expect `make batch2` to
 go red on an SEI bump, and treat that as the apparatus working. Re-take the counts; never
-extrapolate them.
+extrapolate them. **`f2ea8d6` is the second that moves verdicts:** SEI #22 matches a marker
+only where it is code (an identifier, not a key-path component), so a function refuted only
+by string-literal text is pure. The guard named 2 mismatches (`defaultValueLiteral`,
+`baseValues`); the replica gained `Attributor.isMarkerPosition`, which every census token
+scan now goes through.
 
 ## Where to look
 

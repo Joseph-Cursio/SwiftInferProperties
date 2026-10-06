@@ -175,9 +175,23 @@ extension PurityRefutationCensusMeasuredTests {
         /// refuter in this Attributor: `NondeterminismSources` is `public`, and a
         /// fourth hand-rolled copy of "does this reach for ambient time" is
         /// exactly the drift that type was extracted to end.
+        /// `PurityInferrer.isMarkerPosition`, re-derived (SEI `caa37ca`): a marker
+        /// is an identifier, and not a key path's component. The text of a string
+        /// literal is not code — `"Date"` names nothing — and a key-path component
+        /// names a property, where no marker is one. Every token scan in these
+        /// censuses goes through this, so they cannot disagree about it.
+        static func isMarkerPosition(_ token: TokenSyntax) -> Bool {
+            guard case .identifier = token.tokenKind else { return false }
+            if let reference = token.parent?.as(DeclReferenceExprSyntax.self),
+               reference.parent?.is(KeyPathPropertyComponentSyntax.self) == true {
+                return false
+            }
+            return true
+        }
+
         private func hasMarker(in syntax: some SyntaxProtocol) -> Bool {
             let tokenHit = syntax.tokens(viewMode: .sourceAccurate)
-                .contains { markers.contains($0.text) }
+                .contains { markers.contains($0.text) && Self.isMarkerPosition($0) }
             if tokenHit { return true }
             let fileRead = CensusFileReadChecker(viewMode: .sourceAccurate)
             fileRead.walk(syntax)

@@ -199,7 +199,11 @@ struct PurityHigherOrderCensusMeasuredTests {
         .filter { $0.1 != .refuted }
         .compactMap { subject, verdict in
             guard let body = subject.function.body else { return nil }
-            let hits = Set(body.tokens(viewMode: .sourceAccurate).map(\.text))
+            let hits = Set(
+                body.tokens(viewMode: .sourceAccurate)
+                    .filter(PurityRefutationCensusMeasuredTests.Attributor.isMarkerPosition)
+                    .map(\.text)
+            )
                 .intersection(maskedIOMarkers)
             return hits.isEmpty ? nil : UnmaskedIORow(subject: subject, verdict: verdict, names: hits.sorted())
         }
