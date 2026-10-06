@@ -130,15 +130,18 @@ extension SwiftInferCommand {
             OPT-IN. Resolve each function's idempotency effect ACROSS FILES, \
             including effects nothing wrote down: a function that calls a \
             `@NonIdempotent` one is itself non-idempotent, and reading its own \
-            declaration will never say so. Off by default because it re-parses \
-            the tree — FunctionScanner parses one file at a time and discards \
-            the syntax tree to hold the PRD §13 budget, and the inference needs \
-            every tree at once. Only the retry-HOSTILE direction is used: an \
-            inferred pure/idempotent is the least upper bound of what a body \
-            calls and says nothing about the caller. Demotes (-45) rather than \
-            vetoes — a declaration denies the law, an inference is a fact about \
-            a callee. Measured on this repo: +6% to +21% wall clock, under 1 MB \
-            peak RSS. See EffectResolver.
+            declaration will never say so. Off by default for its cost: a \
+            second pass after the scan, which re-parses the scanned directory \
+            and merges an effect table over every file, with a 30 s inference \
+            budget against discover's 2 s. (The scan itself is two-phase: it \
+            already parses the project's construction universe up front and \
+            holds those trees while it judges; this pass runs after.) Only the \
+            retry-HOSTILE direction is used: an inferred pure/idempotent is \
+            the least upper bound of what a body calls and says nothing about \
+            the caller. Demotes (-45) rather than vetoes — a declaration denies \
+            the law, an inference is a fact about a callee. Measured on this \
+            repo's four targets (2026-10-06, with construction facts): +5% to \
+            +23% wall clock, under 2 MB peak RSS. See EffectResolver.
             """
         )
         public var resolveEffects: Bool = false

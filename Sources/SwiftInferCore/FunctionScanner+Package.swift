@@ -68,12 +68,17 @@ extension FunctionScanner {
     /// its facts were built from; a file outside it (a test file in a scan that reaches `Tests/`,
     /// a file of a nested package the root does not compile) is read and parsed here, and judged
     /// under the same table.
+    ///
+    /// That parse runs on a `LargeStackWorkers` thread, like the universe's: the CLI's commands run
+    /// on a Swift-concurrency cooperative thread with ~512 KB of stack, and a parse recurses as deep
+    /// as the source nests.
     public static func scanCorpus(file: URL, purity: PackagePurity) throws -> ScannedCorpus {
         if let tree = purity.tree(for: file) {
             return scanCorpus(tree: tree, file: file.path, purity: purity.oracle)
         }
         let source = try String(contentsOf: file, encoding: .utf8)
-        return scanCorpus(tree: Parser.parse(source: source), file: file.path, purity: purity.oracle)
+        let tree = LargeStackWorkers.run { Parser.parse(source: source) }
+        return scanCorpus(tree: tree, file: file.path, purity: purity.oracle)
     }
 
     /// The package-scope merge of per-file corpora — the post-passes that need every
