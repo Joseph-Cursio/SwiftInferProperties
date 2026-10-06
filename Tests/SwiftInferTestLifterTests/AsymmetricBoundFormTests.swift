@@ -129,6 +129,40 @@ struct AsymmetricBoundFormTests {
         }
     }
 
+    /// A key-path SUBSCRIPT argument is a read, so the binding is substituted there; and a member
+    /// of `self` is a member name like any other, never the local of the same name.
+    @Test("a key-path subscript argument is substituted; a member of self is not")
+    func subscriptArgumentSubstitutedSelfMemberNot() {
+        let subscripted = Self.resolvedFirstArgument(#"""
+        let id = makeID()
+        let once = canonical(rows)
+        #expect(once.map(\.[id]) == [])
+        """#)
+        #expect(subscripted == #"canonical(rows).map(\.[makeID()]) == []"#)
+
+        let member = Self.resolvedFirstArgument("""
+        let once = canonical(rows)
+        #expect(self.once != once)
+        """)
+        #expect(member == "self.once != canonical(rows)")
+    }
+
+    /// `body` inside a `@Test` function, sliced, with its assertion's first argument resolved.
+    private static func resolvedFirstArgument(_ body: String) -> String? {
+        let slice = SlicerTestHelper.sliceFirstBody(in: """
+        import Testing
+        struct T {
+            @Test
+            func resolves() {
+                \(body)
+            }
+        }
+        """)
+        guard let argument = slice.assertion?.arguments.first else { return nil }
+        let bindings = LocalBindingResolver.bindings(in: slice.propertyRegion)
+        return LocalBindingResolver.substituting(argument, bindings: bindings).trimmedDescription
+    }
+
     /// **The control.** The nested form must keep working exactly as before — substitution is
     /// a widening, and a widening that broke the original shape would trade one blindness for
     /// another.

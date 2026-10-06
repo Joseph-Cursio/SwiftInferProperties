@@ -1,17 +1,5 @@
 import SwiftSyntax
 
-/// Which member names `DeclReferenceExprSyntax.isMemberName(on:)` answers `true` for.
-public enum MemberNameBase: Sendable {
-    /// Every member name, whatever its base: `name` in `job.name`, `Rule().name` and
-    /// `self.name`, and the leading-dot `.name`, which has no base at all.
-    case anyBase
-    /// Every member name except one whose base is `self`. Inside a type's own method,
-    /// `self.name` is the stored property `name` spelled out, so a reader that keys on stored
-    /// properties keeps it as a reference. `job.name`, `Rule().name` and `.name` still name a
-    /// member of some other value.
-    case otherThanSelf
-}
-
 /// Positions where a `DeclReferenceExprSyntax` is only a NAME, never a reference to a binding.
 ///
 /// swift-syntax spells three different things with one node. `name` in `f(name)` reads a
@@ -42,28 +30,32 @@ extension DeclReferenceExprSyntax {
         parent?.as(KeyPathPropertyComponentSyntax.self)?.declName.id == id
     }
 
-    /// Whether this is the member half of a member access whose base `scope` admits.
+    /// Whether this is the member half of a member access, on any base: `name` in `job.name`,
+    /// `Rule().name`, `self.name`, and the leading-dot `.name`. The base itself is never a member
+    /// name: `job` in `job.name` answers `false`.
     ///
-    /// `.anyBase` is every member name, `self.name` included. `.otherThanSelf` leaves
-    /// `self.name` out. The base itself is never a member name: `job` in `job.name` answers
-    /// `false` either way.
-    public func isMemberName(on scope: MemberNameBase) -> Bool {
+    /// Every caller here asks about test-local bindings, which no member access reaches — not
+    /// even through `self`. A reader keyed on stored properties would want `self.name` kept, and
+    /// `self?.name`, `self!.name` and `(self).name` with it; none exists yet, so that question is
+    /// not answered here.
+    public var isMemberName: Bool {
+        guard let member = parent?.as(MemberAccessExprSyntax.self) else { return false }
+        return member.declName.id == id
+    }
+
+    /// Whether this is the name of a member access with no base at all: `red` in `.red`, whose
+    /// type comes from the context.
+    public var isImplicitMemberName: Bool {
         guard let member = parent?.as(MemberAccessExprSyntax.self), member.declName.id == id else {
             return false
         }
-        switch scope {
-        case .anyBase:
-            return true
-
-        case .otherThanSelf:
-            return member.base?.as(DeclReferenceExprSyntax.self)?.baseName.tokenKind != .keyword(.self)
-        }
+        return member.base == nil
     }
 
-    /// Whether this is a name-only position: a key-path component's name, or a member name
-    /// whose base `members` admits. A visitor collecting references to bindings skips these and
-    /// keeps every other `DeclReferenceExprSyntax`.
-    public func isNameOnlyPosition(members: MemberNameBase) -> Bool {
-        isKeyPathComponentName || isMemberName(on: members)
+    /// Whether this is a name-only position: a key-path component's name or a member name. A
+    /// visitor collecting references to bindings skips these and keeps every other
+    /// `DeclReferenceExprSyntax`.
+    public var isNameOnlyPosition: Bool {
+        isKeyPathComponentName || isMemberName
     }
 }

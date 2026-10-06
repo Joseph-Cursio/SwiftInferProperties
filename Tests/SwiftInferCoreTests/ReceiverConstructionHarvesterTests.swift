@@ -229,6 +229,22 @@ struct ReceiverConstructionHarvesterTests {
         #expect(found.map(\.substituted) == [true, true])
     }
 
+    /// The other half: a key-path SUBSCRIPT argument is evaluated where the key path is formed,
+    /// so a local there is a read and is inlined like any argument.
+    @Test("a local in a key-path subscript argument is inlined")
+    func keyPathSubscriptArgumentIsInlined() {
+        let source = #"""
+        @Test func sorts() {
+            let index = 1
+            let sorter = Sorter(by: \.[index])
+            _ = sorter
+        }
+        """#
+        let found = ReceiverConstructionHarvester.constructions(in: source, wanted: ["Sorter"])
+        #expect(found.map(\.expression) == [#"Sorter(by: \.[1])"#])
+        #expect(found.map(\.substituted) == [true])
+    }
+
     @Test("only the wanted types are collected")
     func onlyWanted() {
         #expect(Self.constructions(["Budget"]).keys.sorted() == ["Budget"])

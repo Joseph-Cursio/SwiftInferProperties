@@ -126,7 +126,7 @@ enum LocalBindingResolver {
             // `swift-infer discover` died with `Unexpectedly found nil while unwrapping an
             // Optional value` inside `ExprSyntax.trailingIdentifierName`, reached from
             // `roundTripNegativePair` — a detector this change was not even aiming at.
-            if node.isMemberName(on: .anyBase) {
+            if node.isMemberName {
                 return super.visit(node)
             }
             // ⚠ The same holds one node over: `KeyPathPropertyComponentSyntax.declName` is typed

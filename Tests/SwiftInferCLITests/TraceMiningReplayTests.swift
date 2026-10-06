@@ -228,17 +228,33 @@ extension TraceMiningReplayTests {
         #expect(MinedTraceSelector.selfContainedInitialState("Feature.State(count: n)") == nil)
     }
 
-    /// A key-path component's name and a member's name are names, not test-locals. Every
-    /// lowercase `DeclReferenceExprSyntax` used to count, so both of these were dropped, against
-    /// the doc's own word that `.red` is fine. A base, and a key-path subscript's argument, are
-    /// still reads.
-    @Test("Key-path and member names do not mark a test-local; their bases still do")
+    /// A key-path component's name and a leading-dot member's name are names, not test-locals.
+    /// Every lowercase `DeclReferenceExprSyntax` used to count, so both of these were dropped,
+    /// against the doc's own word that `.red` is fine. A base, and a key-path subscript's
+    /// argument, are still reads.
+    @Test("Key-path and leading-dot names do not mark a test-local; their bases still do")
     func keyPathAndMemberNamesAreNotLocals() {
-        for kept in [#"Feature.State(sort: \.name)"#, "Feature.State(color: .red)", "Feature.State.initial"] {
+        for kept in [#"Feature.State(sort: \.name)"#, "Feature.State(color: .red)", "Feature.State(rows: [.empty])"] {
             #expect(MinedTraceSelector.selfContainedInitialState(kept) == kept)
         }
         for dropped in [#"Feature.State(ids: rows.map(\.id))"#, #"Feature.State(sort: \.[index])"#] {
             #expect(MinedTraceSelector.selfContainedInitialState(dropped) == nil)
+        }
+    }
+
+    /// The stub the expression is pasted into compiles production sources only, so a static
+    /// the test target declares fails its build and takes every verdict for the reducer with it.
+    /// A lowercase member reached through a base may be one, and the selector cannot tell, so it
+    /// is dropped — the cheap failure. `Self` is the test suite where the trace was mined and the
+    /// stub where it is replayed, and a `$`-projection reads a test-local's wrapper.
+    @Test("A member reached through a base, Self, or a projection marks a test-local")
+    func testTargetMembersAreLocals() {
+        for dropped in [
+            "Feature.State(items: Self.fixtureItems)", "Feature.State(items: FeatureTests.fixtureItems)",
+            "Feature.State.initial", "Self.Fixture()", "Feature.State(items: $store.items)",
+            "Feature.State(items: rows.first!.items)"
+        ] {
+            #expect(MinedTraceSelector.selfContainedInitialState(dropped) == nil, "\(dropped)")
         }
     }
 

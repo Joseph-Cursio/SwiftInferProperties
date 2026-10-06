@@ -30,7 +30,7 @@ extension Slicer {
         /// member name is skipped, `self.id` included: a test-local is never reached through
         /// `self`, and the base is visited on its own.
         override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
-            if node.isNameOnlyPosition(members: .anyBase) { return .skipChildren }
+            if node.isNameOnlyPosition { return .skipChildren }
             names.insert(node.baseName.text)
             return .visitChildren
         }

@@ -320,7 +320,7 @@ public enum ReceiverConstructionHarvester {
             // ⚠ The name in `\.name` is a member of the key path's root, so it is skipped too —
             // read as a local, it refused `Sorter(by: \.name)`, which has nothing to resolve. A
             // subscript component's argument (`\.[index]`) is still checked: it is evaluated.
-            if node.isNameOnlyPosition(members: .anyBase) { return .skipChildren }
+            if node.isNameOnlyPosition { return .skipChildren }
             let text = node.baseName.text
             if let first = text.first, first.isLowercase { isSelfContained = false }
             return .visitChildren

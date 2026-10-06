@@ -48,6 +48,12 @@ struct SlicerNameOnlyPositionTests {
         ))
     }
 
+    /// A test-local is never reached through `self`, so `self.id` is a member name like any other.
+    @Test("a member of self sharing a local's name does not pull the local into the slice")
+    func selfMemberIsNotAReference() {
+        Self.expectIDLeftInSetup(Self.slice(asserting: "XCTAssertEqual(items.count, self.id)"))
+    }
+
     /// The control: a member no local is named after leaves the slice exactly where it was.
     @Test("a member of $0 with no matching local leaves the local in setup")
     func unrelatedMemberLeavesSetupAlone() {

@@ -38,8 +38,10 @@ struct NameOnlyPositionTests {
         let nested = #"rows.map(\.owner.name)"#
         #expect(try Self.reference("owner", in: nested).isKeyPathComponentName)
         #expect(try Self.reference("name", in: nested).isKeyPathComponentName)
-        #expect(try Self.reference("name", in: #"rows.map(\.name)"#).isNameOnlyPosition(members: .anyBase))
-        #expect(try Self.reference("name", in: #"rows.map(\.name)"#).isNameOnlyPosition(members: .otherThanSelf))
+        let name = try Self.reference("name", in: #"rows.map(\.name)"#)
+        #expect(name.isNameOnlyPosition)
+        #expect(!name.isMemberName)
+        #expect(!name.isImplicitMemberName)
     }
 
     /// `index` is evaluated when the key path is formed, so it reads a binding like any argument.
@@ -47,39 +49,34 @@ struct NameOnlyPositionTests {
     func keyPathSubscriptArgumentIsARead() throws {
         let index = try Self.reference("index", in: #"rows.map(\.[index])"#)
         #expect(!index.isKeyPathComponentName)
-        #expect(!index.isNameOnlyPosition(members: .anyBase))
+        #expect(!index.isNameOnlyPosition)
     }
 
-    @Test("a member name is name-only on any base; the base is a read")
+    @Test("a member name is name-only on any base, self included; the base is a read")
     func memberNames() throws {
-        #expect(try Self.reference("name", in: "job.name").isMemberName(on: .anyBase))
-        #expect(try Self.reference("name", in: "job.name").isMemberName(on: .otherThanSelf))
-        #expect(try Self.reference("pattern", in: "Rule().pattern").isMemberName(on: .otherThanSelf))
-        #expect(try Self.reference("id", in: "rows.map { $0.id }").isMemberName(on: .otherThanSelf))
+        for (text, expression) in [
+            ("name", "job.name"), ("pattern", "Rule().pattern"), ("id", "rows.map { $0.id }"),
+            ("name", "self.name"), ("name", "self?.name"), ("name", "Self.name")
+        ] {
+            let node = try Self.reference(text, in: expression)
+            #expect(node.isMemberName, "`\(text)` in `\(expression)`")
+            #expect(node.isNameOnlyPosition, "`\(text)` in `\(expression)`")
+            #expect(!node.isImplicitMemberName, "`\(text)` in `\(expression)`")
+        }
         let base = try Self.reference("job", in: "job.name")
-        #expect(!base.isMemberName(on: .anyBase))
-        #expect(!base.isNameOnlyPosition(members: .anyBase))
+        #expect(!base.isMemberName)
+        #expect(!base.isNameOnlyPosition)
         #expect(!base.isKeyPathComponentName)
     }
 
-    /// A leading-dot member has no base at all, so it is never "on `self`".
-    @Test("a leading-dot member is name-only under either scope")
+    /// A leading-dot member has no base at all: its type comes from the context.
+    @Test("a leading-dot member is an implicit member name")
     func leadingDotMember() throws {
         let red = try Self.reference("red", in: "paint(.red)")
-        #expect(red.isMemberName(on: .anyBase))
-        #expect(red.isMemberName(on: .otherThanSelf))
+        #expect(red.isMemberName)
+        #expect(red.isImplicitMemberName)
+        #expect(red.isNameOnlyPosition)
         #expect(!red.isKeyPathComponentName)
-    }
-
-    /// The one place the two scopes differ: `self.name` is the stored property `name` spelled
-    /// out, and `.otherThanSelf` is for readers that keep it as one.
-    @Test("a member of self is name-only under .anyBase only")
-    func memberOfSelf() throws {
-        let name = try Self.reference("name", in: "self.name")
-        #expect(name.isMemberName(on: .anyBase))
-        #expect(!name.isMemberName(on: .otherThanSelf))
-        #expect(!name.isNameOnlyPosition(members: .otherThanSelf))
-        #expect(name.isNameOnlyPosition(members: .anyBase))
     }
 
     @Test("a bare reference and a call's callee are reads")
@@ -87,7 +84,7 @@ struct NameOnlyPositionTests {
         let call = "sortItems(items)"
         for text in ["sortItems", "items"] {
             let node = try Self.reference(text, in: call)
-            #expect(!node.isNameOnlyPosition(members: .anyBase), "`\(text)` in `\(call)`")
+            #expect(!node.isNameOnlyPosition, "`\(text)` in `\(call)`")
         }
     }
 }
