@@ -47,9 +47,10 @@ import Foundation
 /// never descends a symlinked directory, and a symlinked `Sources/<target>` is a layout this tool
 /// meets in real use (`SwiftSourceFiles`).
 ///
-/// **Order: root-relative path, Swift `String <`.** Not order-free — SEI's alias resolution takes
-/// the first target, and which witness is reported first depends on input order — so a fixed order
-/// shared with SwiftProjectLint is what lets the two agree.
+/// **Order: root-relative path, Swift `String <`.** Not order-free — which witness SEI reports first
+/// among several declarations of one name depends on input order (which types refute does not,
+/// since SEI `9d0bf6d` follows every alias a name may mean) — so a fixed order shared with
+/// SwiftProjectLint is what lets the two agree.
 public enum ConstructionUniverse {
 
     /// Directory names never part of a universe even when not hidden: build products and vendored

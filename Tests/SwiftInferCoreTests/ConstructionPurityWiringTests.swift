@@ -309,20 +309,27 @@ extension ConstructionPurityWiringTests {
         #expect(Self.verdict("make", in: try FunctionScanner.scanCorpus(directory: lib, purity: purity)) == .refuted)
     }
 
-    /// The parse is parallel; the build is not allowed to notice. SEI's alias resolution takes
-    /// the first target, so two same-named aliases make the table order-sensitive — which is
-    /// what makes this fixture able to fail.
+    /// The parse is parallel; the build is not allowed to notice. Two targets each declare
+    /// `Stamp` with its own witness, and SEI reports the first declaration it read, so the table's
+    /// digest is order-sensitive — which is what makes this fixture able to fail. (Two same-named
+    /// typealiases did that until SEI `9d0bf6d`, which follows every alias a name may mean.)
     @Test("the build order is the universe order, whatever order the parses finish in")
     func buildOrderIsUniverseOrder() throws {
+        let stampA = "struct Stamp { let id = UUID() }\nfunc makeA() -> Stamp { Stamp() }"
+        let stampB = "struct Stamp { let at = Date() }\nfunc makeB() -> Stamp { Stamp() }"
+        let digest = { (trees: [SourceFileSyntax]) -> [String] in
+            let facts = ConstructionFacts.build(from: trees)
+            return facts.refutedTypeNames.map { "\($0): \(facts.refutation(constructing: $0)?.description ?? "?")" }
+        }
+        let parsedA = Parser.parse(source: stampA)
+        let parsedB = Parser.parse(source: stampB)
+        #expect(
+            digest([parsedA, parsedB]) != digest([parsedB, parsedA]),
+            "the fixture must be order-sensitive, or this test cannot fail"
+        )
         let root = try Self.makePackage([
-            "Sources/A/A.swift": """
-            struct A { typealias Stamp = String; var s: Stamp = .init() }
-            func makeA() -> A { A() }
-            """,
-            "Sources/B/B.swift": """
-            struct B { typealias Stamp = UUID; let s: Stamp = .init() }
-            func makeB() -> B { B() }
-            """,
+            "Sources/A/Stamp.swift": stampA,
+            "Sources/B/Stamp.swift": stampB,
             "Sources/C/C.swift": "struct C { let id = UUID() }\nfunc makeC() -> C { C() }"
         ])
         defer { try? FileManager.default.removeItem(at: root) }
