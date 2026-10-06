@@ -47,13 +47,24 @@ killed.
 | `slicer-collects-name-only-positions` | name-only-position | killed | `SlicerNameOnlyPositionTests` |
 | `binding-rewriter-substitutes-keypath-name` | name-only-position | killed | `bindingNamedLikeAKeyPathComponentIsNotSubstituted` |
 | `trace-initial-state-counts-name-only-positions` | name-only-position | killed | `keyPathAndMemberNamesAreNotLocals` |
+| `trace-skips-every-member-name` | name-only-position | killed | `testTargetMembersAreLocals` |
+| `trace-self-is-not-local` | name-only-position | killed | `testTargetMembersAreLocals` |
+| `binding-rewriter-skips-subscript-arguments` | name-only-position | killed | `subscriptArgumentSubstitutedSelfMemberNot` |
+| `harvester-skips-subscript-arguments` | name-only-position | killed | `keyPathSubscriptArgumentIsInlined` |
 
 Each puts back one site's old reading. The first `ReceiverConstructionHarvester`
 mutant refuses `Sorter(by: \.name)`; the second copies
 `Pager(sortedBy: \.10, pageSize: 10)`. The `Slicer` pulls an unrelated `let id = 7` into
 the property region through `.map(\.id)` and `{ $0.id }`. `LocalBindingResolver` builds
 `\.makeID()`, a key-path component whose `declName` slot holds a call.
-`MinedTraceSelector` drops `Feature.State(color: .red)`. All five verified killed.
+`MinedTraceSelector` drops `Feature.State(color: .red)`.
+
+The last four guard the other direction, the over-correction. A selector that skips
+every member name keeps `Feature.State(items: Self.fixtureItems)`, a static only the
+test target declares, and the verifier stub it is pasted into fails to build; one that
+reads `Self` as a type keeps `Self.Fixture()`. A rewriter that skips everything inside
+a key path stops substituting `\.[id]`, whose argument is evaluated. All nine verified
+killed.
 
 ## Adding a mutant
 

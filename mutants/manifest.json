@@ -65,6 +65,38 @@
       "expected": "killed",
       "test": "keyPathAndMemberNamesAreNotLocals",
       "label": "MinedTraceSelector counts every lowercase name as a test-local — `Feature.State(color: .red)` and `Feature.State(sort: \\.name)` are dropped"
+    },
+    {
+      "id": "trace-skips-every-member-name",
+      "patch": "patches/trace-skips-every-member-name.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "testTargetMembersAreLocals",
+      "label": "MinedTraceSelector skips every member name, not only key-path and leading-dot ones — `Feature.State(items: Self.fixtureItems)` is kept, pasted into the verifier stub, and fails its build"
+    },
+    {
+      "id": "trace-self-is-not-local",
+      "patch": "patches/trace-self-is-not-local.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "testTargetMembersAreLocals",
+      "label": "MinedTraceSelector reads `Self` as a type — `Self.Fixture()` names the test suite and is kept for a stub where `Self` is the stub"
+    },
+    {
+      "id": "binding-rewriter-skips-subscript-arguments",
+      "patch": "patches/binding-rewriter-skips-subscript-arguments.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "subscriptArgumentSubstitutedSelfMemberNot",
+      "label": "LocalBindingResolver skips everything inside a key path — `\\.[id]` keeps the unresolved local where its argument should be substituted"
+    },
+    {
+      "id": "harvester-skips-subscript-arguments",
+      "patch": "patches/harvester-skips-subscript-arguments.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "keyPathSubscriptArgumentIsInlined",
+      "label": "ReceiverConstructionHarvester's inliner skips everything inside a key path — `Sorter(by: \\.[index])` keeps the test-local"
     }
   ]
 }

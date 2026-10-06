@@ -1,12 +1,13 @@
 diff --git a/Sources/SwiftInferCLI/MinedTraceSelector.swift b/Sources/SwiftInferCLI/MinedTraceSelector.swift
-index 27489b43..7d2b4df2 100644
+index 27489b43..2919bf85 100644
 --- a/Sources/SwiftInferCLI/MinedTraceSelector.swift
 +++ b/Sources/SwiftInferCLI/MinedTraceSelector.swift
-@@ -159,7 +159,6 @@ private final class LowercaseReferenceCollector: SyntaxVisitor {
+@@ -159,7 +159,7 @@ private final class LowercaseReferenceCollector: SyntaxVisitor {
              sawLowercaseReference = true
              return .skipChildren
          }
 -        if node.isKeyPathComponentName || node.isImplicitMemberName { return .skipChildren }
++        if node.isNameOnlyPosition { return .skipChildren }
          if let first = node.baseName.text.first, first.isLowercase {
              sawLowercaseReference = true
          }

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferTestLifter/LocalBindingResolver.swift b/Sources/SwiftInferTestLifter/LocalBindingResolver.swift
+index 46eac911..dcee0d89 100644
+--- a/Sources/SwiftInferTestLifter/LocalBindingResolver.swift
++++ b/Sources/SwiftInferTestLifter/LocalBindingResolver.swift
+@@ -133,7 +133,7 @@ enum LocalBindingResolver {
+             // as a decl reference as well. Unguarded, `let id = makeID()` turned `once.map(\.id)`
+             // into `\.makeID()`, a component whose `declName` slot holds a call — the same trap,
+             // waiting for its first reader.
+-            if node.isKeyPathComponentName {
++            if sequence(first: Syntax(node), next: { $0.parent }).contains { $0.is(KeyPathExprSyntax.self) } {
+                 return super.visit(node)
+             }
+             guard node.argumentNames == nil,
