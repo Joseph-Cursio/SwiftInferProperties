@@ -1,3 +1,4 @@
+import SwiftInferCore
 import SwiftSyntax
 
 /// Substitutes a sliced body's local `let` bindings into an expression, so the shape matchers
@@ -102,8 +103,9 @@ enum LocalBindingResolver {
         return current
     }
 
-    /// Rewrites every `DeclReferenceExprSyntax` naming a known binding into that binding's
-    /// initializer. One pass; `substituting` iterates it.
+    /// Rewrites every `DeclReferenceExprSyntax` that reads a known binding into that binding's
+    /// initializer — never a member's name or a key-path component's name, which only spell the
+    /// binding's name. One pass; `substituting` iterates it.
     private final class BindingRewriter: SyntaxRewriter {
 
         private let bindings: [String: ExprSyntax]
@@ -124,8 +126,14 @@ enum LocalBindingResolver {
             // `swift-infer discover` died with `Unexpectedly found nil while unwrapping an
             // Optional value` inside `ExprSyntax.trailingIdentifierName`, reached from
             // `roundTripNegativePair` — a detector this change was not even aiming at.
-            if let member = node.parent?.as(MemberAccessExprSyntax.self),
-               member.declName.id == node.id {
+            if node.isMemberName(on: .anyBase) {
+                return super.visit(node)
+            }
+            // ⚠ The same holds one node over: `KeyPathPropertyComponentSyntax.declName` is typed
+            // as a decl reference as well. Unguarded, `let id = makeID()` turned `once.map(\.id)`
+            // into `\.makeID()`, a component whose `declName` slot holds a call — the same trap,
+            // waiting for its first reader.
+            if node.isKeyPathComponentName {
                 return super.visit(node)
             }
             guard node.argumentNames == nil,

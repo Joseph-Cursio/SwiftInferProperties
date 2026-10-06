@@ -77,9 +77,10 @@ enum MinedTraceSelector {
     /// Returns the mined `TestStore(initialState:)` expression when it is
     /// verifier-constructible — i.e. references no test-body-local binding.
     /// Heuristic: any lowercase-leading identifier reference (`a`, `items`,
-    /// `fixture`) marks a local; type/enum references (`Feature`, `.red`) and
-    /// literals are fine. Conservative — a false "not self-contained" only
-    /// costs a mined starting state (falls back to the reducer default).
+    /// `fixture`) marks a local; type/enum references (`Feature`, `.red`),
+    /// key paths (`\.name`) and literals are fine. Conservative — a false
+    /// "not self-contained" only costs a mined starting state (falls back to
+    /// the reducer default).
     static func selfContainedInitialState(_ expr: String?) -> String? {
         guard let expr, !expr.isEmpty else { return nil }
         let tree = Parser.parse(source: expr)
@@ -129,10 +130,17 @@ enum MinedTraceSelector {
 
 /// Detects any lowercase-leading identifier reference in a parsed expression —
 /// the marker of a test-body-local binding in a mined `initialState:` expr.
+///
+/// ⚠ A member's name (`.red`, `Feature.State.initial`) and a key-path component's
+/// name (`\.name`) are not references: they name a member of a type the
+/// verifier can see. Counting them dropped `Feature.State(color: .red)` and
+/// `Feature.State(sort: \.name)`. The base of a member access, and a key-path
+/// subscript's argument, are still visited and still count.
 private final class LowercaseReferenceCollector: SyntaxVisitor {
     private(set) var sawLowercaseReference = false
 
     override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
+        if node.isNameOnlyPosition(members: .anyBase) { return .skipChildren }
         if let first = node.baseName.text.first, first.isLowercase {
             sawLowercaseReference = true
         }

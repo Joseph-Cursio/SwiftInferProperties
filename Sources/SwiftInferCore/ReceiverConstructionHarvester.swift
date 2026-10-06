@@ -24,10 +24,10 @@ import SwiftSyntax
 /// ## Self-contained, or not at all
 ///
 /// An expression is only usable in a generated file if every name in it resolves there. So an
-/// argument may be a literal, a leading-dot enum case, a member chain rooted at a TYPE, or a
-/// nested call of the same kind — and never a lowercase identifier, which in a test body is a
-/// local. A type with several construction sites keeps the first self-contained one in file
-/// order, so the choice is stable.
+/// argument may be a literal, a leading-dot enum case, a key path such as `\.name`, a member
+/// chain rooted at a TYPE, or a nested call of the same kind — and never a lowercase identifier
+/// that reads a binding, which in a test body is a local. A type with several construction
+/// sites keeps the first self-contained one in file order, so the choice is stable.
 ///
 /// ## A local is followed to what it is bound to
 ///
@@ -151,7 +151,7 @@ public enum ReceiverConstructionHarvester {
     }
 
     /// Whether `expression` names only things a generated test file can see: literals, leading-dot
-    /// members, and names beginning with a capital letter (types).
+    /// members, key-path component names, and names beginning with a capital letter (types).
     static func isSelfContained(_ expression: ExprSyntax) -> Bool {
         let checker = FreeNameChecker(viewMode: .sourceAccurate)
         checker.walk(expression)
@@ -285,8 +285,13 @@ public enum ReceiverConstructionHarvester {
             super.init()
         }
 
+        /// ⚠ **The name in `\.pageSize` is not the local `pageSize`.** It names a member of the key
+        /// path's root, like the member half of a chain below, and rewriting it copied
+        /// `Pager(sortedBy: \.10, pageSize: 10)` — which parses, so the parse gate let it through.
         override func visit(_ node: DeclReferenceExprSyntax) -> ExprSyntax {
-            guard let value = bindings[node.baseName.text] else { return super.visit(node) }
+            guard !node.isKeyPathComponentName, let value = bindings[node.baseName.text] else {
+                return super.visit(node)
+            }
             return value.trimmed
                 .with(\.leadingTrivia, node.leadingTrivia)
                 .with(\.trailingTrivia, node.trailingTrivia)
@@ -301,7 +306,8 @@ public enum ReceiverConstructionHarvester {
         }
     }
 
-    /// Fails the expression on any identifier that is not a type, a member, or a labelled argument.
+    /// Fails the expression on any identifier that is not a type, a member, a key-path component,
+    /// or a labelled argument.
     private final class FreeNameChecker: SyntaxVisitor {
         var isSelfContained = true
 
@@ -311,7 +317,10 @@ public enum ReceiverConstructionHarvester {
             // ⚠ Only the MEMBER half is spelled that way. A base is a name in its own right, and
             // both halves are children of the same `MemberAccessExprSyntax`, so asking whether the
             // parent is one waved `pattern.category` through as if it were `Rule().pattern`.
-            if node.parent?.as(MemberAccessExprSyntax.self)?.declName.id == node.id { return .skipChildren }
+            // ⚠ The name in `\.name` is a member of the key path's root, so it is skipped too —
+            // read as a local, it refused `Sorter(by: \.name)`, which has nothing to resolve. A
+            // subscript component's argument (`\.[index]`) is still checked: it is evaluated.
+            if node.isNameOnlyPosition(members: .anyBase) { return .skipChildren }
             let text = node.baseName.text
             if let first = text.first, first.isLowercase { isSelfContained = false }
             return .visitChildren

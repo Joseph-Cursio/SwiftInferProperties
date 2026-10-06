@@ -225,6 +225,21 @@ extension TraceMiningReplayTests {
     @Test("Fixture-referencing initial state (local binding) is dropped")
     func fixtureReferencingInitialStateDropped() {
         #expect(MinedTraceSelector.selfContainedInitialState("Feature.State(items: [a, b])") == nil)
+        #expect(MinedTraceSelector.selfContainedInitialState("Feature.State(count: n)") == nil)
+    }
+
+    /// A key-path component's name and a member's name are names, not test-locals. Every
+    /// lowercase `DeclReferenceExprSyntax` used to count, so both of these were dropped, against
+    /// the doc's own word that `.red` is fine. A base, and a key-path subscript's argument, are
+    /// still reads.
+    @Test("Key-path and member names do not mark a test-local; their bases still do")
+    func keyPathAndMemberNamesAreNotLocals() {
+        for kept in [#"Feature.State(sort: \.name)"#, "Feature.State(color: .red)", "Feature.State.initial"] {
+            #expect(MinedTraceSelector.selfContainedInitialState(kept) == kept)
+        }
+        for dropped in [#"Feature.State(ids: rows.map(\.id))"#, #"Feature.State(sort: \.[index])"#] {
+            #expect(MinedTraceSelector.selfContainedInitialState(dropped) == nil)
+        }
     }
 
     @Test("Selector attaches a self-contained mined initial state to the seed trace")
