@@ -116,7 +116,9 @@ fires only on already-refuted rows is invisible to `verdictAgreesWithSoundPurity
 over the same trees, or new code and the table cannot be told apart. **`9d0bf6d` changes only
 `ConstructionFacts`** (SEI #23): a typealias means every alias it may mean, and a decode is judged
 by every `init(from:)`. On `main`, which builds no table, it moved nothing — `make batch2` stayed
-green with the replica guard naming no mismatch.
+green with the replica guard naming no mismatch. With the table wired in it moved nothing either:
+re-taken at `9d0bf6d`, every construction figure in `docs/measurements/construction-facts-wiring.md`
+— the `Sources/` delta and all 21 scan roots — came out identical.
 
 ## Where to look
 

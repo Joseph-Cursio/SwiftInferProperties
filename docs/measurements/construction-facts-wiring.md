@@ -245,10 +245,15 @@ file — kills the test process with `SIGBUS` when the parse is put back on GCD.
   `Sources/Model` misses `Model`'s types — the unsound direction, recorded rather than fixed,
   because following symlinks in one consumer only would break the shared universe. Scanning the
   symlinked target itself resolves it (`symlinkedTargetIsInUniverse`).
-- **No SEI change.** SEI's alias resolution follows only the first target of a same-named alias,
-  so the refuted set depends on input order; the fixed shared order makes the two consumers
-  agree, not sound. Recommended upstream, with a public `isProductionSource` and a structural
-  digest, so agreement becomes a property of the pin.
+- **No SEI change here; the one this branch recommended has since landed.** SEI resolved a
+  same-named alias by its first target only, so the refuted set depended on input order, and the
+  fixed shared order made the two consumers agree, not sound. SEI #23 (`9d0bf6d`) reads an alias
+  where it is written and follows every alias a name may mean where that is in doubt, so which
+  types refute no longer depends on order; the shared order still decides which witness is
+  reported first. Re-taken at `9d0bf6d` (`make batch2`, 2026-10-06), the `Sources/` delta and the
+  per-corpus table above came out identical, every printed figure to the digit. Still
+  recommended upstream: a public `isProductionSource` and a structural digest, so agreement
+  becomes a property of the pin.
 
 ## One oracle, two consumers
 
