@@ -79,8 +79,8 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `f2ea8d6` (bumped 2026-10-06, jointly with SwiftProjectLint), and
-`SEICrossRepoPinTests` is green as of that day's full run** — the guard compares this manifest against
+**Both repos pin SEI `9d0bf6d` (bumped 2026-10-06, jointly with SwiftProjectLint), and
+`SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
 SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
@@ -113,7 +113,10 @@ the scan started building SEI's table. It flipped 0 verdicts here and re-witness
 verdict guard stayed GREEN while an unchanged replica would have misfiled both. A refuter that
 fires only on already-refuted rows is invisible to `verdictAgreesWithSoundPurity`;
 `classificationAgreesWithSEIWitness` is the guard that sees it. Re-take with the table on AND off
-over the same trees, or new code and the table cannot be told apart.
+over the same trees, or new code and the table cannot be told apart. **`9d0bf6d` changes only
+`ConstructionFacts`** (SEI #23): a typealias means every alias it may mean, and a decode is judged
+by every `init(from:)`. On `main`, which builds no table, it moved nothing — `make batch2` stayed
+green with the replica guard naming no mismatch.
 
 ## Where to look
 
