@@ -1,4 +1,5 @@
 @testable import SwiftInferTestLifter
+import SwiftSyntax
 import Testing
 
 private func detectAsymmetric(in source: String) -> [DetectedAsymmetricAssertion] {
@@ -87,6 +88,79 @@ struct AsymmetricBoundFormTests {
         // The assertion is that this returns AT ALL — the pre-guard build crashed here.
         let detections = detectAsymmetric(in: source)
         #expect(detections.count <= 1, "must not trap, whatever it decides")
+    }
+
+    /// ⚠ **The same trap, one node over.** A key-path component's name is a
+    /// `DeclReferenceExprSyntax` in a slot typed as one, exactly like a member's, and the guard
+    /// above did not cover it: `\.id` became `\.makeID()`, a `KeyPathPropertyComponentSyntax`
+    /// whose `declName` holds a call. Nothing read it yet, so nothing trapped yet. The `[id]` is
+    /// the control: a genuine read of the same binding is still substituted.
+    @Test("a binding sharing a key-path component's name does not corrupt the key path")
+    func bindingNamedLikeAKeyPathComponentIsNotSubstituted() throws {
+        let slice = SlicerTestHelper.sliceFirstBody(in: #"""
+        import Testing
+        struct T {
+            @Test
+            func idsSurviveCanonicalisation() {
+                let id = makeID()
+                let once = canonical(rows)
+                #expect(once.map(\.id) == [id])
+            }
+        }
+        """#)
+        let bindings = LocalBindingResolver.bindings(in: slice.propertyRegion)
+        #expect(bindings.keys.sorted() == ["id", "once"])
+        let argument = try #require(slice.assertion?.arguments.first)
+        let resolved = LocalBindingResolver.substituting(argument, bindings: bindings)
+        #expect(resolved.trimmedDescription == #"canonical(rows).map(\.id) == [makeID()]"#)
+
+        let backslash = resolved.tokens(viewMode: .sourceAccurate).first { $0.tokenKind == .backslash }
+        let keyPath = try #require(backslash?.parent?.as(KeyPathExprSyntax.self))
+        guard case .property(let component)? = keyPath.components.first?.component else {
+            Issue.record("expected a property component in \(keyPath)")
+            return
+        }
+        // Asked of the slot without the force cast `declName` makes, so the broken tree fails
+        // here rather than trapping the test process.
+        let slot = component.children(viewMode: .sourceAccurate).first
+        #expect(slot?.is(DeclReferenceExprSyntax.self) == true)
+        if slot?.is(DeclReferenceExprSyntax.self) == true {
+            #expect(component.declName.baseName.text == "id")
+        }
+    }
+
+    /// A key-path SUBSCRIPT argument is a read, so the binding is substituted there; and a member
+    /// of `self` is a member name like any other, never the local of the same name.
+    @Test("a key-path subscript argument is substituted; a member of self is not")
+    func subscriptArgumentSubstitutedSelfMemberNot() {
+        let subscripted = Self.resolvedFirstArgument(#"""
+        let id = makeID()
+        let once = canonical(rows)
+        #expect(once.map(\.[id]) == [])
+        """#)
+        #expect(subscripted == #"canonical(rows).map(\.[makeID()]) == []"#)
+
+        let member = Self.resolvedFirstArgument("""
+        let once = canonical(rows)
+        #expect(self.once != once)
+        """)
+        #expect(member == "self.once != canonical(rows)")
+    }
+
+    /// `body` inside a `@Test` function, sliced, with its assertion's first argument resolved.
+    private static func resolvedFirstArgument(_ body: String) -> String? {
+        let slice = SlicerTestHelper.sliceFirstBody(in: """
+        import Testing
+        struct T {
+            @Test
+            func resolves() {
+                \(body)
+            }
+        }
+        """)
+        guard let argument = slice.assertion?.arguments.first else { return nil }
+        let bindings = LocalBindingResolver.bindings(in: slice.propertyRegion)
+        return LocalBindingResolver.substituting(argument, bindings: bindings).trimmedDescription
     }
 
     /// **The control.** The nested form must keep working exactly as before — substitution is

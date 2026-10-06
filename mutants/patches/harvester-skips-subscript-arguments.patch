@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ReceiverConstructionHarvester.swift b/Sources/SwiftInferCore/ReceiverConstructionHarvester.swift
+index 4079e845..0eebb5c5 100644
+--- a/Sources/SwiftInferCore/ReceiverConstructionHarvester.swift
++++ b/Sources/SwiftInferCore/ReceiverConstructionHarvester.swift
+@@ -289,7 +289,7 @@ public enum ReceiverConstructionHarvester {
+         /// path's root, like the member half of a chain below, and rewriting it copied
+         /// `Pager(sortedBy: \.10, pageSize: 10)` — which parses, so the parse gate let it through.
+         override func visit(_ node: DeclReferenceExprSyntax) -> ExprSyntax {
+-            guard !node.isKeyPathComponentName, let value = bindings[node.baseName.text] else {
++            guard !(sequence(first: Syntax(node), next: { $0.parent }).contains { $0.is(KeyPathExprSyntax.self) }), let value = bindings[node.baseName.text] else {
+                 return super.visit(node)
+             }
+             return value.trimmed

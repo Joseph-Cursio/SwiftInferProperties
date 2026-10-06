@@ -1,11 +1,17 @@
 # Mutation / regression corpus (private)
 
 A hand-authored mutant corpus for **sharpening the inference engine itself**
-(Chapter 30 §30.4.4). Mutants live in the `IdempotenceWitnessDetector`'s pure
-name-classifier — the logic that decides whether an action name (`reset`, `setColor`,
-`increment`, …) is an idempotence witness — and each is killed by that detector's own
-unit tests, which pin both what it *should* match and what it *should not*. Not a
-scored benchmark — no frozen answer key.
+(Chapter 30 §30.4.4). Two families:
+
+- **Idempotence witnesses.** Mutants in the `IdempotenceWitnessDetector`'s pure
+  name-classifier — the logic that decides whether an action name (`reset`, `setColor`,
+  `increment`, …) is an idempotence witness.
+- **Name-only positions.** Each mutant undoes one guard that keeps a key-path
+  component's name (`\.name`) or a member's name (`job.name`, `.red`) from being read
+  as a test-local binding (`DeclReferenceExprSyntax+NameOnlyPosition`).
+
+Each is killed by its own code's unit tests, which pin both what it *should* do and what
+it *should not*. Not a scored benchmark — no frozen answer key.
 
 Each mutant is a reversible patch (`patches/<id>.patch`). The runner applies one,
 builds, runs its named killer test via `swift test --filter`, checks the outcome,
@@ -32,6 +38,32 @@ Dropping `reset` makes the detector miss a real idempotence witness; adding
 `increment` makes it claim a non-idempotent action as one (a false witness would
 seed a property that can't hold); dropping the `set` prefix loses the `setX`
 assignment family. Recall on two sides, precision on the third. All three verified
+killed.
+
+| id | shape | expected | killer |
+|---|---|---|---|
+| `harvester-keypath-name-is-local` | name-only-position | killed | `keyPathComponentNameIsNotALocal` |
+| `harvester-inlines-keypath-name` | name-only-position | killed | `keyPathComponentNameIsNotInlined` |
+| `slicer-collects-name-only-positions` | name-only-position | killed | `SlicerNameOnlyPositionTests` |
+| `binding-rewriter-substitutes-keypath-name` | name-only-position | killed | `bindingNamedLikeAKeyPathComponentIsNotSubstituted` |
+| `trace-initial-state-counts-name-only-positions` | name-only-position | killed | `keyPathAndMemberNamesAreNotLocals` |
+| `trace-skips-every-member-name` | name-only-position | killed | `testTargetMembersAreLocals` |
+| `trace-self-is-not-local` | name-only-position | killed | `testTargetMembersAreLocals` |
+| `binding-rewriter-skips-subscript-arguments` | name-only-position | killed | `subscriptArgumentSubstitutedSelfMemberNot` |
+| `harvester-skips-subscript-arguments` | name-only-position | killed | `keyPathSubscriptArgumentIsInlined` |
+
+Each puts back one site's old reading. The first `ReceiverConstructionHarvester`
+mutant refuses `Sorter(by: \.name)`; the second copies
+`Pager(sortedBy: \.10, pageSize: 10)`. The `Slicer` pulls an unrelated `let id = 7` into
+the property region through `.map(\.id)` and `{ $0.id }`. `LocalBindingResolver` builds
+`\.makeID()`, a key-path component whose `declName` slot holds a call.
+`MinedTraceSelector` drops `Feature.State(color: .red)`.
+
+The last four guard the other direction, the over-correction. A selector that skips
+every member name keeps `Feature.State(items: Self.fixtureItems)`, a static only the
+test target declares, and the verifier stub it is pasted into fails to build; one that
+reads `Self` as a type keeps `Self.Fixture()`. A rewriter that skips everything inside
+a key path stops substituting `\.[id]`, whose argument is evaluated. All nine verified
 killed.
 
 ## Adding a mutant

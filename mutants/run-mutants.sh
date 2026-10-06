@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # Private mutation/regression runner for SwiftInferProperties (SwiftPM) — the
-# inference engine dogfooding: mutate a witness detector, its own tests kill it.
+# inference engine dogfooding: mutate one of its own analyzers (an idempotence
+# witness detector, a name-only-position guard), and its own tests kill it.
 #
 # For each mutant in manifest.json: apply the patch, build the tests, run its
 # named killer test via `swift test --filter` (SPM targets methods precisely, so
@@ -10,7 +11,7 @@
 # Exit 0 iff every mutant matched its expectation.
 #
 # NOT a scored benchmark (no frozen answer key). A regression guard: it tells you
-# when a change stops the property suites catching a bug shape they used to catch.
+# when a change stops the unit tests catching a bug shape they used to catch.
 #
 # Usage:  mutants/run-mutants.sh [mutant-id ...]      (no args = all)
 # Written for macOS's stock bash 3.2 (no mapfile / associative arrays).
@@ -44,7 +45,7 @@ while IFS=$'\t' read -r id patch expected shape test; do
   [ "$test" = "-" ] && test=""
   want "$id" || continue
 
-  printf '\n-- %-30s [%s]  expect: %s\n' "$id" "$shape" "$expected"
+  printf '\n-- %-46s [%s]  expect: %s\n' "$id" "$shape" "$expected"
   if ! git apply "$HERE/$patch" 2>"$LOG/$id.apply"; then
     printf '   APPLY FAILED (%s)\n' "$(tail -1 "$LOG/$id.apply" 2>/dev/null)"
     printf 'FAIL\t%s\t%s\t%s\tapply-failed\n' "$id" "$shape" "$expected" >>"$RESULTS"; continue
@@ -76,7 +77,7 @@ for shape in sorted(per):
     p, t = per[shape]; print(f"  {shape:<26} {p}/{t}")
 print("------------------------------------------")
 for verdict, mid, shape, expected, outcome in rows:
-    print(f"  {verdict}  {mid:<30} expected={expected:<9} outcome={outcome}")
+    print(f"  {verdict}  {mid:<46} expected={expected:<9} outcome={outcome}")
 print(f"  TOTAL: {npass} pass, {nfail} fail")
 print(f"  logs: {sys.argv[2]}")
 print("==========================================")

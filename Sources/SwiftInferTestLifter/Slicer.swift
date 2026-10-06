@@ -192,29 +192,6 @@ public enum Slicer {
         )
     }
 
-    // MARK: - Identifier collection
-
-    /// Walks a sequence of expressions and returns the bare identifier
-    /// names referenced inside (via `DeclReferenceExprSyntax`). Member
-    /// accesses contribute their *base* — `encoder.encode(x)` adds
-    /// `encoder` (not `encode`) and `x`.
-    private static func identifierNames(in expressions: [ExprSyntax]) -> Set<String> {
-        let collector = IdentifierCollector(viewMode: .sourceAccurate)
-        for expression in expressions {
-            collector.walk(expression)
-        }
-        return collector.names
-    }
-
-    private final class IdentifierCollector: SyntaxVisitor {
-        var names: Set<String> = []
-
-        override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
-            names.insert(node.baseName.text)
-            return .visitChildren
-        }
-    }
-
     // MARK: - Parameterized values
 
     private static func parameterizedValues(in items: [CodeBlockItemSyntax]) -> [ParameterizedValue] {

@@ -1,0 +1,12 @@
+diff --git a/Sources/SwiftInferTestLifter/Slicer+IdentifierNames.swift b/Sources/SwiftInferTestLifter/Slicer+IdentifierNames.swift
+index 9c40431a..f5c546bc 100644
+--- a/Sources/SwiftInferTestLifter/Slicer+IdentifierNames.swift
++++ b/Sources/SwiftInferTestLifter/Slicer+IdentifierNames.swift
+@@ -30,7 +30,6 @@ extension Slicer {
+         /// member name is skipped, `self.id` included: a test-local is never reached through
+         /// `self`, and the base is visited on its own.
+         override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
+-            if node.isNameOnlyPosition { return .skipChildren }
+             names.insert(node.baseName.text)
+             return .visitChildren
+         }

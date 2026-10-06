@@ -179,6 +179,72 @@ struct ReceiverConstructionHarvesterTests {
         #expect(Self.resolved(["RankedVisitor"])["RankedVisitor"] == "RankedVisitor(pattern: Verbatim().pattern)")
     }
 
+    /// ⚠ **`name` in `\.name` is a member of the key path's root, not a test-local.** The free-name
+    /// check read every lowercase `DeclReferenceExprSyntax` as a local, so a construction with
+    /// nothing to resolve was refused, and with no other site the type harvested nothing. The
+    /// leading-dot `.name` beside it is the control: it was always read as a member.
+    @Test("a key-path component's name is not a test-local")
+    func keyPathComponentNameIsNotALocal() {
+        let source = #"""
+        @Test func sorts() {
+            let byKeyPath = Sorter(by: \.name)
+            let byCase = Sorter(by: .name)
+            _ = (byKeyPath, byCase)
+        }
+        """#
+        let found = ReceiverConstructionHarvester.constructions(in: source, wanted: ["Sorter"])
+        #expect(found.map(\.expression) == [#"Sorter(by: \.name)"#, "Sorter(by: .name)"])
+        #expect(found.map(\.substituted) == [false, false])
+    }
+
+    /// The other side of the line: `index` in `\.[index]` is evaluated when the key path is
+    /// formed, so it is a read like any argument, and a local there still refuses the call.
+    @Test("a key-path subscript's argument is still a test-local")
+    func keyPathSubscriptArgumentIsALocal() {
+        let source = #"""
+        @Test func sorts() {
+            let sorter = Sorter(by: \.[index])
+            _ = sorter
+        }
+        """#
+        #expect(ReceiverConstructionHarvester.constructions(in: source, wanted: ["Sorter"]).isEmpty)
+    }
+
+    /// ⚠ **Inlining rewrote the key path's NAME as well as the argument.** The member half of a
+    /// chain was already skipped, but the name in `\.pageSize` was not, so the harvest copied
+    /// `Pager(sortedBy: \.10, pageSize: 10)`, which parses and is not what the test wrote.
+    /// `Plain` is the control: the same local, with no key path, inlines as it always did.
+    @Test("a local sharing a key-path component's name inlines the argument only")
+    func keyPathComponentNameIsNotInlined() {
+        let source = #"""
+        @Test func pages() {
+            let pageSize = 10
+            let pager = Pager(sortedBy: \.pageSize, pageSize: pageSize)
+            let plain = Plain(pageSize: pageSize)
+            _ = (pager, plain)
+        }
+        """#
+        let found = ReceiverConstructionHarvester.constructions(in: source, wanted: ["Pager", "Plain"])
+        #expect(found.map(\.expression) == [#"Pager(sortedBy: \.pageSize, pageSize: 10)"#, "Plain(pageSize: 10)"])
+        #expect(found.map(\.substituted) == [true, true])
+    }
+
+    /// The other half: a key-path SUBSCRIPT argument is evaluated where the key path is formed,
+    /// so a local there is a read and is inlined like any argument.
+    @Test("a local in a key-path subscript argument is inlined")
+    func keyPathSubscriptArgumentIsInlined() {
+        let source = #"""
+        @Test func sorts() {
+            let index = 1
+            let sorter = Sorter(by: \.[index])
+            _ = sorter
+        }
+        """#
+        let found = ReceiverConstructionHarvester.constructions(in: source, wanted: ["Sorter"])
+        #expect(found.map(\.expression) == [#"Sorter(by: \.[1])"#])
+        #expect(found.map(\.substituted) == [true])
+    }
+
     @Test("only the wanted types are collected")
     func onlyWanted() {
         #expect(Self.constructions(["Budget"]).keys.sorted() == ["Budget"])

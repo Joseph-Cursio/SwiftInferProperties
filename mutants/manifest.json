@@ -1,6 +1,6 @@
 {
   "kind": "spm",
-  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Mutants live in the IdempotenceWitnessDetector's own name-classifier; each is killed by that detector's own unit tests, which pin both what it should and should not match. Run via `swift test --filter`. Not a scored benchmark.",
+  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Two families: mutants in the IdempotenceWitnessDetector's own name-classifier, and mutants that undo a name-only-position guard (a key-path component's or a member's name read as a test-local). Each is killed by its own code's unit tests, which pin both what it should and should not do. Run via `swift test --filter`. Not a scored benchmark.",
   "mutants": [
     {
       "id": "witness-drops-reset",
@@ -25,6 +25,78 @@
       "expected": "killed",
       "test": "classifyPrefixes",
       "label": "drop the `set` prefix — `setX`-style assignments are no longer recognized as prefix-match witnesses"
+    },
+    {
+      "id": "harvester-keypath-name-is-local",
+      "patch": "patches/harvester-keypath-name-is-local.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "keyPathComponentNameIsNotALocal",
+      "label": "ReceiverConstructionHarvester's free-name check skips member names only — `\\.name` reads as a test-local and `Sorter(by: \\.name)` is never harvested"
+    },
+    {
+      "id": "harvester-inlines-keypath-name",
+      "patch": "patches/harvester-inlines-keypath-name.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "keyPathComponentNameIsNotInlined",
+      "label": "ReceiverConstructionHarvester's inliner rewrites key-path names — `let pageSize = 10` harvests `Pager(sortedBy: \\.10, pageSize: 10)`"
+    },
+    {
+      "id": "slicer-collects-name-only-positions",
+      "patch": "patches/slicer-collects-name-only-positions.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "SlicerNameOnlyPositionTests",
+      "label": "the Slicer's identifier collector records member and key-path names — `.map(\\.id)` and `{ $0.id }` pull an unrelated `let id = 7` into the property region"
+    },
+    {
+      "id": "binding-rewriter-substitutes-keypath-name",
+      "patch": "patches/binding-rewriter-substitutes-keypath-name.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "bindingNamedLikeAKeyPathComponentIsNotSubstituted",
+      "label": "LocalBindingResolver substitutes into a key-path name — `let id = makeID()` makes `\\.makeID()`, a component whose declName slot holds a call"
+    },
+    {
+      "id": "trace-initial-state-counts-name-only-positions",
+      "patch": "patches/trace-initial-state-counts-name-only-positions.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "keyPathAndMemberNamesAreNotLocals",
+      "label": "MinedTraceSelector counts every lowercase name as a test-local — `Feature.State(color: .red)` and `Feature.State(sort: \\.name)` are dropped"
+    },
+    {
+      "id": "trace-skips-every-member-name",
+      "patch": "patches/trace-skips-every-member-name.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "testTargetMembersAreLocals",
+      "label": "MinedTraceSelector skips every member name, not only key-path and leading-dot ones — `Feature.State(items: Self.fixtureItems)` is kept, pasted into the verifier stub, and fails its build"
+    },
+    {
+      "id": "trace-self-is-not-local",
+      "patch": "patches/trace-self-is-not-local.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "testTargetMembersAreLocals",
+      "label": "MinedTraceSelector reads `Self` as a type — `Self.Fixture()` names the test suite and is kept for a stub where `Self` is the stub"
+    },
+    {
+      "id": "binding-rewriter-skips-subscript-arguments",
+      "patch": "patches/binding-rewriter-skips-subscript-arguments.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "subscriptArgumentSubstitutedSelfMemberNot",
+      "label": "LocalBindingResolver skips everything inside a key path — `\\.[id]` keeps the unresolved local where its argument should be substituted"
+    },
+    {
+      "id": "harvester-skips-subscript-arguments",
+      "patch": "patches/harvester-skips-subscript-arguments.patch",
+      "shape": "name-only-position",
+      "expected": "killed",
+      "test": "keyPathSubscriptArgumentIsInlined",
+      "label": "ReceiverConstructionHarvester's inliner skips everything inside a key path — `Sorter(by: \\.[index])` keeps the test-local"
     }
   ]
 }
