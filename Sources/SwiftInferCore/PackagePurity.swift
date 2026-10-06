@@ -41,7 +41,21 @@ public struct PackagePurity: Sendable {
     /// The table `oracle` consults.
     public var constructionFacts: ConstructionFacts { oracle.constructionFacts }
 
-    /// The project a scan of `directory` belongs to, parsed and its table built.
+    /// The project a scan of `directory` belongs to, parsed and its table built — **when the scan
+    /// will judge something**, and `nil` when `directory` holds no `.swift` file.
+    ///
+    /// The entry point every production caller uses. A purity answers questions about judged
+    /// files, and an empty judged set asks none: building one anyway parses the whole universe for
+    /// nothing — measured on `discover-reducers --sources <empty folder in a swift-syntax copy>`,
+    /// 0.03 s / 12 MB on main against 1.30 s / 379 MB with the build unguarded.
+    /// `PurityConfigurationInventoryTests` holds production to this entry.
+    public static func forJudging(directory: URL) -> Self? {
+        SwiftSourceFiles.sorted(in: directory).isEmpty ? nil : forScan(of: directory)
+    }
+
+    /// The project a scan of `directory` belongs to, parsed and its table built, whatever the scan
+    /// judges. Production goes through `forJudging(directory:)`; this is the unguarded build, for
+    /// tests and for the guard itself.
     public static func forScan(of directory: URL) -> Self {
         forScan(of: directory) { parseInParallel($0) }
     }

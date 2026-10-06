@@ -82,9 +82,11 @@ enum DependencyTypeShapes {
         result.checkoutsDirectoryFound = located.directoryFound
         for root in located.roots {
             let dependency = root.deletingLastPathComponent().lastPathComponent
-            let corpus: ScannedCorpus
+            let typeDecls: [TypeDecl]
             do {
-                corpus = try FunctionScanner.scanCorpus(directory: root)
+                // Declarations only: nothing here reads a verdict, so the construction universe
+                // and its table would be parsed and built for nothing (`scanTypeDecls`).
+                typeDecls = try FunctionScanner.scanTypeDecls(directory: root)
             } catch {
                 // Was `try? … else { continue }`. A dependency that fails to parse is a
                 // different fact from one that declares no types, and the survey has no way
@@ -94,7 +96,7 @@ enum DependencyTypeShapes {
             }
             result.roots.append(dependency)
 
-            for shape in TypeShapeBuilder.shapes(from: corpus.typeDecls) {
+            for shape in TypeShapeBuilder.shapes(from: typeDecls) {
                 // A local declaration always wins: the scanned package is the subject, and
                 // its own type is the one a law is about.
                 guard !localTypeNames.contains(shape.name) else { continue }
@@ -120,7 +122,7 @@ enum DependencyTypeShapes {
             // holds the names an actual declaration has claimed; an extension only fills a
             // gap none of them filled.
             recordDeclarationSites(
-                from: corpus.typeDecls, into: &result, primaries: &primaryDeclarationSites
+                from: typeDecls, into: &result, primaries: &primaryDeclarationSites
             )
         }
         result.collisions.sort()

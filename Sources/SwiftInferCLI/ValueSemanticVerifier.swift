@@ -67,8 +67,8 @@ public enum ValueSemanticVerifier {
         testable: Bool
     ) throws -> [VerifyJob] {
         // One project purity for the three scans of one directory: each scan would otherwise
-        // parse the whole construction universe again.
-        let purity = PackagePurity.forScan(of: targetDirectory)
+        // parse the whole construction universe again. None when nothing is judged.
+        guard let purity = PackagePurity.forJudging(directory: targetDirectory) else { return [] }
         let valueSemantic = try ValueSemanticDiscoverer.discover(directory: targetDirectory, purity: purity)
             .map { valueSemanticJob($0, moduleName: moduleName, testable: testable) }
         let defensiveCopy = try DefensiveCopyDiscoverer.discover(directory: targetDirectory, purity: purity)
