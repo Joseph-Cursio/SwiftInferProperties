@@ -173,6 +173,39 @@ struct PerformanceTests {
         )
     }
 
+    /// **The construction pass, priced where it is not free.** Every other row's corpus declares
+    /// no refuting construction, so SEI's `ConstructionFacts` come back empty and the inferrer
+    /// skips the construction pass entirely — those rows cannot see what the table costs. Here
+    /// each file's `Payload<n>` mints a `UUID` in a stored default and `decode` constructs it, so
+    /// the table is non-empty, every verdict pays the pass, and at least 50 summaries are refuted
+    /// by it. Package-rooted, so the scan builds the table from the package universe the CLI does.
+    @Test("Synthetic 50-file package with refuting constructions discovers within the §13 2-second budget")
+    func syntheticFiftyFilePackageWithConstructionFacts() throws {
+        let directory = try generateSyntheticCorpus(fileCount: 50, mintingIdentity: true)
+        let packageRoot = directory.deletingLastPathComponent()
+            .appendingPathComponent("PerfFactsPkg-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: packageRoot, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: packageRoot) }
+        try Data("// swift-tools-version: 6.1\n".utf8).write(to: packageRoot.appendingPathComponent("Package.swift"))
+        let target = packageRoot.appendingPathComponent("Sources").appendingPathComponent("Lib")
+        try FileManager.default.createDirectory(
+            at: target.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        try FileManager.default.moveItem(at: directory, to: target)
+
+        let elapsed = try measureWall {
+            _ = try TemplateRegistry.discover(in: target)
+        }
+        #expect(
+            elapsed < 2.0,
+            "Synthetic 50-file package with construction facts took \(formatted(elapsed))s — over the §13 2s budget"
+        )
+        // Outside the timing: the row measures what it says only if the table is non-empty.
+        let refuted = try FunctionScanner.scanCorpus(directory: target).summaries
+            .filter { $0.purityVerdict == .refuted }
+        #expect(refuted.count >= 50, "\(refuted.count) refuted summaries — the construction pass did not run")
+    }
+
     // MARK: - Reference-corpus discovery
 
     /// Sibling `../swift-collections/Sources/DequeModule` resolved
@@ -195,19 +228,19 @@ struct PerformanceTests {
 
     // MARK: - Synthetic corpus
 
-    private func generateSyntheticCorpus(fileCount: Int) throws -> URL {
+    private func generateSyntheticCorpus(fileCount: Int, mintingIdentity: Bool = false) throws -> URL {
         let base = FileManager.default.temporaryDirectory
             .appendingPathComponent("SwiftInferPerf-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         for index in 0..<fileCount {
             let url = base.appendingPathComponent("File\(index).swift")
-            try syntheticFileSource(index: index)
+            try syntheticFileSource(index: index, mintingIdentity: mintingIdentity)
                 .write(to: url, atomically: true, encoding: .utf8)
         }
         return base
     }
 
-    private func syntheticFileSource(index: Int) -> String {
+    private func syntheticFileSource(index: Int, mintingIdentity: Bool) -> String {
         // Per-file unique types keep cross-file pairing bounded — a
         // realistic module rarely lets every encoder pair with every
         // decoder, or every merge with every other merge's identity.
@@ -217,7 +250,7 @@ struct PerformanceTests {
         return """
         import Foundation
 
-        \(syntheticTypes(payload: payload, data: data, bag: bag))
+        \(syntheticTypes(payload: payload, data: data, bag: bag, mintingIdentity: mintingIdentity))
 
         \(syntheticBagExtension(bag: bag))
 
@@ -225,9 +258,9 @@ struct PerformanceTests {
         """
     }
 
-    private func syntheticTypes(payload: String, data: String, bag: String) -> String {
+    private func syntheticTypes(payload: String, data: String, bag: String, mintingIdentity: Bool) -> String {
         """
-        struct \(payload) {}
+        struct \(payload) {\(mintingIdentity ? " let id = UUID() " : "")}
         struct \(data) {}
         struct \(bag): Equatable {}
         """
