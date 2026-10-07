@@ -66,6 +66,27 @@ struct ConstructionUniverseSymlinkTests {
         #expect(universe.map(\.relativePath) == ["Sources/Lib/Alias.swift", "Sources/Lib/Stamp.swift"])
     }
 
+    /// **Bound, then deduplicate** — the type doc's order, and the review's `tests#4`. A link in
+    /// `Sources/Lib` to a file of an uncompiled nested package is compiled where the link is, so it
+    /// is in; the file's own spelling, `Demo/…`, is bounded out. Deduplicating first kept the
+    /// smaller `Demo/…` spelling and then bounded it away, losing the linked production file:
+    /// `make` read pure.
+    @Test("a link into an uncompiled package is bounded before it is deduplicated")
+    func boundBeforeDeduplicating() throws {
+        let root = try Wiring.makePackage([
+            "Demo/Package.swift": ConstructionUniverseNestedPackageTests.demoManifest,
+            "Demo/Sources/Demo/Item.swift": Wiring.item,
+            "Sources/Lib/Make.swift": Wiring.make
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        try Self.link("Sources/Lib/Item.swift", in: root, to: "../../Demo/Sources/Demo/Item.swift")
+        let lib = root.appendingPathComponent("Sources/Lib")
+        #expect(ConstructionUniverse.files(forScanOf: lib).map(\.relativePath) == [
+            "Sources/Lib/Item.swift", "Sources/Lib/Make.swift"
+        ])
+        #expect(try Self.verdict("make", scanning: lib) == .refuted)
+    }
+
     // MARK: - D: the root is found from the path as given
 
     /// The review's reproduction: `Sources/Lib` links outside the package, and the refuting `Item`
