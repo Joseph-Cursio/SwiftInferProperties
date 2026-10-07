@@ -639,3 +639,6 @@ same 2 re-witnessed rows, 229 / 118; the same 266 rows over 21 roots, every root
 identical (this repo's own advice 764 → 766 is new code). `make perf` alone, three runs at load
 2.7–4.2: all 12 rows green, none raised — walk row 0.115–0.116 s, `covers` 0.0000 s, `isManifest`
 0.039–0.041 s, DequeModule 2.06–2.08 s, pipeline 2.59–2.60 s, peak RSS delta 369 MB.
+**And again after merging `main` (`63cb0266`), on SEI `4aa91cf`**: `make batch2` printed the same
+`Sources/` figures, the same 3 refuted types with the same witnesses, and the same 21 root lines and
+266 moved rows, byte for byte; `make test-fast` green at 6,568.
