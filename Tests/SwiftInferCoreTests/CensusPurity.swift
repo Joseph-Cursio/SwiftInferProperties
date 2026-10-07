@@ -49,14 +49,23 @@ enum CensusPurity {
 
     // MARK: - The memo
 
-    /// One value per universe root for the whole test process, shared by every census helper
-    /// that asks — a root is parsed once however many suites, arms or scan paths reach it.
+    /// One value per UNIVERSE for the whole test process, shared by every census helper that asks
+    /// — a universe is parsed once however many suites, arms or scan paths reach it.
+    ///
+    /// Keyed by the universe, not its root: since the shared spec's amendment J, two scan paths
+    /// under one root can take different nested packages, and a value built for one does not
+    /// `cover` the other. The directory memo in front keeps the repeated ask cheap — computing a
+    /// universe walks its root.
     static func purity(forScanOf directory: URL) -> PackagePurity {
-        let key = ConstructionUniverse.root(forScanOf: directory).path
-        return memo.value(for: key) { PackagePurity.forScan(of: directory) }
+        byDirectory.value(for: directory.standardizedFileURL.path) {
+            let universe = ConstructionUniverse.universe(forScanOf: directory)
+            let key = ([universe.root.path] + universe.members.map(\.relativePath)).joined(separator: "\n")
+            return byUniverse.value(for: key) { PackagePurity.forScan(of: directory) }
+        }
     }
 
-    private static let memo = Memo()
+    private static let byDirectory = Memo()
+    private static let byUniverse = Memo()
 
     /// Lock-guarded, and the build runs under the lock: two suites racing for one root must not
     /// both parse it, and a second value for the same root would hold different tree nodes.

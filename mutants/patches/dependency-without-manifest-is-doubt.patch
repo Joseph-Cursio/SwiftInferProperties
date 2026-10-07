@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index 429f90b5..3cfd3fc9 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -186,7 +186,7 @@ extension ConstructionUniverse {
+         var targetPaths: [String] = []
+         for manifest in manifests {
+             if manifest == .unreadable { return nil }
+-            guard case .text(let text) = manifest else { continue }
++            guard case .text(let text) = manifest else { return nil }
+             guard let packages = localPackageDependencies(manifest: text),
+                   let targets = localTargetPaths(manifest: text) else { return nil }
+             dependencies += packages

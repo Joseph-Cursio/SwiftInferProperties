@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index 429f90b5..2a29a82a 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -269,7 +269,7 @@ private final class PathArgumentCollector: SyntaxVisitor {
+ 
+     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+         guard let member = node.calledExpression.as(MemberAccessExprSyntax.self),
+-              callees.contains(member.declName.baseName.text),
++              !member.declName.baseName.text.isEmpty,
+               let path = node.arguments.first(where: { $0.label?.text == "path" }) else {
+             return .visitChildren
+         }

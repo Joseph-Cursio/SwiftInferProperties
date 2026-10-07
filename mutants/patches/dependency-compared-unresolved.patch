@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 189274b2..e0b19519 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -230,7 +230,7 @@ public enum ConstructionUniverse {
+                 reported: judged,
+                 rootHasManifest: bounds,
+                 rootPath: root.path,
+-                resolvingSymlinks: canonicalPath
++                resolvingSymlinks: { $0 }
+             ) { relative in
+                 let manifests = manifests(inDirectory: packageDirectory(relative, under: root))
+                 if !relative.isEmpty, manifests.contains(where: { $0 != .absent }) { read.insert(relative) }

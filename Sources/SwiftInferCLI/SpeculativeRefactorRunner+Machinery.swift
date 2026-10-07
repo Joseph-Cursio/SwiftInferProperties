@@ -70,26 +70,78 @@ extension SpeculativeRefactorRunner {
     /// path-depends on the package and builds it: anything that leaves the
     /// original reachable risks compiling the reader's real code and reporting a
     /// verdict about a patch that was never applied.
+    ///
+    /// **The copy carries the baseline's whole construction universe, not only `Sources/`.** The
+    /// baseline is judged under the table its scan builds — every production file of the package
+    /// (`ConstructionUniverse`), a custom-path target such as `Core/`, an `Examples/` executable, a
+    /// nested package the root compiles. A snapshot of `Sources/` alone is judged under a smaller
+    /// table, so a type outside `Sources/` that refutes in the baseline is absent from every
+    /// snapshot, the impure-subject veto lifts there, and `snapshot − baseline` credits the widening
+    /// with laws the real tree vetoes. So each universe member outside `Sources/` is copied too, at
+    /// its root-relative path: the patched file is then the only difference between the two arms.
+    ///
+    /// **A member that cannot be read is skipped, not fatal.** `PackagePurity` skips it too — its
+    /// parse yields nothing — so it is in neither arm's table, and copying nothing keeps the arms
+    /// equal. Reading it with `try` made one dangling `Scripts/Gen.swift` link, or one mode-000
+    /// file under `Examples/`, throw for EVERY candidate: the run printed `No widenable
+    /// candidates.` where main reported a verdict (the review's `sip#2`, `robustness#2`).
+    ///
+    /// **And a snapshot that fails is removed.** The directory is made before anything is copied,
+    /// and a throw after that left it in `$TMPDIR` — one leaked tree per failing candidate.
+    /// `temporaryDirectory` is where it is made; a test passes its own to count what is left.
     static func snapshotTree(
         of packageRoot: URL,
         replacing path: String,
-        with contents: String
+        with contents: String,
+        in temporaryDirectory: URL = URL(fileURLWithPath: NSTemporaryDirectory())
     ) throws -> Snapshot {
-        let root = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("swiftinfer-speculative-\(UUID().uuidString)")
+        let root = temporaryDirectory.appendingPathComponent("swiftinfer-speculative-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        var built = false
+        defer { if !built { try? FileManager.default.removeItem(at: root) } }
 
-        // Sources + manifest only. `.build` is the reason this is a whitelist and
-        // not a blanket copy — it is gigabytes, and copying it would make the
+        // Sources + manifest, then the rest of the universe. `.build` is the reason this is a
+        // whitelist and not a blanket copy — it is gigabytes, and copying it would make the
         // per-candidate cost prohibitive rather than merely high.
         for item in ["Package.swift", "Sources"] {
             let from = packageRoot.appendingPathComponent(item)
             guard FileManager.default.fileExists(atPath: from.path) else { continue }
             try FileManager.default.copyItem(at: from, to: root.appendingPathComponent(item))
         }
+        for relativePath in universeOutsideSources(of: packageRoot) {
+            // The contents, not the entry: a copied symlink would resolve against the snapshot,
+            // or reach back into the reader's tree.
+            guard let data = try? Data(contentsOf: packageRoot.appendingPathComponent(relativePath)) else { continue }
+            let target = root.appendingPathComponent(relativePath)
+            try FileManager.default.createDirectory(
+                at: target.deletingLastPathComponent(), withIntermediateDirectories: true
+            )
+            try data.write(to: target)
+        }
         let mirrored = root.appendingPathComponent(relative(path, to: packageRoot))
         try contents.write(to: mirrored, atomically: true, encoding: .utf8)
+        built = true
         return Snapshot(root: root, sources: root.appendingPathComponent("Sources"))
+    }
+
+    /// The members of the construction universe a scan of `packageRoot/Sources` builds its table
+    /// from that `Sources/` does not already hold, as paths relative to `packageRoot`.
+    ///
+    /// A member whose location is not under `packageRoot` (a root above it, when `packageRoot`
+    /// holds no manifest) has no place in the snapshot and is left out. That is the one layout the
+    /// copy cannot reproduce: with no manifest above it, the snapshot roots at its own `Sources/`,
+    /// a narrower universe than the baseline's. `suggest-refactors` runs from a package root, which
+    /// holds one.
+    static func universeOutsideSources(of packageRoot: URL) -> [String] {
+        let universe = ConstructionUniverse.universe(forScanOf: packageRoot.appendingPathComponent("Sources"))
+        let package = packageRoot.standardizedFileURL.resolvingSymlinksInPath().path + "/"
+        let universeRoot = universe.root.path.hasSuffix("/") ? universe.root.path : universe.root.path + "/"
+        return universe.members.compactMap { member in
+            let location = universeRoot + member.relativePath
+            guard location.hasPrefix(package) else { return nil }
+            let relative = String(location.dropFirst(package.count))
+            return relative.hasPrefix("Sources/") ? nil : relative
+        }
     }
 
     /// Verify the gained laws against the snapshot and fold them into one verdict.

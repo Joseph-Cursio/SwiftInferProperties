@@ -10,8 +10,9 @@ A hand-authored mutant corpus for **sharpening the inference engine itself**
   component's name (`\.name`) or a member's name (`job.name`, `.red`) from being read
   as a test-local binding (`DeclReferenceExprSyntax+NameOnlyPosition`).
 - **Construction facts.** Each mutant undoes one piece of wiring SEI's `ConstructionFacts`
-  into the scan — the table, the trees it was built from, the universe rule, the census
-  replica's construction witness.
+  into the scan — the table, the trees it was built from, the getter path, the universe rule
+  and its shared-spec amendments, the scans that must build no table, the census replica's
+  construction witness.
 
 Each is killed by its own code's unit tests, which pin both what it *should* do and what
 it *should not*. Not a scored benchmark — no frozen answer key.
@@ -85,7 +86,79 @@ target's same-named `A`. The third lets a test target's `Item` into the producti
 fourth walks a `Tests/Fixtures/X` scan up to the package, whose rule drops the fixture's own
 files. The last blinds the census replica to SEI's construction witness: 0 verdicts move on
 `Sources/`, so `verdictAgreesWithSoundPurity` stays green, and only the classification guard
-sees the 2 re-witnessed rows filed as ignorance. All five verified killed.
+sees the 2 re-witnessed rows filed as ignorance. All five verified killed (the first three
+re-anchored after the universe rule changed).
+
+| id | shape | expected | killer |
+|---|---|---|---|
+| `getter-ignores-construction-facts` | construction-facts | killed | `getterConstructingASiblingTypeIsRefuted` · `constructionFacts_refuteEveryAnswer` |
+| `universe-order-not-string-lt` | construction-universe | killed | `universeOrderIsStringLessThan` · `buildOrderIsTheSharedOrder` |
+| `universe-takes-every-nested-package` | construction-universe | killed | `unreferencedNestedPackageIsOutside` · `nearestManifestDecides` |
+| `nested-doubt-includes-nothing` | construction-universe | killed | `doubtIncludesAll` · `doubtfulRootIncludesEveryNestedPackage` |
+| `nested-closure-stops-at-one-hop` | construction-universe | killed | `transitiveClosure` · `referencedNestedPackageIsInside` |
+| `manifest-reader-reads-every-path-argument` | construction-universe | killed | `manifestCasesHold` |
+| `universe-dedup-keeps-first-seen` | construction-universe | killed | `deduplicationKeepsTheSmallestPath` |
+| `universe-admits-non-utf8` | construction-universe | killed | `nonUTF8FileIsNotInTheUniverse` |
+| `universe-root-found-resolved` | construction-universe | killed | `symlinkedTargetSeesItsRealSiblings` · `linkIntoAnotherPackageIsJudgedWhereTheLinkIs` |
+| `purity-built-for-empty-judged-set` | construction-facts | killed | `purityIsBuiltOnlyForAJudgedSet` |
+| `declarations-scan-skips-cross-file-hop` | construction-facts | killed | `declarationsOnlyScanMatchesTheFullScan` |
+| `staleness-ignores-universe-manifests` | construction-facts | killed | `unreferencedNestedPackageIsNotWatched` |
+| `speculative-snapshot-copies-sources-only` | construction-facts | killed | `customPathTargetStaysInTheSnapshot` · `examplesNamesakeStaysInTheSnapshot` |
+
+The second construction batch (2026-10-06, after the adversarial review) adds one mutant per
+fix the review asked for. The getter mutant is the review's own: the getter path judged with a
+fresh unconfigured inferrer survived every test, fast and batch, because every fixture subject
+was a function. The order mutant is the review's too: `localizedStandardCompare` instead of
+`String <` stayed green while the fixtures' paths sorted alike under both. Six undo one clause
+of the shared spec's amendments — the nested-package bound, its doubt rule and its
+transitivity, the manifest reader, smallest-path dedup, strict UTF-8 — and one finds the root
+from the resolved path, which judged a symlinked target at its destination. The rest undo the
+scope fixes: a purity built for an empty scan, a declarations-only scan that drops the
+cross-file precondition hop, a staleness probe blind to the manifests that decide the bound,
+and a speculative snapshot that copies `Sources/` alone. `scan-reparses-universe-trees` now
+also names `scanReusesTheFactsTrees`, which kills it on its own since it was given the
+node-identity subject.
+
+The third construction batch (2026-10-07, after the joint follow-up review and its critic) adds
+one mutant per clause of the shared spec's amendments 3 and 3b, plus the review's two test gaps.
+Seven earlier patches were re-anchored on the moved code, unchanged in meaning
+(`manifest-reader-reads-every-path-argument`, `nested-closure-stops-at-one-hop`,
+`nested-doubt-includes-nothing`, `speculative-snapshot-copies-sources-only`,
+`test-dir-scan-walks-up`, `universe-root-found-resolved`, `universe-takes-every-nested-package`).
+`universe-dedup-before-bound` and `universe-order-per-component` are the review's `tests#4` and
+`tests#5`: before this batch every suite passed under each. `manifest-read-on-caller-stack` is
+killed by the test process dying with `SIGBUS`, which the runner counts as a failure.
+
+| id | shape | expected | killer |
+|---|---|---|---|
+| `manifest-reader-reads-source-text` | construction-universe | killed | `manifestCasesHold` (H) |
+| `manifest-ignores-first-line` | construction-universe | killed | `sourceFileNamedPackageIsNotAManifest` (F) |
+| `manifest-is-any-entry-of-that-name` | construction-universe | killed | `danglingManifestLinkIsNotAManifest` · `directoryNamedPackageIsNotAManifest` (F) |
+| `manifest-unreadable-is-absent` | construction-universe | killed | `unreadableManifestIsDoubt` · `nonUTF8ManifestIsUnreadable` (F) |
+| `universe-ignores-xcode-project` | construction-universe | killed | `xcodeProjectBesideTheManifestTakesEveryNestedPackage` (G) |
+| `dependency-compared-unresolved` | construction-universe | killed | `absolutePathIsComparedResolved` · `dependencyThroughASymlinkIsResolved` · `dependencyInAnotherCaseIsResolved` · `symlinkedPackageDirectoryReachesTheWalkedPackage` (H) |
+| `relative-dependency-compared-by-spelling` | construction-universe | killed | `symlinkedPackageDirectoryReachesTheWalkedPackage` (Q) · `dependencyThroughASymlinkIsResolved` · `dependencyInAnotherCaseIsResolved` |
+| `closure-reads-walked-packages-only` | construction-universe | killed | `closurePassesThroughAnUnwalkedPackage` · `doubtInAnUnwalkedPackageIncludesEveryNestedPackage` (I) |
+| `version-specific-manifests-ignored` | construction-universe | killed | `versionSpecificManifestIsRead` · `versionSpecificDoubtIsDoubt` (O) |
+| `target-paths-ignored` | construction-universe | killed | `targetPathInsideANestedPackageReachesIt` · `targetPathsAcrossTheClosure` (P) |
+| `judged-packages-ignored` | construction-universe | killed | `judgedNestedPackageIsInItsUniverse` · `judgedPackageBringsItsClosure` · `judgingTheNamesakePackageTakesIt` (J) |
+| `covers-compares-root-only` | construction-facts | killed | `purityCoversOnlyItsOwnUniverse` (J) |
+| `manifest-read-on-caller-stack` | construction-universe | killed | `deepManifestIsReadOnALargeStack` (K) |
+| `scanned-path-taken-as-typed` | construction-universe | killed | `misCasedTestSpellingStillFindsThePackage` · `misCasedProductionSpellingStaysSelfContained` · `misCasedScanIsSpelledOnDisk` (L) |
+| `universe-skips-uf-hidden` | construction-universe | killed | `hiddenFlagIsNotHiddenName` (M) |
+| `speculative-unreadable-member-throws` | construction-facts | killed | `unreadableUniverseFileIsSkipped` |
+| `speculative-failed-snapshot-leaks` | construction-facts | killed | `failedSnapshotIsRemoved` |
+| `universe-dedup-before-bound` | construction-universe | killed | `boundBeforeDeduplicating` |
+| `universe-order-per-component` | construction-universe | killed | `buildOrderIsTheSharedOrder` (N) |
+| `universe-watch-misses-version-specific` | construction-facts | killed | `versionSpecificManifestIsRead` |
+| `walk-prunes-test-directories` | construction-universe | killed | `packageUnderTestsIsANestedPackage` |
+| `version-specific-read-only-beside-a-manifest` | construction-universe | killed | `versionSpecificManifestWithoutPackageSwiftIsRead` (O) |
+| `dependency-without-manifest-is-doubt` | construction-universe | killed | `dependencyOnNoManifestIsNoDoubt` (I) |
+
+Fifteen of the batch were re-anchored when the closure became SwiftProjectLint's body line for
+line; the last three pin the choices that alignment settled — the walk enters `Tests/` for its
+packages, a directory's version-specific manifests are read whatever its `Package.swift` is, and a
+dependency on a directory with no manifest passes nothing on.
 
 ## Adding a mutant
 

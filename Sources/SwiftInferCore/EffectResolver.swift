@@ -7,13 +7,17 @@ import SwiftSyntax
 /// effects nothing wrote down — a function that calls a `@NonIdempotent` one is
 /// itself non-idempotent, and no amount of reading its declaration will say so.
 ///
-/// **Opt-in, and the opt-in is the design.** `FunctionScanner` parses one file at
-/// a time and throws the tree away, and its own comment says the one-pass shape
-/// exists to keep the §13 budget intact. `EffectSymbolTable.applyBodyInference`
-/// needs every tree at once and carries a 30-second default wall-clock budget
-/// against §13's 2-second discover budget. So this is a **separate pass that
-/// re-parses**, rather than a change to the scan: the default path stays
-/// byte-identical and cannot regress, and only a caller that asked pays.
+/// **Opt-in, and the opt-in is the design — for its cost, not for parsing.** The
+/// default directory scan is two-phase since construction facts were wired in
+/// (`FunctionScanner+Package.swift`): it already parses the project's construction
+/// universe up front, in parallel, and holds those trees for the scan to build SEI's
+/// `ConstructionFacts` and judge on. What this pass adds is
+/// `EffectSymbolTable.merge` over every file and `applyBodyInference`, which carries
+/// a 30-second default wall-clock budget against §13's 2-second discover budget, and
+/// a retry-hostile verdict a reader may not want. So it stays a **separate pass**,
+/// run after the scan has returned and dropped its trees: it re-parses the judged
+/// directory itself (`parseSources(in:)`), the default path is untouched by it, and
+/// only a caller that asked pays.
 ///
 /// **What it does NOT do, and why the asymmetry is not laziness.** Upward
 /// inference takes the *least upper bound* of a body's callee effects, so an

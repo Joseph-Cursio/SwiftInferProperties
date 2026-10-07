@@ -56,8 +56,9 @@ extension VerifyInteractionPipeline {
         guard let elementType = refintElementType(
             invariant: invariant, candidate: candidate, directory: directory
         ) else { return nil }
-        guard let scanned = try? FunctionScanner.scanCorpus(directory: directory) else { return nil }
-        let resolver = IdentifiableResolver(typeDecls: scanned.typeDecls)
+        // Declarations only — no verdict is read, so no construction table is built.
+        guard let typeDecls = try? FunctionScanner.scanTypeDecls(directory: directory) else { return nil }
+        let resolver = IdentifiableResolver(typeDecls: typeDecls)
         guard resolver.classify(typeText: elementType) == .notIdentifiable else { return nil }
         return InteractionVerifyOutcomeParser.Result(
             outcome: .architecturalCoveragePending,

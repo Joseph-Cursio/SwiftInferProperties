@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 189274b2..497082f5 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -330,6 +330,8 @@ public enum ConstructionUniverse {
+         while let relative = walker.nextObject() as? String {
+             let components = relative.split(separator: "/").map(String.init)
+             let name = components.last ?? relative
++            let flagged = (try? root.appendingPathComponent(relative).resourceValues(forKeys: [.isHiddenKey]))?.isHidden == true
++            if flagged { if walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory { walker.skipDescendants() }; continue }
+             if walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory {
+                 // Pruned by NAME — dot-prefixed, or a vendored or build tree. A test-target
+                 // directory is entered for the nested packages it holds, though none of its files

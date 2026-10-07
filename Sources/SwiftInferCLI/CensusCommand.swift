@@ -131,12 +131,16 @@ extension SwiftInferCommand {
             }
 
             var rows: [String: Int] = [:]
-            // One project purity per root, reused across the entry's scan paths when they share
-            // one (`SwiftLintRuleStudio`'s Core and UI) and rebuilt when they do not. Cost only:
-            // a value that does not cover a path would be rejected, never used.
+            // One project purity per root, reused across the entry's scan paths when they resolve
+            // to the same root — `SwiftProjectLint`'s `Sources` and `Packages`, both under its root
+            // `Package.swift` — and rebuilt when they do not: `SwiftLintRuleStudio`'s `UI` is an
+            // Xcode folder with no `Package.swift` ancestor, so it is its own universe and does
+            // not see Core's facts. Cost only: a value that does not cover a path would be
+            // rejected, never used. None for a scan path holding no Swift file, which then falls
+            // back to the guarded `scanCorpus(directory:)` and judges nothing.
             var purity: PackagePurity?
             for scanPath in scanPaths {
-                if purity?.covers(scanPath) != true { purity = PackagePurity.forScan(of: scanPath) }
+                if purity?.covers(scanPath) != true { purity = PackagePurity.forJudging(directory: scanPath) }
                 let result = try Discover.collectVisibleSuggestions(
                     directory: scanPath,
                     includePossible: includePossible,

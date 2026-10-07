@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index 429f90b5..e4c1575f 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -190,7 +190,7 @@ extension ConstructionUniverse {
+             guard let packages = localPackageDependencies(manifest: text),
+                   let targets = localTargetPaths(manifest: text) else { return nil }
+             dependencies += packages
+-            targetPaths += targets
++            _ = targets
+         }
+         return (dependencies, targetPaths)
+     }

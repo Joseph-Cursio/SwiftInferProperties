@@ -1,0 +1,14 @@
+diff --git a/Sources/SwiftInferCore/PackagePurity.swift b/Sources/SwiftInferCore/PackagePurity.swift
+index ec31235a..ae2c8f35 100644
+--- a/Sources/SwiftInferCore/PackagePurity.swift
++++ b/Sources/SwiftInferCore/PackagePurity.swift
+@@ -165,7 +165,8 @@ public struct PackagePurity: Sendable {
+         let slots = Slots(count: urls.count)
+         LargeStackWorkers.forEach(urls.count) { index in
+             beforeParsing(index)
+-            let tree = (try? String(contentsOf: urls[index], encoding: .utf8)).map { Parser.parse(source: $0) }
++            var encoding = String.Encoding.utf8
++            let tree = (try? String(contentsOf: urls[index], usedEncoding: &encoding)).map { Parser.parse(source: $0) }
+             slots.set(index, tree)
+         }
+         return slots.all

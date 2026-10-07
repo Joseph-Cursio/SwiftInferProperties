@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+index 6ae0c75d..0069dd46 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+@@ -68,7 +68,7 @@ extension ConstructionUniverse {
+     /// The files whose edit can change what `directory`'s manifests say: its `Package.swift` and
+     /// every `Package@swift-*.swift` beside it.
+     static func manifestURLs(inDirectory directory: URL) -> [URL] {
+-        (["Package.swift"] + versionSpecificManifestNames(in: directory)).map(directory.appendingPathComponent)
++        ["Package.swift"].map(directory.appendingPathComponent)
+     }
+ 
+     /// `Package@swift-*.swift` entries directly in `directory`, sorted.

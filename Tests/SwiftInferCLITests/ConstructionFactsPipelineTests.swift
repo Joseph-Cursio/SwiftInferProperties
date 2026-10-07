@@ -19,10 +19,12 @@ struct ConstructionFactsPipelineTests {
         func writeDiagnostic(_: String) { /* no-op */ }
     }
 
+    /// A package: `files` by root-relative path, with a bare root manifest unless `files` gives one.
     private static func makePackage(_ files: [String: String]) throws -> URL {
         let root = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("construction-pipeline-\(UUID().uuidString)")
-        for (path, text) in files.merging(["Package.swift": "// swift-tools-version:5.9\n"], uniquingKeysWith: { $1 }) {
+        let manifest = ["Package.swift": "// swift-tools-version:5.9\n"]
+        for (path, text) in files.merging(manifest, uniquingKeysWith: { given, _ in given }) {
             let url = root.appendingPathComponent(path)
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(), withIntermediateDirectories: true
@@ -62,12 +64,33 @@ struct ConstructionFactsPipelineTests {
         """)
     }
 
+    private static let modelManifest = "// swift-tools-version:5.9\nimport PackageDescription\n"
+
+    private static func touch(_ path: String, in root: URL) throws {
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date().addingTimeInterval(3_600)],
+            ofItemAtPath: root.appendingPathComponent(path).path
+        )
+    }
+
+    private static func makeIndex(in root: URL) throws -> URL {
+        let index = root.appendingPathComponent("index.json")
+        try Data("{}".utf8).write(to: index)
+        return index
+    }
+
     /// A verdict now depends on files outside `Sources/`, so the index's staleness probe must
-    /// watch them: here, a nested local package whose type refutes a constructor in `Sources/`.
+    /// watch them: here, a nested local package the root compiles — its manifest names it by path —
+    /// whose type refutes a constructor in `Sources/`.
     @Test("an edit to a universe file outside Sources/ makes the index stale")
     func universeEditOutsideSourcesIsStale() throws {
         let root = try Self.makePackage([
-            "Packages/Model/Package.swift": "// swift-tools-version:5.9\n",
+            "Package.swift": """
+            // swift-tools-version:5.9
+            import PackageDescription
+            let package = Package(name: "Root", dependencies: [.package(path: "Packages/Model")])
+            """,
+            "Packages/Model/Package.swift": Self.modelManifest,
             "Packages/Model/Sources/Model/Item.swift": Self.item,
             "Sources/Logic/Logic.swift": Self.logic
         ])
@@ -76,20 +99,43 @@ struct ConstructionFactsPipelineTests {
         let corpus = try FunctionScanner.scanCorpus(directory: root.appendingPathComponent("Sources/Logic"))
         #expect(
             corpus.summaries.first { $0.name == "make" }?.purityVerdict == .refuted,
-            "the nested package's `Item` is in the universe, so it decides `make`"
+            "the root compiles the nested package, so its `Item` is in the universe and decides `make`"
         )
 
-        let index = root.appendingPathComponent("index.json")
-        try Data("{}".utf8).write(to: index)
+        let index = try Self.makeIndex(in: root)
         #expect(VerifyHarness.isStale(indexPath: index, packageRoot: root) == false, "control: fresh")
-
-        try FileManager.default.setAttributes(
-            [.modificationDate: Date().addingTimeInterval(3_600)],
-            ofItemAtPath: root.appendingPathComponent("Packages/Model/Sources/Model/Item.swift").path
-        )
+        try Self.touch("Packages/Model/Sources/Model/Item.swift", in: root)
         #expect(VerifyHarness.isStale(indexPath: index, packageRoot: root), """
         A universe file outside Sources/ changed and the index still reads fresh — verify would \
         run on a verdict the construction facts no longer support.
         """)
+    }
+
+    /// The converse, and the critic's scenario: a nested package the root never names is not
+    /// compiled by it, so its namesake neither refutes nor is watched.
+    @Test("a nested package the root does not compile neither refutes nor makes the index stale")
+    func unreferencedNestedPackageIsNotWatched() throws {
+        let root = try Self.makePackage([
+            "Demo/Package.swift": Self.modelManifest,
+            "Demo/Sources/Demo/Item.swift": Self.item,
+            "Sources/Logic/Logic.swift": Self.logic
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let corpus = try FunctionScanner.scanCorpus(directory: root.appendingPathComponent("Sources/Logic"))
+        #expect(
+            corpus.summaries.first { $0.name == "make" }?.purityVerdict == .pure,
+            "a package the root never compiles refuted `make` through a namesake"
+        )
+
+        let index = try Self.makeIndex(in: root)
+        try Self.touch("Demo/Sources/Demo/Item.swift", in: root)
+        #expect(
+            VerifyHarness.isStale(indexPath: index, packageRoot: root) == false,
+            "an edit outside the universe made the index stale"
+        )
+        // But the manifest that would bring it in is watched: naming `Demo` by path moves the bound.
+        try Self.touch("Package.swift", in: root)
+        #expect(VerifyHarness.isStale(indexPath: index, packageRoot: root), "a root manifest edit read fresh")
     }
 }

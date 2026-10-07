@@ -1,0 +1,14 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 189274b2..140a632c 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -191,7 +191,8 @@ public enum ConstructionUniverse {
+         let rootHasManifest = holdsManifest(root)
+         let bound = bound(of: walk.nestedPackages, judging: directory, at: location, rootHasManifest: rootHasManifest)
+         let bounded = members.filter { member in
+-            owningPackage(of: member.relativePath, among: walk.nestedPackages).map(bound.compiled.contains) ?? true
++            _ = owningPackage(of: member.relativePath, among: walk.nestedPackages).map(bound.compiled.contains)
++            return true
+         }
+         // Every manifest that can move the bound: the root's, every walked package's, and every
+         // directory the closure read by path — under a hidden or a pruned directory or not.

@@ -183,6 +183,94 @@ struct SEICrossRepoPinTests {
         """)
     }
 
+    /// Where SwiftProjectLint keeps its copy of the shared cases file — amendment E of the shared
+    /// spec: the manifest reader's cases and the build order, beside the predicate's table.
+    static let linterUniverseCasesPath = "Docs/construction-universe-cases.json"
+
+    /// This package's copy.
+    static var ownUniverseCases: URL {
+        packageRoot.appendingPathComponent("docs/construction-universe-cases.json")
+    }
+
+    /// The sibling's copy, when the sibling is checked out and carries one — absent on a revision
+    /// from before amendment E, which is a skip, not a pass.
+    static var linterUniverseCases: URL? {
+        guard let root = swiftProjectLintRoot else { return nil }
+        let cases = root.appendingPathComponent(linterUniverseCasesPath)
+        return FileManager.default.fileExists(atPath: cases.path) ? cases : nil
+    }
+
+    /// The `.tsv` pins the predicate and nothing else: the two consumers once carried identical
+    /// tables while one bounded nested packages and the other took them all, deduplicated a
+    /// symlinked file by a different rule, and so built different tables from one root. The cases
+    /// file pins the manifest reader that decides the bound and the order the facts are built in;
+    /// each repo asserts its implementation over its own copy, and this keeps the copies one.
+    @Test(
+        "This package and SwiftProjectLint carry the same construction-universe cases",
+        .enabled(if: linterUniverseCases != nil)
+    )
+    func universeCasesMatchSwiftProjectLint() throws {
+        let theirs = try #require(Self.linterUniverseCases, "guarded by .enabled(if:) — unreachable")
+        let ownBytes = try Data(contentsOf: Self.ownUniverseCases)
+        let theirBytes = try Data(contentsOf: theirs)
+        #expect(ownBytes == theirBytes, """
+        The two consumers' construction-universe cases differ, so each asserts its manifest reader \
+        and build order against a different answer key — one root, two universes. Make the files \
+        byte-identical:
+          \(Self.ownUniverseCases.path)
+          \(theirs.path)
+        """)
+    }
+
+    /// Where SwiftProjectLint keeps the shared closure — the nested-package bound both consumers
+    /// run, whose body is the same text in both (the shared spec's amendments 3 and 3b).
+    static let linterNestedPackagesPath =
+        "Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ConstructionUniverse+NestedPackages.swift"
+
+    /// This package's copy.
+    static var ownNestedPackages: URL {
+        packageRoot.appendingPathComponent("Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift")
+    }
+
+    /// The sibling's copy, when the sibling is checked out and carries one.
+    static var linterNestedPackages: URL? {
+        guard let root = swiftProjectLintRoot else { return nil }
+        let file = root.appendingPathComponent(linterNestedPackagesPath)
+        return FileManager.default.fileExists(atPath: file.path) ? file : nil
+    }
+
+    /// Everything from the `extension ConstructionUniverse {` line on — the file's header doc
+    /// comment names its own repo, and the rest is the shared body — less the trailing
+    /// `// swiftlint:` directives each repo's own lint configuration needs around it.
+    static func sharedBody(of file: URL) throws -> String? {
+        let text = try String(contentsOf: file, encoding: .utf8)
+        guard let start = text.range(of: "\nextension ConstructionUniverse {") else { return nil }
+        var lines = text[start.lowerBound...].components(separatedBy: "\n")
+        while let last = lines.last, last.isEmpty || last.hasPrefix("// swiftlint:") { lines.removeLast() }
+        return lines.joined(separator: "\n")
+    }
+
+    /// The answer keys pin the readers and the order; the closure that combines them — which
+    /// directories it follows, what counts as reached, what is doubt — had only prose saying the two
+    /// were "word for word" alike, and the follow-up review found three places they were not. So the
+    /// body is the same text in both repos, and this keeps it so.
+    @Test(
+        "This package and SwiftProjectLint run the same nested-package closure, line for line",
+        .enabled(if: linterNestedPackages != nil)
+    )
+    func nestedPackageClosureMatchesSwiftProjectLint() throws {
+        let theirs = try #require(Self.linterNestedPackages, "guarded by .enabled(if:) — unreachable")
+        let ownBody = try #require(try Self.sharedBody(of: Self.ownNestedPackages), "no extension in our copy")
+        let theirBody = try Self.sharedBody(of: theirs)
+        #expect(ownBody == theirBody, """
+        The two consumers' nested-package closures differ below their header comments, so one root \
+        can bound its nested packages two ways. Make everything from `extension ConstructionUniverse {` \
+        on the same text:
+          \(Self.ownNestedPackages.path)
+          \(theirs.path)
+        """)
+    }
+
     // MARK: - The guard
 
     @Test(
@@ -291,6 +379,17 @@ struct SEICrossRepoPinTests {
                 NOTE — cross-repo construction-universe comparison SKIPPED: SwiftProjectLint at \
                 \(linterRoot.path) carries no \(Self.linterUniverseTablePath). Equal SEI pins over \
                 unequal universes are one oracle configured two ways, and this run did not check.
+                """
+            )
+        }
+        let ownCasesExist = FileManager.default.fileExists(atPath: Self.ownUniverseCases.path)
+        #expect(ownCasesExist, "docs/construction-universe-cases.json is missing")
+        if Self.linterUniverseCases == nil {
+            print(
+                """
+                NOTE — cross-repo construction-universe CASES comparison SKIPPED: SwiftProjectLint \
+                at \(linterRoot.path) carries no \(Self.linterUniverseCasesPath). The two manifest \
+                readers and build orders were not compared on this run.
                 """
             )
         }

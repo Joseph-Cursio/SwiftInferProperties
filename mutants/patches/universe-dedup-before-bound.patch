@@ -1,0 +1,22 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 189274b2..f0782080 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -190,7 +190,7 @@ public enum ConstructionUniverse {
+         } + ownMembers(of: directory, at: location)
+         let rootHasManifest = holdsManifest(root)
+         let bound = bound(of: walk.nestedPackages, judging: directory, at: location, rootHasManifest: rootHasManifest)
+-        let bounded = members.filter { member in
++        let bounded = deduplicated(members).filter { member in
+             owningPackage(of: member.relativePath, among: walk.nestedPackages).map(bound.compiled.contains) ?? true
+         }
+         // Every manifest that can move the bound: the root's, every walked package's, and every
+@@ -198,7 +198,7 @@ public enum ConstructionUniverse {
+         let watched = (rootHasManifest ? [""] : []) + walk.nestedPackages.union(bound.read).sorted()
+         return Universe(
+             root: root,
+-            members: ordered(deduplicated(bounded)),
++            members: ordered(bounded),
+             manifests: watched.flatMap { manifestURLs(inDirectory: packageDirectory($0, under: root)) }
+         )
+     }

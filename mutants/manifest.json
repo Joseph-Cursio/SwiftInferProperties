@@ -1,6 +1,6 @@
 {
   "kind": "spm",
-  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Three families: mutants in the IdempotenceWitnessDetector's own name-classifier; mutants that undo a name-only-position guard (a key-path component's or a member's name read as a test-local); and mutants that undo one piece of the construction-facts wiring (the scan dropping its table, re-parsing the trees the table was built from, the universe admitting test targets, a test-directory scan walking up, the census replica going blind to the construction witness). Each is killed by its own code's unit tests, which pin both what it should and should not do. Run via `swift test --filter`. Not a scored benchmark.",
+  "note": "Private mutation/regression corpus for SwiftInferProperties — the inference engine dogfooding on itself (Chapter 30 §30.4.4). Three families: mutants in the IdempotenceWitnessDetector's own name-classifier; mutants that undo a name-only-position guard (a key-path component's or a member's name read as a test-local); and mutants that undo one piece of the construction-facts wiring (the scan dropping its table or re-parsing the trees it was built from, the getter path judging without it, the universe admitting test targets, a test-directory scan walking up, the universe rule's shared-spec amendments — the nested-package bound, the manifest reader, smallest-path dedup, strict UTF-8, the root found from the path as given, the String < build order — the scans that must build no table, the speculative snapshot's universe, the staleness probe's manifests, and the census replica going blind to the construction witness). Each is killed by its own code's unit tests, which pin both what it should and should not do. Run via `swift test --filter`. Not a scored benchmark.",
   "mutants": [
     {
       "id": "witness-drops-reset",
@@ -111,7 +111,7 @@
       "patch": "patches/scan-reparses-universe-trees.patch",
       "shape": "construction-facts",
       "expected": "killed",
-      "test": "scanJudgesOnTheFactsOwnNodes",
+      "test": "scanJudgesOnTheFactsOwnNodes|scanReusesTheFactsTrees",
       "label": "the scan re-parses every judged file instead of reusing the universe's tree — SEI types an assignment by node identity, so `reset` is refuted by another target's same-named `A`"
     },
     {
@@ -137,6 +137,294 @@
       "expected": "killed",
       "test": "classificationAgreesWithSEIWitness",
       "label": "the census replica stops consulting SEI's construction witness — 0 verdicts move on Sources/, so verdictAgreesWithSoundPurity stays green while 2 re-witnessed rows are filed as ignorance"
+    },
+    {
+      "id": "getter-ignores-construction-facts",
+      "patch": "patches/getter-ignores-construction-facts.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "getterConstructingASiblingTypeIsRefuted|constructionFacts_refuteEveryAnswer",
+      "label": "the getter path judges with a fresh unconfigured PurityInferrer — a computed property constructing a sibling target's UUID-minting `Item` reads pure; every fixture subject was a function, so this survived both halves of the suite"
+    },
+    {
+      "id": "universe-order-not-string-lt",
+      "patch": "patches/universe-order-not-string-lt.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "universeOrderIsStringLessThan|buildOrderIsTheSharedOrder",
+      "label": "buildOrder sorts with localizedStandardCompare (case-insensitive, numeric) instead of String < — `a` before `B`, `F2` before `F10`, so SEI reports a different first witness and the two consumers' tables disagree"
+    },
+    {
+      "id": "universe-takes-every-nested-package",
+      "patch": "patches/universe-takes-every-nested-package.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "unreferencedNestedPackageIsOutside|nearestManifestDecides",
+      "label": "the nested-package bound is computed and ignored — an unrelated `Demo/` package's `Row` refutes the root's own `make(n:)`, which main advised pure"
+    },
+    {
+      "id": "manifest-reader-reads-every-path-argument",
+      "patch": "patches/manifest-reader-reads-every-path-argument.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestCasesHold",
+      "label": "localPackageDependencies takes any member call's `path:` — a target's `.target(name:path:)` reads as a local package dependency"
+    },
+    {
+      "id": "universe-dedup-keeps-first-seen",
+      "patch": "patches/universe-dedup-keeps-first-seen.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "deduplicationKeepsTheSmallestPath",
+      "label": "two spellings of one file keep whichever the walk met first — the build order and the first witness follow directory-listing order, not the paths"
+    },
+    {
+      "id": "universe-admits-non-utf8",
+      "patch": "patches/universe-admits-non-utf8.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "nonUTF8FileIsNotInTheUniverse",
+      "label": "the universe parse reads leniently, detecting UTF-16 by its byte-order mark — a file no compiler reads refutes `make`"
+    },
+    {
+      "id": "universe-root-found-resolved",
+      "patch": "patches/universe-root-found-resolved.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "symlinkedTargetSeesItsRealSiblings|linkIntoAnotherPackageIsJudgedWhereTheLinkIs",
+      "label": "the root is found from the RESOLVED scanned path — a symlinked `Sources/Lib` is judged at its destination, without the real sibling target whose `Item` refutes `make`"
+    },
+    {
+      "id": "purity-built-for-empty-judged-set",
+      "patch": "patches/purity-built-for-empty-judged-set.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "purityIsBuiltOnlyForAJudgedSet",
+      "label": "forJudging builds a purity for a directory with no Swift file — an empty scan parses the whole universe (1.30 s / 379 MB against 0.03 s / 12 MB)"
+    },
+    {
+      "id": "declarations-scan-skips-cross-file-hop",
+      "patch": "patches/declarations-scan-skips-cross-file-hop.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "declarationsOnlyScanMatchesTheFullScan",
+      "label": "the declarations-only scan drops the directory-wide PreconditionHelperHop — a helper in one file no longer marks an initializer in another, and its typeDecls differ from the full scan's"
+    },
+    {
+      "id": "staleness-ignores-universe-manifests",
+      "patch": "patches/staleness-ignores-universe-manifests.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "unreferencedNestedPackageIsNotWatched",
+      "label": "the staleness probe stops watching the manifests that decide the nested-package bound — adding `.package(path:)` leaves the index fresh"
+    },
+    {
+      "id": "speculative-snapshot-copies-sources-only",
+      "patch": "patches/speculative-snapshot-copies-sources-only.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "customPathTargetStaysInTheSnapshot|examplesNamesakeStaysInTheSnapshot",
+      "label": "the speculative snapshot copies only Package.swift and Sources/ — a refuting `Core/` target or `Examples/` namesake vetoes laws in the baseline and not in the copy, so an unrelated widening is credited with them"
+    },
+    {
+      "id": "nested-doubt-includes-nothing",
+      "patch": "patches/nested-doubt-includes-nothing.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "doubtIncludesAll|doubtfulRootIncludesEveryNestedPackage",
+      "label": "a computed `path:` in the closure includes no nested package rather than every one — doubt under-refutes, the direction the spec forbids"
+    },
+    {
+      "id": "nested-closure-stops-at-one-hop",
+      "patch": "patches/nested-closure-stops-at-one-hop.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "transitiveClosure|referencedNestedPackageIsInside",
+      "label": "the closure follows the root's own path dependencies but not theirs — a package the root reaches through another is dropped, and its `Row` no longer refutes"
+    },
+    {
+      "id": "manifest-reader-reads-source-text",
+      "patch": "patches/manifest-reader-reads-source-text.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestCasesHold",
+      "label": "the manifest reader joins a literal's source text instead of its value — `\"Pack\\u{61}ges/A\"` names no package (amendment H)"
+    },
+    {
+      "id": "manifest-ignores-first-line",
+      "patch": "patches/manifest-ignores-first-line.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "sourceFileNamedPackageIsNotAManifest",
+      "label": "any readable Package.swift is a manifest — a `struct Package` source file becomes a package boundary and drops its target's other files (amendment F)"
+    },
+    {
+      "id": "manifest-is-any-entry-of-that-name",
+      "patch": "patches/manifest-is-any-entry-of-that-name.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "danglingManifestLinkIsNotAManifest|directoryNamedPackageIsNotAManifest",
+      "label": "a dangling link or a directory named Package.swift is an unreadable manifest — doubt lets an unrelated Demo in, and a directory becomes a root (amendment F)"
+    },
+    {
+      "id": "manifest-unreadable-is-absent",
+      "patch": "patches/manifest-unreadable-is-absent.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "unreadableManifestIsDoubt|nonUTF8ManifestIsUnreadable",
+      "label": "a Package.swift that cannot be read is no manifest — its doubt is lost and its package's files become the root's (amendment F)"
+    },
+    {
+      "id": "universe-ignores-xcode-project",
+      "patch": "patches/universe-ignores-xcode-project.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "xcodeProjectBesideTheManifestTakesEveryNestedPackage",
+      "label": "an Xcode project beside the root manifest bounds nothing extra — the local package only the app target links leaves the table (amendment G)"
+    },
+    {
+      "id": "dependency-compared-unresolved",
+      "patch": "patches/dependency-compared-unresolved.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "absolutePathIsComparedResolved|dependencyThroughASymlinkIsResolved|dependencyInAnotherCaseIsResolved|symlinkedPackageDirectoryReachesTheWalkedPackage",
+      "label": "dependency paths compared as folded text, never resolved — a `/private/tmp` literal, a symlinked prefix or another letter case misses the compiled package (amendment H)"
+    },
+    {
+      "id": "relative-dependency-compared-by-spelling",
+      "patch": "patches/relative-dependency-compared-by-spelling.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "symlinkedPackageDirectoryReachesTheWalkedPackage|dependencyThroughASymlinkIsResolved|dependencyInAnotherCaseIsResolved",
+      "label": "only an absolute literal is resolved — a relative one through a symlinked package directory never meets the walked package (amendment Q, the critic's s11)"
+    },
+    {
+      "id": "closure-reads-walked-packages-only",
+      "patch": "patches/closure-reads-walked-packages-only.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "closurePassesThroughAnUnwalkedPackage|doubtInAnUnwalkedPackageIncludesEveryNestedPackage",
+      "label": "the closure reads only manifests the walk found — it stops at a package under Tests/, a hidden or a pruned directory (amendment I)"
+    },
+    {
+      "id": "version-specific-manifests-ignored",
+      "patch": "patches/version-specific-manifests-ignored.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "versionSpecificManifestIsRead|versionSpecificDoubtIsDoubt",
+      "label": "a directory's Package@swift-*.swift is never read — its dependency and its doubt are lost (amendment O, the critic's s6v)"
+    },
+    {
+      "id": "target-paths-ignored",
+      "patch": "patches/target-paths-ignored.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "targetPathInsideANestedPackageReachesIt|targetPathsAcrossTheClosure",
+      "label": "a target's `path:` reaches no nested package — the root's own target inside `Core/` leaves the table (amendment P, the critic's s7)"
+    },
+    {
+      "id": "judged-packages-ignored",
+      "patch": "patches/judged-packages-ignored.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "judgedNestedPackageIsInItsUniverse|judgedPackageBringsItsClosure|judgingTheNamesakePackageTakesIt",
+      "label": "a nested package holding a judged file is bounded out like any other — its functions are judged without their own types (amendment J)"
+    },
+    {
+      "id": "covers-compares-root-only",
+      "patch": "patches/covers-compares-root-only.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "purityCoversOnlyItsOwnUniverse",
+      "label": "a purity covers every scan under its root — a value built for Sources/App judges Examples/ under a table without Demo (amendment J)"
+    },
+    {
+      "id": "manifest-read-on-caller-stack",
+      "patch": "patches/manifest-read-on-caller-stack.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "deepManifestIsReadOnALargeStack",
+      "label": "the manifest is parsed on the caller's stack — a 3,000-arm `else if` manifest SIGBUSes the test process (amendment K)"
+    },
+    {
+      "id": "scanned-path-taken-as-typed",
+      "patch": "patches/scanned-path-taken-as-typed.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "misCasedTestSpellingStillFindsThePackage|misCasedProductionSpellingStaysSelfContained|misCasedScanIsSpelledOnDisk",
+      "label": "the scanned path is taken as typed — on a case-insensitive volume the rule turns case-sensitive and members are spelled after the typing (amendment L)"
+    },
+    {
+      "id": "universe-skips-uf-hidden",
+      "patch": "patches/universe-skips-uf-hidden.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "hiddenFlagIsNotHiddenName",
+      "label": "the walk skips an entry carrying UF_HIDDEN — a flagged file SwiftPM compiles leaves the table (amendment M)"
+    },
+    {
+      "id": "speculative-unreadable-member-throws",
+      "patch": "patches/speculative-unreadable-member-throws.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "unreadableUniverseFileIsSkipped",
+      "label": "a speculative snapshot reads every universe member with `try` — one dangling link outside Sources/ skips every candidate"
+    },
+    {
+      "id": "speculative-failed-snapshot-leaks",
+      "patch": "patches/speculative-failed-snapshot-leaks.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "failedSnapshotIsRemoved",
+      "label": "a speculative snapshot that throws is left in the temporary directory"
+    },
+    {
+      "id": "universe-dedup-before-bound",
+      "patch": "patches/universe-dedup-before-bound.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "boundBeforeDeduplicating",
+      "label": "the universe is deduplicated before it is bounded — a link into an uncompiled package is lost with the spelling the bound drops"
+    },
+    {
+      "id": "universe-order-per-component",
+      "patch": "patches/universe-order-per-component.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "buildOrderIsTheSharedOrder",
+      "label": "the build order sorts by path component instead of String < — `Sources/A-B/X.swift` and `Sources/A/X.swift` swap (amendment N)"
+    },
+    {
+      "id": "universe-watch-misses-version-specific",
+      "patch": "patches/universe-watch-misses-version-specific.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "versionSpecificManifestIsRead",
+      "label": "the manifests a universe watches leave out Package@swift-*.swift — an edit to one cannot mark the index stale"
+    },
+    {
+      "id": "walk-prunes-test-directories",
+      "patch": "patches/walk-prunes-test-directories.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "packageUnderTestsIsANestedPackage",
+      "label": "the walk prunes Tests/ again — a nested package there is never recorded, so a target path into it reaches nothing, where SwiftProjectLint's walk finds it"
+    },
+    {
+      "id": "version-specific-read-only-beside-a-manifest",
+      "patch": "patches/version-specific-read-only-beside-a-manifest.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "versionSpecificManifestWithoutPackageSwiftIsRead",
+      "label": "a directory's Package@swift-*.swift is read only when its Package.swift is a manifest — SwiftProjectLint reads them whatever Package.swift is"
+    },
+    {
+      "id": "dependency-without-manifest-is-doubt",
+      "patch": "patches/dependency-without-manifest-is-doubt.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "dependencyOnNoManifestIsNoDoubt",
+      "label": "a dependency on a directory holding no manifest is doubt — every nested package comes in (amendment I says it passes nothing on)"
     }
   ]
 }

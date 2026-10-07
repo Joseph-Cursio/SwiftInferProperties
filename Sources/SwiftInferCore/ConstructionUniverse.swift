@@ -6,11 +6,12 @@ import Foundation
 /// SEI's `ConstructionFacts.build(from:)` asks for production sources only, in a fixed order, and
 /// can check neither: it takes trees, not paths. So the rule lives in the consumer. **It is the
 /// SAME rule SwiftProjectLint applies, with the same names**, and agreement is not a matter of
-/// prose: both repos carry a byte-identical `construction-universe.tsv` (ours at
-/// `docs/construction-universe.tsv`), each asserts its predicate over every row
-/// (`ConstructionUniverseTests`), and `SEICrossRepoPinTests` asserts the two files are identical.
-/// An equal SEI pin is necessary for the two consumers to consult one oracle and no longer
-/// sufficient: the table each builds depends on its universe, so the universes must be equal too.
+/// prose: both repos carry a byte-identical `construction-universe.tsv` (the predicate's answer key)
+/// and `construction-universe-cases.json` (the manifest reader's and the order's), each asserts its
+/// own implementation over every row (`ConstructionUniverseTests`), and `SEICrossRepoPinTests`
+/// asserts both pairs of files are identical. An equal SEI pin is necessary for the two consumers
+/// to consult one oracle and no longer sufficient: the table each builds depends on its universe,
+/// so the universes must be equal too.
 ///
 /// ## The predicate — `isProductionSource(relativePath:)`
 ///
@@ -21,36 +22,94 @@ import Foundation
 ///
 /// Deliberately **not** excluded, because dropping a compiled production type under-refutes —
 /// the unsound direction: `TestSupport` / `Mock` / `Stub` / `Fake` / `Fixtures` / `Examples`
-/// names, `*Test.swift` and `*Tests.swift` *file* names (a production `ABTest.swift`), nested local
-/// packages, and generated files. Keeping something that is not linked can only add a namesake,
-/// which over-refutes — the direction SEI's "any doubt refutes" accepts.
+/// names, `*Test.swift` and `*Tests.swift` *file* names (a production `ABTest.swift`), the nested
+/// local packages the root compiles, and generated files. Keeping something that is not linked
+/// can only add a namesake, which over-refutes — the direction SEI's "any doubt refutes" accepts.
 ///
 /// ## The root — `root(forScanOf:)`
 ///
-/// The nearest ancestor-or-self of the scanned directory, symlinks resolved, holding a
-/// `Package.swift`. `--target Foo` scans `Sources/Foo`, but `Foo` constructs types its sibling
-/// targets declare, and a per-target table misses them — the unsound direction again.
+/// The nearest ancestor-or-self of the scanned directory holding a manifest — a `Package.swift`
+/// whose first line is a tools-version comment (amendment F, `ConstructionUniverse+Manifests.swift`;
+/// a source file of that name, a directory or a dangling link is not one) — **found from
+/// the path as given** (standardised, symlinks NOT resolved), and only then resolved — resolved
+/// paths are keys, never what decides the package. `--target Foo` scans `Sources/Foo`, but `Foo`
+/// constructs types its sibling targets declare, and a per-target table misses them — the unsound
+/// direction again. A `Sources/Foo` that is a symlink is still a target of the package holding the
+/// link, so it is judged there, with that package's real sibling targets. Only when no ancestor of
+/// the path as given holds a manifest is the walk retried from the resolved path, so a link from
+/// outside every package into one still finds it.
 ///
 /// **Except a scan under a component the predicate rejects is self-contained**: a test, fixture or
 /// build directory is its own project. Walking up from `Tests/Fixtures/X` would reach this repo's
 /// root, whose rule drops the fixture's own files — so the fixture's types would never reach its
 /// table, and every such scan would parse the whole package for nothing.
 ///
+/// **And no ancestor with a manifest means the scanned directory is its own root** — an Xcode app's
+/// folder, or a workspace folder of packages. Every nested package below it is in (see below), so a
+/// folder holding five unrelated packages builds ONE table from all of them. At SEI `9d0bf6d` that
+/// build was superlinear — `ConstructionFacts.build` re-walked the member-type graph per decode site
+/// and per fixpoint pass — and on swift-collections, swift-nio, swift-argument-parser,
+/// swift-algorithms and swift-syntax side by side it cost ~14× the five packages scanned one by one,
+/// or overflowed the stack. SEI #24 (`64a905c`) memoises it: the same folder (1,553 files) builds in
+/// 16 s and 744 MB against 7.5 s summed. Partitioning per nested package here would drop the
+/// constructions an app makes from its own local packages — the under-refuting direction — so it
+/// is not done.
+///
 /// `--target`, `--sources` and a config's `excluded_paths` decide what is JUDGED, never what feeds
 /// the table.
 ///
-/// ## The universe — `files(forScanOf:)`
+/// ## The universe — `universe(forScanOf:)`
 ///
-/// The production files under the root, each judged by its root-relative path, **unioned** with
-/// the scanned directory's own production files (judged by their path relative to it), deduplicated
-/// by resolved path. The union is a safety net for what the root walk cannot reach: the enumerator
-/// never descends a symlinked directory, and a symlinked `Sources/<target>` is a layout this tool
-/// meets in real use (`SwiftSourceFiles`).
+/// The production files under the root, each classified by its root-relative path **where the walk
+/// reached it** — for a symlinked file, where the link is, since that is where the compiler sees it —
+/// **unioned** with the scanned directory's own production files, spelled the same way: the scanned
+/// directory's path below the root (as given, in its on-disk letter case — amendment L) plus each
+/// file's path below it. The walk never descends a symlinked directory (nor does SwiftProjectLint's),
+/// so the union is what puts a scanned symlinked `Sources/<target>` into its package's universe,
+/// under the link's spelling. Neither half skips a file for the macOS `UF_HIDDEN` flag — hidden
+/// means a dot-prefixed name (amendment M).
 ///
-/// **Order: root-relative path, Swift `String <`.** Not order-free — which witness SEI reports first
-/// among several declarations of one name depends on input order (which types refute does not,
-/// since SEI `9d0bf6d` follows every alias a name may mean) — so a fixed order shared with
-/// SwiftProjectLint is what lets the two agree.
+/// Then, in this order — the shared spec's first amendment, implemented identically in
+/// SwiftProjectLint:
+///
+/// 1. **Bound by what the root compiles** (amendment B): a file inside a nested package is in only
+///    when the root reaches that package — through local path dependencies or a target's `path:`,
+///    across every manifest of the closure — or the root has no manifest to say, or an Xcode
+///    project beside it may compile more (`ConstructionUniverse+NestedPackages.swift`, whose body
+///    is SwiftProjectLint's line for line). **And a
+///    nested package the scan judges a file of is in, with its own closure** (amendment J):
+///    `--sources Examples` over an uncompiled `Examples/Demo` judges Demo's functions with Demo's
+///    types. So the universe depends on the judged set, not only on the root, and
+///    `PackagePurity.covers(_:)` compares members, not roots.
+/// 2. **One entry per file on disk** (amendment A): entries whose resolved paths are one file are
+///    collapsed to the one with the **smallest** relative path under `String <` — a rule on the
+///    paths, never the walk's directory-listing order.
+/// 3. **Strict UTF-8** (amendment C) is applied where the files are read: `PackagePurity` skips a
+///    member `String(contentsOf:encoding: .utf8)` cannot decode, as no compiler reads one either.
+///
+/// **Order: `buildOrder(_:)` — root-relative path, Swift `String <`.** Not order-free — which
+/// witness SEI reports first among several declarations of one name depends on input order (which
+/// types refute does not, since SEI `9d0bf6d` follows every alias a name may mean) — so a fixed
+/// order shared with SwiftProjectLint is what lets the two agree. A per-component sort differs
+/// wherever `-` or `.` meets `/`, and the shared cases file holds such a pair (amendment N).
+///
+/// ## Accepted gaps — recorded, not fixed
+///
+/// Each is either in the direction SEI's *any doubt refutes* accepts, or would cost the two
+/// consumers their one universe if one of them fixed it alone:
+///
+/// - **A `Package.swift`, or a `Tests` / `*Tests` folder, inside an Xcode app target** is dropped by
+///   the predicate though Xcode compiles it: the predicate reads names, and no Xcode project is
+///   read (amendment G takes an Xcode root's nested packages, not its folders). Under-refuting,
+///   and rare.
+/// - **Namesakes across modules in one universe over-refute.** SEI matches a constructed type by
+///   name, so once two modules share a universe — a judged package (amendment J), every nested
+///   package of a manifest-less or Xcode root — one module's `Row` refutes another's `Row(n:)`
+///   it never imports. The sound direction.
+/// - **A symlinked sibling directory is not walked.** Neither walk descends one, so a scan of
+///   `Sources/Lib` beside a symlinked `Sources/Model` misses `Model`'s types — under-refuting. A
+///   scanned symlinked target is handled (the union), and a dependency through a link is
+///   resolved (amendments H and Q).
 public enum ConstructionUniverse {
 
     /// Directory names never part of a universe even when not hidden: build products and vendored
@@ -59,12 +118,27 @@ public enum ConstructionUniverse {
 
     /// One member of a universe.
     public struct Member: Sendable, Equatable {
-        /// Root-relative, `/`-separated — the sort key, and what the predicate judged.
+        /// Root-relative, `/`-separated, where the walk reached the file — the sort key, and what
+        /// the predicate judged.
         public let relativePath: String
         /// Where to read it from, as reached by the walk.
         public let url: URL
         /// The resolved absolute path — the dedup key, and how `PackagePurity` finds a tree.
         public let key: String
+    }
+
+    /// A scan's whole universe: the root, its members in build order, and the manifests whose text
+    /// decided which nested packages are in.
+    public struct Universe: Sendable {
+        /// The root, resolved — one spelling per location.
+        public let root: URL
+        /// The production files, bounded and deduplicated, in `buildOrder`.
+        public let members: [Member]
+        /// Every manifest that decides the bound — the root's when it has one, every walked nested
+        /// package's and every package the closure reached by path, each `Package.swift` with every
+        /// `Package@swift-*.swift` beside it (amendment O): an edit to any of them can move the
+        /// bound, so whatever watches the members watches these too.
+        public let manifests: [URL]
     }
 
     /// Whether a directory name is a test target's: `Tests`, or any name ending in `Tests`.
@@ -81,6 +155,13 @@ public enum ConstructionUniverse {
         return !components.dropLast().contains(where: isRejectedDirectory)
     }
 
+    /// The order the facts are built in: Swift `String <` over root-relative paths — the shared
+    /// spec's order, asserted against `construction-universe-cases.json` in both repos. The one
+    /// place the universe is sorted; `universe(forScanOf:)` orders its members through it.
+    public static func buildOrder(_ relativePaths: [String]) -> [String] {
+        relativePaths.sorted(by: <)
+    }
+
     /// A directory component the predicate rejects — everything under it is out.
     static func isRejectedDirectory(_ name: String) -> Bool {
         isTestTargetDirectory(name) || name.hasPrefix(".") || prunedDirectoryNames.contains(name)
@@ -90,62 +171,183 @@ public enum ConstructionUniverse {
     /// per location: resolved, and rebuilt from its path, so a root reached as an ancestor
     /// (`…/pkg/`) and one reached as the scanned directory itself (`…/pkg`) compare equal.
     public static func root(forScanOf directory: URL) -> URL {
-        let scanned = resolved(directory)
-        guard let package = DirectoryAncestors.nearest(from: scanned, where: hasManifest) else {
-            return URL(fileURLWithPath: scanned.path)
-        }
-        let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))
-        return URL(fileURLWithPath: (below.contains(where: isRejectedDirectory) ? scanned : package).path)
+        RootLocation(forScanOf: directory).resolved
     }
 
     /// Every production file a scan of `directory` builds its table from, in the fixed order.
     public static func files(forScanOf directory: URL) -> [Member] {
-        let root = root(forScanOf: directory)
-        var members: [Member] = []
-        var seen: Set<String> = []
-        for relativePath in productionPaths(under: root) {
+        universe(forScanOf: directory).members
+    }
+
+    /// The scan's universe — see the type's doc for each step, in order.
+    public static func universe(forScanOf directory: URL) -> Universe {
+        let location = RootLocation(forScanOf: directory)
+        let root = location.resolved
+        let walk = walk(under: root)
+        let members = walk.paths.map { relativePath in
             let url = root.appendingPathComponent(relativePath)
-            let key = resolved(url).path
-            if seen.insert(key).inserted {
-                members.append(Member(relativePath: relativePath, url: url, key: key))
+            return Member(relativePath: relativePath, url: url, key: resolved(url).path)
+        } + ownMembers(of: directory, at: location)
+        let rootHasManifest = holdsManifest(root)
+        let bound = bound(of: walk.nestedPackages, judging: directory, at: location, rootHasManifest: rootHasManifest)
+        let bounded = members.filter { member in
+            owningPackage(of: member.relativePath, among: walk.nestedPackages).map(bound.compiled.contains) ?? true
+        }
+        // Every manifest that can move the bound: the root's, every walked package's, and every
+        // directory the closure read by path — under a hidden or a pruned directory or not.
+        let watched = (rootHasManifest ? [""] : []) + walk.nestedPackages.union(bound.read).sorted()
+        return Universe(
+            root: root,
+            members: ordered(deduplicated(bounded)),
+            manifests: watched.flatMap { manifestURLs(inDirectory: packageDirectory($0, under: root)) }
+        )
+    }
+
+    /// The nested packages of `nestedPackages` the bound takes — `compiledNestedPackages`, the
+    /// shared closure — and the nested directories it read, which decide it.
+    ///
+    /// The closure runs on a `LargeStackWorkers` thread (amendment K): it parses every manifest it
+    /// reaches, a parse recurses as deep as the manifest nests, and the CLI runs on a ~512 KB
+    /// cooperative stack — a 1,000-arm `else if` in a nested manifest `SIGBUS`ed `discover`.
+    /// SwiftProjectLint runs its closure on a large stack at its call site too, so the shared body
+    /// stays the same in both repos.
+    static func bound(
+        of nestedPackages: Set<String>,
+        judging directory: URL,
+        at location: RootLocation,
+        rootHasManifest: Bool
+    ) -> (compiled: Set<String>, read: Set<String>) {
+        let root = location.resolved
+        // An Xcode project beside the manifest may compile packages it never names (amendment G).
+        let bounds = rootHasManifest && !holdsXcodeProject(root)
+        let judged = bounds && !nestedPackages.isEmpty
+            ? judgedPackages(of: judgedFiles(of: directory, at: location).map(\.relativePath), among: nestedPackages)
+            : []
+        return LargeStackWorkers.run {
+            var read: Set<String> = []
+            let compiled = compiledNestedPackages(
+                nestedPackages,
+                reported: judged,
+                rootHasManifest: bounds,
+                rootPath: root.path,
+                resolvingSymlinks: canonicalPath
+            ) { relative in
+                let manifests = manifests(inDirectory: packageDirectory(relative, under: root))
+                if !relative.isEmpty, manifests.contains(where: { $0 != .absent }) { read.insert(relative) }
+                return manifests
             }
-        }
-        // The scanned directory's own production files, judged relative to it. Under the root by
-        // construction, so its root-relative spelling is the scanned directory's prefix plus its
-        // own relative path — which is what keeps the sort a single order.
-        let scanned = resolved(directory)
-        let prefix = scanned.pathComponents.dropFirst(root.pathComponents.count).joined(separator: "/")
-        for url in SwiftSourceFiles.sorted(in: directory) {
-            guard let own = relativePath(of: url, under: directory),
-                  isProductionSource(relativePath: own) else { continue }
-            let key = resolved(url).path
-            guard seen.insert(key).inserted else { continue }
-            let relative = prefix.isEmpty ? own : prefix + "/" + own
-            members.append(Member(relativePath: relative, url: url, key: key))
-        }
-        return members.sorted { lhs, rhs in
-            lhs.relativePath == rhs.relativePath ? lhs.key < rhs.key : lhs.relativePath < rhs.relativePath
+            return (compiled, read)
         }
     }
 
-    /// Root-relative paths of every production `.swift` file under `root`, unsorted.
-    ///
-    /// Pruned during the walk rather than filtered after it: the predicate rejects a path for a
-    /// directory component, so nothing below a rejected directory can be kept, and this repo's
-    /// `Tests/` alone is more files than its `Sources/`. Hidden entries are skipped the same way.
-    /// Symlinked directories are not descended — the path enumerator does not follow them.
-    static func productionPaths(under root: URL) -> [String] {
-        guard let walker = FileManager.default.enumerator(atPath: root.path) else { return [] }
+    /// An absolute path's canonical form — symlinks resolved and, on a volume that folds case, the
+    /// on-disk letter case, as `realpath(3)` gives it — or the path itself when it does not resolve.
+    /// The closure compares every location this way (amendments H and Q), as SwiftProjectLint does.
+    static func canonicalPath(_ path: String) -> String {
+        guard let canonical = realpath(path, nil) else { return path }
+        defer { free(canonical) }
+        return String(cString: canonical)
+    }
+
+    /// The scanned directory's own production files, spelled under the root as given: the scanned
+    /// directory's path below the root plus each file's path below the scanned directory — found by
+    /// the same walk as the root's, so, like it, never skipping a file for the macOS `UF_HIDDEN`
+    /// flag (amendment M: SwiftPM compiles such a file; a dot-prefixed name is still skipped).
+    /// The judged set, `SwiftSourceFiles`, does skip one, and for a scanned symlinked target —
+    /// which the root walk never enters — this union is the only place its files come from.
+    static func ownMembers(of directory: URL, at location: RootLocation) -> [Member] {
+        let prefix = location.scannedPathBelowRoot
+        return walk(under: resolved(directory)).paths.compactMap { own in
+            let relative = prefix.isEmpty ? own : prefix + "/" + own
+            guard isProductionSource(relativePath: relative) else { return nil }
+            let url = directory.appendingPathComponent(own)
+            return Member(relativePath: relative, url: url, key: resolved(url).path)
+        }
+    }
+
+    /// Every file a scan of `directory` judges, spelled under the root as given, as
+    /// `ownMembers(of:at:)` spells its own: they say which nested packages the scan judges
+    /// (amendment J).
+    static func judgedFiles(of directory: URL, at location: RootLocation) -> [Member] {
+        let prefix = location.scannedPathBelowRoot
+        return SwiftSourceFiles.sorted(in: directory).compactMap { url in
+            guard let own = relativePath(of: url, under: directory) else { return nil }
+            let relative = prefix.isEmpty ? own : prefix + "/" + own
+            return Member(relativePath: relative, url: url, key: resolved(url).path)
+        }
+    }
+
+    /// The nested packages that hold a judged file — each file's nearest one of `nestedPackages`
+    /// above it — the shared spec's amendment J, as SwiftProjectLint places its reported files.
+    /// Placed by where the file is judged, like every member: a linked file belongs to the package
+    /// its link sits in.
+    static func judgedPackages(of relativePaths: [String], among nestedPackages: Set<String>) -> Set<String> {
+        Set(relativePaths.compactMap { owningPackage(of: $0, among: nestedPackages) })
+    }
+
+    /// One entry per file on disk: of the members whose `key` (resolved path) is one file, the one
+    /// with the smallest `relativePath` under `String <` — whatever order they arrive in.
+    static func deduplicated(_ members: [Member]) -> [Member] {
+        var byKey: [String: Member] = [:]
+        for member in members {
+            if let kept = byKey[member.key], kept.relativePath < member.relativePath { continue }
+            byKey[member.key] = member
+        }
+        return Array(byKey.values)
+    }
+
+    /// `members` in `buildOrder` of their relative paths. Two members never share a relative path
+    /// (one location is one file); were they to, the smaller key goes first, so the order is still
+    /// a function of the paths.
+    static func ordered(_ members: [Member]) -> [Member] {
+        var byPath: [String: [Member]] = [:]
+        for member in members { byPath[member.relativePath, default: []].append(member) }
+        return buildOrder(Array(byPath.keys)).flatMap { path in
+            (byPath[path] ?? []).sorted { $0.key < $1.key }
+        }
+    }
+
+    /// What the root walk found: the production files' root-relative paths, unsorted, and the
+    /// root-relative directories below the root that hold a manifest (amendment F).
+    struct Walk {
         var paths: [String] = []
+        var nestedPackages: Set<String> = []
+    }
+
+    /// The production `.swift` files under `root`, and the nested packages among its directories.
+    ///
+    /// Pruned during the walk rather than filtered after it — a dot-prefixed or vendored directory,
+    /// whose files the predicate rejects and which can hold gigabytes (`.build/`). A `Tests` /
+    /// `*Tests` directory is entered, though the predicate rejects its files too, for the nested
+    /// packages it holds, which the shared closure reads. Hidden entries are skipped the same way —
+    /// hidden meaning a dot-prefixed NAME, never the macOS `UF_HIDDEN` flag (amendment M): the path
+    /// enumerator takes no `.skipsHiddenFiles`, and SwiftPM compiles a flagged file.
+    /// Symlinked directories are not descended — the path enumerator does not follow them — and a
+    /// symlinked FILE is yielded where the link is, which is where it is classified.
+    static func walk(under root: URL) -> Walk {
+        var result = Walk()
+        guard let walker = FileManager.default.enumerator(atPath: root.path) else { return result }
         while let relative = walker.nextObject() as? String {
-            let name = relative.split(separator: "/").last.map(String.init) ?? relative
+            let components = relative.split(separator: "/").map(String.init)
+            let name = components.last ?? relative
             if walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory {
-                if isRejectedDirectory(name) { walker.skipDescendants() }
+                // Pruned by NAME — dot-prefixed, or a vendored or build tree. A test-target
+                // directory is entered for the nested packages it holds, though none of its files
+                // is production: SwiftProjectLint's walk enters it too, and a package there seeds
+                // the closure when the scan judges one of its files (J), or is reached by a target
+                // path (P), on both sides alike.
+                if name.hasPrefix(".") || prunedDirectoryNames.contains(name) { walker.skipDescendants() }
                 continue
             }
-            if !name.hasPrefix("."), isProductionSource(relativePath: relative) { paths.append(relative) }
+            // A nested package is a directory holding a MANIFEST (amendment F): a source file
+            // that happens to be called `Package.swift`, or a dangling link, makes no boundary.
+            if name == "Package.swift", components.count > 1 {
+                let directory = components.dropLast().joined(separator: "/")
+                if holdsManifest(root.appendingPathComponent(directory)) { result.nestedPackages.insert(directory) }
+            }
+            if !name.hasPrefix("."), isProductionSource(relativePath: relative) { result.paths.append(relative) }
         }
-        return paths
+        return result
     }
 
     /// `url`'s path below `directory`, tolerating the enumerator's `/private/var` spelling of a
@@ -161,12 +363,13 @@ public enum ConstructionUniverse {
         return resolvedPath.hasPrefix(prefix) ? String(resolvedPath.dropFirst(prefix.count)) : nil
     }
 
+    /// The root-relative `directory` under `root`; `""` is the root itself.
+    static func packageDirectory(_ directory: String, under root: URL) -> URL {
+        directory.isEmpty ? root : root.appendingPathComponent(directory)
+    }
+
     /// One spelling per location: standardized, every symlink resolved.
     static func resolved(_ url: URL) -> URL {
         url.standardizedFileURL.resolvingSymlinksInPath()
-    }
-
-    private static func hasManifest(_ directory: URL) -> Bool {
-        FileManager.default.fileExists(atPath: directory.appendingPathComponent("Package.swift").path)
     }
 }

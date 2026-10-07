@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Location.swift b/Sources/SwiftInferCore/ConstructionUniverse+Location.swift
+index 1fafed10..de94094e 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Location.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Location.swift
+@@ -28,7 +28,7 @@ extension ConstructionUniverse {
+         let scannedPathBelowRoot: String
+ 
+         init(forScanOf directory: URL) {
+-            let given = ConstructionUniverse.onDiskSpelling(of: directory.standardizedFileURL)
++            let given = directory.standardizedFileURL
+             for scanned in [given, ConstructionUniverse.resolved(directory)] {
+                 guard let package = DirectoryAncestors.nearest(from: scanned, where: holdsManifest) else { continue }
+                 let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))

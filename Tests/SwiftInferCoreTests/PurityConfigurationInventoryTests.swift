@@ -58,11 +58,46 @@ struct PurityConfigurationInventoryTests {
         )
     }
 
-    @Test("the unconfigured oracle is named nowhere in production")
+    /// The one production opt-out, and why it is one: `FunctionScanner.scanTypeDecls(directory:)`
+    /// reads declarations only, and no verdict its walk computes leaves the function. Every other
+    /// file naming the unconfigured oracle is a scan that would judge without its table.
+    static let declarationsOnlyScan = "FunctionScanner+Declarations.swift"
+
+    @Test("the unconfigured oracle is named nowhere in production but the declarations-only scan")
     func unconfiguredIsNeverReferenced() {
         let offenders = Self.files(containing: ".unconfigured")
-            .subtracting(["SoundPurity.swift", "PackagePurity.swift"])
+            .subtracting(["SoundPurity.swift", "PackagePurity.swift", Self.declarationsOnlyScan])
         #expect(offenders.isEmpty, "production code opts out of the construction table: \(offenders.sorted())")
+        let declarationsOnly = Self.sources.first { $0.name == Self.declarationsOnlyScan }
+        #expect(declarationsOnly?.code.contains("-> [TypeDecl]") == true, "the allow-listed file stopped declaring")
+        #expect(declarationsOnly?.code.contains("ScannedCorpus {") == false, "the allow-listed file returns verdicts")
+    }
+
+    /// `PackagePurity.forJudging(directory:)` returns no purity when the directory holds no Swift
+    /// file; the unguarded `forScan(of:)` parses the whole universe regardless. Measured on
+    /// `discover-reducers` over an empty folder in a swift-syntax copy: 0.03 s / 12 MB guarded,
+    /// 1.30 s / 379 MB not. So production builds a purity through the guard and nowhere else.
+    @Test("a purity is built in production only through the judged-set guard")
+    func purityIsBuiltOnlyThroughTheGuard() {
+        #expect(
+            Self.files(containing: "forScan(of:") == ["PackagePurity.swift"],
+            "an unguarded purity build: \(Self.files(containing: "forScan(of:").sorted())"
+        )
+        #expect(Self.files(containing: "forJudging(directory:").isSuperset(of: [
+            "FunctionScanner+Package.swift", "TypeShapeCarriers.swift",
+            "ValueSemanticVerifier.swift", "CensusCommand.swift"
+        ]))
+    }
+
+    /// The callers that read only `typeDecls` scan declarations only. Through
+    /// `scanCorpus(directory:)` each paid for a construction universe and its table and read none
+    /// of it: `index --scan-dependencies` went from ~75 MB to ~410 MB peak RSS with identical output.
+    @Test("the declarations-only callers build no construction table")
+    func declarationsOnlyCallersBuildNoTable() {
+        let callers: Set = ["DependencyTypeShapes.swift", "VerifyInteractionPipeline+RefintGate.swift"]
+        #expect(Self.files(containing: "scanTypeDecls(directory:").isSuperset(of: callers))
+        let full = Self.files(containing: "scanCorpus(directory:").intersection(callers)
+        #expect(full.isEmpty, "a declarations-only caller runs the full scan: \(full.sorted())")
     }
 
     @Test("every scanner visitor is handed an oracle, in the scanner's own files")

@@ -15,8 +15,13 @@ import SwiftSyntax
 /// asked about — judging each on the very tree the table was built from.
 ///
 /// What is JUDGED is unchanged: `SwiftSourceFiles.sorted(in: directory)`. What feeds the table is
-/// `ConstructionUniverse`, which is wider (a `--target` scan sees its sibling targets) and stricter
-/// (a test file's namesake never refutes a production constructor).
+/// `ConstructionUniverse`, which is wider (a `--target` scan sees its sibling targets — the
+/// package's own real targets, found from the path as given, so a symlinked target sees them too —
+/// and the nested packages the root compiles) and stricter (a test file's namesake never refutes a
+/// production constructor, and neither does a nested package the root never compiles).
+///
+/// A caller that reads only declarations — `typeDecls`, never a verdict — has no use for the first
+/// phase and does not pay for it: `scanTypeDecls(directory:)`.
 extension FunctionScanner {
 
     /// A purity was handed to a directory scan it was not built for.
@@ -41,12 +46,10 @@ extension FunctionScanner {
     /// Judged under the purity of the project `directory` belongs to, built here — so every caller,
     /// the CLI and every measured arm alike, judges under the same table for the same directory.
     public static func scanCorpus(directory: URL) throws -> ScannedCorpus {
-        let judged = SwiftSourceFiles.sorted(in: directory)
         // Nothing to judge, nothing to configure: an empty scan must not parse a whole package to
-        // answer no question.
-        guard !judged.isEmpty else { return merged([]) }
-        let purity = PackagePurity.forScan(of: directory)
-        return try merged(judged.map { try scanCorpus(file: $0, purity: purity) })
+        // answer no question (`PackagePurity.forJudging(directory:)`).
+        guard let purity = PackagePurity.forJudging(directory: directory) else { return merged([]) }
+        return try merged(SwiftSourceFiles.sorted(in: directory).map { try scanCorpus(file: $0, purity: purity) })
     }
 
     /// The same scan under a purity the caller already built — once per project, however many of
@@ -62,14 +65,20 @@ extension FunctionScanner {
 
     /// One file judged under a project's purity, unjoined like every per-file path. Reuses the
     /// project's tree when the file is in its universe, so the file is judged on the very nodes
-    /// its facts were built from; a file outside it (a test file in a scan that reaches `Tests/`)
-    /// is read and parsed here, and judged under the same table.
+    /// its facts were built from; a file outside it (a test file in a scan that reaches `Tests/`,
+    /// a file of a nested package the root does not compile) is read and parsed here, and judged
+    /// under the same table.
+    ///
+    /// That parse runs on a `LargeStackWorkers` thread, like the universe's: the CLI's commands run
+    /// on a Swift-concurrency cooperative thread with ~512 KB of stack, and a parse recurses as deep
+    /// as the source nests.
     public static func scanCorpus(file: URL, purity: PackagePurity) throws -> ScannedCorpus {
         if let tree = purity.tree(for: file) {
             return scanCorpus(tree: tree, file: file.path, purity: purity.oracle)
         }
         let source = try String(contentsOf: file, encoding: .utf8)
-        return scanCorpus(tree: Parser.parse(source: source), file: file.path, purity: purity.oracle)
+        let tree = LargeStackWorkers.run { Parser.parse(source: source) }
+        return scanCorpus(tree: tree, file: file.path, purity: purity.oracle)
     }
 
     /// The package-scope merge of per-file corpora — the post-passes that need every

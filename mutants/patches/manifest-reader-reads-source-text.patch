@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index 429f90b5..a10ce904 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -287,7 +287,7 @@ private final class PathArgumentCollector: SyntaxVisitor {
+     /// The value, not the source text: `"Packages/\u{55}til"` names `Packages/Util` to SwiftPM, and
+     /// read as written it named no package at all, so the one the root compiles left the table.
+     private static func literal(_ expression: ExprSyntax) -> String? {
+-        expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
++        expression.as(StringLiteralExprSyntax.self)?.segments.trimmedDescription
+     }
+ }
+ // swiftlint:enable function_parameter_count

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift b/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift
+index 0f3c9fb7..17a81274 100644
+--- a/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift
++++ b/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift
+@@ -98,7 +98,7 @@ extension SpeculativeRefactorRunner {
+         let root = temporaryDirectory.appendingPathComponent("swiftinfer-speculative-\(UUID().uuidString)")
+         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+         var built = false
+-        defer { if !built { try? FileManager.default.removeItem(at: root) } }
++        defer { _ = built }
+ 
+         // Sources + manifest, then the rest of the universe. `.build` is the reason this is a
+         // whitelist and not a blanket copy — it is gigabytes, and copying it would make the

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/FunctionScanner+Declarations.swift b/Sources/SwiftInferCore/FunctionScanner+Declarations.swift
+index fcb906aa..d49deecc 100644
+--- a/Sources/SwiftInferCore/FunctionScanner+Declarations.swift
++++ b/Sources/SwiftInferCore/FunctionScanner+Declarations.swift
+@@ -39,7 +39,7 @@ extension FunctionScanner {
+             }
+         }
+         let declarations = try scanned.get()
+-        return PreconditionHelperHop.applied(to: declarations.typeDecls, trapping: declarations.trapping)
++        return declarations.typeDecls
+     }
+ 
+     /// What the declarations-only loop keeps per directory.

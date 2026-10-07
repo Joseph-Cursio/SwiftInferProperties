@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index 429f90b5..bc96bc85 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -150,7 +150,7 @@ extension ConstructionUniverse {
+         /// reached still compiles what it depends on.
+         mutating func enter(_ location: String) {
+             if let package = packageAt[location] { reached.insert(package) }
+-            if visited.insert(location).inserted { pending.append(location) }
++            if visited.insert(location).inserted, location.isEmpty || packageAt[location] != nil { pending.append(location) }
+         }
+ 
+         /// Follows what the manifests of `directory` reference: each dependency, and each nested

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCLI/VerifyHarness.swift b/Sources/SwiftInferCLI/VerifyHarness.swift
+index 76e6b99d..eb411487 100644
+--- a/Sources/SwiftInferCLI/VerifyHarness.swift
++++ b/Sources/SwiftInferCLI/VerifyHarness.swift
+@@ -264,7 +264,7 @@ public enum VerifyHarness {
+             files.append(fileURL)
+         }
+         let universe = ConstructionUniverse.universe(forScanOf: packageRoot.appendingPathComponent("Sources"))
+-        return files + universe.members.map(\.url) + universe.manifests
++        return files + universe.members.map(\.url)
+     }
+ 
+     /// The `Sources` walker, or `nil` with the reason reported.

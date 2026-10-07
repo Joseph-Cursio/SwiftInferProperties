@@ -21,7 +21,12 @@ struct TypeShapeCarriers {
     let stableIdentities: [StableIdentityCandidate]
 
     init(directory: URL) throws {
-        let purity = PackagePurity.forScan(of: directory)
+        // Nothing to judge, nothing to build: an empty directory in a large package would
+        // otherwise parse that package's whole universe to report three empty lists.
+        guard let purity = PackagePurity.forJudging(directory: directory) else {
+            (valueSemantics, defensiveCopies, stableIdentities) = ([], [], [])
+            return
+        }
         valueSemantics = try ValueSemanticDiscoverer.discover(directory: directory, purity: purity)
         defensiveCopies = try DefensiveCopyDiscoverer.discover(directory: directory, purity: purity)
         stableIdentities = try StableIdentityDiscoverer.discover(directory: directory, purity: purity)

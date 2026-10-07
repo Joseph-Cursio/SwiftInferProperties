@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/PackagePurity.swift b/Sources/SwiftInferCore/PackagePurity.swift
+index ec31235a..5f32ba2c 100644
+--- a/Sources/SwiftInferCore/PackagePurity.swift
++++ b/Sources/SwiftInferCore/PackagePurity.swift
+@@ -50,7 +50,7 @@ public struct PackagePurity: Sendable {
+     /// 0.03 s / 12 MB on main against 1.30 s / 379 MB with the build unguarded.
+     /// `PurityConfigurationInventoryTests` holds production to this entry.
+     public static func forJudging(directory: URL) -> Self? {
+-        SwiftSourceFiles.sorted(in: directory).isEmpty ? nil : forScan(of: directory)
++        forScan(of: directory)
+     }
+ 
+     /// The project a scan of `directory` belongs to, parsed and its table built, whatever the scan

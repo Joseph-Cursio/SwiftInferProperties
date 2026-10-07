@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index 429f90b5..8ecc0fd2 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -121,7 +121,7 @@ extension ConstructionUniverse {
+             closure.enter(location)
+         }
+         while let directory = closure.pending.popLast() {
+-            guard let read = references(of: manifests(directory)) else { return nestedPackages }
++            guard let read = references(of: manifests(directory)) else { return closure.reached }
+             closure.follow(read, from: directory, resolvingSymlinks: resolvingSymlinks)
+         }
+         return closure.reached

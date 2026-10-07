@@ -1,0 +1,22 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 189274b2..a265a218 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -223,7 +223,7 @@ public enum ConstructionUniverse {
+         let judged = bounds && !nestedPackages.isEmpty
+             ? judgedPackages(of: judgedFiles(of: directory, at: location).map(\.relativePath), among: nestedPackages)
+             : []
+-        return LargeStackWorkers.run {
++        return ({
+             var read: Set<String> = []
+             let compiled = compiledNestedPackages(
+                 nestedPackages,
+@@ -237,7 +237,7 @@ public enum ConstructionUniverse {
+                 return manifests
+             }
+             return (compiled, read)
+-        }
++        })()
+     }
+ 
+     /// An absolute path's canonical form — symlinks resolved and, on a volume that folds case, the
