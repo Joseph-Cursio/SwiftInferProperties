@@ -29,8 +29,10 @@ extension ConstructionUniverse {
 
     /// The literal paths of `manifest`'s local package dependencies, in source order —
     /// `.package(path: "…")` and `.package(name: "…", path: "…")`, with or without an explicit
-    /// `Package.Dependency` base — or `nil` when a `.package(…)` call passes `path:` something that
-    /// is not a plain string literal (the doubt rule).
+    /// `Package.Dependency` base — each the value the compiler sees (amendment H:
+    /// `representedLiteralValue`, so escapes are processed and raw strings allowed), or `nil` when
+    /// a `.package(…)` call passes `path:` something that is not a string literal without
+    /// interpolation (the doubt rule).
     ///
     /// The manifest is parsed, not pattern-matched: a dependency commented out, or the text of one
     /// inside a string, is not a dependency. A `path:` belonging to anything else — a target's
@@ -123,22 +125,13 @@ private final class PathDependencyCollector: SyntaxVisitor {
               let path = node.arguments.first(where: { $0.label?.text == "path" }) else {
             return .visitChildren
         }
-        if let literal = Self.literal(path.expression) {
+        // The value the compiler sees, not the source text: `"Pack\u{61}ges/A"` is `Packages/A`,
+        // and so is `#"Packages/A"#`. Interpolation, or a literal that did not parse, is `nil`.
+        if let literal = path.expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue {
             paths.append(literal)
         } else {
             isReadable = false
         }
         return .visitChildren
-    }
-
-    /// The text of a string literal with no interpolation, or `nil` for anything computed.
-    private static func literal(_ expression: ExprSyntax) -> String? {
-        guard let literal = expression.as(StringLiteralExprSyntax.self) else { return nil }
-        var text = ""
-        for segment in literal.segments {
-            guard let piece = segment.as(StringSegmentSyntax.self) else { return nil }
-            text += piece.content.text
-        }
-        return text
     }
 }

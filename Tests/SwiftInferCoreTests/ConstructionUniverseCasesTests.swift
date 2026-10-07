@@ -43,6 +43,10 @@ struct ConstructionUniverseCasesTests {
         #expect(cases.count >= 8, "\(cases.count) cases — the shared answer key lost rows")
         #expect(cases.contains { $0.expected == nil }, "the doubt rule has no case")
         #expect(cases.contains { $0.expected?.isEmpty == true }, "the no-dependency answer has no case")
+        // Amendment H: the reader returns the value the compiler sees, so some case must spell a
+        // path differently from its value — an escape and a raw string do.
+        #expect(cases.contains { $0.manifest.contains(#"\u{"#) }, "no case escapes a path")
+        #expect(cases.contains { $0.manifest.contains(##"#""##) }, "no case is a raw string")
         let wrong = cases.filter { ConstructionUniverse.localPackageDependencies(manifest: $0.manifest) != $0.expected }
         #expect(wrong.isEmpty, """
         The manifest reader disagrees with the cases SwiftProjectLint answers too — the two \
@@ -62,15 +66,22 @@ struct ConstructionUniverseCasesTests {
         }
     }
 
-    /// The file is only a guard if it can tell the shared order from its two plausible
-    /// neighbours: a case-insensitive sort and a numeric one. Both disagree with it.
-    @Test("the shared order is not a case-insensitive or numeric order")
+    /// The file is only a guard if it can tell the shared order from its plausible neighbours: a
+    /// case-insensitive sort, a numeric one, and a sort by path component — which differs from
+    /// `String <` wherever `-` or `.` meets `/` (`Sources/A-B/X.swift` sorts before
+    /// `Sources/A/X.swift` under `String <`, after it per component; the shared spec's amendment N
+    /// added that pair after a per-component mutant passed both repos). All three disagree with it.
+    @Test("the shared order is not a case-insensitive, numeric or per-component order")
     func sharedOrderDiscriminates() throws {
         let order = try Self.cases().buildOrder
         let finder = order.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
         let caseless = order.sorted { $0.lowercased() < $1.lowercased() }
+        let perComponent = order.sorted {
+            $0.split(separator: "/").lexicographicallyPrecedes($1.split(separator: "/"))
+        }
         #expect(finder != order)
         #expect(caseless != order)
+        #expect(perComponent != order)
     }
 }
 
