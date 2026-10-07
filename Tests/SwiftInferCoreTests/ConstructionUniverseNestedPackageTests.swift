@@ -85,7 +85,7 @@ struct ConstructionUniverseNestedPackageTests {
 
     /// The closure over an in-memory tree: a directory in `manifests` holds that text; the root
     /// and a package of `packages` with no entry hold a manifest that cannot be read; anything else
-    /// holds none.
+    /// holds none — `[.absent]`, as `manifests(inDirectory:)` answers for a directory on disk.
     static func compiled(
         _ manifests: [String: String],
         packages: Set<String> = Self.packages,
@@ -100,7 +100,7 @@ struct ConstructionUniverseNestedPackageTests {
             resolvingSymlinks: { $0 },
             manifests: { directory in
                 if let text = manifests[directory] { return [.text(text)] }
-                return directory.isEmpty || packages.contains(directory) ? [.unreadable] : []
+                return directory.isEmpty || packages.contains(directory) ? [.unreadable] : [.absent]
             }
         )
     }
