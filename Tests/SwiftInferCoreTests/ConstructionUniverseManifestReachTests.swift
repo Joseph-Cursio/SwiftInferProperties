@@ -164,6 +164,29 @@ struct ConstructionUniverseManifestReachTests {
         #expect(try Self.tokenCount(in: root) == .refuted)
     }
 
+    /// The shared spec's amendment T, the final review's `f11`: a target whose path HOLDS a nested
+    /// package compiles that package's sources — `swift package describe` and `swift build` show
+    /// `.target(name: "All", path: "Packages", exclude: ["A/Package.swift"])` building
+    /// `Packages/A/Sources/A` into `All`. The bound looked for a package holding `Packages`, found
+    /// none, and `A`'s UUID-minting `Tok` left the table.
+    @Test("a target whose path holds a nested package reaches it")
+    func targetPathOverANestedPackageReachesIt() throws {
+        let root = try Wiring.makePackage([
+            "Package.swift": Self.rootManifest(
+                targets: #".target(name: "All", path: "Packages", exclude: ["A/Package.swift"])"#
+            ),
+            "Packages/A/Package.swift": Self.library("A"),
+            "Packages/A/Sources/A/Tok.swift": Self.tok,
+            "Packages/Loose/L.swift": "struct Loose { let n: Int }",
+            "Sources/App/App.swift": Self.app(importing: "All")
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = root.appendingPathComponent("Sources/App")
+        let paths = ConstructionUniverse.files(forScanOf: app).map(\.relativePath)
+        #expect(paths.contains("Packages/A/Sources/A/Tok.swift"), "\(paths)")
+        #expect(try Self.tokenCount(in: root) == .refuted)
+    }
+
     /// A target path is followed in every manifest the closure reaches, and a computed one is doubt.
     @Test("target paths are read across the closure, and a computed one is doubt")
     func targetPathsAcrossTheClosure() {
@@ -175,8 +198,16 @@ struct ConstructionUniverseManifestReachTests {
         #expect(reached == ["Packages/A", "Packages/C"])
         let doubt = Nested.compiled(["": #"let p = "Sources"; .target(name: "X", path: p)"#])
         #expect(doubt == ["Packages/A", "Packages/B", "Packages/C", "Demo", "Vendor/Lib"])
-        // A path inside no nested package reaches none.
+        // A path inside no nested package, and holding none, reaches none.
         #expect(Nested.compiled(["": #".target(name: "X", path: "Sources/X")"#]).isEmpty)
+        // Amendment T: `Packages` lies in no package but holds three, and SwiftPM compiles their
+        // sources into `All`; `Packages/C`'s closure brings `Demo`. A path is matched by component:
+        // `Pack` holds nothing.
+        #expect(Nested.compiled([
+            "": #"[.target(name: "All", path: "Packages")]"#,
+            "Packages/A": "", "Packages/B": "", "Packages/C": #".package(path: "../../Demo")"#, "Demo": ""
+        ]) == ["Packages/A", "Packages/B", "Packages/C", "Demo"])
+        #expect(Nested.compiled(["": #".target(name: "X", path: "Pack")"#]).isEmpty)
     }
 
     // MARK: - Q: canonical locations

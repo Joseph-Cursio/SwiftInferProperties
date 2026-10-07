@@ -73,11 +73,11 @@ import Foundation
 /// SwiftProjectLint:
 ///
 /// 1. **Bound by what the root compiles** (amendment B): a file inside a nested package is in only
-///    when the root reaches that package — through local path dependencies or a target's `path:`,
-///    across every manifest of the closure — or the root has no manifest to say, or an Xcode
-///    project beside it may compile more (`ConstructionUniverse+NestedPackages.swift`, whose body
-///    is SwiftProjectLint's line for line). **And a
-///    nested package the scan judges a file of is in, with its own closure** (amendment J):
+///    when the root reaches that package — through local path dependencies or a target's `path:`
+///    that lies in it or holds it (amendments P and T), across every manifest of the closure — or
+///    the root has no manifest to say, or an Xcode project beside it may compile more
+///    (`ConstructionUniverse+NestedPackages.swift`, whose body is SwiftProjectLint's line for
+///    line). **And a nested package the scan judges a file of is in, with its own closure** (amendment J):
 ///    `--sources Examples` over an uncompiled `Examples/Demo` judges Demo's functions with Demo's
 ///    types. So the universe depends on the judged set, not only on the root, and
 ///    `PackagePurity.covers(_:)` compares members, not roots.
