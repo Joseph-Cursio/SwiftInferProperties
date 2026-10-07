@@ -174,12 +174,14 @@ public enum ConstructionUniverse {
             walk.nestedPackages,
             rootHasManifest: rootHasManifest && !holdsXcodeProject(root),
             rootPath: root.path,
-            resolvingSymlinks: { resolved(URL(fileURLWithPath: $0)).path }
+            resolvingSymlinks: { resolved(URL(fileURLWithPath: $0)).path },
+            holdsManifest: { holdsManifest(root.appendingPathComponent($0)) }
         ) { manifestText(of: $0, under: root) }
         let bounded = members.filter { member in
             owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains) ?? true
         }
-        let manifests = (rootHasManifest ? [""] : []) + walk.nestedPackages.sorted()
+        // Every manifest that can move the bound — the closure's too, under `Tests/` or not.
+        let manifests = (rootHasManifest ? [""] : []) + walk.nestedPackages.union(compiled).sorted()
         return Universe(
             root: root,
             members: ordered(deduplicated(bounded)),

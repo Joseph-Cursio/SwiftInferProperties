@@ -54,7 +54,9 @@ extension ConstructionUniverse {
         }
     }
 
-    /// The nested packages, of `nestedPackages`, whose files are in the universe.
+    /// The nested packages whose files are in the universe: every one of `nestedPackages` when the
+    /// root has no manifest or the closure meets doubt, else the closure's nodes — which may include
+    /// a package the walk never entered (amendment I), whose own files the predicate rejects.
     ///
     /// - Parameters:
     ///   - nestedPackages: root-relative directories (no trailing `/`) that hold a manifest.
@@ -64,6 +66,10 @@ extension ConstructionUniverse {
     ///     resolved itself.
     ///   - resolvingSymlinks: an absolute path with every symlink resolved, by the same resolution
     ///     the root's path went through (amendment H). The identity for an in-memory tree.
+    ///   - holdsManifest: whether a root-relative directory holds a manifest ON DISK — the closure
+    ///     follows each dependency to `<dir>/Package.swift` by path (amendment I), so a package
+    ///     under `Tests/`, a hidden or a pruned directory still passes its dependencies and its
+    ///     doubt on. `nil` means "is one of `nestedPackages`", for an in-memory tree.
     ///   - manifest: the text of the manifest in a root-relative directory (`""` is the root), or
     ///     `nil` when it cannot be read — which is doubt, so every nested package is in.
     public static func compiledNestedPackages(
@@ -71,17 +77,21 @@ extension ConstructionUniverse {
         rootHasManifest: Bool,
         rootPath: String,
         resolvingSymlinks: (String) -> String = { $0 },
+        holdsManifest: ((String) -> Bool)? = nil,
         manifest: (String) -> String?
     ) -> Set<String> {
         guard rootHasManifest, !nestedPackages.isEmpty else { return nestedPackages }
+        let isPackage = holdsManifest ?? nestedPackages.contains
         var reached: Set<String> = []
         var pending = [""]
         while let directory = pending.popLast() {
             guard let text = manifest(directory),
                   let dependencies = localPackageDependencies(manifest: text) else { return nestedPackages }
             for literal in dependencies {
+                // The root is no nested package, whatever a `.package(path: ".")` says.
                 guard let resolved = resolve(literal, from: directory, rootPath: rootPath, with: resolvingSymlinks),
-                      nestedPackages.contains(resolved),
+                      !resolved.isEmpty,
+                      isPackage(resolved),
                       reached.insert(resolved).inserted else { continue }
                 pending.append(resolved)
             }

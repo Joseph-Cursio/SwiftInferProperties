@@ -112,4 +112,55 @@ struct ConstructionUniverseDependencyPathTests {
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(try Self.takesQ(root))
     }
+
+    // MARK: - I: the closure reads manifests by path
+
+    /// The review's `agreement#0` / `tests#0` / `sip#4`: the root depends on a package the walk
+    /// never enters — under `Tests/`, a `*Tests` folder, a hidden or a pruned directory — and that
+    /// package depends on one the walk does find. The walk pruned the middle package, so the
+    /// closure stopped at it: `Shared`'s `Token` left the universe, `mint()` read pure, and
+    /// SwiftProjectLint, whose walk enters `Tests/`, built a different table from the same root.
+    @Test("the closure passes through a package the walk never enters", arguments: [
+        "Tests/Support", "SnapshotTests", ".support", "Pods/Support"
+    ])
+    func closurePassesThroughAnUnwalkedPackage(middle: String) throws {
+        let climb = String(repeating: "../", count: middle.split(separator: "/").count)
+        let root = try Wiring.makePackage([
+            "Package.swift": Nested.manifest(dependingOn: middle),
+            "\(middle)/Package.swift": Nested.manifest(dependingOn: climb + "Shared"),
+            "\(middle)/Sources/Support/Support.swift": "public struct Support { public let id = UUID() }",
+            "Shared/Package.swift": Nested.demoManifest,
+            "Shared/Sources/Shared/Token.swift": Self.token,
+            "Sources/Lib/Mint.swift": Self.mint
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let universe = ConstructionUniverse.universe(forScanOf: root.appendingPathComponent("Sources/Lib"))
+        // The middle package's own files stay out: the predicate still decides what is production.
+        #expect(universe.members.map(\.relativePath) == ["Shared/Sources/Shared/Token.swift", "Sources/Lib/Mint.swift"])
+        #expect(try Nested.verdict("mint", scanning: root.appendingPathComponent("Sources/Lib")) == .refuted)
+        // Its manifest decides the bound, so it is watched like any other.
+        let watched = universe.manifests.map { $0.path.dropFirst(universe.root.path.count + 1) }
+        #expect(watched.contains("\(middle)/Package.swift"[...]), "\(watched)")
+    }
+
+    /// The review's `f10b`: doubt in a manifest the walk never enters is still doubt — every
+    /// nested package is in, and an unrelated `Demo/`'s `Row` refutes the root's.
+    @Test("doubt in a package the walk never enters includes every nested package")
+    func doubtInAnUnwalkedPackageIncludesEveryNestedPackage() throws {
+        let root = try Wiring.makePackage([
+            "Package.swift": Nested.manifest(dependingOn: "IntegrationTests"),
+            "IntegrationTests/Package.swift": """
+            // swift-tools-version:5.9
+            let shared = "../Shared"
+            let package = Package(name: "IntegrationTests", dependencies: [.package(path: shared)])
+            """,
+            "Sources/Lib/Row.swift": Nested.row,
+            "Demo/Package.swift": Nested.demoManifest,
+            "Demo/Sources/Demo/main.swift": Nested.mintingRow
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let lib = root.appendingPathComponent("Sources/Lib")
+        #expect(ConstructionUniverse.files(forScanOf: lib).map(\.relativePath).contains("Demo/Sources/Demo/main.swift"))
+        #expect(try Nested.verdict("make", scanning: lib) == .refuted)
+    }
 }
