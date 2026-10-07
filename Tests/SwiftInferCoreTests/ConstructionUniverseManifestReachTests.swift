@@ -141,6 +141,29 @@ struct ConstructionUniverseManifestReachTests {
         #expect(try Self.tokenCount(in: root) == .refuted)
     }
 
+    /// A package under `Tests/` is a nested package — the walk enters a test directory for the
+    /// packages it holds, as SwiftProjectLint's walk does — so a target path into one reaches it,
+    /// and its own dependencies with it. Pruned at `Tests/`, the walk never recorded `Tests/Fixture`,
+    /// the target path reached nothing, and the two consumers bounded one root two ways.
+    @Test("a nested package under Tests/ is one the closure can reach")
+    func packageUnderTestsIsANestedPackage() throws {
+        let root = try Wiring.makePackage([
+            "Package.swift": Self.rootManifest(
+                targets: #".target(name: "F", path: "Tests/Fixture/Sources/F"), "#
+                    + #".target(name: "App", dependencies: ["F"])"#
+            ),
+            "Tests/Fixture/Package.swift": Nested.manifest(dependingOn: "../../Packages/A"),
+            "Tests/Fixture/Sources/F/F.swift": "public struct F {}",
+            "Packages/A/Package.swift": Self.library("A"),
+            "Packages/A/Sources/A/Tok.swift": Self.tok,
+            "Sources/App/App.swift": Self.app(importing: "A")
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let universe = ConstructionUniverse.universe(forScanOf: root.appendingPathComponent("Sources/App"))
+        #expect(universe.members.map(\.relativePath) == ["Packages/A/Sources/A/Tok.swift", "Sources/App/App.swift"])
+        #expect(try Self.tokenCount(in: root) == .refuted)
+    }
+
     /// A target path is followed in every manifest the closure reaches, and a computed one is doubt.
     @Test("target paths are read across the closure, and a computed one is doubt")
     func targetPathsAcrossTheClosure() {
