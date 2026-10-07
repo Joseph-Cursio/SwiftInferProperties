@@ -1,13 +1,13 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
-index f442bfd2..2f6a559c 100644
+index da474bbe..b444df61 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
-@@ -174,7 +174,7 @@ extension ConstructionUniverse {
-                     literal, from: directory, root: root, resolvingSymlinks: resolvingSymlinks
-                 ) else { continue }
+@@ -177,7 +177,7 @@ extension ConstructionUniverse {
+                 // resolves to it, and it holds every package.
                  for package in packageAt.keys
--                where location == package || location.hasPrefix(package + "/") || package.hasPrefix(location + "/") {
-+                where location == package || location.hasPrefix(package + "/") {
+                 where location.isEmpty || location == package
+-                    || location.hasPrefix(package + "/") || package.hasPrefix(location + "/") {
++                    || location.hasPrefix(package + "/") {
                      enter(package)
                  }
              }
