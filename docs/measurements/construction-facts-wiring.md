@@ -425,7 +425,8 @@ the universe parse, the table build, the out-of-universe re-parse in
   types refute no longer depends on order; the shared order still decides which witness is
   reported first. Re-taken at `9d0bf6d` (`make batch2`, 2026-10-06), the `Sources/` delta and the
   per-corpus table above came out identical, every printed figure to the digit — and again at
-  `64a905c` (SEI #24, which memoises how the table is built and changes nothing it says). Still
+  `64a905c` (SEI #24, which memoises how the table is built and changes nothing it says), and at
+  `4aa91cf` (SEI #25, which follows an alias named as a member of its type, and moved no row). Still
   recommended upstream: a public `isProductionSource` and a structural digest, so agreement
   becomes a property of the pin.
 
