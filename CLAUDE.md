@@ -54,25 +54,25 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,794 tests — 6,561 fast + 233 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-10-07** at `7fbc7baa` (the
-`construction-facts-review-fixes` branch after the joint follow-up review's fixes, on `a09c5d56`) on
-**swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `64a905c`**, Xcode 27 / Swift 6.4 — every
-stage counted from that one run, and the run was UNPIPED (`make test > log 2>&1`, exit **0**):
-fast **6,561** · perf 9 · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 233, every batch to the digit** — the follow-up's fixes added no
-measured suite — ⚠ **and the corpus-surveying batches assert floors (`> 1_000` rows), so green is not
-an A/B; the row dumps in `fixtures/` and the census arms are.**
-**The fast half moved 6,524 → 6,561, +37, all this branch's** (amendments 3 and 3b): what a manifest
-is and an Xcode project beside it 7, where a dependency path leads 6, version-specific manifests /
-target paths / canonical locations 7, letter case 4, judged packages 4, the nested-package bound's
-new pure and on-disk cases 3, symlinks (bound-then-deduplicate, `UF_HIDDEN`) 2, the speculative
-snapshot 2, the shared target-path cases 1, the cross-repo closure clause 1.
+Suites green at **6,801 tests — 6,566 fast + 235 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-10-07** at `a4e68820` (the
+`construction-facts-review-fixes` branch, PR #635, after its final review's fixes and the shared
+spec's amendment 4) on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `64a905c`**,
+Xcode 27 / Swift 6.4 — every stage counted from that one run, and the run was UNPIPED
+(`make test > log 2>&1`, exit **0**):
+fast **6,566** · perf **11** · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half moved 233 → 235, and only in `perf`**: two §13 rows
+(`ConstructionUniversePerformanceTests` — the universe walk beside 20,000 files under `Tests/`, and
+`covers` on its own directory); every batch stood still to the digit — ⚠ **and the corpus-surveying
+batches assert floors (`> 1_000` rows), so green is not an A/B; the row dumps in `fixtures/` and the
+census arms are.**
+**The fast half moved 6,561 → 6,566, +5, all this branch's**: `covers`' record and memo 2, the
+target path over a nested package (T) 1, the root manifest SwiftPM loads (S) 1, the shared
+`isManifest` cases (U) 1.
 **Timings** (an M5 Pro; swift-testing's own per-stage durations, which EXCLUDE the build): `batch3`
-121s; `batch2` 391s; `batch5` 772s; `batch1` 102s, `batch4` 82s, `batch6` 51s, `batch7` 79s, `batch8`
-309s; fast suite 88s (the Makefile's own clock), whole run **2,045s** wall. Another session was building
-SwiftProjectLint on the same machine (load peaked at 105 during batches 2–3), so read the times as
-loaded.
+112s; `batch2` 381s; `batch5` 756s; `batch1` 96s, `batch4` 79s, `batch6` 51s, `batch7` 78s, `batch8`
+307s; fast suite 87s (the Makefile's own clock), whole run **1,998s** wall. Load peaked near 12 during
+the batches, so read the times as lightly loaded.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
@@ -160,7 +160,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Why does `verify` decline so much?** | `docs/measurements/verify-carrier-reach-census.md` | **Not** carrier support: carrier is ~4% of declines, template reach is 65% |
 | **Is an unrecognised callee safe to wave through?** | `docs/measurements/purity-unrecognised-callee-census.md` | **Measured no — a subprocess spawn is judged `.pure`**, but the allowlist fix costs 65% of `.pure`. Verdict unchanged with construction facts — taken at SEI `f2ea8d6`, re-taken at `9d0bf6d` |
 | **Is `PurityVerdict.refuted` evidence, or the analyzer reporting its own blindness?** | `docs/measurements/purity-refuted-bucket-census.md` | **Measured 54% ignorance, then 45%, 43%, now 35% (with construction facts)** — check which pin and which configuration a figure belongs to. Rankable ceiling **118**; it has been 152, 135 and 133. Every refuter added anywhere shrinks this bucket |
-| **What did wiring SEI's construction facts move — and do the two consumers still consult one oracle?** | `docs/measurements/construction-facts-wiring.md` | **0 verdicts on this repo; 266 rows over 21 manifest roots, 215 of them one hop from SwiftProjectLint's `addIssue`** — unchanged by the review's 17 fixes and the follow-up's amendments F–R. One oracle now needs an equal pin AND an equal universe — and one closure text |
+| **What did wiring SEI's construction facts move — and do the two consumers still consult one oracle?** | `docs/measurements/construction-facts-wiring.md` | **0 verdicts on this repo; 266 rows over 21 manifest roots, 215 of them one hop from SwiftProjectLint's `addIssue`** — unchanged by the review's 17 fixes, the follow-up's amendments F–R and amendment 4. One oracle now needs an equal pin AND an equal universe — and one closure text |
 | **Would a blocking-callee index earn its keep?** | `docs/measurements/purity-blocking-callee-census.md` | **Measured NO, twice over** — 13–31 rows of leverage behind 118, landing in a tier nothing reads |
 | **Does the toolchain need to run in a LOOP — would a refuting-direction fixpoint pay?** | `docs/measurements/purity-refuting-fixpoint-census.md` | **BUILT as `PackagePurityJoin` (retracts 22 here; it amplifies construction facts elsewhere); the loop itself is unbuilt.** 18 rows at one hop, 29 at fixpoint; a hand-check killed the first answer |
 | **Does purity propagate through a higher-order call?** | `docs/measurements/purity-higher-order-census.md` | **Premise measured FALSE** — chains sail through. The real gap is a 26-row over-claim; item 42 closed |
