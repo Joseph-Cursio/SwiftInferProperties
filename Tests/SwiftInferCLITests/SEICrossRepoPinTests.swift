@@ -369,29 +369,8 @@ struct SEICrossRepoPinTests {
             #expect(pinIsHex, "SwiftProjectLint/\(manifest) → \(pin)")
         }
 
-        // The universe-table clause's own capability: this package's copy must always be
+        // The construction-universe clauses' own capability: this package's copies must always be
         // readable, and a sibling without one is said, for the same reason as the skip above.
-        let ownTableExists = FileManager.default.fileExists(atPath: Self.ownUniverseTable.path)
-        #expect(ownTableExists, "docs/construction-universe.tsv is missing")
-        if Self.linterUniverseTable == nil {
-            print(
-                """
-                NOTE — cross-repo construction-universe comparison SKIPPED: SwiftProjectLint at \
-                \(linterRoot.path) carries no \(Self.linterUniverseTablePath). Equal SEI pins over \
-                unequal universes are one oracle configured two ways, and this run did not check.
-                """
-            )
-        }
-        let ownCasesExist = FileManager.default.fileExists(atPath: Self.ownUniverseCases.path)
-        #expect(ownCasesExist, "docs/construction-universe-cases.json is missing")
-        if Self.linterUniverseCases == nil {
-            print(
-                """
-                NOTE — cross-repo construction-universe CASES comparison SKIPPED: SwiftProjectLint \
-                at \(linterRoot.path) carries no \(Self.linterUniverseCasesPath). The two manifest \
-                readers and build orders were not compared on this run.
-                """
-            )
-        }
+        Self.noteUniverseClauses(linterRoot: linterRoot)
     }
 }
