@@ -162,6 +162,7 @@ killed by the test process dying with `SIGBUS`, which the runner counts as a fai
 | `manifest-later-line-any-version` | construction-universe | killed | `rootManifestIsWhatSwiftPMLoads` · `manifestTextCasesHold` · `firstLineDecides` (S(b)) |
 | `manifest-later-line-ignored` | construction-universe | killed | `rootManifestIsWhatSwiftPMLoads` · `manifestTextCasesHold` · `firstLineDecides` (S(b)) |
 | `target-path-reaches-only-enclosing-packages` | construction-universe | killed | `targetPathOverANestedPackageReachesIt` · `targetPathsAcrossTheClosure` (T) |
+| `target-path-root-reaches-nothing` | construction-universe | killed | `rootTargetPathReachesEveryNestedPackage` (T′) |
 
 The fourth construction batch (2026-10-07, after the final review of the amendment-3 PRs) adds a
 mutant for each of the review's two performance fixes — `covers` answering from its record and

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index da474bbe..3dd30980 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -176,7 +176,7 @@ extension ConstructionUniverse {
+                 // The root is `""`, which no `hasPrefix` matches: a root target's `path: "."`
+                 // resolves to it, and it holds every package.
+                 for package in packageAt.keys
+-                where location.isEmpty || location == package
++                where location == package
+                     || location.hasPrefix(package + "/") || package.hasPrefix(location + "/") {
+                     enter(package)
+                 }

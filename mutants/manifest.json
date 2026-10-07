@@ -489,6 +489,14 @@
       "expected": "killed",
       "test": "targetPathOverANestedPackageReachesIt|targetPathsAcrossTheClosure",
       "label": "a target path reaches only a package that holds it — `path: \"Packages\"` reaches none of the packages it compiles (amendment T)"
+    },
+    {
+      "id": "target-path-root-reaches-nothing",
+      "patch": "patches/target-path-root-reaches-nothing.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "rootTargetPathReachesEveryNestedPackage",
+      "label": "the root's empty location matches no prefix — a root target's `path: \".\"` reaches no nested package (amendment T′)"
     }
   ]
 }
