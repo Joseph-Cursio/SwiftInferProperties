@@ -241,6 +241,166 @@
       "expected": "killed",
       "test": "transitiveClosure|referencedNestedPackageIsInside",
       "label": "the closure follows the root's own path dependencies but not theirs — a package the root reaches through another is dropped, and its `Row` no longer refutes"
+    },
+    {
+      "id": "manifest-reader-reads-source-text",
+      "patch": "patches/manifest-reader-reads-source-text.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestCasesHold",
+      "label": "the manifest reader joins a literal's source text instead of its value — `\"Pack\\u{61}ges/A\"` names no package (amendment H)"
+    },
+    {
+      "id": "manifest-ignores-first-line",
+      "patch": "patches/manifest-ignores-first-line.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "sourceFileNamedPackageIsNotAManifest",
+      "label": "any readable Package.swift is a manifest — a `struct Package` source file becomes a package boundary and drops its target's other files (amendment F)"
+    },
+    {
+      "id": "manifest-is-any-entry-of-that-name",
+      "patch": "patches/manifest-is-any-entry-of-that-name.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "danglingManifestLinkIsNotAManifest|directoryNamedPackageIsNotAManifest",
+      "label": "a dangling link or a directory named Package.swift is an unreadable manifest — doubt lets an unrelated Demo in, and a directory becomes a root (amendment F)"
+    },
+    {
+      "id": "manifest-unreadable-is-absent",
+      "patch": "patches/manifest-unreadable-is-absent.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "unreadableManifestIsDoubt|nonUTF8ManifestIsUnreadable",
+      "label": "a Package.swift that cannot be read is no manifest — its doubt is lost and its package's files become the root's (amendment F)"
+    },
+    {
+      "id": "universe-ignores-xcode-project",
+      "patch": "patches/universe-ignores-xcode-project.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "xcodeProjectBesideTheManifestTakesEveryNestedPackage",
+      "label": "an Xcode project beside the root manifest bounds nothing extra — the local package only the app target links leaves the table (amendment G)"
+    },
+    {
+      "id": "dependency-compared-unresolved",
+      "patch": "patches/dependency-compared-unresolved.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "absolutePathIsComparedResolved|dependencyThroughASymlinkIsResolved|dependencyInAnotherCaseIsResolved|symlinkedPackageDirectoryReachesTheWalkedPackage",
+      "label": "dependency paths compared as folded text, never resolved — a `/private/tmp` literal, a symlinked prefix or another letter case misses the compiled package (amendment H)"
+    },
+    {
+      "id": "relative-dependency-compared-by-spelling",
+      "patch": "patches/relative-dependency-compared-by-spelling.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "symlinkedPackageDirectoryReachesTheWalkedPackage|dependencyThroughASymlinkIsResolved|dependencyInAnotherCaseIsResolved",
+      "label": "only an absolute literal is resolved — a relative one through a symlinked package directory never meets the walked package (amendment Q, the critic's s11)"
+    },
+    {
+      "id": "closure-reads-walked-packages-only",
+      "patch": "patches/closure-reads-walked-packages-only.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "closurePassesThroughAnUnwalkedPackage|doubtInAnUnwalkedPackageIncludesEveryNestedPackage",
+      "label": "the closure reads only manifests the walk found — it stops at a package under Tests/, a hidden or a pruned directory (amendment I)"
+    },
+    {
+      "id": "version-specific-manifests-ignored",
+      "patch": "patches/version-specific-manifests-ignored.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "versionSpecificManifestIsRead|versionSpecificDoubtIsDoubt",
+      "label": "a directory's Package@swift-*.swift is never read — its dependency and its doubt are lost (amendment O, the critic's s6v)"
+    },
+    {
+      "id": "target-paths-ignored",
+      "patch": "patches/target-paths-ignored.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "targetPathInsideANestedPackageReachesIt|targetPathsAcrossTheClosure",
+      "label": "a target's `path:` reaches no nested package — the root's own target inside `Core/` leaves the table (amendment P, the critic's s7)"
+    },
+    {
+      "id": "judged-packages-ignored",
+      "patch": "patches/judged-packages-ignored.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "judgedNestedPackageIsInItsUniverse|judgedPackageBringsItsClosure|judgingTheNamesakePackageTakesIt",
+      "label": "a nested package holding a judged file is bounded out like any other — its functions are judged without their own types (amendment J)"
+    },
+    {
+      "id": "covers-compares-root-only",
+      "patch": "patches/covers-compares-root-only.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "purityCoversOnlyItsOwnUniverse",
+      "label": "a purity covers every scan under its root — a value built for Sources/App judges Examples/ under a table without Demo (amendment J)"
+    },
+    {
+      "id": "manifest-read-on-caller-stack",
+      "patch": "patches/manifest-read-on-caller-stack.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "deepManifestIsReadOnALargeStack",
+      "label": "the manifest is parsed on the caller's stack — a 3,000-arm `else if` manifest SIGBUSes the test process (amendment K)"
+    },
+    {
+      "id": "scanned-path-taken-as-typed",
+      "patch": "patches/scanned-path-taken-as-typed.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "misCasedTestSpellingStillFindsThePackage|misCasedProductionSpellingStaysSelfContained|misCasedScanIsSpelledOnDisk",
+      "label": "the scanned path is taken as typed — on a case-insensitive volume the rule turns case-sensitive and members are spelled after the typing (amendment L)"
+    },
+    {
+      "id": "universe-skips-uf-hidden",
+      "patch": "patches/universe-skips-uf-hidden.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "hiddenFlagIsNotHiddenName",
+      "label": "the walk skips an entry carrying UF_HIDDEN — a flagged file SwiftPM compiles leaves the table (amendment M)"
+    },
+    {
+      "id": "speculative-unreadable-member-throws",
+      "patch": "patches/speculative-unreadable-member-throws.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "unreadableUniverseFileIsSkipped",
+      "label": "a speculative snapshot reads every universe member with `try` — one dangling link outside Sources/ skips every candidate"
+    },
+    {
+      "id": "speculative-failed-snapshot-leaks",
+      "patch": "patches/speculative-failed-snapshot-leaks.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "failedSnapshotIsRemoved",
+      "label": "a speculative snapshot that throws is left in the temporary directory"
+    },
+    {
+      "id": "universe-dedup-before-bound",
+      "patch": "patches/universe-dedup-before-bound.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "boundBeforeDeduplicating",
+      "label": "the universe is deduplicated before it is bounded — a link into an uncompiled package is lost with the spelling the bound drops"
+    },
+    {
+      "id": "universe-order-per-component",
+      "patch": "patches/universe-order-per-component.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "buildOrderIsTheSharedOrder",
+      "label": "the build order sorts by path component instead of String < — `Sources/A-B/X.swift` and `Sources/A/X.swift` swap (amendment N)"
+    },
+    {
+      "id": "universe-watch-misses-version-specific",
+      "patch": "patches/universe-watch-misses-version-specific.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "versionSpecificManifestIsRead",
+      "label": "the manifests a universe watches leave out Package@swift-*.swift — an edit to one cannot mark the index stale"
     }
   ]
 }

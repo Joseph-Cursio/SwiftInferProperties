@@ -119,6 +119,39 @@ and a speculative snapshot that copies `Sources/` alone. `scan-reparses-universe
 also names `scanReusesTheFactsTrees`, which kills it on its own since it was given the
 node-identity subject.
 
+The third construction batch (2026-10-07, after the joint follow-up review and its critic) adds
+one mutant per clause of the shared spec's amendments 3 and 3b, plus the review's two test gaps.
+Seven earlier patches were re-anchored on the moved code, unchanged in meaning
+(`manifest-reader-reads-every-path-argument`, `nested-closure-stops-at-one-hop`,
+`nested-doubt-includes-nothing`, `speculative-snapshot-copies-sources-only`,
+`test-dir-scan-walks-up`, `universe-root-found-resolved`, `universe-takes-every-nested-package`).
+`universe-dedup-before-bound` and `universe-order-per-component` are the review's `tests#4` and
+`tests#5`: before this batch every suite passed under each. `manifest-read-on-caller-stack` is
+killed by the test process dying with `SIGBUS`, which the runner counts as a failure.
+
+| id | shape | expected | killer |
+|---|---|---|---|
+| `manifest-reader-reads-source-text` | construction-universe | killed | `manifestCasesHold` (H) |
+| `manifest-ignores-first-line` | construction-universe | killed | `sourceFileNamedPackageIsNotAManifest` (F) |
+| `manifest-is-any-entry-of-that-name` | construction-universe | killed | `danglingManifestLinkIsNotAManifest` · `directoryNamedPackageIsNotAManifest` (F) |
+| `manifest-unreadable-is-absent` | construction-universe | killed | `unreadableManifestIsDoubt` · `nonUTF8ManifestIsUnreadable` (F) |
+| `universe-ignores-xcode-project` | construction-universe | killed | `xcodeProjectBesideTheManifestTakesEveryNestedPackage` (G) |
+| `dependency-compared-unresolved` | construction-universe | killed | `absolutePathIsComparedResolved` · `dependencyThroughASymlinkIsResolved` · `dependencyInAnotherCaseIsResolved` · `symlinkedPackageDirectoryReachesTheWalkedPackage` (H) |
+| `relative-dependency-compared-by-spelling` | construction-universe | killed | `symlinkedPackageDirectoryReachesTheWalkedPackage` (Q) · `dependencyThroughASymlinkIsResolved` · `dependencyInAnotherCaseIsResolved` |
+| `closure-reads-walked-packages-only` | construction-universe | killed | `closurePassesThroughAnUnwalkedPackage` · `doubtInAnUnwalkedPackageIncludesEveryNestedPackage` (I) |
+| `version-specific-manifests-ignored` | construction-universe | killed | `versionSpecificManifestIsRead` · `versionSpecificDoubtIsDoubt` (O) |
+| `target-paths-ignored` | construction-universe | killed | `targetPathInsideANestedPackageReachesIt` · `targetPathsAcrossTheClosure` (P) |
+| `judged-packages-ignored` | construction-universe | killed | `judgedNestedPackageIsInItsUniverse` · `judgedPackageBringsItsClosure` · `judgingTheNamesakePackageTakesIt` (J) |
+| `covers-compares-root-only` | construction-facts | killed | `purityCoversOnlyItsOwnUniverse` (J) |
+| `manifest-read-on-caller-stack` | construction-universe | killed | `deepManifestIsReadOnALargeStack` (K) |
+| `scanned-path-taken-as-typed` | construction-universe | killed | `misCasedTestSpellingStillFindsThePackage` · `misCasedProductionSpellingStaysSelfContained` · `misCasedScanIsSpelledOnDisk` (L) |
+| `universe-skips-uf-hidden` | construction-universe | killed | `hiddenFlagIsNotHiddenName` (M) |
+| `speculative-unreadable-member-throws` | construction-facts | killed | `unreadableUniverseFileIsSkipped` |
+| `speculative-failed-snapshot-leaks` | construction-facts | killed | `failedSnapshotIsRemoved` |
+| `universe-dedup-before-bound` | construction-universe | killed | `boundBeforeDeduplicating` |
+| `universe-order-per-component` | construction-universe | killed | `buildOrderIsTheSharedOrder` (N) |
+| `universe-watch-misses-version-specific` | construction-facts | killed | `versionSpecificManifestIsRead` |
+
 ## Adding a mutant
 
 1. Make the buggy edit; 2. `git diff -- <file> > mutants/patches/<id>.patch`;

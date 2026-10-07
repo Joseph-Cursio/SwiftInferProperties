@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 67ad850f..230a5db1 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -171,7 +171,7 @@ public enum ConstructionUniverse {
+         let compiled = compiledNestedPackages(
+             walk.nestedPackages,
+             rootHasManifest: bounds,
+-            judgedPackages: bounds ? judgedPackages(of: judged.map(\.relativePath), under: root) : [],
++            judgedPackages: [],
+             rootPath: root.path,
+             resolvingSymlinks: { resolved(URL(fileURLWithPath: $0)).path },
+             packagesContaining: { packages(containing: $0, under: root) },

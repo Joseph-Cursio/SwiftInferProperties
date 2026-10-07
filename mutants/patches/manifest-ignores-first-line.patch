@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+index 6ae0c75d..6e63c46d 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+@@ -43,7 +43,7 @@ extension ConstructionUniverse {
+         var status = stat()
+         guard stat(path, &status) == 0, status.st_mode & S_IFMT == S_IFREG else { return .absent }
+         guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return .unreadable }
+-        return isManifest(text) ? .text(text) : .absent
++        return .text(text)
+     }
+ 
+     /// Whether `directory` holds a manifest — readable or not.

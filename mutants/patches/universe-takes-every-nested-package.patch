@@ -1,14 +1,14 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
-index c762ac0d..e69adb2a 100644
+index 67ad850f..464c5b12 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
-@@ -174,7 +174,8 @@ public enum ConstructionUniverse {
-             try? String(contentsOf: manifestURL(of: directory, under: root), encoding: .utf8)
-         }
+@@ -178,7 +178,8 @@ public enum ConstructionUniverse {
+             manifests: { manifests(inDirectory: packageDirectory($0, under: root)) }
+         )
          let bounded = members.filter { member in
 -            owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains) ?? true
 +            _ = owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains)
 +            return true
          }
-         let manifests = (rootHasManifest ? [""] : []) + walk.nestedPackages.sorted()
-         return Universe(
+         // Every manifest that can move the bound — the closure's too, under `Tests/` or not.
+         let manifests = (rootHasManifest ? [""] : []) + walk.nestedPackages.union(compiled).sorted()

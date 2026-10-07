@@ -1,13 +1,18 @@
-diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
-index c87ac61f..14e414c1 100644
---- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
-+++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
-@@ -119,7 +119,7 @@ private final class PathDependencyCollector: SyntaxVisitor {
- 
-     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-         guard let member = node.calledExpression.as(MemberAccessExprSyntax.self),
--              member.declName.baseName.text == "package",
-+              !member.declName.baseName.text.isEmpty,
-               let path = node.arguments.first(where: { $0.label?.text == "path" }) else {
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
+index ff4a6302..ce1a7f58 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
+@@ -103,11 +103,11 @@ private final class ManifestPathCollector: SyntaxVisitor {
              return .visitChildren
          }
+         let name = member.declName.baseName.text
+-        guard name == "package" || Self.targetKinds.contains(name) else { return .visitChildren }
++        guard !name.isEmpty else { return .visitChildren }
+         // The value the compiler sees, not the source text: `"Pack\u{61}ges/A"` is `Packages/A`,
+         // and so is `#"Packages/A"#`. Interpolation, or a literal that did not parse, is `nil`.
+         let value = path.expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
+-        if name == "package" {
++        if !name.isEmpty {
+             if let value { dependencies.append(value) } else { dependenciesAreLiteral = false }
+         } else {
+             if let value { targetPaths.append(value) } else { targetPathsAreLiteral = false }

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/PackagePurity.swift b/Sources/SwiftInferCore/PackagePurity.swift
+index d81e32bd..beca6748 100644
+--- a/Sources/SwiftInferCore/PackagePurity.swift
++++ b/Sources/SwiftInferCore/PackagePurity.swift
+@@ -126,7 +126,7 @@ public struct PackagePurity: Sendable {
+     public func covers(_ directory: URL) -> Bool {
+         guard let root else { return false }
+         let wanted = ConstructionUniverse.universe(forScanOf: directory)
+-        return root.path == wanted.root.path && members == wanted.members.map(\.relativePath)
++        return root.path == wanted.root.path
+     }
+ 
+     /// Every refuted type with its witness — a structural digest, because `ConstructionFacts ==`

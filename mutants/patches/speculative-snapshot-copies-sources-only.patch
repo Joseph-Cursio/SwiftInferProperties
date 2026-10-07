@@ -1,13 +1,13 @@
 diff --git a/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift b/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift
-index 656d87e0..13b4dbe9 100644
+index 0f3c9fb7..f2c20ec7 100644
 --- a/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift
 +++ b/Sources/SwiftInferCLI/SpeculativeRefactorRunner+Machinery.swift
-@@ -96,7 +96,7 @@ extension SpeculativeRefactorRunner {
+@@ -108,7 +108,7 @@ extension SpeculativeRefactorRunner {
              guard FileManager.default.fileExists(atPath: from.path) else { continue }
              try FileManager.default.copyItem(at: from, to: root.appendingPathComponent(item))
          }
 -        for relativePath in universeOutsideSources(of: packageRoot) {
 +        for relativePath in universeOutsideSources(of: packageRoot) where relativePath.isEmpty {
-             let target = root.appendingPathComponent(relativePath)
-             try FileManager.default.createDirectory(
-                 at: target.deletingLastPathComponent(), withIntermediateDirectories: true
+             // The contents, not the entry: a copied symlink would resolve against the snapshot,
+             // or reach back into the reader's tree.
+             guard let data = try? Data(contentsOf: packageRoot.appendingPathComponent(relativePath)) else { continue }

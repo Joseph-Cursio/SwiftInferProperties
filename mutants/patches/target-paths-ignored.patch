@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
+index ff4a6302..b41b3214 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
+@@ -63,7 +63,7 @@ extension ConstructionUniverse {
+                 let read = read(text)
+                 guard let dependencies = read.dependencies, let targetPaths = read.targetPaths else { return nil }
+                 literals.dependencies += dependencies
+-                literals.targetPaths += targetPaths
++                _ = targetPaths
+             }
+         }
+         return literals

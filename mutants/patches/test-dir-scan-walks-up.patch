@@ -1,10 +1,10 @@
-diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
-index c762ac0d..9e501006 100644
---- a/Sources/SwiftInferCore/ConstructionUniverse.swift
-+++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
-@@ -282,7 +282,7 @@ public enum ConstructionUniverse {
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Location.swift b/Sources/SwiftInferCore/ConstructionUniverse+Location.swift
+index 1fafed10..db7fcf29 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Location.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Location.swift
+@@ -32,7 +32,7 @@ extension ConstructionUniverse {
              for scanned in [given, ConstructionUniverse.resolved(directory)] {
-                 guard let package = DirectoryAncestors.nearest(from: scanned, where: hasManifest) else { continue }
+                 guard let package = DirectoryAncestors.nearest(from: scanned, where: holdsManifest) else { continue }
                  let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))
 -                let selfContained = below.contains(where: isRejectedDirectory)
 +                let selfContained = below.contains(where: isRejectedDirectory) && false

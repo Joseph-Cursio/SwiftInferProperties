@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 67ad850f..6439d6e9 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -135,7 +135,7 @@ public enum ConstructionUniverse {
+     /// spec's order, asserted against `construction-universe-cases.json` in both repos. The one
+     /// place the universe is sorted; `universe(forScanOf:)` orders its members through it.
+     public static func buildOrder(_ relativePaths: [String]) -> [String] {
+-        relativePaths.sorted(by: <)
++        relativePaths.sorted { $0.split(separator: "/").lexicographicallyPrecedes($1.split(separator: "/")) }
+     }
+ 
+     /// A directory component the predicate rejects — everything under it is out.

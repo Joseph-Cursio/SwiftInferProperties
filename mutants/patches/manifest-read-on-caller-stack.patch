@@ -1,0 +1,21 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
+index ff4a6302..6af36a9e 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
+@@ -71,14 +71,14 @@ extension ConstructionUniverse {
+ 
+     /// Both readings of `manifest`, from one parse on a large stack.
+     private static func read(_ manifest: String) -> (dependencies: [String]?, targetPaths: [String]?) {
+-        LargeStackWorkers.run {
++        ({
+             let collector = ManifestPathCollector(viewMode: .sourceAccurate)
+             collector.walk(Parser.parse(source: manifest))
+             return (
+                 collector.dependenciesAreLiteral ? collector.dependencies : nil,
+                 collector.targetPathsAreLiteral ? collector.targetPaths : nil
+             )
+-        }
++        })()
+     }
+ }
+ 

@@ -1,0 +1,14 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index e88af83f..bd4b71b1 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -133,7 +133,8 @@ extension ConstructionUniverse {
+         let root = rootPath.split(separator: "/").map(String.init)
+         let base = literal.hasPrefix("/") ? [] : root + directory.split(separator: "/").map(String.init)
+         guard let lexical = standardised(base + literal.split(separator: "/").map(String.init)) else { return nil }
+-        let absolute = resolvingSymlinks("/" + lexical.joined(separator: "/")).split(separator: "/").map(String.init)
++        let spelled = "/" + lexical.joined(separator: "/")
++        let absolute = (literal.hasPrefix("/") ? resolvingSymlinks(spelled) : spelled).split(separator: "/").map(String.init)
+         guard absolute.starts(with: root) else { return nil }
+         return absolute.dropFirst(root.count).joined(separator: "/")
+     }

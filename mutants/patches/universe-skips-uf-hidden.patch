@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 67ad850f..382f64dd 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -280,6 +280,8 @@ public enum ConstructionUniverse {
+         while let relative = walker.nextObject() as? String {
+             let components = relative.split(separator: "/").map(String.init)
+             let name = components.last ?? relative
++            let flagged = (try? root.appendingPathComponent(relative).resourceValues(forKeys: [.isHiddenKey]))?.isHidden == true
++            if flagged { if walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory { walker.skipDescendants() }; continue }
+             if walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory {
+                 if isRejectedDirectory(name) { walker.skipDescendants() }
+                 continue
