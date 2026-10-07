@@ -43,16 +43,15 @@ import Foundation
 /// table, and every such scan would parse the whole package for nothing.
 ///
 /// **And no ancestor with a manifest means the scanned directory is its own root** — an Xcode app's
-/// folder, or a workspace folder of packages. ⚠ That case costs: every nested package below it is
-/// in (see below), so a folder holding five unrelated packages builds ONE table from all of them.
-/// SEI `9d0bf6d`'s `ConstructionFacts.build` re-walks the member-type graph for every decode site on
-/// every fixpoint pass (`decodeRefutation`, unmemoised), which is superlinear in the universe:
-/// measured on such a folder (swift-collections, swift-nio, swift-argument-parser, swift-algorithms
-/// and swift-syntax side by side, 1,566 production files), a scan cost ~17× the CPU and ~7× the
-/// peak RSS of main, and ~14× the five packages scanned one by one. The fix belongs in SEI
-/// (memoise `decodeRefutation` per declaration within a pass) and is pending there; partitioning
-/// per nested package here would drop the constructions an app makes from its own local packages
-/// — the under-refuting direction — so it is not done.
+/// folder, or a workspace folder of packages. Every nested package below it is in (see below), so a
+/// folder holding five unrelated packages builds ONE table from all of them. At SEI `9d0bf6d` that
+/// build was superlinear — `ConstructionFacts.build` re-walked the member-type graph per decode site
+/// and per fixpoint pass — and on swift-collections, swift-nio, swift-argument-parser,
+/// swift-algorithms and swift-syntax side by side it cost ~14× the five packages scanned one by one,
+/// or overflowed the stack. SEI #24 (`64a905c`) memoises it: the same folder (1,553 files) builds in
+/// 16 s and 744 MB against 7.5 s summed. Partitioning per nested package here would drop the
+/// constructions an app makes from its own local packages — the under-refuting direction — so it
+/// is not done.
 ///
 /// `--target`, `--sources` and a config's `excluded_paths` decide what is JUDGED, never what feeds
 /// the table.

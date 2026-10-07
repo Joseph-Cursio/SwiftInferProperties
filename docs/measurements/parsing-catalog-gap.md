@@ -1725,6 +1725,19 @@ cooperative-pool threads with roughly a 512 KB stack; the CLI parses on the main
 thread with 8 MB. Depth-19 Swift source is entirely ordinary and fits easily in
 8 MB.
 
+> ⚠ **Corrected 2026-10-06 — the CLI does not parse on the main thread.** Every
+> `AsyncParsableCommand`'s `run()` is `async` and runs on a Swift-concurrency
+> cooperative thread with ~512 KB, the same order as swift-testing's; the main
+> thread idles in `CFMainExecutor`. The CLI run above passed because depth 19 fits
+> there under the CLI's shallower call stack, not because it had 8 MB. Measured at
+> main `27be57ad`: a judged file of `f({ g(…) })` nested 26 times (52 levels)
+> `SIGBUS`es `discover` (rc 138, on `Task 1`'s cooperative queue). Since the
+> construction-facts wiring, `LargeStackWorkers` (16 MB threads) carries the
+> universe parse, the table build, the out-of-universe re-parse and the
+> declarations-only scan; **TestLifter's parse still runs on the cooperative
+> stack**, so default `discover` over such a file still crashes, and with
+> `--test-dir` pointed at an empty folder it no longer does.
+
 Every confusing symptom follows from that and from nothing else. It was not a
 poisoned file — `DirectiveTests.swift` scanned alone is fine, and it only dies
 in sequence because it is the last one, i.e. the one that tips a thread already
