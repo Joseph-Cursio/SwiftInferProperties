@@ -1,8 +1,8 @@
-diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
-index 189274b2..b5547d7f 100644
---- a/Sources/SwiftInferCore/ConstructionUniverse.swift
-+++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
-@@ -219,7 +219,7 @@ public enum ConstructionUniverse {
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
+index 8dc76cb2..cd42c30d 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
+@@ -21,7 +21,7 @@ extension ConstructionUniverse {
      ) -> (compiled: Set<String>, read: Set<String>) {
          let root = location.resolved
          // An Xcode project beside the manifest may compile packages it never names (amendment G).

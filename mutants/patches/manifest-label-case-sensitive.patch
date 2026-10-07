@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+index 5869b3b4..0985b993 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+@@ -118,7 +118,7 @@ extension ConstructionUniverse {
+         guard let first = lines.firstIndex(where: { !$0.allSatisfy { $0 == " " || $0 == "\t" } }) else {
+             return false
+         }
+-        if lines[first].prefixMatch(of: #/[ \t]*//[ \t]*(?i:swift-tools-version)/#) != nil { return true }
++        if lines[first].prefixMatch(of: #/[ \t]*//[ \t]*swift-tools-version/#) != nil { return true }
+         return lines[lines.index(after: first)...].contains { line in
+             guard let match = line.prefixMatch(
+                 of: #/[ \t]*//[ \t]*(?i:swift-tools-version)[ \t]*:[ \t]*([0-9]+)/#

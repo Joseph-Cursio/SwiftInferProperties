@@ -1,17 +1,22 @@
 import Foundation
 
-/// What counts as a manifest — the shared spec's amendment F, implemented word for word in
+/// What counts as a manifest — the shared spec's amendments F and S, implemented word for word in
 /// SwiftProjectLint (`ConstructionUniverse+Manifest.swift` there, with the same names).
 ///
 /// A directory **holds a manifest** iff it contains a regular file (symlinks followed) named exactly
-/// `Package.swift` whose first line matches `^\s*//\s*swift-tools-version`, a UTF-8 byte-order mark
-/// allowed. So a directory named `Package.swift`, a dangling symlink, and an ordinary source file
-/// that happens to be called `Package.swift` are not manifests, and make no package boundary. A
-/// `Package.swift` that exists but cannot be read as UTF-8 text counts as a manifest AND as doubt:
-/// nothing says what it depends on, so every nested package is in.
+/// `Package.swift` whose text SwiftPM would load as one (`isManifest(_:)`, amendment S): its first
+/// non-blank line is a `// swift-tools-version` comment, the label in any case, or — from tools
+/// version 6.0, which accepts the comment after other lines — some later line is one naming a major
+/// version of 6 or more. So a directory named `Package.swift`, a dangling symlink, and an ordinary
+/// source file that happens to be called `Package.swift` are not manifests, and make no package
+/// boundary. A `Package.swift` that exists but cannot be read as UTF-8 text counts as a manifest AND
+/// as doubt: nothing says what it depends on, so every nested package is in.
 ///
-/// Why the first line: it is what SwiftPM itself requires of a manifest, and the cheapest test that
-/// tells one from a source file. Before it, `Sources/App/Models/Package.swift` — a `struct Package`
+/// Why the tools-version comment: SwiftPM itself requires it, and it is the cheapest test that
+/// tells a manifest from a source file. Amendment F first read it on the first line only, and
+/// case-sensitively; SwiftPM 6.4 loads leading blank lines, `// SWIFT-TOOLS-VERSION:5.9`, and at
+/// 6.0 or later a copyright header above the comment — and F's reading dropped such a package's
+/// closure, or unbounded a root. Before either rule, `Sources/App/Models/Package.swift` — a `struct Package`
 /// inside the `App` target — made `Models/` a nested package the root never names, and the bound
 /// dropped every other file the target compiles there. A dangling `Ghost/Package.swift` made
 /// `Ghost/` a package whose unreadable manifest was doubt, so an unrelated `Demo/` came back in.
@@ -91,11 +96,34 @@ extension ConstructionUniverse {
         return names.contains { $0.hasSuffix(".xcodeproj") || $0.hasSuffix(".xcworkspace") }
     }
 
-    /// Whether `text` begins as a manifest does: a first line matching
-    /// `^\s*//\s*swift-tools-version`, after an optional UTF-8 byte-order mark.
+    /// Whether SwiftPM would load `text` as a manifest — the shared spec's amendment S, the
+    /// reference implementation verbatim, with the shared cases file's `isManifest` section as its
+    /// arbiter. After one leading U+FEFF, split into lines on `Character.isNewline`:
+    ///
+    /// - (a) the first line holding anything but spaces and tabs matches
+    ///   `^[ \t]*//[ \t]*swift-tools-version`, the label case-insensitive (`///` does not), at
+    ///   any version; or
+    /// - (b) some later line matches `^[ \t]*//[ \t]*swift-tools-version[ \t]*:[ \t]*([0-9]+)`
+    ///   with a major version of 6 or more — tools version 6.0 accepts the comment after other
+    ///   lines.
+    ///
+    /// Accepted: a line of spaces and tabs before the comment is skipped at every version, though
+    /// SwiftPM below 5.4 rejects one (such a package cannot build anyway); and a
+    /// `// swift-tools-version:6…` line inside a string literal below the first line — a code
+    /// generator's template in `Sources/Gen/Package.swift` — makes that file a manifest.
     public static func isManifest(_ text: String) -> Bool {
-        var firstLine = text.prefix { $0 != "\n" && $0 != "\r\n" }
-        if firstLine.first == "\u{FEFF}" { firstLine = firstLine.dropFirst() }
-        return firstLine.prefixMatch(of: #/\s*//\s*swift-tools-version/#) != nil
+        var body = Substring(text)
+        if body.first == "\u{FEFF}" { body = body.dropFirst() }
+        let lines = body.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
+        guard let first = lines.firstIndex(where: { !$0.allSatisfy { $0 == " " || $0 == "\t" } }) else {
+            return false
+        }
+        if lines[first].prefixMatch(of: #/[ \t]*//[ \t]*(?i:swift-tools-version)/#) != nil { return true }
+        return lines[lines.index(after: first)...].contains { line in
+            guard let match = line.prefixMatch(
+                of: #/[ \t]*//[ \t]*(?i:swift-tools-version)[ \t]*:[ \t]*([0-9]+)/#
+            ) else { return false }
+            return (Int(match.1) ?? 0) >= 6
+        }
     }
 }

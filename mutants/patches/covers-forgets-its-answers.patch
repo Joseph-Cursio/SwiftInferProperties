@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/PackagePurity.swift b/Sources/SwiftInferCore/PackagePurity.swift
+index 17272620..36063ab9 100644
+--- a/Sources/SwiftInferCore/PackagePurity.swift
++++ b/Sources/SwiftInferCore/PackagePurity.swift
+@@ -170,7 +170,7 @@ public struct PackagePurity: Sendable {
+             lock.lock()
+             let known = answers[path]
+             lock.unlock()
+-            if let known { return known }
++            if let known, false { return known }
+             let computed = compute()
+             lock.lock()
+             answers[path] = computed

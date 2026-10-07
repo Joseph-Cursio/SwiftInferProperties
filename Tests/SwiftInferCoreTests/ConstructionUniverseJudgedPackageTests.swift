@@ -99,4 +99,44 @@ struct ConstructionUniverseJudgedPackageTests {
         #expect(PackagePurity.forScan(of: examples).covers(examples))
         #expect(app.covers(root.appendingPathComponent("Sources")), "the same universe from a sibling is not foreign")
     }
+
+    /// `covers` is asked once per directory scan — three times by `discover-reducers` — and a
+    /// universe walks the root, `Tests/` included, and parses its closure's manifests: computed
+    /// on every ask, it cost 54–699 ms a call. The directory a value was built for is covered by
+    /// construction, so it is answered from the record. Pinned by changing the disk under it: a
+    /// value that walked again would see a different universe and answer `false`.
+    @Test("covers answers for its own directory from the record, without walking")
+    func coversItsOwnDirectoryFromTheRecord() throws {
+        let root = try Wiring.makePackage([
+            "Sources/Model/Item.swift": Wiring.item,
+            "Sources/Lib/Make.swift": Wiring.make
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let lib = root.appendingPathComponent("Sources/Lib")
+        let purity = PackagePurity.forScan(of: lib)
+        try FileManager.default.removeItem(at: root.appendingPathComponent("Sources/Model/Item.swift"))
+        #expect(ConstructionUniverse.files(forScanOf: lib).count == 1, "control: the universe on disk changed")
+        #expect(purity.covers(lib), "covers walked the root again for the directory it was built for")
+        #expect(purity.withoutConstructionFacts.covers(lib))
+    }
+
+    /// Another directory under the same root is compared in full — once. The answer is
+    /// remembered, so the census and the discoverers that ask again pay nothing.
+    @Test("covers compares another directory once, and remembers the answer")
+    func coversRemembersAnotherDirectory() throws {
+        let root = try Wiring.makePackage([
+            "Sources/Model/Item.swift": Wiring.item,
+            "Sources/Lib/Make.swift": Wiring.make
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let purity = PackagePurity.forScan(of: root.appendingPathComponent("Sources"))
+        let lib = root.appendingPathComponent("Sources/Lib")
+        #expect(purity.covers(lib))
+        try FileManager.default.removeItem(at: root.appendingPathComponent("Sources/Model/Item.swift"))
+        #expect(purity.covers(lib), "covers computed the same directory's universe twice")
+        // A directory under another root is foreign without a walk, and stays so.
+        let other = try Wiring.makePackage(["Sources/Lib/Make.swift": Wiring.make])
+        defer { try? FileManager.default.removeItem(at: other) }
+        #expect(!purity.covers(other.appendingPathComponent("Sources/Lib")))
+    }
 }

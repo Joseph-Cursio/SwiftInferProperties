@@ -36,6 +36,8 @@ public struct PackagePurity: Sendable {
     /// Every member of the universe, readable or not — what `covers(_:)` compares, since two
     /// scans under one root can take different nested packages (amendment J).
     let members: [String]
+    /// The directory this value was built for, and what `covers(_:)` has answered since.
+    let coverage: Coverage
     /// The meet of `ReducerPurityAnalyzer` and a facts-configured `PurityInferrer`.
     public let oracle: SoundPurity
     /// Every parsed universe tree, by resolved absolute path.
@@ -89,6 +91,7 @@ public struct PackagePurity: Sendable {
             root: universe.root,
             universe: used,
             members: members.map(\.relativePath),
+            coverage: Coverage(builtFor: directory),
             oracle: SoundPurity(constructionFacts: facts),
             trees: trees
         )
@@ -97,17 +100,19 @@ public struct PackagePurity: Sendable {
     /// One source that is its own package — what a single-file scan is.
     public static func selfContained(_ tree: SourceFileSyntax) -> Self {
         let oracle = SoundPurity(constructionFacts: .build(from: [tree]))
-        return Self(root: nil, universe: [], members: [], oracle: oracle, trees: [:])
+        return Self(root: nil, universe: [], members: [], coverage: Coverage(builtFor: nil), oracle: oracle, trees: [:])
     }
 
     /// No facts and no trees. **`internal`**: tests reach it through `@testable import`, and no
     /// production file names it (`PurityConfigurationInventoryTests`).
-    static let unconfigured = Self(root: nil, universe: [], members: [], oracle: .unconfigured, trees: [:])
+    static let unconfigured = Self(
+        root: nil, universe: [], members: [], coverage: Coverage(builtFor: nil), oracle: .unconfigured, trees: [:]
+    )
 
     /// The same root and the same trees, judged with no facts — the A/B arm a census needs to say
     /// what the table moved on IDENTICAL input. `internal` for the same reason as `unconfigured`.
     var withoutConstructionFacts: Self {
-        Self(root: root, universe: universe, members: members, oracle: .unconfigured, trees: trees)
+        Self(root: root, universe: universe, members: members, coverage: coverage, oracle: .unconfigured, trees: trees)
     }
 
     /// The tree this value parsed for `url`, when `url` is in the universe.
@@ -122,11 +127,56 @@ public struct PackagePurity: Sendable {
     /// The root alone stopped being enough with the shared spec's amendment J: a scan judging an
     /// uncompiled `Examples/Demo` takes Demo into its universe, and a scan of `Sources/Lib` under
     /// the same root does not, so a value built for one would judge the other under the wrong
-    /// table. The comparison walks the root again, and parses nothing.
+    /// table. Equal members under one root mean equal keys and equal trees, so the comparison is
+    /// sound; it is not cheap — another directory's universe walks the root, `Tests/` included, and
+    /// parses every manifest its closure reaches. Asking it on every call took `covers` from
+    /// ~0.05 ms to 54–699 ms, and `discover-reducers`, which asks three times, from 0.9 s to 1.8 s
+    /// on swift-package-manager's `Basics`. So, in order:
+    ///
+    /// 1. **The directory the value was built for** is covered by construction, answered from the
+    ///    record, without touching the disk.
+    /// 2. **Another root** is another universe — `root(forScanOf:)` alone says so, without a walk.
+    /// 3. **Any other directory under the same root** is compared in full, once: the answer is
+    ///    remembered, for this value and every copy of it.
+    ///
+    /// Like the value itself, the answers describe the tree when it was read; an edit since then is
+    /// what a new value is for.
     public func covers(_ directory: URL) -> Bool {
         guard let root else { return false }
-        let wanted = ConstructionUniverse.universe(forScanOf: directory)
-        return root.path == wanted.root.path && members == wanted.members.map(\.relativePath)
+        return coverage.answer(for: directory) {
+            guard ConstructionUniverse.root(forScanOf: directory).path == root.path else { return false }
+            return members == ConstructionUniverse.universe(forScanOf: directory).members.map(\.relativePath)
+        }
+    }
+
+    /// The directory a value was built for, and what `covers(_:)` has answered for any other —
+    /// one record shared by every copy of the value (`withoutConstructionFacts` covers what the
+    /// value covers: the same root, the same members).
+    final class Coverage: @unchecked Sendable {
+        /// The standardised path of the directory the universe was computed for, or `nil`.
+        private let builtFor: String?
+        private let lock = NSLock()
+        private var answers: [String: Bool] = [:]
+
+        init(builtFor directory: URL?) {
+            builtFor = directory?.standardizedFileURL.path
+        }
+
+        /// `true` for the directory the value was built for; else the remembered answer, or
+        /// `compute()`'s, remembered.
+        func answer(for directory: URL, _ compute: () -> Bool) -> Bool {
+            let path = directory.standardizedFileURL.path
+            if path == builtFor { return true }
+            lock.lock()
+            let known = answers[path]
+            lock.unlock()
+            if let known { return known }
+            let computed = compute()
+            lock.lock()
+            answers[path] = computed
+            lock.unlock()
+            return computed
+        }
     }
 
     /// Every refuted type with its witness — a structural digest, because `ConstructionFacts ==`

@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+index 5869b3b4..39df1e24 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+@@ -123,7 +123,7 @@ extension ConstructionUniverse {
+             guard let match = line.prefixMatch(
+                 of: #/[ \t]*//[ \t]*(?i:swift-tools-version)[ \t]*:[ \t]*([0-9]+)/#
+             ) else { return false }
+-            return (Int(match.1) ?? 0) >= 6
++            return (Int(match.1) ?? 0) >= 0
+         }
+     }
+ }

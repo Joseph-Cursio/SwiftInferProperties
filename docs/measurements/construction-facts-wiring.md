@@ -36,6 +36,13 @@ Re-derivable at any time — `make batch2` runs both arms:
 > effect did not move** — 3 refuted types and 0 flips here, the same 266 rows over 21 roots, every
 > moved row identical. Two corpus universes grew under the new rules and moved no row.
 
+> **Revised a third time 2026-10-07, after the final review of PR #635** — read
+> [*The final review's fixes*](#the-final-reviews-fixes--two-regressions-and-amendment-4). Two
+> performance regressions fixed (`covers` and the walk into `Tests/`), and amendment 4: a manifest
+> is what SwiftPM loads (S), a target path reaches the nested packages under it (T). Re-taken at
+> `a4e68820`: **nothing moved** — the same 3 refuted types, 0 flips, 266 rows over 21 roots, every
+> moved row identical; this repo's universe is 746 (one new source file).
+
 ---
 
 ## What was built
@@ -377,9 +384,13 @@ the universe parse, the table build, the out-of-universe re-parse in
   project BESIDE a root manifest takes every nested package (amendment G), and nothing more: the
   project file is not read.
 - **Accepted gaps of the shared rule, recorded rather than fixed** (each in `ConstructionUniverse`'s
-  doc too): a `Package.swift`, or a `Tests` / `*Tests` folder, inside an Xcode app target is dropped
-  by the predicate though Xcode compiles it — the predicate reads names, and no project file is
-  read; **namesakes across modules in one universe over-refute** — SEI matches a constructed type by
+  doc too): a source file named `Package.swift`, or a `Tests` / `*Tests` folder, inside a target is
+  dropped by the predicate though the target compiles it — SwiftPM as well as Xcode, which builds
+  `Sources/App/Models/Package.swift` and `Sources/App/HelperTests/H.swift` into `App` — because the
+  predicate reads names; **a symlinked package's own relative dependencies resolve from its
+  canonical target**, not from the link's location as SwiftPM resolves them (amendment 4, V); a scan
+  of an NFC-named directory spells its own members NFD (Swift compares canonically, so no verdict
+  moves); **namesakes across modules in one universe over-refute** — SEI matches a constructed type by
   name, so once two modules share a universe (a judged package under amendment J, every nested
   package of a manifest-less or Xcode root) one module's `Row` refutes another's `Row(n:)` it never
   imports, the sound direction; and **a symlinked sibling directory is not walked** (next bullet).
@@ -525,3 +536,67 @@ debug builds, SEI `64a905c`; binaries and outputs in the session's scratch, not 
 | the critic's `s6c` (the control) | 0 → 0, byte-identical | 0 → 0 |
 
 So the fixes moved exactly the rows they were written for, and nothing on either real subject.
+
+---
+
+## The final review's fixes — two regressions and amendment 4
+
+The final review of PR #635 (2026-10-07) measured two performance regressions the amendment-3
+work introduced, a guard gap, and an NFD note; and the shared spec gained amendment 4 (S–V),
+implemented identically in SwiftProjectLint. Timings below are release builds on this machine,
+medians of five, the reviewer's `6bc89a0c` and `c6fadde4` binaries against `7888bed4` (both
+performance fixes, before amendment 4).
+
+| measurement | `6bc89a0c` (base) | `c6fadde4` | `7888bed4` |
+|---|---:|---:|---:|
+| `discover-reducers --sources` swift-package-manager `Sources/Basics` | 0.93 s | 1.78 s | **0.80 s** |
+| `discover-reducers --sources` `SwiftInferCore` | 0.61 s | 1.15 s | **0.64 s** |
+| `covers`, built-for directory (Basics · SwiftInferCore) | 0.1 · 0.1 ms | 277 · 150 ms | **0.0 · 0.0 ms** |
+| universe, Basics · SwiftInferCore | 215 · 86 ms | 278 · 149 ms | **196 · 95 ms** |
+| universe, `fx/snap` `Sources/App` (50,000 PNGs under `Tests/`) | 0.4 ms | 2,443 ms | **247 ms** |
+| `discover-reducers --sources Sources/App`, `fx/snap` | 0.01 s | 9.68 s | **0.26 s** |
+| `discover --sources Sources/App`, `fx/snap` (default test dir) | 0.36 s | 2.86 s | **0.61 s** |
+
+- **`covers` answers from its record** (`7888bed4`): the directory a purity was built for is
+  covered by construction; another root is foreign by `root(forScanOf:)` alone; any other
+  directory is compared in full once and remembered. `discover-reducers` is back at base.
+- **The walk reads attributes only where they decide** (`031b4c0c`): a dot-prefixed or pruned
+  name, and a production `.swift` path. `fx/snap` is ~10× faster than `c6fadde4`, and still
+  ~250 ms over base, which pruned `Tests/` outright and so disagreed with SwiftProjectLint (whose
+  own walk takes ~0.8 s there): entering `Tests/` for its packages costs one directory entry each.
+- **Two §13 rows pin both** (`ConstructionUniversePerformanceTests`): 20,000 files under `Tests/`
+  walked in 0.111–0.113 s against 0.5 s (0.986 s with the per-entry read put back), and three
+  `covers` asks in 0.0000 s against 0.05 s (0.674 s computed every time).
+- **S — a manifest is what SwiftPM loads.** `isManifest(_:)` is the spec's reference
+  implementation: the first non-blank line, the label in any case, or a later line naming 6.0 or
+  more. The reviewer's `fx/blank` (`// Swift-Tools-Version:5.9`) is 2 members and `make` refuted
+  again, as at base; `c6fadde4` advised `make` pure. The cases file's `isManifest` section (U, 19
+  cases) is the arbiter.
+- **T — a target path reaches the nested packages under it**, not only the ones holding it:
+  `.target(name: "All", path: "Packages")` compiles `Packages/A`'s sources. The closure body is
+  SwiftProjectLint's text again, byte for byte. **T′**: a root target's `path: "."` resolves to
+  the root, `""`, which no prefix test matches (`package.hasPrefix("" + "/")` is false), so T's
+  first body reached none of the packages under it, contrary to the spec's own note. Found here,
+  fixed in the shared body (SwiftProjectLint `1bd48dec`, copied byte for byte at `13714773`): the
+  comparison opens with `location.isEmpty ||`. Pinned by `rootTargetPathReachesEveryNestedPackage`
+  (all three expectations fail without the clause) and the mutant `target-path-root-reaches-nothing`.
+- **V** — the docs no longer imply SwiftPM leaves a `Package.swift` or `*Tests` folder out of a
+  target, and record that a symlinked package's own relative dependencies resolve from its
+  canonical target.
+
+**Re-taken at `a4e68820`: nothing moved.** On `Sources/`: universe 746 (745 +
+`ConstructionUniverse+Bound.swift`), 3 refuted types, 0 function flips, 0 of 225 accessor blocks, 0 of 1,650 closure literals, the same 2 re-witnessed rows, 229 / 118 configured; functions
+3,256 and summaries 3,495, `.pure` 3,084 in both arms. Across the corpora: the same 266 rows over 21
+roots, every direct and joined row identical to `7fbc7baa`'s, every universe the same size but this
+repo's own. S and T could move verdicts in principle; on these trees they move none.
+
+`make perf` alone at `a4e68820`, three runs at load below 4: every row within noise of the round
+above (DequeModule 2.030–2.034 s, pipeline 2.535–2.553 s, peak RSS delta 371 MB), the two new
+rows as above, every budget green, none raised.
+
+**Re-taken after T′, at `ec0f1d3a`: nothing moved again** — the same `Sources/` figures (746, 3
+refuted types, 0 flips, 2 re-witnessed, 229 / 118) and the same 266 rows over 21 roots, every root
+line and every moved row identical to `a4e68820`'s; no corpus scan root sits under a root target
+whose `path:` is `"."`. `make perf` was not re-run alone: T′ adds one boolean test per target path
+and nested package to a closure that already compares their prefixes, and the full `make test`'s
+own perf stage passed all 11 rows.
