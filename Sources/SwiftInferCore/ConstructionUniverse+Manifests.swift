@@ -1,14 +1,14 @@
 import Foundation
 
 /// What counts as a manifest — the shared spec's amendment F, implemented word for word in
-/// SwiftProjectLint.
+/// SwiftProjectLint (`ConstructionUniverse+Manifest.swift` there, with the same names).
 ///
 /// A directory **holds a manifest** iff it contains a regular file (symlinks followed) named exactly
 /// `Package.swift` whose first line matches `^\s*//\s*swift-tools-version`, a UTF-8 byte-order mark
 /// allowed. So a directory named `Package.swift`, a dangling symlink, and an ordinary source file
 /// that happens to be called `Package.swift` are not manifests, and make no package boundary. A
-/// `Package.swift` that exists but cannot be read counts as a manifest AND as doubt: nothing says
-/// what it depends on, so every nested package is in.
+/// `Package.swift` that exists but cannot be read as UTF-8 text counts as a manifest AND as doubt:
+/// nothing says what it depends on, so every nested package is in.
 ///
 /// Why the first line: it is what SwiftPM itself requires of a manifest, and the cheapest test that
 /// tells one from a source file. Before it, `Sources/App/Models/Package.swift` — a `struct Package`
@@ -20,39 +20,42 @@ import Foundation
 /// nested packages, and the closure's reads by path.
 extension ConstructionUniverse {
 
-    /// A directory's `Package.swift`, as the universe reads it.
-    enum ManifestFile: Equatable {
-        /// Not a manifest: no regular file of that name, or one whose first line is not a
-        /// tools-version comment.
-        case none
-        /// A manifest whose text cannot be read, or decoded as UTF-8 — a manifest, and doubt.
-        case unreadable
+    /// What a directory holds at `Package.swift`.
+    public enum Manifest: Equatable, Sendable {
+        /// No manifest: nothing of that name, or a directory, a dangling link, or a file whose first
+        /// line is not a tools-version comment.
+        case absent
         /// A manifest, and its text.
         case text(String)
+        /// A regular file of that name that cannot be read as UTF-8 text: a manifest, and doubt.
+        case unreadable
     }
 
-    /// `directory`'s `Package.swift`, classified.
-    static func manifestFile(in directory: URL) -> ManifestFile {
-        let path = directory.appendingPathComponent("Package.swift").path
+    /// What `directory` holds at `Package.swift`.
+    public static func manifest(inDirectory directory: URL) -> Manifest {
+        manifest(atPath: directory.appendingPathComponent("Package.swift").path)
+    }
+
+    /// The file at `path`, read as a manifest.
+    static func manifest(atPath path: String) -> Manifest {
         // `stat`, not `lstat`: a symlink is followed, so a dangling one is not a manifest, and a
         // link to a directory is not one either. A FIFO or a device is never opened.
         var status = stat()
-        guard stat(path, &status) == 0, status.st_mode & S_IFMT == S_IFREG else { return .none }
-        guard let data = FileManager.default.contents(atPath: path) else { return .unreadable }
-        guard isToolsVersionLine(firstLineOf: data) else { return .none }
-        return String(data: data, encoding: .utf8).map(ManifestFile.text) ?? .unreadable
+        guard stat(path, &status) == 0, status.st_mode & S_IFMT == S_IFREG else { return .absent }
+        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { return .unreadable }
+        return isManifest(text) ? .text(text) : .absent
     }
 
     /// Whether `directory` holds a manifest — readable or not.
     public static func holdsManifest(_ directory: URL) -> Bool {
-        manifestFile(in: directory) != .none
+        manifest(inDirectory: directory) != .absent
     }
 
     /// The text of the manifest in the root-relative `directory` (`""` is the root), or `nil` when
-    /// it cannot be read or decoded — which, for a manifest the closure reached, is doubt.
+    /// it cannot be read — which, for a manifest the closure reached, is doubt.
     static func manifestText(of directory: String, under root: URL) -> String? {
         let location = directory.isEmpty ? root : root.appendingPathComponent(directory)
-        guard case let .text(text) = manifestFile(in: location) else { return nil }
+        guard case let .text(text) = manifest(inDirectory: location) else { return nil }
         return text
     }
 
@@ -61,23 +64,19 @@ extension ConstructionUniverse {
     /// manifest never names (an app target's `XCLocalSwiftPackageReference`, a workspace's
     /// `group:` reference), so such a root bounds nothing: every nested package is in. Reading the
     /// project file instead would need its own doubt rule, since pre-Xcode-15 projects and
-    /// workspaces reference local packages as plain folder references. A dot-prefixed name is
-    /// hidden, and no `*` glob matches it.
+    /// workspaces reference local packages as plain folder references. A direct child only: the
+    /// workspace SwiftPM keeps for a package lives under `.swiftpm/`, and is no evidence of
+    /// another build.
     static func holdsXcodeProject(_ directory: URL) -> Bool {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
-        return names.contains { name in
-            !name.hasPrefix(".") && (name.hasSuffix(".xcodeproj") || name.hasSuffix(".xcworkspace"))
-        }
+        return names.contains { $0.hasSuffix(".xcodeproj") || $0.hasSuffix(".xcworkspace") }
     }
 
-    /// Whether the first line of `data` matches `^\s*//\s*swift-tools-version`, after an optional
-    /// UTF-8 byte-order mark. The line ends at the first `\n` or `\r`.
-    static func isToolsVersionLine(firstLineOf data: Data) -> Bool {
-        var bytes = data.prefix { $0 != 0x0A && $0 != 0x0D }
-        if bytes.starts(with: [0xEF, 0xBB, 0xBF]) { bytes = bytes.dropFirst(3) }
-        var line = Substring(String(decoding: bytes, as: UTF8.self))
-        line = line.drop { $0.isWhitespace }
-        guard line.hasPrefix("//") else { return false }
-        return line.dropFirst(2).drop { $0.isWhitespace }.hasPrefix("swift-tools-version")
+    /// Whether `text` begins as a manifest does: a first line matching
+    /// `^\s*//\s*swift-tools-version`, after an optional UTF-8 byte-order mark.
+    public static func isManifest(_ text: String) -> Bool {
+        var firstLine = text.prefix { $0 != "\n" && $0 != "\r\n" }
+        if firstLine.first == "\u{FEFF}" { firstLine = firstLine.dropFirst() }
+        return firstLine.prefixMatch(of: #/\s*//\s*swift-tools-version/#) != nil
     }
 }

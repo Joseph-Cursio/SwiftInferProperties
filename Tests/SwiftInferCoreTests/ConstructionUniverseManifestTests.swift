@@ -29,7 +29,18 @@ struct ConstructionUniverseManifestTests {
         ("", false)
     ])
     func firstLineDecides(text: String, isManifest: Bool) {
-        #expect(ConstructionUniverse.isToolsVersionLine(firstLineOf: Data(text.utf8)) == isManifest)
+        #expect(ConstructionUniverse.isManifest(text) == isManifest)
+    }
+
+    /// A regular file that is not UTF-8 text cannot say what it is: a manifest, and doubt.
+    @Test("a Package.swift that is not UTF-8 text is a manifest that cannot be read")
+    func nonUTF8ManifestIsUnreadable() throws {
+        let directory = try Wiring.makePackage([:], manifest: false)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("Package.swift")
+        try (Data("// swift-tools-version:5.9\n".utf8) + Data([0xFF, 0xFE, 0x00])).write(to: file)
+        #expect(ConstructionUniverse.manifest(inDirectory: directory) == .unreadable)
+        #expect(ConstructionUniverse.holdsManifest(directory))
     }
 
     static func countOf() -> String { "func countOf(_ title: String) -> Int { Item(title: title).title.count }" }
@@ -135,7 +146,8 @@ struct ConstructionUniverseManifestTests {
         ("App.xcodeproj/project.pbxproj", true),
         ("App.xcworkspace/contents.xcworkspacedata", true),
         ("Apps/iOS/App.xcodeproj/project.pbxproj", false),
-        (".Hidden.xcodeproj/project.pbxproj", false)
+        // Any entry so named, as SwiftProjectLint reads it — a dot-prefixed one too.
+        (".Hidden.xcodeproj/project.pbxproj", true)
     ])
     func xcodeProjectBesideTheManifestTakesEveryNestedPackage(project: String, takesEvery: Bool) throws {
         let root = try Wiring.makePackage([
