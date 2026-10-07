@@ -28,7 +28,9 @@ import Foundation
 ///
 /// ## The root — `root(forScanOf:)`
 ///
-/// The nearest ancestor-or-self of the scanned directory holding a `Package.swift`, **found from
+/// The nearest ancestor-or-self of the scanned directory holding a manifest — a `Package.swift`
+/// whose first line is a tools-version comment (amendment F, `ConstructionUniverse+Manifests.swift`;
+/// a source file of that name, a directory or a dangling link is not one) — **found from
 /// the path as given** (standardised, symlinks NOT resolved), and only then resolved — resolved
 /// paths are keys, never what decides the package. `--target Foo` scans `Sources/Foo`, but `Foo`
 /// constructs types its sibling targets declare, and a per-target table misses them — the unsound
@@ -166,12 +168,10 @@ public enum ConstructionUniverse {
             guard isProductionSource(relativePath: relative) else { continue }
             members.append(Member(relativePath: relative, url: url, key: resolved(url).path))
         }
-        let rootHasManifest = hasManifest(root)
+        let rootHasManifest = holdsManifest(root)
         let compiled = compiledNestedPackages(
             walk.nestedPackages, rootHasManifest: rootHasManifest, rootPath: root.path
-        ) { directory in
-            try? String(contentsOf: manifestURL(of: directory, under: root), encoding: .utf8)
-        }
+        ) { manifestText(of: $0, under: root) }
         let bounded = members.filter { member in
             owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains) ?? true
         }
@@ -206,7 +206,7 @@ public enum ConstructionUniverse {
     }
 
     /// What the root walk found: the production files' root-relative paths, unsorted, and the
-    /// root-relative directories below the root that hold a `Package.swift`.
+    /// root-relative directories below the root that hold a manifest (amendment F).
     struct Walk {
         var paths: [String] = []
         var nestedPackages: Set<String> = []
@@ -229,8 +229,11 @@ public enum ConstructionUniverse {
                 if isRejectedDirectory(name) { walker.skipDescendants() }
                 continue
             }
+            // A nested package is a directory holding a MANIFEST (amendment F): a source file
+            // that happens to be called `Package.swift`, or a dangling link, makes no boundary.
             if name == "Package.swift", components.count > 1 {
-                result.nestedPackages.insert(components.dropLast().joined(separator: "/"))
+                let directory = components.dropLast().joined(separator: "/")
+                if holdsManifest(root.appendingPathComponent(directory)) { result.nestedPackages.insert(directory) }
             }
             if !name.hasPrefix("."), isProductionSource(relativePath: relative) { result.paths.append(relative) }
         }
@@ -255,10 +258,6 @@ public enum ConstructionUniverse {
         url.standardizedFileURL.resolvingSymlinksInPath()
     }
 
-    static func hasManifest(_ directory: URL) -> Bool {
-        FileManager.default.fileExists(atPath: directory.appendingPathComponent("Package.swift").path)
-    }
-
     private static func manifestURL(of directory: String, under root: URL) -> URL {
         (directory.isEmpty ? root : root.appendingPathComponent(directory)).appendingPathComponent("Package.swift")
     }
@@ -279,7 +278,7 @@ public enum ConstructionUniverse {
         init(forScanOf directory: URL) {
             let given = directory.standardizedFileURL
             for scanned in [given, ConstructionUniverse.resolved(directory)] {
-                guard let package = DirectoryAncestors.nearest(from: scanned, where: hasManifest) else { continue }
+                guard let package = DirectoryAncestors.nearest(from: scanned, where: holdsManifest) else { continue }
                 let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))
                 let selfContained = below.contains(where: isRejectedDirectory)
                 let root = selfContained ? scanned : package

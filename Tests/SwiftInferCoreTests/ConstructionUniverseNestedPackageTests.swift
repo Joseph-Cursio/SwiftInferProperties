@@ -157,7 +157,7 @@ extension ConstructionUniverseNestedPackageTests {
     """
 
     static func manifest(dependingOn path: String) -> String {
-        "let package = Package(name: \"P\", dependencies: [.package(path: \"\(path)\")])"
+        "// swift-tools-version:5.9\nlet package = Package(name: \"P\", dependencies: [.package(path: \"\(path)\")])"
     }
 
     static func verdict(_ name: String, scanning directory: URL) throws -> PurityVerdict? {
@@ -212,6 +212,7 @@ extension ConstructionUniverseNestedPackageTests {
     func doubtfulRootIncludesEveryNestedPackage() throws {
         let root = try ConstructionPurityWiringTests.makePackage([
             "Package.swift": """
+            // swift-tools-version:5.9
             let base = "Demo"
             let package = Package(name: "P", dependencies: [.package(path: base)])
             """,
