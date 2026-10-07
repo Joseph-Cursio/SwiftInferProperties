@@ -187,6 +187,31 @@ struct ConstructionUniverseManifestReachTests {
         #expect(try Self.tokenCount(in: root) == .refuted)
     }
 
+    /// The shared spec's amendment T′: a root target whose `path:` is `"."` compiles everything
+    /// below the root, every nested package's sources included. `"."` resolves to the root, `""`,
+    /// and `package.hasPrefix("" + "/")` is false, so before T′'s `location.isEmpty ||` it reached
+    /// none of them — here `Packages/A`, which nothing else names, and its UUID-minting `Tok`.
+    @Test("a root target with path \".\" reaches every nested package")
+    func rootTargetPathReachesEveryNestedPackage() throws {
+        let root = try Wiring.makePackage([
+            "Package.swift": Self.rootManifest(targets: #".target(name: "App", path: ".")"#),
+            "Packages/A/Package.swift": Self.library("A"),
+            "Packages/A/Sources/A/Tok.swift": Self.tok,
+            "Sources/App/App.swift": Self.app(importing: "A")
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = root.appendingPathComponent("Sources/App")
+        let paths = ConstructionUniverse.files(forScanOf: app).map(\.relativePath)
+        #expect(paths.contains("Packages/A/Sources/A/Tok.swift"), "\(paths)")
+        #expect(try Self.tokenCount(in: root) == .refuted)
+        // In memory: `"."` from the root reaches every walked package, with each one's closure.
+        let packages: Set<String> = ["Packages/A", "Packages/B", "Demo"]
+        #expect(Nested.compiled(
+            ["": #".target(name: "App", path: ".")"#, "Packages/A": "", "Packages/B": "", "Demo": ""],
+            packages: packages
+        ) == packages)
+    }
+
     /// A target path is followed in every manifest the closure reaches, and a computed one is doubt.
     @Test("target paths are read across the closure, and a computed one is doubt")
     func targetPathsAcrossTheClosure() {
