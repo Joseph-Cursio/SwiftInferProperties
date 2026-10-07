@@ -144,4 +144,23 @@ struct ConstructionUniverseJudgedPackageTests {
         defer { try? FileManager.default.removeItem(at: other) }
         #expect(!purity.covers(other.appendingPathComponent("Sources/Lib")))
     }
+
+    /// A second root holding an IDENTICAL layout — a speculative snapshot is exactly this — has
+    /// the same members, so only the root comparison tells the two apart; judging the copy under
+    /// the original's trees would look every file up under the wrong key. `covers` says no, and
+    /// says it from `root(forScanOf:)` alone, without computing the copy's universe.
+    @Test("covers rejects an identical layout under another root, without a walk")
+    func coversRejectsAnIdenticalLayoutElsewhere() throws {
+        let files = ["Sources/Model/Item.swift": Wiring.item, "Sources/Lib/Make.swift": Wiring.make]
+        let original = try Wiring.makePackage(files)
+        defer { try? FileManager.default.removeItem(at: original) }
+        let copy = try Wiring.makePackage(files)
+        defer { try? FileManager.default.removeItem(at: copy) }
+        let purity = PackagePurity.forScan(of: original.appendingPathComponent("Sources/Lib"))
+        let copiedLib = copy.appendingPathComponent("Sources/Lib")
+        // The control: the copy's universe is member for member the original's.
+        #expect(ConstructionUniverse.files(forScanOf: copiedLib).map(\.relativePath) == purity.universe)
+        #expect(!purity.covers(copiedLib), "a copy of the package was taken for the package")
+        #expect(purity.coverage.universesComputed == 0, "another root was told apart by a walk")
+    }
 }
