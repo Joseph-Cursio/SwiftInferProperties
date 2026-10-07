@@ -37,10 +37,18 @@ extension ConstructionUniverse {
     /// The manifest is parsed, not pattern-matched: a dependency commented out, or the text of one
     /// inside a string, is not a dependency. A `path:` belonging to anything else — a target's
     /// `.target(name:path:)` — is not one either.
+    ///
+    /// **The parse and the walk run on a `LargeStackWorkers` thread** (amendment K), like every
+    /// other parse of universe text: both recurse as deep as the manifest nests, and the CLI runs on
+    /// a ~512 KB cooperative stack. A nested package's manifest holding a 1,000-arm `else if` chain
+    /// `SIGBUS`ed `discover` there — the one parse the universe's move to large stacks had missed.
+    /// Here, rather than at a caller, so every caller is covered.
     public static func localPackageDependencies(manifest: String) -> [String]? {
-        let collector = PathDependencyCollector(viewMode: .sourceAccurate)
-        collector.walk(Parser.parse(source: manifest))
-        return collector.isReadable ? collector.paths : nil
+        LargeStackWorkers.run {
+            let collector = PathDependencyCollector(viewMode: .sourceAccurate)
+            collector.walk(Parser.parse(source: manifest))
+            return collector.isReadable ? collector.paths : nil
+        }
     }
 
     /// The nested packages, of `nestedPackages`, whose files are in the universe.

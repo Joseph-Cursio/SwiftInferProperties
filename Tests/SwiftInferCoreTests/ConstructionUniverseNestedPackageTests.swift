@@ -48,6 +48,28 @@ struct ConstructionUniverseNestedPackageTests {
         #expect(ConstructionUniverse.localPackageDependencies(manifest: manifest) == nil)
     }
 
+    /// A manifest with a function whose `else if` chain has `arms` arms, depending on `../Leaf`.
+    static func deepManifest(arms: Int) -> String {
+        var chain = "if n == 0 { return 0 }"
+        for arm in 1..<arms { chain += " else if n == \(arm) { return \(arm) }" }
+        return """
+        // swift-tools-version:5.9
+        import PackageDescription
+        func pick(_ n: Int) -> Int { \(chain) else { return -1 } }
+        let package = Package(name: "Dep", dependencies: [.package(path: "../Leaf")])
+        """
+    }
+
+    /// The shared spec's amendment K. A nested package's manifest holding a 1,000-arm `else if`
+    /// chain `SIGBUS`ed `discover` — the parse and the visitor's walk recurse per arm, and the CLI,
+    /// like this test, runs on a ~512 KB cooperative stack. 3,000 arms, so this test kills its own
+    /// process when the manifest is parsed on the caller's stack again.
+    @Test("a manifest that nests deep is read on a large stack")
+    func deepManifestIsReadOnALargeStack() {
+        let manifest = Self.deepManifest(arms: 3_000)
+        #expect(ConstructionUniverse.localPackageDependencies(manifest: manifest) == ["../Leaf"])
+    }
+
     // MARK: - The closure
 
     private static let packages: Set<String> = ["Packages/A", "Packages/B", "Packages/C", "Demo", "Vendor/Lib"]
