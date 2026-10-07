@@ -175,8 +175,9 @@ public enum ConstructionUniverse {
             rootHasManifest: rootHasManifest && !holdsXcodeProject(root),
             rootPath: root.path,
             resolvingSymlinks: { resolved(URL(fileURLWithPath: $0)).path },
-            holdsManifest: { holdsManifest(root.appendingPathComponent($0)) }
-        ) { manifestText(of: $0, under: root) }
+            packagesContaining: { packages(containing: $0, under: root) },
+            manifests: { manifests(inDirectory: packageDirectory($0, under: root)) }
+        )
         let bounded = members.filter { member in
             owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains) ?? true
         }
@@ -185,7 +186,7 @@ public enum ConstructionUniverse {
         return Universe(
             root: root,
             members: ordered(deduplicated(bounded)),
-            manifests: manifests.map { manifestURL(of: $0, under: root) }
+            manifests: manifests.flatMap { manifestURLs(inDirectory: packageDirectory($0, under: root)) }
         )
     }
 
@@ -259,13 +260,14 @@ public enum ConstructionUniverse {
         return resolvedPath.hasPrefix(prefix) ? String(resolvedPath.dropFirst(prefix.count)) : nil
     }
 
+    /// The root-relative `directory` under `root`; `""` is the root itself.
+    static func packageDirectory(_ directory: String, under root: URL) -> URL {
+        directory.isEmpty ? root : root.appendingPathComponent(directory)
+    }
+
     /// One spelling per location: standardized, every symlink resolved.
     static func resolved(_ url: URL) -> URL {
         url.standardizedFileURL.resolvingSymlinksInPath()
-    }
-
-    private static func manifestURL(of directory: String, under root: URL) -> URL {
-        (directory.isEmpty ? root : root.appendingPathComponent(directory)).appendingPathComponent("Package.swift")
     }
 
     /// Where a scan's root was found, and how the scanned directory is spelled below it.

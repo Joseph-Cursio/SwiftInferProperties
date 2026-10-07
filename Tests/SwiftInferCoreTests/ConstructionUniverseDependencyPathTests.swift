@@ -26,7 +26,10 @@ struct ConstructionUniverseDependencyPathTests {
 
     /// A root whose manifest depends on the literal `spell(root)` returns, beside a `Packages/Q`
     /// whose `Token` mints a `UUID`, and a `Sources/Lib` whose `mint()` constructs one.
-    static func package(dependingOn spell: (URL) -> String, prepare: (URL) throws -> Void = { _ in }) throws -> URL {
+    static func package(
+        dependingOn spell: (URL) -> String,
+        prepare: (URL) throws -> Void = { _ in /* nothing to add */ }
+    ) throws -> URL {
         let root = try Wiring.makePackage([
             "Packages/Q/Package.swift": Nested.demoManifest,
             "Packages/Q/Sources/Q/Token.swift": Self.token,
@@ -42,8 +45,8 @@ struct ConstructionUniverseDependencyPathTests {
     /// Whether a scan of `Sources/Lib` takes `Q`, checked against its verdict.
     static func takesQ(_ root: URL) throws -> Bool {
         let lib = root.appendingPathComponent("Sources/Lib")
-        let inUniverse = ConstructionUniverse.files(forScanOf: lib).map(\.relativePath)
-            .contains("Packages/Q/Sources/Q/Token.swift")
+        let paths = ConstructionUniverse.files(forScanOf: lib).map(\.relativePath)
+        let inUniverse = paths.contains("Packages/Q/Sources/Q/Token.swift")
         let refuted = try Nested.verdict("mint", scanning: lib) == .refuted
         #expect(inUniverse == refuted, "the universe and the verdict disagree about Q")
         return inUniverse
@@ -97,8 +100,8 @@ struct ConstructionUniverseDependencyPathTests {
         })
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(try !Self.takesQ(root))
-        let paths = ConstructionUniverse.files(forScanOf: root.appendingPathComponent("Sources/Lib")).map(\.relativePath)
-        #expect(paths == ["Sources/Lib/Mint.swift"])
+        let lib = root.appendingPathComponent("Sources/Lib")
+        #expect(ConstructionUniverse.files(forScanOf: lib).map(\.relativePath) == ["Sources/Lib/Mint.swift"])
     }
 
     /// On a volume that folds case, `packages/q` is the directory `Packages/Q`, and the compiler
@@ -108,7 +111,7 @@ struct ConstructionUniverseDependencyPathTests {
         .enabled(if: Self.temporaryVolumeIgnoresCase)
     )
     func dependencyInAnotherCaseIsResolved() throws {
-        let root = try Self.package(dependingOn: { _ in "packages/q" })
+        let root = try Self.package { _ in "packages/q" }
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(try Self.takesQ(root))
     }

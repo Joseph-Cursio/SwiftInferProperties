@@ -74,10 +74,20 @@ struct ConstructionUniverseNestedPackageTests {
 
     private static let packages: Set<String> = ["Packages/A", "Packages/B", "Packages/C", "Demo", "Vendor/Lib"]
 
-    private static func compiled(_ manifests: [String: String], rootHasManifest: Bool = true) -> Set<String> {
+    /// The closure over an in-memory tree: a directory in `manifests` holds that text; the root
+    /// and a package of `packages` with no entry hold a manifest that cannot be read; anything else
+    /// holds none.
+    static func compiled(
+        _ manifests: [String: String],
+        packages: Set<String> = Self.packages,
+        rootHasManifest: Bool = true
+    ) -> Set<String> {
         ConstructionUniverse.compiledNestedPackages(
             packages, rootHasManifest: rootHasManifest, rootPath: "/work/App"
-        ) { manifests[$0] }
+        ) { directory in
+            if let text = manifests[directory] { return [.text(text)] }
+            return directory.isEmpty || packages.contains(directory) ? [.unreadable] : []
+        }
     }
 
     @Test("the root's local path dependencies, followed transitively")

@@ -9,9 +9,9 @@ import Testing
 /// `docs/construction-universe-cases.json` is a byte-identical copy of SwiftProjectLint's
 /// `Docs/construction-universe-cases.json` (`SEICrossRepoPinTests` asserts the two files are equal
 /// when the sibling checkout is present) — the shared spec's amendment E. The `.tsv` beside it pins
-/// the predicate; this pins the two other parts of the rule a disagreement would hide in: which
-/// nested packages a manifest reaches (`localPackageDependencies(manifest:)`) and the order the
-/// facts are built in (`buildOrder(_:)`).
+/// the predicate; this pins the other parts of the rule a disagreement would hide in: which
+/// nested packages a manifest reaches (`localPackageDependencies(manifest:)` and, since amendment R,
+/// `localTargetPaths(manifest:)`) and the order the facts are built in (`buildOrder(_:)`).
 @Suite("Construction universe — the shared cases file")
 struct ConstructionUniverseCasesTests {
 
@@ -30,6 +30,7 @@ struct ConstructionUniverseCasesTests {
 
     struct Cases: Decodable {
         let localPackageDependencies: [ManifestCase]
+        let localTargetPaths: [ManifestCase]
         let buildOrder: [String]
     }
 
@@ -51,6 +52,20 @@ struct ConstructionUniverseCasesTests {
         #expect(wrong.isEmpty, """
         The manifest reader disagrees with the cases SwiftProjectLint answers too — the two \
         consumers would bound one root's nested packages differently: \(wrong)
+        """)
+    }
+
+    /// Amendment R: the target paths a manifest names (amendment P), read as the dependencies are.
+    @Test("localTargetPaths answers every shared case")
+    func targetPathCasesHold() throws {
+        let cases = try Self.cases().localTargetPaths
+        #expect(cases.count >= 6, "\(cases.count) cases — the shared answer key lost rows")
+        #expect(cases.contains { $0.expected == nil }, "the doubt rule has no case")
+        #expect(cases.contains { $0.expected?.isEmpty == true }, "the no-target-path answer has no case")
+        let wrong = cases.filter { ConstructionUniverse.localTargetPaths(manifest: $0.manifest) != $0.expected }
+        #expect(wrong.isEmpty, """
+        The target-path reader disagrees with the cases SwiftProjectLint answers too — the two \
+        consumers would reach different nested packages from one root: \(wrong)
         """)
     }
 

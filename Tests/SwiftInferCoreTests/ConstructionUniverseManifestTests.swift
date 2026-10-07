@@ -132,7 +132,8 @@ struct ConstructionUniverseManifestTests {
             let lib = root.appendingPathComponent("Sources/Lib")
             let paths = ConstructionUniverse.files(forScanOf: lib).map(\.relativePath)
             #expect(paths.contains("Demo/Sources/Demo/main.swift") == demoIsIn, "\(dependency): \(paths)")
-            #expect(paths.contains("Packages/Locked/Sources/Locked/Locked.swift") == demoIsIn, "\(dependency): \(paths)")
+            let lockedIsIn = paths.contains("Packages/Locked/Sources/Locked/Locked.swift")
+            #expect(lockedIsIn == demoIsIn, "\(dependency): \(paths)")
             #expect(try Nested.verdict("make", scanning: lib) == (demoIsIn ? .refuted : .pure), "\(dependency)")
         }
     }
@@ -159,7 +160,8 @@ struct ConstructionUniverseManifestTests {
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("App")
         let paths = ConstructionUniverse.files(forScanOf: app).map(\.relativePath)
-        #expect(paths.contains("LocalPackages/Feature/Sources/Feature/Item.swift") == takesEvery, "\(project): \(paths)")
+        let featureIsIn = paths.contains("LocalPackages/Feature/Sources/Feature/Item.swift")
+        #expect(featureIsIn == takesEvery, "\(project): \(paths)")
         #expect(try Nested.verdict("countOf", scanning: app) == (takesEvery ? .refuted : .pure), "\(project)")
     }
 }
