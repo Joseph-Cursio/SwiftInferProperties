@@ -118,6 +118,10 @@ struct ConstructionUniverseJudgedPackageTests {
         #expect(ConstructionUniverse.files(forScanOf: lib).count == 1, "control: the universe on disk changed")
         #expect(purity.covers(lib), "covers walked the root again for the directory it was built for")
         #expect(purity.withoutConstructionFacts.covers(lib))
+        // The count is what fails when the shortcut goes, however cheap one universe is: the
+        // memo alone would answer asks 2 and 3, and only the record answers ask 1.
+        for _ in 0..<3 { #expect(purity.covers(lib)) }
+        #expect(purity.coverage.universesComputed == 0, "covers computed a universe for its own directory")
     }
 
     /// Another directory under the same root is compared in full — once. The answer is
@@ -134,6 +138,7 @@ struct ConstructionUniverseJudgedPackageTests {
         #expect(purity.covers(lib))
         try FileManager.default.removeItem(at: root.appendingPathComponent("Sources/Model/Item.swift"))
         #expect(purity.covers(lib), "covers computed the same directory's universe twice")
+        #expect(purity.coverage.universesComputed == 1)
         // A directory under another root is foreign without a walk, and stays so.
         let other = try Wiring.makePackage(["Sources/Lib/Make.swift": Wiring.make])
         defer { try? FileManager.default.removeItem(at: other) }

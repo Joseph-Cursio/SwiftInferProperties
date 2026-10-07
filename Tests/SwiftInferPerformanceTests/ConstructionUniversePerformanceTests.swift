@@ -53,9 +53,13 @@ struct ConstructionUniversePerformanceTests {
         #expect(elapsed < 0.5, "the universe walk took \(elapsed)s over 20,000 files it only needs the names of")
     }
 
-    @Test("covers on the directory a purity was built for answers three times within a 0.05-second budget")
+    /// The built-for shortcut is the one `discover-reducers` and `verify-value-semantics` use, so
+    /// the row prices the FIRST ask, which the memo cannot answer: the package is heavy enough
+    /// (20,000 files under `Tests/`, ~0.1 s a universe in a debug build) that one computed universe
+    /// is several budgets over. With the shortcut the three asks are a string comparison each.
+    @Test("covers on the directory a purity was built for answers three times within a 0.02-second budget")
     func coversOnItsOwnDirectory() throws {
-        let root = try Self.snapshotPackage(snapshots: 5_000)
+        let root = try Self.snapshotPackage(snapshots: 20_000)
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("Sources/App")
         let purity = PackagePurity.forScan(of: app)
@@ -65,6 +69,6 @@ struct ConstructionUniversePerformanceTests {
         }
         print("[covers] three asks: \(String(format: "%.4f", elapsed))s")
         #expect(covered)
-        #expect(elapsed < 0.05, "three covers asks took \(elapsed)s — each one walked the universe again")
+        #expect(elapsed < 0.02, "three covers asks took \(elapsed)s — the first one computed a universe")
     }
 }
