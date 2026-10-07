@@ -164,7 +164,7 @@ public enum ConstructionUniverse {
         let members = walk.paths.map { relativePath in
             let url = root.appendingPathComponent(relativePath)
             return Member(relativePath: relativePath, url: url, key: resolved(url).path)
-        } + judged.filter { isProductionSource(relativePath: $0.relativePath) }
+        } + ownMembers(of: directory, at: location)
         let rootHasManifest = holdsManifest(root)
         // An Xcode project beside the manifest may compile packages it never names (amendment G).
         let bounds = rootHasManifest && !holdsXcodeProject(root)
@@ -189,10 +189,25 @@ public enum ConstructionUniverse {
         )
     }
 
-    /// Every file a scan of `directory` judges, spelled under the root as given: the scanned
-    /// directory's path below the root plus each file's path below the scanned directory. The
-    /// production ones are unioned into the universe; all of them say which nested packages the
-    /// scan judges (amendment J).
+    /// The scanned directory's own production files, spelled under the root as given: the scanned
+    /// directory's path below the root plus each file's path below the scanned directory — found by
+    /// the same walk as the root's, so, like it, never skipping a file for the macOS `UF_HIDDEN`
+    /// flag (amendment M: SwiftPM compiles such a file; a dot-prefixed name is still skipped).
+    /// The judged set, `SwiftSourceFiles`, does skip one, and for a scanned symlinked target —
+    /// which the root walk never enters — this union is the only place its files come from.
+    static func ownMembers(of directory: URL, at location: RootLocation) -> [Member] {
+        let prefix = location.scannedPathBelowRoot
+        return walk(under: resolved(directory)).paths.compactMap { own in
+            let relative = prefix.isEmpty ? own : prefix + "/" + own
+            guard isProductionSource(relativePath: relative) else { return nil }
+            let url = directory.appendingPathComponent(own)
+            return Member(relativePath: relative, url: url, key: resolved(url).path)
+        }
+    }
+
+    /// Every file a scan of `directory` judges, spelled under the root as given, as
+    /// `ownMembers(of:at:)` spells its own: they say which nested packages the scan judges
+    /// (amendment J).
     static func judgedFiles(of directory: URL, at location: RootLocation) -> [Member] {
         let prefix = location.scannedPathBelowRoot
         return SwiftSourceFiles.sorted(in: directory).compactMap { url in
@@ -254,7 +269,9 @@ public enum ConstructionUniverse {
     ///
     /// Pruned during the walk rather than filtered after it: the predicate rejects a path for a
     /// directory component, so nothing below a rejected directory can be kept, and this repo's
-    /// `Tests/` alone is more files than its `Sources/`. Hidden entries are skipped the same way.
+    /// `Tests/` alone is more files than its `Sources/`. Hidden entries are skipped the same way —
+    /// hidden meaning a dot-prefixed NAME, never the macOS `UF_HIDDEN` flag (amendment M): the path
+    /// enumerator takes no `.skipsHiddenFiles`, and SwiftPM compiles a flagged file.
     /// Symlinked directories are not descended — the path enumerator does not follow them — and a
     /// symlinked FILE is yielded where the link is, which is where it is classified.
     static func walk(under root: URL) -> Walk {
