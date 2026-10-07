@@ -7,14 +7,16 @@ import Testing
 private typealias Wiring = ConstructionPurityWiringTests
 private typealias Nested = ConstructionUniverseNestedPackageTests
 
-/// **What a manifest is** — the shared spec's amendment F. A directory holds one iff it contains a
-/// regular file (symlinks followed) named `Package.swift` whose first line is a tools-version
-/// comment; one that exists and cannot be read is a manifest AND doubt. Each on-disk case is the
-/// joint review's reproduction, scanned end to end.
+/// **What a manifest is** — the shared spec's amendments F and S. A directory holds one iff it
+/// contains a regular file (symlinks followed) named `Package.swift` that SwiftPM would load as one —
+/// a tools-version comment on its first non-blank line, the label in any case, or below other lines
+/// from 6.0 — and one that exists and cannot be read is a manifest AND doubt. Each on-disk case is
+/// the joint review's reproduction, scanned end to end; the shared cases file's `isManifest` section
+/// is the text rule's arbiter (`ConstructionUniverseCasesTests`).
 @Suite("Construction universe — what a manifest is")
 struct ConstructionUniverseManifestTests {
 
-    @Test("the first line decides", arguments: [
+    @Test("the first non-blank line decides, or a 6.0 comment below it", arguments: [
         ("// swift-tools-version:5.9\nimport PackageDescription", true),
         ("// swift-tools-version: 6.0", true),
         ("  \t//   swift-tools-version:5.9", true),
@@ -22,7 +24,11 @@ struct ConstructionUniverseManifestTests {
         ("// swift-tools-version:5.9\r\nimport PackageDescription", true),
         ("//swift-tools-version:5.7", true),
         ("import PackageDescription\n// swift-tools-version:5.9", false),
-        ("\n// swift-tools-version:5.9", false),
+        ("\n// swift-tools-version:5.9", true),
+        ("// SWIFT-TOOLS-VERSION:5.9", true),
+        ("// Copyright\n// swift-tools-version:6.0", true),
+        ("// Copyright\n// swift-tools-version:5.9", false),
+        ("/// swift-tools-version:5.9", false),
         ("struct Package: Equatable { let name: String }", false),
         ("/* swift-tools-version:5.9 */", false),
         ("// tools-version:5.9", false),
@@ -41,6 +47,32 @@ struct ConstructionUniverseManifestTests {
         try (Data("// swift-tools-version:5.9\n".utf8) + Data([0xFF, 0xFE, 0x00])).write(to: file)
         #expect(ConstructionUniverse.manifest(inDirectory: directory) == .unreadable)
         #expect(ConstructionUniverse.holdsManifest(directory))
+    }
+
+    /// The shared spec's amendment S, on disk: each root manifest is one SwiftPM 6.4 loads —
+    /// checked with `swift package dump-package` — and rule F's first-line test called a
+    /// non-manifest, so the scan of `Sources/Lib` found no root, judged itself as its own universe,
+    /// and lost its sibling target's UUID-minting `Item` (the final review's `fx/blank`: base gave 2
+    /// members and `make` refuted). The last two are the rule's other side: a header above a 5.x
+    /// comment, and `///`, are not manifests.
+    @Test("a manifest is what SwiftPM loads: blank lines, any case, a 6.0 header", arguments: [
+        ("// Swift-Tools-Version:5.9\n", true),
+        ("\n\n// swift-tools-version:5.9\n", true),
+        ("// Copyright 2026 Example\n// swift-tools-version:6.0\n", true),
+        ("// Copyright 2026 Example\n// swift-tools-version:5.9\n", false),
+        ("/// swift-tools-version:5.9\n", false)
+    ])
+    func rootManifestIsWhatSwiftPMLoads(firstLines: String, isRoot: Bool) throws {
+        let root = try Wiring.makePackage([
+            "Package.swift": firstLines + "import PackageDescription\nlet package = Package(name: \"Blank\")\n",
+            "Sources/Model/Item.swift": Wiring.item,
+            "Sources/Lib/Make.swift": Wiring.make
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let lib = root.appendingPathComponent("Sources/Lib")
+        let members = ConstructionUniverse.files(forScanOf: lib).map(\.relativePath)
+        #expect(members.count == (isRoot ? 2 : 1), "\(firstLines.debugDescription): \(members)")
+        #expect(try Nested.verdict("make", scanning: lib) == (isRoot ? .refuted : .pure))
     }
 
     static func countOf() -> String { "func countOf(_ title: String) -> Int { Item(title: title).title.count }" }
