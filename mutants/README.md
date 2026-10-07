@@ -154,6 +154,22 @@ killed by the test process dying with `SIGBUS`, which the runner counts as a fai
 | `walk-prunes-test-directories` | construction-universe | killed | `packageUnderTestsIsANestedPackage` |
 | `version-specific-read-only-beside-a-manifest` | construction-universe | killed | `versionSpecificManifestWithoutPackageSwiftIsRead` (O) |
 | `dependency-without-manifest-is-doubt` | construction-universe | killed | `dependencyOnNoManifestIsNoDoubt` (I) |
+| `covers-walks-for-its-own-directory` | construction-facts | killed | `coversItsOwnDirectoryFromTheRecord` |
+| `covers-forgets-its-answers` | construction-facts | killed | `coversRemembersAnotherDirectory` |
+| `walk-reads-every-entrys-attributes` | construction-universe | killed | `universeBesideManySnapshotFiles` (§13 row) |
+| `manifest-first-line-not-first-non-blank` | construction-universe | killed | `rootManifestIsWhatSwiftPMLoads` · `manifestTextCasesHold` · `firstLineDecides` (S(a)) |
+| `manifest-label-case-sensitive` | construction-universe | killed | `rootManifestIsWhatSwiftPMLoads` · `manifestTextCasesHold` (S(a)) |
+| `manifest-later-line-any-version` | construction-universe | killed | `rootManifestIsWhatSwiftPMLoads` · `manifestTextCasesHold` · `firstLineDecides` (S(b)) |
+| `manifest-later-line-ignored` | construction-universe | killed | `rootManifestIsWhatSwiftPMLoads` · `manifestTextCasesHold` · `firstLineDecides` (S(b)) |
+| `target-path-reaches-only-enclosing-packages` | construction-universe | killed | `targetPathOverANestedPackageReachesIt` · `targetPathsAcrossTheClosure` (T) |
+
+The fourth construction batch (2026-10-07, after the final review of the amendment-3 PRs) adds a
+mutant for each of the review's two performance fixes — `covers` answering from its record and
+its memo, and the walk reading attributes only where they decide — and for each clause of the
+shared spec's amendment 4: the first NON-BLANK line, the label's case, the later-line clause and
+its 6.0 floor, and a target path reaching the packages under it. `walk-reads-every-entrys-attributes`
+is killed by a §13 budget, so run it on a quiet machine. Seven earlier patches were re-anchored on
+the moved code (`ConstructionUniverse+Bound.swift`, the new walk, the new `covers`).
 
 Fifteen of the batch were re-anchored when the closure became SwiftProjectLint's body line for
 line; the last three pin the choices that alignment settled — the walk enters `Tests/` for its

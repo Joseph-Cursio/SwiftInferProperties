@@ -1,13 +1,12 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
-index daf80bda..86ea6080 100644
+index daf80bda..6e534ea0 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
-@@ -286,6 +286,8 @@ public enum ConstructionUniverse {
+@@ -286,6 +286,7 @@ public enum ConstructionUniverse {
          guard let walker = FileManager.default.enumerator(atPath: root.path) else { return result }
          let isDirectory = { walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory }
          while let relative = walker.nextObject() as? String {
-+            let flagged = (try? root.appendingPathComponent(relative).resourceValues(forKeys: [.isHiddenKey]))?.isHidden == true
-+            if flagged { if isDirectory() { walker.skipDescendants() }; continue }
++            _ = walker.fileAttributes
              let name = relative.lastIndex(of: "/").map { String(relative[relative.index(after: $0)...]) } ?? relative
              if name.hasPrefix(".") || prunedDirectoryNames.contains(name) {
                  // Pruned by NAME — dot-prefixed, or a vendored or build tree. A test-target

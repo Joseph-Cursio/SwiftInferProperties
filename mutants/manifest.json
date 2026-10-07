@@ -425,6 +425,70 @@
       "expected": "killed",
       "test": "dependencyOnNoManifestIsNoDoubt",
       "label": "a dependency on a directory holding no manifest is doubt — every nested package comes in (amendment I says it passes nothing on)"
+    },
+    {
+      "id": "covers-walks-for-its-own-directory",
+      "patch": "patches/covers-walks-for-its-own-directory.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "coversItsOwnDirectoryFromTheRecord",
+      "label": "covers computes a universe even for the directory the purity was built for — a root walk and a closure parse per ask (round 3, fix 1)"
+    },
+    {
+      "id": "covers-forgets-its-answers",
+      "patch": "patches/covers-forgets-its-answers.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "coversRemembersAnotherDirectory",
+      "label": "covers computes another directory's universe on every ask, never remembering the answer (round 3, fix 1)"
+    },
+    {
+      "id": "walk-reads-every-entrys-attributes",
+      "patch": "patches/walk-reads-every-entrys-attributes.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "universeBesideManySnapshotFiles",
+      "label": "the walk reads every entry's attributes again — 20,000 snapshot files under Tests/ blow the 0.5 s budget (round 3, fix 2)"
+    },
+    {
+      "id": "manifest-first-line-not-first-non-blank",
+      "patch": "patches/manifest-first-line-not-first-non-blank.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "rootManifestIsWhatSwiftPMLoads|manifestTextCasesHold|firstLineDecides",
+      "label": "the tools-version comment must be the very first line — a manifest after a blank line is no package (amendment S(a))"
+    },
+    {
+      "id": "manifest-label-case-sensitive",
+      "patch": "patches/manifest-label-case-sensitive.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "rootManifestIsWhatSwiftPMLoads|manifestTextCasesHold",
+      "label": "the tools-version label is matched case-sensitively — `// Swift-Tools-Version:5.9` is no manifest, fx/blank's root is lost (amendment S(a))"
+    },
+    {
+      "id": "manifest-later-line-any-version",
+      "patch": "patches/manifest-later-line-any-version.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "rootManifestIsWhatSwiftPMLoads|manifestTextCasesHold|firstLineDecides",
+      "label": "a tools-version comment below other lines counts at any version — SwiftPM below 6.0 rejects it (amendment S(b))"
+    },
+    {
+      "id": "manifest-later-line-ignored",
+      "patch": "patches/manifest-later-line-ignored.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "rootManifestIsWhatSwiftPMLoads|manifestTextCasesHold|firstLineDecides",
+      "label": "a 6.0 tools-version comment below a header is ignored — a copyrighted manifest is no package (amendment S(b))"
+    },
+    {
+      "id": "target-path-reaches-only-enclosing-packages",
+      "patch": "patches/target-path-reaches-only-enclosing-packages.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "targetPathOverANestedPackageReachesIt|targetPathsAcrossTheClosure",
+      "label": "a target path reaches only a package that holds it — `path: \"Packages\"` reaches none of the packages it compiles (amendment T)"
     }
   ]
 }
