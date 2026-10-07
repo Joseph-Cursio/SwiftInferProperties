@@ -324,28 +324,39 @@ public enum ConstructionUniverse {
     /// enumerator takes no `.skipsHiddenFiles`, and SwiftPM compiles a flagged file.
     /// Symlinked directories are not descended — the path enumerator does not follow them — and a
     /// symlinked FILE is yielded where the link is, which is where it is classified.
+    ///
+    /// **An entry's attributes are read only where they decide something**: a dot-prefixed or
+    /// pruned name (prune it if it is a directory) and a production `.swift` path (keep it unless
+    /// it is a directory named so). Everything else is a name and nothing more — `Package.swift`
+    /// is classified by `holdsManifest(_:)`, which stats it itself. Reading `fileAttributes` for
+    /// every entry cost ~48 µs each: a package with 50,000 snapshot PNGs under
+    /// `Tests/AppTests/__Snapshots__` took 2.4 s per universe once the walk entered `Tests/`.
+    /// The path enumerator stays — `enumerator(at:)` would hand back names in another Unicode form.
     static func walk(under root: URL) -> Walk {
         var result = Walk()
         guard let walker = FileManager.default.enumerator(atPath: root.path) else { return result }
+        let isDirectory = { walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory }
         while let relative = walker.nextObject() as? String {
-            let components = relative.split(separator: "/").map(String.init)
-            let name = components.last ?? relative
-            if walker.fileAttributes?[.type] as? FileAttributeType == .typeDirectory {
+            let name = relative.lastIndex(of: "/").map { String(relative[relative.index(after: $0)...]) } ?? relative
+            if name.hasPrefix(".") || prunedDirectoryNames.contains(name) {
                 // Pruned by NAME — dot-prefixed, or a vendored or build tree. A test-target
                 // directory is entered for the nested packages it holds, though none of its files
                 // is production: SwiftProjectLint's walk enters it too, and a package there seeds
                 // the closure when the scan judges one of its files (J), or is reached by a target
                 // path (P), on both sides alike.
-                if name.hasPrefix(".") || prunedDirectoryNames.contains(name) { walker.skipDescendants() }
+                if isDirectory() { walker.skipDescendants() }
                 continue
             }
             // A nested package is a directory holding a MANIFEST (amendment F): a source file
-            // that happens to be called `Package.swift`, or a dangling link, makes no boundary.
-            if name == "Package.swift", components.count > 1 {
-                let directory = components.dropLast().joined(separator: "/")
+            // that happens to be called `Package.swift`, a directory or a dangling link makes no
+            // boundary.
+            if name == "Package.swift", let slash = relative.lastIndex(of: "/") {
+                let directory = String(relative[..<slash])
                 if holdsManifest(root.appendingPathComponent(directory)) { result.nestedPackages.insert(directory) }
+                continue
             }
-            if !name.hasPrefix("."), isProductionSource(relativePath: relative) { result.paths.append(relative) }
+            guard name.hasSuffix(".swift"), isProductionSource(relativePath: relative), !isDirectory() else { continue }
+            result.paths.append(relative)
         }
         return result
     }
