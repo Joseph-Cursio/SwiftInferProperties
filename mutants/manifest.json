@@ -431,7 +431,7 @@
       "patch": "patches/covers-walks-for-its-own-directory.patch",
       "shape": "construction-facts",
       "expected": "killed",
-      "test": "coversItsOwnDirectoryFromTheRecord",
+      "test": "coversItsOwnDirectoryFromTheRecord|coversOnItsOwnDirectory",
       "label": "covers computes a universe even for the directory the purity was built for — a root walk and a closure parse per ask (round 3, fix 1)"
     },
     {
@@ -497,6 +497,38 @@
       "expected": "killed",
       "test": "rootTargetPathReachesEveryNestedPackage",
       "label": "the root's empty location matches no prefix — a root target's `path: \".\"` reaches no nested package (amendment T′)"
+    },
+    {
+      "id": "covers-ignores-root",
+      "patch": "patches/covers-ignores-root.patch",
+      "shape": "construction-facts",
+      "expected": "killed",
+      "test": "coversRejectsAnIdenticalLayoutElsewhere",
+      "label": "covers compares members without comparing roots — an identical layout under another root (a speculative snapshot) is taken for the package, after a walk (review of #636)"
+    },
+    {
+      "id": "manifest-spacing-space-or-tab",
+      "patch": "patches/manifest-spacing-space-or-tab.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestTextCasesHold",
+      "label": "manifest spacing is space-or-tab again — `//\\u{00A0}swift-tools-version` is refused where SwiftPM loads it (amendment S′)"
+    },
+    {
+      "id": "manifest-label-check-dropped",
+      "patch": "patches/manifest-label-check-dropped.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestTestOnALongFile",
+      "label": "the label check in front of rule (b)'s regex is gone — every later line pays the regex, and a 20,000-line comment file takes seconds (amendment S′, §13 row)"
+    },
+    {
+      "id": "manifest-label-check-case-sensitive",
+      "patch": "patches/manifest-label-check-case-sensitive.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestTextCasesHold",
+      "label": "the label check compares case-sensitively — a header above `// SWIFT-TOOLS-VERSION:6.0` is no manifest (amendment S′)"
     }
   ]
 }

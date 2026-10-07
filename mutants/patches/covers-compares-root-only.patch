@@ -1,11 +1,11 @@
 diff --git a/Sources/SwiftInferCore/PackagePurity.swift b/Sources/SwiftInferCore/PackagePurity.swift
-index 17272620..6e017964 100644
+index 1169b59b..bff2b047 100644
 --- a/Sources/SwiftInferCore/PackagePurity.swift
 +++ b/Sources/SwiftInferCore/PackagePurity.swift
-@@ -145,7 +145,7 @@ public struct PackagePurity: Sendable {
-         guard let root else { return false }
+@@ -146,7 +146,7 @@ public struct PackagePurity: Sendable {
          return coverage.answer(for: directory) {
              guard ConstructionUniverse.root(forScanOf: directory).path == root.path else { return false }
+             coverage.countUniverse()
 -            return members == ConstructionUniverse.universe(forScanOf: directory).members.map(\.relativePath)
 +            return true
          }

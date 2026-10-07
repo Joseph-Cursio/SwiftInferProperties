@@ -163,6 +163,16 @@ killed by the test process dying with `SIGBUS`, which the runner counts as a fai
 | `manifest-later-line-ignored` | construction-universe | killed | `rootManifestIsWhatSwiftPMLoads` · `manifestTextCasesHold` · `firstLineDecides` (S(b)) |
 | `target-path-reaches-only-enclosing-packages` | construction-universe | killed | `targetPathOverANestedPackageReachesIt` · `targetPathsAcrossTheClosure` (T) |
 | `target-path-root-reaches-nothing` | construction-universe | killed | `rootTargetPathReachesEveryNestedPackage` (T′) |
+| `covers-ignores-root` | construction-facts | killed | `coversRejectsAnIdenticalLayoutElsewhere` |
+| `manifest-spacing-space-or-tab` | construction-universe | killed | `manifestTextCasesHold` (S′) |
+| `manifest-label-check-dropped` | construction-universe | killed | `manifestTestOnALongFile` (S′, §13 row) |
+| `manifest-label-check-case-sensitive` | construction-universe | killed | `manifestTextCasesHold` (S′) |
+
+The fifth batch (2026-10-07, after the adversarial review of #636) pins what that review found
+unguarded: `covers`' root guard (an identical layout under another root), the built-for shortcut
+(`covers-walks-for-its-own-directory` now also names the counting test and the re-priced §13 row,
+which the memo alone could no longer pass), and amendment 4b's S′ — Unicode spacing, and the label
+check in front of rule (b)'s regex, both its presence (a §13 cost row) and its case.
 
 The fourth construction batch (2026-10-07, after the final review of the amendment-3 PRs) adds a
 mutant for each of the review's two performance fixes — `covers` answering from its record and

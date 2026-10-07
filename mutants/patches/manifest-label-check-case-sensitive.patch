@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+index 04250e9f..b60d9868 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
+@@ -129,7 +129,7 @@ extension ConstructionUniverse {
+             // Only a line that names the label can match; skip the regex, which costs far more, for the rest.
+             let marker = line.drop(while: \.isWhitespace)
+             guard marker.hasPrefix("//"),
+-                  marker.dropFirst(2).drop(while: \.isWhitespace).prefix(19).lowercased() == "swift-tools-version"
++                  marker.dropFirst(2).drop(while: \.isWhitespace).prefix(19) == "swift-tools-version"
+             else { return false }
+             guard let match = line.prefixMatch(of: #/\h*//\h*(?i:swift-tools-version)\h*:\h*([0-9]+)/#) else {
+                 return false
