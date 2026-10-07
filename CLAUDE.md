@@ -75,7 +75,7 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `64a905c` (bumped 2026-10-06, jointly with SwiftProjectLint), and
+**Both repos pin SEI `4aa91cf` (bumped 2026-10-07, jointly with SwiftProjectLint), and
 `SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
 SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
@@ -127,7 +127,11 @@ scope, decodes, body walks and shape guesses per pass — and ends a lookup that
 universe holding swift-collections and a refuting package. Re-taken at `64a905c`, the `Sources/`
 delta and all 21 scan roots came out identical again, `make batch2` green with the replica guard
 naming no mismatch, and an interleaved `make perf` A/B against `9d0bf6d` moved no §13 row past
-run-to-run noise.
+run-to-run noise. **`4aa91cf` moves nothing either** (SEI #25): it follows an alias named as a
+member of its type — `let s: Outer.Stamp = .init()` with `Outer.Stamp = UUID` now refutes — which
+can only refute more. A/B'd against `main` at `64a905c` over the same trees, `make batch2` printed
+the same `Sources/` delta and the same 21 scan roots, every count and every witness, with the
+replica guard naming no mismatch.
 
 ## Where to look
 
