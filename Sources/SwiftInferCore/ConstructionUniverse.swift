@@ -98,10 +98,17 @@ import Foundation
 /// Each is either in the direction SEI's *any doubt refutes* accepts, or would cost the two
 /// consumers their one universe if one of them fixed it alone:
 ///
-/// - **A `Package.swift`, or a `Tests` / `*Tests` folder, inside an Xcode app target** is dropped by
-///   the predicate though Xcode compiles it: the predicate reads names, and no Xcode project is
-///   read (amendment G takes an Xcode root's nested packages, not its folders). Under-refuting,
-///   and rare.
+/// - **A source file named `Package.swift`, or a `Tests` / `*Tests` folder, inside a target** is
+///   dropped by the predicate though the target compiles it — SwiftPM as well as Xcode: SwiftPM
+///   builds `Sources/App/Models/Package.swift` and `Sources/App/HelperTests/H.swift` into `App`.
+///   The predicate reads names; it never claimed SwiftPM leaves such files out. Under-refuting,
+///   and rare. (Amendment F keeps such a `Package.swift` from making a package BOUNDARY; the file
+///   itself still leaves the universe.)
+/// - **A symlinked package's own relative dependencies resolve from its canonical target**, not
+///   from where the link sits, as SwiftPM resolves them: with `Packages/Core → ../Vendor/Core` and
+///   Core depending on `../Util`, the closure looks for `Vendor/Util` where SwiftPM uses
+///   `Packages/Util`, and a link whose target lies outside the root drops its sub-closure. Rare,
+///   and not a regression (amendment 4, V).
 /// - **Namesakes across modules in one universe over-refute.** SEI matches a constructed type by
 ///   name, so once two modules share a universe — a judged package (amendment J), every nested
 ///   package of a manifest-less or Xcode root — one module's `Row` refutes another's `Row(n:)`
@@ -110,6 +117,14 @@ import Foundation
 ///   `Sources/Lib` beside a symlinked `Sources/Model` misses `Model`'s types — under-refuting. A
 ///   scanned symlinked target is handled (the union), and a dependency through a link is
 ///   resolved (amendments H and Q).
+/// - **Unicode normalisation of the scanned directory's spelling.** `onDiskSpelling(of:)` reads
+///   each component's stored name, but the path is rebuilt through `URL`, whose components are
+///   decomposed (NFD), while `enumerator(atPath:)` — the walk — returns the stored bytes. So a scan
+///   of a directory stored NFC-named (`Résumé`, composed) spells its own members below it in NFD,
+///   where the root walk and SwiftProjectLint spell them as stored. Swift's `==`, `<`, hashing and
+///   `hasPrefix` compare canonically, so membership, order, dedup and every verdict are the same;
+///   only a byte-level comparison (a printed universe, a digest compared as bytes) sees it.
+///   Pre-existing: the scanned path went through `URL` before amendment L too.
 public enum ConstructionUniverse {
 
     /// Directory names never part of a universe even when not hidden: build products and vendored
@@ -203,52 +218,6 @@ public enum ConstructionUniverse {
         )
     }
 
-    /// The nested packages of `nestedPackages` the bound takes — `compiledNestedPackages`, the
-    /// shared closure — and the nested directories it read, which decide it.
-    ///
-    /// The closure runs on a `LargeStackWorkers` thread (amendment K): it parses every manifest it
-    /// reaches, a parse recurses as deep as the manifest nests, and the CLI runs on a ~512 KB
-    /// cooperative stack — a 1,000-arm `else if` in a nested manifest `SIGBUS`ed `discover`.
-    /// SwiftProjectLint runs its closure on a large stack at its call site too, so the shared body
-    /// stays the same in both repos.
-    static func bound(
-        of nestedPackages: Set<String>,
-        judging directory: URL,
-        at location: RootLocation,
-        rootHasManifest: Bool
-    ) -> (compiled: Set<String>, read: Set<String>) {
-        let root = location.resolved
-        // An Xcode project beside the manifest may compile packages it never names (amendment G).
-        let bounds = rootHasManifest && !holdsXcodeProject(root)
-        let judged = bounds && !nestedPackages.isEmpty
-            ? judgedPackages(of: judgedFiles(of: directory, at: location).map(\.relativePath), among: nestedPackages)
-            : []
-        return LargeStackWorkers.run {
-            var read: Set<String> = []
-            let compiled = compiledNestedPackages(
-                nestedPackages,
-                reported: judged,
-                rootHasManifest: bounds,
-                rootPath: root.path,
-                resolvingSymlinks: canonicalPath
-            ) { relative in
-                let manifests = manifests(inDirectory: packageDirectory(relative, under: root))
-                if !relative.isEmpty, manifests.contains(where: { $0 != .absent }) { read.insert(relative) }
-                return manifests
-            }
-            return (compiled, read)
-        }
-    }
-
-    /// An absolute path's canonical form — symlinks resolved and, on a volume that folds case, the
-    /// on-disk letter case, as `realpath(3)` gives it — or the path itself when it does not resolve.
-    /// The closure compares every location this way (amendments H and Q), as SwiftProjectLint does.
-    static func canonicalPath(_ path: String) -> String {
-        guard let canonical = realpath(path, nil) else { return path }
-        defer { free(canonical) }
-        return String(cString: canonical)
-    }
-
     /// The scanned directory's own production files, spelled under the root as given: the scanned
     /// directory's path below the root plus each file's path below the scanned directory — found by
     /// the same walk as the root's, so, like it, never skipping a file for the macOS `UF_HIDDEN`
@@ -263,26 +232,6 @@ public enum ConstructionUniverse {
             let url = directory.appendingPathComponent(own)
             return Member(relativePath: relative, url: url, key: resolved(url).path)
         }
-    }
-
-    /// Every file a scan of `directory` judges, spelled under the root as given, as
-    /// `ownMembers(of:at:)` spells its own: they say which nested packages the scan judges
-    /// (amendment J).
-    static func judgedFiles(of directory: URL, at location: RootLocation) -> [Member] {
-        let prefix = location.scannedPathBelowRoot
-        return SwiftSourceFiles.sorted(in: directory).compactMap { url in
-            guard let own = relativePath(of: url, under: directory) else { return nil }
-            let relative = prefix.isEmpty ? own : prefix + "/" + own
-            return Member(relativePath: relative, url: url, key: resolved(url).path)
-        }
-    }
-
-    /// The nested packages that hold a judged file — each file's nearest one of `nestedPackages`
-    /// above it — the shared spec's amendment J, as SwiftProjectLint places its reported files.
-    /// Placed by where the file is judged, like every member: a linked file belongs to the package
-    /// its link sits in.
-    static func judgedPackages(of relativePaths: [String], among nestedPackages: Set<String>) -> Set<String> {
-        Set(relativePaths.compactMap { owningPackage(of: $0, among: nestedPackages) })
     }
 
     /// One entry per file on disk: of the members whose `key` (resolved path) is one file, the one

@@ -377,9 +377,13 @@ the universe parse, the table build, the out-of-universe re-parse in
   project BESIDE a root manifest takes every nested package (amendment G), and nothing more: the
   project file is not read.
 - **Accepted gaps of the shared rule, recorded rather than fixed** (each in `ConstructionUniverse`'s
-  doc too): a `Package.swift`, or a `Tests` / `*Tests` folder, inside an Xcode app target is dropped
-  by the predicate though Xcode compiles it — the predicate reads names, and no project file is
-  read; **namesakes across modules in one universe over-refute** — SEI matches a constructed type by
+  doc too): a source file named `Package.swift`, or a `Tests` / `*Tests` folder, inside a target is
+  dropped by the predicate though the target compiles it — SwiftPM as well as Xcode, which builds
+  `Sources/App/Models/Package.swift` and `Sources/App/HelperTests/H.swift` into `App` — because the
+  predicate reads names; **a symlinked package's own relative dependencies resolve from its
+  canonical target**, not from the link's location as SwiftPM resolves them (amendment 4, V); a scan
+  of an NFC-named directory spells its own members NFD (Swift compares canonically, so no verdict
+  moves); **namesakes across modules in one universe over-refute** — SEI matches a constructed type by
   name, so once two modules share a universe (a judged package under amendment J, every nested
   package of a manifest-less or Xcode root) one module's `Row` refutes another's `Row(n:)` it never
   imports, the sound direction; and **a symlinked sibling directory is not walked** (next bullet).
