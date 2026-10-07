@@ -28,6 +28,12 @@
 > first witness from `propagatedTry` to a construction (a defaulted `Date` in
 > `InteractionInteractiveTriage.Inputs` / `InteractiveTriage.Context`). Full record:
 > `docs/measurements/construction-facts-wiring.md`.
+>
+> **Re-taken 2026-10-07 at `7fbc7baa`, after the shared construction universe's third and fourth
+> amendments** (SEI `64a905c`): configured **229 witness / 118 ignorance of 347**, `construction` 2,
+> bucket a consumer reads 351 — **the ignorance-only count and the rankable ceiling hold at 118**;
+> witness-bearing and the bucket grew by this branch's own new code (unconfigured 227 / 120), not
+> by the table.
 
 Re-derivable at any time — `PurityRefutationCensusMeasuredTests` *is* the
 harness, and `make batch2` runs it.

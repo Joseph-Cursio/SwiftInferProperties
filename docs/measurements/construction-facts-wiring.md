@@ -1,6 +1,6 @@
 # Construction facts, wired in — what the table moved
 
-> **Status:** `measured` · **As of:** 2026-10-06
+> **Status:** `measured` · **As of:** 2026-10-07
 
 **The third step in this repo that moves purity verdicts, and the first by configuration rather
 than by an SEI pin bump.** SEI `f2ea8d6` already shipped `ConstructionFacts` — a table of what
@@ -27,6 +27,15 @@ Re-derivable at any time — `make batch2` runs both arms:
 > `a09c5d56`, at `e06ec8e9` (SEI `64a905c`), the two agreeing to the digit. **The table's effect did
 > not move**: the same 3 refuted types and 0 flips here, the same 266 rows over 21 roots, row for row.
 
+> **Revised again 2026-10-07, after a joint follow-up review of both consumers** — read
+> [*The follow-up review's fixes*](#the-follow-up-reviews-fixes--amendments-3-and-3b). The shared
+> spec gained amendments F–R (what a manifest is, an Xcode project beside it, dependency paths by
+> value and canonical location, the closure read by path, judged packages, version-specific
+> manifests, target paths, the scanned path's letter case, `UF_HIDDEN`), and the nested-package
+> closure is now one text in both repos. Re-taken at `7fbc7baa` (SEI `64a905c`): **the table's
+> effect did not move** — 3 refuted types and 0 flips here, the same 266 rows over 21 roots, every
+> moved row identical. Two corpus universes grew under the new rules and moved no row.
+
 ---
 
 ## What was built
@@ -40,17 +49,25 @@ Re-derivable at any time — `make batch2` runs both arms:
   facts were built from: SEI types an assignment by node identity, so a re-parse answers more
   refutingly (`scanJudgesOnTheFactsOwnNodes` pins it).
 - **`ConstructionUniverse`** — the cross-repo rule, implemented with the same names in
-  SwiftProjectLint: root = nearest `Package.swift` ancestor of the scanned directory **found from
-  the path as given** (resolved only afterwards, as a key), self-contained under a rejected
-  component (`Tests/Fixtures/X` is its own project), unioned with the scanned directory's own
-  production files under the link's spelling; a nested package only when the root compiles it (the
-  closure of its `.package(path:)` literals — any computed path in the closure, or no root manifest,
-  takes every one); one entry per file on disk, the smallest relative path kept; strict UTF-8;
-  production = `.swift`, not a manifest, no `Tests` / `*Tests` / hidden / `DerivedData` / `Pods` /
-  `Carthage` / `node_modules` directory component; order = `buildOrder`, relative path, `String <`.
-  Both repos assert their predicate over a byte-identical `construction-universe.tsv`, and their
-  manifest reader and order over a byte-identical `construction-universe-cases.json`;
-  `SEICrossRepoPinTests` asserts both pairs of copies are equal.
+  SwiftProjectLint: root = nearest ancestor of the scanned directory holding a **manifest** (a
+  `Package.swift` whose first line is a tools-version comment — amendment F), **found from the path
+  as given, in its on-disk letter case** (amendment L; resolved only afterwards, as a key),
+  self-contained under a rejected component (`Tests/Fixtures/X` is its own project), unioned with
+  the scanned directory's own production files under the link's spelling; a nested package only
+  when the run reaches it — the closure of every manifest's `.package(path:)` values (escapes
+  processed, raw strings allowed) and of the nested packages holding its targets' `path:`s,
+  across each `Package.swift` and the `Package@swift-*.swift` beside it, followed **by path** to
+  manifests under `Tests/`, hidden and pruned directories too, every location compared resolved
+  and canonical (amendments H, I, O, P, Q); any computed path in the closure, an unreadable
+  manifest, no root manifest, or an Xcode project beside it takes every one (amendment G); and a
+  nested package holding a JUDGED file is in with its own closure (amendment J); one entry per file
+  on disk, the smallest relative path kept, bounded first; strict UTF-8; production = `.swift`,
+  not a manifest, no `Tests` / `*Tests` / dot-prefixed / `DerivedData` / `Pods` / `Carthage` /
+  `node_modules` directory component, the `UF_HIDDEN` flag ignored (amendment M); order =
+  `buildOrder`, relative path, `String <`. Both repos assert their predicate over a byte-identical
+  `construction-universe.tsv`, and their manifest reader (dependencies and target paths) and order
+  over a byte-identical `construction-universe-cases.json`; `SEICrossRepoPinTests` asserts both
+  pairs of copies are equal.
 - **`FunctionScanner.scanCorpus(directory:)` is two-phase** — build the project purity, then
   judge each file. `--target` / `--sources` decide what is JUDGED, never what feeds the table.
 - **The census replica gains a `construction` cause**, read off SEI's first witness, and a
@@ -86,6 +103,15 @@ type, so the 3 refuted types are the same three. Every other change between the 
 this pass's new code (`ConstructionUniverse+NestedPackages`, `FunctionScanner+Declarations`,
 `PackagePurity.forJudging`, …) being counted, and it moves the census docs' self-arms the same way —
 their head figures stay labelled `c432f691`, where they hold.
+
+**Re-taken after the follow-up review's fixes, at `7fbc7baa`** (same SEI pin): universe **745**
+files (743 + this pass's two new source files, `ConstructionUniverse+Manifests` and
+`+Location`); the same **3** refuted types, **0** function flips, **0** of 225 accessor blocks, **0**
+of 1,646 closure literals, the same **2** re-witnessed rows; witness-bearing / ignorance-only 227 /
+120 unconfigured and **229 / 118** configured; functions 3,255, `.pure` 2,871 / 37 / 347 in both
+arms; summaries 3,494, `.pure` 3,083 in both arms. Every difference from the column pair above is
+this pass's new code being counted. The ignorance-only denominator and its rankable ceiling, 118,
+hold.
 
 The 3 refuted types all refute through a defaulted `Date`: `InteractiveTriage.Context`
 (`clock:`), `InteractionInteractiveTriage.Inputs` and `InteractionBridgeInteractiveTriage.Inputs`
@@ -155,6 +181,19 @@ the universe never goes), **swift-syntax 481 → 338** (`CodeGeneration/`, `Exam
 176 → 172** (`Validation/`) — **and moved no row.** SwiftProjectLint's root names all seven
 `Packages/` by path, so its universe kept them; its figures moved with its tree (538 files, 2,174
 summaries, the same 218 rows).
+
+**Re-taken after the follow-up review's fixes, at `7fbc7baa`** (SEI `64a905c`): **the same 266
+rows over 21 roots, every direct and every joined row identical** to `e06ec8e9`'s, and no root
+dropped. Two universes moved, by the new rules and correctly: **swift-collections 575 → 612** —
+its manifest gives targets a computed `path:` (`kind.path(for: directory)`), which amendment P
+reads as doubt, so every nested package is in again (`Benchmarks/`, `Utils/`) — and
+**swift-package-manager 598 → 599** — `.target(path: "Examples/package-info/Sources/package-info")`
+lies inside the nested `Examples/package-info` package, which amendment P now reaches. Neither
+moved a row: the 37 and the 1 files declare no refuting namesake. SwiftProjectLint's universe read
+539 (was 538) and its `Packages` advice 2,143 → 1,925 (was 2,132 → 1,914) because its tree moved
+(another session's branch) — the same 218 rows; this repo's own 743 → 745 is this pass's two files. GRDB's
+`GRDB.xcworkspace` beside its manifest (amendment G) takes every nested package, and its universe
+did not move (181).
 
 **The motivating rows, with SEI's witness.** In SwiftLintRuleStudio's Core, `analyze` is direct —
 *"constructs `ConfigHealthReport`, and the default value of its stored property `id` references
@@ -272,6 +311,29 @@ Every budget green in every run; none was raised. (A first re-take at SEI `9d0bf
 10–19, read the same within noise; there the `--interactive` row failed once at 1.186 s inside a
 loaded `make test` and passed alone straight after, on both sides of the A/B.)
 
+**Re-taken after the follow-up review's fixes**, `make perf` alone at `7fbc7baa`, three runs
+back to back, each started below load 5 (4.4, 3.6, 2.9) beside the `swift-collections` link so the
+DequeModule row runs in-tree; the `e06ec8e9` column is the previous re-take's, on the same machine:
+
+| §13 row | budget | `e06ec8e9` | `7fbc7baa` |
+|---|---|---:|---:|
+| Discover pipeline, 100 test files | 6.0s | 2.557 · 2.577 · 2.562 | 2.534 · 2.522 · 2.543 |
+| TestLifter.discover, 100 files | 4.0s | 0.421 · 0.425 · 0.425 | 0.422 · 0.422 · 0.425 |
+| Discover, 50-file corpus | 2.0s | 0.469 · 0.477 · 0.470 | 0.471 · 0.469 · 0.471 |
+| …with decisions-load active | 2.0s | 1.582 · 1.592 · 1.571 | 1.585 · 1.578 · 1.595 |
+| 50-file package, refuting constructions | 2.0s | 0.641 · 0.648 · 0.645 | 0.645 · 0.644 · 0.643 |
+| swift-collections DequeModule | 4.0s | 1.932 · 1.943 · 1.917 | **2.051 · 2.060 · 2.051** |
+| Drift re-run | 0.5s | 0.442 · 0.458 · 0.462 | 0.444 · 0.435 · 0.445 |
+| `--interactive` first prompt | 1.0s | 0.746 · 0.737 · 0.739 | 0.743 · 0.743 · 0.743 |
+| 500-file corpus, peak RSS delta | 800 MB | 373.1 · 373.6 · 373.6 MB | 373.1 · 373.7 · 373.0 MB |
+
+**One row moved, and it is the universe growing back**: DequeModule is ~0.12 s slower because
+swift-collections' universe is 612 files again, not 575 — its manifest's computed target `path:`
+is doubt under amendment P, so `Benchmarks/` and `Utils/` are in — which puts it back at
+`a09c5d56`'s 2.02 s, before the bound. Every other row is within run-to-run noise, every budget
+green in every run, and none was raised. Inside the full `make test` (load up to 105 while batches
+2 and 3 ran beside another session's build) all nine passed too.
+
 The real cost is DequeModule: its universe is all of swift-collections (612 production files
 against 46 judged), and the scan now parses it. +0.75 s in a debug build, inside the 4 s budget,
 **with the parse parallel** — a serial parse of a universe that size was the risk the plan named.
@@ -311,7 +373,16 @@ the universe parse, the table build, the out-of-universe re-parse in
   cannot see.
   Carrying SEI's witness on `FunctionSummary` would retract more rows — another A/B.
 - **No Xcode-root fallback.** A scan whose directory has no `Package.swift` ancestor is its own
-  universe; an Xcode app's sibling folders are not read (`swiftlint-rule-studio / UI`).
+  universe; an Xcode app's sibling folders are not read (`swiftlint-rule-studio / UI`). An Xcode
+  project BESIDE a root manifest takes every nested package (amendment G), and nothing more: the
+  project file is not read.
+- **Accepted gaps of the shared rule, recorded rather than fixed** (each in `ConstructionUniverse`'s
+  doc too): a `Package.swift`, or a `Tests` / `*Tests` folder, inside an Xcode app target is dropped
+  by the predicate though Xcode compiles it — the predicate reads names, and no project file is
+  read; **namesakes across modules in one universe over-refute** — SEI matches a constructed type by
+  name, so once two modules share a universe (a judged package under amendment J, every nested
+  package of a manifest-less or Xcode root) one module's `Row` refutes another's `Row(n:)` it never
+  imports, the sound direction; and **a symlinked sibling directory is not walked** (next bullet).
 - **A manifest-less WORKSPACE root is one universe, and since SEI `64a905c` it costs about the sum
   of its packages.** The same rule makes `discover --sources ~/src` — a folder of several packages
   with no `Package.swift` of its own — one universe with every nested package in (amendment B: no
@@ -355,8 +426,12 @@ and pinned by two byte-identical answer keys — `construction-universe.tsv` for
 `construction-universe-cases.json` for the manifest reader and the build order. **The first key
 alone was not enough, and the review showed it**: the two `.tsv`s were byte-identical while
 SwiftProjectLint already bounded nested packages and deduplicated by the smallest path and this
-repo did neither, so one root gave two tables. Both clauses skip loudly where the sibling carries
-no copy; until SwiftProjectLint's side lands on its main, the two consumers knowingly disagree.
+repo did neither, so one root gave two tables. **The two keys were not enough either**: the
+follow-up review found the two closures written from one amendment text and differing in four
+places, so since amendment 3b `ConstructionUniverse+NestedPackages.swift` is SwiftProjectLint's file
+line for line below its header, and a third clause (`nestedPackageClosureMatchesSwiftProjectLint`)
+compares the two bodies. All three clauses skip loudly where the sibling carries no copy; until
+SwiftProjectLint's side lands on its main, the two consumers knowingly disagree.
 
 ---
 
@@ -397,3 +472,56 @@ suggestions, byte-identical; SwiftProjectLint `Packages` (its `main`, `4d7bce7b`
 
 **And one addition the bound made necessary**: the index's staleness probe now watches the
 manifests that decide it, so adding `.package(path:)` for a nested package marks the index stale.
+
+---
+
+## The follow-up review's fixes — amendments 3 and 3b
+
+A joint follow-up review of both consumers (2026-10-07) confirmed 24 findings, and its critic added
+four fixtures; the shared spec gained amendments F–N and O–R, implemented here and in
+SwiftProjectLint. Every fix has a test that fails with it reverted, and a mutant
+(`mutants/README.md`, the third construction batch).
+
+| amendment | what was wrong here (review id) | fix | pinned by |
+|---|---|---|---|
+| F — what a manifest is | a source file named `Package.swift` inside `Sources/App/Models/` made a package boundary and dropped its target's other files (`spl#1`); a dangling `Ghost/Package.swift` link was doubt and let an unrelated `Demo/` in, where SwiftProjectLint read no package (`agreement#4`); a directory named `Package.swift` made a root | a manifest is a regular file whose first line is `// swift-tools-version` (BOM allowed); one that cannot be read as UTF-8 is a manifest and doubt | `ConstructionUniverseManifestTests` |
+| G — Xcode beside the manifest | a root manifest beside `App.xcodeproj` bounded the universe to its own closure, dropping the local package only the app links (`spl#2`) | a direct-child `*.xcodeproj` / `*.xcworkspace` takes every nested package | `xcodeProjectBesideTheManifestTakesEveryNestedPackage` |
+| H — the literal's value, resolved | `"Pack\u{61}ges/A"` named no package; an absolute literal through `/private`, a symlinked prefix or another letter case missed one (`sip#3`, `agreement#2`, `spl#3`) | `representedLiteralValue`; standardise, then resolve symlinks, compare resolved | `manifestCasesHold`, `ConstructionUniverseDependencyPathTests` |
+| I — the closure by path | the closure stopped at a package under `Tests/`, `*Tests`, a hidden or a pruned directory, which SwiftProjectLint follows (`agreement#0`, `tests#0`, `sip#4`) | each dependency followed to `<dir>/Package.swift` on disk; one with no manifest passes nothing on and is no doubt; the walk enters `Tests/` for the packages it holds, as SwiftProjectLint's does | `closurePassesThroughAnUnwalkedPackage`, `doubtInAnUnwalkedPackageIncludesEveryNestedPackage`, `dependencyOnNoManifestIsNoDoubt`, `packageUnderTestsIsANestedPackage` |
+| J — judged packages | `--sources Examples` over an uncompiled `Examples/Demo` judged Demo without its own types and proposed a law the base vetoed (`robustness#1`) | the walked packages owning a judged file seed the closure (`reported:`); `covers` compares members, not roots | `ConstructionUniverseJudgedPackageTests`, `judgedPackageSeedsTheClosure` |
+| K — large stack | a 1,000-arm `else if` in a nested manifest `SIGBUS`ed `discover` (`robustness#3`) | the closure runs on `LargeStackWorkers` at its one call site, as SwiftProjectLint's does | `deepManifestIsReadOnALargeStack` |
+| L — on-disk letter case | a mis-cased `--sources` made the predicate case-sensitive on a case-insensitive volume, both ways, and spelled members after the typing (`sip#1`, `agreement#3`) | `onDiskSpelling(of:)` before the root search | `ConstructionUniverseLetterCaseTests` |
+| M — hidden is a name | the scanned directory's own files came through `SwiftSourceFiles`, which skips `UF_HIDDEN`; for a scanned symlinked target nothing else reaches them | the union walks the scanned directory like the root | `hiddenFlagIsNotHiddenName` |
+| N — the shared order | the shared `buildOrder` could not tell `String <` from a per-component sort (`tests#5`) | the cases file's `Sources/A-B/X.swift` / `Sources/A/X.swift` pair | `buildOrderIsTheSharedOrder`, `sharedOrderDiscriminates` |
+| O — `Package@swift-*.swift` | a dependency named only in `Package@swift-6.0.swift` was never read (critic `s6v`) | the union over a directory's manifests, in name order, whatever its `Package.swift` is; doubt in any is doubt; the watch list holds them | `versionSpecificManifestIsRead`, `versionSpecificDoubtIsDoubt`, `versionSpecificManifestWithoutPackageSwiftIsRead` |
+| P — target paths | `.target(name: "Core", path: "Core/Sources/Core")` inside a nested `Core/` left its files out (critic `s7`) | `localTargetPaths(manifest:)`; every walked package a closure manifest's resolved target path equals or lies in is reached | `targetPathInsideANestedPackageReachesIt`, `targetPathsAcrossTheClosure`, `targetPathCasesHold` |
+| Q — canonical locations | a dependency through a symlinked package directory never met the walked package (critic `s11`) | both sides standardised, then `realpath(3)`, and compared by location | `symlinkedPackageDirectoryReachesTheWalkedPackage` |
+| R — the cases file | target paths had no shared answer key | a `localTargetPaths` section, byte-identical | `targetPathCasesHold`, `universeCasesMatchSwiftProjectLint` |
+| — | `suggest-refactors --speculative` skipped every candidate over one unreadable universe file outside `Sources/`, and leaked a snapshot per failure (`sip#2`, `robustness#2`) | unreadable members skipped, as `PackagePurity` skips them; a failed snapshot removed | `unreadableUniverseFileIsSkipped`, `failedSnapshotIsRemoved` |
+| — | "bound, then deduplicate" was unpinned (`tests#4`) | — (test) | `boundBeforeDeduplicating` |
+
+**The closure is one text now, not two.** Each repo first implemented the amendments from their
+wording, and the two closures differed in four places — what a target path reaches, what seeds a
+judged package, when a version-specific manifest is read, how a location is canonicalised. So
+`ConstructionUniverse+NestedPackages.swift` is SwiftProjectLint's file from
+`extension ConstructionUniverse {` to its end, readers and closure alike, and
+`nestedPackageClosureMatchesSwiftProjectLint` (`SEICrossRepoPinTests`) compares the two bodies the
+way the `.tsv` and the cases file are compared. The edges the amendments leave open follow
+SwiftProjectLint's reading too: a `Package.swift` that is not UTF-8 is a manifest that cannot be
+read (doubt only where the closure reads it), the tools-version line is matched case-sensitively on
+the first line alone, and any direct child named `*.xcodeproj` counts.
+
+**Rows moved, CLI A/B** — `discover --sources <root>` with `--effect-annotations` (advice) and
+`--include-possible` (suggestions), the archived pre-fix head `6bc89a0c` against `7fbc7baa` (both
+debug builds, SEI `64a905c`; binaries and outputs in the session's scratch, not committed):
+
+| subject | advice `6bc89a0c` → `7fbc7baa` | suggestions |
+|---|---|---|
+| SwiftLintRuleStudio Core | 288 → 288, byte-identical | 60 → 60, byte-identical |
+| SwiftProjectLint `Packages` (its `main`, `4d7bce7b`) | 1,899 → 1,899, byte-identical | 523 → 523, byte-identical |
+| the `Demo/` namesake scenario (`Sources/Lib`) | 1 → 1 (`make(n:)`), byte-identical | 0 → 0 |
+| `--sources Examples` over an uncompiled `Examples/Demo` (`robustness#1`) | 2 → **1** — `normalized(_:)` no longer advised pure; `clamp` stays | 3 → **2** — the idempotence law over `normalized` withdrawn |
+| the critic's `s6v` / `s7` / `s11` (`discover --target App`) | 1 → **0** each — `tokenCount` no longer advised pure | 0 → 0 |
+| the critic's `s6c` (the control) | 0 → 0, byte-identical | 0 → 0 |
+
+So the fixes moved exactly the rows they were written for, and nothing on either real subject.

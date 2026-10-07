@@ -7,6 +7,8 @@
 > rows leave it); what a join would free does not move — 13 / 27 conservative and 17 / 31
 > optimistic, one hop / fixpoint — and every freed row still lands on `.pureButPartial`. Blocked by
 > a foreign callee: 15 → 19 → 18. Full record: `docs/measurements/construction-facts-wiring.md`.
+> **Re-taken 2026-10-07 at `7fbc7baa`** (the shared universe's third and fourth amendments, SEI
+> `64a905c`): the denominator is still **118**, and 13 / 27 conservative, 17 / 31 optimistic — unchanged.
 
 Re-derivable at any time — `PurityBlockingCalleeCensusMeasuredTests` *is* the
 harness, and `make batch2` runs it.
