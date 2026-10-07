@@ -173,7 +173,8 @@ public enum ConstructionUniverse {
         let compiled = compiledNestedPackages(
             walk.nestedPackages,
             rootHasManifest: rootHasManifest && !holdsXcodeProject(root),
-            rootPath: root.path
+            rootPath: root.path,
+            resolvingSymlinks: { resolved(URL(fileURLWithPath: $0)).path }
         ) { manifestText(of: $0, under: root) }
         let bounded = members.filter { member in
             owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains) ?? true

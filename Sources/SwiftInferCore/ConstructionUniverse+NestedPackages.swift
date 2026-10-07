@@ -57,15 +57,20 @@ extension ConstructionUniverse {
     /// The nested packages, of `nestedPackages`, whose files are in the universe.
     ///
     /// - Parameters:
-    ///   - nestedPackages: root-relative directories (no trailing `/`) that hold a `Package.swift`.
-    ///   - rootHasManifest: whether the root itself holds a `Package.swift`.
-    ///   - rootPath: the root's absolute path, which an absolute dependency path must lie under.
-    ///   - manifest: the text of the `Package.swift` in a root-relative directory (`""` is the root),
-    ///     or `nil` when it cannot be read — which is doubt, so every nested package is in.
+    ///   - nestedPackages: root-relative directories (no trailing `/`) that hold a manifest.
+    ///   - rootHasManifest: whether the root itself holds one — `false` too when an Xcode project
+    ///     sits beside it (amendment G).
+    ///   - rootPath: the root's absolute path, resolved; every dependency must lie under it once
+    ///     resolved itself.
+    ///   - resolvingSymlinks: an absolute path with every symlink resolved, by the same resolution
+    ///     the root's path went through (amendment H). The identity for an in-memory tree.
+    ///   - manifest: the text of the manifest in a root-relative directory (`""` is the root), or
+    ///     `nil` when it cannot be read — which is doubt, so every nested package is in.
     public static func compiledNestedPackages(
         _ nestedPackages: Set<String>,
         rootHasManifest: Bool,
         rootPath: String,
+        resolvingSymlinks: (String) -> String = { $0 },
         manifest: (String) -> String?
     ) -> Set<String> {
         guard rootHasManifest, !nestedPackages.isEmpty else { return nestedPackages }
@@ -75,7 +80,7 @@ extension ConstructionUniverse {
             guard let text = manifest(directory),
                   let dependencies = localPackageDependencies(manifest: text) else { return nestedPackages }
             for literal in dependencies {
-                guard let resolved = resolve(literal, from: directory, rootPath: rootPath),
+                guard let resolved = resolve(literal, from: directory, rootPath: rootPath, with: resolvingSymlinks),
                       nestedPackages.contains(resolved),
                       reached.insert(resolved).inserted else { continue }
                 pending.append(resolved)
@@ -96,15 +101,23 @@ extension ConstructionUniverse {
         return nil
     }
 
-    /// `literal` resolved from the root-relative `directory` and standardised (`.` and `..` folded
-    /// over the whole absolute path), as a root-relative path without a trailing `/`; `nil` when the
-    /// result is not under the root. Lexical, as SwiftPM's own path resolution is: no symlink is
-    /// followed.
-    static func resolve(_ literal: String, from directory: String, rootPath: String) -> String? {
+    /// `literal` resolved from the root-relative `directory`, standardised (`.` and `..` folded over
+    /// the whole absolute path, lexically, as SwiftPM folds them), then resolved through symlinks
+    /// (amendment H), as a root-relative path without a trailing `/`; `nil` when the result is not
+    /// under the root. `rootPath` went through the same `resolvingSymlinks`, so a `/private/tmp/…`
+    /// literal under a `/tmp/…` root, a dependency reached through a symlinked directory, and one
+    /// spelled in another letter case each name the directory the compiler opens.
+    static func resolve(
+        _ literal: String,
+        from directory: String,
+        rootPath: String,
+        with resolvingSymlinks: (String) -> String = { $0 }
+    ) -> String? {
         let root = rootPath.split(separator: "/").map(String.init)
         let base = literal.hasPrefix("/") ? [] : root + directory.split(separator: "/").map(String.init)
-        guard let absolute = standardised(base + literal.split(separator: "/").map(String.init)),
-              absolute.starts(with: root) else { return nil }
+        guard let lexical = standardised(base + literal.split(separator: "/").map(String.init)) else { return nil }
+        let absolute = resolvingSymlinks("/" + lexical.joined(separator: "/")).split(separator: "/").map(String.init)
+        guard absolute.starts(with: root) else { return nil }
         return absolute.dropFirst(root.count).joined(separator: "/")
     }
 
