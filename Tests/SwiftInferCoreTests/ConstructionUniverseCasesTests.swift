@@ -81,7 +81,7 @@ struct ConstructionUniverseCasesTests {
     @Test("isManifest answers every shared case")
     func manifestTextCasesHold() throws {
         let cases = try Self.cases().isManifest
-        #expect(cases.count >= 19, "\(cases.count) cases — the shared answer key lost rows")
+        #expect(cases.count >= 28, "\(cases.count) cases — the shared answer key lost rows")
         // Bound first: `#expect` treats a key-path argument as throwing.
         let accepts = cases.contains(where: \.expected)
         let rejects = cases.contains { !$0.expected }
