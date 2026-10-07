@@ -300,33 +300,4 @@ public enum ConstructionUniverse {
     static func resolved(_ url: URL) -> URL {
         url.standardizedFileURL.resolvingSymlinksInPath()
     }
-
-    /// Where a scan's root was found, and how the scanned directory is spelled below it.
-    ///
-    /// The walk up starts from the scanned directory **as given** — standardised, never resolved —
-    /// so a symlinked `Sources/<target>` finds the package that holds the link. Only when that
-    /// finds no manifest is it retried from the resolved path. The chosen root is then resolved:
-    /// that spelling is the key, compared by `PackagePurity.covers`.
-    struct RootLocation {
-        /// The root, resolved and rebuilt from its path.
-        let resolved: URL
-        /// The scanned directory's components below the root, in the spelling the root was found
-        /// in; empty when the scanned directory is its own root.
-        let scannedPathBelowRoot: String
-
-        init(forScanOf directory: URL) {
-            let given = directory.standardizedFileURL
-            for scanned in [given, ConstructionUniverse.resolved(directory)] {
-                guard let package = DirectoryAncestors.nearest(from: scanned, where: holdsManifest) else { continue }
-                let below = Array(scanned.pathComponents.dropFirst(package.pathComponents.count))
-                let selfContained = below.contains(where: isRejectedDirectory)
-                let root = selfContained ? scanned : package
-                self.resolved = URL(fileURLWithPath: ConstructionUniverse.resolved(root).path)
-                self.scannedPathBelowRoot = selfContained ? "" : below.joined(separator: "/")
-                return
-            }
-            self.resolved = URL(fileURLWithPath: ConstructionUniverse.resolved(directory).path)
-            self.scannedPathBelowRoot = ""
-        }
-    }
 }
