@@ -574,10 +574,12 @@ performance fixes, before amendment 4).
   cases) is the arbiter.
 - **T — a target path reaches the nested packages under it**, not only the ones holding it:
   `.target(name: "All", path: "Packages")` compiles `Packages/A`'s sources. The closure body is
-  SwiftProjectLint's `e574b728` text again, byte for byte. ⚠ A `path: "."` resolves to `""`,
-  and `package.hasPrefix("" + "/")` is false, so — contrary to the spec's note — it reaches only
-  packages a dependency or another target path reaches; reported to the spec's owner, not diverged
-  from.
+  SwiftProjectLint's text again, byte for byte. **T′**: a root target's `path: "."` resolves to
+  the root, `""`, which no prefix test matches (`package.hasPrefix("" + "/")` is false), so T's
+  first body reached none of the packages under it, contrary to the spec's own note. Found here,
+  fixed in the shared body (SwiftProjectLint `1bd48dec`, copied byte for byte at `13714773`): the
+  comparison opens with `location.isEmpty ||`. Pinned by `rootTargetPathReachesEveryNestedPackage`
+  (all three expectations fail without the clause) and the mutant `target-path-root-reaches-nothing`.
 - **V** — the docs no longer imply SwiftPM leaves a `Package.swift` or `*Tests` folder out of a
   target, and record that a symlinked package's own relative dependencies resolve from its
   canonical target.
@@ -591,3 +593,10 @@ repo's own. S and T could move verdicts in principle; on these trees they move n
 `make perf` alone at `a4e68820`, three runs at load below 4: every row within noise of the round
 above (DequeModule 2.030–2.034 s, pipeline 2.535–2.553 s, peak RSS delta 371 MB), the two new
 rows as above, every budget green, none raised.
+
+**Re-taken after T′, at `ec0f1d3a`: nothing moved again** — the same `Sources/` figures (746, 3
+refuted types, 0 flips, 2 re-witnessed, 229 / 118) and the same 266 rows over 21 roots, every root
+line and every moved row identical to `a4e68820`'s; no corpus scan root sits under a root target
+whose `path:` is `"."`. `make perf` was not re-run alone: T′ adds one boolean test per target path
+and nested package to a closure that already compares their prefixes, and the full `make test`'s
+own perf stage passed all 11 rows.

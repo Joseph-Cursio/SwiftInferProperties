@@ -54,25 +54,21 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,801 tests — 6,566 fast + 235 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-10-07** at `a4e68820` (the
-`construction-facts-review-fixes` branch, PR #635, after its final review's fixes and the shared
-spec's amendment 4) on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `64a905c`**,
+Suites green at **6,802 tests — 6,567 fast + 235 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-10-07** at `ec0f1d3a` (the
+`construction-facts-review-fixes` branch, PR #635, after its final review's fixes, the shared spec's
+amendment 4 and T′) on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `64a905c`**,
 Xcode 27 / Swift 6.4 — every stage counted from that one run, and the run was UNPIPED
 (`make test > log 2>&1`, exit **0**):
-fast **6,566** · perf **11** · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half moved 233 → 235, and only in `perf`**: two §13 rows
-(`ConstructionUniversePerformanceTests` — the universe walk beside 20,000 files under `Tests/`, and
-`covers` on its own directory); every batch stood still to the digit — ⚠ **and the corpus-surveying
+fast **6,567** · perf 11 · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half stood still at 235, every batch to the digit** — ⚠ **and the corpus-surveying
 batches assert floors (`> 1_000` rows), so green is not an A/B; the row dumps in `fixtures/` and the
 census arms are.**
-**The fast half moved 6,561 → 6,566, +5, all this branch's**: `covers`' record and memo 2, the
-target path over a nested package (T) 1, the root manifest SwiftPM loads (S) 1, the shared
-`isManifest` cases (U) 1.
+**The fast half moved 6,566 → 6,567, +1**: T′'s root target `path: "."` reaching every nested
+package.
 **Timings** (an M5 Pro; swift-testing's own per-stage durations, which EXCLUDE the build): `batch3`
-112s; `batch2` 381s; `batch5` 756s; `batch1` 96s, `batch4` 79s, `batch6` 51s, `batch7` 78s, `batch8`
-307s; fast suite 87s (the Makefile's own clock), whole run **1,998s** wall. Load peaked near 12 during
-the batches, so read the times as lightly loaded.
+112s; `batch2` 388s; `batch5` 753s; `batch1` 98s, `batch4` 79s, `batch6` 50s, `batch7` 77s, `batch8`
+310s; fast suite 94s (the Makefile's own clock), whole run **2,014s** wall.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands
