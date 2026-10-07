@@ -1,0 +1,13 @@
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
+index 189274b2..9dd129d8 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
+@@ -336,7 +336,7 @@ public enum ConstructionUniverse {
+                 // is production: SwiftProjectLint's walk enters it too, and a package there seeds
+                 // the closure when the scan judges one of its files (J), or is reached by a target
+                 // path (P), on both sides alike.
+-                if name.hasPrefix(".") || prunedDirectoryNames.contains(name) { walker.skipDescendants() }
++                if isRejectedDirectory(name) { walker.skipDescendants() }
+                 continue
+             }
+             // A nested package is a directory holding a MANIFEST (amendment F): a source file

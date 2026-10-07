@@ -1,5 +1,5 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
-index d0c7b89b..8c8baae5 100644
+index d0c7b89b..eebbf108 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
 @@ -61,7 +61,7 @@ extension ConstructionUniverse {
@@ -7,7 +7,7 @@ index d0c7b89b..8c8baae5 100644
      /// toolchain this tool runs on, yet reading `Package.swift` alone left `A` out.
      public static func manifests(inDirectory directory: URL) -> [Manifest] {
 -        [manifest(inDirectory: directory)] + versionSpecificManifestNames(in: directory).map {
-+        [manifest(inDirectory: directory)] + versionSpecificManifestNames(in: directory).filter { _ in false }.map {
++        manifest(inDirectory: directory) == .absent ? [] : [manifest(inDirectory: directory)] + versionSpecificManifestNames(in: directory).map {
              manifest(atPath: directory.appendingPathComponent($0).path)
          }
      }

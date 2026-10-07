@@ -1,13 +1,13 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
-index 67ad850f..1fa2f856 100644
+index 189274b2..b5547d7f 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
-@@ -167,7 +167,7 @@ public enum ConstructionUniverse {
-         } + ownMembers(of: directory, at: location)
-         let rootHasManifest = holdsManifest(root)
+@@ -219,7 +219,7 @@ public enum ConstructionUniverse {
+     ) -> (compiled: Set<String>, read: Set<String>) {
+         let root = location.resolved
          // An Xcode project beside the manifest may compile packages it never names (amendment G).
 -        let bounds = rootHasManifest && !holdsXcodeProject(root)
 +        let bounds = rootHasManifest
-         let compiled = compiledNestedPackages(
-             walk.nestedPackages,
-             rootHasManifest: bounds,
+         let judged = bounds && !nestedPackages.isEmpty
+             ? judgedPackages(of: judgedFiles(of: directory, at: location).map(\.relativePath), among: nestedPackages)
+             : []

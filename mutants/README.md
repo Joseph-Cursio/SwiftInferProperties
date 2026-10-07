@@ -151,6 +151,14 @@ killed by the test process dying with `SIGBUS`, which the runner counts as a fai
 | `universe-dedup-before-bound` | construction-universe | killed | `boundBeforeDeduplicating` |
 | `universe-order-per-component` | construction-universe | killed | `buildOrderIsTheSharedOrder` (N) |
 | `universe-watch-misses-version-specific` | construction-facts | killed | `versionSpecificManifestIsRead` |
+| `walk-prunes-test-directories` | construction-universe | killed | `packageUnderTestsIsANestedPackage` |
+| `version-specific-read-only-beside-a-manifest` | construction-universe | killed | `versionSpecificManifestWithoutPackageSwiftIsRead` (O) |
+| `dependency-without-manifest-is-doubt` | construction-universe | killed | `dependencyOnNoManifestIsNoDoubt` (I) |
+
+Fifteen of the batch were re-anchored when the closure became SwiftProjectLint's body line for
+line; the last three pin the choices that alignment settled — the walk enters `Tests/` for its
+packages, a directory's version-specific manifests are read whatever its `Package.swift` is, and a
+dependency on a directory with no manifest passes nothing on.
 
 ## Adding a mutant
 

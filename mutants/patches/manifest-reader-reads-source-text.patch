@@ -1,13 +1,13 @@
-diff --git a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
-index ff4a6302..85020f16 100644
---- a/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
-+++ b/Sources/SwiftInferCore/ConstructionUniverse+ManifestReader.swift
-@@ -106,7 +106,7 @@ private final class ManifestPathCollector: SyntaxVisitor {
-         guard name == "package" || Self.targetKinds.contains(name) else { return .visitChildren }
-         // The value the compiler sees, not the source text: `"Pack\u{61}ges/A"` is `Packages/A`,
-         // and so is `#"Packages/A"#`. Interpolation, or a literal that did not parse, is `nil`.
--        let value = path.expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
-+        let value = path.expression.as(StringLiteralExprSyntax.self).map { $0.segments.trimmedDescription }
-         if name == "package" {
-             if let value { dependencies.append(value) } else { dependenciesAreLiteral = false }
-         } else {
+diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+index 429f90b5..a10ce904 100644
+--- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
++++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
+@@ -287,7 +287,7 @@ private final class PathArgumentCollector: SyntaxVisitor {
+     /// The value, not the source text: `"Packages/\u{55}til"` names `Packages/Util` to SwiftPM, and
+     /// read as written it named no package at all, so the one the root compiles left the table.
+     private static func literal(_ expression: ExprSyntax) -> String? {
+-        expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
++        expression.as(StringLiteralExprSyntax.self)?.segments.trimmedDescription
+     }
+ }
+ // swiftlint:enable function_parameter_count

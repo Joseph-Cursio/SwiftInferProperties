@@ -401,6 +401,30 @@
       "expected": "killed",
       "test": "versionSpecificManifestIsRead",
       "label": "the manifests a universe watches leave out Package@swift-*.swift — an edit to one cannot mark the index stale"
+    },
+    {
+      "id": "walk-prunes-test-directories",
+      "patch": "patches/walk-prunes-test-directories.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "packageUnderTestsIsANestedPackage",
+      "label": "the walk prunes Tests/ again — a nested package there is never recorded, so a target path into it reaches nothing, where SwiftProjectLint's walk finds it"
+    },
+    {
+      "id": "version-specific-read-only-beside-a-manifest",
+      "patch": "patches/version-specific-read-only-beside-a-manifest.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "versionSpecificManifestWithoutPackageSwiftIsRead",
+      "label": "a directory's Package@swift-*.swift is read only when its Package.swift is a manifest — SwiftProjectLint reads them whatever Package.swift is"
+    },
+    {
+      "id": "dependency-without-manifest-is-doubt",
+      "patch": "patches/dependency-without-manifest-is-doubt.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "dependencyOnNoManifestIsNoDoubt",
+      "label": "a dependency on a directory holding no manifest is doubt — every nested package comes in (amendment I says it passes nothing on)"
     }
   ]
 }

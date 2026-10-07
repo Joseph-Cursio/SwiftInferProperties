@@ -1,13 +1,13 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse.swift b/Sources/SwiftInferCore/ConstructionUniverse.swift
-index 67ad850f..bf558e5f 100644
+index 189274b2..e0b19519 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse.swift
-@@ -173,7 +173,7 @@ public enum ConstructionUniverse {
-             rootHasManifest: bounds,
-             judgedPackages: bounds ? judgedPackages(of: judged.map(\.relativePath), under: root) : [],
-             rootPath: root.path,
--            resolvingSymlinks: { resolved(URL(fileURLWithPath: $0)).path },
-+            resolvingSymlinks: { $0 },
-             packagesContaining: { packages(containing: $0, under: root) },
-             manifests: { manifests(inDirectory: packageDirectory($0, under: root)) }
-         )
+@@ -230,7 +230,7 @@ public enum ConstructionUniverse {
+                 reported: judged,
+                 rootHasManifest: bounds,
+                 rootPath: root.path,
+-                resolvingSymlinks: canonicalPath
++                resolvingSymlinks: { $0 }
+             ) { relative in
+                 let manifests = manifests(inDirectory: packageDirectory(relative, under: root))
+                 if !relative.isEmpty, manifests.contains(where: { $0 != .absent }) { read.insert(relative) }

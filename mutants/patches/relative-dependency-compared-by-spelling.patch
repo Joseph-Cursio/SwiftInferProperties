@@ -1,14 +1,14 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
-index e88af83f..bd4b71b1 100644
+index 429f90b5..0b4bbd16 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift
-@@ -133,7 +133,8 @@ extension ConstructionUniverse {
-         let root = rootPath.split(separator: "/").map(String.init)
-         let base = literal.hasPrefix("/") ? [] : root + directory.split(separator: "/").map(String.init)
-         guard let lexical = standardised(base + literal.split(separator: "/").map(String.init)) else { return nil }
--        let absolute = resolvingSymlinks("/" + lexical.joined(separator: "/")).split(separator: "/").map(String.init)
-+        let spelled = "/" + lexical.joined(separator: "/")
-+        let absolute = (literal.hasPrefix("/") ? resolvingSymlinks(spelled) : spelled).split(separator: "/").map(String.init)
-         guard absolute.starts(with: root) else { return nil }
-         return absolute.dropFirst(root.count).joined(separator: "/")
+@@ -220,7 +220,8 @@ extension ConstructionUniverse {
+     ) -> String? {
+         let base = literal.hasPrefix("/") ? [] : components(root) + components(directory)
+         guard let folded = standardised(base + components(literal)) else { return nil }
+-        return relative(resolvingSymlinks("/" + folded.joined(separator: "/")), under: root)
++        let spelled = "/" + folded.joined(separator: "/")
++        return relative(literal.hasPrefix("/") ? resolvingSymlinks(spelled) : spelled, under: root)
      }
+ 
+     /// `path` relative to `root`, both absolute, or `nil` when it is not under it; `""` for the root.
