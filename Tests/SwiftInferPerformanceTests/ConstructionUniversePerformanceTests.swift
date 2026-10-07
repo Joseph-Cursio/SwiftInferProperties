@@ -12,6 +12,9 @@ import Testing
 ///   scan asks it per call — three times in `discover-reducers` — which doubled that command on
 ///   swift-package-manager's `Basics`.
 ///
+/// - **`isManifest`'s later-line rule** ran a regex on every line of a long `Package.swift`
+///   (amendment S′ puts a cheap label check in front).
+///
 /// Budgets carry several times their measured headroom, and run alone (`make perf`).
 @Suite("Performance — construction universe walk and coverage budgets")
 struct ConstructionUniversePerformanceTests {
@@ -53,9 +56,13 @@ struct ConstructionUniversePerformanceTests {
         #expect(elapsed < 0.5, "the universe walk took \(elapsed)s over 20,000 files it only needs the names of")
     }
 
-    @Test("covers on the directory a purity was built for answers three times within a 0.05-second budget")
+    /// The built-for shortcut is the one `discover-reducers` and `verify-value-semantics` use, so
+    /// the row prices the FIRST ask, which the memo cannot answer: the package is heavy enough
+    /// (20,000 files under `Tests/`, ~0.1 s a universe in a debug build) that one computed universe
+    /// is several budgets over. With the shortcut the three asks are a string comparison each.
+    @Test("covers on the directory a purity was built for answers three times within a 0.02-second budget")
     func coversOnItsOwnDirectory() throws {
-        let root = try Self.snapshotPackage(snapshots: 5_000)
+        let root = try Self.snapshotPackage(snapshots: 20_000)
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("Sources/App")
         let purity = PackagePurity.forScan(of: app)
@@ -65,6 +72,21 @@ struct ConstructionUniversePerformanceTests {
         }
         print("[covers] three asks: \(String(format: "%.4f", elapsed))s")
         #expect(covered)
-        #expect(elapsed < 0.05, "three covers asks took \(elapsed)s — each one walked the universe again")
+        #expect(elapsed < 0.02, "three covers asks took \(elapsed)s — the first one computed a universe")
+    }
+
+    /// Amendment S′'s cost half: rule (b) ran a Swift Regex on every line after the first, ~50 µs
+    /// a line, so a long source file named `Package.swift` — a generator's output, a vendored
+    /// single-file library — cost seconds to classify, once per walk that met it. The label check
+    /// in front skips the regex for every line that does not name `swift-tools-version`. 20,000
+    /// comment lines are the worst case for that check: each passes its `//` test.
+    @Test("isManifest classifies a 20,000-line comment file within a 0.25-second budget")
+    func manifestTestOnALongFile() {
+        let text = (0..<20_000).map { "// line \($0) of a generated source file" }.joined(separator: "\n")
+        var isManifest = true
+        let elapsed = Self.measureWall { isManifest = ConstructionUniverse.isManifest(text) }
+        print("[isManifest] 20,000 comment lines: \(String(format: "%.3f", elapsed))s")
+        #expect(!isManifest)
+        #expect(elapsed < 0.25, "isManifest took \(elapsed)s over 20,000 lines none of which names the label")
     }
 }

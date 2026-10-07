@@ -1,13 +1,13 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
-index 04250e9f..d7e0c2b9 100644
+index 04250e9f..c9a04de8 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse+Manifests.swift
-@@ -123,7 +123,7 @@ extension ConstructionUniverse {
-         var body = Substring(text)
-         if body.first == "\u{FEFF}" { body = body.dropFirst() }
-         let lines = body.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline)
--        guard let first = lines.firstIndex(where: { !$0.allSatisfy(\.isWhitespace) }) else { return false }
-+        guard let first = lines.indices.first else { return false }
+@@ -127,7 +127,7 @@ extension ConstructionUniverse {
          if lines[first].prefixMatch(of: #/\h*//\h*(?i:swift-tools-version)/#) != nil { return true }
          return lines[lines.index(after: first)...].contains { line in
              // Only a line that names the label can match; skip the regex, which costs far more, for the rest.
+-            let marker = line.drop(while: \.isWhitespace)
++            let marker = line[...]
+             guard marker.hasPrefix("//"),
+                   marker.dropFirst(2).drop(while: \.isWhitespace).prefix(19).lowercased() == "swift-tools-version"
+             else { return false }

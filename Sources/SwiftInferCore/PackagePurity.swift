@@ -145,6 +145,7 @@ public struct PackagePurity: Sendable {
         guard let root else { return false }
         return coverage.answer(for: directory) {
             guard ConstructionUniverse.root(forScanOf: directory).path == root.path else { return false }
+            coverage.countUniverse()
             return members == ConstructionUniverse.universe(forScanOf: directory).members.map(\.relativePath)
         }
     }
@@ -157,6 +158,23 @@ public struct PackagePurity: Sendable {
         private let builtFor: String?
         private let lock = NSLock()
         private var answers: [String: Bool] = [:]
+        private var universes = 0
+
+        /// How many universes `covers` has computed for this value — what the shortcuts exist to
+        /// keep at zero for the directory the value was built for, and for another root.
+        /// `internal`, for the tests that pin both.
+        var universesComputed: Int {
+            lock.lock()
+            defer { lock.unlock() }
+            return universes
+        }
+
+        /// Records one universe computed to answer an ask.
+        func countUniverse() {
+            lock.lock()
+            universes += 1
+            lock.unlock()
+        }
 
         init(builtFor directory: URL?) {
             builtFor = directory?.standardizedFileURL.path

@@ -54,21 +54,24 @@ Consumers over the SemanticIndex, split by trust bar: `query` (author, all tiers
 `insights` (author, inferred cross-type structure) · `docc` (reader, **verified-only**).
 Async is admitted only via the `@ClockDeterministic` claim.
 
-Suites green at **6,802 tests — 6,567 fast + 235 across `perf` and the eight batches**
-(**a genuine full `make test`, verified green 2026-10-07** at `ec0f1d3a` (the
-`construction-facts-review-fixes` branch, PR #635, after its final review's fixes, the shared spec's
-amendment 4 and T′) on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI `64a905c`**,
-Xcode 27 / Swift 6.4 — every stage counted from that one run, and the run was UNPIPED
+Suites green at **6,804 tests — 6,568 fast + 236 across `perf` and the eight batches**
+(**a genuine full `make test`, verified green 2026-10-07** at `22853fb0` (the
+`construction-facts-review-fixes` branch, PR #636, after its adversarial review's fixes and the
+shared spec's amendment 4b) on **swift-property-based 2.0.1 / SwiftPropertyLaws 4.9.3 / SEI
+`64a905c`**, Xcode 27 / Swift 6.4 — every stage counted from that one run, and the run was UNPIPED
 (`make test > log 2>&1`, exit **0**):
-fast **6,567** · perf 11 · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
-**The batch half stood still at 235, every batch to the digit** — ⚠ **and the corpus-surveying
-batches assert floors (`> 1_000` rows), so green is not an A/B; the row dumps in `fixtures/` and the
-census arms are.**
-**The fast half moved 6,566 → 6,567, +1**: T′'s root target `path: "."` reaching every nested
-package.
+fast **6,568** · perf **12** · batches 4 · 119 · 31 · 7 · 14 · 4 · 9 · 36.
+**The batch half moved 235 → 236, only in `perf`**: the §13 row timing `isManifest` on a
+20,000-line comment file (S′'s label check); every batch stood still to the digit — ⚠ **and the
+corpus-surveying batches assert floors (`> 1_000` rows), so green is not an A/B; the row dumps in
+`fixtures/` and the census arms are.**
+**The fast half moved 6,567 → 6,568, +1**: `covers` refusing an identical layout under another
+root. (The shared cases file's 29th `isManifest` case, taken after this run, adds a case to an
+existing test, not a test; `make test-fast` is green on it.)
 **Timings** (an M5 Pro; swift-testing's own per-stage durations, which EXCLUDE the build): `batch3`
-112s; `batch2` 388s; `batch5` 753s; `batch1` 98s, `batch4` 79s, `batch6` 50s, `batch7` 77s, `batch8`
-310s; fast suite 94s (the Makefile's own clock), whole run **2,014s** wall.
+116s; `batch2` 452s; `batch5` 785s; `batch1` 101s, `batch4` 87s, `batch6` 53s, `batch7` 81s, `batch8`
+308s; fast suite 104s (the Makefile's own clock), whole run **2,145s** wall. Another session was
+building on the same machine (load above 12 at the start), so read the times as loaded.
 **Every earlier reading is SUPERSEDED HISTORY and lives in `docs/reference/index-annotations.md` § *Superseded test-count readings*** — kept there because each records what its verdict was decided on; read it for the reasoning behind a past verdict, never for a current count.
 **Quote both halves, never the total alone**: a new `*MeasuredTests` suite that never
 reached a batch shows up here as the fast count rising while the batch count stands

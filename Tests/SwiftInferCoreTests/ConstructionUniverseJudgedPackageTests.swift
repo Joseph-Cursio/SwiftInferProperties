@@ -118,6 +118,10 @@ struct ConstructionUniverseJudgedPackageTests {
         #expect(ConstructionUniverse.files(forScanOf: lib).count == 1, "control: the universe on disk changed")
         #expect(purity.covers(lib), "covers walked the root again for the directory it was built for")
         #expect(purity.withoutConstructionFacts.covers(lib))
+        // The count is what fails when the shortcut goes, however cheap one universe is: the
+        // memo alone would answer asks 2 and 3, and only the record answers ask 1.
+        for _ in 0..<3 { #expect(purity.covers(lib)) }
+        #expect(purity.coverage.universesComputed == 0, "covers computed a universe for its own directory")
     }
 
     /// Another directory under the same root is compared in full — once. The answer is
@@ -134,9 +138,29 @@ struct ConstructionUniverseJudgedPackageTests {
         #expect(purity.covers(lib))
         try FileManager.default.removeItem(at: root.appendingPathComponent("Sources/Model/Item.swift"))
         #expect(purity.covers(lib), "covers computed the same directory's universe twice")
+        #expect(purity.coverage.universesComputed == 1)
         // A directory under another root is foreign without a walk, and stays so.
         let other = try Wiring.makePackage(["Sources/Lib/Make.swift": Wiring.make])
         defer { try? FileManager.default.removeItem(at: other) }
         #expect(!purity.covers(other.appendingPathComponent("Sources/Lib")))
+    }
+
+    /// A second root holding an IDENTICAL layout — a speculative snapshot is exactly this — has
+    /// the same members, so only the root comparison tells the two apart; judging the copy under
+    /// the original's trees would look every file up under the wrong key. `covers` says no, and
+    /// says it from `root(forScanOf:)` alone, without computing the copy's universe.
+    @Test("covers rejects an identical layout under another root, without a walk")
+    func coversRejectsAnIdenticalLayoutElsewhere() throws {
+        let files = ["Sources/Model/Item.swift": Wiring.item, "Sources/Lib/Make.swift": Wiring.make]
+        let original = try Wiring.makePackage(files)
+        defer { try? FileManager.default.removeItem(at: original) }
+        let copy = try Wiring.makePackage(files)
+        defer { try? FileManager.default.removeItem(at: copy) }
+        let purity = PackagePurity.forScan(of: original.appendingPathComponent("Sources/Lib"))
+        let copiedLib = copy.appendingPathComponent("Sources/Lib")
+        // The control: the copy's universe is member for member the original's.
+        #expect(ConstructionUniverse.files(forScanOf: copiedLib).map(\.relativePath) == purity.universe)
+        #expect(!purity.covers(copiedLib), "a copy of the package was taken for the package")
+        #expect(purity.coverage.universesComputed == 0, "another root was told apart by a walk")
     }
 }
