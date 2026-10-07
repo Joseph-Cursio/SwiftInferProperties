@@ -615,3 +615,26 @@ line and every moved row identical to `a4e68820`'s; no corpus scan root sits und
 whose `path:` is `"."`. `make perf` was not re-run alone: T′ adds one boolean test per target path
 and nested package to a closure that already compares their prefixes, and the full `make test`'s
 own perf stage passed all 11 rows.
+
+**After the adversarial review of #636 (round 4).** Four findings fixed and amendment 4b (S′, the
+T-gaps) taken, at `5fe7c179`–`461472e6`:
+
+- **The `covers` row now guards the shortcut it was written for**: the first ask, priced on a
+  20,000-file package against 0.02 s (0.112 s without the built-for shortcut, 0.318–0.320 s with all
+  of `covers` reverted), plus `Coverage.universesComputed`, which must stay 0 for the built-for
+  directory and for another root.
+- **The root guard is pinned** by an identical layout under another root — what a speculative
+  snapshot is — which `covers` must refuse without a walk.
+- **S′**: `isManifest` is amendment 4b's reference verbatim (identical to SwiftProjectLint's):
+  `\h` and `isWhitespace`, and a label check in front of rule (b)'s regex — a §13 row, 20,000
+  comment lines in 0.039–0.041 s against 0.25 s (1.401 s without the check). The shared cases file
+  holds 29 `isManifest` cases; reverting the `isNewline` split, the later-line label's case, `\h`,
+  the label check's `drop(while:)` or rule (b)'s leading `\h*` each fails `manifestTextCasesHold`.
+- **Docs**: the stale first-line wording retired; the T-gaps recorded; "blank lines at any version"
+  corrected to empty lines only.
+
+**Re-taken at `22853fb0`: nothing moved** — `Sources/` universe 746, 3 refuted types, 0 flips, the
+same 2 re-witnessed rows, 229 / 118; the same 266 rows over 21 roots, every root line and moved row
+identical (this repo's own advice 764 → 766 is new code). `make perf` alone, three runs at load
+2.7–4.2: all 12 rows green, none raised — walk row 0.115–0.116 s, `covers` 0.0000 s, `isManifest`
+0.039–0.041 s, DequeModule 2.06–2.08 s, pipeline 2.59–2.60 s, peak RSS delta 369 MB.
