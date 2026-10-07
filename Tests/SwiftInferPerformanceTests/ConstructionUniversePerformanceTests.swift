@@ -2,12 +2,15 @@ import Foundation
 import SwiftInferCore
 import Testing
 
-/// §13-style budgets for the construction universe itself — a regression the final review of the
-/// shared spec's amendment 3 measured, priced so it cannot come back silently.
+/// §13-style budgets for the construction universe itself — the two regressions the final review
+/// of the shared spec's amendment 3 measured, each priced so it cannot come back silently.
 ///
 /// - **The walk enters `Tests/`** for the nested packages it holds, as SwiftProjectLint's does,
 ///   and it once read every entry's attributes there: a package with 50,000 snapshot PNGs under
 ///   `Tests/AppTests/__Snapshots__` took 2.4 s per universe (0.5 ms before the walk entered it).
+/// - **`PackagePurity.covers`** once computed a whole universe on every ask, and a directory
+///   scan asks it per call — three times in `discover-reducers` — which doubled that command on
+///   swift-package-manager's `Basics`.
 ///
 /// Budgets carry several times their measured headroom, and run alone (`make perf`).
 @Suite("Performance — construction universe walk and coverage budgets")
@@ -48,5 +51,20 @@ struct ConstructionUniversePerformanceTests {
         print("[universe walk] 20,000 snapshot files: \(String(format: "%.3f", elapsed))s")
         #expect(members == 1)
         #expect(elapsed < 0.5, "the universe walk took \(elapsed)s over 20,000 files it only needs the names of")
+    }
+
+    @Test("covers on the directory a purity was built for answers three times within a 0.05-second budget")
+    func coversOnItsOwnDirectory() throws {
+        let root = try Self.snapshotPackage(snapshots: 5_000)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = root.appendingPathComponent("Sources/App")
+        let purity = PackagePurity.forScan(of: app)
+        var covered = true
+        let elapsed = Self.measureWall {
+            for _ in 0..<3 { covered = covered && purity.covers(app) }
+        }
+        print("[covers] three asks: \(String(format: "%.4f", elapsed))s")
+        #expect(covered)
+        #expect(elapsed < 0.05, "three covers asks took \(elapsed)s — each one walked the universe again")
     }
 }
