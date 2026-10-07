@@ -87,36 +87,40 @@ struct SpeculativeUniverseTests {
         """)
     }
 
+    /// The `Examples/` namesake package: `Examples/` is production by the shared rule, and its
+    /// `Item` refutes `Sources/`'s by name in the baseline.
+    private static let namesakePackage = [
+        "Package.swift": """
+        // swift-tools-version: 5.9
+        import PackageDescription
+        let package = Package(name: "Spec", targets: [.target(name: "Lib")])
+        """,
+        "Examples/Gen/Item.swift": """
+        import Foundation
+
+        struct Item {
+            let id = UUID()
+            var n: Int = 0
+        }
+        """,
+        "Sources/Lib/Item.swift": """
+        public struct Item: Equatable {
+            public var n: Int
+            public init(n: Int) { self.n = n }
+        }
+        public func normalized(_ item: Item) -> Item { Item(n: abs(item.n)) }
+        public func canonicalize(_ item: Item) -> Item { Item(n: item.n % 10) }
+        public func merge(_ lhs: Item, _ rhs: Item) -> Item { Item(n: max(lhs.n, rhs.n)) }
+        private func clamp(_ value: Int) -> Int { min(max(value, 0), 100) }
+        public func clamped(_ value: Int) -> Int { clamp(value) }
+        """
+    ]
+
     /// The over-refuting namesake: `Examples/` is production by the shared rule, and its `Item`
     /// refutes `Sources/`'s by name in the baseline. The snapshot must see it too.
     @Test("an Examples/ namesake leaves an unrelated widening with no law gained")
     func examplesNamesakeStaysInTheSnapshot() throws {
-        let root = try Self.makePackage([
-            "Package.swift": """
-            // swift-tools-version: 5.9
-            import PackageDescription
-            let package = Package(name: "Spec", targets: [.target(name: "Lib")])
-            """,
-            "Examples/Gen/Item.swift": """
-            import Foundation
-
-            struct Item {
-                let id = UUID()
-                var n: Int = 0
-            }
-            """,
-            "Sources/Lib/Item.swift": """
-            public struct Item: Equatable {
-                public var n: Int
-                public init(n: Int) { self.n = n }
-            }
-            public func normalized(_ item: Item) -> Item { Item(n: abs(item.n)) }
-            public func canonicalize(_ item: Item) -> Item { Item(n: item.n % 10) }
-            public func merge(_ lhs: Item, _ rhs: Item) -> Item { Item(n: max(lhs.n, rhs.n)) }
-            private func clamp(_ value: Int) -> Int { min(max(value, 0), 100) }
-            public func clamped(_ value: Int) -> Int { clamp(value) }
-            """
-        ])
+        let root = try Self.makePackage(Self.namesakePackage)
         defer { try? FileManager.default.removeItem(at: root) }
         let proposals = try Self.proposals(for: root)
         #expect(proposals.map(\.path) == ["Sources/Lib/Item.swift"], "the fixture's one candidate was not examined")
@@ -151,5 +155,60 @@ struct SpeculativeUniverseTests {
         let original = ConstructionUniverse.files(forScanOf: root.appendingPathComponent("Sources")).map(\.relativePath)
         let copied = ConstructionUniverse.files(forScanOf: snapshot.sources).map(\.relativePath)
         #expect(copied == original, "the snapshot's universe differs from the baseline's")
+    }
+
+    /// The review's `sip#2` / `robustness#2`: one universe `.swift` outside `Sources/` that cannot
+    /// be read — a dangling link, a mode-000 file — threw for every candidate's snapshot, so the run
+    /// reported `No widenable candidates.` Neither arm's table has such a file (`PackagePurity`
+    /// skips it), so the snapshot skips it too, and the candidate gets its verdict.
+    @Test("an unreadable universe file outside Sources/ is skipped, and the candidate still judged")
+    func unreadableUniverseFileIsSkipped() throws {
+        var files = Self.namesakePackage
+        files["Examples/Fine.swift"] = "let fine = 1"
+        files["Examples/Locked.swift"] = "let locked = 1"
+        let root = try Self.makePackage(files)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createSymbolicLink(
+            atPath: root.appendingPathComponent("Examples/Gone.swift").path,
+            withDestinationPath: "/nonexistent/Gone.swift"
+        )
+        let locked = root.appendingPathComponent("Examples/Locked.swift").path
+        try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: locked)
+        #expect(FileManager.default.contents(atPath: locked) == nil, "a mode-000 file was readable — running as root?")
+        let outside = SpeculativeRefactorRunner.universeOutsideSources(of: root)
+        #expect(outside.contains("Examples/Gone.swift") && outside.contains("Examples/Locked.swift"), "\(outside)")
+
+        let proposals = try Self.proposals(for: root)
+        #expect(proposals.map(\.path) == ["Sources/Lib/Item.swift"], "the candidate was dropped")
+        #expect(proposals.map(\.verdict) == [.noLawGained])
+    }
+
+    /// A snapshot that fails part-way is removed, rather than left in the temporary directory — the
+    /// copy is made before anything that can throw.
+    @Test("a snapshot that fails leaves nothing behind")
+    func failedSnapshotIsRemoved() throws {
+        let root = try Self.makePackage(Self.namesakePackage)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let scratch = try Self.makePackage([:])
+        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        // The patched file's directory exists in neither tree, so its write throws last.
+        #expect(throws: (any Error).self) {
+            try SpeculativeRefactorRunner.snapshotTree(
+                of: root,
+                replacing: root.appendingPathComponent("Sources/Missing/X.swift").path,
+                with: "let x = 1",
+                in: scratch
+            )
+        }
+        #expect(try FileManager.default.contentsOfDirectory(atPath: scratch.path).isEmpty, "a failed snapshot leaked")
+        // The control: a snapshot that succeeds is the caller's to remove.
+        let snapshot = try SpeculativeRefactorRunner.snapshotTree(
+            of: root,
+            replacing: root.appendingPathComponent("Sources/Lib/Item.swift").path,
+            with: "public struct Item {}",
+            in: scratch
+        )
+        #expect(try FileManager.default.contentsOfDirectory(atPath: scratch.path) == [snapshot.root.lastPathComponent])
     }
 }
