@@ -28,10 +28,17 @@ struct ConstructionUniverseCasesTests {
         var description: String { manifest }
     }
 
+    struct ManifestTextCase: Decodable, CustomStringConvertible {
+        let text: String
+        let expected: Bool
+        var description: String { "\(text.debugDescription) → \(expected)" }
+    }
+
     struct Cases: Decodable {
         let localPackageDependencies: [ManifestCase]
         let localTargetPaths: [ManifestCase]
         let buildOrder: [String]
+        let isManifest: [ManifestTextCase]
     }
 
     static func cases() throws -> Cases {
@@ -66,6 +73,23 @@ struct ConstructionUniverseCasesTests {
         #expect(wrong.isEmpty, """
         The target-path reader disagrees with the cases SwiftProjectLint answers too — the two \
         consumers would reach different nested packages from one root: \(wrong)
+        """)
+    }
+
+    /// Amendment U: what SwiftPM loads as a manifest (amendment S) — leading blank lines, the label
+    /// in any case, the comment after other lines from 6.0 — answered alike by both repos.
+    @Test("isManifest answers every shared case")
+    func manifestTextCasesHold() throws {
+        let cases = try Self.cases().isManifest
+        #expect(cases.count >= 19, "\(cases.count) cases — the shared answer key lost rows")
+        // Bound first: `#expect` treats a key-path argument as throwing.
+        let accepts = cases.contains(where: \.expected)
+        let rejects = cases.contains { !$0.expected }
+        #expect(accepts && rejects, "both answers need a case")
+        let wrong = cases.filter { ConstructionUniverse.isManifest($0.text) != $0.expected }
+        #expect(wrong.isEmpty, """
+        The manifest test disagrees with the cases SwiftProjectLint answers too — the two consumers \
+        would draw different package boundaries in one root: \(wrong)
         """)
     }
 
