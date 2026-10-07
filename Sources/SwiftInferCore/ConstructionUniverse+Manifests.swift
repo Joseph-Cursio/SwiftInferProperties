@@ -14,10 +14,12 @@ import Foundation
 ///
 /// Why the tools-version comment: SwiftPM itself requires it, and it is the cheapest test that
 /// tells a manifest from a source file. Amendment F first read it on the first line only, and
-/// case-sensitively; SwiftPM 6.4 loads leading blank lines, `// SWIFT-TOOLS-VERSION:5.9`, and at
-/// 6.0 or later a copyright header above the comment — and F's reading dropped such a package's
-/// closure, or unbounded a root. Before either rule, `Sources/App/Models/Package.swift` — a `struct Package`
-/// inside the `App` target — made `Models/` a nested package the root never names, and the bound
+/// case-sensitively; SwiftPM 6.4 loads leading empty lines (and from 5.4 lines of whitespace),
+/// `// SWIFT-TOOLS-VERSION:5.9`, Unicode spacing such as `//\u{00A0}swift-tools-version`, and at 6.0
+/// or later a copyright header above the comment — and F's reading dropped such a package's
+/// closure, or unbounded a root (amendments S and S′). Before either rule,
+/// `Sources/App/Models/Package.swift` — a `struct Package` inside the `App` target — made
+/// `Models/` a nested package the root never names, and the bound
 /// dropped every other file the target compiles there. A dangling `Ghost/Package.swift` made
 /// `Ghost/` a package whose unreadable manifest was doubt, so an unrelated `Demo/` came back in.
 ///
@@ -27,8 +29,8 @@ extension ConstructionUniverse {
 
     /// What a directory holds at `Package.swift`.
     public enum Manifest: Equatable, Sendable {
-        /// No manifest: nothing of that name, or a directory, a dangling link, or a file whose first
-        /// line is not a tools-version comment.
+        /// No manifest: nothing of that name, or a directory, a dangling link, or a file SwiftPM
+        /// would not load as one (`isManifest(_:)`).
         case absent
         /// A manifest, and its text.
         case text(String)

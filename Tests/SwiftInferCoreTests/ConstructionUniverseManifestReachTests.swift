@@ -78,7 +78,7 @@ struct ConstructionUniverseManifestReachTests {
     }
 
     /// Doubt in any one manifest of a directory is doubt for the directory; a `Package@swift-*`
-    /// file whose first line is no tools-version comment is no manifest, and says nothing.
+    /// file SwiftPM would not load as a manifest — it names no tools version — says nothing.
     @Test("doubt in a version-specific manifest is doubt; a non-manifest one is ignored", arguments: [
         (
             "// swift-tools-version:6.0\nlet base = \"Demo\"\n"

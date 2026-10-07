@@ -29,8 +29,9 @@ import Foundation
 /// ## The root — `root(forScanOf:)`
 ///
 /// The nearest ancestor-or-self of the scanned directory holding a manifest — a `Package.swift`
-/// whose first line is a tools-version comment (amendment F, `ConstructionUniverse+Manifests.swift`;
-/// a source file of that name, a directory or a dangling link is not one) — **found from
+/// SwiftPM would load as one: a tools-version comment on its first non-blank line, or from 6.0
+/// below other lines (amendments F, S and S′, `ConstructionUniverse+Manifests.swift`; a source file
+/// of that name, a directory or a dangling link is not one) — **found from
 /// the path as given** (standardised, symlinks NOT resolved), and only then resolved — resolved
 /// paths are keys, never what decides the package. `--target Foo` scans `Sources/Foo`, but `Foo`
 /// constructs types its sibling targets declare, and a per-target table misses them — the unsound
@@ -104,6 +105,12 @@ import Foundation
 ///   The predicate reads names; it never claimed SwiftPM leaves such files out. Under-refuting,
 ///   and rare. (Amendment F keeps such a `Package.swift` from making a package BOUNDARY; the file
 ///   itself still leaves the universe.)
+/// - **A target with no `path:` reaches no nested package** (amendment 4b's T-gap). Rule T reads
+///   only literal `path:` arguments, so SwiftPM's default `Sources/<name>` holding a nested package
+///   — its `Package.swift` excluded by the target — compiles that package's files unseen.
+/// - **A symlink below a target path, to a package walked elsewhere, is not followed**: with
+///   `path: "Packages"` and `Packages/A → ../Real/A`, the closure misses `Real/A`. Both T-gaps need a
+///   nested package inside a target's own source directory; no local checkout holds one.
 /// - **A symlinked package's own relative dependencies resolve from its canonical target**, not
 ///   from where the link sits, as SwiftPM resolves them: with `Packages/Core → ../Vendor/Core` and
 ///   Core depending on `../Util`, the closure looks for `Vendor/Util` where SwiftPM uses

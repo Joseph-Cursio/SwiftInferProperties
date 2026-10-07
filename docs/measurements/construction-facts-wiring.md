@@ -57,7 +57,8 @@ Re-derivable at any time — `make batch2` runs both arms:
   refutingly (`scanJudgesOnTheFactsOwnNodes` pins it).
 - **`ConstructionUniverse`** — the cross-repo rule, implemented with the same names in
   SwiftProjectLint: root = nearest ancestor of the scanned directory holding a **manifest** (a
-  `Package.swift` whose first line is a tools-version comment — amendment F), **found from the path
+  `Package.swift` SwiftPM would load as one — a tools-version comment on its first non-blank line,
+  or below other lines from 6.0 — amendments F, S and S′), **found from the path
   as given, in its on-disk letter case** (amendment L; resolved only afterwards, as a key),
   self-contained under a rejected component (`Tests/Fixtures/X` is its own project), unioned with
   the scanned directory's own production files under the link's spelling; a nested package only
@@ -519,8 +520,9 @@ judged package, when a version-specific manifest is read, how a location is cano
 `nestedPackageClosureMatchesSwiftProjectLint` (`SEICrossRepoPinTests`) compares the two bodies the
 way the `.tsv` and the cases file are compared. The edges the amendments leave open follow
 SwiftProjectLint's reading too: a `Package.swift` that is not UTF-8 is a manifest that cannot be
-read (doubt only where the closure reads it), the tools-version line is matched case-sensitively on
-the first line alone, and any direct child named `*.xcodeproj` counts.
+read (doubt only where the closure reads it), and any direct child named `*.xcodeproj` counts. (The
+tools-version line was then matched case-sensitively on the first line alone; amendment 4's S and
+4b's S′ have since replaced that with what SwiftPM loads — see the last section.)
 
 **Rows moved, CLI A/B** — `discover --sources <root>` with `--effect-annotations` (advice) and
 `--include-possible` (suggestions), the archived pre-fix head `6bc89a0c` against `7fbc7baa` (both
@@ -566,12 +568,23 @@ performance fixes, before amendment 4).
   own walk takes ~0.8 s there): entering `Tests/` for its packages costs one directory entry each.
 - **Two §13 rows pin both** (`ConstructionUniversePerformanceTests`): 20,000 files under `Tests/`
   walked in 0.111–0.113 s against 0.5 s (0.986 s with the per-entry read put back), and three
-  `covers` asks in 0.0000 s against 0.05 s (0.674 s computed every time).
+  `covers` asks in 0.0000 s. ⚠ **Corrected after the review of #636**: that row's budget was 0.05 s
+  and its package 5,000 files, so once 031b4c0c made a universe cheap (~25 ms in debug) the memo
+  alone answered asks 2 and 3 and the row passed without the built-for shortcut — the one
+  `discover-reducers` and `verify-value-semantics` use. The 0.674 s first recorded here as "computed
+  every time" included the walk 031b4c0c reverted. The row now prices the FIRST ask: 20,000 files,
+  a 0.02 s budget — 0.0000 s with the shortcut, **0.112 s without it, 0.318–0.320 s** with all of
+  `covers` reverted — and `Coverage.universesComputed` pins it structurally (0 for the built-for
+  directory, 0 for another root, 1 for another directory asked twice).
 - **S — a manifest is what SwiftPM loads.** `isManifest(_:)` is the spec's reference
   implementation: the first non-blank line, the label in any case, or a later line naming 6.0 or
   more. The reviewer's `fx/blank` (`// Swift-Tools-Version:5.9`) is 2 members and `make` refuted
   again, as at base; `c6fadde4` advised `make` pure. The cases file's `isManifest` section (U, 19
-  cases) is the arbiter.
+  cases) is the arbiter. **S′ (amendment 4b)** corrects S's spacing — `\h` and `isWhitespace`, as
+  SwiftPM's parser reads it, where S's `[ \t]` refused `//\u{00A0}swift-tools-version` — and puts a
+  label check in front of rule (b)'s regex (a 20,000-line comment file: 0.042 s, 1.401 s without
+  it, in debug); the section has 28 cases. Only truly empty lines load before the comment at every
+  version; lines of whitespace, CRLF blank lines among them, need 5.4.
 - **T — a target path reaches the nested packages under it**, not only the ones holding it:
   `.target(name: "All", path: "Packages")` compiles `Packages/A`'s sources. The closure body is
   SwiftProjectLint's text again, byte for byte. **T′**: a root target's `path: "."` resolves to
@@ -582,7 +595,9 @@ performance fixes, before amendment 4).
   (all three expectations fail without the clause) and the mutant `target-path-root-reaches-nothing`.
 - **V** — the docs no longer imply SwiftPM leaves a `Package.swift` or `*Tests` folder out of a
   target, and record that a symlinked package's own relative dependencies resolve from its
-  canonical target.
+  canonical target. **T-gaps (4b)**, documented, not extended: a target with no `path:` holding a
+  nested package (SwiftPM's default `Sources/<name>`) is not reached, and neither is a symlink below
+  a target path to a package walked elsewhere (`path: "Packages"`, `Packages/A → ../Real/A`).
 
 **Re-taken at `a4e68820`: nothing moved.** On `Sources/`: universe 746 (745 +
 `ConstructionUniverse+Bound.swift`), 3 refuted types, 0 function flips, 0 of 225 accessor blocks, 0 of 1,650 closure literals, the same 2 re-witnessed rows, 229 / 118 configured; functions
