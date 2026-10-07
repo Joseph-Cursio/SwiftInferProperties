@@ -125,4 +125,29 @@ struct ConstructionUniverseManifestTests {
             #expect(try Nested.verdict("make", scanning: lib) == (demoIsIn ? .refuted : .pure), "\(dependency)")
         }
     }
+
+    // MARK: - G: an Xcode project beside the manifest
+
+    /// The review's `spl#2`: a CLI-tool `Package.swift` beside `App.xcodeproj`, whose app target
+    /// links `LocalPackages/Feature` — a package the manifest never names. Bounded by the manifest,
+    /// `Feature`'s UUID-minting `Item` left the universe and `countOf` read pure.
+    @Test("an Xcode project or workspace beside the root manifest takes every nested package", arguments: [
+        ("App.xcodeproj/project.pbxproj", true),
+        ("App.xcworkspace/contents.xcworkspacedata", true),
+        ("Apps/iOS/App.xcodeproj/project.pbxproj", false),
+        (".Hidden.xcodeproj/project.pbxproj", false)
+    ])
+    func xcodeProjectBesideTheManifestTakesEveryNestedPackage(project: String, takesEvery: Bool) throws {
+        let root = try Wiring.makePackage([
+            project: "// !$*UTF8*$!",
+            "LocalPackages/Feature/Package.swift": Nested.demoManifest,
+            "LocalPackages/Feature/Sources/Feature/Item.swift": Wiring.item,
+            "App/Count.swift": Self.countOf()
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let app = root.appendingPathComponent("App")
+        let paths = ConstructionUniverse.files(forScanOf: app).map(\.relativePath)
+        #expect(paths.contains("LocalPackages/Feature/Sources/Feature/Item.swift") == takesEvery, "\(project): \(paths)")
+        #expect(try Nested.verdict("countOf", scanning: app) == (takesEvery ? .refuted : .pure), "\(project)")
+    }
 }

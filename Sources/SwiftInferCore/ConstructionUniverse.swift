@@ -169,8 +169,11 @@ public enum ConstructionUniverse {
             members.append(Member(relativePath: relative, url: url, key: resolved(url).path))
         }
         let rootHasManifest = holdsManifest(root)
+        // An Xcode project beside the manifest may compile packages it never names (amendment G).
         let compiled = compiledNestedPackages(
-            walk.nestedPackages, rootHasManifest: rootHasManifest, rootPath: root.path
+            walk.nestedPackages,
+            rootHasManifest: rootHasManifest && !holdsXcodeProject(root),
+            rootPath: root.path
         ) { manifestText(of: $0, under: root) }
         let bounded = members.filter { member in
             owningPackage(of: member.relativePath, among: walk.nestedPackages).map(compiled.contains) ?? true

@@ -6,17 +6,20 @@ import SwiftSyntax
 /// both repos by the shared `construction-universe-cases.json`.
 ///
 /// A *nested package* is a directory below the root (never the root itself) that holds a
-/// `Package.swift`. Every file belongs to the nearest one above it, or to the root's own package
-/// when there is none; the root's own files are always in the universe, and a nested package's
-/// are only when the root reaches it:
+/// manifest — a `Package.swift` whose first line is a tools-version comment (amendment F,
+/// `ConstructionUniverse+Manifests.swift`). Every file belongs to the nearest one above it, or to
+/// the root's own package when there is none; the root's own files are always in the universe,
+/// and a nested package's are only when the root reaches it:
 ///
-/// - **The root has a `Package.swift`**: the closure of its local path dependencies. Each
-///   manifest's `.package(path:)` literals are resolved from that manifest's directory and
-///   followed transitively. A manifest in the closure that passes `path:` anything but a string
-///   literal may depend on any of them, so then **every** nested package is in (any doubt
-///   includes). A path that leaves the root is ignored: the universe never does.
-/// - **It has none** — an Xcode project, a workspace folder — and nothing cheap says what it
-///   compiles, so every nested package is in.
+/// - **The root has a manifest**: the closure of its local path dependencies. Each manifest's
+///   `.package(path:)` literals are resolved from that manifest's directory and followed
+///   transitively. A manifest in the closure that passes `path:` anything but a string literal may
+///   depend on any of them, so then **every** nested package is in (any doubt includes), and so
+///   does one that exists and cannot be read. A path that leaves the root is ignored: the universe
+///   never does.
+/// - **It has none** — an Xcode app's folder, a workspace folder — **or an `*.xcodeproj` /
+///   `*.xcworkspace` sits beside it** (amendment G): an Xcode project compiles local packages no
+///   manifest names, and nothing cheap says which, so every nested package is in.
 ///
 /// ## Why bound it
 ///

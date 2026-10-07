@@ -56,6 +56,20 @@ extension ConstructionUniverse {
         return text
     }
 
+    /// Whether `directory` holds an `*.xcodeproj` or `*.xcworkspace` as a direct child — the shared
+    /// spec's amendment G. An Xcode project beside a root manifest may compile local packages the
+    /// manifest never names (an app target's `XCLocalSwiftPackageReference`, a workspace's
+    /// `group:` reference), so such a root bounds nothing: every nested package is in. Reading the
+    /// project file instead would need its own doubt rule, since pre-Xcode-15 projects and
+    /// workspaces reference local packages as plain folder references. A dot-prefixed name is
+    /// hidden, and no `*` glob matches it.
+    static func holdsXcodeProject(_ directory: URL) -> Bool {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        return names.contains { name in
+            !name.hasPrefix(".") && (name.hasSuffix(".xcodeproj") || name.hasSuffix(".xcworkspace"))
+        }
+    }
+
     /// Whether the first line of `data` matches `^\s*//\s*swift-tools-version`, after an optional
     /// UTF-8 byte-order mark. The line ends at the first `\n` or `\r`.
     static func isToolsVersionLine(firstLineOf data: Data) -> Bool {
