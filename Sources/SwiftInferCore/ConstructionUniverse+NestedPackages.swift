@@ -1,29 +1,47 @@
+import SwiftParser
+import SwiftSyntax
+
+// swiftlint:disable function_parameter_count
+// The shared closure takes six parameters, which SwiftProjectLint's lint configuration allows and
+// this repo's does not; the body must stay the same text in both repos (`SEICrossRepoPinTests`
+// compares it), so the rule is off across it and re-enabled after it.
 /// Which nested packages' files are in the construction universe: **those the root compiles** —
-/// the shared spec's amendment B, implemented word for word in SwiftProjectLint too, and pinned in
-/// both repos by the shared `construction-universe-cases.json`.
+/// the shared spec's amendments B, 3 and 3b, implemented word for word in SwiftProjectLint too:
+/// everything below `extension ConstructionUniverse {` is SwiftProjectLint's
+/// `ConstructionUniverse+NestedPackages.swift` line for line, doc comments included, and the
+/// shared `construction-universe-cases.json` pins its readers in both repos.
 ///
 /// A *nested package* is a directory below the root (never the root itself) that holds a
-/// manifest — a `Package.swift` whose first line is a tools-version comment (amendment F,
-/// `ConstructionUniverse+Manifests.swift`). Every file belongs to the nearest one above it, or to
-/// the root's own package when there is none; the root's own files are always in the universe,
-/// and a nested package's are only when the root reaches it:
+/// manifest — a `Package.swift` that is one, by amendment F (`manifest(inDirectory:)`). Every file
+/// belongs to the nearest one above it, or to the root's own package when there is none; the root's
+/// own files are always in the universe, and a nested package's are only when it is reached:
 ///
-/// - **The root has a manifest**: the closure of its local path dependencies. Each manifest's
-///   `.package(path:)` values (`ConstructionUniverse+ManifestReader.swift`) are resolved from that
-///   manifest's directory, standardised, then resolved through symlinks and compared by that
-///   canonical location (amendments H and Q), and followed transitively — **by path**, to
-///   `<dir>/Package.swift` on disk, even under a `Tests` / `*Tests` / hidden / pruned directory the
-///   walk never enters (amendment I). A directory's dependencies are the union over its
-///   `Package.swift` and every `Package@swift-*.swift` beside it (amendment O), and a nested package
-///   holding one of its targets' `path:` is reached too (amendment P: `.target(name: "Core", path:
-///   "Core/Sources/Core")` compiles `Core/`'s files as the root's own). A manifest in the closure
-///   that passes `path:` anything but a string literal — to a dependency or a target — may depend
-///   on any of them, so then **every** nested package is in (any doubt includes), and so does one
-///   that exists and cannot be read. A path that leaves the root is ignored: the universe never
-///   does.
-/// - **It has none** — an Xcode app's folder, a workspace folder — **or an `*.xcodeproj` /
-///   `*.xcworkspace` sits beside it** (amendment G): an Xcode project compiles local packages no
-///   manifest names, and nothing cheap says which, so every nested package is in.
+/// - **The root has a manifest**: the closure of what its manifests reference, followed
+///   transitively through every manifest reached. A directory's manifests are its `Package.swift`
+///   and each `Package@swift-*.swift`, taken together (O). Each `.package(path:)` literal is read
+///   for its value, as SwiftPM reads it — escapes decoded, raw strings allowed (H) — and each
+///   target's `path:` too: a nested package holding one is reached (P). A literal is resolved from
+///   its manifest's directory, standardised, then canonicalised — symlinks resolved, and on a
+///   case-insensitive volume the on-disk letter case (`realpath(3)`) — and matched to a package by
+///   where both resolve, so `/tmp/x` and `/private/tmp/x`, a link to a package's directory, and
+///   `packages/core` for `Packages/Core` each name it (H, Q). A dependency is followed to its
+///   `Package.swift` on disk whether or not the walk reached it: a package under a hidden or a
+///   pruned directory still passes its own dependencies on, though the predicate keeps its files
+///   out (I); one on a directory that holds no manifest passes nothing on, and is no doubt. A
+///   manifest in the closure that cannot be read, or passes `path:` anything but a string literal,
+///   may depend on any of them, so then **every** nested package is in (any doubt includes). A path
+///   that leaves the root is ignored: the universe never does.
+/// - **A nested package holding a file the scan judges** is reached too, with its own closure (J),
+///   so `--sources Examples` over an uncompiled `Examples/Demo` judges Demo with its own types.
+/// - **It has none** — an Xcode app's folder, a workspace folder — and nothing cheap says what it
+///   compiles, so every nested package is in. So too when an `.xcodeproj` or `.xcworkspace` sits
+///   directly beside the root's manifest (G): the Xcode project may compile local packages the
+///   manifest never names.
+///
+/// The manifest reader parses on the caller's thread, as SwiftProjectLint's does; the one
+/// production caller, `universe(forScanOf:)`, runs the closure on a `LargeStackWorkers` thread
+/// (amendment K), since a 1,000-arm `else if` in a nested manifest `SIGBUS`ed the ~512 KB
+/// cooperative stack the CLI runs on.
 ///
 /// ## Why bound it
 ///
@@ -34,108 +52,191 @@
 /// over a package the scan never judged.
 extension ConstructionUniverse {
 
-    /// The nested packages whose files are in the universe: every one of `nestedPackages` when the
-    /// root has no manifest or the closure meets doubt, else the closure's packages — which may
-    /// include one the walk never entered (amendment I), whose own files the predicate rejects.
+    /// The literal paths of `manifest`'s local package dependencies, in source order —
+    /// `.package(path: "…")` and `.package(name: "…", path: "…")`, with or without an explicit
+    /// `Package.Dependency` base — or `nil` when a `.package(…)` call passes `path:` something that
+    /// is not a plain string literal (the doubt rule).
+    ///
+    /// The manifest is parsed, not pattern-matched: a dependency commented out, or the text of one
+    /// inside a string, is not a dependency. A `path:` belonging to anything else — a target's
+    /// `.target(name:path:)` — is not one either.
+    public static func localPackageDependencies(manifest: String) -> [String]? {
+        pathArguments(of: ["package"], in: manifest)
+    }
+
+    /// The literal `path:` values of `manifest`'s targets, in source order — `.target`,
+    /// `.executableTarget`, `.testTarget`, `.plugin`, `.macro`, `.systemLibrary` and `.binaryTarget`
+    /// — or `nil` when one passes `path:` something that is not a plain string literal (doubt).
+    ///
+    /// A target can take its sources from inside a nested package: a root's
+    /// `.target(name: "Core", path: "Core/Sources/Core")` compiles `Core/`'s files though no
+    /// `.package(path:)` names it, so the bound counts a nested package holding a target path as
+    /// reached (amendment P). Read the way dependencies are, so a commented-out target is none.
+    public static func localTargetPaths(manifest: String) -> [String]? {
+        pathArguments(of: targetCallees, in: manifest)
+    }
+
+    /// The member names of the target-declaring calls ``localTargetPaths(manifest:)`` reads.
+    static let targetCallees: Set<String> = [
+        "target", "executableTarget", "testTarget", "plugin", "macro", "systemLibrary", "binaryTarget"
+    ]
+
+    /// The literal `path:` values of `manifest`'s `.<callee>(…)` calls, or `nil` for one that is
+    /// not a literal.
+    private static func pathArguments(of callees: Set<String>, in manifest: String) -> [String]? {
+        let collector = PathArgumentCollector(callees: callees)
+        collector.walk(Parser.parse(source: manifest))
+        return collector.isReadable ? collector.paths : nil
+    }
+
+    /// The nested packages, of `nestedPackages`, whose files are in the universe.
     ///
     /// - Parameters:
-    ///   - nestedPackages: root-relative directories (no trailing `/`) that hold a manifest, as the
-    ///     walk found them.
-    ///   - rootHasManifest: whether the root itself holds one — `false` too when an Xcode project
-    ///     sits beside it (amendment G).
-    ///   - judgedPackages: the root-relative nested packages that hold a file the run judges
-    ///     (amendment J). Each is in, with its own closure, read under the same doubt rules.
-    ///   - rootPath: the root's absolute path, resolved; every dependency and target path must lie
-    ///     under it once resolved itself.
-    ///   - resolvingSymlinks: an absolute path with every symlink resolved and, on a volume that
-    ///     folds case, its on-disk letter case — the resolution the root's path went through
-    ///     (amendments H and Q). The identity for an in-memory tree.
-    ///   - packagesContaining: the root-relative directories at or above a resolved root-relative
-    ///     location that hold a manifest (amendment P). `nil` means the walked packages that do,
-    ///     for an in-memory tree.
-    ///   - manifests: what a root-relative directory (`""` is the root) holds — its `Package.swift`
-    ///     and every `Package@swift-*.swift` beside it, or nothing when it is no package. Read BY
-    ///     PATH, whether or not the walk entered the directory (amendment I).
+    ///   - nestedPackages: root-relative directories (no trailing `/`) that hold a manifest.
+    ///   - reported: those of `nestedPackages` holding a file the run reports on. Each is in, with
+    ///     its own closure (amendment J): a package judged without its own types reads every
+    ///     construction of them as pure.
+    ///   - rootHasManifest: whether the root itself holds a manifest and nothing else builds it —
+    ///     false beside an Xcode project (`holdsXcodeProject(directory:)`).
+    ///   - rootPath: the root's absolute path, which an absolute dependency path must lie under once
+    ///     both are resolved.
+    ///   - resolvingSymlinks: an absolute path's canonical form — symlinks resolved and the on-disk
+    ///     letter case, as `realpath(3)` gives it — or the path itself when it does not resolve.
+    ///   - manifests: every manifest a directory, given relative to the resolved root (`""` is the
+    ///     root), holds — `Package.swift` and each `Package@swift-*.swift` (`manifests(inDirectory:)`).
+    ///     Their dependencies are taken together, and doubt in any one — an unreadable manifest, a
+    ///     `path:` that is not a literal — is doubt, so every nested package is in.
     public static func compiledNestedPackages(
         _ nestedPackages: Set<String>,
+        reported: Set<String>,
         rootHasManifest: Bool,
-        judgedPackages: Set<String> = [],
         rootPath: String,
-        resolvingSymlinks: (String) -> String = \.self,
-        packagesContaining: ((String) -> [String])? = nil,
+        resolvingSymlinks: (String) -> String,
         manifests: (String) -> [Manifest]
     ) -> Set<String> {
         guard rootHasManifest, !nestedPackages.isEmpty else { return nestedPackages }
-        // Each walked package by where it resolves (amendment Q): a dependency or a target path
-        // reaches it by location, never by spelling.
-        var packageAt: [String: String] = [:]
-        for package in nestedPackages {
-            let location = resolve(package, from: "", rootPath: rootPath, with: resolvingSymlinks)
-            if let location { packageAt[location] = package }
+        var closure = Closure(nestedPackages, rootPath: rootPath, resolvingSymlinks: resolvingSymlinks)
+        closure.enter("")
+        for (location, package) in closure.packageAt where reported.contains(package) {
+            closure.enter(location)
         }
-        let containing = packagesContaining ?? { location in
-            packageAt.keys.filter { location == $0 || location.hasPrefix($0 + "/") }
+        while let directory = closure.pending.popLast() {
+            guard let read = references(of: manifests(directory)) else { return nestedPackages }
+            closure.follow(read, from: directory, resolvingSymlinks: resolvingSymlinks)
         }
-        var reached: Set<String> = []
-        // The root's closure, and each judged package's own (amendment J): a scan of `Examples/`
-        // over an uncompiled `Examples/Demo` judges Demo's functions, so it builds with Demo's types.
-        let seeds = judgedPackages.compactMap { resolve($0, from: "", rootPath: rootPath, with: resolvingSymlinks) }
-        var visited = Set([""] + seeds)
-        var pending = visited.sorted(by: >)
-        while let directory = pending.popLast() {
-            let read = manifests(directory)
-            if !directory.isEmpty, !read.isEmpty { reached.insert(packageAt[directory] ?? directory) }
-            guard let literals = literals(of: read) else { return nestedPackages }
-            let resolvedDependencies = literals.dependencies.compactMap {
-                resolve($0, from: directory, rootPath: rootPath, with: resolvingSymlinks)
-            }
-            // A nested package holding a target's `path:` is compiled by that target (amendment P).
-            let targetLocations = literals.targetPaths.compactMap {
-                resolve($0, from: directory, rootPath: rootPath, with: resolvingSymlinks)
-            }
-            let targetPackages = targetLocations.flatMap(containing)
-            for location in resolvedDependencies + targetPackages where visited.insert(location).inserted {
-                pending.append(location)
+        return closure.reached
+    }
+
+    /// The closure's state: where each nested package resolves, which are reached, and which
+    /// directories are still to read. Directories are relative to the resolved root.
+    private struct Closure {
+        let root: String
+        /// Each nested package by where it resolves, so a reference matches it by location rather
+        /// than by spelling.
+        private(set) var packageAt: [String: String] = [:]
+        private(set) var reached: Set<String> = []
+        private var visited: Set<String> = []
+        var pending: [String] = []
+
+        init(_ nestedPackages: Set<String>, rootPath: String, resolvingSymlinks: (String) -> String) {
+            root = resolvingSymlinks(rootPath)
+            for package in nestedPackages {
+                let location = resolvingSymlinks(joined(rootPath, package))
+                if let resolved = relative(location, under: root) { packageAt[resolved] = package }
             }
         }
-        return reached
+
+        /// Reaches `location`, and queues its manifests — nested package or not: one the walk never
+        /// reached still compiles what it depends on.
+        mutating func enter(_ location: String) {
+            if let package = packageAt[location] { reached.insert(package) }
+            if visited.insert(location).inserted { pending.append(location) }
+        }
+
+        /// Follows what the manifests of `directory` reference: each dependency, and each nested
+        /// package holding a target path — a target whose sources lie there compiles its files.
+        mutating func follow(
+            _ read: (dependencies: [String], targetPaths: [String]),
+            from directory: String,
+            resolvingSymlinks: (String) -> String
+        ) {
+            for literal in read.dependencies {
+                if let location = resolve(literal, from: directory, root: root, resolvingSymlinks: resolvingSymlinks) {
+                    enter(location)
+                }
+            }
+            for literal in read.targetPaths {
+                guard let location = resolve(
+                    literal, from: directory, root: root, resolvingSymlinks: resolvingSymlinks
+                ) else { continue }
+                for package in packageAt.keys where location == package || location.hasPrefix(package + "/") {
+                    enter(package)
+                }
+            }
+        }
+    }
+
+    /// The dependency and target-path literals of every one of `manifests`, in order: none from a
+    /// file that is no manifest, and `nil` for doubt in any — an unreadable manifest, or a `path:`
+    /// that is not a literal.
+    private static func references(
+        of manifests: [Manifest]
+    ) -> (dependencies: [String], targetPaths: [String])? {
+        var dependencies: [String] = []
+        var targetPaths: [String] = []
+        for manifest in manifests {
+            if manifest == .unreadable { return nil }
+            guard case .text(let text) = manifest else { continue }
+            guard let packages = localPackageDependencies(manifest: text),
+                  let targets = localTargetPaths(manifest: text) else { return nil }
+            dependencies += packages
+            targetPaths += targets
+        }
+        return (dependencies, targetPaths)
     }
 
     /// The nested package `relativePath` belongs to — the nearest of `nestedPackages` above it —
     /// or `nil` when it belongs to the root's own package.
     public static func owningPackage(of relativePath: String, among nestedPackages: Set<String>) -> String? {
-        owningPackage(of: relativePath, where: nestedPackages.contains)
-    }
-
-    /// The nearest directory above `relativePath` that `isPackage` accepts, or `nil`.
-    static func owningPackage(of relativePath: String, where isPackage: (String) -> Bool) -> String? {
         var directories = relativePath.split(separator: "/").dropLast().map(String.init)
         while !directories.isEmpty {
             let directory = directories.joined(separator: "/")
-            if isPackage(directory) { return directory }
+            if nestedPackages.contains(directory) { return directory }
             directories.removeLast()
         }
         return nil
     }
 
-    /// `literal` resolved from the root-relative `directory`, standardised (`.` and `..` folded over
-    /// the whole absolute path, lexically, as SwiftPM folds them), then resolved through symlinks
-    /// (amendment H), as a root-relative path without a trailing `/`; `nil` when the result is not
-    /// under the root. `rootPath` went through the same `resolvingSymlinks`, so a `/private/tmp/…`
-    /// literal under a `/tmp/…` root, a dependency reached through a symlinked directory, and one
-    /// spelled in another letter case each name the directory the compiler opens.
+    /// `literal` resolved from `directory` (relative to the resolved `root`), standardised (`.` and
+    /// `..` folded over the whole absolute path) and then symlink-resolved, as a path relative to
+    /// `root` without a trailing `/`; `nil` when the result is not under the root.
+    ///
+    /// Standardised first, as SwiftPM folds a dependency path; canonicalised after, so the comparison
+    /// is by location: an absolute literal spelled `/tmp/…` names the package under a root that
+    /// resolves to `/private/tmp/…`, and the other way round; a link to a package's directory names
+    /// the package; and `packages/core` names `Packages/Core` where the volume ignores case.
     static func resolve(
-        _ literal: String,
-        from directory: String,
-        rootPath: String,
-        with resolvingSymlinks: (String) -> String = \.self
+        _ literal: String, from directory: String, root: String, resolvingSymlinks: (String) -> String
     ) -> String? {
-        let root = rootPath.split(separator: "/").map(String.init)
-        let base = literal.hasPrefix("/") ? [] : root + directory.split(separator: "/").map(String.init)
-        guard let lexical = standardised(base + literal.split(separator: "/").map(String.init)) else { return nil }
-        let absolute = resolvingSymlinks("/" + lexical.joined(separator: "/")).split(separator: "/").map(String.init)
-        guard absolute.starts(with: root) else { return nil }
-        return absolute.dropFirst(root.count).joined(separator: "/")
+        let base = literal.hasPrefix("/") ? [] : components(root) + components(directory)
+        guard let folded = standardised(base + components(literal)) else { return nil }
+        return relative(resolvingSymlinks("/" + folded.joined(separator: "/")), under: root)
+    }
+
+    /// `path` relative to `root`, both absolute, or `nil` when it is not under it; `""` for the root.
+    private static func relative(_ path: String, under root: String) -> String? {
+        let rootComponents = components(root)
+        let pathComponents = components(path)
+        guard pathComponents.starts(with: rootComponents) else { return nil }
+        return pathComponents.dropFirst(rootComponents.count).joined(separator: "/")
+    }
+
+    private static func joined(_ root: String, _ relative: String) -> String {
+        relative.isEmpty ? root : (root.hasSuffix("/") ? root : root + "/") + relative
+    }
+
+    private static func components(_ path: String) -> [String] {
+        path.split(separator: "/").map(String.init)
     }
 
     /// `components` with `.` dropped and `..` folded, or `nil` when `..` climbs above `/`.
@@ -152,3 +253,41 @@ extension ConstructionUniverse {
         return result
     }
 }
+
+/// The `path:` arguments of a manifest's `.<callee>(…)` calls, in source order.
+private final class PathArgumentCollector: SyntaxVisitor {
+
+    private let callees: Set<String>
+    private(set) var paths: [String] = []
+    /// False once such a call passes `path:` something that is not a plain literal.
+    private(set) var isReadable = true
+
+    init(callees: Set<String>) {
+        self.callees = callees
+        super.init(viewMode: .sourceAccurate)
+    }
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        guard let member = node.calledExpression.as(MemberAccessExprSyntax.self),
+              callees.contains(member.declName.baseName.text),
+              let path = node.arguments.first(where: { $0.label?.text == "path" }) else {
+            return .visitChildren
+        }
+        if let literal = Self.literal(path.expression) {
+            paths.append(literal)
+        } else {
+            isReadable = false
+        }
+        return .visitChildren
+    }
+
+    /// The value of a string literal with no interpolation — escapes decoded, a raw or multi-line
+    /// literal joined, as the compiler reads it — or `nil` for anything computed or malformed.
+    ///
+    /// The value, not the source text: `"Packages/\u{55}til"` names `Packages/Util` to SwiftPM, and
+    /// read as written it named no package at all, so the one the root compiles left the table.
+    private static func literal(_ expression: ExprSyntax) -> String? {
+        expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
+    }
+}
+// swiftlint:enable function_parameter_count

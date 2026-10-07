@@ -22,10 +22,13 @@ import Foundation
 /// of `f({ g(…) })` nested 26 times (52 levels) `SIGBUS`es `discover` at the same depth on main and
 /// on this branch, on `Task 1`'s cooperative queue, with the main thread idle in `CFMainExecutor`.
 /// What moved here is the universe parse and the table build, the out-of-universe re-parse in
-/// `FunctionScanner.scanCorpus(file:purity:)`, and the declarations-only scan
-/// (`scanTypeDecls(directory:)`). **TestLifter's parse of the test directory still runs on the
-/// cooperative stack**, so default `discover` over such a file still crashes as it did on main;
-/// with `--test-dir` pointed at an empty folder it does not.
+/// `FunctionScanner.scanCorpus(file:purity:)`, the declarations-only scan
+/// (`scanTypeDecls(directory:)`), and — after a 1,000-arm `else if` in a nested package's manifest
+/// `SIGBUS`ed `discover` (the shared spec's amendment K) — the nested-package closure, which parses
+/// every manifest it reaches (`ConstructionUniverse.bound(of:judging:at:rootHasManifest:)`).
+/// **TestLifter's parse of the test directory still runs on the cooperative stack**, so default
+/// `discover` over such a file still crashes as it did on main; with `--test-dir` pointed at an
+/// empty folder it does not.
 enum LargeStackWorkers {
 
     /// Twice the main thread's 8 MB. Virtual, not committed: a thread touches only the pages it

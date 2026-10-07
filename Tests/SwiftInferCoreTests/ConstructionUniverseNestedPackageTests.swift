@@ -62,12 +62,21 @@ struct ConstructionUniverseNestedPackageTests {
 
     /// The shared spec's amendment K. A nested package's manifest holding a 1,000-arm `else if`
     /// chain `SIGBUS`ed `discover` — the parse and the visitor's walk recurse per arm, and the CLI,
-    /// like this test, runs on a ~512 KB cooperative stack. 3,000 arms, so this test kills its own
-    /// process when the manifest is parsed on the caller's stack again.
+    /// like this test, runs on a ~512 KB cooperative stack. The universe runs the closure on a large
+    /// stack; 3,000 arms, so this test kills its own process when it runs on the caller's again.
     @Test("a manifest that nests deep is read on a large stack")
-    func deepManifestIsReadOnALargeStack() {
-        let manifest = Self.deepManifest(arms: 3_000)
-        #expect(ConstructionUniverse.localPackageDependencies(manifest: manifest) == ["../Leaf"])
+    func deepManifestIsReadOnALargeStack() throws {
+        let root = try ConstructionPurityWiringTests.makePackage([
+            "Package.swift": Self.manifest(dependingOn: "Packages/Dep"),
+            "Packages/Dep/Package.swift": Self.deepManifest(arms: 3_000),
+            "Packages/Leaf/Package.swift": Self.demoManifest,
+            "Packages/Leaf/Sources/Leaf/Row.swift": Self.mintingRow,
+            "Sources/Lib/Row.swift": Self.row
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        let lib = root.appendingPathComponent("Sources/Lib")
+        let paths = ConstructionUniverse.files(forScanOf: lib).map(\.relativePath)
+        #expect(paths == ["Packages/Leaf/Sources/Leaf/Row.swift", "Sources/Lib/Row.swift"])
     }
 
     // MARK: - The closure
@@ -80,14 +89,20 @@ struct ConstructionUniverseNestedPackageTests {
     static func compiled(
         _ manifests: [String: String],
         packages: Set<String> = Self.packages,
+        reported: Set<String> = [],
         rootHasManifest: Bool = true
     ) -> Set<String> {
         ConstructionUniverse.compiledNestedPackages(
-            packages, rootHasManifest: rootHasManifest, rootPath: "/work/App"
-        ) { directory in
-            if let text = manifests[directory] { return [.text(text)] }
-            return directory.isEmpty || packages.contains(directory) ? [.unreadable] : []
-        }
+            packages,
+            reported: reported,
+            rootHasManifest: rootHasManifest,
+            rootPath: "/work/App",
+            resolvingSymlinks: { $0 },
+            manifests: { directory in
+                if let text = manifests[directory] { return [.text(text)] }
+                return directory.isEmpty || packages.contains(directory) ? [.unreadable] : []
+            }
+        )
     }
 
     @Test("the root's local path dependencies, followed transitively")
@@ -135,6 +150,25 @@ struct ConstructionUniverseNestedPackageTests {
             "": #".package(path: "Packages/A")"#, "Packages/A": "", "Demo": ".package(path: p)"
         ])
         #expect(unreached == ["Packages/A"])
+    }
+
+    /// Amendment I: a dependency on a directory that holds no manifest passes nothing on, and is
+    /// no doubt — SwiftPM would refuse the package, but nothing here says what it compiles.
+    @Test("a dependency on a directory with no manifest passes nothing on, and is no doubt")
+    func dependencyOnNoManifestIsNoDoubt() {
+        let root = #"let dependencies = [.package(path: "Nowhere"), .package(path: "Packages/A")]"#
+        #expect(Self.compiled(["": root, "Packages/A": ""]) == ["Packages/A"])
+    }
+
+    /// Amendment J: a package the run judges is reached with its own closure, whatever the root
+    /// names; one the root already compiles adds nothing.
+    @Test("a judged package is reached, with its own closure")
+    func judgedPackageSeedsTheClosure() {
+        let manifests = ["": "", "Demo": #".package(path: "../Packages/C")"#, "Packages/C": "", "Packages/A": ""]
+        #expect(Self.compiled(manifests).isEmpty)
+        #expect(Self.compiled(manifests, reported: ["Demo"]) == ["Demo", "Packages/C"])
+        #expect(Self.compiled(["": #".package(path: "Packages/A")"#, "Packages/A": ""], reported: ["Packages/A"])
+            == ["Packages/A"])
     }
 
     @Test("a root with no manifest includes every nested package")

@@ -101,6 +101,26 @@ struct ConstructionUniverseManifestReachTests {
         #expect(try Nested.verdict("make", scanning: lib) == (demoIsIn ? .refuted : .pure))
     }
 
+    /// A directory's version-specific manifests are read whatever its `Package.swift` is — the
+    /// directory is a package by `Package.swift` alone, and its references are every manifest's —
+    /// as SwiftProjectLint reads them: a dependency on `Bridge/`, which holds only a
+    /// `Package@swift-6.0.swift` naming `../Packages/A`, reaches `A`.
+    @Test("a version-specific manifest is read where Package.swift is none")
+    func versionSpecificManifestWithoutPackageSwiftIsRead() throws {
+        let root = try Wiring.makePackage([
+            "Package.swift": Self.rootManifest(dependencies: #".package(path: "Bridge")"#, targets: Self.appTarget),
+            "Bridge/Package@swift-6.0.swift": Self.rootManifest(
+                tools: "6.0", dependencies: #".package(path: "../Packages/A")"#, targets: ""
+            ),
+            "Packages/A/Package.swift": Self.library("A"),
+            "Packages/A/Sources/A/Tok.swift": Self.tok,
+            "Sources/App/App.swift": Self.app(importing: "A")
+        ])
+        defer { try? FileManager.default.removeItem(at: root) }
+        #expect(try Self.tokenCount(in: root) == .refuted)
+        #expect(!ConstructionUniverse.holdsManifest(root.appendingPathComponent("Bridge")), "Bridge/ is no package")
+    }
+
     // MARK: - P: target paths
 
     /// The critic's `s7`: the root's own target `Core` has `path: "Core/Sources/Core"`, inside a

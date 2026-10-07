@@ -51,18 +51,19 @@ extension ConstructionUniverse {
         manifest(inDirectory: directory) != .absent
     }
 
-    /// Every manifest `directory` holds — its `Package.swift` and each `Package@swift-*.swift`
-    /// beside it that is one too, by the same first-line rule (amendment O) — or none when its
-    /// `Package.swift` is not a manifest. A version-specific manifest can name a dependency the
-    /// plain one does not (`Package@swift-6.0.swift` adding `.package(path: "Packages/A")`), and
-    /// SwiftPM reads whichever the toolchain selects, so the closure takes the union.
+    /// Every manifest `directory` holds: its `Package.swift`, then each `Package@swift-*.swift`
+    /// beside it in name order, each read as `manifest(inDirectory:)` reads one (amendment O) —
+    /// whatever `Package.swift` is, as SwiftProjectLint reads them. Whether the directory IS a
+    /// package is decided by `Package.swift` alone (`holdsManifest(_:)`).
+    ///
+    /// The bound takes the **union** of their dependencies. SwiftPM builds a package with whichever
+    /// one the toolchain selects, and nothing cheap says which: a root whose `Package.swift` names no
+    /// dependency and whose `Package@swift-6.0.swift` names `Packages/A` compiles `A` on every
+    /// toolchain this tool runs on, yet reading `Package.swift` alone left `A` out.
     public static func manifests(inDirectory directory: URL) -> [Manifest] {
-        let primary = manifest(inDirectory: directory)
-        guard primary != .absent else { return [] }
-        let variants = versionSpecificManifestNames(in: directory).map {
+        [manifest(inDirectory: directory)] + versionSpecificManifestNames(in: directory).map {
             manifest(atPath: directory.appendingPathComponent($0).path)
         }
-        return [primary] + variants.filter { $0 != .absent }
     }
 
     /// The files whose edit can change what `directory`'s manifests say: its `Package.swift` and
@@ -75,20 +76,6 @@ extension ConstructionUniverse {
     static func versionSpecificManifestNames(in directory: URL) -> [String] {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         return names.filter { $0.hasPrefix("Package@swift-") && $0.hasSuffix(".swift") }.sorted()
-    }
-
-    /// The root-relative directories at or above the root-relative `location` — never the root —
-    /// that hold a manifest on disk (amendment P's "a nested package that contains a target path",
-    /// read by path, as amendment I reads the closure).
-    static func packages(containing location: String, under root: URL) -> [String] {
-        var components = location.split(separator: "/").map(String.init)
-        var found: [String] = []
-        while !components.isEmpty {
-            let directory = components.joined(separator: "/")
-            if holdsManifest(root.appendingPathComponent(directory)) { found.append(directory) }
-            components.removeLast()
-        }
-        return found
     }
 
     /// Whether `directory` holds an `*.xcodeproj` or `*.xcworkspace` as a direct child — the shared

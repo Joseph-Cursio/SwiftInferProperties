@@ -119,10 +119,11 @@ struct ConstructionUniverseDependencyPathTests {
     // MARK: - I: the closure reads manifests by path
 
     /// The review's `agreement#0` / `tests#0` / `sip#4`: the root depends on a package the walk
-    /// never enters — under `Tests/`, a `*Tests` folder, a hidden or a pruned directory — and that
-    /// package depends on one the walk does find. The walk pruned the middle package, so the
-    /// closure stopped at it: `Shared`'s `Token` left the universe, `mint()` read pure, and
+    /// did not record — under `Tests/` or a `*Tests` folder then, under a hidden or a pruned
+    /// directory still — and that package depends on one the walk does find. The closure stopped
+    /// at the middle package: `Shared`'s `Token` left the universe, `mint()` read pure, and
     /// SwiftProjectLint, whose walk enters `Tests/`, built a different table from the same root.
+    /// Since amendment I the closure follows a manifest by path; the walk enters `Tests/` too.
     @Test("the closure passes through a package the walk never enters", arguments: [
         "Tests/Support", "SnapshotTests", ".support", "Pods/Support"
     ])

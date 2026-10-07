@@ -222,6 +222,55 @@ struct SEICrossRepoPinTests {
         """)
     }
 
+    /// Where SwiftProjectLint keeps the shared closure — the nested-package bound both consumers
+    /// run, whose body is the same text in both (the shared spec's amendments 3 and 3b).
+    static let linterNestedPackagesPath =
+        "Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ConstructionUniverse+NestedPackages.swift"
+
+    /// This package's copy.
+    static var ownNestedPackages: URL {
+        packageRoot.appendingPathComponent("Sources/SwiftInferCore/ConstructionUniverse+NestedPackages.swift")
+    }
+
+    /// The sibling's copy, when the sibling is checked out and carries one.
+    static var linterNestedPackages: URL? {
+        guard let root = swiftProjectLintRoot else { return nil }
+        let file = root.appendingPathComponent(linterNestedPackagesPath)
+        return FileManager.default.fileExists(atPath: file.path) ? file : nil
+    }
+
+    /// Everything from the `extension ConstructionUniverse {` line on — the file's header doc
+    /// comment names its own repo, and the rest is the shared body — less the trailing
+    /// `// swiftlint:` directives each repo's own lint configuration needs around it.
+    static func sharedBody(of file: URL) throws -> String? {
+        let text = try String(contentsOf: file, encoding: .utf8)
+        guard let start = text.range(of: "\nextension ConstructionUniverse {") else { return nil }
+        var lines = text[start.lowerBound...].components(separatedBy: "\n")
+        while let last = lines.last, last.isEmpty || last.hasPrefix("// swiftlint:") { lines.removeLast() }
+        return lines.joined(separator: "\n")
+    }
+
+    /// The answer keys pin the readers and the order; the closure that combines them — which
+    /// directories it follows, what counts as reached, what is doubt — had only prose saying the two
+    /// were "word for word" alike, and the follow-up review found three places they were not. So the
+    /// body is the same text in both repos, and this keeps it so.
+    @Test(
+        "This package and SwiftProjectLint run the same nested-package closure, line for line",
+        .enabled(if: linterNestedPackages != nil)
+    )
+    func nestedPackageClosureMatchesSwiftProjectLint() throws {
+        let theirs = try #require(Self.linterNestedPackages, "guarded by .enabled(if:) — unreachable")
+        let ownBody = try #require(try Self.sharedBody(of: Self.ownNestedPackages), "no extension in our copy")
+        let theirBody = try Self.sharedBody(of: theirs)
+        #expect(ownBody == theirBody, """
+        The two consumers' nested-package closures differ below their header comments, so one root \
+        can bound its nested packages two ways. Make everything from `extension ConstructionUniverse {` \
+        on the same text:
+          \(Self.ownNestedPackages.path)
+          \(theirs.path)
+        """)
+    }
+
     // MARK: - The guard
 
     @Test(
