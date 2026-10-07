@@ -33,6 +33,9 @@ public struct PackagePurity: Sendable {
     public let root: URL?
     /// Root-relative paths that fed `ConstructionFacts.build(from:)`, in the order they fed it.
     public let universe: [String]
+    /// Every member of the universe, readable or not — what `covers(_:)` compares, since two
+    /// scans under one root can take different nested packages (amendment J).
+    let members: [String]
     /// The meet of `ReducerPurityAnalyzer` and a facts-configured `PurityInferrer`.
     public let oracle: SoundPurity
     /// Every parsed universe tree, by resolved absolute path.
@@ -85,6 +88,7 @@ public struct PackagePurity: Sendable {
         return Self(
             root: universe.root,
             universe: used,
+            members: members.map(\.relativePath),
             oracle: SoundPurity(constructionFacts: facts),
             trees: trees
         )
@@ -92,17 +96,18 @@ public struct PackagePurity: Sendable {
 
     /// One source that is its own package — what a single-file scan is.
     public static func selfContained(_ tree: SourceFileSyntax) -> Self {
-        Self(root: nil, universe: [], oracle: SoundPurity(constructionFacts: .build(from: [tree])), trees: [:])
+        let oracle = SoundPurity(constructionFacts: .build(from: [tree]))
+        return Self(root: nil, universe: [], members: [], oracle: oracle, trees: [:])
     }
 
     /// No facts and no trees. **`internal`**: tests reach it through `@testable import`, and no
     /// production file names it (`PurityConfigurationInventoryTests`).
-    static let unconfigured = Self(root: nil, universe: [], oracle: .unconfigured, trees: [:])
+    static let unconfigured = Self(root: nil, universe: [], members: [], oracle: .unconfigured, trees: [:])
 
     /// The same root and the same trees, judged with no facts — the A/B arm a census needs to say
     /// what the table moved on IDENTICAL input. `internal` for the same reason as `unconfigured`.
     var withoutConstructionFacts: Self {
-        Self(root: root, universe: universe, oracle: .unconfigured, trees: trees)
+        Self(root: root, universe: universe, members: members, oracle: .unconfigured, trees: trees)
     }
 
     /// The tree this value parsed for `url`, when `url` is in the universe.
@@ -111,11 +116,17 @@ public struct PackagePurity: Sendable {
     }
 
     /// Whether this value is the one a scan of `directory` would build its table from — the same
-    /// root, so the same universe. A value built for another project is FOREIGN, and judging with
+    /// root AND the same members. A value built for another project is FOREIGN, and judging with
     /// it would be the silent disagreement this type exists to prevent.
+    ///
+    /// The root alone stopped being enough with the shared spec's amendment J: a scan judging an
+    /// uncompiled `Examples/Demo` takes Demo into its universe, and a scan of `Sources/Lib` under
+    /// the same root does not, so a value built for one would judge the other under the wrong
+    /// table. The comparison walks the root again, and parses nothing.
     public func covers(_ directory: URL) -> Bool {
         guard let root else { return false }
-        return root.path == ConstructionUniverse.root(forScanOf: directory).path
+        let wanted = ConstructionUniverse.universe(forScanOf: directory)
+        return root.path == wanted.root.path && members == wanted.members.map(\.relativePath)
     }
 
     /// Every refuted type with its witness — a structural digest, because `ConstructionFacts ==`

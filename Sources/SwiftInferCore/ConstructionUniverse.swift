@@ -71,8 +71,13 @@ import Foundation
 /// SwiftProjectLint:
 ///
 /// 1. **Bound by what the root compiles** (amendment B): a file inside a nested package is in only
-///    when the root reaches that package through local path dependencies, or the root has no
-///    manifest to say (`ConstructionUniverse+NestedPackages.swift`).
+///    when the root reaches that package — through local path dependencies or a target's `path:`,
+///    across every manifest of the closure — or the root has no manifest to say, or an Xcode
+///    project beside it may compile more (`ConstructionUniverse+NestedPackages.swift`). **And a
+///    nested package the scan judges a file of is in, with its own closure** (amendment J):
+///    `--sources Examples` over an uncompiled `Examples/Demo` judges Demo's functions with Demo's
+///    types. So the universe depends on the judged set, not only on the root, and
+///    `PackagePurity.covers(_:)` compares members, not roots.
 /// 2. **One entry per file on disk** (amendment A): entries whose resolved paths are one file are
 ///    collapsed to the one with the **smallest** relative path under `String <` — a rule on the
 ///    paths, never the walk's directory-listing order.
@@ -155,24 +160,18 @@ public enum ConstructionUniverse {
         let location = RootLocation(forScanOf: directory)
         let root = location.resolved
         let walk = walk(under: root)
-        var members = walk.paths.map { relativePath in
+        let judged = judgedFiles(of: directory, at: location)
+        let members = walk.paths.map { relativePath in
             let url = root.appendingPathComponent(relativePath)
             return Member(relativePath: relativePath, url: url, key: resolved(url).path)
-        }
-        // The scanned directory's own production files, spelled under the root as given: the
-        // scanned directory's path below it plus each file's path below the scanned directory.
-        let prefix = location.scannedPathBelowRoot
-        for url in SwiftSourceFiles.sorted(in: directory) {
-            guard let own = relativePath(of: url, under: directory) else { continue }
-            let relative = prefix.isEmpty ? own : prefix + "/" + own
-            guard isProductionSource(relativePath: relative) else { continue }
-            members.append(Member(relativePath: relative, url: url, key: resolved(url).path))
-        }
+        } + judged.filter { isProductionSource(relativePath: $0.relativePath) }
         let rootHasManifest = holdsManifest(root)
         // An Xcode project beside the manifest may compile packages it never names (amendment G).
+        let bounds = rootHasManifest && !holdsXcodeProject(root)
         let compiled = compiledNestedPackages(
             walk.nestedPackages,
-            rootHasManifest: rootHasManifest && !holdsXcodeProject(root),
+            rootHasManifest: bounds,
+            judgedPackages: bounds ? judgedPackages(of: judged.map(\.relativePath), under: root) : [],
             rootPath: root.path,
             resolvingSymlinks: { resolved(URL(fileURLWithPath: $0)).path },
             packagesContaining: { packages(containing: $0, under: root) },
@@ -188,6 +187,38 @@ public enum ConstructionUniverse {
             members: ordered(deduplicated(bounded)),
             manifests: manifests.flatMap { manifestURLs(inDirectory: packageDirectory($0, under: root)) }
         )
+    }
+
+    /// Every file a scan of `directory` judges, spelled under the root as given: the scanned
+    /// directory's path below the root plus each file's path below the scanned directory. The
+    /// production ones are unioned into the universe; all of them say which nested packages the
+    /// scan judges (amendment J).
+    static func judgedFiles(of directory: URL, at location: RootLocation) -> [Member] {
+        let prefix = location.scannedPathBelowRoot
+        return SwiftSourceFiles.sorted(in: directory).compactMap { url in
+            guard let own = relativePath(of: url, under: directory) else { return nil }
+            let relative = prefix.isEmpty ? own : prefix + "/" + own
+            return Member(relativePath: relative, url: url, key: resolved(url).path)
+        }
+    }
+
+    /// The nested packages that hold a judged file — each file's nearest directory below the root
+    /// holding a manifest ON DISK, so a judged file under `Tests/` names its package too — the
+    /// shared spec's amendment J. Placed by where the file is judged, like every member: a linked
+    /// file belongs to the package its link sits in.
+    static func judgedPackages(of relativePaths: [String], under root: URL) -> Set<String> {
+        var holds: [String: Bool] = [:]
+        var packages: Set<String> = []
+        for relativePath in relativePaths {
+            let owner = owningPackage(of: relativePath) { directory in
+                if let known = holds[directory] { return known }
+                let answer = holdsManifest(root.appendingPathComponent(directory))
+                holds[directory] = answer
+                return answer
+            }
+            if let owner { packages.insert(owner) }
+        }
+        return packages
     }
 
     /// One entry per file on disk: of the members whose `key` (resolved path) is one file, the one

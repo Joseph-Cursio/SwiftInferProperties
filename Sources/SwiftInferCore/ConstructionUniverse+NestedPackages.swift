@@ -43,6 +43,8 @@ extension ConstructionUniverse {
     ///     walk found them.
     ///   - rootHasManifest: whether the root itself holds one — `false` too when an Xcode project
     ///     sits beside it (amendment G).
+    ///   - judgedPackages: the root-relative nested packages that hold a file the run judges
+    ///     (amendment J). Each is in, with its own closure, read under the same doubt rules.
     ///   - rootPath: the root's absolute path, resolved; every dependency and target path must lie
     ///     under it once resolved itself.
     ///   - resolvingSymlinks: an absolute path with every symlink resolved and, on a volume that
@@ -57,6 +59,7 @@ extension ConstructionUniverse {
     public static func compiledNestedPackages(
         _ nestedPackages: Set<String>,
         rootHasManifest: Bool,
+        judgedPackages: Set<String> = [],
         rootPath: String,
         resolvingSymlinks: (String) -> String = \.self,
         packagesContaining: ((String) -> [String])? = nil,
@@ -74,8 +77,11 @@ extension ConstructionUniverse {
             packageAt.keys.filter { location == $0 || location.hasPrefix($0 + "/") }
         }
         var reached: Set<String> = []
-        var visited: Set<String> = [""]
-        var pending = [""]
+        // The root's closure, and each judged package's own (amendment J): a scan of `Examples/`
+        // over an uncompiled `Examples/Demo` judges Demo's functions, so it builds with Demo's types.
+        let seeds = judgedPackages.compactMap { resolve($0, from: "", rootPath: rootPath, with: resolvingSymlinks) }
+        var visited = Set([""] + seeds)
+        var pending = visited.sorted(by: >)
         while let directory = pending.popLast() {
             let read = manifests(directory)
             if !directory.isEmpty, !read.isEmpty { reached.insert(packageAt[directory] ?? directory) }
@@ -98,10 +104,15 @@ extension ConstructionUniverse {
     /// The nested package `relativePath` belongs to — the nearest of `nestedPackages` above it —
     /// or `nil` when it belongs to the root's own package.
     public static func owningPackage(of relativePath: String, among nestedPackages: Set<String>) -> String? {
+        owningPackage(of: relativePath, where: nestedPackages.contains)
+    }
+
+    /// The nearest directory above `relativePath` that `isPackage` accepts, or `nil`.
+    static func owningPackage(of relativePath: String, where isPackage: (String) -> Bool) -> String? {
         var directories = relativePath.split(separator: "/").dropLast().map(String.init)
         while !directories.isEmpty {
             let directory = directories.joined(separator: "/")
-            if nestedPackages.contains(directory) { return directory }
+            if isPackage(directory) { return directory }
             directories.removeLast()
         }
         return nil
