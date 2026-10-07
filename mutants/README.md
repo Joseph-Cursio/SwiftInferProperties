@@ -167,6 +167,8 @@ killed by the test process dying with `SIGBUS`, which the runner counts as a fai
 | `manifest-spacing-space-or-tab` | construction-universe | killed | `manifestTextCasesHold` (S′) |
 | `manifest-label-check-dropped` | construction-universe | killed | `manifestTestOnALongFile` (S′, §13 row) |
 | `manifest-label-check-case-sensitive` | construction-universe | killed | `manifestTextCasesHold` (S′) |
+| `manifest-label-check-not-indented` | construction-universe | killed | `manifestTextCasesHold` (S′, the 29th case) |
+| `manifest-later-line-not-indented` | construction-universe | killed | `manifestTextCasesHold` (S′, the 29th case) |
 
 The fifth batch (2026-10-07, after the adversarial review of #636) pins what that review found
 unguarded: `covers`' root guard (an identical layout under another root), the built-for shortcut

@@ -529,6 +529,22 @@
       "expected": "killed",
       "test": "manifestTextCasesHold",
       "label": "the label check compares case-sensitively — a header above `// SWIFT-TOOLS-VERSION:6.0` is no manifest (amendment S′)"
+    },
+    {
+      "id": "manifest-label-check-not-indented",
+      "patch": "patches/manifest-label-check-not-indented.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestTextCasesHold",
+      "label": "the label check reads a later line from its first character — an indented `  // swift-tools-version:6.0` below a header is no manifest (amendment S′, the 29th case)"
+    },
+    {
+      "id": "manifest-later-line-not-indented",
+      "patch": "patches/manifest-later-line-not-indented.patch",
+      "shape": "construction-universe",
+      "expected": "killed",
+      "test": "manifestTextCasesHold",
+      "label": "rule (b)'s regex loses its leading `\\h*` — an indented 6.0 comment below a header is no manifest (amendment S′, the 29th case)"
     }
   ]
 }
