@@ -139,6 +139,10 @@ extension InteractiveTriage {
         /// Types a generated `Sendable` shim may name (`SendableShim`). Empty for every caller
         /// that does not supply it — which writes no shim, the behaviour before shims existed.
         var testVisibleTypeNames: Set<String> = []
+
+        /// Per scanned type, what `IsolatedConstructionGate` reads. Empty for every caller that
+        /// does not supply it, which writes every stub as before the gate existed.
+        var isolatedConstructionFacts: [String: IsolatedConstructionGate.Fact] = [:]
         /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
         var typeAliases: [String: String] = [:]
 

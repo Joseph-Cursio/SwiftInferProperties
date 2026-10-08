@@ -39,8 +39,8 @@ import Foundation
 /// on the subject that produced the finding: **0 of 43 public value types** are declared
 /// `nonisolated`, so the over-approximation is free there. Reaching per-carrier precision
 /// needs the scanner to record isolation modifiers, which is a scanner change and is recorded
-/// as the remaining gap rather than approximated with a name heuristic
-/// (falsifier: `IndexedTypeShape.isNonisolated`).
+/// as the remaining gap rather than approximated with a name heuristic. The scanner now records it
+/// (`TypeDecl.isNonisolated`, read by `IsolatedConstructionGate`); this gate does not read it yet.
 ///
 /// ## Degradation
 ///

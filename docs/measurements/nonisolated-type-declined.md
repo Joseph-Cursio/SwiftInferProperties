@@ -82,6 +82,16 @@ Re-run: `python3 scripts/nonisolated_type_census.py <package> <discover-output>`
 ## Still true, and still recorded
 
 The deferral `IndexedTypeShape.isNonisolated` stands, and `DeferralFalsifierTests` will report it
-the day that symbol resolves. **This declines building the join, not the observation** — the
+the day that symbol resolves.
+
+> **Resolved 2026-10-08, from a direction this page did not predict.** The reversal it names — a
+> value type marked `nonisolated` so a refutable law could reach it — arrived on
+> SwiftLintRuleStudioCore, but the failure was the **generator**, not the hop: a derived generator
+> runs in a nonisolated `sample:` closure and cannot call `MigrationPlan`'s MainActor-isolated
+> memberwise initializer. The scanner now records `TypeDecl.isNonisolated` and
+> `TypeDecl.declaresNonisolatedInitializer` (on the scanner's own record — `IndexedTypeShape` mirrors
+> the kit's `TypeShape` field for field), and `IsolatedConstructionGate` withdraws a stub whose
+> generator calls an initializer that opts out nowhere, naming the remedy. The isolation *hop*
+> passes measured here still read function-level opt-outs only, as this page concluded they may. **This declines building the join, not the observation** — the
 scanner genuinely cannot see a type's isolation, and a future subject may make it worth reaching
 for.
