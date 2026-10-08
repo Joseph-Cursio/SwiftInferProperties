@@ -53,6 +53,28 @@ struct DocstringAdvisorTests {
         #expect(DocstringAdvisor.isContract("Resolve one generator per parameter type.") == true)
     }
 
+    /// A DocC link is one span, not two empty ones. Paired single backticks left the symbol as
+    /// prose, and a name that starts with a cue was read as the cue.
+    @Test("a symbol in a DocC link is not a cue", arguments: [
+        "The function called after visiting ``ReturnStmtSyntax`` and its descendants.",
+        "The function called after visiting ``YieldStmtSyntax`` and its descendants.",
+        "Configuration specific to the ``ConvertService``.",
+        "Use this when the call point allows the use of ``URL/ParseStrategy``."
+    ])
+    func aCueInsideADocCLinkIsNotACue(doc: String) {
+        #expect(DocstringAdvisor.isContract(doc) == false)
+    }
+
+    @Test func aCueBesideADocCLinkIsStillACue() {
+        #expect(DocstringAdvisor.isContract("Returns the ``RuleImpact`` for one rule."))
+    }
+
+    /// A fence mention is not a span opener: pairing it with the next backtick dropped the prose
+    /// between them, `each` included, as code.
+    @Test func proseAfterAFenceMentionIsRead() {
+        #expect(DocstringAdvisor.isContract("Output whose ```swift blocks are graded; each block is `parsed` once."))
+    }
+
     /// The family the list was missing. `globPatternToRegex` states its contract in its first
     /// sentence and matched none of the previous 59 cues.
     @Test("the transformation family is recognised", arguments: [

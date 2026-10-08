@@ -212,7 +212,7 @@ public enum DocstringAdvisor {
     /// advisory; false positives cost a reader's trust, so the gate leans strict.
     static func isContract(_ doc: String) -> Bool {
         let prose = doc
-            .replacingOccurrences(of: "`[^`]*`", with: " ", options: .regularExpression)
+            .replacingOccurrences(of: #"(`+)(.+?)\1"#, with: " ", options: .regularExpression)
             .lowercased()
         return contractCues.contains { cue in
             prose.range(
@@ -237,6 +237,15 @@ public enum DocstringAdvisor {
     /// below usable at all: `resolve` appears in `GeneratorResolver`, `render` in
     /// `MetricsRenderer.swift`, far more often than either appears as a claim. Those are
     /// identifiers a docstring is *citing*, not verbs it is using.
+    ///
+    /// A span closes on a backtick run **of its own length**, as CommonMark has it. Pairing single
+    /// backticks read a DocC link — ``` ``ReturnStmtSyntax`` ``` — as two empty spans around bare
+    /// prose, so the symbol it cites was matched as a word: `returns` in `ReturnStmtSyntax`,
+    /// `yields` in `YieldStmtSyntax`, `converts` in `ConvertService`, `parses` in
+    /// `URL/ParseStrategy`. Over 56 323 documented declarations in 47 local repositories that
+    /// admitted **13**, every one on a symbol name. The same mis-pairing ran a ```` ```swift ````
+    /// mention into the next code span and dropped the prose between them as code; one docstring
+    /// is admitted now that it is read.
     ///
     /// ## The transformation family, and why it is an extension rather than an inversion
     ///
