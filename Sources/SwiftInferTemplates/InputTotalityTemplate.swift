@@ -194,11 +194,16 @@ public enum InputTotalityTemplate {
         [
             "THROWING IS NOT A VIOLATION. `throws` is the function saying \"this input is "
                 + "invalid\", which is the correct answer to invalid input. Returning `nil` is "
-                + "the same. The law is only about TRAPS — force-unwrap, unchecked index, "
-                + "unchecked overflow, `precondition` on attacker-controlled data.",
+                + "the same. The law is about TRAPS — force-unwrap, unchecked index, "
+                + "unchecked overflow, `precondition` on attacker-controlled data — and HANGS.",
             "A VIOLATION CRASHES THE TEST PROCESS instead of shrinking to a tidy "
                 + "counterexample. That is what a trap is, and it is why fuzzers exist — do not "
                 + "read a crashed run as a broken harness. Note the seed, then narrow by hand.",
+            "A HANG IS A VIOLATION TOO, and it shows up as a TIMEOUT, not a crash: a scanner that "
+                + "stops advancing on some character loops forever, and nothing it could throw "
+                + "reports that. Read a timed-out run as a counterexample, not a slow machine — "
+                + "SwiftFormatRuleStudio's tokenizer, mutated to split identifiers at `_`, made "
+                + "no progress on `_` and timed out rather than trapping (#645).",
             "A GENERATOR OF REALISTIC INPUT WILL NEVER FIND THIS. The counterexamples live in "
                 + "malformed input: the empty value, invalid UTF-8, lone surrogates, unbalanced "
                 + "delimiters, unterminated literals, pathological nesting depth, and lengths at "
