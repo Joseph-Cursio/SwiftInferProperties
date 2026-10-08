@@ -27,6 +27,13 @@ extension Signal {
         /// Seed-driven rather than inferred from the signature.
         case deterministicPurity
 
+        /// The function was supplied as a **`pure-mutator`** lint seed: pure, returning nothing,
+        /// changing one value. Carries the *idempotence* conjecture over what it changes
+        /// (`Discover+MutatorLaws`), so it is weighted into the Possible band (+25) rather than made
+        /// advisory: purity vouches that applying it twice is deterministic, not that the second
+        /// application is a no-op — `bump()` is a correct mutator that fails it.
+        case seededPureMutator
+
         /// The function's own docstring independently asserts the property a
         /// template has already matched by *shape* — a documented `idempotent`,
         /// `self-inverse`, etc. **Corroborate-only** (`DocstringPropertyCorroborator`):

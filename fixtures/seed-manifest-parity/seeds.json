@@ -8,16 +8,16 @@
       "symbol": "groupByReducer"
     },
     {
-      "file": "SwiftInferCore/KitEvidenceScoring.swift",
+      "file": "SwiftInferCLI/AcceptCheckCommand.swift",
       "kind": "extractable-kernel",
-      "line": 55,
-      "role": "transform",
+      "line": 217,
+      "role": "predicate",
       "rule": "Pure Closure Property-Test Candidate",
-      "symbol": "applied"
+      "symbol": "acceptedRecords"
     },
     {
       "effect": {
-        "anchor": "declaration",
+        "anchor": "heuristic",
         "declared": "idempotent",
         "depth": 5,
         "provenance": "inferred-upward",
@@ -30,53 +30,144 @@
       "symbol": "record"
     },
     {
-      "file": "SwiftInferCore/OrderedCarrierDiscriminator.swift",
+      "file": "SwiftInferCLI/AcceptBridgeCommand.swift",
       "kind": "pure-function",
-      "line": 126,
-      "role": "predicate",
+      "line": 201,
       "rule": "Pure Function Property-Test Candidate",
-      "symbol": "isOrderSensitive"
+      "symbol": "parseDecision"
     },
     {
-      "file": "SwiftInferCore/OrderedCarrierDiscriminator.swift",
+      "file": "SwiftInferCLI/Discover+DocstringAdvice.swift",
       "kind": "pure-function",
-      "line": 146,
-      "rule": "Pure Function Property-Test Candidate",
-      "symbol": "verdict"
+      "line": 100,
+      "requires": {
+        "equatable": [
+          "DocstringAdvice",
+          "DocstringAdviceItem"
+        ]
+      },
+      "rule": "Missing Equatable on Pure Function Result",
+      "symbol": "docstringAdvice"
     },
     {
-      "file": "SwiftInferCore/SwiftSourceFiles.swift",
-      "kind": "restricted-function",
-      "line": 45,
+      "file": "SwiftInferCLI/BaselineLoader.swift",
+      "kind": "pure-function",
+      "line": 54,
+      "role": "normalizer",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "defaultPath"
+    },
+    {
+      "file": "SwiftInferCLI/RefactorBridgeAccumulator.swift",
+      "kind": "pure-mutator",
+      "line": 42,
+      "mutates": "self",
+      "requires": {
+        "equatable": [
+          "RefactorBridgeAccumulator",
+          "OpInfo"
+        ]
+      },
+      "rule": "Missing Equatable on Pure Function Result",
+      "symbol": "record"
+    },
+    {
+      "file": "SwiftInferCLI/InteractionTraceEmitter.swift",
+      "kind": "pure-mutator",
+      "line": 135,
+      "mutates": "lines",
       "restriction": "declaration",
-      "role": "predicate",
-      "rule": "Pure Function Property-Test Candidate",
-      "symbol": "isSymbolicLink"
+      "rule": "Pure Mutator Property-Test Candidate",
+      "symbol": "appendReplayBody"
     },
     {
-      "file": "SwiftInferCore/TypeShapeBuilder.swift",
+      "file": "SwiftInferCLI/RefactorBridgeAccumulator.swift",
+      "kind": "pure-mutator",
+      "line": 74,
+      "mutates": "self",
+      "requires": {
+        "equatable": [
+          "RefactorBridgeAccumulator",
+          "OpInfo"
+        ]
+      },
+      "restriction": "declaration",
+      "rule": "Missing Equatable on Pure Function Result",
+      "symbol": "recordAssociativity"
+    },
+    {
+      "file": "SwiftInferCLI/ActionSequenceStubEmitter.swift",
+      "kind": "pure-mutator",
+      "line": 374,
+      "mutates": "self",
+      "requires": {
+        "equatable": [
+          "SipHasher"
+        ]
+      },
+      "restriction": "enclosing-type",
+      "rule": "Missing Equatable on Pure Function Result",
+      "symbol": "combine"
+    },
+    {
+      "file": "SwiftInferCLI/AcceptCheckInteractionCommand.swift",
       "kind": "restricted-function",
-      "line": 110,
+      "line": 164,
       "restriction": "declaration",
       "rule": "Pure Function Property-Test Candidate",
-      "symbol": "identifiers"
+      "symbol": "filterAccepted"
     },
     {
-      "file": "SwiftInferCore/IdentityKeyedFold.swift",
+      "file": "SwiftInferCLI/Discover+DocstringAdvice.swift",
       "kind": "restricted-function",
-      "line": 103,
+      "line": 165,
+      "requires": {
+        "equatable": [
+          "DocstringAdviceItem"
+        ]
+      },
+      "restriction": "declaration",
+      "rule": "Missing Equatable on Pure Function Result",
+      "symbol": "adviceItem"
+    },
+    {
+      "file": "SwiftInferCLI/AssociativityStubEmitter+NonComplex.swift",
+      "kind": "restricted-function",
+      "line": 36,
+      "restriction": "declaration",
+      "role": "normalizer",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "doubleDefaultPass"
+    },
+    {
+      "file": "SwiftInferCLI/ActionAlphabetScanner.swift",
+      "kind": "restricted-function",
+      "line": 151,
+      "restriction": "enclosing-type",
+      "rule": "Pure Function Property-Test Candidate",
+      "symbol": "readCases"
+    },
+    {
+      "file": "SwiftInferCore/ManifestConditions.swift",
+      "kind": "restricted-function",
+      "line": 114,
+      "requires": {
+        "equatable": [
+          "ManifestDefine"
+        ]
+      },
+      "restriction": "enclosing-type",
+      "rule": "Missing Equatable on Pure Function Result",
+      "symbol": "define"
+    },
+    {
+      "file": "SwiftInferCLI/ConfigLoader.swift",
+      "kind": "restricted-function",
+      "line": 161,
       "restriction": "enclosing-type",
       "role": "predicate",
       "rule": "Pure Function Property-Test Candidate",
-      "symbol": "isRankedAbove"
-    },
-    {
-      "file": "SwiftInferCore/ViewModelProtocolScanner.swift",
-      "kind": "restricted-function",
-      "line": 138,
-      "restriction": "enclosing-type",
-      "rule": "Pure Function Property-Test Candidate",
-      "symbol": "requirement"
+      "symbol": "boolean"
     }
   ],
   "version": 2

@@ -40,6 +40,8 @@ public enum SeedField: String, CodingKey, CaseIterable {
     case role
     case restriction
     case effect
+    case requires
+    case mutates
 }
 
 extension SeedManifest.Seed {
@@ -58,6 +60,8 @@ extension SeedManifest.Seed {
         try container.encodeIfPresent(role, forKey: .role)
         try container.encodeIfPresent(restriction, forKey: .restriction)
         try container.encodeIfPresent(effect, forKey: .effect)
+        try container.encodeIfPresent(requires, forKey: .requires)
+        try container.encodeIfPresent(mutates, forKey: .mutates)
     }
 }
 
@@ -95,7 +99,10 @@ public enum SeedFieldParity {
     /// added to the *wrong* object pass: `reason` is legitimate inside `effect` and would be a
     /// silent drop at the top level.
     public static var knownNestedFields: [String: Set<String>] {
-        [SeedField.effect.stringValue: Set(SeedEffectField.allCases.map(\.stringValue))]
+        [
+            SeedField.effect.stringValue: Set(SeedEffectField.allCases.map(\.stringValue)),
+            SeedField.requires.stringValue: Set(SeedRequirementField.allCases.map(\.stringValue))
+        ]
     }
 
     /// Fields emitted under `holder` that this build does not decode.

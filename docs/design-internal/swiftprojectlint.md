@@ -157,7 +157,7 @@ does**, which is two jobs and nothing else:
 | | job | output channel | who consumes it |
 |---|---|---|---|
 | **1** | **Make property-testable code exist** — extract a pure function, give a primitive a domain type, remove a blocker | the human-readable report | a person, who edits code |
-| **2** | **Say where to point the next tool** — `{file, line, symbol, rule, kind}` required, `{role, restriction, effect}` optional | `--format pbt-seeds` JSON | `swift-infer discover --seeds`, and **only** that |
+| **2** | **Say where to point the next tool** — `{file, line, symbol, rule, kind}` required, `{role, restriction, effect, requires, mutates}` optional | `--format pbt-seeds` JSON | `swift-infer discover --seeds`, and **only** that |
 
 The two jobs are not independent, and the direction is the interesting part: **job 1's output
 becomes job 2's input on the next run.** A kernel you extract this week is a named, analysable
@@ -384,6 +384,8 @@ Three rules find pure logic, and they differ by **whether the logic already has 
 | rule | the logic is… | seed kind | can a tool act on it? |
 |---|---|---|---|
 | `Pure Function Property-Test Candidate` | a `func` | `pure-function` | yes — index it, propose laws |
+| `Pure Mutator Property-Test Candidate` | a `func` returning nothing, changing one `inout` argument or a `mutating` method's `self` | `pure-mutator`, naming what it `mutates` | yes — laws over copies of the mutated value (`Discover+MutatorLaws`) |
+| `Missing Equatable on Pure Function Result` | either of the above, whose compared value a synthesized `: Equatable` would make comparable | `pure-function` or `pure-mutator`, with `requires` | yes — the law leads with the conformances to declare |
 | `Pure Closure Property-Test Candidate` | a closure passed to `sorted`/`filter`/`map`/`reduce` | `extractable-kernel` | **no** — extract it first |
 | `Extractable Total Kernel` | statements in the middle of an impure method | `extractable-kernel` | **no** — extract it first |
 

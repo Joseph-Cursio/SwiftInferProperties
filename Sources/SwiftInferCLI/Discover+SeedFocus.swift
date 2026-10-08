@@ -98,14 +98,34 @@ extension SwiftInferCommand.Discover {
         // Broaden: a seeded pure function that no template matched still earns
         // the generic determinism law, so `--seeds` always surfaces something.
         let covered = focused + owed + promoted
-        let generic = synthesizeGenericLaws(
-            for: analysableManifest,
+        let generic = seededFloorLaws(
+            for: analysableManifest, pipeline: pipeline, covered: covered, diagnostics: diagnostics
+        )
+        return guardFinalAnswer(covered + generic, pipeline: pipeline, diagnostics: diagnostics)
+    }
+
+    /// The laws a seed earns when no template spoke to it: determinism for a function, and —
+    /// since a seeded mutator returns nothing and the determinism floor refuses it — the laws over
+    /// what a mutator leaves behind.
+    static func seededFloorLaws(
+        for manifest: SeedManifest,
+        pipeline: PipelineResult,
+        covered: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        synthesizeGenericLaws(
+            for: manifest,
+            summaries: pipeline.summaries,
+            covered: covered,
+            diagnostics: diagnostics,
+            restrictedFunctions: pipeline.restrictedFunctions
+        ) + synthesizeMutatorLaws(
+            for: manifest,
             summaries: pipeline.summaries,
             covered: covered,
             diagnostics: diagnostics,
             restrictedFunctions: pipeline.restrictedFunctions
         )
-        return guardFinalAnswer(covered + generic, pipeline: pipeline, diagnostics: diagnostics)
     }
 
     /// Say why a lifted law survived the focus, so it does not read as a lucky seed match —

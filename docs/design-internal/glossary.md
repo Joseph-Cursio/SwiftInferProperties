@@ -279,8 +279,11 @@ state. No suggestion scored 50, 80 or 85.
 
 ### Seed / seed manifest
 `{file, line, symbol}` records emitted by SwiftProjectLint's `--format pbt-seeds`, naming
-functions worth pointing `discover` at. Kinds include `pure-function`,
-`extractable-kernel`, `restricted-function`.
+functions worth pointing `discover` at. Kinds include `pure-function`, `idempotency`,
+`extractable-kernel`, `restricted-function`, `carrier` and `pure-mutator` (a pure function that
+returns nothing and changes one value, named by the seed's `mutates`). A seed may carry
+`requires` — the `Equatable` conformances a law over it waits on, which every law synthesized for
+it names first.
 
 **Producer → consumer.** SwiftProjectLint writes them; `swift-infer discover --seeds`
 reads them, and it is the **only** consumer — `scaffold`, `verify`, `index`, `report` and
@@ -291,7 +294,8 @@ five-package toolchain.
 entire target, and then the surfaced suggestions are narrowed to functions named in the
 manifest. Two consequences worth knowing — a seeded pure function that **no template
 matched** still earns the generic determinism law `f(x) == f(x)`, synthesized downstream
-of the tier cut; and an empty manifest (or one holding only extractable-kernel seeds) does
+of the tier cut, and a seeded **pure mutator** earns `mutator-determinism` (advisory) and the
+`mutator-idempotence` conjecture (Possible) over what it leaves behind (`Discover+MutatorLaws`); and an empty manifest (or one holding only extractable-kernel seeds) does
 **not** focus — it returns what an unseeded run would, because "focus on zero functions" is
 what a producer with a blind spot looks like (`SeedFocus.filter`). Docstring advice is not
 narrowed away either: a documented function the manifest does not name as one to analyse

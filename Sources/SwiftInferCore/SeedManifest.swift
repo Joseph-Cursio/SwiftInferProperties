@@ -147,6 +147,15 @@ public struct SeedManifest: Codable, Sendable, Equatable {
         /// rather than retry-safety.
         public let effect: SeedEffect?
 
+        /// The `Equatable` conformances the seed is waiting on — see `SeedRequirement`. Only the
+        /// producer's near-miss rule writes it; absent is "nothing required".
+        public let requires: SeedRequirement?
+
+        /// What a `pure-mutator` writes: `"self"` for a `mutating` method, or the internal name of
+        /// its one `inout` parameter — the argument a law passes with `&`. Only that kind carries
+        /// it; absent is "returns its result".
+        public let mutates: String?
+
         /// `rule` carries a default here and is **required by the decoder**, mirroring `kind`.
         ///
         /// The two initialisers answer different questions. This one is construction — mostly
@@ -160,7 +169,9 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             kind: SeedKind = .pureFunction,
             role: SeedRole? = nil,
             restriction: SeedRestriction? = nil,
-            effect: SeedEffect? = nil
+            effect: SeedEffect? = nil,
+            requires: SeedRequirement? = nil,
+            mutates: String? = nil
         ) {
             self.file = file
             self.line = line
@@ -170,6 +181,8 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             self.role = role
             self.restriction = restriction
             self.effect = effect
+            self.requires = requires
+            self.mutates = mutates
         }
 
         /// `kind` is **required**, and that is a deliberate reversal.
@@ -208,6 +221,10 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             // Same reading as `role`: a seed with no effect is one whose producer
             // resolves no lattice position for it, and absent is honest.
             self.effect = try container.decodeIfPresent(SeedEffect.self, forKey: .effect)
+            // Same reading again: only a near miss carries a requirement, only a mutator says what
+            // it mutates, and absence is the honest answer for every other seed.
+            self.requires = try container.decodeIfPresent(SeedRequirement.self, forKey: .requires)
+            self.mutates = try container.decodeIfPresent(String.self, forKey: .mutates)
         }
     }
 }
@@ -277,6 +294,23 @@ public enum SeedKind: Sendable, Equatable {
     /// type is usually declared elsewhere. Reusing the function join would miss most of the time.
     case carrier
 
+    /// A pure function that returns **nothing** and changes one value — an `inout` argument, or a
+    /// `mutating` method's `self` — named by the seed's `mutates`.
+    ///
+    /// A mutator's result is the value it leaves behind, so its laws copy that value, apply the
+    /// mutator, and compare: twice for idempotence, two copies for determinism. SwiftLintRuleStudio's
+    /// `applyMigration(_:to:)`, which writes a config through `inout` and owes idempotence, is the
+    /// shape that motivated it.
+    ///
+    /// **Its own kind rather than a `pure-function` with a field**, on the producer's reasoning: a
+    /// consumer that ignored a field would take a `Void` function for one with a result and write
+    /// `f(x) == f(x)` over nothing. A build that predates this case decodes it as `unrecognised` and
+    /// skips it out loud, as with `carrier`.
+    ///
+    /// **Analysable**, and never demoted by the producer: a private mutator keeps this kind and
+    /// carries `restriction`, which `SeedRestrictionResolver` reads by presence.
+    case pureMutator
+
     /// A kind emitted by a newer producer than this build knows.
     ///
     /// **Treated as not-analysable, deliberately.** The two ways to be wrong here are not
@@ -288,7 +322,7 @@ public enum SeedKind: Sendable, Equatable {
 
     public var isAnalysable: Bool {
         switch self {
-        case .pureFunction, .idempotency, .restrictedFunction, .carrier:
+        case .pureFunction, .idempotency, .restrictedFunction, .carrier, .pureMutator:
             return true
 
         case .extractableKernel, .unrecognised:
@@ -312,6 +346,9 @@ public enum SeedKind: Sendable, Equatable {
 
         case .carrier:
             return "carrier"
+
+        case .pureMutator:
+            return "pure-mutator"
 
         case .unrecognised(let raw):
             return raw
@@ -337,6 +374,9 @@ extension SeedKind: Codable {
 
         case "carrier":
             self = .carrier
+
+        case "pure-mutator":
+            self = .pureMutator
 
         default:
             self = .unrecognised(raw)
