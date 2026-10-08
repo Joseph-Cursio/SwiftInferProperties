@@ -121,6 +121,7 @@ extension TemplateRegistry {
             context: context,
             into: &collector
         )
+        collectEmptinessAgreementSuggestions(summaries: summaries, into: &collector)
         collectShapeSuggestions(summaries: summaries, typeDecls: typeDecls, context: context, into: &collector)
         collectLiftedSuggestions(
             lifted: liftedTransformations,
