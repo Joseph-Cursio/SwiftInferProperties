@@ -128,6 +128,10 @@ public struct BodySignals: Sendable, Equatable {
     /// `RewritePostcondition`.
     public let rewritePostcondition: RewritePostcondition?
 
+    /// The ordering the returned array is sorted by, read from its comparator, or `nil`. See
+    /// `SortedOutput`.
+    public let sortedOutput: SortedOutput?
+
     /// `true` when the body invokes any API in the curated
     /// non-deterministic list (PRD §4.1's -∞ counter-signal). Drives
     /// the structural disqualifier for idempotence and most algebraic
@@ -203,6 +207,7 @@ public struct BodySignals: Sendable, Equatable {
     public init(
         guardDomain: GuardDomain? = nil,
         rewritePostcondition: RewritePostcondition? = nil,
+        sortedOutput: SortedOutput? = nil,
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
         nonDeterministicAPIsDetected: [String],
@@ -216,6 +221,7 @@ public struct BodySignals: Sendable, Equatable {
     ) {
         self.guardDomain = guardDomain
         self.rewritePostcondition = rewritePostcondition
+        self.sortedOutput = sortedOutput
         self.equalityBodyShape = equalityBodyShape
         self.idempotenceReturnShape = idempotenceReturnShape
         self.dedupGateShape = dedupGateShape

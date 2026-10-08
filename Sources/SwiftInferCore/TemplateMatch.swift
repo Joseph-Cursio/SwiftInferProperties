@@ -60,6 +60,9 @@ public enum TemplateMatch: Sendable, Equatable {
     /// `documented-range` — the closed range the doc comment says the result lies in.
     case documentedRange(DocumentedRange)
 
+    /// `sorted-output` — the keys the returned array is sorted by, and the member that holds it.
+    case sortedOutput(SortedOutput)
+
     /// The `GuardDomain` this match carries, or `nil` for any other template.
     ///
     /// Present so a writer reads one accessor rather than spelling a `switch` with three
@@ -79,6 +82,11 @@ public enum TemplateMatch: Sendable, Equatable {
     public var documentedRangeMatch: DocumentedRange? {
         guard case .documentedRange(let range) = self else { return nil }
         return range
+    }
+
+    public var sortedOutputMatch: SortedOutput? {
+        guard case .sortedOutput(let ordering) = self else { return nil }
+        return ordering
     }
 }
 
