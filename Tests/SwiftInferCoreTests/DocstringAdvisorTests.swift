@@ -73,6 +73,29 @@ struct DocstringAdvisorTests {
         #expect(DocstringAdvisor.isContract("Convenience wrapper. See also the sync path.") == false)
     }
 
+    /// `ranked` states an ordering as plainly as `sorted` does, and was missing: `TuneModel.churn`
+    /// got no advisory while `freeWins` ("Sorted by name") did (SwiftInferProperties#647).
+    @Test("a ranking is an ordering claim", arguments: [
+        "Candidates that would change code, ranked by impact (files, then findings).",
+        "The magnitude this report ranks by.",
+        "The top-ranked skill match for the request, or nil if none matched."
+    ])
+    func rankingIsAContract(doc: String) {
+        #expect(DocstringAdvisor.isContract(doc))
+    }
+
+    /// Only `ranked` and `ranks` are cues. Bare `rank` is the noun, naming a field, and `ranking`
+    /// is the adjective narration uses — the second case is the narration fixture in
+    /// `DiscoverDocstringAdviceTests`, which `ranking` as a cue would admit.
+    @Test("the noun and the adjective are not ordering claims", arguments: [
+        "The rank of this dashboard.",
+        "A convenience helper used by the ranking loop.",
+        "Trust weight for post-search re-ranking (higher = more trusted)."
+    ])
+    func rankAsNounOrAdjectiveIsNotAContract(doc: String) {
+        #expect(DocstringAdvisor.isContract(doc) == false)
+    }
+
     // MARK: - Path 1: a predicate law owes a reference definition
 
     @Test("a predicate law pulls the docstring in as its reference definition")

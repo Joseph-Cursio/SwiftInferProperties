@@ -259,6 +259,22 @@ public enum DocstringAdvisor {
     ///
     /// `wrap` is deliberately absent. It would match `"Convenience wrapper"`, which an existing
     /// negative test requires this gate to reject.
+    ///
+    /// ## `ranked` and `ranks`, and why not `ranking` or bare `rank`
+    ///
+    /// The ordering cues said `sorted` / `sorts` / `orders` and never `ranked`, so *"Candidates
+    /// that would change code, ranked by impact (files, then findings)"* — an ordering law stated
+    /// down to its tie-break — drew no advisory while its sibling *"Sorted by name"* did
+    /// (SwiftInferProperties#647). Measured over 56 323 documented declarations in 47 local
+    /// repositories (22 051 admitted today), `ranked` / `ranks` newly admit **11**: 8 state an
+    /// ordering, 2 mention ranking in passing beside another checkable claim, and 1 is admitted on
+    /// a DocC symbol link the code-span strip does not remove. None is narration.
+    ///
+    /// The other spellings are where narration lives. `ranking` adds one doc and it is narration —
+    /// *"for post-search re-ranking"* — and this repo's own narration fixture is *"A convenience
+    /// helper used by the ranking loop"*: the participle as an adjective. Bare `rank` adds 3 and
+    /// none is an ordering — *"The rank of this dashboard"*, *"The FTS5 rank column"*, *"summed in
+    /// rank order"*: the noun, naming a field.
     private static let contractCues: [String] = [
         // Result verbs — the doc says what the function DOES to produce its value.
         "returns", "return the", "return a", "computes", "produces", "yields",
@@ -268,7 +284,7 @@ public enum DocstringAdvisor {
         "never", "always", "every", "each", "at most", "at least", "no more than",
         "no fewer", "no less", "exactly", "non-negative", "nonnegative", "no larger",
         "no smaller", "nearest", "ties", "ascending", "descending", "in order",
-        "sorted", "unique", "no duplicates", "non-empty", "nonempty", "contains no",
+        "sorted", "ranked", "ranks", "unique", "no duplicates", "non-empty", "nonempty", "contains no",
         "monotonic", "idempotent",
         // Relational guarantees — the value equals / matches / inverts something.
         "inverse", "round-trip", "round trip", "roundtrip", "preserves", "the same",
