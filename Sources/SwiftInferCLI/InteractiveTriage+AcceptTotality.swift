@@ -46,9 +46,6 @@ extension InteractiveTriage {
         case "caseiterable-key-injectivity":
             return caseKeyInjectivityStub(for: suggestion)
 
-        case "emptiness-agreement":
-            return emptinessAgreementStub(for: suggestion, customGenerator: customGenerator)
-
         case "comparator":
             return comparatorStub(for: suggestion, customGenerator: customGenerator)
 
@@ -63,6 +60,37 @@ extension InteractiveTriage {
         // `InteractiveTriage+AcceptStateMachine.swift`.
         case "state-machine":
             return stateMachineScaffold(for: suggestion)
+
+        default:
+            return valueLawStub(
+                for: suggestion, customGenerator: customGenerator, receiverExpression: receiverExpression
+            )
+        }
+    }
+
+    /// The laws over one value's members or one result — `emptiness-agreement`, `documented-range`,
+    /// `empty-range` — dispatched apart so `entailedTemplateStub` stays within its complexity budget.
+    static func valueLawStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)?,
+        receiverExpression: ((String) -> String?)?
+    ) -> String? {
+        switch suggestion.templateName {
+        case "emptiness-agreement":
+            return emptinessAgreementStub(for: suggestion, customGenerator: customGenerator)
+
+        // Same call as totality, checked against the range the doc comment states.
+        case "documented-range":
+            guard let range = suggestion.match?.documentedRangeMatch else { return nil }
+            return totalityStub(
+                for: suggestion,
+                customGenerator: customGenerator,
+                receiverExpression: receiverExpression,
+                law: .withinRange(range)
+            )
+
+        case "empty-range":
+            return emptyRangeStub(for: suggestion, customGenerator: customGenerator)
 
         default:
             return nil
@@ -134,7 +162,7 @@ extension InteractiveTriage {
     /// What an arity-free call is checked for. Totality discards the result; non-negativity is a
     /// predicate on it. Everything before the last line — which arguments, which receiver, which
     /// generators — is the same decision for both, which is why they share one arm.
-    enum ArityFreeLaw { case totality, nonNegative }
+    enum ArityFreeLaw: Equatable { case totality, nonNegative, withinRange(DocumentedRange) }
 
     private static func totalityStub(
         for suggestion: Suggestion,
@@ -169,6 +197,17 @@ extension InteractiveTriage {
                 generators: generators,
                 argumentTypes: argumentTypes,
                 failureLabel: "\(parsed.displaySignature) returned a negative measure"
+            )
+        }
+        if case .withinRange(let range) = law {
+            return LiftedTestEmitter.withinDocumentedRange(
+                callee: callee,
+                range: range,
+                seed: seed,
+                generators: generators,
+                argumentTypes: argumentTypes,
+                failureLabel: "\(parsed.displaySignature) left its documented range "
+                    + "\(range.lower)...\(range.upper)"
             )
         }
         return LiftedTestEmitter.total(
