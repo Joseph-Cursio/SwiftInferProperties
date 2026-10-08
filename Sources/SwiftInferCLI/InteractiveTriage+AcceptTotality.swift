@@ -46,6 +46,9 @@ extension InteractiveTriage {
         case "caseiterable-key-injectivity":
             return caseKeyInjectivityStub(for: suggestion)
 
+        case "emptiness-agreement":
+            return emptinessAgreementStub(for: suggestion, customGenerator: customGenerator)
+
         case "comparator":
             return comparatorStub(for: suggestion, customGenerator: customGenerator)
 
@@ -64,6 +67,31 @@ extension InteractiveTriage {
         default:
             return nil
         }
+    }
+
+    /// A predicate and a count on one type agree — `EmptinessAgreementTemplate`. The two evidence
+    /// rows are the members, the carrier is the type they are declared on, and the polarity is read
+    /// back from the predicate's name, as the pairing read it.
+    static func emptinessAgreementStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)?
+    ) -> String? {
+        guard suggestion.evidence.count == 2,
+              let predicate = CalleeReference(evidence: suggestion.evidence[0]),
+              let measure = CalleeReference(evidence: suggestion.evidence[1]),
+              let typeName = suggestion.evidence[0].qualifiedTypeName,
+              let positive = EmptinessAgreementPairing.polarity(
+                  predicate: predicate.bareName, measure: measure.bareName
+              ) else {
+            return nil
+        }
+        return LiftedTestEmitter.emptinessAgreement(
+            predicate: predicate,
+            measure: measure,
+            holdsWhenPositive: positive,
+            carrier: (typeName, chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)),
+            seed: SamplingSeed.derive(from: suggestion.identity)
+        )
     }
 
     /// Key injectivity over a `CaseIterable` enum: an exhaustive loop over `allCases` (#474).
