@@ -378,13 +378,10 @@ extension FunctionScannerVisitor {
 
     /// Whether this **function declaration** carries `nonisolated`, in any of its spellings.
     ///
-    /// **Named `declaresNonisolated` and not `isNonisolated`, deliberately.**
-    /// `DeferralFalsifierTests` resolves a deferral's falsifier by last dotted component, so a
-    /// symbol named `isNonisolated` anywhere in `Sources/` resolves the standing falsifier
-    /// `IndexedTypeShape.isNonisolated` — and that deferral is about isolation modifiers on a
-    /// **type**, which this repo still does not record. Sharing the leaf name would report a
-    /// true claim as stale, which is the false alarm that suite's own header accepts as the
-    /// price of matching wide.
+    /// **Named `declaresNonisolated` and not `isNonisolated`**, because when it was written the
+    /// falsifier `IndexedTypeShape.isNonisolated` stood for a deferral about isolation on a
+    /// **type**, and sharing the leaf name would have reported that true claim as stale. The
+    /// deferral resolved on 2026-10-08 with `TypeDecl.isNonisolated`, which does record a type's.
     ///
     /// The name is also simply more accurate: this reads a modifier list, it does not describe
     /// a thing that *is* nonisolated.

@@ -193,6 +193,22 @@ public struct TypeDecl: Sendable, Equatable {
     /// text says so. Empty for every record built without a scan.
     public let attributeNames: [String]
 
+    /// Whether the declaration itself is written `nonisolated` — `nonisolated struct Plan` — so its
+    /// members, initializers included, escape a `.defaultIsolation(MainActor.self)` target.
+    ///
+    /// **This resolved a standing deferral** — the one `IndexedTypeShape.isNonisolated` named, in
+    /// `TargetIsolation` and `docs/measurements/nonisolated-type-declined.md`: the scanner used to
+    /// read isolation modifiers on functions only. It is recorded here, on the scanner's own
+    /// record, rather than on `IndexedTypeShape`, which mirrors the kit's `TypeShape` field for
+    /// field. `IsolatedConstructionGate` is its first reader; the isolation passes and the kit-suite
+    /// gate still over-approximate, as their docs say.
+    public let isNonisolated: Bool
+
+    /// Whether any initializer in this declaration's own body is written `nonisolated` —
+    /// `RuleConfiguration`'s `nonisolated public init(…)` in SwiftLintRuleStudio, which a generator
+    /// may call from a MainActor-default target although the type itself is isolated.
+    public let declaresNonisolatedInitializer: Bool
+
     /// One generic parameter and the constraint written on it, if any.
     public struct GenericParameter: Sendable, Equatable {
         public let name: String
@@ -222,7 +238,9 @@ public struct TypeDecl: Sendable, Equatable {
         genericParameters: [GenericParameter] = [],
         isConditionalExtension: Bool = false,
         isVisibleToTestableImport: Bool = true,
-        attributeNames: [String] = []
+        attributeNames: [String] = [],
+        isNonisolated: Bool = false,
+        declaresNonisolatedInitializer: Bool = false
     ) {
         // Defaulted to `name` so the many hand-built test fixtures — and any
         // caller that has no enclosing-type context — keep working unchanged.
@@ -231,6 +249,8 @@ public struct TypeDecl: Sendable, Equatable {
         self.genericParameters = genericParameters
         self.isConditionalExtension = isConditionalExtension
         self.attributeNames = attributeNames
+        self.isNonisolated = isNonisolated
+        self.declaresNonisolatedInitializer = declaresNonisolatedInitializer
         self.kind = kind
         self.inheritedTypes = inheritedTypes
         self.location = location
@@ -263,7 +283,9 @@ public struct TypeDecl: Sendable, Equatable {
             genericParameters: genericParameters,
             isConditionalExtension: isConditionalExtension,
             isVisibleToTestableImport: isVisibleToTestableImport,
-            attributeNames: attributeNames
+            attributeNames: attributeNames,
+            isNonisolated: isNonisolated,
+            declaresNonisolatedInitializer: declaresNonisolatedInitializer
         )
     }
 }

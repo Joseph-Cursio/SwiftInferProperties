@@ -92,7 +92,11 @@ extension FunctionScannerVisitor {
             // so only `.notVisibleToTests` answers no.
             isVisibleToTestableImport: modifiers
                 .map { Self.access(of: $0) != .notVisibleToTests } ?? true,
-            attributeNames: Self.attributeNames(in: attributes)
+            attributeNames: Self.attributeNames(in: attributes),
+            isNonisolated: modifiers.map(Self.declaresNonisolated) ?? false,
+            declaresNonisolatedInitializer: memberBlock.members.contains { member in
+                member.decl.as(InitializerDeclSyntax.self).map { Self.declaresNonisolated($0.modifiers) } ?? false
+            }
         )
     }
 

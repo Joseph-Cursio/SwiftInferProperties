@@ -60,7 +60,7 @@ Nothing reached `Verified`.
 > **Two honest limits.** The gate is a sound **over-approximation** — a type declared
 > `nonisolated` escapes default isolation and would compile, and the scanner records no
 > isolation modifiers, so it is blocked anyway (0 of 43 public value types on this subject, so
-> the cost is nil here; falsifier: `IndexedTypeShape.isNonisolated`). And because it runs
+> the cost is nil here; the deferral this named is **resolved 2026-10-08**: the scanner records it as `TypeDecl.isNonisolated` (not on `IndexedTypeShape`, which mirrors the kit), and `IsolatedConstructionGate` is its first reader — this gate does not read it yet). And because it runs
 > first, the per-carrier gaps behind it are not reported while it fires — the reason says so
 > and tells the reader to re-run.
 >

@@ -107,7 +107,26 @@ extension SwiftInferCommand.Discover {
     /// The laws a seed earns when no template spoke to it: determinism for a function, and —
     /// since a seeded mutator returns nothing and the determinism floor refuses it — the laws over
     /// what a mutator leaves behind.
+    ///
+    /// **Isolated as the pipeline's own rows are.** These laws are built here, after
+    /// `makePipelineResult` ran its isolation passes, from each summary's `inferenceEvidence` —
+    /// which carries only the declaration's own attribute. So in a `.defaultIsolation(MainActor)`
+    /// target every one of them called its subject with no hop, while the template rows for the
+    /// same functions had one: SwiftLintRuleStudio's `detectMigrations` determinism stub and its
+    /// `applyMigration` mutator stubs failed with *main actor-isolated instance method cannot be
+    /// called from outside of the actor* (#482's gap, for the laws #482's pass never saw).
     static func seededFloorLaws(
+        for manifest: SeedManifest,
+        pipeline: PipelineResult,
+        covered: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        withTargetDefaultIsolation(synthesizedFloorLaws(
+            for: manifest, pipeline: pipeline, covered: covered, diagnostics: diagnostics
+        ))
+    }
+
+    private static func synthesizedFloorLaws(
         for manifest: SeedManifest,
         pipeline: PipelineResult,
         covered: [Suggestion],

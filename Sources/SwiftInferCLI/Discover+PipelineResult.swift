@@ -107,6 +107,11 @@ extension SwiftInferCommand.Discover {
         /// mention, since naming any other breaks the whole test target (`SendableShim`).
         public let testVisibleTypeNames: Set<String>
 
+        /// What `IsolatedConstructionGate` needs per scanned type: where it is declared and whether
+        /// it, or one of its initializers, opts out of isolation. Set after construction by the
+        /// discover path; empty for every other caller, which disables the gate.
+        var isolatedConstructionFacts: [String: IsolatedConstructionGate.Fact] = [:]
+
         /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
         public let typeAliases: [String: String]
 

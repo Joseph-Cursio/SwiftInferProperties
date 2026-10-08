@@ -52,6 +52,7 @@ extension InteractiveTriage {
             reportNoStub(for: writable, context: context)
             return nil
         }
+        if withdrawsIsolatedConstruction(stub, context: context) { return nil }
         let path = stubDestination(for: suggestion, context: context)
         let fileName = path.lastPathComponent
         if context.dryRun {
@@ -74,6 +75,20 @@ extension InteractiveTriage {
         context.output.write("Wrote \(path.path)")
         try writeSendableShims(for: drawn.typeNames, context: context)
         return path
+    }
+
+    /// Whether `stub` is withdrawn by `IsolatedConstructionGate`, saying why when it is.
+    ///
+    /// Read from the stub rather than the suggestion, unlike the gates before the emitter: which
+    /// initializer a generator calls is only known once the generator has been derived.
+    static func withdrawsIsolatedConstruction(_ stub: String, context: Context) -> Bool {
+        guard let reason = IsolatedConstructionGate.declineReason(
+            stub: stub, facts: context.isolatedConstructionFacts
+        ) else { return false }
+        context.diagnostics.writeDiagnostic(
+            "note: no stub written — \(reason); decision recorded without writing a file"
+        )
+        return true
     }
 
     /// The stub for `suggestion` with its receiver held where it is configuration

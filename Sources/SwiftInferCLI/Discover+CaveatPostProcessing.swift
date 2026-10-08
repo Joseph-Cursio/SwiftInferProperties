@@ -276,9 +276,10 @@ extension SwiftInferCommand.Discover {
     /// scanner was computing the keyword and discarding it.
     ///
     /// ⚠ **Function-level only, and that is an over-approximation.** A `nonisolated` TYPE in a
-    /// MainActor-default target still has its members isolated here, because the scanner records
-    /// isolation modifiers on functions and not on type declarations — the gap `TargetIsolation`
-    /// already records as its own remaining limit (falsifier: `IndexedTypeShape.isNonisolated`).
+    /// MainActor-default target still has its members isolated here, because this pass reads
+    /// isolation modifiers on functions only. The scanner now records a type's
+    /// (`TypeDecl.isNonisolated`), and `docs/measurements/nonisolated-type-declined.md` is why this
+    /// pass does not use it: on the four packages measured, no such member carried a refutable law.
     /// The direction is the same one that type chose: a hop that was not needed compiles, while a
     /// missing hop does not.
     static func withTargetDefaultIsolation(_ suggestions: [Suggestion]) -> [Suggestion] {

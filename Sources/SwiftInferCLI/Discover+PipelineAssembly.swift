@@ -90,7 +90,7 @@ extension SwiftInferCommand.Discover {
         cut: VisibilityCut,
         hints: HintsAndShapes
     ) -> PipelineResult {
-        PipelineResult(
+        var result = PipelineResult(
             suggestions: withAccessRestrictionCaveats(
                 withTargetDefaultIsolation(
                     withInheritedIsolation(
@@ -125,5 +125,7 @@ extension SwiftInferCommand.Discover {
             docstringAdvice: setup.docstringAdvice,
             coverage: cut.coverage
         )
+        result.isolatedConstructionFacts = IsolatedConstructionGate.facts(from: artifacts.typeDecls)
+        return result
     }
 }
