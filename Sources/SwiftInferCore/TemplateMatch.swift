@@ -57,6 +57,9 @@ public enum TemplateMatch: Sendable, Equatable {
     /// `rewrite-postcondition` — the tokens a string-rewriting body removes. See `RewritePostcondition`.
     case rewritePostcondition(RewritePostcondition)
 
+    /// `documented-range` — the closed range the doc comment says the result lies in.
+    case documentedRange(DocumentedRange)
+
     /// The `GuardDomain` this match carries, or `nil` for any other template.
     ///
     /// Present so a writer reads one accessor rather than spelling a `switch` with three
@@ -70,6 +73,25 @@ public enum TemplateMatch: Sendable, Equatable {
     public var rewritePostconditionMatch: RewritePostcondition? {
         guard case .rewritePostcondition(let postcondition) = self else { return nil }
         return postcondition
+    }
+
+    /// The `DocumentedRange` this match carries, or `nil` for any other template.
+    public var documentedRangeMatch: DocumentedRange? {
+        guard case .documentedRange(let range) = self else { return nil }
+        return range
+    }
+}
+
+/// `documented-range`'s match: the bounds a doc comment states, as numeric literals a writer can
+/// splice — `0.0` and `1.0` from "Fraction of files processed (0.0 to 1.0)". Nothing in the
+/// signature carries them, so without the payload a writer would re-read prose it cannot see.
+public struct DocumentedRange: Sendable, Equatable {
+    public let lower: String
+    public let upper: String
+
+    public init(lower: String, upper: String) {
+        self.lower = lower
+        self.upper = upper
     }
 }
 
