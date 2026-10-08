@@ -73,8 +73,16 @@ extension InteractiveTriage {
         )
         try Data(contents.utf8).write(to: path, options: .atomic)
         context.output.write("Wrote \(path.path)")
+        noteKitFloor(for: stub, context: context)
         try writeSendableShims(for: drawn.typeNames, context: context)
         return path
+    }
+
+    /// Says so when `stub` calls a kit API newer than the package resolves — see `KitAPIFloor`.
+    static func noteKitFloor(for stub: String, context: Context) {
+        let resolved = context.packageRoot.flatMap(KitAPIFloor.resolvedVersion(packageRoot:))
+        guard let note = KitAPIFloor.note(stub: stub, resolved: resolved) else { return }
+        context.diagnostics.writeDiagnostic("note: \(note)")
     }
 
     /// Whether `stub` is withdrawn by `IsolatedConstructionGate`, saying why when it is.
