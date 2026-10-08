@@ -24,4 +24,26 @@ extension InteractiveTriage {
             seed: SamplingSeed.derive(from: suggestion.identity)
         )
     }
+
+    /// A keyword table dispatches each marker to its row's case — `MarkerDispatchTemplate`. The
+    /// template admits only a chain callable without a receiver, so the callee is the evidence row
+    /// as written; a front's lookup is spelled on the same qualifier, with the same isolation.
+    static func markerDispatchStub(for suggestion: Suggestion) -> String? {
+        guard let match = suggestion.match?.markerDispatchMatch,
+              let evidence = suggestion.evidence.first,
+              let callee = CalleeReference(evidence: evidence),
+              !callee.isInstanceMethod,
+              callee.isolation != CalleeReference.actorReceiverIsolation else {
+            return nil
+        }
+        let front = match.front.map {
+            CalleeReference(
+                bareName: $0.primaryName,
+                qualifier: callee.qualifier,
+                argumentLabels: [$0.primaryLabel],
+                isolation: callee.isolation
+            )
+        }
+        return LiftedTestEmitter.markerDispatch(callee: callee, match: match, front: front)
+    }
 }

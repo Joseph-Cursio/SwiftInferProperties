@@ -63,6 +63,9 @@ public enum TemplateMatch: Sendable, Equatable {
     /// `sorted-output` — the keys the returned array is sorted by, and the member that holds it.
     case sortedOutput(SortedOutput)
 
+    /// `marker-dispatch` — the keyword table, and the lookup a test must step around to reach it.
+    case markerDispatch(MarkerDispatchMatch)
+
     /// The `GuardDomain` this match carries, or `nil` for any other template.
     ///
     /// Present so a writer reads one accessor rather than spelling a `switch` with three
@@ -87,6 +90,11 @@ public enum TemplateMatch: Sendable, Equatable {
     public var sortedOutputMatch: SortedOutput? {
         guard case .sortedOutput(let ordering) = self else { return nil }
         return ordering
+    }
+
+    public var markerDispatchMatch: MarkerDispatchMatch? {
+        guard case .markerDispatch(let match) = self else { return nil }
+        return match
     }
 }
 
@@ -199,5 +207,21 @@ public struct PartitionMatch: Sendable, Equatable {
         self.tilerForm = tilerForm
         self.indexParameterName = indexParameterName
         self.progressName = progressName
+    }
+}
+
+/// `marker-dispatch`'s match: the table, and — when the chain is reached through a
+/// `primary(for:) ?? chain(for:)` front — the lookup whose hits the test must skip.
+public struct MarkerDispatchMatch: Sendable, Equatable {
+    public let dispatch: MarkerDispatch
+    public let front: FallbackDelegation?
+    /// The declared result type, which the stub's `(name, expected)` table is typed with so a
+    /// leading-dot case resolves.
+    public let resultType: String
+
+    public init(dispatch: MarkerDispatch, front: FallbackDelegation?, resultType: String) {
+        self.dispatch = dispatch
+        self.front = front
+        self.resultType = resultType
     }
 }

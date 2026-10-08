@@ -101,6 +101,7 @@ public enum Refutability {
         "guard-domain",
         "rewrite-postcondition", // the tokens the body removes; see `RewritePostcondition`
         "sorted-output",     // the comparator the body sorts with, restated; see `SortedOutput`
+        "marker-dispatch",   // the keyword table the body dispatches on, restated; see `MarkerDispatch`
         "filter-subset",     // result ⊆ the collection it selects from
         "selection-subset",  // result ⊆ container.<collection>
         "diff-disjointness", // added ∩ removed = ∅
@@ -166,7 +167,9 @@ public enum Refutability {
         "rewrite-postcondition",
         // The law IS the comparator the body sorts with. See `SortedOutput` — and note its one
         // exception: a comparator that is not a strict weak ordering can fail it today.
-        "sorted-output"
+        "sorted-output",
+        // The law IS the keyword table the body dispatches on. See `MarkerDispatch`.
+        "marker-dispatch"
     ]
 
     /// Whether a pass tells the reader nothing about today's behaviour, because the law was read

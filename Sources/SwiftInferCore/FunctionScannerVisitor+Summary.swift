@@ -296,6 +296,8 @@ extension FunctionScannerVisitor {
             guardDomain: GuardDomainReader.read(node),
             rewritePostcondition: RewritePostconditionReader.read(node),
             sortedOutput: SortedOutputReader.read(node),
+            markerDispatch: MarkerDispatchReader.read(node),
+            fallbackDelegation: MarkerDispatchReader.readDelegation(node),
             hasNonDeterministicCall: !scanner.detectedAPIs.isEmpty,
             hasSelfComposition: scanner.foundSelfComposition,
             nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),

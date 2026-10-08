@@ -69,8 +69,8 @@ extension InteractiveTriage {
     }
 
     /// The laws over one value's members or one result — `emptiness-agreement`, `documented-range`,
-    /// `empty-range`, `sorted-output` — dispatched apart so `entailedTemplateStub` stays within its
-    /// complexity budget.
+    /// `empty-range`, `sorted-output`, `marker-dispatch` — dispatched apart so `entailedTemplateStub`
+    /// stays within its complexity budget.
     static func valueLawStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)?,
@@ -102,6 +102,9 @@ extension InteractiveTriage {
                 receiverExpression: receiverExpression,
                 law: .sortedBy(ordering)
             )
+
+        case "marker-dispatch":
+            return markerDispatchStub(for: suggestion)
 
         default:
             return nil
