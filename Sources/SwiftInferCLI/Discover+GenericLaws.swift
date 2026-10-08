@@ -46,6 +46,7 @@ extension SwiftInferCommand.Discover {
         let restrictionByCoordinate = Dictionary(
             restrictedFunctions.map { (coordinate(of: $0.summary.location), $0.restriction) }
         ) { first, _ in first }
+        let requirements = seedRequirements(in: manifest)
         var synthesized: [Suggestion] = []
         var seen: Set<String> = []
         for summary in summaries {
@@ -54,7 +55,9 @@ extension SwiftInferCommand.Discover {
             guard qualifiesForDeterminism(summary) else { continue }
             seen.insert(key)
             let restriction = restrictionByCoordinate[coordinate(of: summary.location)]
-            synthesized.append(determinismSuggestion(for: summary, accessRestriction: restriction))
+            synthesized.append(determinismSuggestion(
+                for: summary, accessRestriction: restriction, requirement: requirements[key]
+            ))
         }
 
         // A seed naming a function the scan set aside is an explicit request from a producer that
@@ -73,9 +76,9 @@ extension SwiftInferCommand.Discover {
             guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
             guard qualifiesForDeterminism(summary) else { continue }
             seen.insert(key)
-            synthesized.append(
-                determinismSuggestion(for: summary, accessRestriction: restricted.restriction)
-            )
+            synthesized.append(determinismSuggestion(
+                for: summary, accessRestriction: restricted.restriction, requirement: requirements[key]
+            ))
             diagnostics.writeDiagnostic(
                 "note: seeded function `\(summary.name)` "
                     + "(\(summary.location)) is not reachable from a "
@@ -150,7 +153,8 @@ extension SwiftInferCommand.Discover {
     /// caveat leads with the remedy rather than leaving them to discover it at verify time.
     private static func determinismSuggestion(
         for summary: FunctionSummary,
-        accessRestriction: AccessRestriction? = nil
+        accessRestriction: AccessRestriction? = nil,
+        requirement: SeedRequirement? = nil
     ) -> Suggestion {
         let evidence = makeEvidence(for: summary)
         let signal = summary.isAsync
@@ -166,6 +170,10 @@ extension SwiftInferCommand.Discover {
                 detail: "Lint-seeded pure function — a pure function is deterministic: f(x) == f(x)"
             )
         let resultShape = TupleResultShape(signature: evidence.signature)
+        // A seed that names the conformance it is waiting on says it better than the generic
+        // sentence: which types, and that the compiler will synthesize them. A tuple result is
+        // never remedied by the producer, so the tuple sentences are never the ones replaced.
+        let resultCaveat = requirement?.caveat ?? equatableCaveat(for: resultShape, isThrows: summary.isThrows)
         let whyMightBeWrong = [
             summary.isAsync
                 ? "Holds only if time is genuinely injected — a wall-clock read, Task.sleep "
@@ -173,7 +181,7 @@ extension SwiftInferCommand.Discover {
                     + "falsify the @ClockDeterministic claim, which is exactly what the test catches."
                 : "Holds only if the function is genuinely pure — a hidden global read or "
                     + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
-            equatableCaveat(for: resultShape, isThrows: summary.isThrows)
+            resultCaveat
         ]
         let throwsCaveat = summary.isThrows && resultShape.involvesTuple == false ? [Self.tryOnBothSidesCaveat] : []
         // Same opening as `withAccessRestrictionCaveats`, verbatim and deliberately: a reader
@@ -249,7 +257,7 @@ extension SwiftInferCommand.Discover {
     /// caveat text — so a `private` member's determinism stub failed to compile with no
     /// explanation, the defect #428 fixed for every template row (#465). Weight 0, as there: the
     /// tier is unchanged, because the remedy is to lift or widen and demoting would hide it.
-    private static func accessBlockerSignals(for restriction: AccessRestriction?) -> [Signal] {
+    static func accessBlockerSignals(for restriction: AccessRestriction?) -> [Signal] {
         guard let restriction, blocksEveryTest(restriction) else { return [] }
         let detail = "no test can name the subject: \(restriction.remedy)"
         return [Signal(kind: .subjectNotVisibleToTests, weight: 0, detail: detail)]
@@ -267,9 +275,19 @@ extension SwiftInferCommand.Discover {
         summary.inferenceEvidence
     }
 
-    private static func canonicalInput(for summary: FunctionSummary, evidence: Evidence) -> String {
+    static func canonicalInput(for summary: FunctionSummary, evidence: Evidence) -> String {
         let owner = summary.containingTypeName.map { "\($0)." } ?? ""
         return "\(owner)\(evidence.displayName)|\(evidence.signature)"
+    }
+
+    /// What each seed is still waiting on, by join key — the producer's `requires`, for the caveat
+    /// a synthesized law leads with. See `SeedRequirement`.
+    static func seedRequirements(in manifest: SeedManifest) -> [String: SeedRequirement] {
+        Dictionary(
+            manifest.seeds.compactMap { seed in
+                seed.requires.map { (genericLawKey(file: seed.file, symbol: seed.symbol), $0) }
+            }
+        ) { first, _ in first }
     }
 
     /// The bare function name from an evidence display name: `add(_:_:)` → `add`.

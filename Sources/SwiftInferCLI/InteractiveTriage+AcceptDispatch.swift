@@ -43,6 +43,10 @@ extension InteractiveTriage {
         if suggestion.templateName == "determinism" {
             return deterministicStub(for: suggestion, customGenerator: customGenerator)
         }
+        // The mutator laws are seed-driven too, and dispatch beside it.
+        if suggestion.templateName.hasPrefix("mutator-") {
+            return mutatorStub(for: suggestion, customGenerator: customGenerator)
+        }
         return templateStub(
             for: suggestion,
             customGenerator: customGenerator,

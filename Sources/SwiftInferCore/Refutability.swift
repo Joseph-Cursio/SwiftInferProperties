@@ -38,7 +38,10 @@ public enum Refutability {
     /// here. If you *can*, ask why the template exists at all.
     public static let tautologicalTemplates: Set<String> = [
         // f(x) == f(x). No implementation, however wrong, fails this.
-        "determinism"
+        "determinism",
+        // The same law over what a pure mutator leaves behind: two copies given the same inputs end
+        // equal. Synthesized beside it for a `pure-mutator` seed, and just as unable to fail.
+        "mutator-determinism"
     ]
 
     /// Whether this suggestion's law could ever fail against a wrong implementation.

@@ -3,11 +3,12 @@
 `seeds.json` is **real producer output**, not a hand-written sample.
 
 - Produced by: `swiftprojectlint <this repo>/Sources --format pbt-seeds`
-- Subject: `SwiftProjectLint@db4be6b` (release build), 2026-08-06 — regenerated the
-  same day for `anchor`, see below
-- Reduced from 2,108 seeds to **one per distinct shape** — the nine combinations of
-  `(kind, restriction, has-role, has-effect)` that run produced. Between them the nine
-  cover all eight fields the producer emits.
+- Subject: `SwiftProjectLint@6c145b34` (release build, branch `pure-mutator-seeds`), 2026-10-08 —
+  regenerated for `requires` and `mutates`, and the `pure-mutator` kind. Earlier captures:
+  `db4be6b` (2026-08-06, regenerated the same day for `anchor`, see below)
+- Reduced from 2,906 seeds to **one per distinct shape** — the sixteen combinations of
+  `(kind, restriction, has-role, has-effect, has-requires, has-mutates)` that run produced.
+  Between them the sixteen cover all ten fields the producer emits.
 
 ## What it is for
 

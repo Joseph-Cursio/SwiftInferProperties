@@ -31,7 +31,9 @@ public enum SeedFocus {
     /// The manifest holds what the linter's *pure-function* rule found. A state machine's moves are
     /// `Void`-returning **impure** mutators — `navigateToFolder(_:)`, `navigateUp()` — which that rule
     /// will never seed and never could. Join a state-machine suggestion against a pure-function
-    /// manifest and it misses, every time, by construction.
+    /// manifest and it misses, every time, by construction. (The producer now seeds **pure**
+    /// mutators too, as `pure-mutator` — a move that reads or writes anything but its one value is
+    /// still impure, and still never seeded, so this holds.)
     ///
     /// **Left unguarded, that is A1's disease in a new organ.** On the road-test fixture, discovery
     /// found exactly one suggestion that could ever fail — the state-machine law — and the focus threw
