@@ -6,6 +6,15 @@ extension InteractiveTriage {
     /// it CAN fail today: the general wording describes `guard-domain`, and "cannot fail" is false
     /// of a comparator that is not a strict weak ordering.
     static func characterisationHeader(templateName: String) -> String {
+        if templateName == "marker-dispatch" {
+            return """
+            // Law class: CHARACTERISATION — this law is the keyword table the subject dispatches
+            //            on, read out of its own body, so a pass says little about today's
+            //            behaviour. It catches an EDIT: a `||` turned `&&`, a marker dropped or
+            //            misspelled, two rows reordered. Each marker is checked alone.
+
+            """
+        }
         if templateName == "sorted-output" {
             return """
             // Law class: CHARACTERISATION — this law is the comparator the subject sorts with, read

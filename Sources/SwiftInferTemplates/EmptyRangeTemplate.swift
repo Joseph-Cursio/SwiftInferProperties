@@ -103,8 +103,8 @@ public enum EmptyRangeTemplate {
 extension TemplateRegistry {
 
     /// The laws over one value's members or one result: emptiness agreement, the two range laws,
-    /// and the order of a sorted result. One call from `TemplateRegistry+Collection`, whose
-    /// collecting function is at its length cap.
+    /// the order of a sorted result, and a keyword table's dispatch. One call from
+    /// `TemplateRegistry+Collection`, whose collecting function is at its length cap.
     static func collectValueLawSuggestions(
         summaries: [FunctionSummary],
         into collector: inout SuggestionCollector
@@ -112,6 +112,7 @@ extension TemplateRegistry {
         collectEmptinessAgreementSuggestions(summaries: summaries, into: &collector)
         collectRangeLawSuggestions(summaries: summaries, into: &collector)
         collectSortedOutputSuggestions(summaries: summaries, into: &collector)
+        collectMarkerDispatchSuggestions(summaries: summaries, into: &collector)
     }
 
     /// The two range laws — `EmptyRangeTemplate` and `DocumentedRangeTemplate`. Lives here rather

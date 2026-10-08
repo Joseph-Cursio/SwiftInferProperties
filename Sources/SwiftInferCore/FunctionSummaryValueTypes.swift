@@ -132,6 +132,12 @@ public struct BodySignals: Sendable, Equatable {
     /// `SortedOutput`.
     public let sortedOutput: SortedOutput?
 
+    /// The keyword table the body dispatches on, or `nil`. See `MarkerDispatch`.
+    public let markerDispatch: MarkerDispatch?
+
+    /// `primary(for: x) ?? fallback(for: x)`, or `nil`. See `FallbackDelegation`.
+    public let fallbackDelegation: FallbackDelegation?
+
     /// `true` when the body invokes any API in the curated
     /// non-deterministic list (PRD §4.1's -∞ counter-signal). Drives
     /// the structural disqualifier for idempotence and most algebraic
@@ -208,6 +214,8 @@ public struct BodySignals: Sendable, Equatable {
         guardDomain: GuardDomain? = nil,
         rewritePostcondition: RewritePostcondition? = nil,
         sortedOutput: SortedOutput? = nil,
+        markerDispatch: MarkerDispatch? = nil,
+        fallbackDelegation: FallbackDelegation? = nil,
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
         nonDeterministicAPIsDetected: [String],
@@ -222,6 +230,8 @@ public struct BodySignals: Sendable, Equatable {
         self.guardDomain = guardDomain
         self.rewritePostcondition = rewritePostcondition
         self.sortedOutput = sortedOutput
+        self.markerDispatch = markerDispatch
+        self.fallbackDelegation = fallbackDelegation
         self.equalityBodyShape = equalityBodyShape
         self.idempotenceReturnShape = idempotenceReturnShape
         self.dedupGateShape = dedupGateShape
