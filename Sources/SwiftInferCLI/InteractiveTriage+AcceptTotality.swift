@@ -69,7 +69,8 @@ extension InteractiveTriage {
     }
 
     /// The laws over one value's members or one result — `emptiness-agreement`, `documented-range`,
-    /// `empty-range` — dispatched apart so `entailedTemplateStub` stays within its complexity budget.
+    /// `empty-range`, `sorted-output` — dispatched apart so `entailedTemplateStub` stays within its
+    /// complexity budget.
     static func valueLawStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)?,
@@ -91,6 +92,16 @@ extension InteractiveTriage {
 
         case "empty-range":
             return emptyRangeStub(for: suggestion, customGenerator: customGenerator)
+
+        // Same call as totality, checked against the comparator the body sorts with.
+        case "sorted-output":
+            guard let ordering = suggestion.match?.sortedOutputMatch else { return nil }
+            return totalityStub(
+                for: suggestion,
+                customGenerator: customGenerator,
+                receiverExpression: receiverExpression,
+                law: .sortedBy(ordering)
+            )
 
         default:
             return nil
@@ -162,7 +173,9 @@ extension InteractiveTriage {
     /// What an arity-free call is checked for. Totality discards the result; non-negativity is a
     /// predicate on it. Everything before the last line — which arguments, which receiver, which
     /// generators — is the same decision for both, which is why they share one arm.
-    enum ArityFreeLaw: Equatable { case totality, nonNegative, withinRange(DocumentedRange) }
+    enum ArityFreeLaw: Equatable {
+        case totality, nonNegative, withinRange(DocumentedRange), sortedBy(SortedOutput)
+    }
 
     private static func totalityStub(
         for suggestion: Suggestion,
@@ -190,25 +203,11 @@ extension InteractiveTriage {
         let generators = argumentTypes.map {
             totalityGenerator(for: $0, customGenerator: customGenerator, subjectLiterals: literals)
         }
-        if law == .nonNegative {
-            return LiftedTestEmitter.nonNegative(
-                callee: callee,
-                seed: seed,
-                generators: generators,
-                argumentTypes: argumentTypes,
-                failureLabel: "\(parsed.displaySignature) returned a negative measure"
-            )
-        }
-        if case .withinRange(let range) = law {
-            return LiftedTestEmitter.withinDocumentedRange(
-                callee: callee,
-                range: range,
-                seed: seed,
-                generators: generators,
-                argumentTypes: argumentTypes,
-                failureLabel: "\(parsed.displaySignature) left its documented range "
-                    + "\(range.lower)...\(range.upper)"
-            )
+        if let stub = resultLawStub(
+            law, callee: callee, label: parsed.displaySignature, seed: seed,
+            draws: (generators, argumentTypes)
+        ) {
+            return stub
         }
         return LiftedTestEmitter.total(
             callee: callee,
@@ -223,6 +222,52 @@ extension InteractiveTriage {
             inoutArguments: Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) }),
             failureLabel: failureLabel
         )
+    }
+
+    /// The laws that check what the call returned — a non-negative measure, a documented range, a
+    /// comparator's order — or `nil` for totality, which checks only that it returned. Split out of
+    /// `totalityStub`, which builds the call all four share.
+    private static func resultLawStub(
+        _ law: ArityFreeLaw,
+        callee: CalleeReference,
+        label: String,
+        seed: SamplingSeed.Value,
+        draws: (generators: [String], argumentTypes: [String])
+    ) -> String? {
+        let (generators, argumentTypes) = draws
+        switch law {
+        case .totality:
+            return nil
+
+        case .nonNegative:
+            return LiftedTestEmitter.nonNegative(
+                callee: callee,
+                seed: seed,
+                generators: generators,
+                argumentTypes: argumentTypes,
+                failureLabel: "\(label) returned a negative measure"
+            )
+
+        case .withinRange(let range):
+            return LiftedTestEmitter.withinDocumentedRange(
+                callee: callee,
+                range: range,
+                seed: seed,
+                generators: generators,
+                argumentTypes: argumentTypes,
+                failureLabel: "\(label) left its documented range \(range.lower)...\(range.upper)"
+            )
+
+        case .sortedBy(let ordering):
+            return LiftedTestEmitter.sortedByKey(
+                callee: callee,
+                ordering: ordering,
+                seed: seed,
+                generators: generators,
+                argumentTypes: argumentTypes,
+                failureLabel: "\(label) returned a result out of its comparator's order"
+            )
+        }
     }
 
     /// The callee with its receiver CONSTRUCTED at the call site, or `nil` to draw one as usual.

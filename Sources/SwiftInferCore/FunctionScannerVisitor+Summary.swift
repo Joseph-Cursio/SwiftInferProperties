@@ -295,6 +295,7 @@ extension FunctionScannerVisitor {
         return BodySignals(
             guardDomain: GuardDomainReader.read(node),
             rewritePostcondition: RewritePostconditionReader.read(node),
+            sortedOutput: SortedOutputReader.read(node),
             hasNonDeterministicCall: !scanner.detectedAPIs.isEmpty,
             hasSelfComposition: scanner.foundSelfComposition,
             nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),

@@ -100,6 +100,7 @@ public enum Refutability {
         // `GuardDomainTemplate` for why it still cannot find a bug that exists today.
         "guard-domain",
         "rewrite-postcondition", // the tokens the body removes; see `RewritePostcondition`
+        "sorted-output",     // the comparator the body sorts with, restated; see `SortedOutput`
         "filter-subset",     // result ⊆ the collection it selects from
         "selection-subset",  // result ⊆ container.<collection>
         "diff-disjointness", // added ∩ removed = ∅
@@ -162,7 +163,10 @@ public enum Refutability {
         "guard-domain",
         // The law IS the rewrite: the tokens the body's own replacements or split remove.
         // See `RewritePostcondition`.
-        "rewrite-postcondition"
+        "rewrite-postcondition",
+        // The law IS the comparator the body sorts with. See `SortedOutput` — and note its one
+        // exception: a comparator that is not a strict weak ordering can fail it today.
+        "sorted-output"
     ]
 
     /// Whether a pass tells the reader nothing about today's behaviour, because the law was read
