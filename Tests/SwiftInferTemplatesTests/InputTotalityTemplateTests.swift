@@ -170,6 +170,8 @@ struct InputTotalityTemplateTests {
         #expect(caveats.contains { $0.contains("THROWING IS NOT A VIOLATION") })
         // A trap kills the process — that is what a trap is, not a broken harness.
         #expect(caveats.contains { $0.contains("CRASHES THE TEST PROCESS") })
+        // A scanner that stops advancing never traps — it times out, and that is a violation too.
+        #expect(caveats.contains { $0.contains("A HANG IS A VIOLATION TOO") })
         // And the generator lesson: realistic input never finds this.
         #expect(caveats.contains { $0.contains("REALISTIC INPUT WILL NEVER FIND THIS") })
     }
