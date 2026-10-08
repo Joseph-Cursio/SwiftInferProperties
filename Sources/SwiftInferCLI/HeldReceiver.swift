@@ -46,8 +46,56 @@ enum HeldReceiver {
         receiverExpression: ((String) -> String?)?,
         customGenerator: ((String) -> String?)?
     ) -> Suggestion {
+        if let held = rewriteSeedLaw(suggestion, receiverExpression: receiverExpression) { return held }
         let spell = spelling(for: suggestion, receiverExpression: receiverExpression, customGenerator: customGenerator)
         return rewrite(suggestion, spelling: spell) ?? suggestion
+    }
+
+    /// The seed-synthesized laws, whose arity is the subject's own rather than the template's.
+    static let seedLawTemplates: Set<String> = ["determinism", "mutator-determinism", "mutator-idempotence"]
+
+    /// A seed-synthesized law over an instance method, held at the receiver the package's own
+    /// tests construct — or `nil`.
+    ///
+    /// **Why these laws, and why only that spelling.** `rewrite` keys on a template's fixed arity,
+    /// and a seed law has none: it applies every argument the subject takes. So a class receiver —
+    /// which memberwise derivation never builds — was drawn through a `.todo` generator, and the
+    /// stub could not compile. SwiftLintRuleStudio's `MigrationAssistant` is the case: a stateless
+    /// service class whose tests write `MigrationAssistant()`, and whose `detectMigrations` and
+    /// `applyMigration` laws drew the receiver from `MigrationAssistant.gen()`, which does not
+    /// exist.
+    ///
+    /// Held, the receiver is an expression inside the property closure, which is also what makes
+    /// it isolation-safe: in a `.defaultIsolation(MainActor)` target the property runs inside the
+    /// hop, where the generator's `sample:` closure cannot (`IsolatedConstructionGate`).
+    ///
+    /// Only the tests' own construction, never a draw of a derived generator: a value-type receiver
+    /// a generator *can* build is an input to these laws (`Rule.isEnabled(…)` ranges over rules),
+    /// and holding it would narrow the law to one value. A `mutating` method's receiver is what it
+    /// changes, and is never held.
+    static func rewriteSeedLaw(
+        _ suggestion: Suggestion,
+        receiverExpression: ((String) -> String?)?
+    ) -> Suggestion? {
+        guard seedLawTemplates.contains(suggestion.templateName),
+              let evidence = suggestion.evidence.first, suggestion.evidence.count == 1,
+              evidence.isInstanceMethod, !evidence.isMutatingMethod, !evidence.isComputedProperty,
+              let receiverType = evidence.qualifiedTypeName,
+              !evidence.signature.contains(" async"),
+              takesNoOperandOfItsOwnType(evidence, receiverType: receiverType),
+              let expression = receiverExpression?(receiverType)
+        else { return nil }
+        var copy = suggestion
+        copy.evidence = [evidence.holdingReceiver(as: expression)]
+        return copy
+    }
+
+    /// Whether none of `evidence`'s parameters is of the receiver's own type — which would make the
+    /// receiver an operand rather than configuration (see the type's doc).
+    static func takesNoOperandOfItsOwnType(_ evidence: Evidence, receiverType: String) -> Bool {
+        let bareReceiver = receiverType.split(separator: ".").last.map(String.init) ?? receiverType
+        let parameters = InteractiveTriage.parameterTypes(from: evidence.signature)
+        return !parameters.contains { $0 == receiverType || $0 == bareReceiver || $0 == "Self" }
     }
 
     /// `suggestion` with each evidence row's receiver held fixed, or `nil` when the subject
@@ -78,9 +126,7 @@ enum HeldReceiver {
               callee.isInstanceMethod, !callee.isComputedProperty,
               callee.applicationArity == arity + 1
         else { return false }
-        let bareReceiver = receiverType.split(separator: ".").last.map(String.init) ?? receiverType
-        let parameters = InteractiveTriage.parameterTypes(from: evidence.signature)
-        return !parameters.contains { $0 == receiverType || $0 == bareReceiver || $0 == "Self" }
+        return takesNoOperandOfItsOwnType(evidence, receiverType: receiverType)
     }
 
     /// `async` or `throws` in the signature's effects position. Every arm this reaches splices a
