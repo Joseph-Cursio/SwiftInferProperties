@@ -46,4 +46,19 @@ extension InteractiveTriage {
         }
         return LiftedTestEmitter.markerDispatch(callee: callee, match: match, front: front)
     }
+
+    /// The structure-first round-trip scaffold — `StructuralRoundTripTemplate`. The parser is the
+    /// evidence row; the type it returns is the suggestion's carrier.
+    static func structuralRoundTripScaffold(for suggestion: Suggestion) -> String? {
+        guard let evidence = suggestion.evidence.first,
+              let parser = CalleeReference(evidence: evidence),
+              let structure = suggestion.carrier else {
+            return nil
+        }
+        return LiftedTestEmitter.structuralRoundTripScaffold(
+            parser: parser,
+            structure: structure,
+            isThrowing: evidence.signature.contains(" throws")
+        )
+    }
 }

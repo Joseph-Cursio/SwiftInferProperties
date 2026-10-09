@@ -69,8 +69,8 @@ extension InteractiveTriage {
     }
 
     /// The laws over one value's members or one result — `emptiness-agreement`, `documented-range`,
-    /// `empty-range`, `sorted-output`, `marker-dispatch` — dispatched apart so `entailedTemplateStub`
-    /// stays within its complexity budget.
+    /// `empty-range`, `sorted-output`, `marker-dispatch`, and the `structural-round-trip` scaffold —
+    /// dispatched apart so `entailedTemplateStub` stays within its complexity budget.
     static func valueLawStub(
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)?,
@@ -105,6 +105,9 @@ extension InteractiveTriage {
 
         case "marker-dispatch":
             return markerDispatchStub(for: suggestion)
+
+        case "structural-round-trip":
+            return structuralRoundTripScaffold(for: suggestion)
 
         default:
             return nil
