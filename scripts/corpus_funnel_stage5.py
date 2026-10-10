@@ -26,6 +26,25 @@ import re
 import subprocess
 import sys
 
+
+def swift_environment(swift):
+    """The repo's toolchain first on PATH, with colored diagnostics OFF.
+
+    ⚠ **Swift 6.4 colors its diagnostics even when stdout is a pipe**: an error prints as
+    `…swift:37:92: \x1b[1;31merror: \x1b[1;39m'…' is inaccessible…`. `_ERROR` then matches no
+    line, `build_to_fixpoint` finds no stub to set aside and reports the package `unattributed`,
+    and the whole package records **compiled 0, passed 0** — a zero that reads exactly like a
+    package that will not build. Measured on SwiftUMLStudio under Xcode 27: `compiled 0` without
+    this, `compiled 40 passed 35` with it (`docs/measurements/roadtest-swiftumlstudio-mutation.md`
+    F1). `NO_COLOR` fixes it at the source, so every regex reading tool output in the funnel —
+    the test-result ones included — sees plain text.
+    """
+    env = dict(os.environ)
+    env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+    env["NO_COLOR"] = "1"
+    return env
+
+
 # Mirrors VerifierWorkdir.swiftPropertyLawsRequirement / swiftPropertyBasedRequirement. Both
 # are declared DIRECTLY, deliberately: resolution must not lean on the kit's own dep graph.
 KIT_DEPENDENCY = ('.package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", '
@@ -284,8 +303,7 @@ def rewrite_manifest(manifest_path, modules, census_target, stubs_relative_path,
 
 def verify_manifest(package_dir, swift):
     """`dump-package` must parse the rewrite. An unparseable manifest fails HERE, loudly."""
-    env = dict(os.environ)
-    env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+    env = swift_environment(swift)
     # ⚠ **Every SwiftPM call gets a timeout.** `capture_output` waits for EOF on the pipe, and
     # SwiftPM spawns helpers that inherit it — so a build whose child has already exited can
     # leave the parent blocked forever with no CPU and no children. The driver sat 25 minutes
@@ -304,8 +322,7 @@ def _swift_files(directory):
 
 
 def _builds(package_dir, swift):
-    env = dict(os.environ)
-    env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+    env = swift_environment(swift)
     try:
         done = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
                               capture_output=True, text=True, env=env, timeout=1800)
@@ -381,8 +398,7 @@ def build_to_fixpoint(package_dir, stubs_dir, swift, aside_dir, max_rounds=40):
     os.makedirs(aside_dir, exist_ok=True)
     set_aside = {}
     for round_number in range(max_rounds):
-        env = dict(os.environ)
-        env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+        env = swift_environment(swift)
         try:
             done = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
                                   capture_output=True, text=True, env=env, timeout=1800)
@@ -451,8 +467,7 @@ def _runs_within(package_dir, swift, seconds, skip=None):
     stub was responsible. The build gets its own generous bound; the hang is measured against
     the run.
     """
-    env = dict(os.environ)
-    env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+    env = swift_environment(swift)
     try:
         built = subprocess.run([swift, "build", "--build-tests"], cwd=package_dir,
                                capture_output=True, text=True, env=env, timeout=1800)
@@ -586,8 +601,7 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
         command = [swift, "test", "--no-parallel"]
         for name in skipped:
             command += ["--skip", _skip_pattern(name)]
-        env = dict(os.environ)
-        env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
+        env = swift_environment(swift)
         timed_out = False
         try:
             # ⚠ **600s, not 1800s.** A generated law is cheap — the pilot ran 15 of them in

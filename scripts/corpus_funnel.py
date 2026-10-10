@@ -50,10 +50,10 @@ def environment(swift):
     stubs come out with no `@testable import` at all — the 16 September census's worst defect,
     which discarded a 2,914-stub pass. The first driver run reproduced it exactly: 0 of 35 on
     SwiftMarkdownWiki, caught by `import_rate` rather than by reading the stubs.
+
+    Colored diagnostics are switched off there too — see `corpus_funnel_stage5.swift_environment`.
     """
-    env = dict(os.environ)
-    env["PATH"] = os.path.dirname(swift) + os.pathsep + env.get("PATH", "")
-    return env
+    return s5.swift_environment(swift)
 
 
 def worktree(repo_path, destination):
