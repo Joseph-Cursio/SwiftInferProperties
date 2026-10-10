@@ -346,13 +346,23 @@ it, and `make test` does not run it.
 
 ## Build & test
 
-- **This package needs the swift.org Swift compiler toolchain, not Xcode's.**
-  (*Toolchain* elsewhere in this file means the five-package PBT toolchain — every use in
-  this section means the Swift compiler.) Under Xcode's
-  (`swiftlang-6.3.3.1.3`) every source file compiles and then the post-build plugin stage —
-  `Applying swift-infer`, `Applying soundness-probe` — fails with
+- **The Makefile prefers the swift.org Swift compiler toolchain, pinned to `swift-6.4.0-RELEASE`
+  since 2026-10-10.** (*Toolchain* elsewhere in this file means the five-package PBT toolchain —
+  every use in this section means the Swift compiler.) **On Xcode 27, measured 2026-10-10:**
+  - Xcode's own toolchain (`swiftlang-6.4.0.34.1`) builds every product and test target in ~40s,
+    with no `Corrupted JSON` or `fatalError`, so the defect below is gone.
+  - swift.org's 6.3.3, the old pin, cannot use the macOS 27 SDK: a dependency's `Package.swift`
+    segfaults (signal 11) and every frontend call fails with `unknown argument:
+    '-target-arch-variant'`.
+  - swift.org's 6.4.0 (`swift --version` says `swift-6.4-RELEASE`) builds in ~50s and ran
+    `make test-fast` and batches 1, 2, 4, 6 and 7; the only failures were sibling checkouts
+    missing beside a worktree.
+
+  **History, Xcode 26:** under Xcode's toolchain
+  (`swiftlang-6.3.3.1.3`) every source file compiled and then the post-build plugin stage —
+  `Applying swift-infer`, `Applying soundness-probe` — failed with
   `Internal Error: DecodingError.dataCorrupted … Corrupted JSON` followed by `error: fatalError`.
-  Under swift.org's `swift-6.3.3-RELEASE` it builds in ~55s. The two report the same version
+  Under swift.org's `swift-6.3.3-RELEASE` it built in ~55s. The two report the same version
   number; `swiftlang-` in `swift --version` is the tell. ⚠ **The `Corrupted JSON` line ALONE is
   NOT the tell — the plugin stage ABORTING is.** Measured 2026-09-17 on the swift.org toolchain: a
   clean `make test` printed that exact `Internal Error: DecodingError.dataCorrupted … Corrupted
@@ -363,16 +373,19 @@ it, and `make test` does not run it.
   healthy run.
 
   The Makefile handles this: `SWIFT` defaults to
-  `~/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift` when present, so
-  `make test` works regardless of what `swift` resolves to. Override with `make test SWIFT=…`.
+  `~/Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain/usr/bin/swift` when present, and
+  to whatever `swift` is on PATH otherwise. Override with `make test SWIFT=…`. ⚠ **The default is
+  chosen by existence alone**, so a toolchain installed at the pinned path that the SDK rejects
+  breaks `make` for every session on the machine — which is what installing 6.3.3 did on Xcode 27.
+  Move the pin when Xcode moves the SDK.
   **It also puts that toolchain's directory on `PATH`**, because choosing `SWIFT` only decides what
   runs the tests — `TestTargetScope` and two others shell out to `swift package dump-package`
   through `DrainedProcess.standardOutputViaEnv`, which resolves the name on PATH on purpose.
 
   **`.swift-version` pins the toolchain for swiftly users**, so a bare `swift` in this repo is the
   swift.org one and Xcode's stays the default everywhere else — which is what lets SwiftMarkdownWiki
-  keep the opposite requirement. Without one of those two, a bare `swift test` fails if your
-  `swift` is Xcode's.
+  keep the opposite requirement. Without one of those two, a bare `swift test` failed if your
+  `swift` was Xcode 26's.
 
   ⚠ **The failure does not look like a toolchain problem.** Measured 2026-09-16: PATH's `swift`
   resolved the SDK to `/Library/Developer/CommandLineTools` (27.0, built with Swift 6.4) and could
@@ -382,7 +395,8 @@ it, and `make test` does not run it.
   as the defect it guards against.**
 
   This is the opposite constraint to SwiftMarkdownWiki, which needs Xcode's toolchain because the
-  swift.org one cannot see SwiftUI cross-import overlay types. No single toolchain builds both.
+  swift.org one cannot see SwiftUI cross-import overlay types. On Xcode 26 no single toolchain built
+  both; Xcode 27's builds this package too, and whether it builds both is unchecked.
 - `swift package clean && swift test` on session start — with the toolchain caveat above.
 - **Use the Makefile** — `make test-fast` (regex-skip fast path; the Makefile says ~35s and runs on 2026-09-23 took ~50–70s) · `make test` (fast suite + sequential subprocess batches, fail-fast) · `make batch1`…`batch8` · `make perf` · `make clean-temp` · `make help`. Prefer `make test` over a bare `swift test`: the batches bound peak temp-disk and avoid §13 perf-budget contention flakes.
 - A killed-mid-run subprocess suite skips its cleanup `defer` and can leak tens of GB to `$TMPDIR` — that is what `make clean-temp` is for. It also sweeps `.swiftinfer/verify-workdir/`, which is gitignored and accumulates silently.
