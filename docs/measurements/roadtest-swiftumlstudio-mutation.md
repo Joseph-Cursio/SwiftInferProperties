@@ -152,6 +152,8 @@ Suggested:
 2. **F6 + seeding gaps**: 1,048 of the 1,300 mutants are in unseeded or determinism-only functions. Laws that kill are worth little while only 4% of mutants sit near one.
 3. **F2 / F3 / F4 together** are one idea: *a law must be shown to reach the inputs that make it bite*. Each comes with a cheap check (outcome reach, non-triviality, boundary draw), and the A/B shows the check pays off immediately where the generator already reaches both outcomes.
 
+Ten candidate laws aimed at this run's survivors are in [`docs/ideas/laws-from-mutation-survivors.md`](../ideas/laws-from-mutation-survivors.md).
+
 ## Reproduce
 
 The run's artifacts lived in a session scratchpad and are **not** kept. To repeat it:
