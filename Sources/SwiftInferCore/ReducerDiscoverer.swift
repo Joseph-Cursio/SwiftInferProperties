@@ -50,13 +50,19 @@ public enum ReducerDiscoverer {
 
     /// Scan a single in-memory source string. `file` is the label
     /// attached to every emitted candidate's `location` — pass the
-    /// path you want shown to the user.
+    /// path you want shown to the user. Action types resolve against
+    /// this source alone.
     public static func discover(source: String, file: String) -> [ReducerCandidate] {
+        let scan = scan(source: source, file: file)
+        return scan.resolvingActionTypes(in: scan.declaredTypes)
+    }
+
+    static func scan(source: String, file: String) -> ReducerFileScan {
         let tree = Parser.parse(source: source)
         let converter = SourceLocationConverter(fileName: file, tree: tree)
         let visitor = ReducerDiscoveryVisitor(file: file, converter: converter)
         visitor.walk(tree)
-        return visitor.candidates
+        return visitor.scan
     }
 
     /// Scan a single `.swift` file on disk. Reads as UTF-8.
@@ -69,14 +75,14 @@ public enum ReducerDiscoverer {
     /// are visited in deterministic (sorted-path) order so the merged
     /// candidate list is stable across runs — matches v1's
     /// byte-identical-reproducibility posture (PRD §16 #6 carried
-    /// from v1.0).
+    /// from v1.0). Action types resolve against every file under
+    /// `directory`, so an Action enum declared in a sibling file counts.
     public static func discover(directory: URL) throws -> [ReducerCandidate] {
-        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
-        var candidates: [ReducerCandidate] = []
-        for fileURL in swiftFiles {
-            candidates.append(contentsOf: try discover(file: fileURL))
+        let scans = try SwiftSourceFiles.sorted(in: directory).map { fileURL in
+            scan(source: try String(contentsOf: fileURL, encoding: .utf8), file: fileURL.path)
         }
-        return candidates
+        let universe = DeclaredTypeIndex(merging: scans.map(\.declaredTypes))
+        return scans.flatMap { $0.resolvingActionTypes(in: universe) }
     }
 }
 
@@ -112,6 +118,12 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     /// step 1 — same name-match strategy v1 uses for `@Discoverable`,
     /// avoids false matches against unrelated `Reducer` protocols).
     var importsComposableArchitecture: Bool = false
+    /// The `typeStack` each of `candidates` was found under, index for
+    /// index — appended together by `record(_:)`.
+    var candidateScopes: [[String]] = []
+    /// Every type and typealias this file declares, for resolving each
+    /// candidate's Action type (`+ActionTypes.swift`).
+    var declaredTypes = DeclaredTypeIndex()
 
     init(file: String, converter: SourceLocationConverter) {
         self.file = file
@@ -144,7 +156,7 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
             return .skipChildren
         }
         if let candidate = matchReducer(in: node) {
-            candidates.append(candidate)
+            record([candidate])
         }
         return .skipChildren
     }
@@ -152,6 +164,7 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     // MARK: - Type-stack maintenance + TCA conformance walk
 
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+        declaredTypes.recordType(node.name.text, kind: .class, scope: typeStack)
         pushType(node.name.text, memberBlock: node.memberBlock)
         extractTCACandidatesIfReducerConformer(
             attributes: node.attributes,
@@ -165,6 +178,7 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     override func visitPost(_: ClassDeclSyntax) { popType() }
 
     override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+        declaredTypes.recordType(node.name.text, kind: .struct, scope: typeStack)
         pushType(node.name.text, memberBlock: node.memberBlock)
         extractTCACandidatesIfReducerConformer(
             attributes: node.attributes,
@@ -178,6 +192,7 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     override func visitPost(_: StructDeclSyntax) { popType() }
 
     override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+        declaredTypes.recordType(node.name.text, kind: .enum, scope: typeStack)
         pushType(node.name.text, memberBlock: node.memberBlock)
         extractTCACandidatesIfReducerConformer(
             attributes: node.attributes,
@@ -191,6 +206,7 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     override func visitPost(_: EnumDeclSyntax) { popType() }
 
     override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+        declaredTypes.recordType(node.name.text, kind: .actor, scope: typeStack)
         pushType(node.name.text, memberBlock: node.memberBlock)
         return .visitChildren
     }
@@ -209,6 +225,20 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
         return .visitChildren
     }
     override func visitPost(_: ExtensionDeclSyntax) { popType() }
+
+    /// Recorded, never pushed: a protocol declares no nested types. Its
+    /// children are still visited, exactly as before it was recorded.
+    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+        declaredTypes.recordType(node.name.text, kind: .protocol, scope: typeStack)
+        return .visitChildren
+    }
+
+    override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
+        declaredTypes.recordAlias(
+            node.name.text, target: node.initializer.value.trimmedDescription, scope: typeStack
+        )
+        return .skipChildren
+    }
 
     // MARK: - Type-stack push/pop (Cycle 109 — tracks nested type names)
 
@@ -276,7 +306,7 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
         if secondRaw.hasPrefix("inout ") { return nil }
         let secondType = secondRaw
 
-        guard let shape = Self.classifyShape(
+        guard let shape = ReducerDiscoverer.classifyShape(
             firstType: firstType,
             firstIsInout: firstIsInout,
             returnType: returnType
@@ -351,44 +381,5 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
             // an async candidate instead of rejecting `.asyncReducer`.
             isClockDeterministic: EffectAnnotationParser.isClockDeterministic(declaration: node)
         )
-    }
-
-    // MARK: - Tuple-return helper (M1.A)
-
-    /// V1.92 lint pass — shape classification extracted from
-    /// `matchReducer` so the outer function stays under SwiftLint's
-    /// 50-line cap. Returns the matched `ReducerSignatureShape` or
-    /// `nil` when no canonical shape matches.
-    static func classifyShape(
-        firstType: String,
-        firstIsInout: Bool,
-        returnType: String
-    ) -> ReducerSignatureShape? {
-        if firstIsInout {
-            if returnType == "Void" || returnType.isEmpty {
-                return .inoutStateActionReturnsVoid
-            }
-            if ReducerDiscoverer.looksLikeEffect(returnType) {
-                // V1.92 — Shape 4: `(inout S, A) -> Effect<A>`.
-                return .inoutStateActionReturnsEffect
-            }
-            return nil
-        }
-        if returnType == firstType {
-            // Shape 1: `(S, A) -> S`.
-            return .stateActionReturnsState
-        }
-        if ReducerDiscoverer.isStateEffectTuple(returnType, expectedFirst: firstType) {
-            // Shape 3: `(S, A) -> (S, Effect<A>)`.
-            return .stateActionReturnsStateAndEffect
-        }
-        if ReducerDiscoverer.looksLikeMobiusNext(returnType, expectedFirst: firstType) {
-            // Mobius: `(S, A) -> Next<S, E>` — same effect-bearing shape as
-            // the tuple form (the new State + discarded effects), mapped
-            // onto the same case. `matchReducer` re-checks the `Next<…>`
-            // return to label the carrier `.mobius`.
-            return .stateActionReturnsStateAndEffect
-        }
-        return nil
     }
 }

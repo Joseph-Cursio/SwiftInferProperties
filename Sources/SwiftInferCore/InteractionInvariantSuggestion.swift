@@ -195,8 +195,8 @@ public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, Ca
     /// cannot catch.
     case determinism
     /// A `.redux`-family reducer with an *open* Action alphabet (a protocol
-    /// `Action` à la ReSwift, or String/opaque dispatch — `actionCases` is
-    /// empty): an action the reducer does not recognise should fall through to
+    /// `Action` à la ReSwift, or String/opaque dispatch — `hasClosedActionAlphabet`
+    /// is false): an action the reducer does not recognise should fall through to
     /// the default branch and leave State unchanged — `reduce(s, unknown) ==
     /// s`. Measured by minting a fresh probe type conforming to the open
     /// alphabet and asserting the reducer leaves State untouched. Closed Swift

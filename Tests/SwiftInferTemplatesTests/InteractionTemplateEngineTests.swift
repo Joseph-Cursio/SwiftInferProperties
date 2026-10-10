@@ -64,6 +64,42 @@ struct InteractionTemplateEngineTests {
         #expect(Set(result.map(\.family)) == [.determinism, .unknownActionIsNoOp])
     }
 
+    @Test("an Action resolved to an enum leaves only determinism — unknown-action needs an unclosed alphabet")
+    func enumActionSurfacesOnlyDeterminism() throws {
+        var closed = candidate()
+        closed.actionTypeKind = .enum
+        let result = try InteractionTemplateEngine.analyzeOne(
+            closed,
+            sourcesDirectory: nil,
+            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+        )
+        #expect(result.map(\.family) == [.determinism])
+    }
+
+    @Test("an unresolved Action's unknown-action suggestion says discovery could not see it")
+    func unresolvedActionCarriesCaveat() throws {
+        let result = try InteractionTemplateEngine.analyzeOne(
+            candidate(),
+            sourcesDirectory: nil,
+            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+        )
+        let noOp = try #require(result.first { $0.family == .unknownActionIsNoOp })
+        #expect(noOp.whyMightBeWrong.contains { $0.contains("not declared in the scanned sources") })
+    }
+
+    @Test("a struct Action's unknown-action suggestion says the probe cannot conform to it")
+    func structActionCarriesCaveat() throws {
+        var dispatch = candidate()
+        dispatch.actionTypeKind = .struct
+        let result = try InteractionTemplateEngine.analyzeOne(
+            dispatch,
+            sourcesDirectory: nil,
+            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+        )
+        let noOp = try #require(result.first { $0.family == .unknownActionIsNoOp })
+        #expect(noOp.whyMightBeWrong.contains { $0.contains("build failure") })
+    }
+
     @Test("Determinism now surfaces for a TCA carrier (dependency-pinned)")
     func determinismIncludesTCA() throws {
         let tcaCandidate = ReducerCandidate(

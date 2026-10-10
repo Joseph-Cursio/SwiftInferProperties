@@ -232,6 +232,6 @@ extension ReducerDiscoveryVisitor {
             stateFields: stateFields
         )
         walker.walk(subtree)
-        candidates.append(contentsOf: walker.candidates)
+        record(walker.candidates)
     }
 }

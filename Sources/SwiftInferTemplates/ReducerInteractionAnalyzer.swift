@@ -49,12 +49,13 @@ public struct ReducerInteractionCandidate: Sendable, Equatable {
 ///     unsettled by static means. The rationale carries the purity signal
 ///     so an already-flagged impure reducer reads as higher-urgency.
 ///   - **`unknownActionIsNoOp`** (`reduce(s, unknown) == s`) — surfaced
-///     only when the Action alphabet is *open*: an unrecognised action can
+///     only when the Action alphabet is not closed: an unrecognised action can
 ///     only exist when the action type is not a statically-resolved closed
-///     enum (`actionCases.isEmpty` — a protocol `Action` à la ReSwift, or a
-///     String/opaque dispatch). A closed Swift enum is exhaustive, so no
-///     "unknown action" is representable and the claim is vacuous — we skip
-///     it rather than emit a tautology.
+///     enum (`hasClosedActionAlphabet` false — a protocol `Action` à la
+///     ReSwift, a String/opaque dispatch, or a type declared outside the
+///     scanned sources). A closed Swift enum is exhaustive, so no "unknown
+///     action" is representable and the claim is vacuous — we skip it rather
+///     than emit a tautology.
 public enum ReducerInteractionAnalyzer {
 
     public static func analyze(_ candidate: ReducerCandidate) -> [ReducerInteractionCandidate] {
@@ -95,16 +96,15 @@ public enum ReducerInteractionAnalyzer {
         _ candidate: ReducerCandidate
     ) -> ReducerInteractionCandidate? {
         // A statically-resolved closed enum is exhaustive — no "unknown"
-        // action is representable, so the invariant is vacuous. Only an open
-        // alphabet (protocol `Action`, String/opaque dispatch) admits it.
-        guard candidate.actionCases.isEmpty else { return nil }
+        // action is representable, so the invariant is vacuous.
+        guard !candidate.hasClosedActionAlphabet else { return nil }
+        let evidence = UnknownActionIsNoOpInteractionTemplate.alphabetEvidence(candidate.actionTypeKind)
         return ReducerInteractionCandidate(
             kind: .unknownActionIsNoOp,
             typeName: candidate.qualifiedName,
             subjects: [candidate.actionTypeName],
-            rationale: "the Action type '\(candidate.actionTypeName)' has no statically-resolved "
-                + "closed case set (an open / protocol alphabet) — an unrecognised action should "
-                + "hit the default branch and leave State unchanged: `reduce(s, unknown) == s`"
+            rationale: "the Action type '\(candidate.actionTypeName)' \(evidence) — an unrecognised "
+                + "action should hit the default branch and leave State unchanged: `reduce(s, unknown) == s`"
         )
     }
 }
