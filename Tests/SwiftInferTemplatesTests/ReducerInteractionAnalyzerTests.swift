@@ -98,6 +98,17 @@ struct ReducerInteractionAnalyzerTests {
     }
 
     @Test
+    func enumResolvedAtDiscoverySuppressesUnknownActionNoOp() {
+        // The 2026-10-10 misfire's state: a non-TCA carrier has no captured
+        // `actionCases`, but its Action type resolved to an enum.
+        var closed = candidate(carrierKind: .elmStyle, actionCases: [])
+        closed.actionTypeKind = .enum
+        let result = ReducerInteractionAnalyzer.analyze(closed)
+        #expect(result.contains { $0.kind == .unknownActionIsNoOp } == false)
+        #expect(result.contains { $0.kind == .determinism })
+    }
+
+    @Test
     func openAlphabetSurfacesUnknownActionNoOp() {
         // No resolved cases (a protocol `Action` à la ReSwift) → open alphabet.
         let result = ReducerInteractionAnalyzer.analyze(

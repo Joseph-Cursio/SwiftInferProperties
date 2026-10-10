@@ -98,8 +98,23 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
     /// relaxed partial-exploration emitter builds a generator over the
     /// *constructible* subset (payload-free + raw-payload cases) and
     /// discloses the rest as excluded; the all-or-nothing Phase A gate is
-    /// gone. Empty for non-`.tca` carriers and older records.
+    /// gone. Empty for non-`.tca` carriers and older records — so empty
+    /// does not mean open; `hasClosedActionAlphabet` is the question.
     public var actionCases: [ActionCaseInfo]
+
+    /// What `actionTypeName` resolved to among the scanned sources, for
+    /// every carrier — the question `actionCases` cannot answer outside
+    /// TCA. Set by `ReducerDiscoverer` after every file is walked;
+    /// `.unresolved` for a hand-built candidate and older records.
+    public var actionTypeKind: ActionTypeKind
+
+    /// The Action alphabet is closed — a TCA nested `enum Action` whose
+    /// cases were captured, or an Action type that resolved to an `enum`.
+    /// Exhaustive either way, so no action outside its cases is
+    /// representable. The single gate for `unknownActionIsNoOp`.
+    public var hasClosedActionAlphabet: Bool {
+        !actionCases.isEmpty || actionTypeKind == .enum
+    }
 
     /// Multi-module — the module (SwiftPM target) this candidate was discovered
     /// in, or `nil` for a single-target run / older records. A `var` because it
@@ -165,7 +180,8 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         stateIDTypeName: String? = nil,
         stateFields: [StateFieldInfo] = [],
         isAsync: Bool = false,
-        isClockDeterministic: Bool = false
+        isClockDeterministic: Bool = false,
+        actionTypeKind: ActionTypeKind = .unresolved
     ) {
         self.location = location
         self.enclosingTypeName = enclosingTypeName
@@ -181,6 +197,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         self.stateFields = stateFields
         self.isAsync = isAsync
         self.isClockDeterministic = isClockDeterministic
+        self.actionTypeKind = actionTypeKind
     }
 
     /// Item 2 slice 3 — a copy of this candidate with its `actionCases`
@@ -252,6 +269,7 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
         case stateFields
         case isAsync
         case isClockDeterministic
+        case actionTypeKind
     }
 
     public init(from decoder: Decoder) throws {
@@ -298,6 +316,11 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
             Bool.self,
             forKey: .isClockDeterministic
         ) ?? false
+        // Pre-resolution records cannot say what their Action type was.
+        self.actionTypeKind = try container.decodeIfPresent(
+            ActionTypeKind.self,
+            forKey: .actionTypeKind
+        ) ?? .unresolved
     }
 }
 

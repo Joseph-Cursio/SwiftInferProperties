@@ -195,6 +195,14 @@ still disclosed, so no new precision decision.
   `UnknownActionCorpusMeasuredTests` proves the split on a plain-Swift corpus
   (no CA): `NoOpCounter` → bothPass → Verified; `LeakyReducer` (mutates State on
   the default branch) → defaultFails → suppressed (~37s, no toolchain gate).
+- **Correction (2026-10-10): `actionCases` empty never meant *open*.** Discovery
+  captures an Action's cases only in the TCA walk, which this family excludes, so
+  the gate admitted every non-TCA reducer — closed enums included. Over the
+  in-repo reducer fixtures, 28 of 30 rows were closed enums; the 2 survivors are
+  this corpus's protocol reducers. The gate is now `hasClosedActionAlphabet`,
+  which also reads `actionTypeKind`: the Action type resolved, by enclosing
+  scope, over the scanned sources. A type declared outside them still fires,
+  with a caveat in its "why this might be wrong".
 - **Correction to the earlier "cheapest" framing:** this was *not* just a stub
   arm. `unknownActionIsNoOp` existed only as a `PropertyKind` (via
   `ReducerInteractionAnalyzer`), whose sole consumer was the discovery *render*

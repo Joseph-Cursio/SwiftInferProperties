@@ -255,4 +255,43 @@ extension ReducerDiscoverer {
         }
         return "\(enclosing).\(name)"
     }
+
+    // MARK: - Signature shape (M1.A)
+
+    /// V1.92 lint pass — shape classification extracted from
+    /// `matchReducer` so the outer function stays under SwiftLint's
+    /// 50-line cap. Returns the matched `ReducerSignatureShape` or
+    /// `nil` when no canonical shape matches.
+    static func classifyShape(
+        firstType: String,
+        firstIsInout: Bool,
+        returnType: String
+    ) -> ReducerSignatureShape? {
+        if firstIsInout {
+            if returnType == "Void" || returnType.isEmpty {
+                return .inoutStateActionReturnsVoid
+            }
+            if Self.looksLikeEffect(returnType) {
+                // V1.92 — Shape 4: `(inout S, A) -> Effect<A>`.
+                return .inoutStateActionReturnsEffect
+            }
+            return nil
+        }
+        if returnType == firstType {
+            // Shape 1: `(S, A) -> S`.
+            return .stateActionReturnsState
+        }
+        if Self.isStateEffectTuple(returnType, expectedFirst: firstType) {
+            // Shape 3: `(S, A) -> (S, Effect<A>)`.
+            return .stateActionReturnsStateAndEffect
+        }
+        if Self.looksLikeMobiusNext(returnType, expectedFirst: firstType) {
+            // Mobius: `(S, A) -> Next<S, E>` — same effect-bearing shape as
+            // the tuple form (the new State + discarded effects), mapped
+            // onto the same case. `matchReducer` re-checks the `Next<…>`
+            // return to label the carrier `.mobius`.
+            return .stateActionReturnsStateAndEffect
+        }
+        return nil
+    }
 }

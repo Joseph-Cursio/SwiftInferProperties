@@ -71,9 +71,9 @@ public enum InteractionTemplateEngine {
             firstSeenAt: firstSeenAt
         )
         // V2.0 — Unknown-action-is-no-op. Also witness-free: it gates on the
-        // candidate's carrier + open Action alphabet (`actionCases.isEmpty`),
+        // candidate's carrier + Action alphabet (`hasClosedActionAlphabet`),
         // both resolved at discovery, so it needs no source access. Fires only
-        // for open-alphabet redux reducers; a no-op for everything else.
+        // for redux reducers whose alphabet is not closed; a no-op otherwise.
         collected.append(contentsOf: UnknownActionIsNoOpInteractionTemplate.analyze(
             candidate: candidate,
             firstSeenAt: firstSeenAt
