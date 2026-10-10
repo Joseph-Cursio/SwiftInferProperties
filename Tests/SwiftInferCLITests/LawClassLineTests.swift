@@ -123,6 +123,14 @@ struct LawClassLineTests {
         #expect(Refutability.characterisationTemplates.isDisjoint(with: Refutability.tautologicalTemplates))
     }
 
+    /// **A scaffold in place of a law is in none of the law sets.** Role-entailed (and so
+    /// characterisation, its subset) would surface a to-do below the confidence cut; a tautology is
+    /// a law already stated.
+    @Test func noScaffoldTemplateIsInALawSet() {
+        #expect(Refutability.scaffoldTemplates.isDisjoint(with: Refutability.roleEntailedTemplates))
+        #expect(Refutability.scaffoldTemplates.isDisjoint(with: Refutability.tautologicalTemplates))
+    }
+
     /// Every emitted stub carries one — a header that is sometimes silent is worse than one that
     /// is always present, because a reader cannot tell absence from "not applicable".
     @Test func theLineIsNeverEmpty() {

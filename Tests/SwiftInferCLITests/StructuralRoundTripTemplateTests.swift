@@ -120,4 +120,16 @@ struct StructuralRoundTripTemplateTests {
         }
         #expect(live.count == 3, "the test's signature, the Issue.record, and the closing brace: \(live)")
     }
+
+    /// **`discover`'s block must not call the scaffold a law.** It used to end with the conjecture
+    /// caveat every non-entailed template gets — "THIS LAW IS A CONJECTURE … a `T -> T` need not be
+    /// idempotent" — beneath its own "THIS IS A SCAFFOLD, NOT A LAW".
+    @Test func theDiscoverBlockDoesNotCallTheScaffoldALaw() throws {
+        let subject = try #require(StructuralRoundTripSubject.candidates(in: [Self.parser]).first)
+        let suggestion = try #require(StructuralRoundTripTemplate.suggest(for: subject))
+        #expect(Refutability.isScaffold(suggestion))
+        let block = SuggestionRenderer.render(suggestion)
+        #expect(block.contains("THIS IS A SCAFFOLD, NOT A LAW"))
+        #expect(!block.contains("THIS LAW IS A CONJECTURE"))
+    }
 }

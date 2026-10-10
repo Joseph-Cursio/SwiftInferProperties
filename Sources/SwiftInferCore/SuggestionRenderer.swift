@@ -268,9 +268,12 @@ public enum SuggestionRenderer {
     ///
     /// A **tautology** (`determinism`) gets nothing: it is not a conjecture, it is a law no
     /// implementation can fail, and calling it a guess would misdescribe it in the other direction.
+    /// Nor does a **scaffold** (`structural-round-trip`): it proposes no law yet, and says so in its
+    /// own first caveat — see `Refutability.scaffoldTemplates`.
     private static func conjectureCaveat(for suggestion: Suggestion) -> [String] {
         guard Refutability.isRefutable(suggestion),
-              Refutability.isRoleEntailed(suggestion) == false else {
+              Refutability.isRoleEntailed(suggestion) == false,
+              Refutability.isScaffold(suggestion) == false else {
             return []
         }
         return [

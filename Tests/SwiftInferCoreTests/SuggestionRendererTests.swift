@@ -81,6 +81,22 @@ Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
         #expect(rendered.contains("  ✓ no known caveats for this template"))
     }
 
+    /// **The conjecture caveat follows the law, not the stub.** Both templates write a scaffold
+    /// stub, but only `structural-round-trip` proposes no law yet. `replay-idempotence` proposes a
+    /// conjecture, since a correct write need not be idempotent, so it keeps the caveat.
+    @Test(arguments: zip(["structural-round-trip", "replay-idempotence"], [false, true]))
+    func theConjectureCaveatIsWithheldOnlyFromAScaffoldInPlaceOfALaw(template: String, conjectured: Bool) {
+        let suggestion = Suggestion(
+            templateName: template,
+            evidence: [],
+            score: Score(signals: [Signal(kind: .typeSymmetrySignature, weight: 35, detail: "shape")]),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: ["the template's own caveat"]),
+            identity: SuggestionIdentity(canonicalInput: "test|\(template)")
+        )
+        #expect(SuggestionRenderer.render(suggestion).contains("THIS LAW IS A CONJECTURE") == conjectured)
+    }
+
     @Test("M1 placeholder generator + M4.3 sampling-seed line render in the footer")
     func m1PlaceholderFooter() {
         let suggestion = makeStrongSuggestion()

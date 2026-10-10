@@ -263,9 +263,11 @@ extension InteractiveTriage {
     /// opening with the to-do marker, until a person completes it.
     ///
     /// Read from the body rather than from the template name because the property belongs to the
-    /// file, not the template — today only the two replay emitters write one
-    /// (`LiftedTestEmitter.replayIdempotent`, `replayKeyBuilder`), and a template that starts
-    /// writing one tomorrow is labelled correctly without anyone remembering this function.
+    /// file, not the template — today four emitters write one (`LiftedTestEmitter.replayIdempotent`,
+    /// `replayKeyBuilder`, `stateMachineScaffold`, `structuralRoundTripScaffold`), and a template
+    /// that starts writing one tomorrow is labelled correctly without anyone remembering this
+    /// function. `Refutability.scaffoldTemplates` is a different, narrower question: which
+    /// suggestions owe no conjecture caveat in `discover`'s output, before any stub exists.
     static func isScaffold(_ stub: String) -> Bool {
         stub.contains("Issue.record(\"TODO")
     }
