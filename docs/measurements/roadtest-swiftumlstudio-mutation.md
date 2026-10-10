@@ -156,7 +156,17 @@ Ten candidate laws aimed at this run's survivors are in [`docs/ideas/laws-from-m
 
 ## Reproduce
 
-The run's artifacts lived in a session scratchpad and are **not** kept. To repeat it:
+**The per-mutant attribution is kept** in [`fixtures/mutation-check/roadtest-swiftumlstudio-2026-10-10.jsonl`](../../fixtures/mutation-check/roadtest-swiftumlstudio-2026-10-10.jsonl): one row per mutant, 1,300 rows, the source of the funnel-stage table above. Each row has these fields:
+
+- `file`, `line`: where the mutant is, relative to `SwiftUMLBridge/`.
+- `func`, `funcStart`: its innermost enclosing function, found by brace matching (`null` when there is none).
+- `operator`, `original`, `replacement`: the mutation.
+- `status`: the run 1 outcome, against the 35 passing generated laws.
+- `baseline`: the run 2 outcome, against the hand-written suite. A `Timeout` counts as detected.
+- `stage`: the furthest funnel stage the enclosing function reached.
+- `seedKinds`, `laws`, `passingStubs`, `otherStubs`: what that stage was read from.
+
+The reach A/B (run 1 with the 3 reach tests added) is not in it. The rest of the run's artifacts lived in a session scratchpad and are **not** kept: the two mutation reports, the logs, the stubs and the attribution script. To repeat it:
 
 1. `python3 scripts/corpus_funnel.py <scratch> $PWD/.build/release/swift-infer <abs path to SwiftProjectLint>/.build/debug/CLI SwiftUMLStudio`
 2. Move the stubs that fail out of `<scratch>/trees/SwiftUMLStudio/SwiftUMLBridge/Tests/SwiftUMLBridgeFrameworkTests/Generated/SwiftInfer/`, then in `SwiftUMLBridge/` run
