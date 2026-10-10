@@ -256,8 +256,28 @@ public enum TypeShapeBuilder {
                     delegatesToSelf: signature.delegatesToSelf
                 )
             },
-            enumCases: mergedEnumCases
+            enumCases: Self.qualifyingPayloads(of: mergedEnumCases, resolve)
         )
+    }
+
+    /// `cases` with each payload spelling resolved the way members and parameters are.
+    ///
+    /// **Payloads were passed through bare until 2026-10-10**, and it went unnoticed because the
+    /// kit guessed: a bare `Payload` fell back to the one scanned type ending in `.Payload`.
+    /// SwiftPropertyLaws#63 removed that guess — it also matched other modules' types — and
+    /// from then on only a qualified spelling resolves.
+    private static func qualifyingPayloads(
+        of cases: [EnumCase],
+        _ resolve: (String) -> String
+    ) -> [EnumCase] {
+        cases.map { enumCase in
+            EnumCase(
+                name: enumCase.name,
+                associatedValues: enumCase.associatedValues.map {
+                    InitializerParameter(label: $0.label, typeName: resolve($0.typeName))
+                }
+            )
+        }
     }
 }
 
