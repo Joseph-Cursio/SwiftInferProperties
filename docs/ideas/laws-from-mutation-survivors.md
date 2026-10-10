@@ -44,7 +44,7 @@ For each node or edge name in the input, `output.contains(name)`. A stronger for
 
 - **Signal:** `String -> String` named `*Id`, `*Alias`, `slug`, `identifier`, or `key`.
 - **Evidence:** the point of a diagram ID is that it does not collide. Sanitizers that collapse characters (`a-b` and `a_b` both become `a_b`) silently merge two nodes. It is a conjecture and is likely refutable, which is what a law should be.
-- **Measured:** **refutes the real code and found a real defect.** `mermaidId(">->") == mermaidId("-..")` and `safeAlias(" ") == safeAlias("+")`. Through the emitter, `Outer.Inner` and `Outer_Inner` were declared under one Mermaid id and drawn as one node. Fix in review: [SwiftUMLStudio#52](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/52). It kills no hand mutant, by construction: dropping a replacement makes a sanitizer *more* injective.
+- **Measured:** **refutes the real code and found a real defect.** `mermaidId(">->") == mermaidId("-..")` and `safeAlias(" ") == safeAlias("+")`. Through the emitter, `Outer.Inner` and `Outer_Inner` were declared under one Mermaid id and drawn as one node. Fixed in [SwiftUMLStudio#52](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/52). It kills no hand mutant, by construction: dropping a replacement makes a sanitizer *more* injective.
 - **Closest existing:** `caseiterable-key-injectivity`, which covers enums only.
 
 ## 5. Deduplication laws (`dedupe`, `unique`, `distinct`, `removingDuplicates`)
@@ -124,6 +124,6 @@ the tool has no operator for a string literal or a dropped chained call. So kill
 
 - **Law #3 matches the hand-written suite.** Four of its kills are its own (escapes dropped from the class, the escape template broken, the `?` replacement dropped). The anchors-dropped mutant is caught only because an empty glob then yields `""`, which `NSRegularExpression` rejects. Both miss the mutant that stops escaping `.`: an unescaped `.` is still valid, so catching it needs a law about what the regex *matches*.
 - **The existing `rewrite-postcondition` laws beat the hand-written suite, 9 of 9 against 4 of 9**, on code the mutation tool cannot see. So the road test's 1.3% understates the generated laws on string-transform code.
-- **#4's value is the defect, not kills:** a real, user-visible merge of two diagram nodes ([SwiftUMLStudio#52](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/52) fixes it).
+- **#4's value is the defect, not kills:** a real, user-visible merge of two diagram nodes (fixed in [SwiftUMLStudio#52](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/52)).
 
 The stubs and the hand-mutant driver lived in a session scratchpad and are not kept.
