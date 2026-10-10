@@ -178,6 +178,33 @@ public enum Refutability {
         characterisationTemplates.contains(suggestion.templateName)
     }
 
+    /// Templates that propose a **scaffold in place of a law**: the law cannot be stated until the
+    /// author writes the half the code lacks, so there is not yet a claim for the conjecture caveat
+    /// to qualify.
+    ///
+    /// The caveat would be wrong about these twice. It calls the suggestion a law, beside the
+    /// template's own first caveat saying it is not one. And its reason, *a CORRECT implementation
+    /// can fail it*, is false of the subject: a correct parser reads back what a faithful layout
+    /// prints, so the round trip fails only through the halves the author writes, the printer and
+    /// the values, which the template's own caveats name.
+    ///
+    /// Kept out of `roleEntailedTemplates` on purpose: that set decides what is shown below the
+    /// confidence cut, and a to-do is not worth showing by default.
+    ///
+    /// **Membership is about the law, not the stub.** `replay-idempotence` and `state-machine` also
+    /// write scaffold stubs, and neither belongs: replay's law is a conjecture, since a correct write
+    /// need not be idempotent, and state-machine's is stated and role-entailed already. The stub
+    /// file's SCAFFOLD header is read from the stub itself (`isScaffold(_:)` in the CLI).
+    public static let scaffoldTemplates: Set<String> = [
+        // `parse(render(value)) == value`, with `render` the author's. See `StructuralRoundTripTemplate`.
+        "structural-round-trip"
+    ]
+
+    /// Whether the suggestion is a scaffold in place of a law, and so owes no conjecture caveat.
+    public static func isScaffold(_ suggestion: Suggestion) -> Bool {
+        scaffoldTemplates.contains(suggestion.templateName)
+    }
+
     /// A law worth showing a reader **below the confidence cut**: it can catch a bug, and it cannot
     /// cry wolf on correct code.
     ///
