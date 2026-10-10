@@ -6,8 +6,9 @@ Ten laws the catalogue does not have, each chosen because it would have caught s
 [`roadtest-swiftumlstudio-mutation.md`](../measurements/roadtest-swiftumlstudio-mutation.md).
 They are listed by how much they would have caught in that run.
 
-**Only the reach check in #8 was measured** (the F2 A/B: 16 → 20 kills). For every other entry, the
-mutants it would catch are reasoned from the survivors and have not been run.
+**Three entries are measured**: #8's reach check (the F2 A/B: 16 → 20 kills), and #3 and #4, prototyped
+by hand on SwiftUMLBridge (see [Measured](#measured-2026-10-10-prototypes-of-3-and-4)). For every other
+entry, the mutants it would catch are reasoned from the survivors and have not been run.
 
 Each entry gives the law, the **signal** that lets the tool find candidate functions, the
 **evidence** from the run, and the **closest existing** template.
@@ -33,7 +34,8 @@ For each node or edge name in the input, `output.contains(name)`. A stronger for
 `NSRegularExpression(pattern: globPatternToRegex(g))` does not throw. The same idea covers `URL(string:)`, `UUID(uuidString:)` and `JSONSerialization`.
 
 - **Signal:** returns `String`, and the name or doc names the target format (`regex`, `url`, `json`, `pattern`).
-- **Evidence:** law G2 in [`roadtest-swiftumlstudio.md`](../measurements/roadtest-swiftumlstudio.md). It is predicted to find a **real defect**: `a[b` and `a}b` produce invalid patterns, and no existing template can propose it.
+- **Evidence:** law G2 in [`roadtest-swiftumlstudio.md`](../measurements/roadtest-swiftumlstudio.md); no existing template can propose it.
+- **Measured:** **refutes the real code.** `globPatternToRegex("a[^\\")` is not a valid regex: brackets pass through unescaped by design, so an unbalanced one breaks the pattern. (`}` is now escaped; G2's `a}b` no longer refutes.) On bracket-free globs the law holds and kills 5 of 6 hand mutants, matching the hand-written suite.
 - **Closest existing:** none.
 
 ## 4. IDs and aliases never collide
@@ -42,6 +44,7 @@ For each node or edge name in the input, `output.contains(name)`. A stronger for
 
 - **Signal:** `String -> String` named `*Id`, `*Alias`, `slug`, `identifier`, or `key`.
 - **Evidence:** the point of a diagram ID is that it does not collide. Sanitizers that collapse characters (`a-b` and `a_b` both become `a_b`) silently merge two nodes. It is a conjecture and is likely refutable, which is what a law should be.
+- **Measured:** **refutes the real code and found a real defect.** `mermaidId(">->") == mermaidId("-..")` and `safeAlias(" ") == safeAlias("+")`. Through the emitter, `Outer.Inner` and `Outer_Inner` were declared under one Mermaid id and drawn as one node. Fix in review: [SwiftUMLStudio#52](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/52). It kills no hand mutant, by construction: dropping a replacement makes a sanitizer *more* injective.
 - **Closest existing:** `caseiterable-key-injectivity`, which covers enums only.
 
 ## 5. Deduplication laws (`dedupe`, `unique`, `distinct`, `removingDuplicates`)
@@ -103,4 +106,24 @@ Calling `uniqName` n times returns n distinct values.
 - **#5–#8** are cheap upgrades to templates already emitted, and they directly fix the weaknesses the run measured.
 - **#1, #2 and #9** cover the most code, but they need new detection work.
 
-**Cheapest next measurement:** hand-write #3 against `globPatternToRegex` and #4 against the Mermaid ID functions as stubs on SwiftUMLBridge, then rerun swift-mutation-testing, the same way the predicate A/B was measured.
+## Measured 2026-10-10: prototypes of #3 and #4
+
+Hand-written stubs on SwiftUMLBridge (SwiftUMLStudio `e36da59`), 1,000 trials each, run in the
+funnel's scratch tree beside the 35 passing generated laws.
+
+**swift-mutation-testing could not measure them: it generates no mutants in `globPatternToRegex`,
+`mermaidId` or `safeAlias`.** Each is a chain of `replacingOccurrences` calls on string literals, and
+the tool has no operator for a string literal or a dropped chained call. So kills were measured on
+**15 hand-applied mutants** of that kind, the method `scripts/mutation_check.py` uses:
+
+| Mutants | Law #3 | Existing generated laws | Hand-written suite |
+|---|---|---|---|
+| `globPatternToRegex` G1–G6: escapes dropped from the class, escape template broken, `?` replacement dropped, anchors dropped | **5 of 6** | none passing | 5 of 6 |
+| `mermaidId` M1–M5: one replacement dropped each | – | **5 of 5** | 2 of 5 |
+| `safeAlias` S1–S4: one replacement dropped each | – | **4 of 4** | 2 of 4 |
+
+- **Law #3 matches the hand-written suite.** Four of its kills are its own (escapes dropped from the class, the escape template broken, the `?` replacement dropped). The anchors-dropped mutant is caught only because an empty glob then yields `""`, which `NSRegularExpression` rejects. Both miss the mutant that stops escaping `.`: an unescaped `.` is still valid, so catching it needs a law about what the regex *matches*.
+- **The existing `rewrite-postcondition` laws beat the hand-written suite, 9 of 9 against 4 of 9**, on code the mutation tool cannot see. So the road test's 1.3% understates the generated laws on string-transform code.
+- **#4's value is the defect, not kills:** a real, user-visible merge of two diagram nodes ([SwiftUMLStudio#52](https://github.com/Joseph-Cursio/SwiftUMLStudio/pull/52) fixes it).
+
+The stubs and the hand-mutant driver lived in a session scratchpad and are not kept.
