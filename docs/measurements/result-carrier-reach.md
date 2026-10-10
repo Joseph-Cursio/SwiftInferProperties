@@ -1,10 +1,21 @@
 # Does moving from `throws` to `Result` put more code within a law's reach?
 
-> **Status:** `measured` · **As of:** 2026-08-19
+> **Status:** `measured` · **As of:** 2026-08-20
 
 Re-derivable at any time — `ResultCarrierReachMeasuredTests` *is* the harness, and
 `make batch5` runs it. It costs **~28 minutes**, which is real and is the price of
 three discovery passes over 28,274 functions.
+
+> **Before re-taking (noted 2026-10-10).** The harness pins no figure. Its corpus-wide
+> checks are floors (at least 8 corpora, more than 100 throwing functions, more than 20
+> conformance-fixed ones), and its other tests check the transform and the classifier on
+> small inputs, so a green `make batch5` does not re-confirm +62, −218 or −53. And the
+> universe has moved. The swiftlang-swift checkout that contributed −50 of the −218 is no
+> longer on disk. Three corpora joined on 2026-08-23
+> (`docs/measurements/census-universe-17-to-20.md`), and swift-numerics and
+> swift-algorithms are missing too, so this machine now resolves 19 corpora, not 17. The
+> SEI pin and the templates have changed as well. A re-run will report a different total
+> without failing, so print the arms and compare them by hand.
 
 **Measured NO, and the sign is negative.** The headline is **−218 suggestions
 (−3.3%)** against a ceiling of **+62 (+0.95%)**. But the headline over-states the cost
@@ -200,7 +211,10 @@ of the refactor makes things worse.** Three findings, in order of what they chan
   thing: **the decline causes this tool has are not about the effect channel.** Not
   one of `UnverifiableCause`'s eight cases is *the subject throws*.
 - **The measured refactor is negative, and mostly for an invalid reason.** −218
-  gross, ~−66 for transforms that could actually be made.
+  gross, **−53** for transforms that could actually be made (first derived as ~−66).
+  *(Corrected 2026-10-10: −53 is the §4.1 measurement, and −66 the subtraction it
+  replaced. This line was missed when the opening summary, §4 and §7 were corrected on
+  2026-08-20.)*
 - **The advice is not wrong; it is about a different thing.** `Result` makes error
   laws *statable by a human*. It does not make them *discoverable by this tool*, and
   nothing here suggests it would after a carrier were added — that would take a
