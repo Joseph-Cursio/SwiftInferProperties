@@ -49,12 +49,16 @@ struct EnumPayloadQualificationTests {
         }
     }
 
-    /// The control: `Change` is nested in nothing, so its `Symbol` is another module's, and the
-    /// walk must not qualify it to the unrelated `Document.Symbol`. Whether the kit then refuses
-    /// the bare spelling is #63's own fix, asserted once the kit pin includes it.
-    @Test("a payload from another module stays bare")
-    func foreignPayloadStaysBare() throws {
+    /// The control, and #63 seen from this side: `Change` is nested in nothing, so its `Symbol` is
+    /// another module's. The walk must not qualify it to the unrelated `Document.Symbol`, and the
+    /// kit (4.10.0 on) must not build one for the bare spelling either.
+    @Test("a payload from another module stays bare and does not derive")
+    func foreignPayloadDoesNotDerive() throws {
         let change = try #require(Self.shapes.first { $0.name == "Change" })
         #expect(change.enumCases.first?.associatedValues.map(\.typeName) == ["Symbol"])
+        guard case .todo = try Self.strategy(for: "Change") else {
+            Issue.record("Change must not derive from the unrelated Document.Symbol")
+            return
+        }
     }
 }
