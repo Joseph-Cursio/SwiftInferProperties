@@ -124,6 +124,11 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     /// Every type and typealias this file declares, for resolving each
     /// candidate's Action type (`+ActionTypes.swift`).
     var declaredTypes = DeclaredTypeIndex()
+    /// How many protocol bodies enclose the walk. A function declared in one
+    /// is a requirement with no body, so not a reducer; unskipped, it read as
+    /// a free `(S, A) -> S` and was labelled `.elmStyle` (`Ring.add`, found
+    /// 2026-10-10), because a protocol is never pushed onto `typeStack`.
+    var protocolDepth = 0
 
     init(file: String, converter: SourceLocationConverter) {
         self.file = file
@@ -143,6 +148,10 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     // MARK: - Function-decl signature scan (M1.A path)
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        // A protocol requirement declares a signature, not a reducer.
+        if protocolDepth > 0 {
+            return .skipChildren
+        }
         // Skip private / fileprivate — same posture as
         // `FunctionScannerVisitor`. V1.57.A cycle-53 lesson: file-private
         // helpers aren't reachable cross-module and pollute the list.
@@ -227,11 +236,14 @@ final class ReducerDiscoveryVisitor: SyntaxVisitor {
     override func visitPost(_: ExtensionDeclSyntax) { popType() }
 
     /// Recorded, never pushed: a protocol declares no nested types. Its
-    /// children are still visited, exactly as before it was recorded.
+    /// children are still visited, so a `typealias` in its body is recorded,
+    /// but a function there is a requirement and is skipped (`protocolDepth`).
     override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
         declaredTypes.recordType(node.name.text, kind: .protocol, scope: typeStack)
+        protocolDepth += 1
         return .visitChildren
     }
+    override func visitPost(_: ProtocolDeclSyntax) { protocolDepth -= 1 }
 
     override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
         declaredTypes.recordAlias(
