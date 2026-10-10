@@ -23,14 +23,16 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import corpus_funnel_stage5 as s5  # noqa: E402
 
 SWIFT_ORG = os.path.expanduser(
-    "~/Library/Developer/Toolchains/swift-6.3.3-RELEASE.xctoolchain/usr/bin/swift")
+    "~/Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain/usr/bin/swift")
 XCODE = "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift"
 
 # ⚠ **The toolchain is per REPOSITORY and it is not cosmetic.** SwiftMarkdownWiki needs Xcode's,
-# because the swift.org one cannot see its SwiftUI cross-import overlay types; this project needs
-# swift.org's, because Xcode's dies in the plugin stage. The 16 September census's worst defect
-# was a toolchain mismatch that left 0 of 70 stubs carrying an import against 70 of 70 with the
-# right one -- a whole pass discarded. Anything SwiftUI-shaped gets Xcode's.
+# because the swift.org one cannot see its SwiftUI cross-import overlay types; this project needed
+# swift.org's, because Xcode 26's died in the plugin stage (Xcode 27's builds it; the swift.org pin
+# moved 6.3.3 -> 6.4.0 on 2026-10-10, as 6.3.3 cannot use the macOS 27 SDK; see the Makefile).
+# The 16 September census's worst defect was a toolchain mismatch that left 0 of 70 stubs carrying
+# an import against 70 of 70 with the right one -- a whole pass discarded. Anything SwiftUI-shaped
+# gets Xcode's.
 XCODE_REPOS = {"SwiftMarkdownWiki", "SwiftUMLStudio", "SwiftLintRuleStudio",
                "SwiftFormatRuleStudio", "SwiftAssist", "LintStudioUI",
                "MacCloud_client_MacOS", "SwiftLintRuleStudioTeam", "SwiftCloneDetector"}
