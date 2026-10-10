@@ -155,10 +155,12 @@ struct SortedOutputTemplateTests {
         #expect(stub.contains("await if") == false)
     }
 
-    /// A descending last key ends on `>=`; a returned array is checked with no member access.
+    /// A descending last key ends on `>=`; a returned array is checked with no member access. With
+    /// no tie-break the comparison is the closure's one expression, so it carries no `return` —
+    /// SwiftLint's `implicit_return` flags one in the file the stub is written to.
     @Test func aDescendingLastKeyAndADirectlyReturnedArray() {
         let chain = LiftedTestEmitter.inOrderChain([SortKey(path: "count", ascending: false)])
-        #expect(chain == "return first.count >= second.count")
+        #expect(chain == "first.count >= second.count")
         let stub = LiftedTestEmitter.sortedByKey(
             callee: CalleeReference(bareName: "biggestFirst", qualifier: "Groups", argumentLabels: [nil]),
             ordering: SortedOutput(member: nil, keys: [SortKey(path: "count", ascending: false)]),

@@ -22,7 +22,9 @@ extension LiftedTestEmitter {
         let drawn = generators.isEmpty ? []
             : isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
         let bounds = "(\(range.lower)...\(range.upper) as ClosedRange<Double>)"
-        let body = "return \(bounds).contains(Double(\(callee.call(drawn))))"
+        // No `return`: the body is one expression, and SwiftLint's `implicit_return` flags the
+        // spelled-out form in the emitted closure.
+        let body = "\(bounds).contains(Double(\(callee.call(drawn))))"
         return makeTestStubExpression(
             testFunctionName: "\(callee.identifierName)_staysInDocumentedRange",
             seed: seed,
