@@ -30,11 +30,13 @@ import SwiftInferTemplates
 ///
 /// ⚠ **Known exceptions, printed and not compiling** — each shared with accept's determinism stub:
 /// a package in Swift 5 language mode (`Gen.frequency` and `Gen.oneOf` are `@available(swift
-/// 6.2)`); a receiver of a global-actor-isolated type built through its isolated initializer in
-/// the nonisolated `sample` closure, and a `.defaultIsolation(MainActor)` target; and a parameter
-/// whose bare type name SwiftPropertyLaws' `GeneratorResolver` matches to a different scanned type
-/// of the same name (its leaf index; `encodeSnapshot(_:)` on SwiftAssist draws
-/// `XcodeDocument.Symbol` for SwiftSourceKitClient's `Symbol`; filed as SwiftPropertyLaws#63).
+/// 6.2)`); and a receiver of a global-actor-isolated type built through its isolated initializer
+/// in the nonisolated `sample` closure, and a `.defaultIsolation(MainActor)` target.
+///
+/// A parameter whose bare type name the kit matched to an unrelated scanned type of the same leaf
+/// was a third, until kit 4.10.0 (SwiftPropertyLaws#63): `encodeSnapshot(_:)` on SwiftAssist drew
+/// `XcodeDocument.Symbol` for SwiftSourceKitClient's `Symbol`. The kit now reads a bare name from
+/// the scope it was written in, so that parameter declines with the resolver's reason instead.
 extension SwiftInferCommand.Discover {
 
     /// What the reference oracle reads from the scan. Built once per `discover` run; the resolver
