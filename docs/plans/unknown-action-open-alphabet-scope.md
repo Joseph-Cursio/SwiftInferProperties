@@ -48,7 +48,8 @@ tests this.
 
 - operators (`AssociationAggregate.<`) and combinators (`Anchor.strongest`);
 - protocol requirements read as free functions — `Semigroup.combine` and `Ring.add` render as
-  `elm-style`, because discovery never pushes a protocol onto its type stack;
+  `elm-style`, because discovery never pushes a protocol onto its type stack (**fixed after this
+  scope was written**: see §8);
 - shape matches — `Bundle.preferredLocalizations` is labelled `reswift` without the file importing
   ReSwift, where the TCA walk requires `import ComposableArchitecture`.
 
@@ -124,5 +125,9 @@ Written before any arm runs.
 
 - **Reducer recognition precision on library code** (§3): both redux families fire on every match.
 - **Protocol requirements discovered as free reducers**: a discovery defect, recorded separately.
+  **Fixed 2026-10-10** (`ReducerDiscoveryVisitor.protocolDepth`). Over the same manifest trees,
+  10 requirements left the scan, each taking both of its rows: reducer-shaped functions 274 → 264,
+  `determinism` 274 → 264, `unknown-action-is-no-op` 269 → 259. Fixtures did not move. The figures
+  and predictions above are left as written; arm 1's population is now 259 rows.
 - **String-dispatch reducers**: their property is real, and stating it needs a different probe
   (an unrecognised value of the dispatch type), not a different gate.
