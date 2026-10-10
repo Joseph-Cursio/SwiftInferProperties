@@ -127,7 +127,7 @@ As of SwiftProjectLint `2567f79f`, SwiftLint 0.65.1 and the Swift 6.4 compiler:
 
 | §2.1 check | Who owns it today |
 |---|---|
-| `(try? f()) ?? x` | **Nobody.** 144 sites in code across every repo under `~/GitHub_projects` plus SwiftProjectLint and this repo, about 120 outside tests, mostly deliberate best-effort reads. SwiftProjectLint flags the equivalent `do { return try f() } catch { return 0 }`, and its own rule docs disagree on whether `try?` already counts as handling. Filed upstream as a question: Joseph-Cursio/SwiftProjectLint#ISSUE |
+| `(try? f()) ?? x` | **Nobody.** 144 sites in code across every repo under `~/GitHub_projects` plus SwiftProjectLint and this repo, about 120 outside tests, mostly deliberate best-effort reads. SwiftProjectLint flags the equivalent `do { return try f() } catch { return 0 }`, and its own rule docs disagree on whether `try?` already counts as handling. Filed upstream as a question: Joseph-Cursio/SwiftProjectLint#305 |
 | Empty `catch { }` | SwiftProjectLint `Catch Without Handling`, on by default; SwiftLint's opt-in `no_empty_block` also fires |
 | `catch { throw .unknown }` | Nobody. `Catch Without Handling` counts any `throw` as handling. §2.2's propagation and exhaustiveness rows claim the same defect for property tests, so the doc assigns one defect to both instruments |
 | Unused `catch let error` | **The compiler** already warns |
