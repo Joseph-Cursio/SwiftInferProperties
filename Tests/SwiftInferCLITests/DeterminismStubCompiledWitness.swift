@@ -75,9 +75,12 @@ enum DeterminismWitnessBank {
     static func read(_ raw: Int) -> DeterminismWitnessReading { DeterminismWitnessReading(value: raw) }
 }
 
-// WITNESS-BEGIN — emitted text, verbatim; the rules below are the ones it trips.
-// swiftlint:disable closure_end_indentation identical_operands line_length type_name
-struct DeterminismWitnessGauge_scale_determinismTests {
+// WITNESS-BEGIN — emitted text, verbatim; the rules below are the ones it trips. `identical_operands`
+// is the determinism law itself, `f(x) == f(x)`; `type_name` is a suite name past this repo's
+// 40-character limit. `closure_end_indentation` and `line_length` were on this list until the
+// written file was laid out (`GeneratedFileLayout`).
+// swiftlint:disable identical_operands type_name
+struct DeterminismWitnessGaugeScaleDeterminismTests {
 
     @Test func scale_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -91,11 +94,16 @@ struct DeterminismWitnessGauge_scale_determinismTests {
             trials: 100,
             seed: seed,
             sample: { rng in (Gen<Double>.double(in: -1_000_000...1_000_000)).run(using: &rng) },
-            property: { value in approximatelyEqual(DeterminismWitnessGauge.scale(value), DeterminismWitnessGauge.scale(value)) }
+            property: { value in
+                approximatelyEqual(DeterminismWitnessGauge.scale(value), DeterminismWitnessGauge.scale(value))
+            }
         )
         if case let .failed(_, _, input, error) = result {
             Issue.record(
-                "DeterminismWitnessGauge.scale(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                """
+                DeterminismWitnessGauge.scale(_:) is not deterministic — same input produced different output at input \
+                \(input). \(error?.message ?? "")
+                """
             )
         }
     }
@@ -111,7 +119,7 @@ struct DeterminismWitnessGauge_scale_determinismTests {
     }
 }
 
-struct DeterminismWitnessPoint_merge_determinismTests {
+struct DeterminismWitnessPointMergeDeterminismTests {
 
     @Test func merge_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -125,21 +133,26 @@ struct DeterminismWitnessPoint_merge_determinismTests {
             trials: 100,
             seed: seed,
             sample: { rng in
-                        let arg0 = (Gen<Int>.int().map { DeterminismWitnessPoint(value: $0) }).run(using: &rng)
-                        let arg1 = (Gen<Int>.int().map { DeterminismWitnessPoint(value: $0) }).run(using: &rng)
-                        return (arg0, arg1)
-                    },
-            property: { (args: (DeterminismWitnessPoint, DeterminismWitnessPoint)) in DeterminismWitnessPoint.merge(args.0, args.1) == DeterminismWitnessPoint.merge(args.0, args.1) }
+                let arg0 = (Gen<Int>.int().map { DeterminismWitnessPoint(value: $0) }).run(using: &rng)
+                let arg1 = (Gen<Int>.int().map { DeterminismWitnessPoint(value: $0) }).run(using: &rng)
+                return (arg0, arg1)
+            },
+            property: { (args: (DeterminismWitnessPoint, DeterminismWitnessPoint)) in
+                DeterminismWitnessPoint.merge(args.0, args.1) == DeterminismWitnessPoint.merge(args.0, args.1)
+            }
         )
         if case let .failed(_, _, input, error) = result {
             Issue.record(
-                "DeterminismWitnessPoint.merge(_:_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                """
+                DeterminismWitnessPoint.merge(_:_:) is not deterministic — same input produced different output at \
+                input \(input). \(error?.message ?? "")
+                """
             )
         }
     }
 }
 
-struct DeterminismWitnessColumns_sortKey_determinismTests {
+struct DeterminismWitnessColumnsSortKeyDeterminismTests {
 
     @Test func sortKey_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -157,13 +170,16 @@ struct DeterminismWitnessColumns_sortKey_determinismTests {
         )
         if case let .failed(_, _, input, error) = result {
             Issue.record(
-                "DeterminismWitnessColumns.sortKey(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                """
+                DeterminismWitnessColumns.sortKey(_:) is not deterministic — same input produced different output at \
+                input \(input). \(error?.message ?? "")
+                """
             )
         }
     }
 }
 
-struct DeterminismWitnessColumns_rowID_determinismTests {
+struct DeterminismWitnessColumnsRowIDDeterminismTests {
 
     @Test func rowID_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -181,13 +197,16 @@ struct DeterminismWitnessColumns_rowID_determinismTests {
         )
         if case let .failed(_, _, input, error) = result {
             Issue.record(
-                "DeterminismWitnessColumns.rowID(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                """
+                DeterminismWitnessColumns.rowID(_:) is not deterministic — same input produced different output at \
+                input \(input). \(error?.message ?? "")
+                """
             )
         }
     }
 }
 
-struct DeterminismWitnessBank_credit_determinismTests {
+struct DeterminismWitnessBankCreditDeterminismTests {
 
     @Test func credit_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -205,13 +224,16 @@ struct DeterminismWitnessBank_credit_determinismTests {
         )
         if case let .failed(_, _, input, error) = result {
             Issue.record(
-                "DeterminismWitnessBank.credit(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                """
+                DeterminismWitnessBank.credit(_:) is not deterministic — same input produced different output at input \
+                \(input). \(error?.message ?? "")
+                """
             )
         }
     }
 }
 
-struct DeterminismWitnessBank_read_determinismTests {
+struct DeterminismWitnessBankReadDeterminismTests {
 
     @Test func read_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -229,10 +251,13 @@ struct DeterminismWitnessBank_read_determinismTests {
         )
         if case let .failed(_, _, input, error) = result {
             Issue.record(
-                "DeterminismWitnessBank.read(_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                """
+                DeterminismWitnessBank.read(_:) is not deterministic — same input produced different output at input \
+                \(input). \(error?.message ?? "")
+                """
             )
         }
     }
 }
-// swiftlint:enable closure_end_indentation identical_operands line_length type_name
+// swiftlint:enable identical_operands type_name
 // WITNESS-END

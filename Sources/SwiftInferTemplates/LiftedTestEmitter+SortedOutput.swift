@@ -54,7 +54,8 @@ extension LiftedTestEmitter {
             "if first.\(key.path) != second.\(key.path) { "
                 + "return first.\(key.path) \(key.ascending ? "<" : ">") second.\(key.path) }; "
         }
-        return ties.joined()
-            + "return first.\(last.path) \(last.ascending ? "<=" : ">=") second.\(last.path)"
+        // With no tie-break the closure is one expression, and `implicit_return` flags a `return`.
+        let comparison = "first.\(last.path) \(last.ascending ? "<=" : ">=") second.\(last.path)"
+        return ties.isEmpty ? comparison : ties.joined() + "return " + comparison
     }
 }

@@ -44,7 +44,8 @@ struct MeasureNonNegativityStubTests {
     @Test("a one-argument measure checks its result is non-negative")
     func oneArgumentMeasure() throws {
         let stub = try Self.emits(Self.suggestion(displayName: "depth(_:)", signature: "(Node) -> Int"))
-        #expect(stub.contains("return depth(value) >= 0"), "got:\n\(stub)")
+        // One expression, so no `return` (`implicit_return`).
+        #expect(stub.contains("{ value in depth(value) >= 0 }"), "got:\n\(stub)")
         #expect(stub.contains("depth_isNonNegative"))
         #expect(stub.contains("returned a negative measure"))
     }

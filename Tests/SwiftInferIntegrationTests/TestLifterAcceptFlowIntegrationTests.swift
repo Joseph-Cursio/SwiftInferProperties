@@ -7,14 +7,14 @@ import Testing
 
 /// TestLifter M3.3 acceptance — accepting a lifted-promoted suggestion
 /// in `swift-infer discover --interactive` writes a peer test stub to
-/// `Tests/Generated/SwiftInfer/<template>/<TestMethodName>_lifted_<template>.swift`
+/// `Tests/Generated/SwiftInfer/<template>/<TestMethodName>Lifted<Template>Tests.swift`
 /// with a provenance comment header pointing at the originating test
 /// method, and unrecovered-type lifted suggestions emit a `.todo<?>()`
 /// stub that doesn't compile (PRD §16 #4 invariant preserved).
 @Suite("TestLifter — accept-flow writeouts (M3.3)")
 struct TestLifterAcceptFlowIntegrationTests {
 
-    @Test("Accepting a lifted round-trip suggestion writes <TestMethodName>_lifted_round-trip.swift")
+    @Test("Accepting a lifted round-trip suggestion writes <TestMethodName>LiftedRoundTripTests.swift")
     func acceptLiftedRoundTripWritesDisambiguatedFile() throws {
         let directory = try makeFixtureDirectory(name: "AcceptLiftedRoundTrip")
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -46,7 +46,7 @@ struct TestLifterAcceptFlowIntegrationTests {
         // File path matches the M3.3 disambiguated naming pattern.
         let writtenPath = try #require(outcome.writtenFiles.first)
         let expectedPath = directory
-            .appendingPathComponent("Tests/Generated/SwiftInfer/round-trip/testRoundTrip_lifted_round-trip.swift")
+            .appendingPathComponent("Tests/Generated/SwiftInfer/round-trip/TestRoundTripLiftedRoundTripTests.swift")
         #expect(writtenPath.path == expectedPath.path)
 
         // File contents carry the provenance header.
@@ -88,10 +88,10 @@ struct TestLifterAcceptFlowIntegrationTests {
         // The would-be path is reported on stdout — the M6.4 dry-run
         // contract from the existing accept-flow.
         #expect(recordedOutput.text.contains("[dry-run] would write"))
-        #expect(recordedOutput.text.contains("testRoundTrip_lifted_round-trip.swift"))
+        #expect(recordedOutput.text.contains("TestRoundTripLiftedRoundTripTests.swift"))
         // Not actually present on disk.
         let expectedPath = directory
-            .appendingPathComponent("Tests/Generated/SwiftInfer/round-trip/testRoundTrip_lifted_round-trip.swift")
+            .appendingPathComponent("Tests/Generated/SwiftInfer/round-trip/TestRoundTripLiftedRoundTripTests.swift")
         #expect(!FileManager.default.fileExists(atPath: expectedPath.path))
     }
 

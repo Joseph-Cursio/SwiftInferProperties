@@ -95,8 +95,11 @@ struct InteractiveTriageModuleImportTests {
         )
         let wrapped = InteractiveTriage.wrappedFileContents(stub: "\n@Test func x() async {}", suggestion: suggestion)
         #expect(wrapped.contains("@testable import Demo"))
-        // Placed after the kit imports, before the test body.
-        #expect(wrapped.contains("import PropertyLawKit\n@testable import Demo"))
+        // Sorted among the other imports by module name, ignoring `@testable` and case, as
+        // `sorted_imports` checks them.
+        #expect(wrapped.contains(
+            "@testable import Demo\nimport Foundation\nimport PropertyBased\nimport PropertyLawKit\nimport Testing\n"
+        ))
     }
 
     /// **This test used to pin the defect it was named for** (#415). Omitting the import for a
@@ -268,8 +271,8 @@ struct InteractiveTriageModuleImportTests {
         other.templateName = "commutativity"
         let commutativity = try #require(InteractiveTriage.stubFileName(for: other))
 
-        #expect(idempotence == "union_idempotence.swift")
-        #expect(commutativity == "union_commutativity.swift")
+        #expect(idempotence == "UnionIdempotenceTests.swift")
+        #expect(commutativity == "UnionCommutativityTests.swift")
         #expect(idempotence != commutativity)
     }
 

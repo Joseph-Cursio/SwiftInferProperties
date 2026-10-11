@@ -67,14 +67,14 @@ struct DeterminismResultEqualityDiscoverTests {
     @Test func aHandWrittenEqualityOperatorLetsTheStubThrough() throws {
         let run = try Self.accept(Self.handWritten, symbol: "read", line: 8)
         #expect(run.output.contains("would write"), "accept wrote nothing:\n\(run.diagnostics.joined(separator: "\n"))")
-        #expect(run.output.contains("SwiftInfer/determinism/Meter_read_determinism.swift"))
+        #expect(run.output.contains("SwiftInfer/determinism/MeterReadDeterminismTests.swift"))
         #expect(run.diagnostics.contains { $0.contains("no stub written") } == false)
     }
 
     @Test func anAttachedMacroLetsTheStubThrough() throws {
         let run = try Self.accept(Self.macroAttached, symbol: "make", line: 8)
         #expect(run.output.contains("would write"), "accept wrote nothing:\n\(run.diagnostics.joined(separator: "\n"))")
-        #expect(run.output.contains("SwiftInfer/determinism/Factory_make_determinism.swift"))
+        #expect(run.output.contains("SwiftInfer/determinism/FactoryMakeDeterminismTests.swift"))
         #expect(run.diagnostics.contains { $0.contains("no stub written") } == false)
     }
 

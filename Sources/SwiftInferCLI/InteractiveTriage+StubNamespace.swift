@@ -28,28 +28,24 @@ import SwiftInferCore
 /// property closure.
 extension InteractiveTriage {
 
-    /// The suite type a stub file's tests live in: its base name as a Swift identifier, plus `Tests`.
+    /// The suite type a stub file's tests live in: its base name in UpperCamelCase, ending `Tests`.
     ///
-    /// `normalize_idempotence.swift` → `normalize_idempotenceTests`;
-    /// `parse_input-totality.swift` → `parse_input_totalityTests`;
-    /// `BigInt_+_commutativity.swift` → `BigInt_Plus_commutativityTests`.
+    /// A name `stubFileName` gave is already that, and comes back unchanged —
+    /// `NormalizeIdempotenceTests.swift` → `NormalizeIdempotenceTests` — so the file is named for
+    /// the type it declares (`file_name`). Any other name is cased the same way:
+    /// `parse_input-totality.swift` → `ParseInputTotalityTests`;
+    /// `BigInt_+_commutativity.swift` → `BigIntPlusCommutativityTests`.
     ///
     /// **An operator character is spelled, not blanked.** Blanking every one made `BigInt_+_…` and
-    /// `BigInt_*_…` — distinct files — both `BigInt___…Tests`, an `invalid redeclaration` that set
-    /// both aside. `-` stays `_`, since it is what separates a kebab-case template name.
+    /// `BigInt_*_…` — distinct files — one suite name, an `invalid redeclaration` that set both
+    /// aside. `-` is a word break, since it is what separates a kebab-case template name.
+    ///
+    /// No `_` survives: SwiftLint's `type_name` rejects one in a type name, as an error.
     static func suiteName(forStubFileName fileName: String) -> String {
         let base = fileName.hasSuffix(".swift") ? String(fileName.dropLast(".swift".count)) : fileName
-        let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_")
-        let pieces = base.map { character -> String in
-            if allowed.contains(character) { return String(character) }
-            if character != "-", let word = CalleeReference.operatorCharacterWords[character] {
-                return CalleeReference.capitalized(word)
-            }
-            return "_"
-        }
-        var identifier = pieces.joined()
-        if identifier.first.map(\.isNumber) ?? true { identifier = "_" + identifier }
-        return identifier + "Tests"
+        var identifier = upperCamel(base, spellingOperators: true)
+        if !(identifier.first?.isLetter ?? false) { identifier = "Stub" + identifier }
+        return identifier.hasSuffix("Tests") ? identifier : identifier + "Tests"
     }
 
     /// `stub` inside `struct <suiteName> { … }`.
@@ -71,7 +67,7 @@ extension InteractiveTriage {
     /// by `collisionFreeStubFileName`, with a note when it had to be.
     static func stubDestination(for suggestion: Suggestion, context: Context) -> URL {
         let directory = context.generatedRoot.appendingPathComponent("SwiftInfer/\(suggestion.templateName)")
-        let preferred = stubFileName(for: suggestion) ?? "\(suggestion.identity.normalized).swift"
+        let preferred = stubFileName(for: suggestion) ?? fallbackStubFileName(for: suggestion)
         let (fileName, displaced) = collisionFreeStubFileName(preferred: preferred, for: suggestion, in: directory)
         if let displaced {
             context.diagnostics.writeDiagnostic(
@@ -84,7 +80,7 @@ extension InteractiveTriage {
 
     /// The file name to write `suggestion`'s stub under in `directory`: `preferred`, unless a file
     /// already there belongs to a **different** suggestion — then `preferred` with the identity's
-    /// first eight hex digits appended, and the name of the stub it would have replaced.
+    /// first eight hex digits before its `Tests`, and the name of the stub it would have replaced.
     ///
     /// ## What the declaring-type prefix cannot separate
     ///
@@ -112,8 +108,10 @@ extension InteractiveTriage {
         // edited away — and is treated as someone else's, never overwritten.
         let occupant = recordedIdentity(in: contents)
         guard occupant != suggestion.identity.display else { return (preferred, nil) }
+        // Before `Tests` and with no `_`, so the name stays the suite's (`file_name`, `type_name`).
         let base = preferred.hasSuffix(".swift") ? String(preferred.dropLast(".swift".count)) : preferred
-        return ("\(base)_\(suggestion.identity.normalized.prefix(8)).swift", occupant ?? "with no identity line")
+        let stem = base.hasSuffix("Tests") ? String(base.dropLast("Tests".count)) : base
+        return ("\(stem)\(suggestion.identity.normalized.prefix(8))Tests.swift", occupant ?? "with no identity line")
     }
 
     /// The `// Suggestion identity: 0x…` a generated stub records in its header, or `nil`.

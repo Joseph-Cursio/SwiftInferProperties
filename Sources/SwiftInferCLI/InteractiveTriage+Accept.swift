@@ -65,17 +65,37 @@ extension InteractiveTriage {
             moduleUnderTest: context.moduleUnderTest,
             fileName: fileName,
             carrierImports: Self.carrierImports(for: context),
-            sourceModules: context.sourceModules
+            sourceModules: context.sourceModules,
+            packageRoot: context.packageRoot
         )
+        try writeStubFile(contents, to: path, for: suggestion, context: context)
+        noteKitFloor(for: stub, context: context)
+        try writeSendableShims(for: drawn.typeNames, context: context)
+        return path
+    }
+
+    /// Writes an accepted stub, replacing any file an older run wrote for the same suggestion.
+    static func writeStubFile(_ contents: String, to path: URL, for suggestion: Suggestion, context: Context) throws {
         try FileManager.default.createDirectory(
             at: path.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
         try Data(contents.utf8).write(to: path, options: .atomic)
         context.output.write("Wrote \(path.path)")
-        noteKitFloor(for: stub, context: context)
-        try writeSendableShims(for: drawn.typeNames, context: context)
-        return path
+        try removeSupersededStubs(for: suggestion, replacedBy: path, context: context)
+    }
+
+    /// Removes the file an older run wrote for this same suggestion under the name stubs had
+    /// before they were named for their suite — the re-accept that would have overwritten it in
+    /// place, had the name not changed. See `supersededStubFiles(for:in:)`.
+    static func removeSupersededStubs(for suggestion: Suggestion, replacedBy path: URL, context: Context) throws {
+        for old in supersededStubFiles(for: suggestion, in: path.deletingLastPathComponent()) where old != path {
+            try FileManager.default.removeItem(at: old)
+            context.diagnostics.writeDiagnostic(
+                "note: replaced \(old.lastPathComponent) with \(path.lastPathComponent) — the same suggestion's stub, "
+                    + "under the name stub files now take from the suite they declare"
+            )
+        }
     }
 
     /// Says so when `stub` calls a kit API newer than the package resolves — see `KitAPIFloor`.

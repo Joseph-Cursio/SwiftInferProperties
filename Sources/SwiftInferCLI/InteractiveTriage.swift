@@ -12,7 +12,8 @@ import SwiftInferTemplates
 /// - `A` — accept Option A. For `idempotence` / `round-trip` /
 ///   `monotonicity` / `invariant-preservation` suggestions, emit a
 ///   peer `@Test func` via `LiftedTestEmitter` (M6.3 + M7.3) and
-///   write it to `Tests/Generated/SwiftInfer/<TemplateName>/<FunctionName>.swift`.
+///   write it to `Tests/Generated/SwiftInfer/<TemplateName>/<Suite>.swift`, the file named for
+///   the suite it declares (`stubFileName(for:)`).
 ///   In every case the suggestion's identity-derived seed (M4.3,
 ///   widened to 256 bits in M5.2.a) is used so re-running the
 ///   emitted test produces identical trial sequences per PRD §16 #6.

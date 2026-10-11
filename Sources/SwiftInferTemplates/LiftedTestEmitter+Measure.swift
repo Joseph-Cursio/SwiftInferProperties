@@ -29,7 +29,8 @@ extension LiftedTestEmitter {
             : isTuple ? tupleBinding(argumentTypes: argumentTypes, count: generators.count) : "value"
         let drawn = generators.isEmpty ? []
             : isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
-        let body = "return \(callee.call(drawn)) >= 0"
+        // One expression, so no `return` (`implicit_return`).
+        let body = "\(callee.call(drawn)) >= 0"
         return makeTestStubExpression(
             testFunctionName: "\(callee.identifierName)_isNonNegative",
             seed: seed,

@@ -38,13 +38,17 @@ struct StubNamespaceTests {
 
     // MARK: - The name
 
+    /// UpperCamelCase with no `_`, which SwiftLint's `type_name` rejects as an error. A name
+    /// `stubFileName` gave comes back unchanged, so the file is named for the type it declares;
+    /// an older, underscored name is cased the same way.
     @Test("a file name becomes a Swift identifier", arguments: [
-        ("normalize_idempotence.swift", "normalize_idempotenceTests"),
-        ("parse_input-totality.swift", "parse_input_totalityTests"),
-        ("Editor_Tokenizer_tokenizeLine_determinism.swift", "Editor_Tokenizer_tokenizeLine_determinismTests"),
-        ("3d_round-trip.swift", "_3d_round_tripTests"),
-        ("BigInt_+_commutativity.swift", "BigInt_Plus_commutativityTests"),
-        ("BigInt_*_commutativity.swift", "BigInt_Times_commutativityTests")
+        ("NormalizeIdempotenceTests.swift", "NormalizeIdempotenceTests"),
+        ("normalize_idempotence.swift", "NormalizeIdempotenceTests"),
+        ("parse_input-totality.swift", "ParseInputTotalityTests"),
+        ("Editor_Tokenizer_tokenizeLine_determinism.swift", "EditorTokenizerTokenizeLineDeterminismTests"),
+        ("3d_round-trip.swift", "Stub3dRoundTripTests"),
+        ("BigInt_+_commutativity.swift", "BigIntPlusCommutativityTests"),
+        ("BigInt_*_commutativity.swift", "BigIntTimesCommutativityTests")
     ])
     func theSuiteNameIsAnIdentifier(fileName: String, expected: String) {
         #expect(InteractiveTriage.suiteName(forStubFileName: fileName) == expected)
@@ -72,22 +76,22 @@ struct StubNamespaceTests {
     @Test func twoStubsWithOneTestNameGetDistinctSuites() {
         let suggestion = Self.suggestion("matches(_:)")
         let first = InteractiveTriage.wrappedFileContents(
-            stub: Self.stub, suggestion: suggestion, fileName: "RegistrationVerb_matches_predicate.swift"
+            stub: Self.stub, suggestion: suggestion, fileName: "RegistrationVerbMatchesPredicateTests.swift"
         )
         let second = InteractiveTriage.wrappedFileContents(
-            stub: Self.stub, suggestion: suggestion, fileName: "MockTypeName_matches_predicate.swift"
+            stub: Self.stub, suggestion: suggestion, fileName: "MockTypeNameMatchesPredicateTests.swift"
         )
-        #expect(first.contains("struct RegistrationVerb_matches_predicateTests {\n    @Test func matches_isTotal()"))
-        #expect(second.contains("struct MockTypeName_matches_predicateTests {\n    @Test func matches_isTotal()"))
+        #expect(first.contains("struct RegistrationVerbMatchesPredicateTests {\n    @Test func matches_isTotal()"))
+        #expect(second.contains("struct MockTypeNameMatchesPredicateTests {\n    @Test func matches_isTotal()"))
     }
 
     /// The imports stay at file scope, outside the suite; only the stub moves.
     @Test func theImportsStayAtFileScope() throws {
         let file = InteractiveTriage.wrappedFileContents(
-            stub: Self.stub, suggestion: Self.suggestion("matches(_:)"), fileName: "matches_predicate.swift"
+            stub: Self.stub, suggestion: Self.suggestion("matches(_:)"), fileName: "MatchesPredicateTests.swift"
         )
-        let suiteStart = try #require(file.range(of: "struct matches_predicateTests {"))
-        let lastImport = try #require(file.range(of: "import PropertyLawKit", options: .backwards))
+        let suiteStart = try #require(file.range(of: "struct MatchesPredicateTests {"))
+        let lastImport = try #require(file.range(of: "import Testing", options: .backwards))
         #expect(lastImport.upperBound <= suiteStart.lowerBound)
         #expect(file.hasSuffix("}\n"))
     }

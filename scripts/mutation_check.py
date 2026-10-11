@@ -95,17 +95,30 @@ def law_of(stub_path, repo, package_dir, template):
     source = re.search(r"^// Source: (.+):(\d+)\s*$", text, re.M)
     if not (suite and test and source):
         return None
+    test_name = test.group(1) or test.group(2)
     stem = os.path.basename(stub_path)[:-len(".swift")]
-    # `<Type>_<fn>[_<fn2>]_<template>` — the subjects are the names between type and template.
-    # ⚠ **Not `[1:]`**: a FREE function's stub has no type prefix (`isFunctionLocal_predicate`), and
-    # dropping the first name dropped its only one — the first run crashed on exactly that.
-    names = stem[:-(len(template) + 1)].split("_") if stem.endswith("_" + template) else []
-    # The leading names are the type and any nesting; the subject is the last one — two for a
-    # round trip, which pairs a function with its inverse.
-    names = names[-2:] if template == "round-trip" else names[-1:]
+    if stem.endswith("_" + template):
+        # A stub written before 2026-10-10: `<Type>_<fn>[_<fn2>]_<template>` — the subjects are the
+        # names between type and template.
+        # ⚠ **Not `[1:]`**: a FREE function's stub has no type prefix (`isFunctionLocal_predicate`),
+        # and dropping the first name dropped its only one — the first run crashed on exactly that.
+        names = stem[:-(len(template) + 1)].split("_")
+        # The leading names are the type and any nesting; the subject is the last one — two for a
+        # round trip, which pairs a function with its inverse.
+        names = names[-2:] if template == "round-trip" else names[-1:]
+    else:
+        # Since then the file is named for its suite, in UpperCamelCase, and the words cannot be
+        # split back apart. The test function still leads with the subject — `<fn>_<law>`, or
+        # `<fn>_<fn2>_roundTrip` — as every emitter names it.
+        names = test_name.split("_")
+        names = names[:2] if template == "round-trip" else names[:1]
+    # The path is relative to the package since 2026-10-10, and absolute before.
+    path = source.group(1)
+    if not os.path.isabs(path):
+        path = os.path.join(package_dir, path)
     return {"repo": repo, "package": package_dir, "stub": stub_path, "template": template,
-            "suite": suite.group(1), "test": test.group(1) or test.group(2),
-            "subjects": [name for name in names if name], "source": source.group(1),
+            "suite": suite.group(1), "test": test_name,
+            "subjects": [name for name in names if name], "source": path,
             "line": int(source.group(2)), "trials": "trials:" in text}
 
 
