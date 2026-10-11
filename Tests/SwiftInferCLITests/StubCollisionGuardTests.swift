@@ -48,9 +48,9 @@ struct StubCollisionGuardTests {
         let directory = try Self.scratchDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let resolved = InteractiveTriage.collisionFreeStubFileName(
-            preferred: "Rules_matches_predicate.swift", for: Self.suggestion("a"), in: directory
+            preferred: "RulesMatchesPredicateTests.swift", for: Self.suggestion("a"), in: directory
         )
-        #expect(resolved.fileName == "Rules_matches_predicate.swift")
+        #expect(resolved.fileName == "RulesMatchesPredicateTests.swift")
         #expect(resolved.displaced == nil)
     }
 
@@ -59,11 +59,11 @@ struct StubCollisionGuardTests {
         let directory = try Self.scratchDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestion = Self.suggestion("a")
-        try Self.writeStub(for: suggestion, named: "Rules_matches_predicate.swift", in: directory)
+        try Self.writeStub(for: suggestion, named: "RulesMatchesPredicateTests.swift", in: directory)
         let resolved = InteractiveTriage.collisionFreeStubFileName(
-            preferred: "Rules_matches_predicate.swift", for: suggestion, in: directory
+            preferred: "RulesMatchesPredicateTests.swift", for: suggestion, in: directory
         )
-        #expect(resolved.fileName == "Rules_matches_predicate.swift")
+        #expect(resolved.fileName == "RulesMatchesPredicateTests.swift")
         #expect(resolved.displaced == nil)
     }
 
@@ -74,11 +74,11 @@ struct StubCollisionGuardTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let first = Self.suggestion("matches(String)")
         let second = Self.suggestion("matches(Int)")
-        try Self.writeStub(for: first, named: "Rules_matches_predicate.swift", in: directory)
+        try Self.writeStub(for: first, named: "RulesMatchesPredicateTests.swift", in: directory)
         let resolved = InteractiveTriage.collisionFreeStubFileName(
-            preferred: "Rules_matches_predicate.swift", for: second, in: directory
+            preferred: "RulesMatchesPredicateTests.swift", for: second, in: directory
         )
-        #expect(resolved.fileName == "Rules_matches_predicate_\(second.identity.normalized.prefix(8)).swift")
+        #expect(resolved.fileName == "RulesMatchesPredicate\(second.identity.normalized.prefix(8))Tests.swift")
         #expect(resolved.displaced == first.identity.display)
     }
 
@@ -86,16 +86,17 @@ struct StubCollisionGuardTests {
     @Test func aFileWithNoIdentityLineIsNotOverwritten() throws {
         let directory = try Self.scratchDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
-        try Data("// hand-written\n".utf8).write(to: directory.appendingPathComponent("Rules_matches_predicate.swift"))
+        let occupied = directory.appendingPathComponent("RulesMatchesPredicateTests.swift")
+        try Data("// hand-written\n".utf8).write(to: occupied)
         let resolved = InteractiveTriage.collisionFreeStubFileName(
-            preferred: "Rules_matches_predicate.swift", for: Self.suggestion("a"), in: directory
+            preferred: "RulesMatchesPredicateTests.swift", for: Self.suggestion("a"), in: directory
         )
-        #expect(resolved.fileName != "Rules_matches_predicate.swift")
+        #expect(resolved.fileName != "RulesMatchesPredicateTests.swift")
     }
 
     /// **End to end, through a real triage run.** Two overloads — `normalize(_: String)` and
     /// `normalize(_: Int)` — share a name, a template and (as free functions) no declaring type, so
-    /// both prefer `normalize_idempotence.swift`. Accepting both writes two files, not one, says so,
+    /// both prefer `NormalizeIdempotenceTests.swift`. Accepting both writes two files, not one, says so,
     /// and puts the shared test name `normalize_isIdempotent()` in two different suites.
     @Test func acceptingTwoOverloadsInOneRunWritesBoth() throws {
         let directory = try makeTriageFixtureDirectory(name: "OverloadCollision")

@@ -67,7 +67,7 @@ struct InteractiveTriageAcceptTests {
         #expect(stored.template == "idempotence")
         #expect(result.writtenFiles.count == 1)
         let stubPath = try #require(result.writtenFiles.first)
-        #expect(stubPath.path.contains("Tests/Generated/SwiftInfer/idempotence/normalize_idempotence.swift"))
+        #expect(stubPath.path.contains("Tests/Generated/SwiftInfer/idempotence/NormalizeIdempotenceTests.swift"))
         let contents = try String(contentsOf: stubPath, encoding: .utf8)
         #expect(contents.contains("@Test func normalize_isIdempotent()"))
         #expect(contents.contains("normalize(normalize(value)) == normalize(value)"))
@@ -88,7 +88,7 @@ struct InteractiveTriageAcceptTests {
             )
         )
         let stubPath = try #require(result.writtenFiles.first)
-        #expect(stubPath.path.contains("Tests/Generated/SwiftInfer/round-trip/encode_decode_round-trip.swift"))
+        #expect(stubPath.path.contains("Tests/Generated/SwiftInfer/round-trip/EncodeDecodeRoundTripTests.swift"))
         let contents = try String(contentsOf: stubPath, encoding: .utf8)
         #expect(contents.contains("@Test func encode_decode_roundTrip()"))
         #expect(contents.contains("decode(encode(value)) == value"))
@@ -115,7 +115,7 @@ struct InteractiveTriageAcceptTests {
         let stored = try #require(result.updatedDecisions.record(for: suggestion.identity.normalized))
         #expect(stored.decision == .accepted)
         let stubPath = try #require(result.writtenFiles.first)
-        #expect(stubPath.path.contains("Tests/Generated/SwiftInfer/commutativity/merge_commutativity.swift"))
+        #expect(stubPath.path.contains("Tests/Generated/SwiftInfer/commutativity/MergeCommutativityTests.swift"))
         let contents = try String(contentsOf: stubPath, encoding: .utf8)
         #expect(contents.contains("@Test func merge_isCommutative()"))
         #expect(contents.contains("merge(pair.0, pair.1) == merge(pair.1, pair.0)"))
@@ -232,10 +232,10 @@ struct InteractiveTriageBehaviorTests {
         #expect(output.lines.contains { $0.contains("--dry-run in effect") })
         #expect(output.lines.contains { line in
             line.contains("[dry-run] would write")
-                && line.contains("Tests/Generated/SwiftInfer/idempotence/normalize_idempotence.swift")
+                && line.contains("Tests/Generated/SwiftInfer/idempotence/NormalizeIdempotenceTests.swift")
         })
         let expectedPath = directory
-            .appendingPathComponent("Tests/Generated/SwiftInfer/idempotence/normalize_idempotence.swift")
+            .appendingPathComponent("Tests/Generated/SwiftInfer/idempotence/NormalizeIdempotenceTests.swift")
         #expect(!FileManager.default.fileExists(atPath: expectedPath.path))
     }
 

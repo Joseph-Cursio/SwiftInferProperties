@@ -972,31 +972,35 @@ package with no test target, or no manifest at all, keeps the old `Tests/Generat
 says on stderr that nothing will build it.
 
 The tree below shows the conventional case; substitute your own test target's directory for
-`Tests/DemoTests/`.
+`Tests/DemoTests/`. An accepted stub's file is named for the suite type it declares — the
+declaring type (if any), the function and the template in UpperCamelCase, then `Tests` — so
+`Codec.encode`'s round trip is `CodecEncodeDecodeRoundTripTests.swift` declaring
+`struct CodecEncodeDecodeRoundTripTests`. Stubs written before 2026-10-10 used underscores
+(`Codec_encode_decode_round-trip.swift`); re-accepting one replaces it under the new name.
 
 ```
 <package-root>/
 ├── Tests/DemoTests/Generated/SwiftInfer/
 │   ├── idempotence/                  ← --interactive Accept (A)
-│   │   └── normalize.swift
+│   │   └── NormalizeIdempotenceTests.swift
 │   ├── round-trip/
-│   │   └── encode_decode.swift
+│   │   └── EncodeDecodeRoundTripTests.swift
 │   ├── commutativity/
-│   │   └── union.swift
+│   │   └── UnionCommutativityTests.swift
 │   ├── associativity/
-│   │   └── combine.swift
+│   │   └── CombineAssociativityTests.swift
 │   ├── identity-element/
-│   │   └── concat.swift
+│   │   └── ConcatIdentityElementTests.swift
 │   ├── inverse-pair/
-│   │   └── mirror_unmirror.swift
+│   │   └── MirrorInversePairTests.swift
 │   ├── monotonicity/
-│   │   └── length.swift
+│   │   └── LengthMonotonicityTests.swift
 │   ├── invariant-preservation/
-│   │   └── adjust.swift
+│   │   └── AdjustIsValidInvariantPreservationTests.swift
 │   ├── count-invariance/
-│   │   └── reverse.swift
+│   │   └── ReverseCountInvarianceTests.swift
 │   ├── reduce-equivalence/
-│   │   └── sumLeftRight.swift
+│   │   └── SumLeftRightReduceEquivalenceTests.swift
 │   ├── equivalence-class/             ← M11 / M13 advisory
 │   │   ├── EquivalenceClasses_isValidUsername.swift
 │   │   └── EquivalenceClasses_classify_tristate.swift

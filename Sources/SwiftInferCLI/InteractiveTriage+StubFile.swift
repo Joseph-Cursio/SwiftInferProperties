@@ -124,7 +124,7 @@ extension InteractiveTriage {
             foundationImport + "import Testing\nimport PropertyBased\nimport PropertyLawKit\n"
                 + syntaxImport + moduleImport + carrierImportLines
         )
-        let suiteKey = fileName ?? stubFileName(for: suggestion) ?? suggestion.identity.normalized
+        let suiteKey = fileName ?? stubFileName(for: suggestion) ?? fallbackStubFileName(for: suggestion)
         let namespacedStub = Self.namespaced(
             stub,
             suiteName: Self.suiteName(forStubFileName: suiteKey)

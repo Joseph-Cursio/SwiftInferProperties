@@ -246,7 +246,8 @@ extension SwiftInferCommand {
             help: """
             Walk surviving suggestions one at a time, prompting \
             [A/s/n/?]: Accept writes a property-test stub to \
-            Tests/Generated/SwiftInfer/<TemplateName>/<FunctionName>.swift \
+            Tests/Generated/SwiftInfer/<TemplateName>/<Suite>.swift (named for \
+            the suite it declares: type, function and template, then Tests) \
             and records the decision; Skip / Reject record the decision \
             without writing files. (M6.4, PRD §5.8.)
             """

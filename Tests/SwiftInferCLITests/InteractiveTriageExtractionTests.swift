@@ -271,8 +271,8 @@ struct InteractiveTriageModuleImportTests {
         other.templateName = "commutativity"
         let commutativity = try #require(InteractiveTriage.stubFileName(for: other))
 
-        #expect(idempotence == "union_idempotence.swift")
-        #expect(commutativity == "union_commutativity.swift")
+        #expect(idempotence == "UnionIdempotenceTests.swift")
+        #expect(commutativity == "UnionCommutativityTests.swift")
         #expect(idempotence != commutativity)
     }
 

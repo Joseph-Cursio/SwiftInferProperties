@@ -160,7 +160,8 @@ writes into a declared **test target**, so the file is inside something SwiftPM 
 package has several test targets, or none, read that note: it says which one was chosen and, when
 nothing will build the file, says so outright.
 
-`Tests/SlugTests/Generated/SwiftInfer/round-trip/encode_decode.swift`:
+`Tests/SlugTests/Generated/SwiftInfer/round-trip/SlugEncodeDecodeRoundTripTests.swift` (the test below sits
+inside `struct SlugEncodeDecodeRoundTripTests`, the type the file is named for):
 
 ```swift
 @Test func encode_decode_roundTrip() async {

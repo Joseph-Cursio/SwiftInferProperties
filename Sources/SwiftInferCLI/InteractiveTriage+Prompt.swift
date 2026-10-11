@@ -85,7 +85,9 @@ extension InteractiveTriage {
                 monotonicity / invariant-preservation / commutativity /
                 associativity / identity-element / inverse-pair, a
                 property-test stub is written to
-                Tests/Generated/SwiftInfer/<TemplateName>/<FunctionName>.swift.
+                Tests/Generated/SwiftInfer/<TemplateName>/<Suite>.swift, where
+                <Suite> is the type, function and template in UpperCamelCase
+                with Tests after them — the name of the suite it declares.
             """
         if primaryAvailable {
             text += "\n"

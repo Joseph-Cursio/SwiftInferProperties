@@ -44,7 +44,7 @@ struct StubFileQualificationTests {
             try #require(InteractiveTriage.stubFileName(for: Self.suggestion("matches(_:)", owner: owner)))
         }
         #expect(Set(names).count == 5)
-        #expect(names.first == "RegistrationVerb_matches_predicate.swift")
+        #expect(names.first == "RegistrationVerbMatchesPredicateTests.swift")
     }
 
     /// And the suites those files get are distinct, so the shared test name is declared once per suite.
@@ -55,21 +55,20 @@ struct StubFileQualificationTests {
             )))
         }
         #expect(suites == [
-            "Sum_combine_associativityTests", "Rotation_combine_associativityTests", "Peak_combine_associativityTests"
+            "SumCombineAssociativityTests", "RotationCombineAssociativityTests", "PeakCombineAssociativityTests"
         ])
     }
 
     @Test func aNestedTypeIsFlattened() {
         let suggestion = Self.suggestion("tokenizeLine(_:)", template: "determinism", owner: "Editor.Tokenizer")
         let name = InteractiveTriage.stubFileName(for: suggestion)
-        #expect(name == "Editor_Tokenizer_tokenizeLine_determinism.swift")
+        #expect(name == "EditorTokenizerTokenizeLineDeterminismTests.swift")
     }
 
-    /// **The control.** A free function has no declaring type and keeps the name it always had, so
-    /// no existing golden or previously accepted file is renamed.
-    @Test func aFreeFunctionKeepsItsName() {
+    /// **The control.** A free function has no declaring type, so its name starts at the function.
+    @Test func aFreeFunctionHasNoTypeInItsName() {
         let suggestion = Self.suggestion("normalize(_:)", template: "idempotence", owner: nil)
-        #expect(InteractiveTriage.stubFileName(for: suggestion) == "normalize_idempotence.swift")
+        #expect(InteractiveTriage.stubFileName(for: suggestion) == "NormalizeIdempotenceTests.swift")
     }
 
     /// The template-specific arms keep their shape and gain the owner in front.
@@ -77,6 +76,6 @@ struct StubFileQualificationTests {
         let name = InteractiveTriage.stubFileName(
             for: Self.suggestion("encode(_:)", template: "round-trip", owner: "Codec", pairedWith: "decode(_:)")
         )
-        #expect(name == "Codec_encode_decode_round-trip.swift")
+        #expect(name == "CodecEncodeDecodeRoundTripTests.swift")
     }
 }

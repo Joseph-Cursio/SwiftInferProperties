@@ -77,7 +77,7 @@ enum DeterminismWitnessBank {
 
 // WITNESS-BEGIN — emitted text, verbatim; the rules below are the ones it trips.
 // swiftlint:disable closure_end_indentation identical_operands line_length type_name
-struct DeterminismWitnessGauge_scale_determinismTests {
+struct DeterminismWitnessGaugeScaleDeterminismTests {
 
     @Test func scale_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -111,7 +111,7 @@ struct DeterminismWitnessGauge_scale_determinismTests {
     }
 }
 
-struct DeterminismWitnessPoint_merge_determinismTests {
+struct DeterminismWitnessPointMergeDeterminismTests {
 
     @Test func merge_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -139,7 +139,7 @@ struct DeterminismWitnessPoint_merge_determinismTests {
     }
 }
 
-struct DeterminismWitnessColumns_sortKey_determinismTests {
+struct DeterminismWitnessColumnsSortKeyDeterminismTests {
 
     @Test func sortKey_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -163,7 +163,7 @@ struct DeterminismWitnessColumns_sortKey_determinismTests {
     }
 }
 
-struct DeterminismWitnessColumns_rowID_determinismTests {
+struct DeterminismWitnessColumnsRowIDDeterminismTests {
 
     @Test func rowID_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -187,7 +187,7 @@ struct DeterminismWitnessColumns_rowID_determinismTests {
     }
 }
 
-struct DeterminismWitnessBank_credit_determinismTests {
+struct DeterminismWitnessBankCreditDeterminismTests {
 
     @Test func credit_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
@@ -211,7 +211,7 @@ struct DeterminismWitnessBank_credit_determinismTests {
     }
 }
 
-struct DeterminismWitnessBank_read_determinismTests {
+struct DeterminismWitnessBankReadDeterminismTests {
 
     @Test func read_isDeterministic() async {
         let backend = SwiftPropertyBasedBackend()
