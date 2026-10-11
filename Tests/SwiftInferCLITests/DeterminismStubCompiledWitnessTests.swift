@@ -50,7 +50,9 @@ struct DeterminismStubCompiledWitnessTests {
         return try #require(laws.first { $0.templateName == "determinism" })
     }
 
-    /// The namespaced stub accept writes for `owner.name`, exactly as `wrappedFileContents` places it.
+    /// The namespaced stub accept writes for `owner.name`, exactly as `wrappedFileContents` places it
+    /// — laid out by `GeneratedFileLayout` as the written file is, so the witness compiles the
+    /// layout's output and not only the emitter's.
     static func acceptWrittenStub(owner: String, name: String, in source: String) throws -> String {
         let scanned = Self.scanned(source)
         let law = try Self.law(owner: owner, name: name, in: scanned)
@@ -60,7 +62,8 @@ struct DeterminismStubCompiledWitnessTests {
         let resolver = InteractiveTriage.projectTypeGenerator(types: presented)
         let stub = try #require(InteractiveTriage.deterministicStub(for: law, customGenerator: resolver))
         let fileName = try #require(InteractiveTriage.stubFileName(for: law))
-        return InteractiveTriage.namespaced(stub, suiteName: InteractiveTriage.suiteName(forStubFileName: fileName))
+        let suiteName = InteractiveTriage.suiteName(forStubFileName: fileName)
+        return GeneratedFileLayout.laidOut(InteractiveTriage.namespaced(stub, suiteName: suiteName))
     }
 
     /// The subjects whose stubs `UnequatableResultGate` used to withdraw although they compile.

@@ -130,11 +130,11 @@ extension InteractiveTriage {
             suiteName: Self.suiteName(forStubFileName: suiteKey)
         )
         let header = Self.provenanceLines(for: suggestion, packageRoot: packageRoot).joined(separator: "\n")
-        return """
+        return GeneratedFileLayout.laidOut("""
         \(header)
         \(Self.lawClassLine(for: suggestion, isScaffold: Self.isScaffold(stub)))\(accessLine)
         \(imports)\(unresolvedModuleNote)\(namespacedStub)
-        """
+        """)
     }
 
     /// The header's comment lines above the law class, with no blank line among them — an absent
