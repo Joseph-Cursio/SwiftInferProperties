@@ -103,9 +103,13 @@ def law_of(stub_path, repo, package_dir, template):
     # The leading names are the type and any nesting; the subject is the last one — two for a
     # round trip, which pairs a function with its inverse.
     names = names[-2:] if template == "round-trip" else names[-1:]
+    # The path is relative to the package since 2026-10-10, and absolute before.
+    path = source.group(1)
+    if not os.path.isabs(path):
+        path = os.path.join(package_dir, path)
     return {"repo": repo, "package": package_dir, "stub": stub_path, "template": template,
             "suite": suite.group(1), "test": test.group(1) or test.group(2),
-            "subjects": [name for name in names if name], "source": source.group(1),
+            "subjects": [name for name in names if name], "source": path,
             "line": int(source.group(2)), "trials": "trials:" in text}
 
 
