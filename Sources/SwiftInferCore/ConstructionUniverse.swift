@@ -17,8 +17,9 @@ import Foundation
 ///
 /// A root-relative, `/`-separated path is production unless its leaf is not a `.swift` file, the
 /// leaf is a manifest (`Package.swift`, `Package@swift-*`), or a **directory** component is a test
-/// target (`Tests`, `*Tests`), hidden (`.build`, `.git`, `.swiftpm`), or a vendored/build tree
-/// (`prunedDirectoryNames`).
+/// target (`Tests`, `*Tests`), a test suite (`testSuiteDirectoryNames`: `test`, `tests`,
+/// `validation-test` — amendment 5, W), hidden (`.build`, `.git`, `.swiftpm`), or a vendored/build
+/// tree (`prunedDirectoryNames`).
 ///
 /// Deliberately **not** excluded, because dropping a compiled production type under-refutes —
 /// the unsound direction: `TestSupport` / `Mock` / `Stub` / `Fake` / `Fixtures` / `Examples`
@@ -138,6 +139,14 @@ public enum ConstructionUniverse {
     /// trees. Shared verbatim with SwiftProjectLint.
     public static let prunedDirectoryNames: Set<String> = ["DerivedData", "Pods", "Carthage", "node_modules"]
 
+    /// Directory names holding a test suite rather than a target — `test/` and `validation-test/`
+    /// in the swift compiler's tree, where every file is a test program of its own. Their types are
+    /// not what production constructs, as a test target's are not; pooled into one table, the
+    /// compiler's 22,600 test programs made a namesake of every name and the table did not finish
+    /// building. Exact names only — SwiftPM's `Sources/swift-test` is a production target. Shared
+    /// verbatim with SwiftProjectLint (amendment 5, W).
+    public static let testSuiteDirectoryNames: Set<String> = ["test", "tests", "validation-test"]
+
     /// One member of a universe.
     public struct Member: Sendable, Equatable {
         /// Root-relative, `/`-separated, where the walk reached the file — the sort key, and what
@@ -186,7 +195,8 @@ public enum ConstructionUniverse {
 
     /// A directory component the predicate rejects — everything under it is out.
     static func isRejectedDirectory(_ name: String) -> Bool {
-        isTestTargetDirectory(name) || name.hasPrefix(".") || prunedDirectoryNames.contains(name)
+        isTestTargetDirectory(name) || testSuiteDirectoryNames.contains(name) || name.hasPrefix(".")
+            || prunedDirectoryNames.contains(name)
     }
 
     /// The root a scan of `directory` builds its table from — see the type's doc. One spelling

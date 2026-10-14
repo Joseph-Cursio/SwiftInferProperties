@@ -206,6 +206,9 @@ extension ConstructionPurityWiringTests {
         ("Sources/A/Mocks.swift", true),
         ("Sources/A/ABTest.swift", true),
         ("fixtures/x/Sources/X/y.swift", true),
+        ("test/Parse/x.swift", false),
+        ("validation-test/stdlib/x.swift", false),
+        ("Sources/swift-test/x.swift", true),
         ("Sources/A/README.md", false)
     ])
     func universeRule(path: String, expected: Bool) {

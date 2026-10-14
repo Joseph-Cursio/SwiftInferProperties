@@ -57,7 +57,7 @@ struct ConstructionUniverseTests {
         let table = try Self.rows()
         #expect(table.header == "path\tproduction")
         #expect(table.malformed.isEmpty, "malformed rows: \(table.malformed)")
-        #expect(table.rows.count >= 20, "\(table.rows.count) rows — the shared answer key lost rows")
+        #expect(table.rows.count >= 37, "\(table.rows.count) rows — the shared answer key lost rows")
         // Bound first: `#expect` treats a key-path argument as throwing.
         let keeps = table.rows.contains(where: \.production)
         let drops = table.rows.contains { !$0.production }

@@ -70,8 +70,9 @@ Re-derivable at any time — `make batch2` runs both arms:
   manifest, no root manifest, or an Xcode project beside it takes every one (amendment G); and a
   nested package holding a JUDGED file is in with its own closure (amendment J); one entry per file
   on disk, the smallest relative path kept, bounded first; strict UTF-8; production = `.swift`,
-  not a manifest, no `Tests` / `*Tests` / dot-prefixed / `DerivedData` / `Pods` / `Carthage` /
-  `node_modules` directory component, the `UF_HIDDEN` flag ignored (amendment M); order =
+  not a manifest, no `Tests` / `*Tests` / `test` / `tests` / `validation-test` (amendment 5, W) /
+  dot-prefixed / `DerivedData` / `Pods` / `Carthage` / `node_modules` directory component, the
+  `UF_HIDDEN` flag ignored (amendment M); order =
   `buildOrder`, relative path, `String <`. Both repos assert their predicate over a byte-identical
   `construction-universe.tsv`, and their manifest reader (dependencies and target paths) and order
   over a byte-identical `construction-universe-cases.json`; `SEICrossRepoPinTests` asserts both

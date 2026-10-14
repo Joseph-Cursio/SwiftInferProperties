@@ -8,7 +8,7 @@ private typealias Wiring = ConstructionPurityWiringTests
 
 /// **The scanned path in its on-disk letter case** — the shared spec's amendment L. On a volume that
 /// folds case a mis-cased `--sources` opens the same directory, so it must build the same universe:
-/// the predicate reads names (`Tests` is a test directory, `tests` is not), and the build order and
+/// the predicate reads names (`MyTests` is a test directory, `Mytests` is not), and the build order and
 /// SEI's first witness follow the spelling. Each case is the joint review's reproduction; all of
 /// them need a case-insensitive temporary volume, APFS's default, and are skipped on any other.
 @Suite(
@@ -22,38 +22,40 @@ struct ConstructionUniverseLetterCaseTests {
     func double(_ n: Int) -> Int { n * 2 }
     """
 
-    /// `sip#1` (a): `tests/X` — lowercase, production by the predicate — scanned as `Tests/X`. Spelled
-    /// as typed, `Tests` made the scan self-contained, the package's UUID-minting `Item` left its
-    /// table, and `make` was advised pure.
+    /// `sip#1` (a): `Mytests/X` — production by the predicate — scanned as `MyTests/X`. Spelled as
+    /// typed, `MyTests` made the scan self-contained, the package's UUID-minting `Item` left its
+    /// table, and `make` was advised pure. (The reproduction was `tests/X` scanned as `Tests/X`;
+    /// since amendment 5, `tests` is a test suite's folder in either case, so a name only the letter
+    /// case makes a test target's stands in.)
     @Test("a production directory scanned through a test-directory spelling joins its package")
     func misCasedTestSpellingStillFindsThePackage() throws {
         let root = try Wiring.makePackage([
             "Sources/Model/Item.swift": Wiring.item,
-            "tests/X/Logic.swift": Self.logic
+            "Mytests/X/Logic.swift": Self.logic
         ])
         defer { try? FileManager.default.removeItem(at: root) }
-        let typed = root.appendingPathComponent("Tests/X")
+        let typed = root.appendingPathComponent("MyTests/X")
         #expect(ConstructionUniverse.root(forScanOf: typed).path == ConstructionUniverse.resolved(root).path)
         #expect(ConstructionUniverse.files(forScanOf: typed).map(\.relativePath) == [
-            "Sources/Model/Item.swift", "tests/X/Logic.swift"
+            "Mytests/X/Logic.swift", "Sources/Model/Item.swift"
         ])
         #expect(try ConstructionUniverseNestedPackageTests.verdict("make", scanning: typed) == .refuted)
     }
 
-    /// `sip#1` (b): a real fixture under `Tests/Fixtures/X`, with its own plain `Item`, scanned as
-    /// `tests/fixtures/x`. Spelled as typed, `tests` is no test directory, so the scan walked up to
-    /// the package, the fixture joined its universe as production, and the package's namesake
-    /// `Item` refuted the fixture's `make`.
+    /// `sip#1` (b): a real fixture under `MyTests/Fixtures/X`, with its own plain `Item`, scanned as
+    /// `Mytests/fixtures/x`. Spelled as typed, `Mytests` is no test directory, so the scan walked up
+    /// to the package, the fixture joined its universe as production, and the package's namesake
+    /// `Item` refuted the fixture's `make`. (Reproduced with `Tests` and `tests` before amendment 5.)
     @Test("a test fixture scanned through a production spelling stays its own project")
     func misCasedProductionSpellingStaysSelfContained() throws {
         let root = try Wiring.makePackage([
             "Sources/Model/Item.swift": Wiring.item,
-            "Tests/Fixtures/X/Item.swift": "struct Item { let title: String }",
-            "Tests/Fixtures/X/Logic.swift": Self.logic
+            "MyTests/Fixtures/X/Item.swift": "struct Item { let title: String }",
+            "MyTests/Fixtures/X/Logic.swift": Self.logic
         ])
         defer { try? FileManager.default.removeItem(at: root) }
-        let typed = root.appendingPathComponent("tests/fixtures/x")
-        let fixture = root.appendingPathComponent("Tests/Fixtures/X")
+        let typed = root.appendingPathComponent("Mytests/fixtures/x")
+        let fixture = root.appendingPathComponent("MyTests/Fixtures/X")
         #expect(ConstructionUniverse.root(forScanOf: typed).path == ConstructionUniverse.resolved(fixture).path)
         #expect(ConstructionUniverse.files(forScanOf: typed).map(\.relativePath) == ["Item.swift", "Logic.swift"])
         #expect(try ConstructionUniverseNestedPackageTests.verdict("make", scanning: typed) == .pure)
