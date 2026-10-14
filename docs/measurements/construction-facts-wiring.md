@@ -429,7 +429,8 @@ the universe parse, the table build, the out-of-universe re-parse in
   `64a905c` (SEI #24, which memoises how the table is built and changes nothing it says), and at
   `4aa91cf` (SEI #25, which follows an alias named as a member of its type, and moved no row), and at
   `cfbb250` (SEI #27, which makes classifying a call cheaper and moved no row), and at `97bb56a`
-  (SEI #28, which makes namesakes cheaper to build the table over and moved no row). Still
+  (SEI #28, which makes namesakes cheaper to build the table over and moved no row), and at
+  `f34cee3` (SEI #29, which keeps the aliases seen through `Self` and moved no row). Still
   recommended upstream: a public `isProductionSource` and a structural digest, so agreement
   becomes a property of the pin.
 
