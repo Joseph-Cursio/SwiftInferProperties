@@ -78,7 +78,7 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `cfbb250` (bumped 2026-10-13, jointly with SwiftProjectLint), and
+**Both repos pin SEI `97bb56a` (bumped 2026-10-14, jointly with SwiftProjectLint), and
 `SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
 SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
@@ -138,7 +138,11 @@ replica guard naming no mismatch. **`cfbb250` moves nothing either** (SEI #27): 
 once it is known to be a nondeterminism source, so classifying a member chain costs its length,
 not its square, and no kind, marker or position changes. A/B'd against `main` at `4aa91cf` over the
 same trees, `make batch2` printed the same `Sources/` delta and the same 22 scan roots, every line
-of census output, with the replica guard naming no mismatch.
+of census output, with the replica guard naming no mismatch. **`97bb56a` moves nothing either** (SEI
+#28): it makes a name's namesakes cost building the construction facts their square, not their cube.
+It indexes each name's declarations, superclasses and subtypes, and answers each lookup with each
+declaration once, so no fact changes. A/B'd against `main` at `cfbb250` over the same trees, `make
+batch2` printed every one of 853 census lines again, with the replica guard naming no mismatch.
 
 ## Where to look
 
