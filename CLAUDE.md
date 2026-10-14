@@ -78,7 +78,7 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `4aa91cf` (bumped 2026-10-07, jointly with SwiftProjectLint), and
+**Both repos pin SEI `cfbb250` (bumped 2026-10-13, jointly with SwiftProjectLint), and
 `SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
 SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
@@ -134,7 +134,11 @@ run-to-run noise. **`4aa91cf` moves nothing either** (SEI #25): it follows an al
 member of its type — `let s: Outer.Stamp = .init()` with `Outer.Stamp = UUID` now refutes — which
 can only refute more. A/B'd against `main` at `64a905c` over the same trees, `make batch2` printed
 the same `Sources/` delta and the same 21 scan roots, every count and every witness, with the
-replica guard naming no mismatch.
+replica guard naming no mismatch. **`cfbb250` moves nothing either** (SEI #27): it locates a call only
+once it is known to be a nondeterminism source, so classifying a member chain costs its length,
+not its square, and no kind, marker or position changes. A/B'd against `main` at `4aa91cf` over the
+same trees, `make batch2` printed the same `Sources/` delta and the same 22 scan roots, every line
+of census output, with the replica guard naming no mismatch.
 
 ## Where to look
 
