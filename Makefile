@@ -20,13 +20,14 @@
 # failed with `Internal Error: DecodingError.dataCorrupted ... Corrupted JSON` and
 # `error: fatalError`, where swift.org's 6.3.3 built it in ~55s. Xcode 27's own toolchain (6.4)
 # builds it, but swift.org's 6.3.3 cannot use the macOS 27 SDK at all: manifests segfault and the
-# frontend rejects `-target-arch-variant`. So the pin moved to 6.4.0 (2026-10-10). See CLAUDE.md.
+# frontend rejects `-target-arch-variant`. So the pin moved to 6.4.0 (2026-10-10), then to 6.4.1
+# (2026-10-14), the newest 6.4 release. See CLAUDE.md.
 #
 # So `swift` is not assumed: SWIFT defaults to the pinned swift.org toolchain when it is installed
 # and falls back to whatever is on PATH otherwise. Override with `make test SWIFT=/path/to/swift`.
 # ⚠ The default is chosen by existence alone, so a toolchain at this path that the SDK rejects
 # breaks `make` for every session on the machine. Move the pin when Xcode moves the SDK.
-SWIFT_ORG := $(HOME)/Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain/usr/bin/swift
+SWIFT_ORG := $(HOME)/Library/Developer/Toolchains/swift-6.4.1-RELEASE.xctoolchain/usr/bin/swift
 SWIFT ?= $(if $(wildcard $(SWIFT_ORG)),$(SWIFT_ORG),swift)
 
 # ...AND THE CHILD PROCESSES A TEST SPAWNS MUST GET THE SAME TOOLCHAIN.

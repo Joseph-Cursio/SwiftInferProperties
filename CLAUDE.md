@@ -350,8 +350,16 @@ it, and `make test` does not run it.
 
 ## Build & test
 
-- **The Makefile prefers the swift.org Swift compiler toolchain, pinned to `swift-6.4.0-RELEASE`
-  since 2026-10-10.** (*Toolchain* elsewhere in this file means the five-package PBT toolchain —
+- **The Makefile prefers the swift.org Swift compiler toolchain, pinned to `swift-6.4.1-RELEASE`
+  since 2026-10-14** (`swift-6.4.0-RELEASE` from 2026-10-10). Why 6.4.1: it is the newest 6.4
+  release, and swiftly 1.1.1 cannot install 6.4.0. It requests `swift-6.4-RELEASE-osx.pkg`, which
+  404s, although swift.org publishes `swift-6.4.0-RELEASE-osx.pkg`; it prints an error and exits 0.
+  Measured 2026-10-14 on 6.4.1 (`swift --version` says `swift-6.4.1-RELEASE`) with the Makefile
+  choosing it: a clean build took 150s, `make test-fast` passed 6,709 in 123s warm, and `batch7`
+  passed, with no `Corrupted JSON` or `fatalError`. Another session held the load average at 10–31,
+  so read the times as loaded. The fast-suite clock counts the build: the first run after the clean
+  build took 291s against the 240s budget, and failed on it.
+  (*Toolchain* elsewhere in this file means the five-package PBT toolchain —
   every use in this section means the Swift compiler.) **On Xcode 27, measured 2026-10-10:**
   - Xcode's own toolchain (`swiftlang-6.4.0.34.1`) builds every product and test target in ~40s,
     with no `Corrupted JSON` or `fatalError`, so the defect below is gone.
@@ -377,7 +385,7 @@ it, and `make test` does not run it.
   healthy run.
 
   The Makefile handles this: `SWIFT` defaults to
-  `~/Library/Developer/Toolchains/swift-6.4.0-RELEASE.xctoolchain/usr/bin/swift` when present, and
+  `~/Library/Developer/Toolchains/swift-6.4.1-RELEASE.xctoolchain/usr/bin/swift` when present, and
   to whatever `swift` is on PATH otherwise. Override with `make test SWIFT=…`. ⚠ **The default is
   chosen by existence alone**, so a toolchain installed at the pinned path that the SDK rejects
   breaks `make` for every session on the machine — which is what installing 6.3.3 did on Xcode 27.
