@@ -646,3 +646,26 @@ identical (this repo's own advice 764 → 766 is new code). `make perf` alone, t
 **And again after merging `main` (`63cb0266`), on SEI `4aa91cf`**: `make batch2` printed the same
 `Sources/` figures, the same 3 refuted types with the same witnesses, and the same 21 root lines and
 266 moved rows, byte for byte; `make test-fast` green at 6,568.
+
+## Amendment 5 (W) — a test suite's folder
+
+The swift compiler's tree (23,845 `.swift` files) has no root manifest, so its whole tree was one
+universe. 22,642 of those files are under `test/` and `validation-test/`, one test program per file
+(`// RUN:`), and the predicate kept them: `Tests` and `*Tests` are case-sensitive names. Pooled into
+one table they made a namesake of every name — `class A` 1,700 times, single-letter typealiases in
+hundreds of unrelated files — and SwiftProjectLint did not finish building the facts in an hour.
+Partitioning a manifest-less root stays rejected (see *The root* above); instead the shared
+predicate rejects a directory named exactly `test`, `tests` or `validation-test`, as it rejects a
+test target's, for the same reason: its types are not what production constructs. A `-test`
+suffix is not matched — SwiftPM's `Sources/swift-test` is the `swift test` executable.
+
+| amendment | what was wrong | fix | pinned by |
+|---|---|---|---|
+| W — a test suite's folder | the compiler's 22,600 test programs were one table, and it did not finish building | `testSuiteDirectoryNames`, in `isRejectedDirectory`, so a scan under one is its own project; seven rows in the shared `.tsv` | `predicateAnswersTheTable`, `universeRule`, `testSuiteIsOutOfTheUniverse` |
+
+Measured at SEI `f34cee3`: SwiftProjectLint's release CLI lints the whole compiler tree in 67 s at
+3.2 GB peak RSS, its universe now the tree's 1,177 production files, and its JSON output is
+byte-identical before and after over all 74 corpus repositories. Here, `make batch2` printed all 853
+census lines again, and `make test-fast` passed at 6,710.
+Amendment L's letter-case reproductions used lowercase `tests` as the production spelling of `Tests`;
+they now use `Mytests` and `MyTests`, which only the letter case tells apart.
