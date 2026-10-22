@@ -35,10 +35,24 @@ public struct SortedOutput: Sendable, Equatable {
     public let member: String?
     /// The comparator's keys in priority order; the last is the final tie-break.
     public let keys: [SortKey]
+    /// The element member that holds the key of the `Dictionary` the sorted array was mapped from —
+    /// `ruleID` in `byRule.map { ruleID, group in RuleImpact(ruleID: ruleID, …) }.sorted { … }` — or
+    /// `nil` when it was not mapped from one in a shape `DictionaryKeyReader` restates. It is what
+    /// `input-order-independence` compares: the dictionary's keys are distinct, so the sequence of
+    /// them says the whole order, including the order of elements the comparator calls tied.
+    public let dictionaryKeyMember: String?
 
-    public init(member: String?, keys: [SortKey]) {
+    public init(member: String?, keys: [SortKey], dictionaryKeyMember: String? = nil) {
         self.member = member
         self.keys = keys
+        self.dictionaryKeyMember = dictionaryKeyMember
+    }
+
+    /// Whether the comparator reaches the dictionary's key, so no two elements compare tied and the
+    /// order cannot depend on the dictionary's. `false` when there is no dictionary key to reach.
+    public var comparatorReachesDictionaryKey: Bool {
+        guard let dictionaryKeyMember else { return false }
+        return keys.contains { $0.path == dictionaryKeyMember }
     }
 }
 
@@ -64,19 +78,21 @@ public enum SortedOutputReader {
               let returned = returnedExpression(last, isOnlyStatement: statements.count == 1) else {
             return nil
         }
-        if let keys = sortKeys(ofSortedCall: returned) {
-            return SortedOutput(member: nil, keys: keys)
+        let dictionaries = DictionaryKeyReader.dictionaryLocals(in: statements)
+        if let ordering = readOrdering(of: returned, member: nil, dictionaries: dictionaries) {
+            return ordering
         }
         guard let construction = returned.as(FunctionCallExprSyntax.self) else { return nil }
         let locals = sortedLocals(in: statements)
         var found: [SortedOutput] = []
         for argument in construction.arguments {
             guard let label = argument.label?.text else { continue }
-            if let keys = sortKeys(ofSortedCall: argument.expression) {
-                found.append(SortedOutput(member: label, keys: keys))
+            if let ordering = readOrdering(of: argument.expression, member: label, dictionaries: dictionaries) {
+                found.append(ordering)
             } else if let name = argument.expression.as(DeclReferenceExprSyntax.self)?.baseName.text,
-                      let keys = locals[name] {
-                found.append(SortedOutput(member: label, keys: keys))
+                      let value = locals[name],
+                      let ordering = readOrdering(of: value, member: label, dictionaries: dictionaries) {
+                found.append(ordering)
             }
         }
         // Two sorted members would be two laws, and a suggestion carries one.
@@ -89,9 +105,23 @@ public enum SortedOutputReader {
         return item.as(ExpressionStmtSyntax.self)?.expression ?? item.as(ExprSyntax.self)
     }
 
-    /// `let name = ….sorted { … }` bindings in the body's top-level statements.
-    private static func sortedLocals(in statements: CodeBlockItemListSyntax) -> [String: [SortKey]] {
-        var locals: [String: [SortKey]] = [:]
+    /// The ordering of `….sorted { … }`, with the dictionary key it was mapped from when there is one.
+    private static func readOrdering(
+        of expression: ExprSyntax,
+        member: String?,
+        dictionaries: Set<String>
+    ) -> SortedOutput? {
+        guard let keys = sortKeys(ofSortedCall: expression) else { return nil }
+        return SortedOutput(
+            member: member,
+            keys: keys,
+            dictionaryKeyMember: DictionaryKeyReader.keyMember(ofSortedCall: expression, dictionaries: dictionaries)
+        )
+    }
+
+    /// `let name = ….sorted { … }` bindings in the body's top-level statements, as the sorted call.
+    private static func sortedLocals(in statements: CodeBlockItemListSyntax) -> [String: ExprSyntax] {
+        var locals: [String: ExprSyntax] = [:]
         for statement in statements {
             guard let declaration = statement.item.as(VariableDeclSyntax.self),
                   declaration.bindingSpecifier.tokenKind == .keyword(.let),
@@ -99,10 +129,10 @@ public enum SortedOutputReader {
                   let binding = declaration.bindings.first,
                   let name = binding.pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
                   let value = binding.initializer?.value,
-                  let keys = sortKeys(ofSortedCall: value) else {
+                  sortKeys(ofSortedCall: value) != nil else {
                 continue
             }
-            locals[name] = keys
+            locals[name] = value
         }
         return locals
     }

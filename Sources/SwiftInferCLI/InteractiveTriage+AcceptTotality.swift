@@ -69,7 +69,8 @@ extension InteractiveTriage {
     }
 
     /// The laws over one value's members or one result — `emptiness-agreement`, `documented-range`,
-    /// `empty-range`, `sorted-output`, `marker-dispatch`, and the `structural-round-trip` scaffold —
+    /// `empty-range`, `sorted-output`, `input-order-independence`, `marker-dispatch`, and the
+    /// `structural-round-trip` scaffold —
     /// dispatched apart so `entailedTemplateStub` stays within its complexity budget.
     static func valueLawStub(
         for suggestion: Suggestion,
@@ -93,14 +94,9 @@ extension InteractiveTriage {
         case "empty-range":
             return emptyRangeStub(for: suggestion, customGenerator: customGenerator)
 
-        // Same call as totality, checked against the comparator the body sorts with.
-        case "sorted-output":
-            guard let ordering = suggestion.match?.sortedOutputMatch else { return nil }
-            return totalityStub(
-                for: suggestion,
-                customGenerator: customGenerator,
-                receiverExpression: receiverExpression,
-                law: .sortedBy(ordering)
+        case "sorted-output", "input-order-independence":
+            return orderLawStub(
+                for: suggestion, customGenerator: customGenerator, receiverExpression: receiverExpression
             )
 
         case "marker-dispatch":
@@ -181,6 +177,7 @@ extension InteractiveTriage {
     /// generators — is the same decision for both, which is why they share one arm.
     enum ArityFreeLaw: Equatable {
         case totality, nonNegative, withinRange(DocumentedRange), sortedBy(SortedOutput)
+        case independentOfInputOrder(SortedOutput)
     }
 
     private static func totalityStub(
@@ -215,6 +212,8 @@ extension InteractiveTriage {
         ) {
             return stub
         }
+        // A result law that could not be written is declined, never written as totality instead.
+        guard law == .totality else { return nil }
         return LiftedTestEmitter.total(
             callee: callee,
             seed: seed,
@@ -273,7 +272,34 @@ extension InteractiveTriage {
                 argumentTypes: argumentTypes,
                 failureLabel: "\(label) returned a result out of its comparator's order"
             )
+
+        case .independentOfInputOrder(let ordering):
+            return LiftedTestEmitter.inputOrderIndependent(
+                callee: callee,
+                ordering: ordering,
+                seed: seed,
+                generators: generators,
+                argumentTypes: argumentTypes,
+                failureLabel: "\(label) returned another order for the same input reversed"
+            )
         }
+    }
+
+    /// The two laws over a sorted result, both the totality call checked against what it returned:
+    /// `sorted-output` against the comparator the body sorts with, `input-order-independence`
+    /// against a second call on the input array reversed.
+    private static func orderLawStub(
+        for suggestion: Suggestion,
+        customGenerator: ((String) -> String?)?,
+        receiverExpression: ((String) -> String?)?
+    ) -> String? {
+        guard let ordering = suggestion.match?.sortedOutputMatch else { return nil }
+        return totalityStub(
+            for: suggestion,
+            customGenerator: customGenerator,
+            receiverExpression: receiverExpression,
+            law: suggestion.templateName == "sorted-output" ? .sortedBy(ordering) : .independentOfInputOrder(ordering)
+        )
     }
 
     /// The callee with its receiver CONSTRUCTED at the call site, or `nil` to draw one as usual.
