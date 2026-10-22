@@ -118,10 +118,30 @@ SwiftLintRuleStudioTeam's `fleetBurndown(_:)` maps a `[Date: Int]` and sorts on 
 itself, so it should be a holding row. **Neither template proposes it.** Bisected on a copy:
 renaming `Date` brings both rows back, and so does keeping `Date` but writing the local as
 `[Day: Int]()` with `typealias Day = Date`. **The type annotation `var byDate: [Date: Int] =
-[:]` alone withdraws the function.** That annotation constructs no `Date`, but the purity path
-reads it as one and `applyImpureSubjectVeto` vetoes the row. This is the same veto that silently
-withdraws `input-totality` from a trapping body (`lexer-corpus-census.md`), and it is not fixed
-here.
+[:]` alone withdraws the function.** This is the same veto that silently withdraws
+`input-totality` from a trapping body (`lexer-corpus-census.md`). It is not fixed here.
+
+**The refuter is SwiftEffectInference's, not this repo's**, and it is filed as
+[SwiftEffectInference#30](https://github.com/Joseph-Cursio/SwiftEffectInference/issues/30).
+`PurityInferrer.nondeterministicMarkers` (`"Date"`, `"UUID"`, at SEI `f34cee3`) is matched by
+bare token, and `isMarkerPosition` admits any identifier. So **naming** `Date` as a type counts
+as a clock read, and the function is `.refuted` with `.nondeterministicMarker("Date")`. That
+covers `[Date: Int]`, `Date?`, `let d: Date = m.date`, and a nested helper's `-> Date`.
+`applyImpureSubjectVeto` then withdraws the row. SEI's own `NondeterminismSources` says the
+opposite: *"`Date` in a type annotation is not an expression and is never a source."*
+
+**An A/B of the naive fix** (skip a token whose parent is `IdentifierTypeSyntax`), read through
+`discover --effect-annotations` over 9 subjects (about 9,300 pure functions):
+
+- **5 functions gain `.pure`, 0 lose it, and all 5 are sound.** They include `fleetBurndown`.
+  The sharpest is SwiftLintRuleStudioTeam's `auditLog(…asOf now: Date)`, which takes its clock
+  as a parameter, the injection SEI recommends, and was refuted for a nested helper's
+  `-> Date`.
+- **The naive fix is unsound**: it admits `let d: Date = .now` and `let u: UUID = .init()`,
+  where the annotation is the type's only spelling.
+- **It does not reach `[Date: Int]()`**, which spells the type as an expression.
+
+The issue states the fix's three parts. The pin here is unchanged.
 
 ## 4. End to end: accepted, compiled, run
 
