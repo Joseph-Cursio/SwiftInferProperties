@@ -1,6 +1,10 @@
 # Prediction — does a corpus of REAL lexers reopen the tokenizer laws?
 
-> **Status:** `proposed` · **As of:** 2026-10-22
+> **Status:** `superseded` · **As of:** 2026-10-22
+>
+> **SCORED AND DECLINED — see `docs/measurements/lexer-corpus-census.md`.** 4 of 5 predictions
+> held. Kept unedited below this header: it was committed at `0a70441d`, before the census, and
+> editing it would destroy the evidence that the census was not tuned to the answer.
 
 **Committed BEFORE any of the ten corpora below was read or scanned**, so "not tuned to the
 answer" is checkable in `git log` — the practice `whole-to-parts-partition-prediction.md` and
