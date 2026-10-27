@@ -162,7 +162,7 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 # stubs and logs (V0 in `docs/plans/predicate-outcome-reach-scope.md`). No compiler, ~0.1s.
 #
 # The generator-diversity census joined after #665: which stub files a build error names, in both of
-# Swift 6.4's error forms. No compiler, ~0.1s.
+# Swift 6.4's error forms, and which generators a stub draws, hoisted or inline. No compiler, ~0.1s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test

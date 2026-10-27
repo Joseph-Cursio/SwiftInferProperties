@@ -184,15 +184,6 @@ def expression_before(masked, end):
     return index + 1
 
 
-def hoisted_generator(text, masked, name):
-    """The text of `static let <name> = …`, up to the first blank line after it (the hoist's layout)."""
-    match = re.search(r"static let " + re.escape(name) + r"\s*=\s*", masked)
-    if not match:
-        return None
-    blank = text.find("\n\n", match.end())
-    return text[match.end():blank if blank >= 0 else len(text)].strip()
-
-
 def stub_generators(text, masked, start, end):
     """Each generator `.run(using: &rng)` draws from between `sample:` and `property:`, in draw order."""
     sample = masked.find("sample:", start, end)
@@ -210,7 +201,7 @@ def stub_generators(text, masked, start, end):
                 continue
         named = re.search(r"Self\.(\w+)$", masked[:dot])
         if named:
-            found.append(hoisted_generator(text, masked, named.group(1)) or named.group(0))
+            found.append(mc.hoisted_generator(text, masked, named.group(1)) or named.group(0))
             continue
         found.append(text[expression_before(masked, dot):dot].strip())
     return found

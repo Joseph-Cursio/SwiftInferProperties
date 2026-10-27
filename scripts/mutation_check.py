@@ -377,6 +377,19 @@ def matching_back(masked, close_index):
     raise ValueError("unbalanced")
 
 
+def hoisted_generator(text, masked, name):
+    """The text of `static let <name> = …`, up to the first blank line after it.
+
+    That is `GeneratedFileGeneratorHoist`'s layout: since 2026-10-10 a long generator is moved out of its
+    `@Test` into a `nonisolated private static let` on the suite, and the test draws `Self.<name>.run(…)`.
+    """
+    match = re.search(r"static let " + re.escape(name) + r"\s*=\s*", masked)
+    if not match:
+        return None
+    blank = text.find("\n\n", match.end())
+    return text[match.end():blank if blank >= 0 else len(text)].strip()
+
+
 def chain_start(masked, at):
     """Where the postfix chain ending in the member at `at` begins — `a.b(c).d` for `d`.
 

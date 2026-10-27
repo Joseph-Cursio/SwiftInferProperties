@@ -36,7 +36,13 @@ MARKER = "// generator_diversity.py probe"
 
 
 def expressions(stub_text):
-    """Each `(EXPR).run(using:` in the stub, as the text inside the parentheses.
+    """Each generator the stub draws from: the text inside `(EXPR).run(using:`, or, for a hoisted draw
+    `Self.<name>.run(using:`, the text of the suite's `static let <name> = …`.
+
+    ⚠ **A hoisted draw was invisible here.** Since `0d4ab637` (2026-10-10) a long generator moves out of
+    its test into a `static let`, and the test draws `Self.<name>.run(using: &rng)`: no `)` before
+    `.run`, so it was skipped. In #665's 2026-10-27 funnel 426 of 1,064 stub files drew that way. Read
+    from its declaration, it is the same text the inline form held, so its key and `uses` agree.
 
     A draw `using: &reachRNG` is skipped: a predicate stub's reach test (#665) re-draws the law's
     own generator, and counting it would double that generator's `uses` on every such stub.
@@ -45,9 +51,13 @@ def expressions(stub_text):
     found = []
     for match in re.finditer(r"\.run\(using:", masked):
         end = match.start()
-        if masked[end - 1] != ")":
-            continue
         if masked[match.end():].lstrip().startswith("&reachRNG"):
+            continue
+        if masked[end - 1] != ")":
+            named = re.search(r"\bSelf\.(\w+)$", masked[:end])
+            hoisted = mc.hoisted_generator(stub_text, masked, named.group(1)) if named else None
+            if hoisted:
+                found.append(hoisted)
             continue
         depth, start = 0, None
         for index in range(end - 1, -1, -1):
@@ -270,13 +280,42 @@ def self_test():
         if not condition:
             failures.append(f"{name}: {detail}")
     _selftest_error_forms(check)
+    _selftest_expressions(check)
     for failure in failures:
         print("FAIL", failure)
     if failures:
         print(f"{len(failures)} self-test failure(s)")
         return 1
-    print("generator_diversity.py self-test OK  (both compiler error forms)")
+    print("generator_diversity.py self-test OK  (both compiler error forms, inline and hoisted draws)")
     return 0
+
+
+_HOISTED_STUB = """\
+struct PairPredicateTests {
+
+    nonisolated private static let generator = zip(Gen<Int>.int(), Gen<Int>.int()).map { drawn in
+        Pair(drawn.0, drawn.1)
+    }
+
+    @Test func holds_isTotal() async {
+        let label = "Pair.holds(_:) failed totality"
+        let first = Self.generator.run(using: &rng)
+        let second = Self.generator.run(using: &rng)
+        let flag = (Gen<Bool>.bool()).run(using: &rng)
+        let again = Self.generator.run(using: &reachRNG)
+        let ghost = Self.undeclared.run(using: &rng)
+    }
+}
+"""
+
+
+def _selftest_expressions(check):
+    hoisted = "zip(Gen<Int>.int(), Gen<Int>.int()).map { drawn in\n        Pair(drawn.0, drawn.1)\n    }"
+    got = expressions(_HOISTED_STUB)
+    check("hoisted and inline draws, the reach draw skipped", got == [hoisted, hoisted, "Gen<Bool>.bool()"], f"{got}")
+    inline = _HOISTED_STUB.replace("Self.generator.run", "(" + hoisted + ").run")
+    check("a hoisted draw keys as its inline form",
+          [normalised(e) for e in expressions(inline)] == [normalised(e) for e in got], f"{expressions(inline)}")
 
 
 def _selftest_error_forms(check):

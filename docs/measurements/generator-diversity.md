@@ -70,4 +70,4 @@ It measures what a generator draws, not what a law needs. It reads compiled stub
 no compiling stub uses is not here. And the shape statistic is blind to a fixed sub-structure beside any
 varying field.
 
-> **2026-10-27 (#665):** this doc's figures stand, but its script can no longer re-take them as written. Since `0d4ab637` (2026-10-10) a stub may draw through a hoisted `Self.<name>.run(using:)`, and `generator_diversity.expressions` reads only an inline `.run(using:)` argument. In the 2026-10-27 funnel's trees, 426 of 1,064 generated stub files draw this way. `scripts/predicate_outcome_reach.py` resolves the hoist; a re-run of this census must teach `expressions` to do the same.
+> **2026-10-27 (#665):** this doc's figures stand; they predate the hoist. Since `0d4ab637` (2026-10-10) a stub may draw through a hoisted `Self.<name>.run(using:)`, and `generator_diversity.expressions` read only an inline `.run(using:)` argument. In the 2026-10-27 funnel's trees, 426 of 1,064 generated stub files draw this way. `expressions` now reads the hoisted `static let` text, finding all 599 hoisted draws there, so a re-run reads every generator again.

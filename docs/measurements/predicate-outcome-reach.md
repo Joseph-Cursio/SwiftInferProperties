@@ -261,9 +261,13 @@ measure: a state-reading predicate on a fresh receiver is constant.
   - `generator_diversity.py` and `reference_oracle_scaffold_census.py` still read only the old form.
   - **Any funnel figure taken under 6.4 before `df88a65c` may undercount compiles** wherever one stub fails
     to parse.
-- **`generator_diversity.expressions` is blind to a hoisted generator.** Since `0d4ab637` (2026-10-10), a
+- **`generator_diversity.expressions` was blind to a hoisted generator.** Since `0d4ab637` (2026-10-10), a
   stub may draw through `Self.<name>.run(using:)`. That is 426 of the 1,064 generated stub files in arm A's
-  trees, and 169 of the 503 predicate stubs. This probe resolves the hoist; that script does not.
+  trees, and 169 of the 503 predicate stubs.
+  - Fixed on this branch: `expressions` now reads the `static let` text, as this probe does, through
+    `mutation_check.hoisted_generator`.
+  - Over arm A's stubs it now finds 1,478 draws where it found 879: all 599 hoisted draws. That is 340
+    distinct generators where it found 118.
 
 ## 7. The predictions, scored: 8 of 13
 
