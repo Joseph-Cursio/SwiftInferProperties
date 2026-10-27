@@ -821,7 +821,87 @@ run's status, seconds and hex-packed bits (bit *i* = call *i*), its classes and 
 
 ## 12. Amendments
 
-Dated, each recorded before any census figure is read. None yet.
+Dated, each recorded before any census figure is read.
+
+### A1 (2026-10-27): the funnel attributes a parse error, and arm A was restarted
+
+- **What happened.** The first arm-A run was stopped after 8 of 19 repositories. Its stage counts, the
+  only thing read from it, showed whole packages unbuilt with nothing set aside: SwiftProjectLintRules
+  (496 stubs), SwiftProjectLint's root, Models and Config, SwiftUMLBridge, SwiftLintRuleStudioCore,
+  pbt-book's `code` and SwiftAssist's root. No predicate stub was probed and no class was read.
+- **Cause, measured on a toy under swift.org 6.4.1 and Xcode's 6.4.0.** Swift Build, SwiftPM's build
+  system from Swift 6.4, prints a parse error as `error: <path>:<line>:<col> <message>`. That is not the
+  `<path>:<line>:<col>: error: <message>` form stage 5's `_ERROR` reads. The build also stops there, so
+  that round prints no type error from any other file. One stub with an unparseable `TODO` generator
+  (`(Syntax`, `?`) left its whole package unattributed. Type errors still print in the old form.
+- **Change.** Stage 5's `build_to_fixpoint` and `literal_reach_check.build_setting_aside` read both forms
+  (stage 5's `_DRIVER_ERROR`). Arm A was re-run from an empty scratch directory with that fix, the same
+  binaries and the same 19 SHAs. Its counts are the funnel's under the fix, not comparable stage for stage
+  with a census taken before the 6.4 pin.
+- **The harness A/A (§4) is unaffected.** The control at `e36da59` compiled 40 of 50 stubs under both
+  harnesses, and no package there has a parse error to attribute.
+
+### A2 (2026-10-27): what the probe's implementation changed in §3–§5
+
+Recorded with the probe's commit, before V1's gating run and before any census or control stub is probed.
+
+- **Toy shapes (§4 V1).** Every row is offered by `discover` at `fef2971d`, so no hand stub is written.
+  - `Faults.trapsLate` traps by indexing (`[value > 0][value == trapValue ? 1 : 0]`), because with a
+    `precondition` it was not offered.
+  - The `Registry` actor is constructed once in `Tests/PredicateReachToyTests/Placeholder.swift`, so its
+    stub calls `await Registry().holds(value)` instead of drawing an underived `Registry.gen()`.
+  - The tuned constants are frozen in `expected.json`: `rareResidue = 566` (`first_true_at` 500,
+    `true1000` 2), and `trapValue` and `spinValue`, draw 150 at each stub's own seed.
+- **V1's oracle replays the clone's whole process.** It draws 100, then 100, then 1,000, each from a fresh
+  `Xoshiro` on the stub's seed, in one process. The spec's single 1,000-draw loop would disagree by design
+  on a stateful row (`isFirstSighting`), whose `At1000` runs after the first two. A draw that would trap or
+  spin is logged as `OSTOP`, not handed to the subject.
+  - Gate (a) compares every tag up to the clone's stop, the stop position included. A tag the oracle never
+    logged is a disagreement, and the oracle process must exit 0 within its timeout.
+  - V2a compares `law` only, as §4 says.
+  - The helper gains `__reachOracle(_:)`, writing `OBEGIN`/`OPROBE`/`OSTOP` lines through the same
+    descriptor. Oracle tests are named `<subject>Oracle()`, and a V2a oracle file is
+    `<stub stem>_Oracle.swift`.
+- **Population.** Besides `*_Reach.swift`, the glob drops `*_Oracle.swift` and other instruments' copies
+  (`*_Lit`, `*_N1000`, `*_Probe`), so a foreign copy cannot become a row of its own.
+- **Status rules, added to §3's table.**
+  - **TRAPPED needs SwiftPM's signal line**, `exited with unexpected signal code N` with N not in
+    {1, 2, 3, 9, 15}. Otherwise the run is NO READING `killed-or-exited`. Measured on both toolchains:
+    SIGKILL, SIGTERM, SIGINT and `exit()` print no such line, and a trap prints code 5.
+  - **A timeout or a trap in a test whose count is already full** is NO READING `stopped-after-complete`.
+  - **A trap or a hang whose earlier tests are not complete** is NO READING `miscounted`.
+- **Kinds (§5) name a generator's outermost shape**, so a piece nested inside a derived generator does not
+  set it. `held-constant` applies only to a whole `Gen.always(…)`. `array` applies only when
+  `.array(of:)` is outermost, with `.optional` allowed. `hostile-string` applies only when the generator is
+  not itself a `zip` or `.map`. `stdlib-scalar` excludes `.string(`, `.map {` and `zip(`.
+- **Isolation (§5).** An `await` with no hop sets `async` only on a bare `f(` or `Type.f(` call. A drawn,
+  constructed or held instance, such as `X.shared.f(`, reads `actor`.
+- **`hash_sensitive_class`** ignores random-hashing runs that read NO READING, and counts TRAPPED and HUNG
+  as classes.
+- **JSONL (§11).** Each process record carries `n` per tag. Extra fields: `literals`, `class1000_note`,
+  `package_build_seconds`, and the absolute `package_dir` and `stub_path`, which `record` strips. Class
+  strings carry no positions; trap and hang positions are in `runs.<mode>.trapped` and `.hung`.
+- **`report`.** Fix rounds are counted from `decisions.log` as distinct (script SHA, input digest) pairs
+  among earlier NOT-DECISIVE lines for the cause. The current run's own pair is not counted, a line
+  identical to the last apart from its timestamp is not appended, and an uncommitted script records as
+  `<sha>-dirty-<8 hex>`.
+  - `report` and `sample` default to `--arm census`.
+  - `cbd_share` is an exact fraction.
+  - The hand sample's allocation uses integer largest remainders.
+  - A judgement class outside the four stops the run.
+  - Added options: `--census` (the arm-A invariants), `--expected-rows` and `--expected-packages` (the
+    time projection).
+  - `run` adds `--timeout`, `--rand-runs`, `--swift-infer` and `--cli`, and resumes by repository and
+    package.
+
+### A3 (2026-10-27): which NO READING causes a fix round may re-probe
+
+§7's NOT-DECISIVE(no-reading) round re-probes rows that read NO READING "for an instrument-side cause". A2
+adds two causes, `killed-or-exited` and `stopped-after-complete`. Both describe the run, not the subject:
+a process ended from outside, or a timeout that landed after a test's count was full. Both are therefore
+instrument-side, alongside wrap, missing, miscounted and clone-not-compiled, and a fix round may re-probe
+them. `package-no-verdict` and `foreign-clones` are not instrument-side causes of this probe and are not
+re-probed.
 
 ## Appendix: design measurements
 

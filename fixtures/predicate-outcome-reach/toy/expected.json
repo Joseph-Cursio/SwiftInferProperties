@@ -1,0 +1,191 @@
+{
+  "about": "What `scripts/predicate_outcome_reach.py validate` must read off the V1 toy. Every key under a subject's `expect` must equal the probe row's field; `offered` must equal whether arm A's discover wrote the stub. The bits themselves are gated against Oracles.swift, not here. `readings` are counts, not gates: a count that differs while the oracles agree is a provenance note.",
+  "swift_infer": "fef2971d",
+  "toolchain": "swift-6.4.1-RELEASE (corpus_funnel.toolchain of a repository not on the Xcode list)",
+  "resolved": {
+    "SwiftPropertyLaws": "4.10.0",
+    "swift-property-based": "2.0.1"
+  },
+  "tuned": {
+    "rule": "Chosen once, from 1,000 draws of Gen<Int>.int() at each stub's own seed words (the oracle's draws), then frozen in Subjects.swift. Changing one is a deliberate commit that re-tunes it.",
+    "Rules.rareResidue": {
+      "value": 566,
+      "stub": "RulesIsRareResiduePredicateTests",
+      "how": "the residue (value % 1_000, Swift's truncating remainder) of draw 500, the first draw from the 500th on whose residue no earlier draw has; it recurs once, at draw 897"
+    },
+    "Faults.trapValue": {
+      "value": -8300438475956774088,
+      "stub": "FaultsTrapsLatePredicateTests",
+      "how": "draw 150, which occurs nowhere else among the 1,000"
+    },
+    "Faults.spinValue": {
+      "value": 4518500762316687390,
+      "stub": "FaultsSpinsLatePredicateTests",
+      "how": "draw 150, which occurs nowhere else among the 1,000"
+    }
+  },
+  "subjects": {
+    "RulesIsEvenPredicateTests": {
+      "subject": "Rules.isEven",
+      "exercises": "static unary",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "stateful": false,
+                 "hash_sensitive_class": false, "hash_sensitive_bits": false, "again_bits_differ": false,
+                 "scale_prefix_differs": false, "unstable": false, "rand_skipped": false, "receiver": "none",
+                 "isolation": "none", "inout": false, "arity": 1, "row_kind": "unary",
+                 "primary_kind": "stdlib-scalar", "clone": "built"}
+    },
+    "PointIsRightOfPredicateTests": {
+      "subject": "Point.isRightOf",
+      "exercises": "drawn receiver, hoisted generator, tuple",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "stateful": false,
+                 "hash_sensitive_class": false, "hash_sensitive_bits": false, "again_bits_differ": false,
+                 "scale_prefix_differs": false, "unstable": false, "receiver": "drawn", "isolation": "none",
+                 "arity": 2, "row_kind": "relational", "primary_kind": "derived"}
+    },
+    "RulesIsWithinPredicateTests": {
+      "subject": "Rules.isWithin",
+      "exercises": "two arguments",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "receiver": "none", "arity": 2, "row_kind": "relational", "primary_kind": "stdlib-scalar"}
+    },
+    "LayoutIsWidePredicateTests": {
+      "subject": "Layout.isWide",
+      "exercises": "MainActor",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "isolation": "MainActor", "inout": false, "receiver": "none"}
+    },
+    "LayoutTrimsLeadingPredicateTests": {
+      "subject": "Layout.trimsLeading",
+      "exercises": "MainActor + inout",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "isolation": "MainActor", "inout": true, "primary_kind": "hostile-string", "literals": true}
+    },
+    "MatcherMatchesPrefixPredicateTests": {
+      "subject": "Matcher.matchesPrefix",
+      "exercises": "constructed receiver, subject literals",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "receiver": "constructed", "isolation": "none", "primary_kind": "hostile-string", "literals": true}
+    },
+    "RulesConsumesPrefixPredicateTests": {
+      "subject": "Rules.consumesPrefix",
+      "exercises": "inout",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "inout": true, "isolation": "none", "literals": true}
+    },
+    "IsBlankLinePredicateTests": {
+      "subject": "isBlankLine",
+      "exercises": "free function",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "receiver": "none", "isolation": "none"}
+    },
+    "RulesHasControlCharactersPredicateTests": {
+      "subject": "Rules.hasControlCharacters",
+      "exercises": "hostile string",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "primary_kind": "hostile-string", "literals": false}
+    },
+    "RulesIsMagicPredicateTests": {
+      "subject": "Rules.isMagic",
+      "exercises": "a predicate the generator never makes true",
+      "offered": true,
+      "expect": {"class100": "ONLY-FALSE", "class_again": "ONLY-FALSE", "class1000": "ONLY-FALSE",
+                 "unstable": false, "rand_skipped": false}
+    },
+    "RulesIsRepresentablePredicateTests": {
+      "subject": "Rules.isRepresentable",
+      "exercises": "constant by design",
+      "offered": true,
+      "expect": {"class100": "ONLY-TRUE", "class_again": "ONLY-TRUE", "class1000": "ONLY-TRUE", "unstable": false}
+    },
+    "RulesIsRareResiduePredicateTests": {
+      "subject": "Rules.isRareResidue",
+      "exercises": "the rare region: red at 100, BOTH at 1,000, first_true_at in (100, 1000]",
+      "offered": true,
+      "expect": {"class100": "ONLY-FALSE", "class_again": "ONLY-FALSE", "class1000": "BOTH", "first_true_at": 500,
+                 "unstable": false}
+    },
+    "RulesIndexesSmallTablePredicateTests": {
+      "subject": "Rules.indexesSmallTable",
+      "exercises": "a trap at the first call",
+      "offered": true,
+      "expect": {"class100": "TRAPPED", "class_again": null, "class1000": "TRAPPED",
+                 "det_trapped": {"test": "law", "at": 1}, "rand_skipped": true, "stateful": false}
+    },
+    "FaultsSpinsForeverPredicateTests": {
+      "subject": "Faults.spinsForever",
+      "exercises": "a hang at the first call; random runs skipped; no orphan",
+      "offered": true,
+      "expect": {"class100": "HUNG", "class_again": null, "class1000": "HUNG",
+                 "det_hung": {"test": "law", "at": 1}, "rand_skipped": true}
+    },
+    "FaultsTrapsLatePredicateTests": {
+      "subject": "Faults.trapsLate",
+      "exercises": "a trap on the value drawn 150th, reached only by the 1,000-trial test",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "TRAPPED",
+                 "det_trapped": {"test": "scale", "at": 150}, "stateful": false, "rand_skipped": false,
+                 "scale_prefix_differs": false}
+    },
+    "FaultsSpinsLatePredicateTests": {
+      "subject": "Faults.spinsLate",
+      "exercises": "the file probe across a hang: 149 answers survive the kill",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "HUNG",
+                 "det_hung": {"test": "scale", "at": 150}, "stateful": false, "rand_skipped": false,
+                 "scale_prefix_differs": false}
+    },
+    "SightingsIsFirstSightingPredicateTests": {
+      "subject": "Sightings.isFirstSighting",
+      "exercises": "a static seen-set: the replay after the law answers differently",
+      "offered": true,
+      "expect": {"class100": "ONLY-TRUE", "class_again": "ONLY-FALSE", "class1000": "BOTH", "first_true_at": 101,
+                 "stateful": true, "unstable": true, "again_bits_differ": true, "scale_prefix_differs": true,
+                 "hash_sensitive_class": false}
+    },
+    "HashOrderFirstOfFourIsEvenPredicateTests": {
+      "subject": "HashOrder.firstOfFourIsEven",
+      "exercises": "a Set<Int> of four, then first: the bits move with hashing, the class does not",
+      "offered": true,
+      "expect": {"class100": "BOTH", "hash_sensitive_bits": true, "hash_sensitive_class": false, "stateful": false,
+                 "unstable": false}
+    },
+    "HashOrderFirstOfTwoIsAPredicateTests": {
+      "subject": "HashOrder.firstOfTwoIsA",
+      "exercises": "class-level hash dependence: constant within a process, flipping between processes (missed with probability 2^-8 at 8 random runs)",
+      "offered": true,
+      "expect": {"hash_sensitive_class": true, "unstable": true, "stateful": false}
+    },
+    "RegistryHoldsPredicateTests": {
+      "subject": "Registry.holds",
+      "exercises": "actor await, constructed receiver",
+      "offered": true,
+      "expect": {"class100": "BOTH", "class_again": "BOTH", "class1000": "BOTH", "unstable": false,
+                 "receiver": "constructed", "isolation": "actor"}
+    }
+  },
+  "readings": {
+    "source": "M, the design-phase measurement at fef2971d (kit 4.10.0, swift-property-based 2.0.0), as [true100, true1000]; only subjects M measured with the same identity, so the same seed",
+    "counts": {
+      "RulesIsEvenPredicateTests": [57, 501],
+      "PointIsRightOfPredicateTests": [54, 486],
+      "RulesIsWithinPredicateTests": [54, 532],
+      "LayoutIsWidePredicateTests": [65, 496],
+      "LayoutTrimsLeadingPredicateTests": [18, 104],
+      "MatcherMatchesPrefixPredicateTests": [12, 100],
+      "RulesConsumesPrefixPredicateTests": [13, 99],
+      "IsBlankLinePredicateTests": [21, 151],
+      "RulesHasControlCharactersPredicateTests": [27, 245],
+      "RulesIsMagicPredicateTests": [0, 0],
+      "RulesIsRepresentablePredicateTests": [100, 1000]
+    }
+  }
+}
