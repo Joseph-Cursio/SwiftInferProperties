@@ -1,6 +1,11 @@
 # Do a predicate stub's draws reach both answers? A census first, then a reach check only if it says so (#665)
 
-> **Status:** `proposed` · **As of:** 2026-10-27
+> **Status:** `shipped` · **As of:** 2026-10-27
+
+> **2026-10-27 (#665): run.** The census decided **NONE**: G = 42.8% (204/477), and G_loo = 53.6% without
+> SwiftProjectLint. Nothing is emitted, and §9 does not run. The result, the DECISION line and the scored
+> predictions are in `docs/measurements/predicate-outcome-reach.md`. Below this note the text is as
+> frozen, with its amendments in §12.
 
 The `predicate` template's stub is totality, `_ = f(x); return true`, labelled ENTAILED. The label is
 true, but for a `Bool`-returning subject a pass states only that nothing trapped on the inputs drawn. It
