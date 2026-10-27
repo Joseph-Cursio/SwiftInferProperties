@@ -160,12 +160,16 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 # #665's census probe joined with them: its wrap, clone, process-status and class rules, the frozen
 # DECISION function at its boundaries, the stratified hand sample and the kill match, over canned
 # stubs and logs (V0 in `docs/plans/predicate-outcome-reach-scope.md`). No compiler, ~0.1s.
+#
+# The generator-diversity census joined after #665: which stub files a build error names, in both of
+# Swift 6.4's error forms. No compiler, ~0.1s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
 	@python3 scripts/corpus_funnel_stage5.py --self-test
 	@python3 scripts/corpus_funnel.py --self-test
 	@python3 scripts/predicate_outcome_reach.py --self-test
+	@python3 scripts/generator_diversity.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \

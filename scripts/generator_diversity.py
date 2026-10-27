@@ -16,6 +16,7 @@ so every file-private helper the expression names stays in scope.
 
   run    <census-dir> <out.jsonl> [repo …]    probe every compiled stub's generators
   report <out.jsonl>                          classify and summarise
+  --self-test                                 the stub and build-output parsing, no compiler
 """
 
 import collections
@@ -60,6 +61,19 @@ def expressions(stub_text):
         if start is not None:
             found.append(stub_text[start + 1:end - 1])
     return found
+
+
+# A compiler error names its file in two forms under Swift Build, which SwiftPM uses from Swift 6.4: a
+# type error as `<path>:<line>:<col>: error: …`, a PARSE error as `error: <path>:<line>:<col> …`, after
+# which the build stops. Reading only the first, a probe that does not parse is never stripped and its
+# whole package reads `build failed` (#665; `corpus_funnel_stage5._DRIVER_ERROR`).
+_ERROR_PATHS = (re.compile(r"^[ \t]*(/\S+\.swift):\d+:\d+: error:", re.M),
+                re.compile(r"^[ \t]*error: (/\S+\.swift):\d+:\d+", re.M))
+
+
+def erroring_files(output):
+    """The real path of every file a compiler error in `output` names, in either form."""
+    return {os.path.realpath(path) for pattern in _ERROR_PATHS for path in pattern.findall(output)}
 
 
 def normalised(expression):
@@ -156,7 +170,7 @@ def run(census_dir, out_path, repos):
                 ok, output = mc.build(package_dir, swift)
                 if ok:
                     break
-                named = {os.path.realpath(f) for f in re.findall(r"^(/\S+\.swift):\d+:\d+: error:", output, re.M)}
+                named = erroring_files(output)
                 culprits = {tag for tag, probe in probes.items() if os.path.realpath(probe["stub"]) in named}
                 if not culprits - stripped:
                     break
@@ -249,7 +263,36 @@ def report(out_path):
     return 0
 
 
+def self_test():
+    failures = []
+
+    def check(name, condition, detail=""):
+        if not condition:
+            failures.append(f"{name}: {detail}")
+    _selftest_error_forms(check)
+    for failure in failures:
+        print("FAIL", failure)
+    if failures:
+        print(f"{len(failures)} self-test failure(s)")
+        return 1
+    print("generator_diversity.py self-test OK  (both compiler error forms)")
+    return 0
+
+
+def _selftest_error_forms(check):
+    output = ("/t/A.swift:3:9: error: cannot find 'x' in scope\n"
+              "error: /t/B.swift:7:14 expected expression\n"
+              "error: /t/C.swift:2:1: expected ')'\n"
+              "/t/D.swift:2:5: warning: unused\n"
+              "error: fatalError\n")
+    named = erroring_files(output)
+    expected = {os.path.realpath(path) for path in ("/t/A.swift", "/t/B.swift", "/t/C.swift")}
+    check("erroring files, both forms", named == expected, f"{sorted(named)}")
+
+
 def main(argv):
+    if argv[1:] == ["--self-test"]:
+        return self_test()
     if argv[1] == "run":
         return run(argv[2], argv[3], set(argv[4:]))
     if argv[1] == "report":
