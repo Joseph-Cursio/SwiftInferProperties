@@ -679,6 +679,27 @@ def summary_line(repo, result):
             f"unaccounted {result.get('unaccounted','?')}{reach} {result.get('error','')}")
 
 
+def census_helpers(listing, scratch):
+    """The pids, in a `ps -axo pid=,command=` listing, of the `swiftpm-testing-helper`s running a test
+    bundle inside this census's trees.
+
+    ⚠ **This sweep was `pkill -f swiftpm-testing-helper`, which killed every helper on the machine** —
+    a `swift test` in another checkout or another session died mid-run with no failure printed, and a
+    measurement run beside the funnel read a kill as a trap (#665). A helper's command line names its
+    bundle, `--test-bundle-path <package>/.build/…`, so the ones this census started are the ones
+    under its `trees/`. Both spellings of the scratch path are matched, as given and resolved
+    (`/tmp` is `/private/tmp`), because SwiftPM may print either.
+    """
+    roots = {os.path.join(path, "trees") + os.sep
+             for path in (os.path.abspath(scratch), os.path.realpath(scratch))}
+    pids = []
+    for line in listing.splitlines():
+        pid, _, command = line.strip().partition(" ")
+        if "swiftpm-testing-helper" in command and any(root in command for root in roots):
+            pids.append(pid)
+    return pids
+
+
 def main(argv):
     if "--self-test" in argv[1:]:
         return self_test()
@@ -699,8 +720,11 @@ def main(argv):
         # **Sweep SwiftPM's orphaned helpers between repositories.** `swiftpm-testing-helper`
         # outlives its parent and keeps the inherited pipe open, which is what blocks the next
         # `capture_output` call forever — observed alive at 25 minutes after its run was killed.
-        subprocess.run(["pkill", "-f", "swiftpm-testing-helper"], check=False,
-                       capture_output=True)
+        # Only this census's own helpers: see `census_helpers`.
+        listing = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True,
+                                 text=True).stdout
+        for pid in census_helpers(listing, scratch):
+            subprocess.run(["kill", pid], check=False, capture_output=True)
         json.dump(result, open(out, "w"), indent=2)
         print(summary_line(repo, result), flush=True)
     return 0
@@ -1113,6 +1137,16 @@ def self_test():
         check("summary line: reach appended when expected",
               summary_line("R", dict(legacy, **totals)).endswith(
                   "unaccounted 0 reach 8/16 (not applied 4) "), summary_line("R", dict(legacy, **totals)))
+    helper = "/tc/usr/libexec/swift/pm/swiftpm-testing-helper --test-bundle-path"
+    listing = "\n".join([
+        f"  101 {helper} /private/tmp/census/trees/Repo/.build/out/Products/Debug/RepoTests.xctest",
+        f"  102 {helper} /Users/me/OtherCheckout/.build/out/Products/Debug/OtherTests.xctest",
+        "  103 /tc/usr/bin/swift-build --package-path /private/tmp/census/trees/Repo",
+        f"  104 {helper} /private/tmp/census/trees-old/Repo/.build/out/Products/Debug/RepoTests.xctest",
+    ])
+    check("census_helpers kills only a helper inside this census's trees",
+          census_helpers(listing, "/private/tmp/census") == ["101"],
+          str(census_helpers(listing, "/private/tmp/census")))
     walks = _selftest_walk_repo(check)
     for failure in failures:
         print("FAIL", failure)
