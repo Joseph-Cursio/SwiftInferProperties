@@ -308,13 +308,12 @@ form) and 5 (arm B) are dropped. The branch ships:
 - this record: `fixtures/predicate-outcome-reach/census-2026-10-27.jsonl` (the 503 census rows and 10
   control rows), `judgements.json` and `decisions.log`.
 
-**The follow-up issue** (scope §10, NONE by the bands) is Direction 2. Both of §5's triggers fired, so it is
+**The follow-up issue** (scope §10, NONE by the bands) is Direction 2, filed as #684. Both of §5's triggers fired, so it is
 reopened on two fronts:
 - syntax-corpus seeding: 172 red rows, 161 of them in SwiftProjectLint;
 - relational pairing: 47 red rows.
 
-Success is scored as rows moved to BOTH, re-measured by running this script on a fresh funnel. Its number is
-added here when it is filed.
+Success is scored as rows moved to BOTH, re-measured by running this script on a fresh funnel.
 
 ## 9. V3, the mutation run's baselines
 
