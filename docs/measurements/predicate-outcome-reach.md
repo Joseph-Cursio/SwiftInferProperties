@@ -258,7 +258,8 @@ measure: a state-reading predicate on a fresh receiver is constant.
   for a parse error and then stops, so stage 5 read whole packages as unbuilt with nothing set aside. In the
   first arm-A run that hid 496 SwiftProjectLintRules stubs. `df88a65c` reads both forms in stage 5 and
   `literal_reach_check`.
-  - `generator_diversity.py` and `reference_oracle_scaffold_census.py` still read only the old form.
+  - `generator_diversity.py` and `reference_oracle_scaffold_census.py` read only the old form too. They
+    now read both, and each self-test fails on a parser that reads only the old form.
   - **Any funnel figure taken under 6.4 before `df88a65c` may undercount compiles** wherever one stub fails
     to parse.
 - **`generator_diversity.expressions` was blind to a hoisted generator.** Since `0d4ab637` (2026-10-10), a
