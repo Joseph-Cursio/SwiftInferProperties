@@ -703,7 +703,16 @@ def stub_header(module, subject_file, file_imports=True):
 
 
 _ERROR = re.compile(r"^(/[^:]+\.swift):(\d+):(\d+): error: (.+)$")
+# A PARSE error prints in another form under Swift Build, which SwiftPM uses from Swift 6.4:
+# `error: <path>:<line>:<col> <message>`, and the build stops there, so no other file's error prints
+# that round. Reading only `_ERROR` attributes none of it (#665; `corpus_funnel_stage5._DRIVER_ERROR`).
+_DRIVER_ERROR = re.compile(r"^error: (/[^:]+\.swift):(\d+):(\d+):? (.+)$")
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def error_match(line):
+    """A compiler error on `line` in either form, with groups (path, line, col, message), else None."""
+    return _ERROR.match(line.strip()) or _DRIVER_ERROR.match(line.strip())
 
 
 def build_once(tree, swift):
@@ -747,7 +756,7 @@ def build_batch_to_fixpoint(tree, swift, files, max_rounds=40):
             return {"failed": failed, "compiled": sorted(present.values()), "rounds": rounds}
         errors = collections.defaultdict(list)
         for line in output.splitlines():
-            match = _ERROR.match(line.strip())
+            match = error_match(line)
             if not match:
                 continue
             path = os.path.realpath(match.group(1))
@@ -867,7 +876,7 @@ def compile_alone(args, path, timeout=1200):
     output = _ANSI.sub("", done.stdout + done.stderr)
     errors, real = [], os.path.realpath(path)
     for line in output.splitlines():
-        match = _ERROR.match(line.strip())
+        match = error_match(line)
         if match and os.path.realpath(match.group(1)) == real:
             record = {"line": int(match.group(2)), "col": int(match.group(3)),
                       "message": match.group(4)}
@@ -1974,6 +1983,23 @@ def _selftest_report(scratch, check):
           and scaffolds[1]["scaffold"] == "", str(sorted(stand_ins)))
 
 
+def _selftest_error_forms(check):
+    """Both forms Swift 6.4 prints a compiler error in: a type error after the column, a parse error
+    before the path. The parse form is the one a whole build stops on (#665)."""
+    cases = [
+        ("/t/A.swift:3:9: error: cannot find 'x' in scope", ("/t/A.swift", "3", "9", "cannot find 'x' in scope")),
+        ("error: /t/B.swift:7:14 expected expression", ("/t/B.swift", "7", "14", "expected expression")),
+        ("error: /t/B.swift:7:14: expected ')'", ("/t/B.swift", "7", "14", "expected ')'")),
+        ("  error: /t/C.swift:1:1 unexpected token", ("/t/C.swift", "1", "1", "unexpected token")),
+        ("/t/D.swift:2:5: warning: unused", None),
+        ("error: fatalError", None),
+    ]
+    for line, expected in cases:
+        match = error_match(line)
+        got = match.groups() if match else None
+        check(f"error form {line!r}", got == expected, f"{got}")
+
+
 def self_test():
     failures = []
 
@@ -1986,13 +2012,14 @@ def self_test():
         _selftest_identity(scratch, check)
         _selftest_resolved(scratch, check)
         _selftest_report(scratch, check)
+    _selftest_error_forms(check)
     for failure in failures:
         print("FAIL", failure)
     if failures:
         print(f"{len(failures)} self-test failure(s)")
         return 1
     print("reference_oracle_scaffold_census.py self-test OK  (reclassify revision, Package.resolved "
-          "pinning, binary identity, summary denominators)")
+          "pinning, binary identity, summary denominators, both compiler error forms)")
     return 0
 
 

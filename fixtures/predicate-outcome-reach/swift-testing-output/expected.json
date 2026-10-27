@@ -1,0 +1,333 @@
+{
+  "about": "`started` and `results`: the unpatched fef2971d parse loop over each capture. `warned` and `sides`: read by hand from each capture. See README.md.",
+  "captures": {
+    "hang-big-truncated.out": {
+      "started": [
+        "BigHang.spinsAfterMuchOutput()"
+      ],
+      "results": {},
+      "warned": [],
+      "sides": {}
+    },
+    "hang-quiet.out": {
+      "started": [],
+      "results": {},
+      "warned": [],
+      "sides": {}
+    },
+    "helper-swiftorg.out": {
+      "started": [
+        "Reach_ToyTests.isEven_reachesBothOutcomes()",
+        "Reach_ToyTests.isEven_syncReach()",
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()",
+        "Reach_ToyMainTests.isEven_syncReach()"
+      ],
+      "results": {
+        "Reach_ToyTests.isEven_reachesBothOutcomes()": "passed",
+        "Reach_ToyTests.isEven_syncReach()": "passed",
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()": "passed",
+        "Reach_ToyMainTests.isEven_syncReach()": "passed"
+      },
+      "warned": [
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()",
+        "Reach_ToyTests.isEven_reachesBothOutcomes()"
+      ],
+      "sides": {
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()": [
+          "false"
+        ],
+        "Reach_ToyTests.isEven_reachesBothOutcomes()": [
+          "false"
+        ]
+      }
+    },
+    "helper-xcode.out": {
+      "started": [
+        "Reach_ToyTests.isEven_reachesBothOutcomes()",
+        "Reach_ToyTests.isEven_syncReach()",
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()",
+        "Reach_ToyMainTests.isEven_syncReach()"
+      ],
+      "results": {
+        "Reach_ToyTests.isEven_reachesBothOutcomes()": "passed",
+        "Reach_ToyTests.isEven_syncReach()": "passed",
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()": "passed",
+        "Reach_ToyMainTests.isEven_syncReach()": "passed"
+      },
+      "warned": [
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()",
+        "Reach_ToyTests.isEven_reachesBothOutcomes()"
+      ],
+      "sides": {
+        "Reach_ToyMainTests.isEven_reachesBothOutcomes()": [
+          "false"
+        ],
+        "Reach_ToyTests.isEven_reachesBothOutcomes()": [
+          "false"
+        ]
+      }
+    },
+    "known-issue-side.out": {
+      "started": [
+        "RulesIsPositivePredicateTests.isPositive_isTotal()",
+        "RulesIsPositivePredicateTests.isPositive_reachesBothOutcomes()"
+      ],
+      "results": {
+        "RulesIsPositivePredicateTests.isPositive_isTotal()": "passed",
+        "RulesIsPositivePredicateTests.isPositive_reachesBothOutcomes()": "passed"
+      },
+      "warned": [
+        "RulesIsPositivePredicateTests.isPositive_reachesBothOutcomes()"
+      ],
+      "sides": {
+        "RulesIsPositivePredicateTests.isPositive_reachesBothOutcomes()": [
+          "false"
+        ]
+      }
+    },
+    "reach-mixed.txt": {
+      "started": [
+        "LayoutIsWidePredicateTests.isWide_reachesBothOutcomes()",
+        "LayoutTrimsLeadingPredicateTests.trimsLeading_reachesBothOutcomes()",
+        "MatcherMatchesPrefixPredicateTests.matchesPrefix_reachesBothOutcomes()",
+        "PointIsRightOfPredicateTests.isRightOf_reachesBothOutcomes()",
+        "RulesConsumesPrefixPredicateTests.consumesPrefix_reachesBothOutcomes()",
+        "RulesIsEvenPredicateTests.isEven_reachesBothOutcomes()",
+        "RulesIsMagicPredicateTests.isMagic_reachesBothOutcomes()",
+        "RulesIsRepresentablePredicateTests.isRepresentable_reachesBothOutcomes()",
+        "RulesIsWithinPredicateTests.isWithin_reachesBothOutcomes()"
+      ],
+      "results": {
+        "LayoutIsWidePredicateTests.isWide_reachesBothOutcomes()": "passed",
+        "LayoutTrimsLeadingPredicateTests.trimsLeading_reachesBothOutcomes()": "passed",
+        "MatcherMatchesPrefixPredicateTests.matchesPrefix_reachesBothOutcomes()": "passed",
+        "PointIsRightOfPredicateTests.isRightOf_reachesBothOutcomes()": "passed",
+        "RulesConsumesPrefixPredicateTests.consumesPrefix_reachesBothOutcomes()": "passed",
+        "RulesIsEvenPredicateTests.isEven_reachesBothOutcomes()": "passed",
+        "RulesIsMagicPredicateTests.isMagic_reachesBothOutcomes()": "failed",
+        "RulesIsRepresentablePredicateTests.isRepresentable_reachesBothOutcomes()": "passed",
+        "RulesIsWithinPredicateTests.isWithin_reachesBothOutcomes()": "passed"
+      },
+      "warned": [
+        "RulesIsRepresentablePredicateTests.isRepresentable_reachesBothOutcomes()"
+      ],
+      "sides": {
+        "RulesIsMagicPredicateTests.isMagic_reachesBothOutcomes()": [
+          "true"
+        ],
+        "RulesIsRepresentablePredicateTests.isRepresentable_reachesBothOutcomes()": [
+          "false"
+        ]
+      }
+    },
+    "severity-all-swiftorg.txt": {
+      "started": [
+        "Toy_isEvenTests.aErrorIssue()",
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()",
+        "Toy_isEvenTests.dPasses()"
+      ],
+      "results": {
+        "Toy_isEvenTests.aErrorIssue()": "failed",
+        "Toy_isEvenTests.bWarningIssue()": "passed",
+        "Toy_isEvenTests.cKnownIssue()": "passed",
+        "Toy_isEvenTests.dPasses()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "sides": {}
+    },
+    "severity-all-xcode.txt": {
+      "started": [
+        "Toy_isEvenTests.aErrorIssue()",
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()",
+        "Toy_isEvenTests.dPasses()"
+      ],
+      "results": {
+        "Toy_isEvenTests.aErrorIssue()": "failed",
+        "Toy_isEvenTests.bWarningIssue()": "passed",
+        "Toy_isEvenTests.cKnownIssue()": "passed",
+        "Toy_isEvenTests.dPasses()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "sides": {}
+    },
+    "severity-filt-swiftorg-eKnownIssueNotRecorded.out": {
+      "started": [
+        "Toy_extraTests.eKnownIssueNotRecorded()"
+      ],
+      "results": {
+        "Toy_extraTests.eKnownIssueNotRecorded()": "failed"
+      },
+      "warned": [],
+      "sides": {}
+    },
+    "severity-filt-swiftorg-fKnownIssueIntermittentNotRecorded.out": {
+      "started": [
+        "Toy_extraTests.fKnownIssueIntermittentNotRecorded()"
+      ],
+      "results": {
+        "Toy_extraTests.fKnownIssueIntermittentNotRecorded()": "passed"
+      },
+      "warned": [],
+      "sides": {}
+    },
+    "severity-filt-xcode-eKnownIssueNotRecorded.out": {
+      "started": [
+        "Toy_extraTests.eKnownIssueNotRecorded()"
+      ],
+      "results": {
+        "Toy_extraTests.eKnownIssueNotRecorded()": "failed"
+      },
+      "warned": [],
+      "sides": {}
+    },
+    "severity-filt-xcode-fKnownIssueIntermittentNotRecorded.out": {
+      "started": [
+        "Toy_extraTests.fKnownIssueIntermittentNotRecorded()"
+      ],
+      "results": {
+        "Toy_extraTests.fKnownIssueIntermittentNotRecorded()": "passed"
+      },
+      "warned": [],
+      "sides": {}
+    },
+    "severity-only-swiftorg-aErrorIssue.out": {
+      "started": [
+        "Toy_isEvenTests.aErrorIssue()"
+      ],
+      "results": {
+        "Toy_isEvenTests.aErrorIssue()": "failed"
+      },
+      "warned": [],
+      "sides": {}
+    },
+    "severity-only-swiftorg-bWarningIssue.out": {
+      "started": [
+        "Toy_isEvenTests.bWarningIssue()"
+      ],
+      "results": {
+        "Toy_isEvenTests.bWarningIssue()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.bWarningIssue()"
+      ],
+      "sides": {}
+    },
+    "severity-only-swiftorg-cKnownIssue.out": {
+      "started": [
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "results": {
+        "Toy_isEvenTests.cKnownIssue()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "sides": {}
+    },
+    "severity-only-xcode-aErrorIssue.out": {
+      "started": [
+        "Toy_isEvenTests.aErrorIssue()"
+      ],
+      "results": {
+        "Toy_isEvenTests.aErrorIssue()": "failed"
+      },
+      "warned": [],
+      "sides": {}
+    },
+    "severity-only-xcode-bWarningIssue.out": {
+      "started": [
+        "Toy_isEvenTests.bWarningIssue()"
+      ],
+      "results": {
+        "Toy_isEvenTests.bWarningIssue()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.bWarningIssue()"
+      ],
+      "sides": {}
+    },
+    "severity-only-xcode-cKnownIssue.out": {
+      "started": [
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "results": {
+        "Toy_isEvenTests.cKnownIssue()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "sides": {}
+    },
+    "severity-out-swiftorg.stderr": {
+      "started": [],
+      "results": {},
+      "warned": [],
+      "sides": {}
+    },
+    "severity-out-swiftorg.stdout": {
+      "started": [
+        "Toy_isEvenTests.aErrorIssue()",
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()",
+        "Toy_isEvenTests.dPasses()"
+      ],
+      "results": {
+        "Toy_isEvenTests.aErrorIssue()": "failed",
+        "Toy_isEvenTests.bWarningIssue()": "passed",
+        "Toy_isEvenTests.cKnownIssue()": "passed",
+        "Toy_isEvenTests.dPasses()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "sides": {}
+    },
+    "severity-out-xcode.stderr": {
+      "started": [],
+      "results": {},
+      "warned": [],
+      "sides": {}
+    },
+    "severity-out-xcode.stdout": {
+      "started": [
+        "Toy_isEvenTests.aErrorIssue()",
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()",
+        "Toy_isEvenTests.dPasses()"
+      ],
+      "results": {
+        "Toy_isEvenTests.aErrorIssue()": "failed",
+        "Toy_isEvenTests.bWarningIssue()": "passed",
+        "Toy_isEvenTests.cKnownIssue()": "passed",
+        "Toy_isEvenTests.dPasses()": "passed"
+      },
+      "warned": [
+        "Toy_isEvenTests.bWarningIssue()",
+        "Toy_isEvenTests.cKnownIssue()"
+      ],
+      "sides": {}
+    },
+    "trap.out": {
+      "started": [
+        "RulesIsEvenPredicateTests.isEven_isTotal()",
+        "RulesIsEvenPredicateTests.isEven_reachesBothOutcomes()",
+        "RulesIsOddPredicateTests.isOdd_isTotal()"
+      ],
+      "results": {
+        "RulesIsEvenPredicateTests.isEven_isTotal()": "passed",
+        "RulesIsEvenPredicateTests.isEven_reachesBothOutcomes()": "passed"
+      },
+      "warned": [],
+      "sides": {}
+    }
+  }
+}

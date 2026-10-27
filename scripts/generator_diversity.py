@@ -16,6 +16,7 @@ so every file-private helper the expression names stays in scope.
 
   run    <census-dir> <out.jsonl> [repo …]    probe every compiled stub's generators
   report <out.jsonl>                          classify and summarise
+  --self-test                                 the stub and build-output parsing, no compiler
 """
 
 import collections
@@ -35,12 +36,28 @@ MARKER = "// generator_diversity.py probe"
 
 
 def expressions(stub_text):
-    """Each `(EXPR).run(using:` in the stub, as the text inside the parentheses."""
+    """Each generator the stub draws from: the text inside `(EXPR).run(using:`, or, for a hoisted draw
+    `Self.<name>.run(using:`, the text of the suite's `static let <name> = …`.
+
+    ⚠ **A hoisted draw was invisible here.** Since `0d4ab637` (2026-10-10) a long generator moves out of
+    its test into a `static let`, and the test draws `Self.<name>.run(using: &rng)`: no `)` before
+    `.run`, so it was skipped. In #665's 2026-10-27 funnel 426 of 1,064 stub files drew that way. Read
+    from its declaration, it is the same text the inline form held, so its key and `uses` agree.
+
+    A draw `using: &reachRNG` is skipped: a predicate stub's reach test (#665) re-draws the law's
+    own generator, and counting it would double that generator's `uses` on every such stub.
+    """
     masked, _ = mc.mask(stub_text)
     found = []
     for match in re.finditer(r"\.run\(using:", masked):
         end = match.start()
+        if masked[match.end():].lstrip().startswith("&reachRNG"):
+            continue
         if masked[end - 1] != ")":
+            named = re.search(r"\bSelf\.(\w+)$", masked[:end])
+            hoisted = mc.hoisted_generator(stub_text, masked, named.group(1)) if named else None
+            if hoisted:
+                found.append(hoisted)
             continue
         depth, start = 0, None
         for index in range(end - 1, -1, -1):
@@ -54,6 +71,19 @@ def expressions(stub_text):
         if start is not None:
             found.append(stub_text[start + 1:end - 1])
     return found
+
+
+# A compiler error names its file in two forms under Swift Build, which SwiftPM uses from Swift 6.4: a
+# type error as `<path>:<line>:<col>: error: …`, a PARSE error as `error: <path>:<line>:<col> …`, after
+# which the build stops. Reading only the first, a probe that does not parse is never stripped and its
+# whole package reads `build failed` (#665; `corpus_funnel_stage5._DRIVER_ERROR`).
+_ERROR_PATHS = (re.compile(r"^[ \t]*(/\S+\.swift):\d+:\d+: error:", re.M),
+                re.compile(r"^[ \t]*error: (/\S+\.swift):\d+:\d+", re.M))
+
+
+def erroring_files(output):
+    """The real path of every file a compiler error in `output` names, in either form."""
+    return {os.path.realpath(path) for pattern in _ERROR_PATHS for path in pattern.findall(output)}
 
 
 def normalised(expression):
@@ -95,7 +125,7 @@ def install(package_dir):
     if not target:
         return {}
     stubs = sorted(glob.glob(os.path.join(target, "*", "*.swift")))
-    stubs = [s for s in stubs if not re.search(r"_(N1000|Probe)\.swift$", s)]
+    stubs = [s for s in stubs if not re.search(r"_(N1000|Probe|Lit|Reach)\.swift$", s)]
     seen, uses = {}, collections.Counter()
     for stub in stubs:
         text = open(stub, encoding="utf-8").read()
@@ -150,7 +180,7 @@ def run(census_dir, out_path, repos):
                 ok, output = mc.build(package_dir, swift)
                 if ok:
                     break
-                named = {os.path.realpath(f) for f in re.findall(r"^(/\S+\.swift):\d+:\d+: error:", output, re.M)}
+                named = erroring_files(output)
                 culprits = {tag for tag, probe in probes.items() if os.path.realpath(probe["stub"]) in named}
                 if not culprits - stripped:
                     break
@@ -243,7 +273,65 @@ def report(out_path):
     return 0
 
 
+def self_test():
+    failures = []
+
+    def check(name, condition, detail=""):
+        if not condition:
+            failures.append(f"{name}: {detail}")
+    _selftest_error_forms(check)
+    _selftest_expressions(check)
+    for failure in failures:
+        print("FAIL", failure)
+    if failures:
+        print(f"{len(failures)} self-test failure(s)")
+        return 1
+    print("generator_diversity.py self-test OK  (both compiler error forms, inline and hoisted draws)")
+    return 0
+
+
+_HOISTED_STUB = """\
+struct PairPredicateTests {
+
+    nonisolated private static let generator = zip(Gen<Int>.int(), Gen<Int>.int()).map { drawn in
+        Pair(drawn.0, drawn.1)
+    }
+
+    @Test func holds_isTotal() async {
+        let label = "Pair.holds(_:) failed totality"
+        let first = Self.generator.run(using: &rng)
+        let second = Self.generator.run(using: &rng)
+        let flag = (Gen<Bool>.bool()).run(using: &rng)
+        let again = Self.generator.run(using: &reachRNG)
+        let ghost = Self.undeclared.run(using: &rng)
+    }
+}
+"""
+
+
+def _selftest_expressions(check):
+    hoisted = "zip(Gen<Int>.int(), Gen<Int>.int()).map { drawn in\n        Pair(drawn.0, drawn.1)\n    }"
+    got = expressions(_HOISTED_STUB)
+    check("hoisted and inline draws, the reach draw skipped", got == [hoisted, hoisted, "Gen<Bool>.bool()"], f"{got}")
+    inline = _HOISTED_STUB.replace("Self.generator.run", "(" + hoisted + ").run")
+    check("a hoisted draw keys as its inline form",
+          [normalised(e) for e in expressions(inline)] == [normalised(e) for e in got], f"{expressions(inline)}")
+
+
+def _selftest_error_forms(check):
+    output = ("/t/A.swift:3:9: error: cannot find 'x' in scope\n"
+              "error: /t/B.swift:7:14 expected expression\n"
+              "error: /t/C.swift:2:1: expected ')'\n"
+              "/t/D.swift:2:5: warning: unused\n"
+              "error: fatalError\n")
+    named = erroring_files(output)
+    expected = {os.path.realpath(path) for path in ("/t/A.swift", "/t/B.swift", "/t/C.swift")}
+    check("erroring files, both forms", named == expected, f"{sorted(named)}")
+
+
 def main(argv):
+    if argv[1:] == ["--self-test"]:
+        return self_test()
     if argv[1] == "run":
         return run(argv[2], argv[3], set(argv[4:]))
     if argv[1] == "report":

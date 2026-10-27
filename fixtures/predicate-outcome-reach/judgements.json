@@ -1,0 +1,122 @@
+{
+ "Packages/SwiftInferenceBackends/Tests/SwiftInferenceBackendsTests/Generated/SwiftInfer/predicate/ThinkStatePromptOpensThinkingPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: \"<think>\". ThinkState.thinkOpen is the constant \"<think>\" (MLXBackend.swift:354). Trimming whitespace leaves \"<think>\" unchanged, and it hasSuffix(\"<think>\"), so the function returns true. Any String ending in that constant also works. None of the generator's fixed lists contains it, and the ascii/latin1 arms reach it only by chance."
+ },
+ "Packages/SwiftProjectLintModels/Tests/Generated/SwiftInfer/predicate/LayerPolicyContainsPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: \"Domain/\" (or any string that starts with it, such as \"Domain/User.swift\"). The stub fixes the receiver as `LayerPolicy(name: \"domain\", paths: [\"Domain/\"])`. contains returns `paths.contains { relativePath.hasPrefix($0) }`, so \"Domain/\".hasPrefix(\"Domain/\") is true. The hostile-string generator's ASCII arm could produce this string only with negligible probability, and its fixed lists never include it. A different fixed `paths` value would change which prefix serves as the witness, but not this classification."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/AccessibilityTreeTraverserContainsAccessibilityModifierPredicateTests.swift": {
+  "class": "relational",
+  "note": "Witness: syntax = Syntax of the parsed expression `a.b` (a MemberAccessExprSyntax whose declName.baseName.text is \"b\"), modifierName = \"b\" (reachable from Gen<Character>.letterOrNumber.string(of: 0...8)). AccessibilityTreeTraverser.swift:91-93 returns true as soon as a MemberAccessExprSyntax in the subtree has `declName.baseName.text == modifierName`. Getting true needs the drawn String to equal a member name inside the drawn Syntax, so the two drawn values must line up. For `a.b` with \"b\", the first `if` matches at the root and returns true."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/AccessibilityTreeTraverserGroupsChildrenPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The LabeledExprListSyntax of the arguments of `f(children: .combine)` (Parser.parse; take the FunctionCallExpr's `arguments`). groupsChildren returns true when an argument has label \"children\" and its expression is a MemberAccessExprSyntax whose declName.baseName.text is in groupingChildBehaviours = [\"combine\", \"ignore\"] (line 106). `.combine` is such a MemberAccessExpr with no base. The 1,000-draw run reading BOTH is consistent with this."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/CatchWithoutHandlingVisitorContainsLoggingCallPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: Syntax(ExprSyntax(\"print(x)\")), i.e. a FunctionCallExprSyntax whose calledExpression is DeclReferenceExprSyntax(baseName: .identifier(\"print\")). At line 111, syntax.as(FunctionCallExprSyntax.self) succeeds. The calledExpression is a DeclReferenceExprSyntax whose baseName.text \"print\" is in loggingFunctionNames (print, debugPrint, NSLog, os_log, os_signpost), so it returns true at line 115. The fixed receiver's instance state is never read. `logger.error(e)` also works through LoggingMethod.anyLogger."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/ComputedPropertyViewVisitorIsDecomposingContainerPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The FunctionCallExprSyntax parsed from `Menu(\"Options\") {}`, or from `toolbar()`. Its calledExpression is a DeclReferenceExprSyntax with baseName \"Menu\" (or \"toolbar\"). `view.alert(\"t\", isPresented: $flag)` also works, through the MemberAccessExprSyntax branch with declName \"alert\".. At line 78, isDecomposingContainer reads a DeclReferenceExprSyntax callee and returns `decomposingContainers.contains(reference.baseName.text)`. The set at line 38 contains \"Menu\", \"alert\", \"toolbar\" and similar names, so any call spelled with one of them returns true. Grepping the syntax corpus finds no call named Menu, alert, toolbar, contextMenu, confirmationDialog, actionSheet or ToolbarItem, which explains why every draw returned false."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/DirectInstantiationVisitorIsRuntimeDrivenMemberPredicateTests.swift": {
+  "class": "constant-by-design",
+  "note": "The stub fixes the receiver as a fresh DirectInstantiationVisitor(patternCategory: .architecture), which never walks. entryTypeStack starts as [] and is appended only in the visit(Class/Struct/Enum/ActorDeclSyntax) overrides (DirectInstantiationVisitor.swift:27, 407-448). So `entryTypeStack.last == true` is `nil == true`, which is false, and the guard at line 290 returns false for every VariableDeclSyntax. A receiver held mid-walk inside an `@main`/`App` type would make `var body` or a stored instance member return true."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/DocumentationVisitorIsProtocolRequiredStubPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The FunctionDeclSyntax parsed from `static func expansion() {}` (or `func encode(to encoder: Encoder) {}`). For `static func expansion() {}`, `name.text == \"expansion\"` and `modifiers` contains `static`, so line 97 returns true. The `encode(to:)` form also returns true at lines 103-108: there is one parameter and its `firstName` is `to`. The corpus simply holds no such declaration."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/FireAndForgetTaskVisitorIsValueOrResultAccessPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: Syntax(MemberAccessExprSyntax parsed from `x.value`), i.e. base DeclReferenceExpr `x`, declName baseName `value`. `syntax.as(MemberAccessExprSyntax.self)` succeeds and `member.declName.baseName.text == \"value\"`, so line 86 returns true (`task.result` works the same way). The method never reads the fixed receiver. Any well-formed Syntax counts as drawn, so this node is within the generator's type."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/GlobalActorMismatchVisitorIsAwaitPrecedingPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The `work()` FunctionCallExprSyntax inside `return try await work()` (corpus snippet: actor GuardedEngine, around line 2243 of SwiftInferSyntaxCorpus.swift). It is still attached to its parsed tree, and its direct parent is an AwaitExprSyntax. A bare parse of `await foo()` gives the same result.. The corpus generator returns nodes collected from parsed SourceFileSyntax trees, so each node keeps its parent chain. isAwaitPreceding walks `.parent` and returns true on the first AwaitExprSyntax (line 181), before it reaches a CodeBlockItemSyntax. The witness is itself a corpus member, which fits the BOTH reading at 1,000 draws. The receiver the stub builds (`patternCategory: .codeQuality`) has no effect on this method."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/GlobalMutableStateVisitorIsStaticPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The VariableDeclSyntax parsed from `static var shared = 0`. isStatic checks whether `node.modifiers` has a DeclModifierSyntax whose name token is `.keyword(.static)`. The modifier list of `static var shared = 0` is exactly that, so it returns true. The receiver the stub builds (`GlobalMutableStateVisitor(patternCategory: .testability)`) is never read by isStatic, so holding it fixed changes nothing."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/IOS17ObservationMigrationVisitorDetectsManualObjectWillChangePredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: MemberBlockSyntax parsed from `{ func notify() { objectWillChange.send() } }` (the member block of `class M: ObservableObject { func notify() { objectWillChange.send() } }`). PatternFinder(pattern: \"objectWillChange\") walks the block in sourceAccurate mode and visits the MemberAccessExprSyntax `objectWillChange.send`. Its base is a DeclReferenceExprSyntax whose baseName.text == \"objectWillChange\", so found = true and the subject returns true (IOS17ObservationMigrationVisitor.swift:117-125). `{ let p = self.objectWillChange }` also works, through the declName branch. The corpus's member blocks simply contain no such access."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/MissingCancellationCheckVisitorIsTaskCreationPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: Syntax(FunctionCallExprSyntax parsed from `Task { }`), i.e. Syntax(ExprSyntax(\"Task { }\")). `withTaskGroup(of: Void.self) { _ in }` also works. syntax.as(FunctionCallExprSyntax.self) succeeds. calledExpression is a DeclReferenceExprSyntax with baseName.text == \"Task\", so the subject returns true at MissingCancellationCheckVisitor.swift:52-54. The drawn Syntax nodes are almost never a call node with that callee name."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/MutuallyExclusivePresentationStateVisitorHasOptionalBindingPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: VariableDeclSyntax parsed from `var x: Int?` (one PatternBinding whose typeAnnotation.type is OptionalTypeSyntax(wrappedType: IdentifierTypeSyntax(\"Int\"))). `hasOptionalBinding` returns true when any binding's `typeAnnotation?.type.is(OptionalTypeSyntax.self)` holds. For `var x: Int?` the annotation's type is an OptionalTypeSyntax, so `contains` yields true. The visitor receiver plays no part in this check. Declarations with no annotation, or with a non-optional one, give false, which explains why false dominated the corpus draws."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/NetworkingVisitorCheckSynchronousDataCallPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: FunctionCallExprSyntax parsed from `Data(contentsOf: remoteURL)`. The calledExpression is DeclReferenceExpr `Data` and the argument label is `contentsOf`. In isLikelyLocalURL, the argument is not a call and contains no \"Bundle\" text. Its lowercased text \"remoteurl\" contains none of the local hints and does contain the network hint \"remote\" (line 133), so the function returns false. checkSynchronousDataCall then calls addIssue, with lineNumber returning 0 because no converter is set, and returns true (line 70). The corpus simply never draws a networked `Data(contentsOf:)` call."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/NonInjectedNondeterminismVisitorCallsTemporaryDirectoryFunctionPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: Syntax(ExprSyntax(\"NSTemporaryDirectory()\")), i.e. a FunctionCallExprSyntax with calledExpression DeclReferenceExprSyntax(baseName: .identifier(\"NSTemporaryDirectory\")); also any tree containing one, e.g. `URL(fileURLWithPath: NSTemporaryDirectory())`. At line 189 the node casts to FunctionCallExprSyntax and its calledExpression's DeclReferenceExprSyntax baseName.text equals \"NSTemporaryDirectory\", so it returns true at line 192. The recursive children scan also finds such a call nested anywhere in a larger Syntax."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/NonisolatedUnsafeVisitorEnclosingTypeHasLockPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The in-tree VariableDeclSyntax `let lock = NSLock()` taken from the parse of `final class C { let lock = NSLock(); nonisolated(unsafe) var x = 0 }`. Either member decl works, kept attached to its parsed tree.. Corpus nodes are collected in place from parsed trees, so they keep their parents. The walk goes MemberBlockItem → MemberBlockItemList → MemberBlockSyntax. `memberBlockDeclaresLock` then finds a binding whose initializer is a FunctionCallExpr with DeclReference `NSLock`, which is in `lockTypeNames`, so the answer is true. The corpus apparently contains no type that declares a lock."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/ObservableEnvironmentViewMissingInspectionHookVisitorIsInspectedPredicateTests.swift": {
+  "class": "constant-by-design",
+  "note": "The stub builds a fresh visitor with init(pattern:), which only calls super.init. `knownInspectedTypeNames` (BasePatternVisitor.swift:143) is a `Set<String>?` that is never set, so it stays nil, and isInspected's `guard let inspected = knownInspectedTypeNames else { return true }` (line 92) returns true before viewName is read. A receiver with knownInspectedTypeNames set (for example to []) would return false for names not in the set, but the stub fixes the receiver with nil."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/ProtocolExemptionIsTestConformerPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: name: \"Mock\", filePath: nil (or name: \"abc\", filePath: \"Tests\"). isTestDoubleName(\"Mock\") is true because `name == marker` for mockMarkers' \"Mock\" (line 74). Independently, filePath \"Tests\" hits testPathFragments (line 52/59), and both are letterOrNumber strings of length 0...8 that each generator could draw. Each argument meets a constant on its own, so this is not relational; also, the stub injects \"Test.swift\" into the name, but the hasSuffix(\"Test.swift\") check is on filePath, which is the wrong argument."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/UncheckedSendableVisitorHasUncheckedSendablePredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: .some(inheritance clause of `class NetworkCache: @unchecked Sendable {}`), i.e. InheritanceClauseSyntax with one InheritedTypeSyntax whose type is AttributedTypeSyntax(attributes: [@unchecked], baseType: IdentifierTypeSyntax(Sendable)). With a non-nil clause, the inherited type is an AttributedTypeSyntax. Its baseType.trimmedDescription is \"Sendable\" and its AttributeSyntax attributeName.trimmedDescription is \"unchecked\", so lines 77-84 return true. The method never reads the fixed receiver. The repo's own UncheckedSendableVisitorTests (detectsClassWithNoLock) confirm that the parser produces this shape at swift-syntax 602.0.0."
+ },
+ "Packages/SwiftProjectLintRules/Tests/Generated/SwiftInfer/predicate/VariableShadowingVisitorSequenceReferencesPredicateTests.swift": {
+  "class": "relational",
+  "note": "Witness: name = \"a\" (drawable from letterOrNumber.string(of: 0...8)), sequence = ExprSyntax(DeclReferenceExprSyntax(baseName: .identifier(\"a\"))), i.e. the bare expression `a`. isReference requires token.tokenKind == .identifier(name), so the drawn name must equal an identifier token's text in the drawn ExprSyntax: two drawn values have to line up. For `a`, the token's parent is a DeclReferenceExprSyntax that is neither a member name nor a key-path component, so isLexicalReference is true and the call returns true. No fixed constant is involved."
+ },
+ "Packages/SwiftProjectLintVisitors/Tests/Generated/SwiftInfer/predicate/ActorTypeCatalogContainsPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: \"CoreDataOrderStore\". The stub fixes the receiver as `ActorTypeCatalog(actors: [\"CoreDataOrderStore\"])`, and `contains` is just `actors.contains(name)` (ActorTypeCollector.swift:56). So the drawn String \"CoreDataOrderStore\" returns true. One drawn value matches a constant table key, which makes this unary, not relational. The 18-character ASCII name is reachable in principle by the latin1 (0...24) and ascii (0...120) arms but is practically never drawn."
+ },
+ "Packages/SwiftProjectLintVisitors/Tests/Generated/SwiftInfer/predicate/DeclaredRoleClassifierIsOrderingPredicateTests.swift": {
+  "class": "relational",
+  "note": "Witness: node = the FunctionDeclSyntax parsed from `func compare(_ lhs: Int, _ rhs: Int) -> Bool { lhs < rhs }`, parameterTypes = [\"Int\", \"Int\"]. isOrdering returns true only when two independently drawn array elements are equal (`parameterTypes.count == 2, parameterTypes[0] == parameterTypes[1]`), so the pairing is the relational part. It also needs `node.name.text.lowercased()` to be in the constant `orderingNames` set (\"compare\", \"precedes\", ...), which is a separate unary table condition. With the witness the guard passes and \"compare\" is in the set, so it returns true. The visitors syntax corpus appears to hold no function with an ordering name, so the name condition, not just the pairing, also blocks the generated draws."
+ },
+ "Packages/SwiftProjectLintVisitors/Tests/Generated/SwiftInfer/predicate/PropertyTestCandidacyAccessorThrowsPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The AccessorBlockSyntax of `var x: Int { get throws { 0 } }` (Parser.parse that source; take the VariableDecl's binding's accessorBlock), whose accessors are `.accessors([get throws {...}])`. accessorThrows (PropertyTestCandidacy.swift:295-298) matches `.accessors(list)` and returns true when some accessor's effectSpecifiers.throwsClause is non-nil, and the `get throws` accessor has exactly that. The corpus evidently holds no throwing getter, but any well-formed AccessorBlockSyntax counts."
+ },
+ "Packages/SwiftProjectLintVisitors/Tests/Generated/SwiftInfer/predicate/PropertyTestCandidacyIsGetOnlyPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The AccessorBlockSyntax of `var value: Int { get { 0 } set { } }`, i.e. `{ get { 0 } set { } }`. The `accessors` of this block are `.accessors(list)`. The first entry, `.keyword(.get)`, sets sawGetter. The second entry, `.keyword(.set)`, falls to `default: return false`. The block of `var x = 0 { willSet { } }` also returns false, through the observer arm."
+ },
+ "SwiftLintRuleStudioCore/Tests/Generated/SwiftInfer/predicate/SwiftLintDeprecationsIsRemovedPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: rule = \"inert_defer\", version = \"1\". `removedRules[\"inert_defer\"]` has removedInVersion \"0.58.0\". `isVersion(\"1\", lessThan: \"0.58.0\")` compares [1] with [0,58,0]: at idx 0, 1 > 0, so it returns false and `isRemoved` returns `!false = true`. Each argument meets a constant on its own: the rule must be a removedRules key, and the version must be at least that key's removal version. Any version of \"0.59.1\" or above works for every key, so this is not a pairing. The generators' letterOrNumber/hostile strings practically never spell a key such as \"inert_defer\"."
+ },
+ "SwiftMarkdownWikiTests/Generated/SwiftInfer/predicate/PluginTimeoutTrackerIsDisabledPredicateTests.swift": {
+  "class": "constant-by-design",
+  "note": "The stub builds a fresh `PluginTimeoutTracker(threshold: 3, windowSeconds: 60)` for each call, and its `disabled` set starts empty (line 15). Only `recordTimeout` inserts into it, so `disabled.contains(pluginID)` is false for every String. A receiver that had already received 3 `recordTimeout(pluginID:)` calls inside the window would return true for that ID, but the stub never builds one."
+ },
+ "Tests/PropertyLawMacroTests/Generated/SwiftInfer/predicate/GeneratorResolverIsRecursivePredicateTests.swift": {
+  "class": "constant-by-design",
+  "note": "`isRecursive` reads `recursiveDeclarations`, a private dictionary written only during derivation (GeneratorResolver.swift:337). The stub builds a fresh `GeneratorResolver(types: [], ...)` and never resolves anything, so the dictionary is empty and every String gives false. A different fixed receiver would change the answer: a universe holding a self-referential type, resolved before the call."
+ },
+ "Tests/SwiftAssistAppTests/Generated/SwiftInfer/predicate/CodeSandboxStartsWithLabelPredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: [\"a\", \":\"][...]  (ArraySlice<Unicode.Scalar> of U+0061, U+003A). 'a' is alphabetic, so isIdentifierCharacter accepts it (SwiftSourceScanner+Support.swift:48). That gives label = [\"a\"], which is not empty. Then following.dropFirst(1).first == \":\" and the function returns true. It is unary: one drawn slice has to begin with an identifier run followed by a colon."
+ },
+ "Tests/SwiftEffectInferenceTests/Generated/SwiftInfer/predicate/EffectAnnotationParserHasClockDeterministicAttributePredicateTests.swift": {
+  "class": "generator-miss",
+  "note": "Witness: The AttributeListSyntax parsed from `@ClockDeterministic func f() {}` (one AttributeSyntax whose attributeName is IdentifierTypeSyntax(name: \"ClockDeterministic\")). The element is an AttributeSyntax. attributeTypeName returns the IdentifierTypeSyntax name text, \"ClockDeterministic\" (EffectAnnotationParser.swift:309-310). That name is in clockDeterministicAttributeNames (line 512), so contains returns true. The corpus simply holds no such attribute list."
+ }
+}

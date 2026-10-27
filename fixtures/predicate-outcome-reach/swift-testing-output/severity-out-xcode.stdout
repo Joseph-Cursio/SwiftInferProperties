@@ -1,0 +1,25 @@
+Test Suite 'All tests' started at 2026-10-27 08:57:33.393.
+Test Suite 'All tests' passed at 2026-10-27 08:57:33.394.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite Toy_isEvenTests started.
+◇ Test aErrorIssue() started.
+✘ Test aErrorIssue() recorded an issue at ToyTests.swift:6:21: Issue recorded
+↳ NOT APPLIED — a
+✘ Test aErrorIssue() failed after 0.001 seconds with 1 issue.
+◇ Test bWarningIssue() started.
+⚠︎ Test bWarningIssue() recorded a warning at ToyTests.swift:10:21: Issue recorded
+↳ NOT APPLIED — b
+✔ Test bWarningIssue() passed after 0.001 seconds with 1 warning.
+◇ Test cKnownIssue() started.
+━ Test cKnownIssue() recorded a known issue at ToyTests.swift:15:25: Issue recorded
+↳ NOT APPLIED — c
+━ Test cKnownIssue() passed after 0.001 seconds with 1 known issue.
+◇ Test dPasses() started.
+✔ Test dPasses() passed after 0.001 seconds.
+✘ Suite Toy_isEvenTests failed after 0.001 seconds with 3 issues (including 1 warning and 1 known issue).
+✘ Test run with 4 tests in 1 suite failed after 0.001 seconds with 3 issues (including 1 warning and 1 known issue).
+Note: Some test targets reported failures:
+  - ToyTests (Swift Testing)

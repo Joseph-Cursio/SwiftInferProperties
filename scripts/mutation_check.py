@@ -6,6 +6,7 @@ Three stages, each resumable:
     sample   <census-dirs...>   → fixtures/mutation-check/sample.json   (frozen before any mutant)
     run      <sample.json> <out.jsonl>                                    (baseline, then mutants)
     report   <out.jsonl>
+    --self-test                                                           (no compiler)
 
 Every law-mutant is scored as one of three outcomes (scope §2):
 
@@ -91,11 +92,15 @@ def census_target_dir(package_dir):
 def law_of(stub_path, repo, package_dir, template):
     text = open(stub_path, encoding="utf-8").read()
     suite = re.search(r"^struct (\w+)", text, re.M)
-    test = re.search(r"@Test[^\n]*\n\s*func (\w+)\(|@Test func (\w+)\(", text)
+    # ⚠ **A predicate stub may declare a second test, its reach check (#665)**, which is not a law.
+    # The first test that is not one is taken; it is the law, emitted first, so every committed
+    # record reproduces.
+    tests = (match.group(1) or match.group(2)
+             for match in re.finditer(r"@Test[^\n]*\n\s*func (\w+)\(|@Test func (\w+)\(", text))
+    test_name = next((name for name in tests if not name.endswith("_reachesBothOutcomes")), None)
     source = re.search(r"^// Source: (.+):(\d+)\s*$", text, re.M)
-    if not (suite and test and source):
+    if not (suite and test_name and source):
         return None
-    test_name = test.group(1) or test.group(2)
     stem = os.path.basename(stub_path)[:-len(".swift")]
     if stem.endswith("_" + template):
         # A stub written before 2026-10-10: `<Type>_<fn>[_<fn2>]_<template>` — the subjects are the
@@ -140,7 +145,10 @@ def candidates(census_dirs):
             stubs = census_target_dir(package_dir)
             if not stubs:
                 continue
-            failed = {name.split(".")[0] for name in package.get("failures") or []}
+            # A reach test's failure is not its law's (#665). `failures` holds laws only from that
+            # harness on, so this is defensive, and older result files read the same.
+            failed = {name.split(".")[0] for name in package.get("failures") or []
+                      if not name.endswith(cf.s5.REACH_SUFFIX)}
             for stub in glob.glob(os.path.join(stubs, "*", "*.swift")):
                 template = os.path.basename(os.path.dirname(stub))
                 law = law_of(stub, repo, os.path.normpath(package_dir), template)
@@ -370,6 +378,19 @@ def matching_back(masked, close_index):
     raise ValueError("unbalanced")
 
 
+def hoisted_generator(text, masked, name):
+    """The text of `static let <name> = …`, up to the first blank line after it.
+
+    That is `GeneratedFileGeneratorHoist`'s layout: since 2026-10-10 a long generator is moved out of its
+    `@Test` into a `nonisolated private static let` on the suite, and the test draws `Self.<name>.run(…)`.
+    """
+    match = re.search(r"static let " + re.escape(name) + r"\s*=\s*", masked)
+    if not match:
+        return None
+    blank = text.find("\n\n", match.end())
+    return text[match.end():blank if blank >= 0 else len(text)].strip()
+
+
 def chain_start(masked, at):
     """Where the postfix chain ending in the member at `at` begins — `a.b(c).d` for `d`.
 
@@ -476,6 +497,27 @@ def build(package_dir, swift):
     return done.returncode == 0, done.stdout + done.stderr
 
 
+def package_helpers(listing, package_dir):
+    """The pids, in a `ps -axo pid=,command=` listing, of the `swiftpm-testing-helper`s running a test
+    bundle built in `package_dir`.
+
+    ⚠ **A hung law's sweep was `pkill -f swiftpm-testing-helper`, which killed every helper on the
+    machine**: a `swift test` in another checkout or another session died mid-run with no failure
+    printed (#665, where the funnel's own sweep was scoped the same way, `corpus_funnel.census_helpers`).
+    A helper's command line names its bundle, `--test-bundle-path <package>/.build/…`, so the one this
+    run started is the one under this package's `.build`. Both spellings of the path are matched, as
+    given and resolved (`/tmp` is `/private/tmp`), because SwiftPM may print either.
+    """
+    roots = {os.path.join(path, ".build") + os.sep
+             for path in (os.path.abspath(package_dir), os.path.realpath(package_dir))}
+    pids = []
+    for line in listing.splitlines():
+        pid, _, command = line.strip().partition(" ")
+        if "swiftpm-testing-helper" in command and any(root in command for root in roots):
+            pids.append(pid)
+    return pids
+
+
 def run_suite(package_dir, swift, suite, test, seconds=300):
     """'passed' | 'failed' | 'trapped' | 'hung' | 'missing', plus the probe lines it printed."""
     pattern = r"\." + re.escape(suite) + "/" + re.escape(test) + r"\("
@@ -487,7 +529,10 @@ def run_suite(package_dir, swift, suite, test, seconds=300):
         done = subprocess.run([swift, "test", "--skip-build", "--no-parallel", "--filter", pattern],
                               cwd=package_dir, capture_output=True, text=True, env=env, timeout=seconds)
     except subprocess.TimeoutExpired:
-        subprocess.run(["pkill", "-f", "swiftpm-testing-helper"], capture_output=True)
+        # The helper outlives `swift test` and keeps spinning: stop this package's, and only its.
+        listing = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True).stdout
+        for pid in package_helpers(listing, package_dir):
+            subprocess.run(["kill", pid], check=False, capture_output=True)
         return "hung", []
     output = done.stdout + done.stderr
     probes = [row.split("|", 2)[2] for row in output.splitlines() if row.startswith("MPROBE|")]
@@ -765,7 +810,40 @@ def unreached(sample_path, record_path, trees_root):
         print(f"{kind:10} {feature:18} {count}")
 
 
+def self_test():
+    failures = []
+
+    def check(name, condition, detail=""):
+        if not condition:
+            failures.append(f"{name}: {detail}")
+    helper = "/tc/usr/libexec/swift/pm/swiftpm-testing-helper --test-bundle-path"
+    listing = "\n".join([
+        f"  201 {helper} /private/tmp/census/trees/Repo/.build/out/Products/Debug/RepoTests.xctest",
+        f"  202 {helper} /tmp/census/trees/Repo/.build/debug/RepoPackageTests.xctest",
+        f"  203 {helper} /Users/me/OtherCheckout/.build/out/Products/Debug/OtherTests.xctest",
+        f"  204 {helper} /private/tmp/census/trees/Repo/Packages/Inner/.build/debug/InnerTests.xctest",
+        f"  205 {helper} /private/tmp/census/trees/Repo2/.build/debug/Repo2Tests.xctest",
+        "  206 /tc/usr/bin/swift-build --package-path /private/tmp/census/trees/Repo/.build/x",
+    ])
+    # Not the nested package (204), the sibling whose name extends this one (205), another checkout
+    # (203), or a non-helper (206). A `/tmp/…` spelling also resolves to `/private/tmp/…` on macOS.
+    resolved = os.path.realpath("/tmp") == "/private/tmp"
+    for spelling, expected in (("/private/tmp/census/trees/Repo", ["201"]),
+                               ("/tmp/census/trees/Repo", ["201", "202"] if resolved else ["202"])):
+        got = sorted(package_helpers(listing, spelling))
+        check(f"package_helpers kills only {spelling}'s own helpers", got == expected, str(got))
+    for failure in failures:
+        print("FAIL", failure)
+    if failures:
+        print(f"{len(failures)} self-test failure(s)")
+        return 1
+    print("mutation_check.py self-test OK  (a hung law's sweep kills only its package's helpers)")
+    return 0
+
+
 def main(argv):
+    if argv[1:] == ["--self-test"]:
+        return self_test()
     if argv[1] == "sample":
         found = candidates(argv[3:])
         sample, shortfalls = draw(found)

@@ -149,9 +149,31 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 # The reference-oracle scaffold census's two scripts joined 2026-10-05, after review found
 # `--reclassify` re-reading a moved subject HEAD under the measured run's SHA. Theirs need git,
 # no compiler, and cost ~0.4s more.
+#
+# The corpus funnel's two joined 2026-10-27 with #665's reach bucket. Stage 5's parser replays
+# real Swift Testing captures (`fixtures/predicate-outcome-reach/swift-testing-output/`) against
+# what the UNPATCHED fef2971d loop read from them, `record_outcomes` is held to the assignments
+# it replaced, and `walk_repo` itself runs behind a scripted `swift test` against what fef2971d's
+# walk wrote (every legacy key's value and order, each command and its timeout) — so a reach test
+# cannot leak into a law column, nor the patch move arm A, unseen. No compiler, ~0.1s.
+#
+# #665's census probe joined with them: its wrap, clone, process-status and class rules, the frozen
+# DECISION function at its boundaries, the stratified hand sample and the kill match, over canned
+# stubs and logs (V0 in `docs/plans/predicate-outcome-reach-scope.md`). No compiler, ~0.1s.
+#
+# The generator-diversity census joined after #665: which stub files a build error names, in both of
+# Swift 6.4's error forms, and which generators a stub draws, hoisted or inline. No compiler, ~0.1s.
+#
+# The mutation check joined with it: a hung law's sweep kills only its own package's test helpers,
+# never another session's. No compiler, ~0.1s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
+	@python3 scripts/corpus_funnel_stage5.py --self-test
+	@python3 scripts/corpus_funnel.py --self-test
+	@python3 scripts/predicate_outcome_reach.py --self-test
+	@python3 scripts/generator_diversity.py --self-test
+	@python3 scripts/mutation_check.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \

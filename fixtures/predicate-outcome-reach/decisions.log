@@ -1,0 +1,1 @@
+2026-10-27T20:10:30Z  script 0d8f4a19  DECISION: NONE  G=42.8% (204/477)  G_loo=53.6% without SwiftProjectLint  G_all=42.8%  |R|=477  unstable=0  no_reading=0.0% of compiled  hand: constant-by-design 14.3% weighted (4/30)  V1=pass  V2a=pass  V2b=10/10  input=50c38277c609

@@ -1,0 +1,3 @@
+# The toy pins its dependency graph on purpose (`validate` asserts the resolved kit and engine), so
+# its Package.resolved is committed, unlike every other one in this repository.
+!Package.resolved
