@@ -6,6 +6,7 @@ Three stages, each resumable:
     sample   <census-dirs...>   → fixtures/mutation-check/sample.json   (frozen before any mutant)
     run      <sample.json> <out.jsonl>                                    (baseline, then mutants)
     report   <out.jsonl>
+    --self-test                                                           (no compiler)
 
 Every law-mutant is scored as one of three outcomes (scope §2):
 
@@ -496,6 +497,27 @@ def build(package_dir, swift):
     return done.returncode == 0, done.stdout + done.stderr
 
 
+def package_helpers(listing, package_dir):
+    """The pids, in a `ps -axo pid=,command=` listing, of the `swiftpm-testing-helper`s running a test
+    bundle built in `package_dir`.
+
+    ⚠ **A hung law's sweep was `pkill -f swiftpm-testing-helper`, which killed every helper on the
+    machine**: a `swift test` in another checkout or another session died mid-run with no failure
+    printed (#665, where the funnel's own sweep was scoped the same way, `corpus_funnel.census_helpers`).
+    A helper's command line names its bundle, `--test-bundle-path <package>/.build/…`, so the one this
+    run started is the one under this package's `.build`. Both spellings of the path are matched, as
+    given and resolved (`/tmp` is `/private/tmp`), because SwiftPM may print either.
+    """
+    roots = {os.path.join(path, ".build") + os.sep
+             for path in (os.path.abspath(package_dir), os.path.realpath(package_dir))}
+    pids = []
+    for line in listing.splitlines():
+        pid, _, command = line.strip().partition(" ")
+        if "swiftpm-testing-helper" in command and any(root in command for root in roots):
+            pids.append(pid)
+    return pids
+
+
 def run_suite(package_dir, swift, suite, test, seconds=300):
     """'passed' | 'failed' | 'trapped' | 'hung' | 'missing', plus the probe lines it printed."""
     pattern = r"\." + re.escape(suite) + "/" + re.escape(test) + r"\("
@@ -507,7 +529,10 @@ def run_suite(package_dir, swift, suite, test, seconds=300):
         done = subprocess.run([swift, "test", "--skip-build", "--no-parallel", "--filter", pattern],
                               cwd=package_dir, capture_output=True, text=True, env=env, timeout=seconds)
     except subprocess.TimeoutExpired:
-        subprocess.run(["pkill", "-f", "swiftpm-testing-helper"], capture_output=True)
+        # The helper outlives `swift test` and keeps spinning: stop this package's, and only its.
+        listing = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True).stdout
+        for pid in package_helpers(listing, package_dir):
+            subprocess.run(["kill", pid], check=False, capture_output=True)
         return "hung", []
     output = done.stdout + done.stderr
     probes = [row.split("|", 2)[2] for row in output.splitlines() if row.startswith("MPROBE|")]
@@ -785,7 +810,40 @@ def unreached(sample_path, record_path, trees_root):
         print(f"{kind:10} {feature:18} {count}")
 
 
+def self_test():
+    failures = []
+
+    def check(name, condition, detail=""):
+        if not condition:
+            failures.append(f"{name}: {detail}")
+    helper = "/tc/usr/libexec/swift/pm/swiftpm-testing-helper --test-bundle-path"
+    listing = "\n".join([
+        f"  201 {helper} /private/tmp/census/trees/Repo/.build/out/Products/Debug/RepoTests.xctest",
+        f"  202 {helper} /tmp/census/trees/Repo/.build/debug/RepoPackageTests.xctest",
+        f"  203 {helper} /Users/me/OtherCheckout/.build/out/Products/Debug/OtherTests.xctest",
+        f"  204 {helper} /private/tmp/census/trees/Repo/Packages/Inner/.build/debug/InnerTests.xctest",
+        f"  205 {helper} /private/tmp/census/trees/Repo2/.build/debug/Repo2Tests.xctest",
+        "  206 /tc/usr/bin/swift-build --package-path /private/tmp/census/trees/Repo/.build/x",
+    ])
+    # Not the nested package (204), the sibling whose name extends this one (205), another checkout
+    # (203), or a non-helper (206). A `/tmp/…` spelling also resolves to `/private/tmp/…` on macOS.
+    resolved = os.path.realpath("/tmp") == "/private/tmp"
+    for spelling, expected in (("/private/tmp/census/trees/Repo", ["201"]),
+                               ("/tmp/census/trees/Repo", ["201", "202"] if resolved else ["202"])):
+        got = sorted(package_helpers(listing, spelling))
+        check(f"package_helpers kills only {spelling}'s own helpers", got == expected, str(got))
+    for failure in failures:
+        print("FAIL", failure)
+    if failures:
+        print(f"{len(failures)} self-test failure(s)")
+        return 1
+    print("mutation_check.py self-test OK  (a hung law's sweep kills only its package's helpers)")
+    return 0
+
+
 def main(argv):
+    if argv[1:] == ["--self-test"]:
+        return self_test()
     if argv[1] == "sample":
         found = candidates(argv[3:])
         sample, shortfalls = draw(found)

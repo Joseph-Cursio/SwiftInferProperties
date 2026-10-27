@@ -163,6 +163,9 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 #
 # The generator-diversity census joined after #665: which stub files a build error names, in both of
 # Swift 6.4's error forms, and which generators a stub draws, hoisted or inline. No compiler, ~0.1s.
+#
+# The mutation check joined with it: a hung law's sweep kills only its own package's test helpers,
+# never another session's. No compiler, ~0.1s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
@@ -170,6 +173,7 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 	@python3 scripts/corpus_funnel.py --self-test
 	@python3 scripts/predicate_outcome_reach.py --self-test
 	@python3 scripts/generator_diversity.py --self-test
+	@python3 scripts/mutation_check.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \
