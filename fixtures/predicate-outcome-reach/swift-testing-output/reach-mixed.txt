@@ -1,0 +1,46 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite LayoutIsWidePredicateTests started.
+◇ Test isWide_reachesBothOutcomes() started.
+✔ Test isWide_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite LayoutIsWidePredicateTests passed after 0.001 seconds.
+◇ Suite LayoutTrimsLeadingPredicateTests started.
+◇ Test trimsLeading_reachesBothOutcomes() started.
+✔ Test trimsLeading_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite LayoutTrimsLeadingPredicateTests passed after 0.002 seconds.
+◇ Suite MatcherMatchesPrefixPredicateTests started.
+◇ Test matchesPrefix_reachesBothOutcomes() started.
+✔ Test matchesPrefix_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite MatcherMatchesPrefixPredicateTests passed after 0.001 seconds.
+◇ Suite PointIsRightOfPredicateTests started.
+◇ Test isRightOf_reachesBothOutcomes() started.
+✔ Test isRightOf_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite PointIsRightOfPredicateTests passed after 0.001 seconds.
+◇ Suite RulesConsumesPrefixPredicateTests started.
+◇ Test consumesPrefix_reachesBothOutcomes() started.
+✔ Test consumesPrefix_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite RulesConsumesPrefixPredicateTests passed after 0.001 seconds.
+◇ Suite RulesIsEvenPredicateTests started.
+◇ Test isEven_reachesBothOutcomes() started.
+✔ Test isEven_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite RulesIsEvenPredicateTests passed after 0.001 seconds.
+◇ Suite RulesIsMagicPredicateTests started.
+◇ Test isMagic_reachesBothOutcomes() started.
+✘ Test isMagic_reachesBothOutcomes() recorded an issue at RulesIsMagicPredicateTests.swift:49:25: Issue recorded
+↳ NOT APPLIED — the true side: no draw made Rules.isMagic(_:) return true in 100 trials, so the totality test beside this one checked only inputs where it is false. Narrow the generator until it reaches both outcomes, or delete this test.
+✘ Test isMagic_reachesBothOutcomes() failed after 0.001 seconds with 1 issue.
+✘ Suite RulesIsMagicPredicateTests failed after 0.001 seconds with 1 issue.
+◇ Suite RulesIsRepresentablePredicateTests started.
+◇ Test isRepresentable_reachesBothOutcomes() started.
+⚠︎ Test isRepresentable_reachesBothOutcomes() recorded a warning at RulesIsRepresentablePredicateTests.swift:52:25: Issue recorded
+↳ NOT APPLIED — the false side: no draw made Rules.isRepresentable(_:) return false in 100 trials, so the totality test beside this one checked only inputs where it is true. Narrow the generator until it reaches both outcomes, or delete this test.
+✔ Test isRepresentable_reachesBothOutcomes() passed after 0.001 seconds with 1 warning.
+✔ Suite RulesIsRepresentablePredicateTests passed after 0.001 seconds with 1 warning.
+◇ Suite RulesIsWithinPredicateTests started.
+◇ Test isWithin_reachesBothOutcomes() started.
+✔ Test isWithin_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite RulesIsWithinPredicateTests passed after 0.001 seconds.
+✘ Test run with 9 tests in 9 suites failed after 0.006 seconds with 2 issues (including 1 warning).
+Note: Some test targets reported failures:
+  - SwiftInferCensusTests (Swift Testing)

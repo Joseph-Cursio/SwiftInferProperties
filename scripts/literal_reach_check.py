@@ -57,10 +57,12 @@ def with_literals(text, literals):
     return text.replace(BASE, mixed)
 
 
-def build_setting_aside(package, swift, rounds=6):
+def build_setting_aside(package, swift, rounds=6, suffix="_Lit"):
     """Build, removing any `_Lit` clone the compiler rejects, so one bad clone cannot sink a package.
 
     Returns `(ok, output, broken)` where `broken` maps a suite to the first error its clone raised.
+    `suffix` names the clones' suffix — a file `<stub><suffix>.swift` declaring `struct <suite><suffix>`
+    — so `predicate_outcome_reach.py` sets aside its `_Reach` clones the same way.
     """
     broken = {}
     for _ in range(rounds):
@@ -68,12 +70,13 @@ def build_setting_aside(package, swift, rounds=6):
         if ok:
             return True, output, broken
         culprits = {}
-        for match in re.finditer(r"^(/\S+_Lit\.swift):\d+:\d+: error: (.+)$", output, re.M):
+        for match in re.finditer(r"^(/\S+" + re.escape(suffix) + r"\.swift):\d+:\d+: error: (.+)$", output, re.M):
             culprits.setdefault(match.group(1), match.group(2))
         if not culprits:
             return False, output, broken
         for path, error in culprits.items():
-            suite = re.search(r"^struct (\w+)_Lit", open(path, encoding="utf-8").read(), re.M).group(1)
+            suite = re.search(r"^struct (\w+)" + re.escape(suffix), open(path, encoding="utf-8").read(),
+                              re.M).group(1)
             broken[suite] = error[:200]
             os.remove(path)
     return False, output, broken
@@ -99,7 +102,9 @@ def behaviour_stubs(root, totality=False):
             if not package.get("passed"):
                 continue
             target = mc.census_target_dir(os.path.join(root, directory, "trees", repo, package["package"]))
-            failed = {name.split(".")[0] for name in package.get("failures") or []}
+            # A reach test's failure is not its law's (#665); defensive, as in `mutation_check.candidates`.
+            failed = {name.split(".")[0] for name in package.get("failures") or []
+                      if not name.endswith(cf.s5.REACH_SUFFIX)}
             for path in sorted(glob.glob(os.path.join(target, "*", "*.swift"))):
                 template = os.path.basename(os.path.dirname(path))
                 suite = re.search(r"^struct (\w+)", open(path, encoding="utf-8").read(), re.M)

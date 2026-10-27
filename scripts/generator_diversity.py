@@ -35,12 +35,18 @@ MARKER = "// generator_diversity.py probe"
 
 
 def expressions(stub_text):
-    """Each `(EXPR).run(using:` in the stub, as the text inside the parentheses."""
+    """Each `(EXPR).run(using:` in the stub, as the text inside the parentheses.
+
+    A draw `using: &reachRNG` is skipped: a predicate stub's reach test (#665) re-draws the law's
+    own generator, and counting it would double that generator's `uses` on every such stub.
+    """
     masked, _ = mc.mask(stub_text)
     found = []
     for match in re.finditer(r"\.run\(using:", masked):
         end = match.start()
         if masked[end - 1] != ")":
+            continue
+        if masked[match.end():].lstrip().startswith("&reachRNG"):
             continue
         depth, start = 0, None
         for index in range(end - 1, -1, -1):
@@ -95,7 +101,7 @@ def install(package_dir):
     if not target:
         return {}
     stubs = sorted(glob.glob(os.path.join(target, "*", "*.swift")))
-    stubs = [s for s in stubs if not re.search(r"_(N1000|Probe)\.swift$", s)]
+    stubs = [s for s in stubs if not re.search(r"_(N1000|Probe|Lit|Reach)\.swift$", s)]
     seen, uses = {}, collections.Counter()
     for stub in stubs:
         text = open(stub, encoding="utf-8").read()

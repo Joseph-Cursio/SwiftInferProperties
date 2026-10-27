@@ -1,0 +1,14 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite RulesIsPositivePredicateTests started.
+◇ Test isPositive_isTotal() started.
+✔ Test isPositive_isTotal() passed after 0.001 seconds.
+◇ Test isPositive_reachesBothOutcomes() started.
+━ Test isPositive_reachesBothOutcomes() recorded a known issue at RulesTests.swift:45:25: Issue recorded
+↳ NOT APPLIED — the false side: no draw made Rules.isPositive(_:) return false in 100 trials, so the totality test beside this one checked only inputs where it is true. Narrow the generator until it reaches both outcomes, or delete this test.
+━ Test isPositive_reachesBothOutcomes() passed after 0.001 seconds with 1 known issue.
+━ Suite RulesIsPositivePredicateTests passed after 0.001 seconds with 1 known issue.
+━ Test run with 2 tests in 1 suite passed after 0.001 seconds with 1 known issue.
+Building for debugging...
+Build complete! (0.17 sec)

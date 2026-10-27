@@ -1,0 +1,10 @@
+Building for debugging...
+Build complete! (0.20 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite Toy_extraTests started.
+◇ Test fKnownIssueIntermittentNotRecorded() started.
+✔ Test fKnownIssueIntermittentNotRecorded() passed after 0.001 seconds.
+✔ Suite Toy_extraTests passed after 0.001 seconds.
+✔ Test run with 1 test in 1 suite passed after 0.001 seconds.

@@ -1,0 +1,13 @@
+Building for debugging...
+[1 / 5]
+Build complete! (0.32 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite Toy_isEvenTests started.
+◇ Test bWarningIssue() started.
+⚠︎ Test bWarningIssue() recorded a warning at ToyTests.swift:10:21: Issue recorded
+↳ NOT APPLIED — b
+✔ Test bWarningIssue() passed after 0.001 seconds with 1 warning.
+✔ Suite Toy_isEvenTests passed after 0.001 seconds with 1 warning.
+✔ Test run with 1 test in 1 suite passed after 0.001 seconds with 1 warning.

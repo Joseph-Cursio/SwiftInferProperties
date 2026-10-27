@@ -25,6 +25,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 
 def swift_environment(swift):
@@ -457,6 +458,69 @@ _STARTED = re.compile(r"Test\s+(\S+\(\))\s+started")
 _PASSED = re.compile(r"Test\s+(\S+\(\))\s+passed")
 _FAILED = re.compile(r"Test\s+(\S+\(\))\s+(?:failed|recorded an issue)")
 
+# A predicate stub's second test (#665) is a REACH claim, not a law. Kept out of every law column by
+# its suffix, so `compiled` still reconciles per stub FILE, and counted in its own bucket.
+REACH_SUFFIX = "_reachesBothOutcomes()"
+_WARNED = re.compile(r"Test\s+(\S+\(\))\s+recorded a (?:warning|known issue)")
+_DETAIL = re.compile(r"^\s*↳\s?(.*)$")                       # the message is on the NEXT line
+_NOT_APPLIED_SIDE = re.compile(r"^NOT APPLIED — the (true|false) side: ")
+
+
+def is_reach(name):
+    return name.endswith(REACH_SUFFIX)
+
+
+def reach_twin(name):
+    """`S.f_isTotal()` → `S.f_reachesBothOutcomes()`, else None."""
+    return name[:-len("_isTotal()")] + REACH_SUFFIX if name.endswith("_isTotal()") else None
+
+
+def parse_test_output(output, results):
+    """The legacy loop, verbatim in what it writes to `results` and `started`, plus warnings and the
+    NOT APPLIED side each issue names. Returns (started, warned, sides).
+
+    ⚠ **What this writes to `results` and `started` must not move.** It was factored out of
+    `run_serially` for #665, and arm A of that measurement is only comparable with every census
+    before it if the law columns read the same. `--self-test` replays real Swift Testing captures
+    against what the UNPATCHED loop (fef2971d) produced from them. The legacy `_FAILED` branch had no
+    `continue`, but nothing followed it; the new branches act only on lines none of the three legacy
+    patterns match.
+    """
+    suite, started, warned, sides, pending = None, [], set(), {}, None
+    for line in output.splitlines():
+        suite_match = re.search(r"Suite\s+(\S+)\s+started", line)
+        if suite_match:
+            suite, pending = suite_match.group(1), None
+            continue
+        start_match = _STARTED.search(line)
+        if start_match:
+            started.append(f"{suite}.{start_match.group(1)}")
+            pending = None
+            continue
+        pass_match = _PASSED.search(line)
+        if pass_match:
+            results[f"{suite}.{pass_match.group(1)}"] = "passed"
+            pending = None
+            continue
+        fail_match = _FAILED.search(line)
+        if fail_match:
+            key = f"{suite}.{fail_match.group(1)}"
+            results[key] = "failed"
+            pending = key if "recorded an issue" in line else None
+            continue
+        warn_match = _WARNED.search(line)          # matches none of the three legacy patterns
+        if warn_match:
+            pending = f"{suite}.{warn_match.group(1)}"
+            warned.add(pending)
+            continue
+        detail = _DETAIL.match(line)
+        if detail and pending:
+            side = _NOT_APPLIED_SIDE.match(detail.group(1))
+            if side:
+                sides.setdefault(pending, set()).add(side.group(1))
+            pending = None
+    return started, warned, sides
+
 
 def _runs_within(package_dir, swift, seconds, skip=None):
     """Does the test target RUN to completion inside `seconds`?
@@ -498,7 +562,7 @@ def _suite_names(stubs_dir):
     return sorted(set(names))
 
 
-def bisect_hang(package_dir, stubs_dir, swift, aside_dir, seconds=150, limit=40):
+def bisect_hang(package_dir, stubs_dir, swift, aside_dir, seconds=150, limit=40, stats=None):
     """Name the suites whose presence stops the test process reporting at all.
 
     ⚠ **Skip suites, do not remove files.** The first version moved stub files aside, which
@@ -517,16 +581,27 @@ def bisect_hang(package_dir, stubs_dir, swift, aside_dir, seconds=150, limit=40)
 
     Returns the suite names that had to be skipped for the run to finish, and moves their files
     to `aside_dir` so the caller's counts stay consistent.
+
+    **`stats`, when a dict, receives `probes` and `seconds`** — how many test processes the search
+    spent and their wall time, so a package that bisected can be told from one that merely ran
+    long (#665's A/B flags both). Recorded after every probe, so every return path carries it.
     """
     os.makedirs(aside_dir, exist_ok=True)
+    clock = time.monotonic()
+    probes = [0]
+    if stats is not None:
+        stats.update(probes=0, seconds=0.0)
     suites = _suite_names(stubs_dir)
     if not suites:
         return []
-    probes = [0]
 
     def runs(skip):
         probes[0] += 1
-        return _runs_within(package_dir, swift, seconds, skip=skip)
+        try:
+            return _runs_within(package_dir, swift, seconds, skip=skip)
+        finally:
+            if stats is not None:
+                stats.update(probes=probes[0], seconds=round(time.monotonic() - clock, 1))
 
     if runs([]):
         return []
@@ -579,7 +654,8 @@ def _skip_pattern(name):
     return r"\." + re.escape(suite) + "/" + re.escape(test)
 
 
-def run_serially(package_dir, swift, census_target=None, max_resumes=30):
+def run_serially(package_dir, swift, census_target=None, max_resumes=30, reach_tests=(),
+                 seconds=600):
     """Run the surviving stubs one at a time, resuming past a crash.
 
     **A crash is attributed to the last test STARTED, and the run resumes past it.** A trapping
@@ -592,8 +668,38 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
     and `SearchService_parse_input_totalityTests.parse_isTotal()` both exist on the pilot — and
     keying on the bare name silently collapsed them, reporting 12 results for 13 lines. That is
     this repository's most-repeated defect, arriving in the instrument that measures it.
+
+    **`reach_tests` (#665) is empty in every census before it**, so those runs issue the same
+    commands as before. Given the `Suite.test()` names of the predicate stubs' reach tests, a law
+    that crashes or hangs takes its reach twin out with it, pre-emptively (C27): the twin calls the
+    same subject through the same generator, so it would most likely cost a second resume to learn
+    the same thing. With the twin skipped a stub costs at most one resume, which is why
+    `max_resumes` can stay 30.
+    Every return path also carries the warnings and NOT APPLIED sides `parse_test_output` read
+    (each test's from the run that gave its result, as `results` keeps its last outcome),
+    `resumes`, `exhausted`, the twins skipped, and each invocation's wall time (`run_seconds`).
     """
     skipped, results, crashed, hung = [], {}, [], []
+    warned, sides, run_seconds, reach_skipped_after_law = set(), {}, [], []
+    reach_tests = set(reach_tests)
+
+    def outcome(**fields):
+        """The legacy fields, plus what every return path adds — the `no_verdict` one included."""
+        fields.update(warned=sorted(warned),
+                      sides={name: sorted(found) for name, found in sorted(sides.items())},
+                      resumes=len(crashed) + len(hung),
+                      exhausted=bool(fields.get("exhausted")),
+                      reach_skipped_after_law=list(reach_skipped_after_law),
+                      run_seconds=list(run_seconds))
+        return fields
+
+    def set_aside(victim):
+        skipped.append(victim)
+        twin = reach_twin(victim)
+        if twin in reach_tests and twin not in results and twin not in skipped:
+            skipped.append(twin)
+            reach_skipped_after_law.append(twin)
+
     for _ in range(max_resumes):
         # **No `--filter`.** Stage 5 drops every other test target, so the census target is the
         # only one left — and `--filter` matches a test ID, not a target name, so passing the
@@ -603,12 +709,14 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
             command += ["--skip", _skip_pattern(name)]
         env = swift_environment(swift)
         timed_out = False
+        began = time.monotonic()
         try:
             # ⚠ **600s, not 1800s.** A generated law is cheap — the pilot ran 15 of them in
             # 0.03s — so minutes of test time means one law is looping, not working. The census
-            # recorded a chapter hanging for 677s.
+            # recorded a chapter hanging for 677s. (`seconds` defaults to it; #665's A/B re-runs a
+            # package near that budget at 1,800s before attributing a difference.)
             done = subprocess.run(command, cwd=package_dir, capture_output=True, text=True,
-                                  env=env, timeout=600)
+                                  env=env, timeout=seconds)
             output = done.stdout + done.stderr
             code = done.returncode
         except subprocess.TimeoutExpired as expired:
@@ -627,31 +735,29 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
 
             output = _text(expired.stdout) + _text(expired.stderr)
             code, timed_out = None, True
-        
+        run_seconds.append(round(time.monotonic() - began, 1))
 
-        suite, started = None, []
-        for line in output.splitlines():
-            suite_match = re.search(r"Suite\s+(\S+)\s+started", line)
-            if suite_match:
-                suite = suite_match.group(1)
-                continue
-            start_match = _STARTED.search(line)
-            if start_match:
-                started.append(f"{suite}.{start_match.group(1)}")
-                continue
-            pass_match = _PASSED.search(line)
-            if pass_match:
-                results[f"{suite}.{pass_match.group(1)}"] = "passed"
-                continue
-            fail_match = _FAILED.search(line)
-            if fail_match:
-                results[f"{suite}.{fail_match.group(1)}"] = "failed"
+        # ⚠ **A test's warnings are those of the run that gave its result.** `results` keeps each
+        # test's LAST outcome, because a resume re-runs every test it does not skip. A union of
+        # warnings over the resumes would file a reach test that warned before a resume and
+        # passed clean after it as NOT APPLIED. E would read the same instability as green, since
+        # there the last run wins. Parsing into a fresh dict and merging it in writes `results`
+        # exactly as the legacy loop did: same values, same key order.
+        run_results = {}
+        started, run_warned, run_sides = parse_test_output(output, run_results)
+        results.update(run_results)
+        for name in run_results:
+            warned.discard(name)
+            sides.pop(name, None)
+        warned |= run_warned
+        for name, found in run_sides.items():
+            sides.setdefault(name, set()).update(found)
 
         unfinished = [name for name in started if name not in results]
         if timed_out and unfinished:
             victim = unfinished[-1]
             hung.append(victim)
-            skipped.append(victim)
+            set_aside(victim)
             continue
         if timed_out and not started:
             # ⚠ **The process hung before ANY test reported**, so there is no name to attribute
@@ -659,17 +765,245 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30):
             # the run never gets as far as printing a first test. Returning zeros here would
             # read as "15 laws, none pass", which is a claim about the laws; this says the run
             # never produced a verdict, which is a claim about the run.
-            return {"passed": [], "failed": [], "crashed": crashed, "hung": hung,
-                    "no_verdict": "test run timed out before any test reported"}
+            return outcome(passed=[], failed=[], crashed=crashed, hung=hung,
+                           no_verdict="test run timed out before any test reported")
         if not unfinished:
             passed = sorted(k for k, v in results.items() if v == "passed")
             failed = sorted(k for k, v in results.items() if v == "failed")
-            return {"passed": passed, "failed": failed, "crashed": crashed,
-                    "hung": hung, "returncode": code}
+            return outcome(passed=passed, failed=failed, crashed=crashed,
+                           hung=hung, returncode=code)
         victim = unfinished[-1]
         crashed.append(victim)
-        skipped.append(victim)
+        set_aside(victim)
     passed = sorted(k for k, v in results.items() if v == "passed")
     failed = sorted(k for k, v in results.items() if v == "failed")
-    return {"passed": passed, "failed": failed, "crashed": crashed, "hung": hung,
-            "exhausted": True}
+    return outcome(passed=passed, failed=failed, crashed=crashed, hung=hung,
+                   exhausted=True)
+
+
+# ---------------------------------------------------------------------------------------------
+# self-test — what #665 changed here, checked with no compiler: the parser against real Swift
+# Testing captures, and `run_serially` / `bisect_hang` against a scripted `swift test`.
+# `make measurement-selftest` runs it.
+# ---------------------------------------------------------------------------------------------
+
+CAPTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "fixtures",
+                        "predicate-outcome-reach", "swift-testing-output")
+
+
+def _selftest_captures(check):
+    """Every capture, parsed, against `expected.json`.
+
+    ⚠ **The `started` / `results` halves were produced by the UNPATCHED loop** (fef2971d's, run
+    over the same files; the procedure is in that directory's README), not by this parser — so
+    a parse that moved a law column fails here rather than agreeing with itself. The
+    `warned` / `sides` halves were read off the captures by hand.
+    """
+    expected = json.load(open(os.path.join(CAPTURES, "expected.json"), encoding="utf-8"))["captures"]
+    # A dotfile is not a capture: Finder writes `.DS_Store` into any folder it opens.
+    names = sorted(n for n in os.listdir(CAPTURES)
+                   if not n.startswith(".") and n not in ("README.md", "expected.json"))
+    check("every capture has an expectation, and every expectation a capture",
+          names == sorted(expected), str(sorted(set(names) ^ set(expected))))
+    for name in names:
+        want = expected.get(name)
+        if want is None:
+            continue
+        results = {}
+        started, warned, sides = parse_test_output(
+            open(os.path.join(CAPTURES, name), encoding="utf-8").read(), results)
+        got = {"started": started, "results": results, "warned": sorted(warned),
+               "sides": {test: sorted(found) for test, found in sides.items()}}
+        for half in ("started", "results", "warned", "sides"):
+            check(f"{name}: {half}", got[half] == want[half], f"{got[half]!r} != {want[half]!r}")
+    return len(names)
+
+
+class _ScriptedSwiftTest:
+    """Stands in for `subprocess.run`: records each command and plays the next scripted run.
+
+    A run is `(output, code)` — or `(output, None)` for a hang, raised as `TimeoutExpired` with
+    the partial output as BYTES, as the real quirk delivers it."""
+
+    def __init__(self, runs):
+        self.runs, self.commands, self.timeouts = list(runs), [], []
+
+    def __call__(self, command, **kwargs):
+        self.commands.append(list(command))
+        self.timeouts.append(kwargs.get("timeout"))
+        output, code = self.runs.pop(0)
+        if code is None:
+            raise subprocess.TimeoutExpired(command, 600, output=output.encode("utf-8"), stderr=b"")
+        return subprocess.CompletedProcess(command, code, stdout=output, stderr="")
+
+
+def _run(lines):
+    return "".join(line + "\n" for line in lines)
+
+
+def _selftest_run_serially(check):
+    """C27's twin skip, the added fields on every return path, and arm A's commands unchanged."""
+    law, reach = "S.g_isTotal()", "S.g_reachesBothOutcomes()"
+    passing = ["◇ Suite S started.", "◇ Test f_isTotal() started.",
+               "✔ Test f_isTotal() passed after 0.001 seconds.",
+               "◇ Test f_reachesBothOutcomes() started.",
+               "⚠︎ Test f_reachesBothOutcomes() recorded a warning at S.swift:9:9: Issue recorded",
+               "↳ NOT APPLIED — the false side: no draw made f(_:) return false in 100 trials, …",
+               "✔ Test f_reachesBothOutcomes() passed after 0.001 seconds with 1 warning."]
+    traps = _run(passing + ["◇ Test g_isTotal() started.", "Fatal error: Index out of range"])
+    resumed = _run(passing + ["◇ Test h_isTotal() started.",
+                              "✔ Test h_isTotal() passed after 0.001 seconds."])
+    real_run = subprocess.run
+    try:
+        # Arm B: the law traps, so its twin is skipped with it — one resume, not two.
+        fake = subprocess.run = _ScriptedSwiftTest([(traps, 1), (resumed, 0)])
+        ran = run_serially("/nonexistent", "swift",
+                           reach_tests={"S.f_reachesBothOutcomes()", reach})
+        check("arm B: the twin is skipped in the same resume as its law",
+              fake.commands[1][3:] == ["--skip", _skip_pattern(law), "--skip", _skip_pattern(reach)],
+              str(fake.commands[1]))
+        check("arm B: outcome", (ran["passed"], ran["crashed"], ran["reach_skipped_after_law"],
+                                 ran["resumes"], ran["exhausted"], len(ran["run_seconds"]))
+              == (["S.f_isTotal()", "S.f_reachesBothOutcomes()", "S.h_isTotal()"], [law], [reach],
+                  1, False, 2), str(ran))
+        check("arm B: warned and sides", (ran["warned"], ran["sides"]) ==
+              (["S.f_reachesBothOutcomes()"], {"S.f_reachesBothOutcomes()": ["false"]}), str(ran))
+
+        # A warning is the run's that gave the test its result. The resume re-runs the reach
+        # test; whichever way its warning flips, the last run decides, as it does for `results`.
+        clean = ["◇ Suite S started.", "◇ Test f_isTotal() started.",
+                 "✔ Test f_isTotal() passed after 0.001 seconds.",
+                 "◇ Test f_reachesBothOutcomes() started.",
+                 "✔ Test f_reachesBothOutcomes() passed after 0.001 seconds."]
+        then_h = ["◇ Test h_isTotal() started.", "✔ Test h_isTotal() passed after 0.001 seconds."]
+        for first, last, want in ((passing, clean, ([], {})),
+                                  (clean, passing, (["S.f_reachesBothOutcomes()"],
+                                                    {"S.f_reachesBothOutcomes()": ["false"]}))):
+            subprocess.run = _ScriptedSwiftTest(
+                [(_run(first + ["◇ Test g_isTotal() started.", "Fatal error"]), 1), (_run(last + then_h), 0)])
+            ran = run_serially("/nonexistent", "swift", reach_tests={"S.f_reachesBothOutcomes()", reach})
+            check(f"warned and sides are the last run's ({'warned' if want[0] else 'clean'} last)",
+                  (ran["warned"], ran["sides"]) == want, str(ran))
+
+        # Arm A: no reach names, so the resume skips exactly what fef2971d skipped, inside the
+        # same 600s budget.
+        fake = subprocess.run = _ScriptedSwiftTest([(traps, 1), (resumed, 0)])
+        ran = run_serially("/nonexistent", "swift")
+        check("arm A: commands unchanged",
+              fake.commands == [["swift", "test", "--no-parallel"],
+                                ["swift", "test", "--no-parallel", "--skip", _skip_pattern(law)]],
+              str(fake.commands))
+        check("arm A: each run's timeout is fef2971d's 600s", fake.timeouts == [600, 600],
+              str(fake.timeouts))
+        check("arm A: legacy keys first, then the added ones",
+              list(ran) == ["passed", "failed", "crashed", "hung", "returncode", "warned", "sides",
+                            "resumes", "exhausted", "reach_skipped_after_law", "run_seconds"],
+              str(list(ran)))
+
+        # A hang on the law skips its twin too.
+        hangs = _run(passing + ["◇ Test g_isTotal() started."])
+        fake = subprocess.run = _ScriptedSwiftTest([(hangs, None), (resumed, 0)])
+        ran = run_serially("/nonexistent", "swift", reach_tests={reach}, seconds=5)
+        check("hang: the twin is skipped with its law",
+              (ran["hung"], ran["reach_skipped_after_law"], ran["resumes"]) == ([law], [reach], 1),
+              str(ran))
+
+        # A twin that already has a result is not skipped (a law crashing on a later resume).
+        fake = subprocess.run = _ScriptedSwiftTest([(_run(["◇ Suite S started.",
+                                                           "◇ Test g_reachesBothOutcomes() started.",
+                                                           "✔ Test g_reachesBothOutcomes() passed after 0.001 seconds.",
+                                                           "◇ Test g_isTotal() started."]), 1),
+                                                    (_run(["◇ Suite S started."]), 0)])
+        ran = run_serially("/nonexistent", "swift", reach_tests={reach})
+        check("a twin with a result is not skipped",
+              (ran["reach_skipped_after_law"], fake.commands[1][3:])
+              == ([], ["--skip", _skip_pattern(law)]), str(ran))
+
+        # The no-verdict path carries the added fields too.
+        fake = subprocess.run = _ScriptedSwiftTest([("Building for debugging...\n", None)])
+        ran = run_serially("/nonexistent", "swift", reach_tests={reach})
+        check("no_verdict carries the added fields",
+              ran.get("no_verdict") and (ran["resumes"], ran["exhausted"], ran["warned"],
+                                         ran["sides"], len(ran["run_seconds"])) == (0, False, [], {}, 1),
+              str(ran))
+
+        # The exhausted path says so, and only it does.
+        fake = subprocess.run = _ScriptedSwiftTest(
+            [(_run(["◇ Suite S started.", f"◇ Test t{n}_isTotal() started."]), 1) for n in range(3)])
+        ran = run_serially("/nonexistent", "swift", max_resumes=3)
+        check("exhausted", (ran["exhausted"], ran["resumes"], len(ran["run_seconds"])) == (True, 3, 3),
+              str(ran))
+    finally:
+        subprocess.run = real_run
+
+
+def _selftest_bisect_stats(check):
+    """`stats` records probes and seconds on every return path; the search itself is unchanged."""
+    import tempfile
+    real = _runs_within
+    try:
+        with tempfile.TemporaryDirectory() as scratch:
+            stubs, aside = os.path.join(scratch, "stubs"), os.path.join(scratch, "aside")
+            os.makedirs(os.path.join(stubs, "predicate"))
+            stats = {}
+            check("no suites: nothing probed", bisect_hang(scratch, stubs, "swift", aside, stats=stats) == []
+                  and stats == {"probes": 0, "seconds": 0.0}, str(stats))
+            for name in ("ATests", "BTests", "CTests", "DTests"):
+                open(os.path.join(stubs, "predicate", f"{name}.swift"), "w", encoding="utf-8").write(
+                    f"struct {name} {{\n}}\n")
+            # The run finishes exactly when CTests is skipped.
+            globals()["_runs_within"] = lambda _p, _s, _t, skip=None: "CTests" in (skip or [])
+            stats = {}
+            culprits = bisect_hang(scratch, stubs, "swift", aside, stats=stats)
+            check("bisect: culprit named and set aside",
+                  culprits == ["CTests"] and os.listdir(aside) == ["CTests.swift"], str(culprits))
+            check("bisect: probes counted", stats.get("probes", 0) > 2 and "seconds" in stats, str(stats))
+            check("bisect: no stats argument still works",
+                  bisect_hang(scratch, stubs, "swift", aside) == [], "")
+    finally:
+        globals()["_runs_within"] = real
+
+
+def _selftest_budgets(check):
+    """The budgets arm A runs under are fef2971d's. `walk_repo` passes none of them, so a moved
+    default would change every census after it without one line of the walk changing."""
+    import inspect
+    serial = {name: p.default for name, p in inspect.signature(run_serially).parameters.items()}
+    check("run_serially's defaults: max_resumes 30, seconds 600, no reach tests",
+          (serial["max_resumes"], serial["seconds"], serial["reach_tests"], serial["census_target"])
+          == (30, 600, (), None), str(serial))
+    search = {name: p.default for name, p in inspect.signature(bisect_hang).parameters.items()}
+    check("bisect_hang's defaults: seconds 150, limit 40",
+          (search["seconds"], search["limit"], search["stats"]) == (150, 40, None), str(search))
+
+
+def self_test():
+    failures = []
+
+    def check(name, condition, detail):
+        if not condition:
+            failures.append(f"{name}: {detail}")
+
+    captures = _selftest_captures(check)
+    _selftest_run_serially(check)
+    _selftest_bisect_stats(check)
+    _selftest_budgets(check)
+    check("reach names", (is_reach("S.f_reachesBothOutcomes()"), is_reach("S.f_isTotal()"),
+                          reach_twin("S.f_isTotal()"), reach_twin("S.f_reachesBothOutcomes()"))
+          == (True, False, "S.f_reachesBothOutcomes()", None), "")
+    for failure in failures:
+        print("FAIL", failure)
+    if failures:
+        print(f"{len(failures)} self-test failure(s)")
+        return 1
+    print(f"corpus_funnel_stage5.py self-test OK  ({captures} Swift Testing captures against the "
+          "fef2971d parse, run_serially's twin skip, fields and budgets, bisect_hang's stats)")
+    return 0
+
+
+if __name__ == "__main__":
+    if sys.argv[1:] == ["--self-test"]:
+        sys.exit(self_test())
+    print("corpus_funnel_stage5.py is driven by corpus_funnel.py; its own command is --self-test",
+          file=sys.stderr)
+    sys.exit(2)

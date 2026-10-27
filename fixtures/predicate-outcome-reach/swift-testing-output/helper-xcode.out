@@ -1,0 +1,30 @@
+Test Suite 'All tests' started at 2026-10-27 10:35:49.284.
+Test Suite 'All tests' passed at 2026-10-27 10:35:49.285.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'All tests' started at 2026-10-27 10:35:49.572.
+Test Suite 'All tests' passed at 2026-10-27 10:35:49.574.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite Reach_ToyTests started.
+◇ Test isEven_reachesBothOutcomes() started.
+⚠︎ Test isEven_reachesBothOutcomes() recorded a warning at ReachTests.swift:32:21: Issue recorded
+↳ NOT APPLIED — the false side: no draw made isEven(_:) return false in 100 trials, so the totality test beside this one checked only inputs where it is true. Narrow the generator until it reaches both outcomes, or delete this test.
+✔ Test isEven_reachesBothOutcomes() passed after 0.001 seconds with 1 warning.
+◇ Test isEven_syncReach() started.
+✔ Test isEven_syncReach() passed after 0.001 seconds.
+✔ Suite Reach_ToyTests passed after 0.001 seconds with 1 warning.
+✔ Test run with 2 tests in 1 suite passed after 0.001 seconds with 1 warning.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite Reach_ToyMainTests started.
+◇ Test isEven_reachesBothOutcomes() started.
+⚠︎ Test isEven_reachesBothOutcomes() recorded a warning at ReachTests.swift:32:21: Issue recorded
+↳ NOT APPLIED — the false side: no draw made isEven(_:) return false in 100 trials, so the totality test beside this one checked only inputs where it is true. Narrow the generator until it reaches both outcomes, or delete this test.
+✔ Test isEven_reachesBothOutcomes() passed after 0.001 seconds with 1 warning.
+◇ Test isEven_syncReach() started.
+✔ Test isEven_syncReach() passed after 0.001 seconds.
+✔ Suite Reach_ToyMainTests passed after 0.001 seconds with 1 warning.
+✔ Test run with 2 tests in 1 suite passed after 0.001 seconds with 1 warning.

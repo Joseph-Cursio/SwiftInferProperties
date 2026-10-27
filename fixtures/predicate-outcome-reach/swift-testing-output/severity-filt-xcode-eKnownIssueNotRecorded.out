@@ -1,0 +1,18 @@
+Building for debugging...
+[Planning deferred tasks]
+[6 / 15] ToyTests-product
+[12 / 16] ToyTests-product
+[14 / 16] ToyTests-product
+Build complete! (0.75 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite Toy_extraTests started.
+◇ Test eKnownIssueNotRecorded() started.
+✘ Test eKnownIssueNotRecorded() recorded an issue at ExtraTests.swift:7:24: Known issue was not recorded
+✘ Test eKnownIssueNotRecorded() failed after 0.001 seconds with 1 issue.
+↳ // (e) withKnownIssue whose body records NOTHING (reach succeeded)
+✘ Suite Toy_extraTests failed after 0.001 seconds with 1 issue.
+✘ Test run with 1 test in 1 suite failed after 0.001 seconds with 1 issue.
+Note: Some test targets reported failures:
+  - ToyTests (Swift Testing)

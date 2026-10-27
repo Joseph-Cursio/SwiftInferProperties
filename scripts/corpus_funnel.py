@@ -338,6 +338,64 @@ def record_passes(entry, ran, stubs_dir):
     entry["passed_behaviour"] = entry["passed"] - entry["passed_does_not_crash"]
 
 
+def declared_tests(stubs_dir):
+    """`Suite.test()` for every @Test a compiled stub file declares (set-aside files have been moved out)."""
+    keys = []
+    for path in glob.glob(os.path.join(stubs_dir, "*", "*.swift")):
+        text = open(path, encoding="utf-8", errors="ignore").read()
+        suite = re.search(r"^struct (\w+)", text, re.M)
+        if suite:
+            keys += [f"{suite.group(1)}.{name}()"
+                     for name in re.findall(r"@Test(?:\([^)]*\))?\s+func\s+(\w+)\s*\(", text)]
+    return keys
+
+
+_OUTCOMES = ("passed", "failed", "crashed", "hung")
+
+
+def record_outcomes(entry, ran, stubs_dir, declared, bisect_stats=None):
+    """Every outcome column for one package. Law tests feed the legacy columns, exactly as before #665;
+    a predicate stub's reach test feeds only `reach`.
+
+    ⚠ **A reach test that passes is not a law that passes.** It sits in a `predicate` suite, so
+    `record_passes` would file it under `passed_does_not_crash` — one phantom law per green reach
+    check, and another per warned one — and `compiled`, which counts stub FILES, would stop
+    reconciling with the outcome columns, which count TESTS. Filtering by suffix keeps every legacy
+    column what it was; the reach outcomes get their own bucket.
+    """
+    law = {k: [n for n in ran.get(k, []) if not s5.is_reach(n)] for k in _OUTCOMES}
+    reach = {k: [n for n in ran.get(k, []) if s5.is_reach(n)] for k in _OUTCOMES}
+    record_passes(entry, law, stubs_dir)                       # unchanged function
+    entry["failed"], entry["crashed"], entry["hung"] = len(law["failed"]), len(law["crashed"]), len(law["hung"])
+    entry["hung_tests"], entry["failures"] = law["hung"][:5], law["failed"]
+    entry["passed_tests"], entry["crashed_tests"], entry["hung_tests_all"] = law["passed"], law["crashed"], law["hung"]
+    warned, sides = set(ran.get("warned", [])), ran.get("sides", {})
+    entry["warned_tests"] = sorted(n for n in warned if not s5.is_reach(n))
+    entry["exhausted"], entry["resumes"] = bool(ran.get("exhausted")), ran.get("resumes", 0)
+    entry["run_seconds"] = ran.get("run_seconds", [])
+    if bisect_stats is not None:
+        entry["bisect"] = bisect_stats
+    declared_reach = {k for k in declared if s5.is_reach(k)}
+    reported = list(reach["failed"]) + [n for n in reach["passed"] if n in warned]
+    entry["reach"] = {
+        "expected": len(declared_reach),
+        "green": sorted(n for n in reach["passed"] if n not in warned),
+        "not_applied": {n: sorted(sides[n]) for n in reported if sides.get(n)},
+        "other": sorted(n for n in reported if not sides.get(n)),     # an emitter defect until shown otherwise
+        "crashed": reach["crashed"], "hung": reach["hung"],
+        "skipped_after_law": sorted(set(ran.get("reach_skipped_after_law", [])) & declared_reach),
+    }
+    seen = {n for k in _OUTCOMES for n in ran.get(k, [])}
+    seen |= set(entry["reach"]["skipped_after_law"])
+    entry["reach"]["unaccounted"] = sorted(declared_reach - seen)
+    missing = sorted(set(declared) - seen)
+    entry["unaccounted_tests"], entry["unaccounted_test_names"] = len(missing), missing[:10]
+
+
+def _reach_tests(declared):
+    return {name for name in declared if s5.is_reach(name)}
+
+
 def _unaccounted(per_package):
     """Compiled stubs that reported no outcome of any kind, summed over a repository's packages.
 
@@ -501,31 +559,37 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                 if "could not be resolved" in detail or "Dependencies could not" in detail:
                     entry["limit"] = "dependency conflict in the subject (kit 2.x vs pinned 1.x)"
             if built["built"]:
-                ran = s5.run_serially(package_dir, swift)
-                record_passes(entry, ran, dirs[0])
-                entry["failed"] = len(ran["failed"])
-                entry["crashed"] = len(ran["crashed"])
-                entry["hung"] = len(ran.get("hung", []))
+                # #665: the declared tests are read off the stub files that BUILT, so a predicate
+                # stub's reach test can be told apart from its law and every test that reported
+                # nothing can be named. Read again after a hang's culprits are set aside.
+                declared = declared_tests(dirs[0])
+                ran = s5.run_serially(package_dir, swift, reach_tests=_reach_tests(declared))
+                record_outcomes(entry, ran, dirs[0], declared)
                 if ran.get("no_verdict"):
                     # **Name the law that hangs, then measure the rest.** A repo-level "no
                     # verdict" says nothing about 18 innocent stubs; bisecting turns it into a
                     # finding about one law and lets the others report.
+                    bisect_stats = {}
                     culprits = s5.bisect_hang(package_dir, dirs[0], swift,
-                                              os.path.join(scratch, f"hang-{repo}"))
+                                              os.path.join(scratch, f"hang-{repo}"),
+                                              stats=bisect_stats)
                     if culprits:
                         entry["hangs"] = culprits
                         for name in culprits:
                             built["set_aside"][name] = "test process hangs before reporting"
                         entry["compiled"] = max(0, entry["compiled"] - len(culprits))
-                        ran = s5.run_serially(package_dir, swift)
-                        # ⚠ **Read the counts back off the RE-RUN.** They were taken above from
-                        # the hung run, and setting the culprit aside is pointless if the entry
-                        # still reports what the hang produced — measured on
-                        # SwiftFormatRuleStudio, that is the difference between 0 passes and 13.
-                        record_passes(entry, ran, dirs[0])
-                        entry["failed"] = len(ran["failed"])
-                        entry["crashed"] = len(ran["crashed"])
-                        entry["hung"] = len(ran.get("hung", []))
+                        declared = declared_tests(dirs[0])
+                        hung_seconds = ran["run_seconds"]
+                        ran = s5.run_serially(package_dir, swift,
+                                              reach_tests=_reach_tests(declared))
+                        # Two runs, two clocks: the timed-out one is most of the package's wall
+                        # time, so it is kept. Every other column is the re-run's.
+                        ran["run_seconds"] = hung_seconds + ran["run_seconds"]
+                    # ⚠ **Read the counts back off the RE-RUN.** They were taken above from
+                    # the hung run, and setting the culprit aside is pointless if the entry
+                    # still reports what the hang produced — measured on
+                    # SwiftFormatRuleStudio, that is the difference between 0 passes and 13.
+                    record_outcomes(entry, ran, dirs[0], declared, bisect_stats)
                 if ran.get("no_verdict"):
                     # Not "0 passed": the run produced no verdict at all, so these stubs are
                     # unmeasured rather than failing. Kept out of the pass column deliberately.
@@ -534,8 +598,10 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                     entry["passed_behaviour"] = None
                     entry["passed_does_not_crash"] = None
                     entry["failed"] = None
-                entry["hung_tests"] = ran.get("hung", [])[:5]
-                entry["failures"] = ran["failed"]
+                # fef2971d assigned these two last, so they move back to the end: a result file
+                # keeps every legacy key in fef2971d's order, with #665's keys between them.
+                for key in ("hung_tests", "failures"):
+                    entry[key] = entry.pop(key)
         except subprocess.TimeoutExpired:
             entry["blocked"] = "timeout"
         per_package.append(entry)
@@ -565,11 +631,57 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
     # end a 50-minute run. It is the seventh number in this harness put there so that a figure
     # that cannot be true cannot also be invisible.
     result["unaccounted"] = _unaccounted(per_package)
+    result.update(_reach_totals(per_package))
     result["finished"] = time.strftime("%H:%M:%S")
     return result
 
 
+def _reach_totals(per_package):
+    """#665's repository-level columns, each summed over the packages that produced a verdict.
+
+    Every legacy column above is untouched, `unaccounted` (stub FILES) included; `unaccounted_tests`
+    is its per-TEST sibling, which a stub declaring no test at all (`consumer-producer`) cannot move.
+    """
+    measured = [p for p in per_package if not p.get("no_verdict")]
+
+    def reach(package, key, default):
+        return (package.get("reach") or {}).get(key, default)
+
+    def side(package, which):
+        return sum(1 for sides in reach(package, "not_applied", {}).values() if which in sides)
+
+    return {
+        "unaccounted_tests": sum(p.get("unaccounted_tests") or 0 for p in measured),
+        "reach_expected": sum(reach(p, "expected", 0) for p in measured),
+        "reach_green": sum(len(reach(p, "green", [])) for p in measured),
+        "reach_not_applied_true": sum(side(p, "true") for p in measured),
+        "reach_not_applied_false": sum(side(p, "false") for p in measured),
+        "reach_other": sum(len(reach(p, "other", [])) for p in measured),
+        "reach_crashed": sum(len(reach(p, "crashed", [])) for p in measured),
+        "reach_hung": sum(len(reach(p, "hung", [])) for p in measured),
+        "reach_skipped_after_law": sum(len(reach(p, "skipped_after_law", [])) for p in measured),
+        "reach_unaccounted": sum(len(reach(p, "unaccounted", [])) for p in measured),
+        "run_seconds_total": round(sum(sum(p.get("run_seconds") or []) for p in measured), 1),
+    }
+
+
+def summary_line(repo, result):
+    """The one line `main` prints per repository. The reach part appears only when a stub declared a
+    reach test, so a run without them (every census before #665, and its arm A) prints what it did."""
+    reach = ""
+    if result.get("reach_expected"):
+        reach = (f" reach {result.get('reach_green', 0)}/{result['reach_expected']} (not applied "
+                 f"{result.get('reach_not_applied_true', 0) + result.get('reach_not_applied_false', 0)})")
+    return (f"{repo}: seeds {result.get('seeds','?')} named {result.get('named','?')} "
+            f"stubs {result.get('stubs','?')} compiled {result.get('compiled','?')} "
+            f"passed {result.get('passed','?')} (behaviour {result.get('passed_behaviour','?')}, "
+            f"does not crash {result.get('passed_does_not_crash','?')}) crashed {result.get('crashed','?')} "
+            f"unaccounted {result.get('unaccounted','?')}{reach} {result.get('error','')}")
+
+
 def main(argv):
+    if "--self-test" in argv[1:]:
+        return self_test()
     scratch, infer, cli = argv[1], argv[2], argv[3]
     repos = argv[4:]
     os.makedirs(scratch, exist_ok=True)
@@ -590,11 +702,426 @@ def main(argv):
         subprocess.run(["pkill", "-f", "swiftpm-testing-helper"], check=False,
                        capture_output=True)
         json.dump(result, open(out, "w"), indent=2)
-        print(f"{repo}: seeds {result.get('seeds','?')} named {result.get('named','?')} "
-              f"stubs {result.get('stubs','?')} compiled {result.get('compiled','?')} "
-              f"passed {result.get('passed','?')} (behaviour {result.get('passed_behaviour','?')}, "
-              f"does not crash {result.get('passed_does_not_crash','?')}) crashed {result.get('crashed','?')} "
-              f"unaccounted {result.get('unaccounted','?')} {result.get('error','')}", flush=True)
+        print(summary_line(repo, result), flush=True)
+    return 0
+
+
+# ---------------------------------------------------------------------------------------------
+# self-test — `record_outcomes` against the assignments it replaced, with no compiler.
+# `make measurement-selftest` runs it.
+# ---------------------------------------------------------------------------------------------
+
+_SELFTEST_STUBS = {
+    "predicate/XPredicateTests.swift": (
+        "// Template: predicate\nimport Testing\n\nstruct XPredicateTests {\n"
+        + "".join(f"    @Test func {s}_isTotal() {{}}\n\n    @Test func {s}_reachesBothOutcomes() {{}}\n"
+                  for s in "abcd") + "}\n"),
+    "round-trip/YRoundTripTests.swift": (
+        "import Testing\n\nstruct YRoundTripTests {\n    @Test(\"y round trip\") func y_roundTrip() {}\n}\n"),
+    # documentation only, like a `consumer-producer` stub: a file, but no test
+    "consumer-producer/WConsumerProducerTests.swift": "struct WConsumerProducerTests {\n}\n",
+}
+
+
+def _pre_patch(entry, ran, stubs_dir):
+    """The five assignments `walk_repo` made before #665, copied verbatim (`record_passes`, the three
+    `len()`s, `hung_tests` and `failures`)."""
+    record_passes(entry, ran, stubs_dir)
+    entry["failed"] = len(ran["failed"])
+    entry["crashed"] = len(ran["crashed"])
+    entry["hung"] = len(ran.get("hung", []))
+    entry["hung_tests"] = ran.get("hung", [])[:5]
+    entry["failures"] = ran["failed"]
+
+
+def _selftest_shapes():
+    """One synthetic `ran` per shape, with what its reach bucket must read and, for E and W, the
+    `passed_does_not_crash` the pre-patch reading would have inflated by."""
+    def x(name):
+        return f"XPredicateTests.{name}()"
+
+    def law(s):
+        return x(f"{s}_isTotal")
+
+    def reach(s):
+        return x(f"{s}_reachesBothOutcomes")
+
+    y = "YRoundTripTests.y_roundTrip()"
+    tail = {"warned": [], "sides": {}, "resumes": 0, "exhausted": False,
+            "reach_skipped_after_law": [], "run_seconds": [1.5]}
+    empty = {"expected": 4, "green": [], "not_applied": {}, "other": [], "crashed": [], "hung": [],
+             "skipped_after_law": [], "unaccounted": []}
+    return {
+        # Arm A: no reach test was emitted, so nothing may differ from the pre-patch reading.
+        "arm A": (dict(tail, passed=[law("a"), law("b"), law("c"), y], failed=[],
+                       crashed=[law("d")], hung=[], resumes=1, run_seconds=[2.0, 3.5]),
+                  dict(empty, expected=0), None, 0),
+        # E: a not-applied reach test FAILS. a is green; b names true; d names false; c fails
+        # without naming a side (an emitter defect until shown otherwise). Inflation g = 1.
+        "E": (dict(tail, passed=[law(s) for s in "abcd"] + [reach("a"), y],
+                   failed=[reach("b"), reach("c"), reach("d")], crashed=[], hung=[],
+                   sides={reach("b"): ["true"], reach("d"): ["false"]}),
+              dict(empty, green=[reach("a")], not_applied={reach("b"): ["true"], reach("d"): ["false"]},
+                   other=[reach("c")]), 1, 0),
+        # W: a not-applied reach test PASSES with a warning. a and d green; b true; c false; and
+        # a LAW that warned, which `warned_tests` keeps. Inflation g + t + f = 2 + 1 + 1.
+        "W": (dict(tail, passed=[law(s) for s in "abcd"] + [reach(s) for s in "abcd"] + [y],
+                   failed=[], crashed=[], hung=[],
+                   warned=[reach("b"), reach("c"), law("a")],
+                   sides={reach("b"): ["true"], reach("c"): ["false"]}),
+              dict(empty, green=[reach("a"), reach("d")],
+                   not_applied={reach("b"): ["true"], reach("c"): ["false"]}), 4, 0),
+        # A law that crashed takes its twin with it (C27): the twin is accounted for, not lost.
+        "law crash, twin skipped": (
+            dict(tail, passed=[law(s) for s in "acd"] + [reach(s) for s in "acd"] + [y], failed=[],
+                 crashed=[law("b")], hung=[], resumes=1, reach_skipped_after_law=[reach("b")]),
+            dict(empty, green=[reach(s) for s in "acd"], skipped_after_law=[reach("b")]), None, 0),
+        # A reach test that crashes or hangs beside a passing law moves no law column.
+        "reach crash beside a passing law": (
+            dict(tail, passed=[law(s) for s in "abcd"] + [reach("b"), reach("d"), y], failed=[],
+                 crashed=[reach("a")], hung=[reach("c")], resumes=2),
+            dict(empty, green=[reach("b"), reach("d")], crashed=[reach("a")], hung=[reach("c")]),
+            None, 0),
+        # No verdict: nothing reported, so every declared test is unaccounted for in this package.
+        "no_verdict": (dict(tail, passed=[], failed=[], crashed=[], hung=[], run_seconds=[600.0],
+                            no_verdict="test run timed out before any test reported"),
+                       dict(empty, unaccounted=[reach(s) for s in "abcd"]), None, 9),
+    }
+
+
+def _walk_stubs(reach):
+    """One package's stub files: two predicate suites (each with its reach twin when `reach`), a
+    round trip, a law whose `@Test` sits on its own line, and a `consumer-producer` file with no test."""
+    def suite(name, *tests):
+        return (f"import Testing\n@testable import M\n\nstruct {name} {{\n"
+                + "".join(f"    @Test func {test}() {{}}\n" for test in tests) + "}\n")
+
+    def predicate(stem):
+        return [f"{stem}_isTotal"] + ([f"{stem}_reachesBothOutcomes"] if reach else [])
+
+    return {
+        "predicate/APredicateTests.swift": suite("APredicateTests", *predicate("a")),
+        "predicate/EPredicateTests.swift": suite("EPredicateTests", *predicate("e")),
+        "round-trip/BRoundTripTests.swift": suite("BRoundTripTests", "b_roundTrip"),
+        "idempotence/DIdempotenceTests.swift": ("import Testing\n@testable import M\n\n"
+                                                "struct DIdempotenceTests {\n    @Test\n"
+                                                "    func d_idempotent() {}\n}\n"),
+        "consumer-producer/CConsumerProducerTests.swift": "@testable import M\n\nstruct CConsumerProducerTests {\n}\n",
+    }
+
+
+def _walk_scenarios():
+    """name → (reach twins emitted, scripted `swift test` runs, the suite bisection must name).
+
+    A run is `(output, exit code)`, the code `None` for a hang. Each arm-A shape has its fef2971d
+    reading in `_WALK_FEF2971D`; the arm-B one is checked by hand in `_selftest_walk_repo`."""
+    def ran(suite, test, side=None):
+        lines = [f"◇ Suite {suite} started.", f"◇ Test {test}() started."]
+        if side:
+            lines += [f"⚠︎ Test {test}() recorded a warning at X.swift:1:1: Issue recorded",
+                      f"↳ NOT APPLIED — the {side} side: no draw made f(_:) return {side} in 100 trials"]
+        return lines + [f"✔ Test {test}() passed after 0.001 seconds{' with 1 warning' if side else ''}."]
+
+    def failed(suite, test):
+        return [f"◇ Suite {suite} started.", f"◇ Test {test}() started.",
+                f"✘ Test {test}() recorded an issue at X.swift:1:1: Expectation failed",
+                f"✘ Test {test}() failed after 0.001 seconds with 1 issue."]
+
+    def traps(suite, test):
+        return [f"◇ Suite {suite} started.", f"◇ Test {test}() started.", "Fatal error: Index out of range"]
+
+    def out(*groups):
+        return "".join(line + "\n" for group in groups for line in group)
+
+    a, b, d, e = (("APredicateTests", "a_isTotal"), ("BRoundTripTests", "b_roundTrip"),
+                  ("DIdempotenceTests", "d_idempotent"), ("EPredicateTests", "e_isTotal"))
+    twin = ("APredicateTests", "a_reachesBothOutcomes")
+    hang = ("Building for debugging...\n", None)
+    return {
+        "crash, then resume": (False, [(out(ran(*a), traps(*b)), 1),
+                                       (out(ran(*a), ran(*d), failed(*e)), 1)], None),
+        "no verdict, culprit set aside": (False, [hang, (out(ran(*a), failed(*b), traps(*e)), 1),
+                                                  (out(ran(*a), failed(*b)), 1)], "DIdempotenceTests"),
+        "no verdict, no culprit": (False, [hang], None),
+        "no verdict, the re-run hangs too": (False, [hang, hang], "DIdempotenceTests"),
+        "arm B: no verdict, culprit, a law traps in the re-run": (
+            True, [hang, (out(ran(*a), ran(*twin, "false"), ran(*b), traps(*e)), 1),
+                   (out(ran(*a), ran(*twin, "false"), ran(*b)), 0)], "DIdempotenceTests"),
+    }
+
+
+def _drive_walk(funnel, reach, runs, culprit):
+    """`funnel.walk_repo` over one package: every stage before 5 stubbed, `swift test` scripted,
+    and bisection's probe answering whether `culprit` is skipped.
+
+    It takes the module so it can drive fef2971d's `walk_repo` too, which is how `_WALK_FEF2971D`
+    was taken. Returns `(result, commands, runs left)`; each command ends in its `timeout=`.
+    """
+    import tempfile
+    stage5, runs, commands = funnel.s5, list(runs), []
+
+    def scripted(command, **kwargs):
+        if list(command[1:3]) != ["test", "--no-parallel"]:
+            raise AssertionError(f"unscripted command {command}")
+        commands.append(list(command) + [f"timeout={kwargs.get('timeout')}"])
+        output, code = runs.pop(0)
+        if code is None:
+            raise subprocess.TimeoutExpired(command, kwargs.get("timeout"),
+                                            output=output.encode("utf-8"), stderr=b"")
+        return subprocess.CompletedProcess(command, code, stdout=output, stderr="")
+
+    with tempfile.TemporaryDirectory() as scratch:
+        tree = os.path.join(scratch, "trees", "Repo")
+        package = os.path.join(tree, "pkg")
+        stubs = os.path.join(package, "Tests", "Generated", "SwiftInfer")
+        for relative, text in _walk_stubs(reach).items():
+            os.makedirs(os.path.join(stubs, os.path.dirname(relative)), exist_ok=True)
+            open(os.path.join(stubs, relative), "w", encoding="utf-8").write(text)
+        doubles = [
+            (funnel, "toolchain", lambda _repo: "swift"),
+            (funnel, "worktree", lambda _path, _destination: tree),
+            (funnel, "link_path_dependencies", lambda *_args: []),
+            # a seed outside every target, so no `index` or `discover` runs
+            (funnel, "seeds", lambda *_args: {"seeds": 3, "named": 2, "rows": [{"file": "elsewhere.swift"}]}),
+            (funnel, "packages", lambda _tree: [package]),
+            (funnel, "regular_targets", lambda *_args: [("M", os.path.join(package, "Sources", "M"), "regular")]),
+            (funnel, "external_dependencies", lambda *_args: []),
+            (funnel, "laws_proposed", lambda *_args: {"any": 1, "refutable": 1}),
+            (stage5, "rewrite_manifest", lambda *_args, **_kwargs: None),
+            (stage5, "verify_manifest", lambda *_args, **_kwargs: None),
+            # a fresh dict per call, because `walk_repo` adds a hang's culprits to it
+            (stage5, "build_to_fixpoint",
+             lambda *_args, **_kwargs: {"built": True, "set_aside": {"ZGoneTests": "error: x"}}),
+            (stage5, "_runs_within", lambda _p, _s, _t, skip=None: bool(culprit) and culprit in (skip or [])),
+            (subprocess, "run", scripted),
+        ]
+        saved = [(owner, name, getattr(owner, name)) for owner, name, _double in doubles]
+        try:
+            for owner, name, double in doubles:
+                setattr(owner, name, double)
+            result = funnel.walk_repo("Repo", os.path.join(scratch, "Repo"), scratch, "infer", "cli")
+        finally:
+            for owner, name, original in saved:
+                setattr(owner, name, original)
+    for key in ("started", "finished"):
+        result.pop(key, None)
+    return result, commands, len(runs)
+
+
+# ⚠ **What fef2971d's `walk_repo` wrote for each arm-A shape — taken from fef2971d, not from this
+# walk.** `git show fef2971d:scripts/corpus_funnel.py` and its stage 5 were imported, and
+# `_walk_stubs`, `_walk_scenarios` and `_drive_walk` were lifted out of this file by name and
+# exec'd beside them, so the walk under replay was fef2971d's and only the scaffolding is new.
+# `started` and `finished` are dropped. The patched walk must reproduce every key here, value AND
+# order; the keys #665 added may sit between them. Regenerate the same way, never from this walk.
+_WALK_FEF2971D = {
+    "crash, then resume": {
+        "commands": [
+            ["swift", "test", "--no-parallel", "timeout=600"],
+            ["swift", "test", "--no-parallel", "--skip", "\\.BRoundTripTests/b_roundTrip\\(\\)", "timeout=600"]],
+        "result": {
+            "repo": "Repo", "toolchain": "", "linked_siblings": [], "seeds": 3, "named": 2,
+            "scanned_targets": [], "any_law": 1, "refutable_law": 1,
+            "packages": [{
+                "package": "pkg", "stubs": 5, "with_import": 5, "built": True,
+                "set_aside": {"ZGoneTests": "error: x"}, "compiled": 4, "passed": 2,
+                "passed_by_template": {"predicate": 1, "idempotence": 1}, "passed_does_not_crash": 1,
+                "passed_behaviour": 1, "failed": 1, "crashed": 1, "hung": 0, "hung_tests": [],
+                "failures": ["EPredicateTests.e_isTotal()"]}],
+            "stubs": 5, "compiled": 4, "passed": 2, "passed_behaviour": 1, "passed_does_not_crash": 1,
+            "failed": 1, "crashed": 1, "hung": 0, "no_verdict_stubs": 0, "unaccounted": 0}},
+    "no verdict, culprit set aside": {
+        "commands": [
+            ["swift", "test", "--no-parallel", "timeout=600"],
+            ["swift", "test", "--no-parallel", "timeout=600"],
+            ["swift", "test", "--no-parallel", "--skip", "\\.EPredicateTests/e_isTotal\\(\\)", "timeout=600"]],
+        "result": {
+            "repo": "Repo", "toolchain": "", "linked_siblings": [], "seeds": 3, "named": 2,
+            "scanned_targets": [], "any_law": 1, "refutable_law": 1,
+            "packages": [{
+                "package": "pkg", "stubs": 5, "with_import": 5, "built": True,
+                "set_aside": {"ZGoneTests": "error: x", "DIdempotenceTests": "test process hangs before reporting"},
+                "compiled": 3, "passed": 1, "passed_by_template": {"predicate": 1},
+                "passed_does_not_crash": 1, "passed_behaviour": 0, "failed": 1, "crashed": 1, "hung": 0,
+                "hangs": ["DIdempotenceTests"], "hung_tests": [],
+                "failures": ["BRoundTripTests.b_roundTrip()"]}],
+            "stubs": 5, "compiled": 3, "passed": 1, "passed_behaviour": 0, "passed_does_not_crash": 1,
+            "failed": 1, "crashed": 1, "hung": 0, "no_verdict_stubs": 0, "unaccounted": 0}},
+    "no verdict, no culprit": {
+        "commands": [
+            ["swift", "test", "--no-parallel", "timeout=600"]],
+        "result": {
+            "repo": "Repo", "toolchain": "", "linked_siblings": [], "seeds": 3, "named": 2,
+            "scanned_targets": [], "any_law": 1, "refutable_law": 1,
+            "packages": [{
+                "package": "pkg", "stubs": 5, "with_import": 5, "built": True,
+                "set_aside": {"ZGoneTests": "error: x"}, "compiled": 4, "passed": None,
+                "passed_by_template": {}, "passed_does_not_crash": None, "passed_behaviour": None,
+                "failed": None, "crashed": 0, "hung": 0,
+                "no_verdict": "test run timed out before any test reported", "hung_tests": [],
+                "failures": []}],
+            "stubs": 5, "compiled": 4, "passed": 0, "passed_behaviour": 0, "passed_does_not_crash": 0,
+            "failed": 0, "crashed": 0, "hung": 0, "no_verdict_stubs": 5, "unaccounted": 0}},
+    "no verdict, the re-run hangs too": {
+        "commands": [
+            ["swift", "test", "--no-parallel", "timeout=600"],
+            ["swift", "test", "--no-parallel", "timeout=600"]],
+        "result": {
+            "repo": "Repo", "toolchain": "", "linked_siblings": [], "seeds": 3, "named": 2,
+            "scanned_targets": [], "any_law": 1, "refutable_law": 1,
+            "packages": [{
+                "package": "pkg", "stubs": 5, "with_import": 5, "built": True,
+                "set_aside": {"ZGoneTests": "error: x", "DIdempotenceTests": "test process hangs before reporting"},
+                "compiled": 3, "passed": None, "passed_by_template": {}, "passed_does_not_crash": None,
+                "passed_behaviour": None, "failed": None, "crashed": 0, "hung": 0,
+                "hangs": ["DIdempotenceTests"], "no_verdict": "test run timed out before any test reported",
+                "hung_tests": [], "failures": []}],
+            "stubs": 5, "compiled": 3, "passed": 0, "passed_behaviour": 0, "passed_does_not_crash": 0,
+            "failed": 0, "crashed": 0, "hung": 0, "no_verdict_stubs": 5, "unaccounted": 0}},
+}
+
+
+def _legacy_view(new, old):
+    """`new`'s items for `old`'s keys, in `new`'s order: equal to `old.items()` only when every
+    legacy key kept its value and its place."""
+    return [(key, value) for key, value in new.items() if key in old]
+
+
+def _selftest_walk_repo(check):
+    """`walk_repo`'s wiring: the re-run after a hang is read, the override comes after it, the
+    budgets reach `swift test`, and an arm-B re-run still skips a trapping law's twin."""
+    walked = {}
+    for name, (reach, runs, culprit) in _walk_scenarios().items():
+        try:
+            result, commands, left = _drive_walk(sys.modules[__name__], reach, runs, culprit)
+        except Exception as error:  # a walk that raises is a failed check, not a traceback
+            check(f"walk_repo, {name}", False, repr(error))
+            continue
+        walked[name] = result, commands
+        check(f"walk_repo, {name}: every scripted run was used", left == 0, f"{left} left")
+        entry = result["packages"][0]
+        want = _WALK_FEF2971D.get(name)
+        if want is not None:
+            old_entry = want["result"]["packages"][0]
+            old_repository = {k: v for k, v in want["result"].items() if k != "packages"}
+            check(f"walk_repo, {name}: fef2971d's commands and timeouts", commands == want["commands"],
+                  f"{commands} != {want['commands']}")
+            check(f"walk_repo, {name}: fef2971d's package entry, value and order",
+                  _legacy_view(entry, old_entry) == list(old_entry.items()),
+                  f"{_legacy_view(entry, old_entry)} != {list(old_entry.items())}")
+            check(f"walk_repo, {name}: fef2971d's repository columns, value and order",
+                  _legacy_view({k: v for k, v in result.items() if k != "packages"}, old_repository)
+                  == list(old_repository.items()), str(result))
+            check(f"walk_repo, {name}: no reach column moves", result["reach_expected"] == 0
+                  and entry.get("reach", {}).get("expected", 0) == 0, str(entry.get("reach")))
+        if culprit:
+            # Both runs' clocks are kept: the timed-out one, then the re-run's own.
+            check(f"walk_repo, {name}: bisection recorded, every run timed",
+                  entry.get("bisect", {}).get("probes", 0) > 0 and len(entry["run_seconds"]) == len(runs),
+                  str(entry))
+    # Arm B, by hand: the re-run's law trap takes its twin out with it; the twin that warned is
+    # NOT APPLIED; the culprit's tests are gone from what was declared.
+    name = "arm B: no verdict, culprit, a law traps in the re-run"
+    if name not in walked:
+        return len(walked)
+    result, commands = walked[name]
+    entry = result["packages"][0]
+    law, twin = "EPredicateTests.e_isTotal()", "EPredicateTests.e_reachesBothOutcomes()"
+    check(f"walk_repo, {name}: the twin is skipped with its law",
+          commands[2] == ["swift", "test", "--no-parallel", "--skip", s5._skip_pattern(law),
+                          "--skip", s5._skip_pattern(twin), "timeout=600"], str(commands))
+    check(f"walk_repo, {name}: law columns",
+          (entry["compiled"], entry["passed"], entry["passed_does_not_crash"], entry["passed_behaviour"],
+           entry["crashed"], entry["failures"], entry["hangs"])
+          == (3, 2, 1, 1, 1, [], ["DIdempotenceTests"]), str(entry))
+    check(f"walk_repo, {name}: reach bucket", entry["reach"] == {
+        "expected": 2, "green": [], "not_applied": {"APredicateTests.a_reachesBothOutcomes()": ["false"]},
+        "other": [], "crashed": [], "hung": [], "skipped_after_law": [twin], "unaccounted": []},
+          str(entry["reach"]))
+    check(f"walk_repo, {name}: repository reach columns",
+          (result["reach_expected"], result["reach_not_applied_false"], result["reach_skipped_after_law"],
+           result["unaccounted_tests"]) == (2, 1, 1, 0), str(result))
+    return len(walked)
+
+
+def self_test():
+    import tempfile
+    failures = []
+
+    def check(name, condition, detail):
+        if not condition:
+            failures.append(f"{name}: {detail}")
+
+    with tempfile.TemporaryDirectory() as stubs:
+        for relative, text in _SELFTEST_STUBS.items():
+            os.makedirs(os.path.join(stubs, os.path.dirname(relative)), exist_ok=True)
+            open(os.path.join(stubs, relative), "w", encoding="utf-8").write(text)
+        declared = declared_tests(stubs)
+        check("declared_tests reads every @Test, the attributed one included",
+              sorted(declared) == sorted([f"XPredicateTests.{s}_{t}()" for s in "abcd"
+                                          for t in ("isTotal", "reachesBothOutcomes")]
+                                         + ["YRoundTripTests.y_roundTrip()"]), str(sorted(declared)))
+        entries = {}
+        for shape, (ran, want_reach, inflation, unaccounted) in _selftest_shapes().items():
+            shape_declared = [n for n in declared if not s5.is_reach(n)] if shape == "arm A" else declared
+            entry = {}
+            record_outcomes(entry, ran, stubs, shape_declared)
+            entries[shape] = entry
+            # Legacy fields: exactly the pre-patch assignments over `ran` with every reach name removed.
+            law_only = {k: ([n for n in v if not s5.is_reach(n)] if k in _OUTCOMES else v)
+                        for k, v in ran.items()}
+            before = {}
+            _pre_patch(before, law_only, stubs)
+            check(f"{shape}: legacy fields", {k: entry[k] for k in before} == before,
+                  f"{ {k: entry[k] for k in before} } != {before}")
+            check(f"{shape}: reach bucket", entry["reach"] == want_reach,
+                  f"{entry['reach']} != {want_reach}")
+            check(f"{shape}: unaccounted tests", entry["unaccounted_tests"] == unaccounted,
+                  str(entry["unaccounted_test_names"]))
+            check(f"{shape}: law-only lists", not any(s5.is_reach(n) for key in
+                  ("passed_tests", "crashed_tests", "hung_tests_all", "failures", "warned_tests")
+                                                     for n in entry[key]), str(entry))
+            unfiltered = {}
+            _pre_patch(unfiltered, ran, stubs)
+            if inflation is None:
+                check(f"{shape}: the unfiltered reading inflates nothing it reads as a pass",
+                      unfiltered["passed"] - entry["passed"] == len([n for n in ran["passed"]
+                                                                    if s5.is_reach(n)]), "")
+            else:
+                # The regression the bucket exists for: a reach pass filed as a does-not-crash law.
+                check(f"{shape}: unfiltered pre-patch passed_does_not_crash is +{inflation}",
+                      unfiltered["passed_does_not_crash"] - entry["passed_does_not_crash"] == inflation,
+                      f"{unfiltered['passed_does_not_crash']} - {entry['passed_does_not_crash']}")
+        check("arm A: identical to the pre-patch reading of the unfiltered ran",
+              entries["arm A"]["passed_by_template"] == {"predicate": 3, "round-trip": 1}
+              and entries["arm A"]["crashed"] == 1, str(entries["arm A"]))
+        check("W: a warned law stays in warned_tests", entries["W"]["warned_tests"]
+              == ["XPredicateTests.a_isTotal()"], str(entries["W"]["warned_tests"]))
+        entries["no_verdict"]["no_verdict"] = "test run timed out before any test reported"
+        totals = _reach_totals(list(entries.values()))
+        check("repository sums skip the no-verdict package", totals == {
+            "unaccounted_tests": 0, "reach_expected": 16, "reach_green": 8,
+            "reach_not_applied_true": 2, "reach_not_applied_false": 2, "reach_other": 1,
+            "reach_crashed": 1, "reach_hung": 1, "reach_skipped_after_law": 1, "reach_unaccounted": 0,
+            "run_seconds_total": 11.5}, str(totals))
+        legacy = {"seeds": 3, "named": 2, "stubs": 9, "compiled": 9, "passed": 5,
+                  "passed_behaviour": 1, "passed_does_not_crash": 4, "crashed": 0, "unaccounted": 0}
+        check("summary line: unchanged without reach tests",
+              summary_line("R", dict(legacy, reach_expected=0)) ==
+              "R: seeds 3 named 2 stubs 9 compiled 9 passed 5 (behaviour 1, does not crash 4) "
+              "crashed 0 unaccounted 0 ", summary_line("R", legacy))
+        check("summary line: reach appended when expected",
+              summary_line("R", dict(legacy, **totals)).endswith(
+                  "unaccounted 0 reach 8/16 (not applied 4) "), summary_line("R", dict(legacy, **totals)))
+    walks = _selftest_walk_repo(check)
+    for failure in failures:
+        print("FAIL", failure)
+    if failures:
+        print(f"{len(failures)} self-test failure(s)")
+        return 1
+    print(f"corpus_funnel.py self-test OK  ({len(_selftest_shapes())} outcome shapes against the "
+          f"pre-patch assignments, reach sums, summary line; {walks} walk_repo runs, "
+          f"{len(_WALK_FEF2971D)} against fef2971d's)")
     return 0
 
 

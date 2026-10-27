@@ -1,0 +1,12 @@
+Building for debugging...
+Build complete! (0.19 sec)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite Toy_isEvenTests started.
+◇ Test cKnownIssue() started.
+━ Test cKnownIssue() recorded a known issue at ToyTests.swift:15:25: Issue recorded
+↳ NOT APPLIED — c
+━ Test cKnownIssue() passed after 0.001 seconds with 1 known issue.
+━ Suite Toy_isEvenTests passed after 0.001 seconds with 1 known issue.
+━ Test run with 1 test in 1 suite passed after 0.001 seconds with 1 known issue.

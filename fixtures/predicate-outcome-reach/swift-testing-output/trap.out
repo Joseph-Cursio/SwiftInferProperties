@@ -1,0 +1,17 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite RulesIsEvenPredicateTests started.
+◇ Test isEven_isTotal() started.
+✔ Test isEven_isTotal() passed after 0.001 seconds.
+◇ Test isEven_reachesBothOutcomes() started.
+✔ Test isEven_reachesBothOutcomes() passed after 0.001 seconds.
+✔ Suite RulesIsEvenPredicateTests passed after 0.001 seconds.
+◇ Suite RulesIsOddPredicateTests started.
+◇ Test isOdd_isTotal() started.
+Swift/ContiguousArrayBuffer.swift:695: Fatal error: Index out of range
+Note: Some test targets reported failures:
+  - RulesTests (Swift Testing)
+Building for debugging...
+Build complete! (0.16 sec)
+error: Process '<swift.org-6.4.1-toolchain>/usr/libexec/swift/pm/swiftpm-testing-helper --test-bundle-path <package>/.build/out/Products/Debug/RulesTests.xctest/Contents/MacOS/RulesTests --no-parallel --skip \.RulesIsSlowPredicateTests/ <package>/.build/out/Products/Debug/RulesTests.xctest/Contents/MacOS/RulesTests --testing-library swift-testing' exited with unexpected signal code 5

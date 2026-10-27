@@ -91,11 +91,15 @@ def census_target_dir(package_dir):
 def law_of(stub_path, repo, package_dir, template):
     text = open(stub_path, encoding="utf-8").read()
     suite = re.search(r"^struct (\w+)", text, re.M)
-    test = re.search(r"@Test[^\n]*\n\s*func (\w+)\(|@Test func (\w+)\(", text)
+    # ⚠ **A predicate stub may declare a second test, its reach check (#665)**, which is not a law.
+    # The first test that is not one is taken; it is the law, emitted first, so every committed
+    # record reproduces.
+    tests = (match.group(1) or match.group(2)
+             for match in re.finditer(r"@Test[^\n]*\n\s*func (\w+)\(|@Test func (\w+)\(", text))
+    test_name = next((name for name in tests if not name.endswith("_reachesBothOutcomes")), None)
     source = re.search(r"^// Source: (.+):(\d+)\s*$", text, re.M)
-    if not (suite and test and source):
+    if not (suite and test_name and source):
         return None
-    test_name = test.group(1) or test.group(2)
     stem = os.path.basename(stub_path)[:-len(".swift")]
     if stem.endswith("_" + template):
         # A stub written before 2026-10-10: `<Type>_<fn>[_<fn2>]_<template>` — the subjects are the
@@ -140,7 +144,10 @@ def candidates(census_dirs):
             stubs = census_target_dir(package_dir)
             if not stubs:
                 continue
-            failed = {name.split(".")[0] for name in package.get("failures") or []}
+            # A reach test's failure is not its law's (#665). `failures` holds laws only from that
+            # harness on, so this is defensive, and older result files read the same.
+            failed = {name.split(".")[0] for name in package.get("failures") or []
+                      if not name.endswith(cf.s5.REACH_SUFFIX)}
             for stub in glob.glob(os.path.join(stubs, "*", "*.swift")):
                 template = os.path.basename(os.path.dirname(stub))
                 law = law_of(stub, repo, os.path.normpath(package_dir), template)
