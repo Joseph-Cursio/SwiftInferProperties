@@ -392,6 +392,19 @@ def attributed_reason(path, message):
 
 
 _ERROR = re.compile(r"^(/[^:]+\.swift):(\d+):(\d+): error: (.+)$")
+# ⚠ **A PARSE error prints in another form, and hides every other error in its build.** Swift Build,
+# which SwiftPM uses from Swift 6.4 (swift.org's 6.4.1 and Xcode's 6.4.0 alike), reports what the
+# driver rejects before type-checking as `error: <path>:<line>:<col> <message>` — no `: error:` after
+# the column — and stops there, so that round prints no type error from any other file. `_ERROR` alone
+# attributed none of it: one stub with an unparseable `TODO` generator (`(Syntax`, `?`) made its whole
+# package read unbuilt, 496 stubs in SwiftProjectLintRules alone on 2026-10-27 (#665).
+_DRIVER_ERROR = re.compile(r"^error: (/[^:]+\.swift):(\d+):(\d+):? (.+)$")
+
+
+def error_line(line):
+    """`(path, message)` for a compiler error on `line` in either form, else None."""
+    match = _ERROR.match(line.strip()) or _DRIVER_ERROR.match(line.strip())
+    return (match.group(1), match.group(4)) if match else None
 
 
 def build_to_fixpoint(package_dir, stubs_dir, swift, aside_dir, max_rounds=40):
@@ -410,12 +423,12 @@ def build_to_fixpoint(package_dir, stubs_dir, swift, aside_dir, max_rounds=40):
             return {"built": True, "rounds": round_number, "set_aside": set_aside}
         first_error = {}
         for line in (done.stdout + done.stderr).splitlines():
-            match = _ERROR.match(line.strip())
-            if not match:
+            error = error_line(line)
+            if not error:
                 continue
-            path = os.path.realpath(match.group(1))
+            path = os.path.realpath(error[0])
             if path.startswith(os.path.realpath(stubs_dir)) and path not in first_error:
-                first_error[path] = match.group(4)
+                first_error[path] = error[1]
         if not first_error:
             # The failure is not attributable to a stub — a manifest or dependency problem.
             # ⚠ **Keep the ERROR lines, not the tail.** SwiftPM prints pages of
@@ -977,6 +990,25 @@ def _selftest_budgets(check):
           (search["seconds"], search["limit"], search["stats"]) == (150, 40, None), str(search))
 
 
+def _selftest_error_lines(check):
+    """Both forms SwiftPM prints a compiler error in attribute it; Swift Build's summary lines do not.
+    The lines are swift.org 6.4.1's, from a toy holding one parse error and one type error."""
+    stub = "/s/trees/R/Tests/Generated/SwiftInfer/predicate/XPredicateTests.swift"
+    lines = {
+        f"{stub}:3:37: error: cannot convert value of type 'Int' to specified type 'String'":
+            (stub, "cannot convert value of type 'Int' to specified type 'String'"),
+        f"error: {stub}:3:31 expected expression in list of expressions":
+            (stub, "expected expression in list of expressions"),
+        f"error: SwiftCompile normal arm64 {stub} failed with a nonzero exit code": None,
+        "error: SwiftDriver LibTests normal arm64 com.apple.xcode.tools.swift.compiler failed with a "
+        "nonzero exit code. Command line:     cd /s/trees/R": None,
+        "error: Build failed": None,
+        f"  |                                     `- error: cannot convert value of type 'Int'": None,
+    }
+    for line, want in lines.items():
+        check(f"error_line: {line[:60]}", error_line(line) == want, str(error_line(line)))
+
+
 def self_test():
     failures = []
 
@@ -988,6 +1020,7 @@ def self_test():
     _selftest_run_serially(check)
     _selftest_bisect_stats(check)
     _selftest_budgets(check)
+    _selftest_error_lines(check)
     check("reach names", (is_reach("S.f_reachesBothOutcomes()"), is_reach("S.f_isTotal()"),
                           reach_twin("S.f_isTotal()"), reach_twin("S.f_reachesBothOutcomes()"))
           == (True, False, "S.f_reachesBothOutcomes()", None), "")
@@ -997,7 +1030,8 @@ def self_test():
         print(f"{len(failures)} self-test failure(s)")
         return 1
     print(f"corpus_funnel_stage5.py self-test OK  ({captures} Swift Testing captures against the "
-          "fef2971d parse, run_serially's twin skip, fields and budgets, bisect_hang's stats)")
+          "fef2971d parse, run_serially's twin skip, fields and budgets, bisect_hang's stats, both "
+          "compiler error forms)")
     return 0
 
 

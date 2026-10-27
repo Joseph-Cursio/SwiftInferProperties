@@ -70,8 +70,12 @@ def build_setting_aside(package, swift, rounds=6, suffix="_Lit"):
         if ok:
             return True, output, broken
         culprits = {}
-        for match in re.finditer(r"^(/\S+" + re.escape(suffix) + r"\.swift):\d+:\d+: error: (.+)$", output, re.M):
-            culprits.setdefault(match.group(1), match.group(2))
+        # Both forms a compiler error prints in: a type error as `<path>:<l>:<c>: error: …`, a parse
+        # error as `error: <path>:<l>:<c> …` (Swift Build, Swift 6.4; see `s5._DRIVER_ERROR`).
+        clone = r"(/\S+" + re.escape(suffix) + r"\.swift):\d+:\d+"
+        for pattern in (r"^" + clone + r": error: (.+)$", r"^error: " + clone + r":? (.+)$"):
+            for match in re.finditer(pattern, output, re.M):
+                culprits.setdefault(match.group(1), match.group(2))
         if not culprits:
             return False, output, broken
         for path, error in culprits.items():
