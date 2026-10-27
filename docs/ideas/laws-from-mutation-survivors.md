@@ -82,6 +82,8 @@ If `P(xs) = xs.contains { … }`, then `P(xs + ys) == P(xs) || P(ys)`. For `allS
 - **Evidence:** F2. It replaces the `predicate` template's totality law, which no non-crashing mutant can fail (0 of 16 killed), with one that catches negations and `||` → `&&`. Ship it with the outcome-reach check. In the A/B, adding that check to the 3 predicates whose generators already reach `true` raised kills from 16 to 20.
 - **Closest existing:** `homomorphism`, with `(Bool, ||)` as the target.
 
+> **2026-10-27 (#665):** "ship it with the outcome-reach check" no longer has a check to ship with. The census of every compiled predicate stub in the funnel decided NONE (G 42.8%, `docs/measurements/predicate-outcome-reach.md`), so no reach test is emitted. This entry's law has to stand on its own refutations. The 16 → 20 kills above came from adding the reach check, not from this law.
+
 ## 9. Layout geometry
 
 - Every node rectangle lies inside the canvas size.

@@ -36,6 +36,8 @@ Overlap: both suites kill 14 mutants. The hand-written suite alone kills 756, an
 
 [`toolchain-exit-criteria.md`](../design-internal/toolchain-exit-criteria.md) states A-quality as *≥1 emitted law kills a mutant the subject's own tests miss*. This run has two such mutants, both from tool-generated mutants rather than planted ones, and both in `ActivityGraphBuilder.compactText` L200 (`> 80` negated, and `>` → `<`). They are killed by its idempotence law; the hand-written suite has no test of the truncation branch. With the reach check added (F2), a third: `conformsToGRDBRecord` L192 `false` → `true`.
 
+> **2026-10-27 (#665):** the reach check that killed this third mutant is not emitted (DECISION NONE, `docs/measurements/predicate-outcome-reach.md`), and a reach claim is not a law. So A-quality still counts the two `compactText` mutants from this run, not three.
+
 **This is evidence and does not settle the criterion.** The laws ran at the stub default of 100 trials, not the stressed budget A-reach requires. And the hand-written run excluded 8 tests that cannot pass in the mutation sandbox (M1), so "the subject's own tests" is the suite minus those 8. None of the 8 exercise `compactText`.
 
 ### Where each mutant's function stopped in the funnel
@@ -86,6 +88,8 @@ A/B: a test beside each stub, with the same generator, seed and 100 trials, asse
 Suggested:
 1. Emit an outcome-reach check with every `predicate` stub. Label it a generator-reach claim rather than a law, so a red result reads "generator never reached `true`" and not "bug".
 2. Fix reach at the source: seed the syntax-corpus generators with the tokens the predicate body compares against (`.keyword(.static)`, `"addTask"`, `"withTaskGroup"`, attribute names). These are literal operands found in the body, the same signal as F4.
+
+> **2026-10-27 (#665):** suggestion 1 was measured across the whole funnel before anything was emitted (`docs/measurements/predicate-outcome-reach.md`). Over 477 passing predicate stubs in 11 repositories, **42.8% reach both answers in their own 100 draws**, against a frozen floor of 50% for even a warning. **DECISION NONE: the reach check is not emitted.** This package's 3 of 10 was low but not unusual: SwiftProjectLint reads 38.9%, and the corpus without it 53.6%. Suggestion 2 is the follow-up. The census's syntax-corpus trigger fired, with 172 red rows in 4 repositories.
 
 ### F3. Idempotence passes for functions that became a constant or the identity
 
