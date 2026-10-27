@@ -1343,6 +1343,12 @@ def draw_sample(rows):
     for repo in sorted(counts):
         pool = sorted((row for row in red if row["repo"] == repo), key=lambda row: row["stub"])
         sample += rng.sample(pool, allocation.get(repo, 0))
+    # `judgements.json` is keyed by `stub`, a path relative to its repository's tree: two sampled rows with
+    # one path would silently share a verdict.
+    shared = sorted(stub for stub, count in collections.Counter(row["stub"] for row in sample).items() if count > 1)
+    if shared:
+        raise SystemExit(f"hand sample: {len(shared)} stub path(s) sampled from more than one repository, which "
+                         f"judgements.json cannot tell apart: {', '.join(shared[:3])}")
     return sample, allocation, dict(counts)
 
 
@@ -2390,6 +2396,12 @@ def _selftest_sampling(check):
     missing = dict(judgements)
     missing.pop(sample[0]["stub"])
     check("cbd incomplete", cbd_share(sample, missing, counts)[0] is None)
+    try:
+        draw_sample([_row("A", "Tests/same.swift", "ONLY-FALSE"), _row("B", "Tests/same.swift", "ONLY-TRUE")])
+        refused = False
+    except SystemExit:
+        refused = True
+    check("sample refuses a stub path shared across repositories", refused)
     # Every remainder exactly 1/3: the tie goes to the earlier name, never to rounding error.
     tie = allocate({"Alpha": 4, "Beta": 1, "Gamma": 85}, 30)
     check("allocate exact tie", tie == {"Alpha": 2, "Beta": 0, "Gamma": 28}, tie)
