@@ -5,7 +5,8 @@
 > **Two runs, both 2026-10-28.** The local universe gave DECLINE (population), with 2 groups in one repository.
 > Its frozen reopen condition, a corpus of graph-layout packages, gave **DECLINE (gate precision)**: the
 > population exists, but only 11% of the rows #667's gate admits (16 of 149) are layerings. §"The reopen
-> condition" reports the second run. Under that scope's §4, #667 closes once the user approves.
+> condition" reports the second run. Under that scope's §4, #667 closes; the user approved, and it was
+> closed as not planned on 2026-10-28, with a result comment.
 
 #667 asked for a law the catalogue does not have. For a function that assigns each node of a directed graph a
 layer, the law is: for every edge `u → v` the layering covers, with `v` unable to reach `u`,
@@ -551,8 +552,8 @@ most, not the 112 by which the prediction missed.
 
 **DECLINE (gate precision).** The reopen condition's population exists: 15 groups across 5 repositories, or 12–13
 after the re-read. But the gate #667 proposes is right on 16 of the 149 rows it admits, and the cues reach none
-of ELK's five working layerers. Under the corpus scope's §4, #667 closes. Closing it and commenting on it are
-the user's to approve.
+of ELK's five working layerers. Under the corpus scope's §4, #667 closes. The user approved, and it was closed
+as not planned on 2026-10-28, with a [result comment](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/667#issuecomment-6470249962).
 
 **Not answered here:**
 
@@ -570,7 +571,7 @@ the user's to approve.
   - **The gate is what fails.** It admits four look-alikes for every layering locally, and eight for every one
     in the graph-layout corpus (seven in its layout packages). Its cues reach none of ELK's five working
     layerers.
-  - **#667 closes under the corpus scope's §4.** A template for this law would need a different gate: one that
+  - **#667 is closed under the corpus scope's §4** (not planned, 2026-10-28). A template for this law would need a different gate: one that
     reads a layering's role off its type, or off the graph it mutates, not off a function's name.
 - **As a test SwiftUMLStudio could own, the law is close to redundant today, and the margin it has is real.**
   - It catches 37 of the 38 layering-logic mutants, and so does the suite. Only one of the suite's 37, M035,
