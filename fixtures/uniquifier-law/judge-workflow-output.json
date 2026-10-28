@@ -1,0 +1,2330 @@
+{
+ "calibration": [
+  {
+   "records": [
+    {
+     "label": "calibration/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": true,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "\"\" for an item with no fullName",
+     "reason": "It issues each element's alias using diagram-wide state (uniqElementNames, a counter that only grows, takenIdentifiers). reserveIdentifiers(drawing:among:) is documented to reserve every id \"before the first alias is issued\", so setup is required. Once that reservation is made, a suffixed candidate is checked against every reserved and issued id. A macro's alias in Mermaid or Nomnoml is documented as not an identifier, so it falls outside the law."
+    },
+    {
+     "label": "calibration/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "fresh DiagramContext(); uniqName(item: SyntaxStructure(kind: .struct, name: \"Foo\"), relationship: \"inherits\") -> \"Foo\"; uniqName(item: SyntaxStructure(kind: .struct, name: \"Foo\"), relationship: \"inherits\") -> \"Foo0\"; uniqName(item: SyntaxStructure(kind: .struct, name: \"Foo0\"), relationship: \"inherits\") -> \"Foo0\"",
+     "sentinel": "\"\" for an item with no fullName",
+     "reason": "It issues aliases from receiver state, appending a counter that only grows to a repeated name, and it needs no setup call. The decorated name is never checked against names declared earlier or later, so a type literally named Foo0 receives an alias already issued."
+    },
+    {
+     "label": "calibration/3",
+     "verdict": "MEMOIZING",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A key seen before gets back its stored identifier through an early return. A new key gets a sanitized candidate, suffixed _2, _3 and so on until it is not in taken, and every issued identifier is recorded in taken. Distinct keys therefore always get distinct identifiers, and a fresh struct can be built with any sanitize closure."
+    },
+    {
+     "label": "calibration/4",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It computes a candidate that is not among existing's keys or values but never writes it into existing, so the caller must register it, and two calls with nothing recorded between them return the same id."
+    },
+    {
+     "label": "calibration/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicates from a sequence and issues no names."
+    },
+    {
+     "label": "calibration/6",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It makes a whole array of column names distinct in one static call and keeps no state between calls."
+    },
+    {
+     "label": "calibration/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "The counter only numbers log lines for printing; the function issues no names or identifiers."
+    },
+    {
+     "label": "calibration/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a round-robin modular counter that repeats worker names by design."
+    },
+    {
+     "label": "calibration/9",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "fresh TemporaryNamer(); freshName(\"x1\") -> \"x11\"; freshName(\"x\") nine times -> \"x2\" ... \"x10\"; freshName(\"x\") -> \"x11\"",
+     "sentinel": "",
+     "reason": "The owner promises fresh names where no two are ever the same, using a stored counter that only grows. Concatenating a free-form prefix with the counter means a prefix ending in a digit can reproduce a name issued later."
+    }
+   ]
+  },
+  {
+   "records": [
+    {
+     "label": "calibration/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": true,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "\"\" for an item with no fullName (a macro's alias in Mermaid/Nomnoml is written only as a comment and is not an identifier)",
+     "reason": "uniqName issues a per-element alias, suffixing a repeated name with a diagram-wide counter checked against takenIdentifiers, which every declared alias joins; reserveIdentifiers' doc says it must reserve every id 'before the first alias is issued', and once every drawn item's name is reserved no suffix can equal a later first declaration."
+    },
+    {
+     "label": "calibration/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "on a fresh DiagramContext(): uniqName(item: struct named \"Foo\") -> \"Foo\"; uniqName(item: another struct named \"Foo\") -> \"Foo0\"; uniqName(item: struct named \"Foo0\") -> \"Foo0\" (first declaration of that name, returned unchecked)",
+     "sentinel": "\"\" for an item with no fullName",
+     "reason": "It issues a unique alias per element, using uniqElementNames and a growing index, but it never checks the suffixed name against names already issued or issued later, so a type literally named Foo0 gets the same alias as the second Foo."
+    },
+    {
+     "label": "calibration/3",
+     "verdict": "MEMOIZING",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns the stored identifier for a key it has seen, and otherwise suffixes the sanitized text until it is not in taken, then records the result in both byKey and taken, so distinct keys always get distinct identifiers on a fresh DiagramIdentifiers(sanitize:)."
+    },
+    {
+     "label": "calibration/4",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It computes a candidate absent from the existing dictionary but never writes it back, even though the dictionary is inout, so its caller does the registering and two calls with nothing recorded between them return the same id."
+    },
+    {
+     "label": "calibration/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicates from a sequence (uniqued()) and issues no names."
+    },
+    {
+     "label": "calibration/6",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It makes a whole array of column names distinct in one static call, with its used set local to that call and nothing kept between calls."
+    },
+    {
+     "label": "calibration/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Its counter numbers log lines for printing, and the contract issues no identifier."
+    },
+    {
+     "label": "calibration/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a round-robin modular counter that repeats worker names by design."
+    },
+    {
+     "label": "calibration/9",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "on a fresh TemporaryNamer(): freshName(\"a1\") -> \"a11\"; freshName(\"b\") nine times -> \"b2\" ... \"b10\"; freshName(\"a\") -> \"a11\"",
+     "sentinel": "",
+     "reason": "The owner promises fresh names that are never the same, built from a growing counter, but it appends the counter to the prefix with no separator, so a prefix ending in a digit makes two calls give one name."
+    }
+   ]
+  }
+ ],
+ "calibrationMisses": [
+  [],
+  []
+ ],
+ "judged": [
+  {
+   "packet": "packet-01",
+   "A": {
+    "packet-01/1": {
+     "label": "packet-01/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A parser helper that advances the token index past a run of given keywords; it issues no names."
+    },
+    "packet-01/2": {
+     "label": "packet-01/2",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Makes the whole node list's sanitized identifiers distinct in one call with a local used-set and suffix counter, keeping no state between calls."
+    },
+    "packet-01/3": {
+     "label": "packet-01/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Appends a rule id to a list only when it is not already present, which keeps a collection free of duplicates and does not issue any name."
+    },
+    "packet-01/4": {
+     "label": "packet-01/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "From a counter at 0: uniqueId(\"a1\") returns \"a11\" (counter 1); then uniqueId(\"b\") nine times (counters 2-10); then uniqueId(\"a\") returns \"a11\" (counter 11), the same ID as the first call.",
+     "sentinel": "",
+     "reason": "Documented to generate a unique node ID from a counter that only grows, but the counter is private static shared state, so no test can make it fresh, and joining prefix and counter with no separator lets two different prefixes produce the same ID."
+    },
+    "packet-01/5": {
+     "label": "packet-01/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "nil when the key has no alias",
+     "reason": "Follows an alias chain in a dictionary to its final value; this resolves a name rather than issuing one."
+    },
+    "packet-01/6": {
+     "label": "packet-01/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "uniqued() removes duplicates from a collection, which the brief excludes by name."
+    },
+    "packet-01/7": {
+     "label": "packet-01/7",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Computes a selector name that is not in the passed-in set by adding an index suffix, but never records it, so two calls with the same set return the same name."
+    },
+    "packet-01/8": {
+     "label": "packet-01/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Removes near-duplicate CGFloat lane values from an array (a tolerance-based dedup); it issues no identifiers."
+    }
+   },
+   "B": {
+    "packet-01/1": {
+     "label": "packet-01/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It advances the parser's token index past a run of given keywords and returns nothing, so it is parsing and issues no name."
+    },
+    "packet-01/2": {
+     "label": "packet-01/2",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It builds a full map of distinct identifiers for a list of nodes in one call. Its `used` set is local, so no state carries over between calls."
+    },
+    "packet-01/3": {
+     "label": "packet-01/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It appends a rule id to a YAML list only when the id is missing, which is duplicate avoidance in a collection rather than issuing a name."
+    },
+    "packet-01/4": {
+     "label": "packet-01/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "uniqueId(\"a1\") -> \"a11\" (counter 1); uniqueId(\"a\") nine times -> \"a2\" ... \"a10\"; uniqueId(\"a\") -> \"a11\" (counter 11), a repeat of the first result",
+     "sentinel": "",
+     "reason": "Documented to generate a unique node ID by appending a counter that only grows. The counter is a private static shared across all callers, so its state cannot be made fresh, and the prefix-plus-counter result is never checked against IDs already issued under other prefixes."
+    },
+    "packet-01/5": {
+     "label": "packet-01/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It follows a chain of module aliases in a dictionary to its final alias, which is a lookup in the ordinary sense; it creates no fresh name."
+    },
+    "packet-01/6": {
+     "label": "packet-01/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Documented as returning the array with duplicates removed, which is `uniqued()` deduplication."
+    },
+    "packet-01/7": {
+     "label": "packet-01/7",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It takes the class's existing selector names as an immutable Set and returns a name not in it, decorated with a growing index. It records nothing, so two calls with the same set return the same name."
+    },
+    "packet-01/8": {
+     "label": "packet-01/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes near-duplicate CGFloat lane values (within 1 point) from an array, which is deduplication rather than issuing a name."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-02",
+   "A": {
+    "packet-02/1": {
+     "label": "packet-02/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A state-diagram parser that returns a ParsedGraph; the _start/_end counters are internal to one parse and no name is issued to the caller."
+    },
+    "packet-02/2": {
+     "label": "packet-02/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A graph walk up parent links that returns the nearest bind ancestor's ID; it issues no names."
+    },
+    "packet-02/3": {
+     "label": "packet-02/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A reporting function that sums per-encoder statistics and prints them, with counters used only for statistics."
+    },
+    "packet-02/4": {
+     "label": "packet-02/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A deduplication gate that returns a Bool, accepting a choice-sequence hash only if it was unseen (or matches replay), and it issues no name or identifier."
+    },
+    "packet-02/5": {
+     "label": "packet-02/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Formats a constructor expression string for a class by walking its superclass chain, which is code generation and not uniquifying."
+    },
+    "packet-02/6": {
+     "label": "packet-02/6",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Computes type-signature disambiguations that make a group of overloads distinct in one call; the inout remainingIDs only tracks which elements still need disambiguating, and no issued names are recorded."
+    },
+    "packet-02/7": {
+     "label": "packet-02/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Skips duplicate enum values with a warning and returns nothing, which is deduplication of a collection."
+    },
+    "packet-02/8": {
+     "label": "packet-02/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A Boolean ancestry check that follows parent links; it issues no names."
+    }
+   },
+   "B": {
+    "packet-02/1": {
+     "label": "packet-02/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It parses state-diagram lines into a ParsedGraph and returns that graph, not an issued name; its local start/end counters exist only inside one parse call."
+    },
+    "packet-02/2": {
+     "label": "packet-02/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a tree query that walks parent links to find the nearest bind ancestor, and it issues no names."
+    },
+    "packet-02/3": {
+     "label": "packet-02/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It sums per-encoder statistics and prints a report, which is logging and formatting rather than issuing names."
+    },
+    "packet-02/4": {
+     "label": "packet-02/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns a Bool accept/reject decision for deduplicating generated choice-sequence hashes (with replay), so it filters duplicates and issues no name."
+    },
+    "packet-02/5": {
+     "label": "packet-02/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a construction expression by walking a superclass chain; its seen set only detects cycles and is not an issued-name registry."
+    },
+    "packet-02/6": {
+     "label": "packet-02/6",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "In one call it computes distinguishing type-signature disambiguations for a whole group of overloads; its inout set records which elements are already handled, not names issued across calls."
+    },
+    "packet-02/7": {
+     "label": "packet-02/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It skips duplicate enum values, warns about them, and appends only first occurrences, so it removes duplicates rather than issuing distinct names."
+    },
+    "packet-02/8": {
+     "label": "packet-02/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a Boolean ancestry check that follows parent links, and it issues no names."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-03",
+   "A": {
+    "packet-03/1": {
+     "label": "packet-03/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "makeRef issues message reference identifiers from a counter in the client's own state that only grows between calls (only disconnect() resets it); a fresh client from the public init with only makeRef calls gives \"1\", \"2\", … with no repeats."
+    },
+    "packet-03/2": {
+     "label": "packet-03/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "let p = UniqueAliasProvider(); p.uniqueAlias(for: 42) returns Anchor(\"1\"); then p.uniqueAlias(for: v), where v is an Encodable YamlAnchorProviding value with yamlAnchor == Anchor(rawValue: \"1\"), also returns Anchor(\"1\"). Passing the same anchor-providing value twice also repeats a result.",
+     "sentinel": "",
+     "reason": "uniqueAlias issues anchors from a counter held in the provider, but a value's own yamlAnchor is returned as is and is never checked against the counter-made anchors or earlier provided ones, so a result can come back twice."
+    },
+    "packet-03/3": {
+     "label": "packet-03/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a Bool alias-analysis predicate for loop-invariant code motion and issues no names; 'Unique' here describes a stored value."
+    },
+    "packet-03/4": {
+     "label": "packet-03/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It loops, heating or cooling the machine, until the thermal level falls in a range; it issues no names."
+    },
+    "packet-03/5": {
+     "label": "packet-03/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is formatting: it writes a literal expression as Swift source text into the writer."
+    },
+    "packet-03/6": {
+     "label": "packet-03/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is formatting: it draws a sequence diagram onto an ASCII canvas and returns it as a string."
+    },
+    "packet-03/7": {
+     "label": "packet-03/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a layout computation that returns frames and routes; its internal dummy-node ids are built from edge index and layer, are not issued, and are stripped before returning."
+    },
+    "packet-03/8": {
+     "label": "packet-03/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "AutoDictionary.insert hands out keys from a pool that recycles released keys (remove pushes them onto salvagedKeys and insert reuses them first), so by design keys are distinct only among live entries."
+    }
+   },
+   "B": {
+    "packet-03/1": {
+     "label": "packet-03/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "makeRef issues message reference identifiers from a per-instance counter that only grows (only disconnect resets it), so on a fresh client built with the public init, n makeRef calls return distinct strings \"1\", \"2\", and so on, and no setup call is needed."
+    },
+    "packet-03/2": {
+     "label": "packet-03/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "let p = UniqueAliasProvider(); p.uniqueAlias(for: 0) returns Anchor(\"1\"); then p.uniqueAlias(for: v), where v is an Encodable YamlAnchorProviding value whose yamlAnchor is Anchor(rawValue: \"1\"), returns Anchor(\"1\") again",
+     "sentinel": "",
+     "reason": "uniqueAlias issues anchor names from a private counter that only grows, but it returns a caller-dictated yamlAnchor without checking it against the names the counter has issued, so a dictated anchor can equal a counter-issued one."
+    },
+    "packet-03/3": {
+     "label": "packet-03/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A compiler-optimizer predicate that decides whether a store dominates every aliasing read; it issues no names."
+    },
+    "packet-03/4": {
+     "label": "packet-03/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A test-support helper that heats or cools the machine until its thermal level falls in a range; it returns nothing and issues no names."
+    },
+    "packet-03/5": {
+     "label": "packet-03/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Formatting: it renders a literal expression to the code writer, choosing enough raw-string hash delimiters, and issues no identifiers."
+    },
+    "packet-03/6": {
+     "label": "packet-03/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Formatting: it renders a sequence diagram to an ASCII or Unicode canvas string and keeps no naming state."
+    },
+    "packet-03/7": {
+     "label": "packet-03/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A layered graph-layout routine that returns frames, a canvas size and routes; the dummy-node names it builds are internal scaffolding inside one call, not names it issues."
+    },
+    "packet-03/8": {
+     "label": "packet-03/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "AutoDictionary.insert hands out keys from a pool: remove puts released keys in salvagedKeys and insert reuses them first, so by design it recycles released names."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-04",
+   "A": {
+    "packet-04/1": {
+     "label": "packet-04/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a parser: it scans a raw string and returns every balanced {...} substring, keeping no state between calls and issuing no names."
+    },
+    "packet-04/2": {
+     "label": "packet-04/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is uniqued(on:), which removes duplicate elements from a sequence by projection and issues no names."
+    },
+    "packet-04/3": {
+     "label": "packet-04/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It resolves a CLDR list-format part by following locale parents and type aliases, and its seen set only guards against alias cycles, so it issues no names."
+    },
+    "packet-04/4": {
+     "label": "packet-04/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It drops duplicate parameters by (name, location) identity from the merged operation and path-item lists, which is deduplication, not name issuing."
+    },
+    "packet-04/5": {
+     "label": "packet-04/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It turns Expat's flat name/value pointer array into a dictionary, which is parsing with no state across calls."
+    },
+    "packet-04/6": {
+     "label": "packet-04/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Its documented job is to drop repeated transitions from a list, keeping order, which is deduplication and issues no names."
+    },
+    "packet-04/7": {
+     "label": "packet-04/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It strips leading git-log graph-art characters from a line, which is string formatting with no state across calls."
+    },
+    "packet-04/8": {
+     "label": "packet-04/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It builds parse diagnostics explaining why a Mermaid source was rejected or what was set aside, which is parsing and reporting, not issuing names."
+    }
+   },
+   "B": {
+    "packet-04/1": {
+     "label": "packet-04/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a parsing helper that pulls balanced `{...}` blocks out of a model response, and it issues no names and keeps no state between calls."
+    },
+    "packet-04/2": {
+     "label": "packet-04/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicates from a sequence by projection, which is deduplication (`uniqued`), not issuing distinct names."
+    },
+    "packet-04/3": {
+     "label": "packet-04/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It resolves a CLDR list-format part by following locale parents and aliases, and its local `seen` set only guards against alias cycles, so it is a lookup of existing data, not a name issuer."
+    },
+    "packet-04/4": {
+     "label": "packet-04/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It drops parameters whose (name, location) identity has already been seen, which is deduplication of a collection, not issuing distinct names."
+    },
+    "packet-04/5": {
+     "label": "packet-04/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It converts Expat's name/value pointer array into a dictionary, which is parsing with no name issuance and no state kept across calls."
+    },
+    "packet-04/6": {
+     "label": "packet-04/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Its documentation says it returns the transitions with each repeat dropped, which is deduplication (`uniqued`), not a uniquifier."
+    },
+    "packet-04/7": {
+     "label": "packet-04/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It strips leading git-graph art characters from a line, which is string formatting with no identifiers issued and no state."
+    },
+    "packet-04/8": {
+     "label": "packet-04/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It builds parse diagnostics for a Mermaid source and keeps no state between calls, so it issues no unique names."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-05",
+   "A": {
+    "packet-05/1": {
+     "label": "packet-05/1",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Builds a fresh local map of disambiguated paths for every symbol in the hierarchy in one call and asserts the whole set is collision-free, keeping no state between calls."
+    },
+    "packet-05/2": {
+     "label": "packet-05/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Formats per-tier counts into a display string; it issues no names."
+    },
+    "packet-05/3": {
+     "label": "packet-05/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A Bool acceptance gate for unique(by:) deduplication and replay; it records seen keys but issues no name or identifier."
+    },
+    "packet-05/4": {
+     "label": "packet-05/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Issues synthesized subgraph ids from an inout counter that only grows (the defer increments past each issued id, and candidates already in subgraphs or reserved are skipped), but it is a local function nested inside the private static openSubgraph, so a test cannot reach it to call it n times."
+    },
+    "packet-05/5": {
+     "label": "packet-05/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Removes duplicate rule IDs from a list while keeping their order (a uniqued()), and issues no names."
+    },
+    "packet-05/6": {
+     "label": "packet-05/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Appends only the values not already in the destination array, which is deduplication rather than issuing names."
+    },
+    "packet-05/7": {
+     "label": "packet-05/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A layout step that computes inner shifts and block sizes for aligned blocks; it issues no names."
+    },
+    "packet-05/8": {
+     "label": "packet-05/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A command that counts missing builds per platform and Swift version for logging, and its counters are statistics, not names."
+    }
+   },
+   "B": {
+    "packet-05/1": {
+     "label": "packet-05/1",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It computes disambiguated paths for every symbol in the hierarchy in one call, asserting they are distinct, into a local map that does not survive the call."
+    },
+    "packet-05/2": {
+     "label": "packet-05/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats per-tier counts into a display string and issues no names."
+    },
+    "packet-05/3": {
+     "label": "packet-05/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns a Bool saying whether a generated key is new for unique(by:) deduplication (or matches the replay trace), so it filters values and never issues a name."
+    },
+    "packet-05/4": {
+     "label": "packet-05/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues synthesized subgraph ids from a counter that only grows, checks each against the registered subgraphs and the reserved header ids, and keeps the counter in inout state, but it is a local function inside a private static method, so no test can build its captured state or call it directly."
+    },
+    "packet-05/5": {
+     "label": "packet-05/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicate rule IDs from a list while keeping their order (uniqued), and issues no new names."
+    },
+    "packet-05/6": {
+     "label": "packet-05/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It appends only the values the destination array does not already hold, which is deduplication rather than issuing names."
+    },
+    "packet-05/7": {
+     "label": "packet-05/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a layout routine that computes inner shifts and block sizes for aligned blocks, and returns no names."
+    },
+    "packet-05/8": {
+     "label": "packet-05/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a command that counts missing builds per platform and Swift version for logging statistics, and issues no identifiers."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-06",
+   "A": {
+    "packet-06/1": {
+     "label": "packet-06/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Removes duplicate elements from a sequence by key (uniqued(by:)); it issues no names and keeps no state across calls."
+    },
+    "packet-06/2": {
+     "label": "packet-06/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues local variable names \"_local_N\" from a stored counter that only grows, but the receiver is a file-private struct in a file built only under FOUNDATION_FRAMEWORK, so no test can construct it, even with @testable import."
+    },
+    "packet-06/3": {
+     "label": "packet-06/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a trace of steps from a reduced command sequence, and its per-lane counters are local to one call and serve as labels, not as issued identifiers."
+    },
+    "packet-06/4": {
+     "label": "packet-06/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "ctx = PlantUMLContext(); ctx.uniqName(item: SyntaxStructure(kind: .struct, name: \"A\"), relationship: \"inherits\") -> \"A\"; ctx.uniqName(item: SyntaxStructure(kind: .struct, name: \"A\"), relationship: \"inherits\") -> \"A0\"; ctx.uniqName(item: SyntaxStructure(kind: .struct, name: \"A0\"), relationship: \"inherits\") -> \"A0\" (only undecorated names are recorded in uniqElementNames, so the decorated \"A0\" is never checked)",
+     "sentinel": "\"\" for an item with no fullName (guard)",
+     "reason": "uniqName issues the unique name of each element (stored in uniqueNameForElement) by appending a growing index when a name repeats, but it never checks decorated names against those already issued, so an element whose real name equals an earlier decoration gets the same name."
+    },
+    "packet-06/5": {
+     "label": "packet-06/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It checks a JSON array for duplicate items and throws on one; it issues no names."
+    },
+    "packet-06/6": {
+     "label": "packet-06/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A breadth-first path search over a tree; it issues no names and keeps no state across calls."
+    },
+    "packet-06/7": {
+     "label": "packet-06/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a camelCase key as snake_case, a pure string transformation with no state."
+    },
+    "packet-06/8": {
+     "label": "packet-06/8",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "fixReference issues a permanent reference to each object that still has a temporary one, retrying with a growing counter until the reference is not in the stored references set and then recording it; a fresh ReferenceGenerator(outputSettings:) and freshly built PBXObjects (temporary references) are reachable through @testable import, and no prior call is documented as required."
+    }
+   },
+   "B": {
+    "packet-06/1": {
+     "label": "packet-06/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicate elements from a sequence by a derived key (a `uniqued(by:)` dedup), and issues no names."
+    },
+    "packet-06/2": {
+     "label": "packet-06/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues `_local_N` variable names from a stored counter that only grows, so every name is distinct, but the receiver is a `private struct` inside a `#if FOUNDATION_FRAMEWORK` file, so no test, even with `@testable import`, can construct it."
+    },
+    "packet-06/3": {
+     "label": "packet-06/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a trace of steps from a command sequence, and its per-lane counts number the steps for display, not to issue identifiers."
+    },
+    "packet-06/4": {
+     "label": "packet-06/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "ctx = PlantUMLContext(); ctx.uniqName(item: SyntaxStructure(name: \"A\"), relationship: \"inherits\") -> \"A\"; ctx.uniqName(item: SyntaxStructure(name: \"A\"), relationship: \"inherits\") -> \"A0\"; ctx.uniqName(item: SyntaxStructure(name: \"A0\"), relationship: \"inherits\") -> \"A0\" (duplicate)",
+     "sentinel": "\"\" for an item whose fullName is nil",
+     "reason": "It issues a unique element name, decorating a repeated name with a growing index, but it records only undecorated names in `uniqElementNames`, so a decorated name such as \"A0\" is reissued when an element is literally named \"A0\"."
+    },
+    "packet-06/5": {
+     "label": "packet-06/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It validates that an array has no duplicate items and throws on one; it issues no names."
+    },
+    "packet-06/6": {
+     "label": "packet-06/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a breadth-first search that returns a path of tree nodes; its visited set serves the traversal, not the issuing of names."
+    },
+    "packet-06/7": {
+     "label": "packet-06/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It converts a camelCase key to snake_case, which is formatting with no state kept across calls."
+    },
+    "packet-06/8": {
+     "label": "packet-06/8",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "no reference issued (a no-op) for an object whose reference is already permanent",
+     "reason": "It assigns each object with a temporary reference a reference that is not yet in the generator's stored `references` set, raising a counter until there is no collision and then inserting the result, so a fresh `ReferenceGenerator(outputSettings:)` (reachable with `@testable import`) issues pairwise-distinct references; the result is read from `object.reference.value` because the function returns Void."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-07",
+   "A": {
+    "packet-07/1": {
+     "label": "packet-07/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A nested helper inside allServers that drops servers whose hash it has already seen; it removes duplicates, returns nothing and issues no name."
+    },
+    "packet-07/2": {
+     "label": "packet-07/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Each call records a capture and returns the name \"captureN\" from a stored counter that only grows, so on a fresh DebugStringConversionState([]) n calls return capture1...capturen, all distinct."
+    },
+    "packet-07/3": {
+     "label": "packet-07/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a comment-only documentation block from a hint and keeps no state, so it is formatting rather than issuing names."
+    },
+    "packet-07/4": {
+     "label": "packet-07/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A syntax predicate that reports whether a token is a no-argument construction of a listed type; it issues no names."
+    },
+    "packet-07/5": {
+     "label": "packet-07/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Its doc comment says the global audit counter is a deliberate stand-in for a nondeterministic read that breaks determinism; it is a 'seen' count, not a promise of distinct identifiers."
+    },
+    "packet-07/6": {
+     "label": "packet-07/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Greedy graph colouring gives each vertex the smallest colour unused by its neighbours, and colours repeat by design, so it does not issue unique names."
+    },
+    "packet-07/7": {
+     "label": "packet-07/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "uniqued(by:) removes duplicate elements from a sequence by a key and issues no names."
+    },
+    "packet-07/8": {
+     "label": "packet-07/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Reverse-order greedy graph colouring reuses colours by design and keeps no naming state between calls."
+    }
+   },
+   "B": {
+    "packet-07/1": {
+     "label": "packet-07/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A nested helper inside allServers that drops duplicate servers by hash while it collects them, so it removes duplicates and issues no name."
+    },
+    "packet-07/2": {
+     "label": "packet-07/2",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Returns the capture identifier \"capture\\(nextCapture)\" from a stored counter that only grows, so on a fresh DebugStringConversionState (its internal init, reached with @testable import, accepts an empty variable list) n calls give capture1...captureN, which are pairwise distinct."
+    },
+    "packet-07/3": {
+     "label": "packet-07/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A pure formatter that renders the comment-only documentation block for an N-class equivalence hint and keeps no state."
+    },
+    "packet-07/4": {
+     "label": "packet-07/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A syntax predicate that says whether a token is an argument-less construction of a fresh-value type, and issues no name."
+    },
+    "packet-07/5": {
+     "label": "packet-07/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "The file documents the process-wide auditCounter as an audit-count stand-in for nondeterminism that makes the formatter impure, not as an identifier issuer, so it is a counter used for statistics."
+    },
+    "packet-07/6": {
+     "label": "packet-07/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A greedy graph colouring that reuses colours across non-adjacent vertices by design and keeps no state between calls."
+    },
+    "packet-07/7": {
+     "label": "packet-07/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "uniqued(by:) removes the elements of a sequence whose key is a duplicate, so it is deduplication, not name issuance."
+    },
+    "packet-07/8": {
+     "label": "packet-07/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A greedy graph colouring over the reverse vertex order that reuses colours by design and keeps no state between calls."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-08",
+   "A": {
+    "packet-08/1": {
+     "label": "packet-08/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "update issues a presentation nonce, re-drawing until it is not in the nonce set recorded for that presentationContext and then inserting it, so on a fresh PresentationState() calls within one context never repeat (an explicit colliding optionalNonce throws, as does exceeding the limit), though distinctness is promised per context only and different contexts may share a nonce."
+    },
+    "packet-08/2": {
+     "label": "packet-08/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A deterministic grid layout that places nodes, groups and edges and returns positioned geometry; it issues no names."
+    },
+    "packet-08/3": {
+     "label": "packet-08/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Counts consecutive empty lines in one direction from a line; a pure count, not a name issuer."
+    },
+    "packet-08/4": {
+     "label": "packet-08/4",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Suffixes the preferred name with \"Value\" until it is not in the given avoid set, but records nothing, so two calls with the same set return the same name."
+    },
+    "packet-08/5": {
+     "label": "packet-08/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "asGraphViz formats the graph as a GraphViz string; its local nameOf memoizes short ids only within one call, and the function itself is formatting."
+    },
+    "packet-08/6": {
+     "label": "packet-08/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "orderedUnique removes duplicates from an array while keeping order, which is deduplication, not name issuing."
+    },
+    "packet-08/7": {
+     "label": "packet-08/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "parseState parses a state diagram body into a StateDiagram; its internal scope counter only serves the parse and the function is a parser."
+    },
+    "packet-08/8": {
+     "label": "packet-08/8",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "nil for an overload that cannot be uniquely disambiguated",
+     "reason": "In one stateless call it computes, for every overload, the minimal type-name combination that matches only that overload, making the whole collection of disambiguations distinct."
+    }
+   },
+   "B": {
+    "packet-08/1": {
+     "label": "packet-08/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues a presentation nonce and records it in the receiver's per-context nonce set, redrawing on a collision, so a fresh PresentationState() given one context and limit never returns the same nonce twice; distinctness is promised only within a presentationContext, and an over-limit or colliding explicit nonce throws instead of returning."
+    },
+    "packet-08/2": {
+     "label": "packet-08/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A grid layout routine that returns positioned geometry; its local collision-avoiding cell placement issues no names."
+    },
+    "packet-08/3": {
+     "label": "packet-08/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Counts consecutive empty lines from a starting line; it is a counting helper, not a name issuer."
+    },
+    "packet-08/4": {
+     "label": "packet-08/4",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Returns preferredName suffixed with \"Value\" until it is not in the given set, but records nothing, so two calls with the same set return the same name."
+    },
+    "packet-08/5": {
+     "label": "packet-08/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Formats the graph as GraphViz text; its nested short-name memo is local to one call and the function's result is a rendered string."
+    },
+    "packet-08/6": {
+     "label": "packet-08/6",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Removes duplicates from an array while keeping order (a uniqued() helper)."
+    },
+    "packet-08/7": {
+     "label": "packet-08/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Parses a state diagram; its scope counter for synthetic terminal ids is a local detail of a parser."
+    },
+    "packet-08/8": {
+     "label": "packet-08/8",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "nil for an overload that cannot be disambiguated",
+     "reason": "In one stateless call it computes, for every overload, a minimal type-name combination that tells it apart from all the others, so the collection's disambiguations are pairwise distinct, with nil where no combination exists."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-09",
+   "A": {
+    "packet-09/1": {
+     "label": "packet-09/1",
+     "verdict": "MEMOIZING",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Returns the stored identifier for a key seen before; for a new key it suffixes `_2`, `_3`, … until the candidate is outside `taken`, then records it, so distinct keys always get distinct identifiers on a fresh struct built with `init(sanitize:)`."
+    },
+    "packet-09/2": {
+     "label": "packet-09/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "This is a parser step that returns Void and registers or re-opens a subgraph in the parser state; its auto-id counter is incidental to parsing and the function issues no name as a result."
+    },
+    "packet-09/3": {
+     "label": "packet-09/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns a veto Signal, or nil, for idempotence shape-coincidence patterns and issues no names or identifiers."
+    },
+    "packet-09/4": {
+     "label": "packet-09/4",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It makes a whole array of names unique by numeric suffixing in one call, and its `seen` dictionary is local, so nothing is kept between calls."
+    },
+    "packet-09/5": {
+     "label": "packet-09/5",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues `rev<n>` from a counter that only grows, but that counter is a private static shared across the process, so a test cannot make the state fresh."
+    },
+    "packet-09/6": {
+     "label": "packet-09/6",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It computes disambiguation suffixes (kind, type signature, then hash) for a whole collection of colliding elements in one call, and its state (`remainingIDs`, `collisions`) is local to the call."
+    },
+    "packet-09/7": {
+     "label": "packet-09/7",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It decorates the method name with labels and then a counter until the name is absent from the inout `taken` set, then inserts it; every decorated candidate is checked, keyword escaping is injective on backtick-free method names, and a fresh empty Set plus public `ViewModelAction` inits make the law testable (though the function itself is private)."
+    },
+    "packet-09/8": {
+     "label": "packet-09/8",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": true,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "\"\" for an item with no fullName",
+     "reason": "It issues each element's alias, suffixed with a diagram-wide index checked against `takenIdentifiers`, but `reserveIdentifiers(drawing:)` is documented to run before the first alias is issued, so the law needs a setup call; given it, every alias that declares an id is checked and recorded (macro aliases in Mermaid and Nomnoml are not ids)."
+    }
+   },
+   "B": {
+    "packet-09/1": {
+     "label": "packet-09/1",
+     "verdict": "MEMOIZING",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Returns the stored identifier for a key seen before and otherwise decorates the sanitized text with _2, _3, ... until it misses `taken`, recording every result, so equal keys share a result and distinct keys never do, on a receiver built fresh from the internal init(sanitize:) with no other call first."
+    },
+    "packet-09/2": {
+     "verdict": "NOT-UNIQUIFIER",
+     "label": "packet-09/2",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "This parses a subgraph header into parser state and returns nothing; its auto-ID counter for anonymous subgraphs is incidental to parsing, not an issued name."
+    },
+    "packet-09/3": {
+     "label": "packet-09/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns a veto Signal for shape-coincidence idempotence candidates and issues no names."
+    },
+    "packet-09/4": {
+     "label": "packet-09/4",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It makes a whole array of names unique in one call by suffixing per-name counts, keeping no state between calls."
+    },
+    "packet-09/5": {
+     "label": "packet-09/5",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues \"rev\\(n)\" from a counter that only grows, under a lock, so results never repeat, but the counter is a private static shared across all callers and cannot be made fresh."
+    },
+    "packet-09/6": {
+     "label": "packet-09/6",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It assigns disambiguation suffixes (kind, type signature, then hash) to a whole collection of colliding elements in one call, with no state kept between calls."
+    },
+    "packet-09/7": {
+     "label": "packet-09/7",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It decorates the method name with argument labels and then a numeric suffix until it misses the inout `taken` set, and inserts the result; a fresh empty set and public ViewModelAction inputs set this up (the function itself is private), and keyword escaping is injective over backtick-free method names."
+    },
+    "packet-09/8": {
+     "label": "packet-09/8",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": true,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "\"\" for an item with no fullName",
+     "reason": "It issues element aliases (name + diagram-wide index, skipping takenIdentifiers), but its contract requires reserveIdentifiers(drawing:) to be called before the first alias is issued, and with that reservation a first declaration's own name is never one a suffix took (a Mermaid/Nomnoml macro's comment-only alias is excluded)."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-10",
+   "A": {
+    "packet-10/1": {
+     "label": "packet-10/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It assigns layout routing slots to self-loops on one node side and returns nothing; it does not issue names or identifiers."
+    },
+    "packet-10/2": {
+     "label": "packet-10/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is an index query that returns the single module defining a symbol (or nil when ambiguous); it keeps no issuing state."
+    },
+    "packet-10/3": {
+     "label": "packet-10/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicate elements from a sequence (uniqued()), which is not issuing names."
+    },
+    "packet-10/4": {
+     "label": "packet-10/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues the next generated handler name \"handler\\(idx)\" from a stored counter that only grows, so names on one pipeline are distinct; but nextName is private, so a test cannot call it (not reachable even with @testable import)."
+    },
+    "packet-10/5": {
+     "label": "packet-10/5",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "On a fresh DOTManifestSerializer(manifest: LLBuildManifest()): label(for: c1) with a PhonyTool command returns \"phony\"; label(for: c2), another PhonyTool command, returns \"phony 1\"; label(for: c3), a command whose tool is set (via Command's public `tool`) to a custom ToolProtocol type with static name \"phony 1\", returns \"phony 1\" again.",
+     "sentinel": "",
+     "reason": "The doc promises a unique label from a per-tool-name counter that only grows, and the internal type is reachable with @testable import; but the decorated label \"<tool> <n>\" is never checked against undecorated tool names, so a tool whose name ends in \" <n>\" collides."
+    },
+    "packet-10/6": {
+     "label": "packet-10/6",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "On a fresh Writer: id(\"a1\") returns \"a11\" (nextID 1); then id(\"a\") ten times returns \"a2\" through \"a11\", so the tenth id(\"a\") repeats \"a11\".",
+     "sentinel": "",
+     "reason": "It issues SVG def ids from a nextID counter that only grows, but Writer is a private nested struct a test cannot reach, and appending the counter to a prefix that ends in a digit collides with another prefix."
+    },
+    "packet-10/7": {
+     "label": "packet-10/7",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "The doc says it generates unique names from a per-name counter that only grows; the length-prefixed mangling (count+name+\"fMu\"+index+\"_\") decodes back to one (name, index) pair, so results are distinct, and the internal context can be built with @testable import."
+    },
+    "packet-10/8": {
+     "label": "packet-10/8",
+     "verdict": "MEMOIZING",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "On a fresh PropertyListSerializer: id(of: A) where A.objectID == \"OBJ_2\" returns \"\\\"OBJ_2\\\"\" (objsToIds now has 1 entry); id(of: B) where B is a different object with objectID nil returns \"\\\"OBJ_\\(1+1)\\\"\" = \"\\\"OBJ_2\\\"\".",
+     "sentinel": "",
+     "reason": "It returns the stored id for an object it has seen and otherwise assigns a new one, but PropertyListSerializer is a fileprivate class a test cannot reach, and the generated \"OBJ_n\" is never checked against custom objectIDs, so two distinct objects can get one id."
+    }
+   },
+   "B": {
+    "packet-10/1": {
+     "label": "packet-10/1",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It assigns integer routing slots to self-loops (returning Void), and loops whose port ranges do not overlap share slots by design, so it issues no names."
+    },
+    "packet-10/2": {
+     "label": "packet-10/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is an index query that returns the single module defining a symbol, or nil when the modules are ambiguous, and it keeps no issuing state."
+    },
+    "packet-10/3": {
+     "label": "packet-10/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is uniqued(), which removes duplicates from a sequence, not a name issuer."
+    },
+    "packet-10/4": {
+     "label": "packet-10/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "nextName returns \"handler\\(idx)\" from a stored counter that only grows and is never reset, on a pipeline you can build fresh with init(channel:); I set aside that the method is private."
+    },
+    "packet-10/5": {
+     "label": "packet-10/5",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "label(for: cmdA) with a ShellTool command -> \"shell\"; label(for: cmdB) with another ShellTool command -> \"shell 1\"; label(for: cmdC) whose tool type (a ToolProtocol conformer) has static name \"shell 1\" -> \"shell 1\"",
+     "sentinel": "",
+     "reason": "Its documented job is a unique label per job, kept unique by a per-tool counter, but the decorated \"<tool> <n>\" is never checked against raw tool names, so a tool named like a decorated label collides with it."
+    },
+    "packet-10/6": {
+     "label": "packet-10/6",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "id(\"g1\") -> \"g11\" (nextID 1); id(\"x\") nine times (nextID 2...10); id(\"g\") -> \"g11\" (nextID 11)",
+     "sentinel": "",
+     "reason": "It issues SVG def ids as prefix plus a counter that only grows, but bare concatenation lets a prefix ending in a digit plus a small counter equal a shorter prefix plus a larger counter; I set aside that the struct is private."
+    },
+    "packet-10/7": {
+     "label": "packet-10/7",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A per-name counter plus length-prefixed mangling (discriminator + count + name + \"fMu\" + index + \"_\") gives distinct tokens on one context, and the internal init is reachable with @testable import using an empty lexical context."
+    },
+    "packet-10/8": {
+     "label": "packet-10/8",
+     "verdict": "MEMOIZING",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "id(of: A) where A.objectID == \"OBJ_2\" -> \"\\\"OBJ_2\\\"\" (map count becomes 1); id(of: B) where B.objectID == nil -> \"\\\"OBJ_2\\\"\"",
+     "sentinel": "",
+     "reason": "It returns the stored id for an object seen before and otherwise assigns objectID or \"OBJ_<count+1>\", but it never checks auto-assigned ids against custom objectIDs, so two distinct objects can get the same id; I set aside that the class is fileprivate."
+    }
+   },
+   "C": {
+    "packet-10/4": {
+     "label": "packet-10/4",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "nextName issues handler names from a stored idx that only grows (\"handler\\(idx)\", then idx += 1), so its own results never repeat on one pipeline, but the method is private and a test cannot call it even with @testable import."
+    },
+    "packet-10/6": {
+     "label": "packet-10/6",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "On a fresh Writer, call id(\"a1\") (nextID 1, returns \"a11\"), then id(\"b\") nine times (nextID 2 to 10), then id(\"a\") (nextID 11, returns \"a11\" again).",
+     "sentinel": "",
+     "reason": "id issues SVG def ids as prefix plus a counter that only grows, but the prefix plus counter is never checked against ids already issued, so a prefix ending in a digit collides; Writer is a private nested struct a test cannot construct."
+    },
+    "packet-10/8": {
+     "label": "packet-10/8",
+     "verdict": "MEMOIZING",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "On a fresh PropertyListSerializer, call id(of: A) where A.objectID == \"OBJ_2\" (returns \"\\\"OBJ_2\\\"\"), then id(of: B) for a distinct object B whose objectID is nil (objsToIds.count + 1 == 2, so it returns \"\\\"OBJ_2\\\"\" again).",
+     "sentinel": "",
+     "reason": "id(of:) returns the stored id for an object it has seen and otherwise assigns objectID or \"OBJ_<count+1>\", but the generated id is never checked against custom ids already issued, and the fileprivate serializer and fileprivate PropertyListSerializable protocol cannot be reached or conformed to from a test."
+    }
+   },
+   "split": [
+    "packet-10/4",
+    "packet-10/6",
+    "packet-10/8"
+   ]
+  },
+  {
+   "packet": "packet-11",
+   "A": {
+    "packet-11/1": {
+     "label": "packet-11/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "makeUniqueName promises a name that won't conflict with any other, and it bumps a per-name counter in the receiver's shared state; the output is length-prefixed, so a public init() receiver gives distinct names, and the empty name maps onto \"__local\" and shares its counter."
+    },
+    "packet-11/2": {
+     "label": "packet-11/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a per-tier count summary string for the stats line and issues no names."
+    },
+    "packet-11/3": {
+     "label": "packet-11/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It appends descriptive Insight values built from a project summary; this is formatting and issues no identifiers."
+    },
+    "packet-11/4": {
+     "label": "packet-11/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicates from a sequence by key (a uniqued() shape) and issues no names."
+    },
+    "packet-11/5": {
+     "label": "packet-11/5",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": true,
+     "witness": "registerCluster(\"\\u{a7}sub0\") -> \"\\u{a7}sub0\"; registerCluster(\"\\u{a7}sub0\") -> collision, decorated to \"\\u{a7}sub\\(anonCount=0)\" = \"\\u{a7}sub0\" again",
+     "sentinel": "",
+     "reason": "It records each issued cluster id in subgraphs, and on a collision it decorates with a growing anonCount, but it never checks the decorated id against the ids already registered (it is safe only because its sole caller passes cluster-prefixed ids); the method and its receiver class are private, so no test can construct or call them."
+    },
+    "packet-11/6": {
+     "label": "packet-11/6",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "The protocol documents requestId as generating a unique identifier, and this struct returns a stored sequence number that only grows (a public init(startAt:) makes a fresh receiver); overflow traps rather than repeating."
+    },
+    "packet-11/7": {
+     "label": "packet-11/7",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It finds a name not in the given selectorNames set by adding a \" (n)\" suffix, but never records it, so two calls with the same set return the same name."
+    },
+    "packet-11/8": {
+     "label": "packet-11/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It validates an IP-literal host span and returns a Bool, which is parsing and validation, not naming."
+    }
+   },
+   "B": {
+    "packet-11/1": {
+     "label": "packet-11/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues a macro-local identifier per name from a per-name counter in the receiver's state that only grows (an empty name becomes \"__local\" and shares its counter), and the mangling (fixed discriminator, character count, name, \"fMu\", index, \"_\") is decodable, so a fresh receiver from the public init never returns one result twice."
+    },
+    "packet-11/2": {
+     "label": "packet-11/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a count of suggestions per tier for a stats line and issues no names."
+    },
+    "packet-11/3": {
+     "label": "packet-11/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It appends descriptive insight values about project structure to an array and issues no names or identifiers."
+    },
+    "packet-11/4": {
+     "label": "packet-11/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It removes duplicates from a sequence by key, the uniqued() shape, and issues no names."
+    },
+    "packet-11/5": {
+     "label": "packet-11/5",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues a cluster id and records it in the subgraphs map, replacing a clashing preferred id with \"\\u{a7}sub\\(anonCount)\" from a counter that only grows; cluster ids begin with \"cluster\" (the only caller filters on that), so the decorated ids cannot clash with them, but DOTParserImpl, its init's DOTToken input and the method are all file-private, so a test cannot construct the receiver or make the call."
+    },
+    "packet-11/6": {
+     "label": "packet-11/6",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns the stored sequence number as the operation id and increments it, a counter that only grows (overflow traps rather than repeating), with a public init giving a fresh receiver."
+    },
+    "packet-11/7": {
+     "label": "packet-11/7",
+     "verdict": "LOOKUP",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It is a static function that finds a selector name not yet in the given (non-inout) set by adding \" (n)\" suffixes, but never records it, so two calls with the same set return the same name."
+    },
+    "packet-11/8": {
+     "label": "packet-11/8",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It validates the characters of an IP-literal host and its zone ID, which is parsing and validation, not issuing names."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-12",
+   "A": {
+    "packet-12/1": {
+     "label": "packet-12/1",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "Computes the disambiguated, sibling-distinct relative links of all of a page's direct descendants in one stateless call, mapping the path hierarchy's batch result back to topic references."
+    },
+    "packet-12/2": {
+     "label": "packet-12/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A nested parser that reads one state-diagram scope into a StateDiagram; the scope-counter id it mints for child scopes is incidental, and it issues no name to its caller."
+    },
+    "packet-12/3": {
+     "label": "packet-12/3",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "The owner's contract is to hand out node ids distinct within one diagram, with every name reserved through init(reserving:). Repeats get an `_n` suffix checked against every taken id, so inputs drawn from the reserved names can never yield a duplicate; the struct is internal and reachable with @testable."
+    },
+    "packet-12/4": {
+     "label": "packet-12/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A Boolean predicate testing whether an attribute list contains @Attribute(.unique); it issues no names."
+    },
+    "packet-12/5": {
+     "label": "packet-12/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A scoped text transformation that temporarily swaps completion tokens for placeholders and restores them; it returns transformed code, its placeholder naming is internal to one call, and it keeps no state across calls."
+    },
+    "packet-12/6": {
+     "label": "packet-12/6",
+     "verdict": "MEMOIZING",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns a subgraph's id from inout state: a closed named id returns itself, while new or anonymous headers and self-nesting get fresh `§subN` ids that avoid every registered and reserved name. It is private static, so no test can call it, even with @testable import."
+    },
+    "packet-12/7": {
+     "label": "packet-12/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It computes how many `#` delimiters a raw string literal needs, which is formatting arithmetic, not name issuance."
+    },
+    "packet-12/8": {
+     "label": "packet-12/8",
+     "verdict": "MEMOIZING",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns the stored short name for a function name seen before and otherwise mints the next value of a growing counter. As a nested local function inside asGraphViz of a private struct, whose state lives only in that call, a test cannot reach it."
+    }
+   },
+   "B": {
+    "packet-12/1": {
+     "label": "packet-12/1",
+     "verdict": "BATCH",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It returns, in one call and keeping no state, the disambiguated relative links for every direct descendant of a page (the disambiguation itself is delegated to PathHierarchy.disambiguatedChildLinks), so it disambiguates a whole sibling collection at once."
+    },
+    "packet-12/2": {
+     "label": "packet-12/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A nested state-diagram parser that returns a StateDiagram for one scope; the scope-id counter it bumps is incidental to parsing, not a name the function hands out."
+    },
+    "packet-12/3": {
+     "label": "packet-12/3",
+     "verdict": "UNIQUIFIER",
+     "expressible": true,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "issue(for:) hands out node ids distinct within one diagram, recording each issued id in `taken` and suffixing `_n` against it; the names are reserved through the initialiser (init(reserving:)), not a separate call, and with every issued name reserved no sequence repeats an id."
+    },
+    "packet-12/4": {
+     "label": "packet-12/4",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A Boolean predicate that checks an attribute list for `@Attribute(.unique)`; it issues no names."
+    },
+    "packet-12/5": {
+     "label": "packet-12/5",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A scoped text substitution that returns transformed Code, not names: it swaps completion tokens for placeholders for the duration of `body` and restores them, and any placeholder minting happens only inside one call."
+    },
+    "packet-12/6": {
+     "label": "packet-12/6",
+     "verdict": "MEMOIZING",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "A get-or-create over the inout subgraph registry (a closed named id is returned again, a new one is registered, an anonymous one gets a fresh `§subN` that avoids `reserved` and existing ids); it is not expressible because it is a private static method a test cannot call, and because its contract gives a key that is still open on `stack` a fresh id, so equal keys are not promised equal results for every input."
+    },
+    "packet-12/7": {
+     "label": "packet-12/7",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It computes how many `#` delimiters a raw string literal needs for a snippet, which is a formatting computation, not a name issuer."
+    },
+    "packet-12/8": {
+     "label": "packet-12/8",
+     "verdict": "MEMOIZING",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "nameOf returns the stored short name for a function name it has seen and otherwise mints a counter value that only grows, so it is memoizing; it is not expressible because it is a function nested inside asGraphViz on a private struct, its state is that call's locals, and its Function input needs a SIL module pass context."
+    }
+   },
+   "C": {},
+   "split": []
+  },
+  {
+   "packet": "packet-13",
+   "A": {
+    "packet-13/1": {
+     "label": "packet-13/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues resumability event IDs as streamID + \"_\" + a per-instance counter that only grows (replayEventsAfter relies on those IDs being unique), and no call can collide because the digits after the last underscore are always the counter; but the method is private on the actor, so a test cannot call it directly even with @testable import."
+    },
+    "packet-13/2": {
+     "label": "packet-13/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a stateless summary text from the given results (one line per decision plus per-kind counts), so it issues no names and keeps no state between calls."
+    },
+    "packet-13/3": {
+     "label": "packet-13/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It builds explainability text lines from an equivalence-class hint, which is pure formatting with no identifiers issued and no state kept."
+    }
+   },
+   "B": {
+    "packet-13/1": {
+     "label": "packet-13/1",
+     "verdict": "UNIQUIFIER",
+     "expressible": false,
+     "setup": false,
+     "body_disagrees": false,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It issues event IDs for the resumability store as streamID_counter. The counter only grows and terminate() never resets it, and the trailing integer after the last underscore keeps every ID distinct; the method is private, though, so no test can call it directly, even with @testable import."
+    },
+    "packet-13/2": {
+     "label": "packet-13/2",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It formats a summary text of re-checked decisions and per-kind tallies, issuing no names and keeping no state."
+    },
+    "packet-13/3": {
+     "label": "packet-13/3",
+     "verdict": "NOT-UNIQUIFIER",
+     "expressible": null,
+     "setup": null,
+     "body_disagrees": null,
+     "witness": "",
+     "sentinel": "",
+     "reason": "It builds explainability text for an equivalence-class hint, which is pure formatting with no issued names and no state."
+    }
+   },
+   "C": {},
+   "split": []
+  }
+ ]
+}

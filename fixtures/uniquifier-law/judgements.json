@@ -1,0 +1,992 @@
+{
+ "2389-research__MermaidKit:Sources/MermaidLayout/DOTParser.swift:415": {
+  "body_disagrees": true,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "It records each issued cluster id in subgraphs, and on a collision it decorates with a growing anonCount, but it never checks the decorated id against the ids already registered (it is safe only because its sole caller passes cluster-prefixed ids); the method and its receiver class are private, so no test can construct or call them.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": "registerCluster(\"\\u{a7}sub0\") -> \"\\u{a7}sub0\"; registerCluster(\"\\u{a7}sub0\") -> collision, decorated to \"\\u{a7}sub\\(anonCount=0)\" = \"\\u{a7}sub0\" again"
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayout.swift:873": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It is a layout computation that returns frames and routes; its internal dummy-node ids are built from edge index and layer, are not issued, and are stripped before returning.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/GitLogParser.swift:323": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It strips leading git-log graph-art characters from a line, which is string formatting with no state across calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/MermaidParser.swift:1456": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "parseState parses a state diagram body into a StateDiagram; its internal scope counter only serves the parse and the function is a parser.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/MermaidParser.swift:1475": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A nested parser that reads one state-diagram scope into a StateDiagram; the scope-counter id it mints for child scopes is incidental, and it issues no name to its caller.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/MermaidParser.swift:977": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "It returns a subgraph's id from inout state: a closed named id returns itself, while new or anonymous headers and self-nesting get fresh `§subN` ids that avoid every registered and reserved name. It is private static, so no test can call it, even with @testable import.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "MEMOIZING",
+  "witness": ""
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/MermaidParser.swift:987": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "Issues synthesized subgraph ids from an inout counter that only grows (the defer increments past each issued id, and candidates already in subgraphs or reserved are skipped), but it is a local function nested inside the private static openSubgraph, so a test cannot reach it to call it n times.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/ParseDiagnostics.swift:53": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It builds parse diagnostics explaining why a Mermaid source was rejected or what was set aside, which is parsing and reporting, not issuing names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "2389-research__MermaidKit:Sources/MermaidLayout/SQLDDLParser.swift:130": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A parser helper that advances the token index past a run of given keywords; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "Australware__swift-mermaid:Sources/Mermaid/Architecture/ArchitectureLayout.swift:61": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A deterministic grid layout that places nodes, groups and edges and returns positioned geometry; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "Australware__swift-mermaid:Sources/Mermaid/Flowchart/FlowchartParser.swift:171": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "This is a parser step that returns Void and registers or re-opens a subgraph in the parser state; its auto-id counter is incidental to parsing and the function issues no name as a result.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Acyclic/Acyclic.swift:17": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "It issues `rev<n>` from a counter that only grows, but that counter is a private static shared across the process, so a test cannot make the state fresh.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:20": {
+  "body_disagrees": true,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "Documented to generate a unique node ID from a counter that only grows, but the counter is private static shared state, so no test can make it fresh, and joining prefix and counter with no separator lets two different prefixes produce the same ID.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": "From a counter at 0: uniqueId(\"a1\") returns \"a11\" (counter 1); then uniqueId(\"b\") nine times (counters 2-10); then uniqueId(\"a\") returns \"a11\" (counter 11), the same ID as the first call. | uniqueId(\"a1\") -> \"a11\" (counter 1); uniqueId(\"a\") nine times -> \"a2\" ... \"a10\"; uniqueId(\"a\") -> \"a11\" (counter 11), a repeat of the first result"
+ },
+ "GlitchLoom__SwiftDependencyGraphExplorer:Sources/GraphBuilder/MermaidGraphBuilder.swift:55": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Makes the whole node list's sanitized identifiers distinct in one call with a local used-set and suffix counter, keeping no state between calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "BATCH",
+  "witness": ""
+ },
+ "GlitchLoom__SwiftDependencyGraphExplorer:Sources/SwiftTypeParser/SwiftTypeParser.swift:393": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Appends only the values not already in the destination array, which is deduplication rather than issuing names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "OpenAPIKit:Sources/OpenAPIKit/Document/DereferencedDocument.swift:166": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A nested helper inside allServers that drops servers whose hash it has already seen; it removes duplicates, returns nothing and issues no name.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "OpenAPIKit:Sources/OpenAPIKit/Operation/ResolvedEndpoint.swift:108": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It drops duplicate parameters by (name, location) identity from the merged operation and path-item lists, which is deduplication, not name issuing.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "Quick:Sources/Quick/TestSelectorNameProvider.swift:25": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Computes a selector name that is not in the passed-in set by adding an index suffix, but never records it, so two calls with the same set return the same name.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "LOOKUP",
+  "witness": ""
+ },
+ "Quick:Sources/Quick/TestSelectorNameProvider.swift:41": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It finds a name not in the given selectorNames set by adding a \" (n)\" suffix, but never records it, so two calls with the same set return the same name.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "LOOKUP",
+  "witness": ""
+ },
+ "SwiftAssist:Sources/SwiftAssist/Insights/Queries/EvolutionWatchdogQuery.swift:103": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Removes duplicate elements from a sequence by key (uniqued(by:)); it issues no names and keeps no state across calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftAssist:Sources/SwiftAssistEval/Graders/JudgeGrader.swift:186": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It is a parser: it scans a raw string and returns every balanced {...} substring, keeping no state between calls and issuing no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftAssist:Sources/SwiftAssistEval/Graders/LintCleanGrader.swift:43": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Removes duplicate rule IDs from a list while keeping their order (a uniqued()), and issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftLint:Source/SwiftLintBuiltInRules/Rules/Style/VerticalWhitespaceBetweenCasesRule.swift:102": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Counts consecutive empty lines in one direction from a line; a pure count, not a name issuer.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftPackageIndex-Server:Sources/App/Commands/BuildBacklogStats.swift:31": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A command that counts missing builds per platform and Swift version for logging, and its counters are statistics, not names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftPlantUML:Sources/SwiftPlantUMLFramework/Internal/PlantUMLContext.swift:85": {
+  "body_disagrees": true,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "uniqName issues the unique name of each element (stored in uniqueNameForElement) by appending a growing index when a name repeats, but it never checks decorated names against those already issued, so an element whose real name equals an earlier decoration gets the same name.",
+  "sentinel": "\"\" for an item with no fullName (guard)",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": "ctx = PlantUMLContext(); ctx.uniqName(item: SyntaxStructure(kind: .struct, name: \"A\"), relationship: \"inherits\") -> \"A\"; ctx.uniqName(item: SyntaxStructure(kind: .struct, name: \"A\"), relationship: \"inherits\") -> \"A0\"; ctx.uniqName(item: SyntaxStructure(kind: .struct, name: \"A0\"), relationship: \"inherits\") -> \"A0\" (only undecorated names are recorded in uniqElementNames, so the decorated \"A0\" is never checked) | ctx = PlantUMLContext(); ctx.uniqName(item: SyntaxStructure(name: \"A\"), relationship: \"inherits\") -> \"A\"; ctx.uniqName(item: SyntaxStructure(name: \"A\"), relationship: \"inherits\") -> \"A0\"; ctx.uniqName(item: SyntaxStructure(name: \"A0\"), relationship: \"inherits\") -> \"A0\" (duplicate)"
+ },
+ "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/DiagramIdentifiers.swift:31": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "Returns the stored identifier for a key seen before; for a new key it suffixes `_2`, `_3`, … until the candidate is outside `taken`, then records it, so distinct keys always get distinct identifiers on a fresh struct built with `init(sanitize:)`.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "MEMOIZING",
+  "witness": ""
+ },
+ "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/DiagramContext.swift:291": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "It issues each element's alias, suffixed with a diagram-wide index checked against `takenIdentifiers`, but `reserveIdentifiers(drawing:)` is documented to run before the first alias is issued, so the law needs a setup call; given it, every alias that declares an id is checked and recorded (macro aliases in Mermaid and Nomnoml are not ids).",
+  "sentinel": "\"\" for an item with no fullName",
+  "setup": true,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+PendingEdge.swift:48": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "The owner's contract is to hand out node ids distinct within one diagram, with every name reserved through init(reserving:). Repeats get an `_n` suffix checked against every taken id, so inputs drawn from the reserved names can never yield a duplicate; the struct is internal and reachable with @testable.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/StateMachineExtractor.swift:293": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Its documented job is to drop repeated transitions from a list, keeping order, which is deduplication and issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "SwiftUMLStudio:SwiftUMLStudio/InsightEngine.swift:56": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It appends descriptive Insight values built from a project summary; this is formatting and issues no identifiers.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "XcodeProj:Sources/XcodeProj/Extensions/Array+Extras.swift:10": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "uniqued() removes duplicates from a collection, which the brief excludes by name.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "XcodeProj:Sources/XcodeProj/Utils/ReferenceGenerator.swift:382": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "fixReference issues a permanent reference to each object that still has a temporary one, retrying with a growing counter until the reference is not in the stored references set and then recording it; a fresh ReferenceGenerator(outputSettings:) and freshly built PBXObjects (temporary references) are reachable through @testable import, and no prior call is documented as required.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "Yams:Sources/Yams/RedundancyAliasingStrategy.swift:120": {
+  "body_disagrees": true,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "uniqueAlias issues anchors from a counter held in the provider, but a value's own yamlAnchor is returned as is and is never checked against the counter-made anchors or earlier provided ones, so a result can come back twice.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": "let p = UniqueAliasProvider(); p.uniqueAlias(for: 42) returns Anchor(\"1\"); then p.uniqueAlias(for: v), where v is an Encodable YamlAnchorProviding value with yamlAnchor == Anchor(rawValue: \"1\"), also returns Anchor(\"1\"). Passing the same anchor-providing value twice also repeats a result. | let p = UniqueAliasProvider(); p.uniqueAlias(for: 0) returns Anchor(\"1\"); then p.uniqueAlias(for: v), where v is an Encodable YamlAnchorProviding value whose yamlAnchor is Anchor(rawValue: \"1\"), returns Anchor(\"1\") again"
+ },
+ "apollo-ios:Sources/ApolloWebSocket/OperationMessageIdCreator.swift:36": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "The protocol documents requestId as generating a unique identifier, and this struct returns a stored sequence number that only grows (a public init(startAt:) makes a fresh receiver); overflow traps rather than repeating.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "exhaust:Packages/exhaust-macros/Sources/ExhaustMacros/StateMachineSynthesis.swift:11": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Suffixes the preferred name with \"Value\" until it is not in the given avoid set, but records nothing, so two calls with the same set return the same name.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "LOOKUP",
+  "witness": ""
+ },
+ "exhaust:Sources/ExhaustBenchmarks/ShrinkingChallenge/ECOOPBenchmarks.swift:551": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A reporting function that sums per-encoder statistics and prints them, with counters used only for statistics.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "exhaust:Sources/ExhaustCore/Interpreters/Shared/GenerationContext.swift:218": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A Bool acceptance gate for unique(by:) deduplication and replay; it records seen keys but issues no name or identifier.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "exhaust:Sources/ExhaustCore/Interpreters/Shared/GenerationContext.swift:246": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A deduplication gate that returns a Bool, accepting a choice-sequence hash only if it was unseen (or matches replay), and it issues no name or identifier.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "exhaust:Sources/ExhaustCore/Reduction/Queries/MinimizationQuery.swift:307": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A graph walk up parent links that returns the nearest bind ancestor's ID; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "exhaust:Sources/ExhaustCore/Reduction/Queries/ReplacementCandidateSource.swift:271": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A Boolean ancestry check that follows parent links; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "exhaust:Sources/ExhaustCore/Runners/StateMachine/Preemptive/PreemptiveChecker.swift:117": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It formats a trace of steps from a reduced command sequence, and its per-lane counters are local to one call and serve as labels, not as issued identifiers.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:893": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "orderedUnique removes duplicates from an array while keeping order, which is deduplication, not name issuing.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "leejungyeob__TuistSpider:App/Sources/Views/GraphCanvasView.swift:855": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Removes near-duplicate CGFloat lane values from an array (a tolerance-based dedup); it issues no identifiers.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_ascii_sequence.swift:176": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It is formatting: it draws a sequence diagram onto an ASCII canvas and returns it as a string.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_parser.swift:280": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A state-diagram parser that returns a ParsedGraph; the _start/_end counters are internal to one parse and no name is issued to the caller.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/loops/routing/org_eclipse_elk_alg_layered_intermediate_loops_routing_RoutingSlotAssigner.swift:213": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It assigns layout routing slots to self-loops on one node side and returns nothing; it does not issue names or identifiers.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p4nodes/bk/org_eclipse_elk_alg_layered_p4nodes_bk_BKAligner.swift:108": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A layout step that computes inner shifts and block sizes for aligned blocks; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "pbt-book:code/Sources/Ch12AdoptionLoop/Candidates.swift:45": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Its doc comment says the global audit counter is a deliberate stand-in for a nondeterministic read that breaks determinism; it is a 'seen' count, not a promise of distinct identifiers.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "pbt-workbook-corpus:Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift:104": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Reverse-order greedy graph colouring reuses colours by design and keeps no naming state between calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "pbt-workbook-corpus:Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift:51": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Greedy graph colouring gives each vertex the smallest colour unused by its neighbours, and colours repeat by design, so it does not issue unique names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "soto-core:Sources/SotoXML/Expat.swift:190": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It turns Expat's flat name/value pointer array into a dictionary, which is parsing with no state across calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "sourcekit-lsp:Sources/CompletionScoringTestSupport/TestExtensions.swift:66": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It loops, heating or cooling the machine, until the thermal level falls in a range; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "sourcekit-lsp:Sources/SwiftLanguageService/DiagnosticReportManager.swift:318": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It is an index query that returns the single module defining a symbol (or nil when ambiguous); it keeps no issuing state.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "supabase-swift:Sources/RealtimeV2/RealtimeClientV2.swift:907": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "makeRef issues message reference identifiers from a counter in the client's own state that only grows between calls (only disconnect() resets it); a fresh client from the public init with only makeRef calls gives \"1\", \"2\", … with no repeats.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-algorithms:Sources/Algorithms/Unique.swift:115": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It is uniqued(on:), which removes duplicate elements from a sequence by projection and issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-argument-parser:Sources/ArgumentParser/Utilities/Tree.swift:46": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A breadth-first path search over a tree; it issues no names and keeps no state across calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-argument-parser:Tools/changelog-authors/Util.swift:15": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "uniqued(by:) removes duplicate elements from a sequence by a key and issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-crypto:Sources/CryptoExtras/ARC/ARCCredential.swift:80": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "update issues a presentation nonce, re-drawing until it is not in the nonce set recorded for that presentationContext and then inserting it, so on a fresh PresentationState() calls within one context never repeat (an explicit colliding optionalNonce throws, as does exceeding the limit), though distinctness is promised per context only and different contexts may share a nonce.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-docc:Sources/DocCCommandLine/Utility/FoundationExtensions/Sequence+Unique.swift:16": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It removes duplicates from a sequence by key (a uniqued() shape) and issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-docc:Sources/SwiftDocC/Infrastructure/Link Resolution/PathHierarchy+DisambiguatedPaths.swift:193": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It computes disambiguation suffixes (kind, type signature, then hash) for a whole collection of colliding elements in one call, and its state (`remainingIDs`, `collisions`) is local to the call.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "BATCH",
+  "witness": ""
+ },
+ "swift-docc:Sources/SwiftDocC/Infrastructure/Link Resolution/PathHierarchy+DisambiguatedPaths.swift:426": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Computes type-signature disambiguations that make a group of overloads distinct in one call; the inout remainingIDs only tracks which elements still need disambiguating, and no issued names are recorded.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "BATCH",
+  "witness": ""
+ },
+ "swift-docc:Sources/SwiftDocC/Infrastructure/Link Resolution/PathHierarchy+DisambiguatedPaths.swift:93": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Builds a fresh local map of disambiguated paths for every symbol in the hierarchy in one call and asserts the whole set is collision-free, keeping no state between calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "BATCH",
+  "witness": ""
+ },
+ "swift-docc:Sources/SwiftDocC/Infrastructure/Link Resolution/PathHierarchy+TypeSignatureDisambiguation.swift:66": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "In one stateless call it computes, for every overload, the minimal type-name combination that matches only that overload, making the whole collection of disambiguations distinct.",
+  "sentinel": "nil for an overload that cannot be uniquely disambiguated",
+  "setup": null,
+  "verdict": "BATCH",
+  "witness": ""
+ },
+ "swift-docc:Sources/SwiftDocC/Infrastructure/Link Resolution/PathHierarchyBasedLinkResolver.swift:318": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Computes the disambiguated, sibling-distinct relative links of all of a page's direct descendants in one stateless call, mapping the path hierarchy's batch result back to topic references.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "BATCH",
+  "witness": ""
+ },
+ "swift-effect-inference:Sources/SwiftEffectInference/PurityInferrer.swift:719": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A syntax predicate that reports whether a token is a no-argument construction of a listed type; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-foundation:Sources/FoundationEssentials/JSON/JSONEncoder.swift:175": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It formats a camelCase key as snake_case, a pure string transformation with no state.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-foundation:Sources/FoundationEssentials/NotificationCenter/NotificationCenter.swift:34": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "AutoDictionary.insert hands out keys from a pool that recycles released keys (remove pushes them onto salvagedKeys and insert reuses them first), so by design keys are distinct only among live entries.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-foundation:Sources/FoundationEssentials/Predicate/NSPredicateConversion.swift:36": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "It issues local variable names \"_local_N\" from a stored counter that only grows, but the receiver is a file-private struct in a file built only under FOUNDATION_FRAMEWORK, so no test can construct it, even with @testable import.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-foundation:Sources/FoundationEssentials/Predicate/Predicate+Description.swift:39": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "Each call records a capture and returns the name \"captureN\" from a stored counter that only grows, so on a fresh DebugStringConversionState([]) n calls return capture1...capturen, all distinct.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-foundation:Sources/FoundationEssentials/URL/URL_Validation.swift:70": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It validates an IP-literal host span and returns a Bool, which is parsing and validation, not naming.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-foundation:utils/update-list-format-data-impl.swift:262": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It resolves a CLDR list-format part by following locale parents and type aliases, and its seen set only guards against alias cycles, so it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferCLI/AcceptCheckCommand.swift:322": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It formats a stateless summary text from the given results (one line per decision plus per-kind counts), so it issues no names and keeps no state between calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferCLI/InteractiveTriage+AcceptEquivalenceClass.swift:111": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It formats a comment-only documentation block from a hint and keeps no state, so it is formatting rather than issuing names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferCLI/ReportRenderer.swift:103": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Formats per-tier counts into a display string; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferCLI/SyntaxCorpusSource.swift:178": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It computes how many `#` delimiters a raw string literal needs, which is formatting arithmetic, not name issuance.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferCLI/ViewModelActionEnumEmitter.swift:158": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "It decorates the method name with labels and then a counter until the name is absent from the inout `taken` set, then inserts it; every decorated candidate is checked, keyword escaping is injective on backtick-free method names, and a fresh empty Set plus public `ViewModelAction` inits make the law testable (though the function itself is private).",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferCore/SuggestionRenderer.swift:210": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It formats a per-tier count summary string for the stats line and issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferCore/TrivialConstruction.swift:51": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Formats a constructor expression string for a class by walking its superclass chain, which is code generation and not uniquifying.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferTemplates/IdempotenceTemplate+ShapeDisambiguationVeto.swift:68": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It returns a veto Signal, or nil, for idempotence shape-coincidence patterns and issues no names or identifiers.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-infer-core:Sources/SwiftInferTestLifter/LiftedSuggestionPromotion+Explainability.swift:124": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It builds explainability text lines from an equivalence-class hint, which is pure formatting with no identifiers issued and no state kept.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-nio:Sources/NIOCore/ChannelPipeline.swift:650": {
+  "body_disagrees": false,
+  "decided_by": "C",
+  "expressible": false,
+  "reason": "nextName issues handler names from a stored idx that only grows (\"handler\\(idx)\", then idx += 1), so its own results never repeat on one pipeline, but the method is private and a test cannot call it even with @testable import.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-openapi-generator:Sources/_OpenAPIGeneratorCore/Renderer/TextBasedRenderer.swift:452": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It is formatting: it writes a literal expression as Swift source text into the writer.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-openapi-generator:Sources/_OpenAPIGeneratorCore/Translator/CommonTranslations/translateRawEnum.swift:77": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Skips duplicate enum values with a warning and returns nothing, which is deduplication of a collection.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-package-manager:Sources/Build/BuildManifest/LLBuildManifestBuilder.swift:353": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It removes duplicate elements from a sequence (uniqued()), which is not issuing names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-package-manager:Sources/Commands/Utilities/DOTManifestSerializer.swift:29": {
+  "body_disagrees": true,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "The doc promises a unique label from a per-tool-name counter that only grows, and the internal type is reachable with @testable import; but the decorated label \"<tool> <n>\" is never checked against undecorated tool names, so a tool whose name ends in \" <n>\" collides.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": "On a fresh DOTManifestSerializer(manifest: LLBuildManifest()): label(for: c1) with a PhonyTool command returns \"phony\"; label(for: c2), another PhonyTool command, returns \"phony 1\"; label(for: c3), a command whose tool is set (via Command's public `tool`) to a custom ToolProtocol type with static name \"phony 1\", returns \"phony 1\" again. | label(for: cmdA) with a ShellTool command -> \"shell\"; label(for: cmdB) with another ShellTool command -> \"shell 1\"; label(for: cmdC) whose tool type (a ToolProtocol conformer) has static name \"shell 1\" -> \"shell 1\""
+ },
+ "swift-package-manager:Sources/PackageGraph/ModuleAliasTracker.swift:381": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Follows an alias chain in a dictionary to its final value; this resolves a name rather than issuing one.",
+  "sentinel": "nil when the key has no alias",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-package-manager:Sources/SBOMModel/Validator/SBOMValidator.swift:576": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It checks a JSON array for duplicate items and throws on one; it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/SwiftDataUniqueAttributeCloudKitVisitor.swift:71": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A Boolean predicate testing whether an attribute list contains @Attribute(.unique); it issues no names.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-sdk:Sources/MCP/Base/Transports/HTTPServer/StatefulHTTPServerTransport.swift:474": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "It issues resumability event IDs as streamID + \"_\" + a per-instance counter that only grows (replayEventsAfter relies on those IDs being unique), and no call can collide because the digits after the last underscore are always the counter; but the method is private on the actor, so a test cannot call it directly even with @testable import.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-syntax:Sources/SwiftCompilerPluginMessageHandling/PluginMacroExpansionContext.swift:334": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "The doc says it generates unique names from a per-name counter that only grows; the length-prefixed mangling (count+name+\"fMu\"+index+\"_\") decodes back to one (name, index) pair, so results are distinct, and the internal context can be built with @testable import.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swift-syntax:Sources/SwiftSyntaxMacroExpansion/BasicMacroExpansionContext.swift:155": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": true,
+  "reason": "makeUniqueName promises a name that won't conflict with any other, and it bumps a per-name counter in the receiver's shared state; the output is length-prefixed, so a public init() receiver gives distinct names, and the empty name maps onto \"__local\" and shares its counter.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": ""
+ },
+ "swiftlang-swift:SwiftCompilerSources/Sources/Optimizer/FunctionPasses/AsyncDemotion.swift:359": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "asGraphViz formats the graph as a GraphViz string; its local nameOf memoizes short ids only within one call, and the function itself is formatting.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swiftlang-swift:SwiftCompilerSources/Sources/Optimizer/FunctionPasses/AsyncDemotion.swift:362": {
+  "body_disagrees": false,
+  "decided_by": "A+B",
+  "expressible": false,
+  "reason": "It returns the stored short name for a function name seen before and otherwise mints the next value of a growing counter. As a nested local function inside asGraphViz of a private struct, whose state lives only in that call, a test cannot reach it.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "MEMOIZING",
+  "witness": ""
+ },
+ "swiftlang-swift:SwiftCompilerSources/Sources/Optimizer/FunctionPasses/LoopInvariantCodeMotion.swift:331": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It is a Bool alias-analysis predicate for loop-invariant code motion and issues no names; 'Unique' here describes a stored value.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swiftlang-swift:utils/swift-dev-utils/Sources/CrashReduce/Cleanup.swift:55": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "A scoped text transformation that temporarily swaps completion tokens for placeholders and restores them; it returns transformed code, its placeholder naming is internal to one call, and it keeps no state across calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "swiftlang-swift:utils/swift-dev-utils/Sources/SwiftXcodeGen/Xcodeproj/XcodeProjectModelSerialization.swift:476": {
+  "body_disagrees": true,
+  "decided_by": "C",
+  "expressible": false,
+  "reason": "id(of:) returns the stored id for an object it has seen and otherwise assigns objectID or \"OBJ_<count+1>\", but the generated id is never checked against custom ids already issued, and the fileprivate serializer and fileprivate PropertyListSerializable protocol cannot be reached or conformed to from a test.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "MEMOIZING",
+  "witness": "On a fresh PropertyListSerializer, call id(of: A) where A.objectID == \"OBJ_2\" (returns \"\\\"OBJ_2\\\"\"), then id(of: B) for a distinct object B whose objectID is nil (objsToIds.count + 1 == 2, so it returns \"\\\"OBJ_2\\\"\" again)."
+ },
+ "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/SimulationWorkspaceBuilder.swift:124": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "Appends a rule id to a list only when it is not already present, which keeps a collection free of duplicates and does not issue any name.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "NOT-UNIQUIFIER",
+  "witness": ""
+ },
+ "yahirvitelugardo__Graffle:Sources/Graffle/CodeGen/GeneratedProject.swift:129": {
+  "body_disagrees": null,
+  "decided_by": "A+B",
+  "expressible": null,
+  "reason": "It makes a whole array of names unique by numeric suffixing in one call, and its `seen` dictionary is local, so nothing is kept between calls.",
+  "sentinel": "",
+  "setup": null,
+  "verdict": "BATCH",
+  "witness": ""
+ },
+ "yahirvitelugardo__Graffle:Sources/Graffle/SVGExport.swift:93": {
+  "body_disagrees": true,
+  "decided_by": "C",
+  "expressible": false,
+  "reason": "id issues SVG def ids as prefix plus a counter that only grows, but the prefix plus counter is never checked against ids already issued, so a prefix ending in a digit collides; Writer is a private nested struct a test cannot construct.",
+  "sentinel": "",
+  "setup": false,
+  "verdict": "UNIQUIFIER",
+  "witness": "On a fresh Writer, call id(\"a1\") (nextID 1, returns \"a11\"), then id(\"b\") nine times (nextID 2 to 10), then id(\"a\") (nextID 11, returns \"a11\" again)."
+ }
+}
