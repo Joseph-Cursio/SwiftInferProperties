@@ -1119,6 +1119,12 @@ def callers(producer, key, sources, index):
                        if is_call else None}
             if not is_call and not element["member"]:
                 continue
+            before = source.masked[:match.start()].rstrip()
+            if re.search(r"\b(func|case)$", before) or re.search(r"\bcase\s*\.$", before):
+                continue  # the declaration itself, an enum case, or a case pattern
+            receiver = re.search(r"(\w+|[)\]?!])\s*\.$", before)
+            if element["member"] and (not receiver or receiver.group(1) in KEYWORDS - {"self", "Self", "super"}):
+                continue  # an implicit member expression names a case or static member, not this method
             status, targets = resolve(element, index, path)
             if status == "resolved" and producer_key(targets[0]) == key:
                 line_start = source.text.rfind("\n", 0, match.start()) + 1
@@ -1805,8 +1811,9 @@ def run(out_path, upstream):
             report["rows"].append(row)
         for producer_key_, producer in result["producers"].items():
             producer.update({"file": local(producer["file"]), "group": entry["group"], "subject": entry["name"]})
-            if producer["via"]:
-                producer["via"] = ident(tuple(producer["via"]))
+            for caller in producer.get("callers", []):
+                caller["file"] = local(caller["file"])
+            producer["delegates"] = [ident(tuple(item)) for item in producer["delegates"]]
             report["producers"][ident(producer_key_)] = producer
         report["population"].extend(ident(item) for item in result["population"])
         report["unparsed"].extend({"subject": entry["name"], "file": local(item["file"]),
@@ -1816,6 +1823,8 @@ def run(out_path, upstream):
                 for field in ("file", "wrapper_file", "caller_file", "producer_file"):
                     if field in item and item[field]:
                         item[field] = local(item[field])
+                if "delegates" in item:
+                    item["delegates"] = [ident(tuple(delegate)) for delegate in item["delegates"]]
                 item.update({"group": entry["group"], "subject": entry["name"]})
                 report["probes"][probe].append(item)
         report["probes"]["r3"].append({"subject": entry["name"], **result["probes"]["r3"]})
@@ -1824,7 +1833,9 @@ def run(out_path, upstream):
                                                      "calls": result["probes"]["regex_type_calls"]})
         outcomes = collections.Counter(row["outcome"] for row in result["rows"])
         report["subjects"].append({"group": entry["group"], "subject": entry["name"], "also": entry["also"],
-                                   "root": key.replace(os.path.expanduser("~"), "~", 1),
+                                   "root": (f"a shallow clone of github.com/nicklockwood/{entry['name']}"
+                                            if entry["group"] == "upstream"
+                                            else key.replace(os.path.expanduser("~"), "~", 1)),
                                    "roots": sorted({local(root) for root in entry["roots"]}),
                                    "revision": revision(entry["root"]), "files": len(files), "skipped": skipped,
                                    "unparsed": len(result["unparsed"]), "rows": len(result["rows"]),

@@ -1,0 +1,3488 @@
+{
+ "missing": [
+  {
+   "group": "unmet",
+   "subject": "Harbeth"
+  },
+  {
+   "group": "unmet",
+   "subject": "JiraKit"
+  },
+  {
+   "group": "unmet",
+   "subject": "nocturne-swift"
+  },
+  {
+   "group": "unmet",
+   "subject": "Open-Jellycore"
+  },
+  {
+   "group": "unmet",
+   "subject": "scale-codec-swift"
+  },
+  {
+   "group": "unmet",
+   "subject": "sora-ios-sdk"
+  },
+  {
+   "group": "unmet",
+   "subject": "StripeKit"
+  },
+  {
+   "group": "unmet",
+   "subject": "swift-codex"
+  }
+ ],
+ "population": [
+  "SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936",
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968",
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491"
+ ],
+ "probes": {
+  "r2": [
+   {
+    "body_key": "2dcdecaa520771b6",
+    "delegates": [],
+    "direct_kind": "wide",
+    "doc": "Normalizes a name for comparison: case- and separator-insensitive, so `UIPatterns`, `uiPatterns` and `\"ui-patterns\"` all collapse to `uipatterns`.",
+    "evidence": ".lowercased",
+    "evidence_kind": "wide",
+    "file": "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/NameListReader.swift",
+    "group": "manifest",
+    "input": "PARAM",
+    "inputs": [
+     "raw"
+    ],
+    "kind": "func",
+    "labels": [
+     "_"
+    ],
+    "line": 15,
+    "name": "normalize",
+    "offset": 754,
+    "owner": "NameListReader",
+    "subject": "swift-project-lint",
+    "visibility": ""
+   },
+   {
+    "body_key": "47fd23bc206de164",
+    "delegates": [],
+    "direct_kind": "wide",
+    "doc": "The content of a one-line string literal written as its plain characters (`\"\u2026\"` or `#\"\u2026\"#`), or nil for any other literal: one holding an escape or an interpolation, a multi-line or regex literal.",
+    "evidence": ".trimmingCharacters",
+    "evidence_kind": "wide",
+    "file": "Sources/SwiftAssist/Security/CodeSandbox.swift",
+    "group": "funnel",
+    "input": "PARAM",
+    "inputs": [
+     "literal"
+    ],
+    "kind": "func",
+    "labels": [
+     "of"
+    ],
+    "line": 202,
+    "name": "plainStringContent",
+    "offset": 9272,
+    "owner": "CodeSandbox",
+    "subject": "SwiftAssist",
+    "visibility": "public"
+   },
+   {
+    "body_key": "6a325e8a9daf791d",
+    "delegates": [],
+    "direct_kind": "wide",
+    "doc": "Deterministic id derived from the candidate name: lowercased, alphanumeric-tokenized, first six tokens joined with `-`. Mirrors `ThinkingAntiPatternIngester.makeID` so the two surfaces use the same convention.",
+    "evidence": ".lowercased",
+    "evidence_kind": "wide",
+    "file": "Sources/SwiftAssist/Thinking/ThinkingRecipeIngester.swift",
+    "group": "funnel",
+    "input": "PARAM",
+    "inputs": [
+     "name"
+    ],
+    "kind": "func",
+    "labels": [
+     "from"
+    ],
+    "line": 97,
+    "name": "makeID",
+    "offset": 3698,
+    "owner": "ThinkingRecipeIngester",
+    "subject": "SwiftAssist",
+    "visibility": "public"
+   },
+   {
+    "body_key": "356145a0a1bf089e",
+    "delegates": [
+     "SwiftAssist:Sources/SwiftAssist/Skills/Core/SkillRegistry.swift:3391"
+    ],
+    "direct_kind": null,
+    "doc": "",
+    "evidence": "delegates to markdown",
+    "evidence_kind": "three",
+    "file": "Sources/SwiftAssist/Skills/Core/SkillRegistry.swift",
+    "group": "funnel",
+    "input": "PARAM",
+    "inputs": [
+     "skillID"
+    ],
+    "kind": "func",
+    "labels": [
+     "for"
+    ],
+    "line": 59,
+    "name": "patternMarkdown",
+    "offset": 2851,
+    "owner": "SkillRegistry",
+    "subject": "SwiftAssist",
+    "visibility": "public"
+   },
+   {
+    "body_key": "22b7f7d3af59947c",
+    "delegates": [],
+    "direct_kind": "three",
+    "doc": "",
+    "evidence": "startIndex",
+    "evidence_kind": "three",
+    "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/Theme.swift",
+    "group": "funnel",
+    "input": "RECEIVER",
+    "inputs": [
+     "self",
+     "pattern"
+    ],
+    "kind": "func",
+    "labels": [
+     "pattern"
+    ],
+    "line": 31,
+    "name": "processKebapCaseRegex",
+    "offset": 1143,
+    "owner": "String",
+    "subject": "SwiftUMLStudio",
+    "visibility": "private"
+   }
+  ],
+  "r3": [
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-infer-core"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-format"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "grdb"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-collections"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-syntax"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-nio"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-package-manager"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-numerics"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-algorithms"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-argument-parser"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 5,
+    "subject": "swift-foundation"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swiftlang-swift"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "harmonize"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-project-lint"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-property-laws"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-effect-inference"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "maccloud-client-ios"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swiftlint-rule-studio"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swiftformat-rule-studio"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "planted-defect-arm"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "cycle27-surface"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "leaderboard-sort"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "LintStudioUI"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "MacCloud_client_MacOS"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "MacCloud_server"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "pbt-book"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "pbt-workbook-corpus"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "pbt-workbook-grader"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "pbt-workbook-sampler"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "pbt-workbook"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "SwiftAssist"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "SwiftCloneDetector"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "SwiftIdempotency"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "SwiftLintRuleStudioTeam"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "SwiftMarkdownWiki"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "SwiftUMLStudio"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "Euclid"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-docc"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "OpenAPIKit"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "jwt-kit"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 0,
+    "subject": "swift-system"
+   },
+   {
+    "bare_init_pattern": 0,
+    "nspredicate_matches": 0,
+    "silent_option_identifier": 1,
+    "subject": "SwiftFormat"
+   }
+  ],
+  "regex_type_calls": [
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-infer-core"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-format"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "grdb"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-collections"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-syntax"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-nio"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-package-manager"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-numerics"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-algorithms"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-argument-parser"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-foundation"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swiftlang-swift"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "harmonize"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-project-lint"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-property-laws"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-effect-inference"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "maccloud-client-ios"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swiftlint-rule-studio"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swiftformat-rule-studio"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "planted-defect-arm"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "cycle27-surface"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "leaderboard-sort"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "LintStudioUI"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "MacCloud_client_MacOS"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "MacCloud_server"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "pbt-book"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "pbt-workbook-corpus"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "pbt-workbook-grader"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "pbt-workbook-sampler"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "pbt-workbook"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "SwiftAssist"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "SwiftCloneDetector"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "SwiftIdempotency"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "SwiftLintRuleStudioTeam"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "SwiftMarkdownWiki"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "SwiftUMLStudio"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "Euclid"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-docc"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "OpenAPIKit"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "jwt-kit"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "swift-system"
+   },
+   {
+    "calls": 0,
+    "regex_is_stdlib": true,
+    "subject": "SwiftFormat"
+   }
+  ]
+ },
+ "producers": {
+  "SwiftAssist:Sources/SwiftAssist/Agent/ToolCall.swift:367": {
+   "body_key": "e4bda9bdc1199683",
+   "callers": [
+    {
+     "file": "Sources/SwiftAssist/Agent/AgentRunner+Helpers.swift",
+     "line": 352,
+     "text": "return .complete(summary: call.string(\"summary\") ?? \"<no summary>\")"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/AgentRunner+Helpers.swift",
+     "line": 356,
+     "text": "reason: call.string(\"reason\") ?? \"<no reason>\","
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/AgentRunner+Helpers.swift",
+     "line": 357,
+     "text": "needs: call.string(\"needs\")"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/TerminationTools.swift",
+     "line": 22,
+     "text": "let summary = call.string(\"summary\") ?? \"<no summary>\""
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/TerminationTools.swift",
+     "line": 45,
+     "text": "let reason = call.string(\"reason\") ?? \"<no reason given>\""
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/SCIPTools.swift",
+     "line": 49,
+     "text": "guard let symbolId = call.string(\"symbol_id\"), !symbolId.isEmpty else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/GitTools.swift",
+     "line": 33,
+     "text": "if let since = call.string(\"since\") {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/GitTools.swift",
+     "line": 36,
+     "text": "if let path = call.string(\"path\") {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/GitTools.swift",
+     "line": 106,
+     "text": "if let revision = call.string(\"revision\") {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/GitTools.swift",
+     "line": 123,
+     "text": "if let path = call.string(\"path\") {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/AppleDocsTools.swift",
+     "line": 49,
+     "text": "guard let query = call.string(\"query\"), !query.isEmpty else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/ExecTools.swift",
+     "line": 173,
+     "text": "guard let path = call.string(\"path\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/ExecTools.swift",
+     "line": 258,
+     "text": "guard let path = call.string(\"path\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/ExecTools.swift",
+     "line": 357,
+     "text": "filter: call.string(\"filter\")"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+     "line": 29,
+     "text": "guard let path = call.string(\"path\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+     "line": 85,
+     "text": "guard let path = call.string(\"path\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+     "line": 156,
+     "text": "guard let pattern = call.string(\"pattern\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+     "line": 159,
+     "text": "let pathArg = call.string(\"path\") ?? \".\""
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+     "line": 173,
+     "text": "if let include = call.string(\"include\") {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+     "line": 235,
+     "text": "guard let pattern = call.string(\"pattern\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/SourceKitTools.swift",
+     "line": 35,
+     "text": "guard let file = call.string(\"file\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/SourceKitTools.swift",
+     "line": 80,
+     "text": "guard let file = call.string(\"file\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/SourceKitTools.swift",
+     "line": 123,
+     "text": "guard let file = call.string(\"file\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/KnowledgeGraphTools.swift",
+     "line": 36,
+     "text": "guard let concept = call.string(\"concept\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/KnowledgeGraphTools.swift",
+     "line": 80,
+     "text": "guard let diagnostic = call.string(\"diagnostic\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/KnowledgeGraphTools.swift",
+     "line": 83,
+     "text": "let file = call.string(\"file\")"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/EditTools.swift",
+     "line": 40,
+     "text": "guard let path = call.string(\"path\"),"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/EditTools.swift",
+     "line": 41,
+     "text": "let oldString = call.string(\"old_string\"),"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/EditTools.swift",
+     "line": 42,
+     "text": "let newString = call.string(\"new_string\")"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/EditTools.swift",
+     "line": 119,
+     "text": "guard let path = call.string(\"path\") else {"
+    },
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/EditTools.swift",
+     "line": 122,
+     "text": "guard let content = call.string(\"content\") else {"
+    }
+   ],
+   "delegates": [],
+   "direct_kind": null,
+   "doc": "",
+   "evidence": null,
+   "evidence_kind": null,
+   "file": "Sources/SwiftAssist/Agent/ToolCall.swift",
+   "group": "funnel",
+   "input": "PARAM",
+   "inputs": [
+    "key"
+   ],
+   "kind": "func",
+   "labels": [
+    "_"
+   ],
+   "line": 14,
+   "name": "string",
+   "offset": 367,
+   "owner": "ToolCall",
+   "subject": "SwiftAssist",
+   "visibility": "public"
+  },
+  "SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936": {
+   "body_key": "6a7ec474ab811f9a",
+   "callers": [
+    {
+     "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+     "line": 243,
+     "text": "let translated = Self.translate(glob: pattern)"
+    }
+   ],
+   "delegates": [],
+   "direct_kind": "three",
+   "doc": "Translates a simple glob (`*`, `**`, `?`, `[...]`) into a regex.",
+   "evidence": "glob[",
+   "evidence_kind": "three",
+   "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+   "group": "funnel",
+   "input": "PARAM",
+   "inputs": [
+    "glob"
+   ],
+   "kind": "func",
+   "labels": [
+    "glob"
+   ],
+   "line": 296,
+   "name": "translate",
+   "offset": 12936,
+   "owner": "GlobTool",
+   "subject": "SwiftAssist",
+   "visibility": "public"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968": {
+   "body_key": "a56756997bbdf05d",
+   "callers": [
+    {
+     "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift",
+     "line": 124,
+     "text": "let pattern = searchPattern.globPatternToRegex()"
+    },
+    {
+     "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+     "line": 140,
+     "text": "var patternRegex = String(pattern.globPatternToRegex().dropFirst())"
+    }
+   ],
+   "delegates": [],
+   "direct_kind": "three",
+   "doc": "Translate this glob pattern into an anchored regular-expression string (`^\u2026$`): escape regex metacharacters, then expand `?`, `**/`, `**`, and `*`.  **The escape happens before the anchors are added, and that ordering is the fix.** The class used to be `[.+(){\\|]`, applied to the already-wrapped `^\u2026$`, and it omitted `}`, `^` and `$` \u2014 every one of which is regex-special and glob-literal:  | glob | old regex | | | --- | --- | --- | | `a}b` | `^a}b$` | **invalid** \u2014 ICU rejects a bare `}` | | `a^b` | `^a^b$` | valid, and **can never match**: two start anchors | | `a$b` | `^a$b$` | valid, and **can never match** |  Adding them to the class is not enough on its own: applied after the wrap it would escape the anchors this function exists to add, and `\\^\u2026\\$` matches a literal caret. So the escape now runs on `self` and the anchors are added to the escaped result.  **`[` and `]` are deliberately still not escaped.** They are glob syntax, not accidents \u2014 `pathContainsGlobSyntax` lists `[` as one of the four characters that make a path a glob \u2014 and a glob character class `[abc]` is spelled the same way in a regex, so passing it through is what makes it work. An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug; `isMatching` below no longer treats one as a match.  Known and unfixed: glob negation is `[!abc]` where regex wants `[^abc]`, so a negated class is read as a literal `!`. That is a semantic gap, not an invalid pattern, and it is left for its own change.  Found by the SwiftInferProperties pipeline walk (subject 2), whose prediction for this function was written before the tool ran and named `[` \u2014 and explicitly guessed that `}` was harmless, which it is not.",
+   "evidence": "replacingOccurrences",
+   "evidence_kind": "three",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift",
+   "group": "funnel",
+   "input": "RECEIVER",
+   "inputs": [
+    "self"
+   ],
+   "kind": "func",
+   "labels": [],
+   "line": 102,
+   "name": "globPatternToRegex",
+   "offset": 4968,
+   "owner": "String",
+   "subject": "SwiftUMLStudio",
+   "visibility": "internal"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491": {
+   "body_key": "ca0c90bc58d1dc7e",
+   "callers": [
+    {
+     "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+     "line": 174,
+     "text": "let regex = globRegexPattern(anchor: anchor, pattern: pattern, tokens: tokens)"
+    }
+   ],
+   "delegates": [
+    "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968"
+   ],
+   "direct_kind": "three",
+   "doc": "The anchored regex for an entry split by `splitGlobEntry`, with each `<<<n>>>` token in `pattern` replaced by its alternation from `tokens`. The anchor is a literal path, so it is escaped whole: read as glob syntax, a directory named `Proj [old]` became a character class that never matched it, and a `*` or `?` in a directory name matched its siblings as well.",
+   "evidence": ".replacingOccurrences",
+   "evidence_kind": "three",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+   "group": "funnel",
+   "input": "PARAM",
+   "inputs": [
+    "anchor",
+    "pattern"
+   ],
+   "kind": "func",
+   "labels": [
+    "anchor",
+    "pattern",
+    "tokens"
+   ],
+   "line": 136,
+   "name": "globRegexPattern",
+   "offset": 6491,
+   "owner": "",
+   "subject": "SwiftUMLStudio",
+   "visibility": "internal"
+  }
+ },
+ "rows": [
+  {
+   "acceptor": "silent:range",
+   "argument": "#\"^(_|(let|var) \\w+) = \"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "awaitingStatement",
+   "file": "Sources/SwiftInferCore/CalleeReference.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 239,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-infer-core"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"(`+)(.+?)\\1\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "isContract",
+   "file": "Sources/SwiftInferCore/DocstringAdvisor.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 215,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-infer-core"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"\\\\b\" + NSRegularExpression.escapedPattern(for: cue)",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": [
+      "for"
+     ],
+     "name": "escapedPattern",
+     "status": "external"
+    }
+   ],
+   "enclosing": "isContract",
+   "file": "Sources/SwiftInferCore/DocstringAdvisor.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 218,
+   "options": ".regularExpression",
+   "outcome": "EXTERNAL",
+   "subject": "swift-infer-core"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"\"(?:[^\"\\\\]|\\\\[^(])*\"\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "withoutPlainStringLiterals",
+   "file": "Sources/SwiftInferCore/GuardDomainReader.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 191,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-infer-core"
+  },
+  {
+   "acceptor": "Regex",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [
+    {
+     "candidates": [
+      {
+       "file": "Sources/SwiftFormat/PrettyPrint/PrettyPrintFindingCategory.swift",
+       "line": 21,
+       "name": "description",
+       "owner": "PrettyPrintFindingCategory",
+       "qualifies": false
+      },
+      {
+       "file": "Sources/SwiftFormat/PrettyPrint/WhitespaceFindingCategory.swift",
+       "line": 36,
+       "name": "description",
+       "owner": "WhitespaceFindingCategory",
+       "qualifies": false
+      },
+      {
+       "file": "Sources/SwiftFormat/Core/RuleBasedFindingCategory.swift",
+       "line": 23,
+       "name": "description",
+       "owner": "RuleBasedFindingCategory",
+       "qualifies": false
+      },
+      {
+       "file": "Sources/SwiftFormat/Core/RuleMask.swift",
+       "line": 107,
+       "name": "description",
+       "owner": "IgnoreDirective",
+       "qualifies": false
+      },
+      {
+       "file": "Sources/SwiftFormat/Utilities/GitIgnorePattern.swift",
+       "line": 38,
+       "name": "description",
+       "owner": "PatternError",
+       "qualifies": false
+      },
+      {
+       "file": "Sources/SwiftFormat/Rules/OrderedImports.swift",
+       "line": 536,
+       "name": "description",
+       "owner": "LineType",
+       "qualifies": false
+      },
+      {
+       "file": "Sources/SwiftFormat/Rules/OrderedImports.swift",
+       "line": 681,
+       "name": "description",
+       "owner": "Line",
+       "qualifies": false
+      },
+      {
+       "file": "Sources/SwiftFormat/API/Finding.swift",
+       "line": 47,
+       "name": "description",
+       "owner": "Message",
+       "qualifies": false
+      }
+     ],
+     "class": "AMBIGUOUS",
+     "labels": null,
+     "name": "description",
+     "status": "ambiguous"
+    }
+   ],
+   "enclosing": "makeRegex",
+   "file": "Sources/SwiftFormat/Core/RuleMask.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 123,
+   "options": "",
+   "outcome": "AMBIGUOUS",
+   "subject": "swift-format"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"(.)\\\\b.*$\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "defaultDatabaseTableName",
+   "file": "GRDB/Record/TableRecord.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 316,
+   "options": "[.regularExpression]",
+   "outcome": "LITERAL",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"^([A-Z]+).*$\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "defaultDatabaseTableName",
+   "file": "GRDB/Record/TableRecord.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 317,
+   "options": "[.regularExpression]",
+   "outcome": "LITERAL",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: parameter of plural"
+   ],
+   "elements": [],
+   "enclosing": "plural",
+   "file": "GRDB/Utils/Inflections.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 67,
+   "options": "options",
+   "outcome": "WRAPPER",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: parameter of singular"
+   ],
+   "elements": [],
+   "enclosing": "singular",
+   "file": "GRDB/Utils/Inflections.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 87,
+   "options": "options",
+   "outcome": "WRAPPER",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"\\\\b\\(escWord)\\\\Z\"",
+   "chased": [
+    "escWord: let"
+   ],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": [
+      "for"
+     ],
+     "name": "escapedPattern",
+     "status": "external"
+    }
+   ],
+   "enclosing": "uncountableWord",
+   "file": "GRDB/Utils/Inflections.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 166,
+   "options": "[.caseInsensitive]",
+   "outcome": "EXTERNAL",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"\\\\b\\\\w+$\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "",
+   "file": "GRDB/Utils/Inflections.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 244,
+   "options": "[]",
+   "outcome": "LITERAL",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"_[^_]+$\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "",
+   "file": "GRDB/Utils/Inflections.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 245,
+   "options": "[]",
+   "outcome": "LITERAL",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"[^A-Z][A-Z]+[a-z1-9]+$\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "",
+   "file": "GRDB/Utils/Inflections.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 246,
+   "options": "[]",
+   "outcome": "LITERAL",
+   "subject": "grdb"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "RegexUtil.netrcPattern",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "netrcPattern",
+     "status": "external"
+    }
+   ],
+   "enclosing": "parse",
+   "file": "Sources/Basics/Netrc.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 102,
+   "options": "[]",
+   "outcome": "STORED",
+   "subject": "swift-package-manager"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "RegexUtil.comments",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "comments",
+     "status": "external"
+    }
+   ],
+   "enclosing": "trimComments",
+   "file": "Sources/Basics/Netrc.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 129,
+   "options": ".anchorsMatchLines",
+   "outcome": "STORED",
+   "subject": "swift-package-manager"
+  },
+  {
+   "acceptor": "Regex<AnyRegexOutput>",
+   "argument": "component.regex",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "regex",
+     "status": "ambiguous"
+    }
+   ],
+   "enclosing": "init",
+   "file": "Sources/FoundationEssentials/Predicate/Expressions/Regex.swift",
+   "group": "manifest",
+   "handling": "UNKNOWN",
+   "line": 65,
+   "options": "",
+   "outcome": "STORED",
+   "subject": "swift-foundation"
+  },
+  {
+   "acceptor": "Regex<AnyRegexOutput>",
+   "argument": "self.stringRepresentation",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "stringRepresentation",
+     "status": "external"
+    }
+   ],
+   "enclosing": "init",
+   "file": "Sources/FoundationEssentials/Predicate/Expressions/Regex.swift",
+   "group": "manifest",
+   "handling": "PROPAGATES",
+   "line": 76,
+   "options": "",
+   "outcome": "STORED",
+   "subject": "swift-foundation"
+  },
+  {
+   "acceptor": "Regex",
+   "argument": "#\"([\\+#.\\/;\\?&])?\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "init",
+   "file": "Sources/FoundationEssentials/URL/URLTemplate_Expression.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 154,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-foundation"
+  },
+  {
+   "acceptor": "Regex",
+   "argument": "#\",\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "init",
+   "file": "Sources/FoundationEssentials/URL/URLTemplate_Expression.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 158,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-foundation"
+  },
+  {
+   "acceptor": "Regex",
+   "argument": "#\"([a-zA-Z][a-zA-Z0-9_]*)(:([0-9]*)|\\*)?\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "init",
+   "file": "Sources/FoundationEssentials/URL/URLTemplate_Expression.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 162,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-foundation"
+  },
+  {
+   "acceptor": "Regex",
+   "argument": "#\"{([^}]+)}\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "init",
+   "file": "Sources/FoundationEssentials/URL/URLTemplate_Expression.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 166,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-foundation"
+  },
+  {
+   "acceptor": "Regex",
+   "argument": "pattern",
+   "chased": [
+    "pattern: parameter of regex"
+   ],
+   "elements": [],
+   "enclosing": "regex",
+   "file": "Sources/FoundationEssentials/String/RegexPatternCache.swift",
+   "group": "manifest",
+   "handling": "PROPAGATES",
+   "line": 39,
+   "options": "",
+   "outcome": "WRAPPER",
+   "subject": "swift-foundation"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "regexPattern",
+   "chased": [
+    "regexPattern: let"
+   ],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": [
+      "for"
+     ],
+     "name": "escapedPattern",
+     "status": "external"
+    },
+    {
+     "class": "EXTERNAL",
+     "labels": [
+      "of",
+      "with"
+     ],
+     "name": "replacingOccurrences",
+     "status": "external"
+    }
+   ],
+   "enclosing": "fileOrParentIsContainedInArray",
+   "file": "Sources/Harmonize/Core/Finder/GetFiles.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 139,
+   "options": ".regularExpression",
+   "outcome": "EXTERNAL",
+   "subject": "harmonize"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "regex",
+   "chased": [
+    "regex: let",
+    "regex: parameter of withBodyContent"
+   ],
+   "elements": [],
+   "enclosing": "withBodyContent",
+   "file": "Sources/Harmonize/Frontend/API/Filters/Array+BodyProviding.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 162,
+   "options": "",
+   "outcome": "WRAPPER",
+   "subject": "harmonize"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"<[^>]+>\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "withAttribute",
+   "file": "Sources/Harmonize/Frontend/API/Filters/Array+AttributesProviding.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 69,
+   "options": "[]",
+   "outcome": "LITERAL",
+   "subject": "harmonize"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "regex",
+   "chased": [
+    "regex: let",
+    "regex: parameter of withValue"
+   ],
+   "elements": [],
+   "enclosing": "withValue",
+   "file": "Sources/Harmonize/Frontend/API/Filters/Array+InitializerClauseProviding.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 66,
+   "options": "",
+   "outcome": "WRAPPER",
+   "subject": "harmonize"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "regex",
+   "chased": [
+    "regex: parameter of withFunctionCalls"
+   ],
+   "elements": [],
+   "enclosing": "withFunctionCalls",
+   "file": "Sources/Harmonize/Frontend/API/Filters/Array+FunctionCallsProviding.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 50,
+   "options": "",
+   "outcome": "WRAPPER",
+   "subject": "harmonize"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "pattern",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "pattern",
+     "status": "ambiguous"
+    }
+   ],
+   "enclosing": "tokenizeLine",
+   "file": "Sources/App/Views/RuleDocView+SyntaxHighlighting.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 142,
+   "options": ".regularExpression",
+   "outcome": "STORED",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [],
+   "enclosing": "",
+   "file": "Packages/SwiftProjectLintEngine/Sources/SwiftProjectLintEngine/DependencyConformances.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 109,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"/\\*[\\s\\S]*?\\*/\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "withoutComments",
+   "file": "Packages/SwiftProjectLintEngine/Sources/SwiftProjectLintEngine/DependencyConformances.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 134,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"//[^\\n]*\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "withoutComments",
+   "file": "Packages/SwiftProjectLintEngine/Sources/SwiftProjectLintEngine/DependencyConformances.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 135,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [],
+   "enclosing": "",
+   "file": "Packages/SwiftProjectLintEngine/Sources/SwiftProjectLintEngine/DependencyConformances.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 184,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\"swift-tools-version:\\s*\\d+(\\.\\d+)?\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "toolsVersion",
+   "file": "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Modernization/Visitors/MemberImportVisibilityNotEnabledVisitor.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 125,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "#\"\\.(?:executableTarget|target)\\s*\\(\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "targetPaths",
+   "file": "Packages/SwiftProjectLintConfig/Sources/SwiftProjectLintConfig/Configuration/DefaultIsolationDetector.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 42,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "setting",
+   "chased": [
+    "setting: let"
+   ],
+   "elements": [],
+   "enclosing": "setsMainActorDefault",
+   "file": "Packages/SwiftProjectLintConfig/Sources/SwiftProjectLintConfig/Configuration/DefaultIsolationDetector.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 69,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\"\\b\\#(name)\\b\"#",
+   "chased": [],
+   "elements": [
+    {
+     "candidates": [
+      {
+       "file": "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/UnreachableEffectClosureVisitor.swift",
+       "line": 287,
+       "name": "name",
+       "owner": "CallbackSurface",
+       "qualifies": false
+      },
+      {
+       "file": "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/LossyRoundTripVisitor.swift",
+       "line": 241,
+       "name": "name",
+       "owner": "DroppedField",
+       "qualifies": false
+      }
+     ],
+     "class": "AMBIGUOUS",
+     "labels": null,
+     "name": "name",
+     "status": "ambiguous"
+    }
+   ],
+   "enclosing": "setsMainActorDefault",
+   "file": "Packages/SwiftProjectLintConfig/Sources/SwiftProjectLintConfig/Configuration/DefaultIsolationDetector.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 73,
+   "options": ".regularExpression",
+   "outcome": "AMBIGUOUS",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "#\"\\.executableTarget\\s*\\(\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "parseExecutableTargets",
+   "file": "Packages/SwiftProjectLintConfig/Sources/SwiftProjectLintConfig/Configuration/ExecutableTargetDetector.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 35,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "#\"\\b\"# + NSRegularExpression.escapedPattern(for: param) + #\"\\s*:\\s*\"([^\"]+)\"\"#",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": [
+      "for"
+     ],
+     "name": "escapedPattern",
+     "status": "external"
+    }
+   ],
+   "enclosing": "extractStringParam",
+   "file": "Packages/SwiftProjectLintConfig/Sources/SwiftProjectLintConfig/Configuration/ExecutableTargetDetector.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 82,
+   "options": "",
+   "outcome": "EXTERNAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "#\"\\.library\\s*\\(\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "declaresLibraryProduct",
+   "file": "Packages/SwiftProjectLintConfig/Sources/SwiftProjectLintConfig/Configuration/LibraryPackageDetector.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 65,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-project-lint"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\":(\\s|$)\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "topLevelKey",
+   "file": "SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/LayoutPreservingEdit.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 344,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\":(\\s|$)\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "opensBlock",
+   "file": "SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/LayoutPreservingEdit.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 355,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "pattern",
+     "status": "external"
+    }
+   ],
+   "enclosing": "extractSwiftEvolutionLinks",
+   "file": "UI/Views/RuleDetail/RuleDetailView+RationaleHelpers.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 89,
+   "options": ".caseInsensitive",
+   "outcome": "STORED",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"`([^`]+)`\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "inlineMarkdownHTML",
+   "file": "UI/Views/RuleDetail/RuleDetailView+MarkdownHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 249,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"\\*\\*([^*]+)\\*\\*\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "inlineMarkdownHTML",
+   "file": "UI/Views/RuleDetail/RuleDetailView+MarkdownHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 256,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"(?<!\\*)\\*([^*\\n]+)\\*(?!\\*)\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "inlineMarkdownHTML",
+   "file": "UI/Views/RuleDetail/RuleDetailView+MarkdownHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 263,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": [
+      "separator"
+     ],
+     "name": "joined",
+     "status": "external"
+    }
+   ],
+   "enclosing": "",
+   "file": "UI/Views/RuleDetail/SwiftCodeHighlighter.swift",
+   "group": "manifest",
+   "handling": "ASSERTS",
+   "line": 71,
+   "options": "",
+   "outcome": "EXTERNAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"^#+\\s+\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "convertMarkdownToPlainText",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 29,
+   "options": "[.regularExpression, .anchored]",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"\\*\\*([^*]+)\\*\\*\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "convertMarkdownToPlainText",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 36,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"(?<!\\*)\\*([^*\\n]+)\\*(?!\\*)\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "convertMarkdownToPlainText",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 43,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"`([^`]+)`\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "convertMarkdownToPlainText",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 50,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"style\\s*=\\s*[\"'][^\"']*[\"']\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "stripHTMLTags",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 81,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"<[^>]+>\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "stripHTMLTags",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 87,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"`([^`]+)`\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "convertInlineMarkdown",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 326,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"\\*\\*([^*]+)\\*\\*\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "convertInlineMarkdown",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 331,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"(?<!\\*)\\*([^*\\n]+)\\*(?!\\*)\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "convertInlineMarkdown",
+   "file": "UI/Views/RuleBrowser/RuleBrowserView+DocumentationHelpers.swift",
+   "group": "manifest",
+   "handling": "SILENT",
+   "line": 336,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swiftlint-rule-studio"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: parameter of allCaptures"
+   ],
+   "elements": [],
+   "enclosing": "allCaptures",
+   "file": "SwiftFormatRuleStudioCore/Sources/SwiftFormatRuleStudioCore/Parsing/OptionsParser.swift",
+   "group": "manifest",
+   "handling": "HANDLES-NIL",
+   "line": 132,
+   "options": "",
+   "outcome": "WRAPPER",
+   "subject": "swiftformat-rule-studio"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\"model\\s+['\\\"]?([^'\\\"]+)['\\\"]?\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "extractModelName",
+   "file": "Packages/SwiftInferenceBackends/Sources/SwiftInferenceBackends/Ollama/OllamaHTTPClient.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 257,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\"['\\\"]([^'\\\"]+)['\\\"]\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "extractModelName",
+   "file": "Packages/SwiftInferenceBackends/Sources/SwiftInferenceBackends/Ollama/OllamaHTTPClient.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 258,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"\\n\\n\\n+\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "render",
+   "file": "Sources/SwiftAssist/Context/Sources/SkillGuidance.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 47,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [],
+   "enclosing": "extractStringLiteral",
+   "file": "Sources/SwiftAssist/Security/CodeSandbox.swift",
+   "group": "funnel",
+   "handling": "HANDLES-NIL",
+   "line": 222,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [],
+   "enclosing": "extractFailedFiles",
+   "file": "Sources/SwiftAssist/CI/CIAdapter.swift",
+   "group": "funnel",
+   "handling": "HANDLES-NIL",
+   "line": 206,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "Self.toolCallOpener",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "toolCallOpener",
+     "status": "external"
+    }
+   ],
+   "enclosing": "endsInsideToolCall",
+   "file": "Sources/SwiftAssist/Agent/XMLToolCallProtocol.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 173,
+   "options": ".regularExpression",
+   "outcome": "STORED",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "Self.toolCallOpener",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "toolCallOpener",
+     "status": "external"
+    }
+   ],
+   "enclosing": "firstOpener",
+   "file": "Sources/SwiftAssist/Agent/XMLToolCallProtocol.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 185,
+   "options": ".regularExpression",
+   "outcome": "STORED",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [],
+   "enclosing": "toolCallMatches",
+   "file": "Sources/SwiftAssist/Agent/XMLToolCallProtocol.swift",
+   "group": "funnel",
+   "handling": "HANDLES-NIL",
+   "line": 203,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"^\" + translated + \"$\"",
+   "chased": [
+    "translated: let",
+    "pattern: let (through a receiver or argument)"
+   ],
+   "elements": [
+    {
+     "class": "QUALIFYING",
+     "labels": [
+      "glob"
+     ],
+     "name": "translate",
+     "producer": "SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936",
+     "status": "resolved"
+    },
+    {
+     "class": "COMBINATOR",
+     "labels": [
+      "_"
+     ],
+     "name": "string",
+     "producer": "SwiftAssist:Sources/SwiftAssist/Agent/ToolCall.swift:367",
+     "status": "resolved"
+    }
+   ],
+   "enclosing": "execute",
+   "file": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift",
+   "group": "funnel",
+   "handling": "HANDLES-CATCH",
+   "line": 244,
+   "options": "",
+   "outcome": "QUALIFYING",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [],
+   "enclosing": "isValidID",
+   "file": "Sources/SwiftAssist/Skills/Core/SkillLocalStore.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 131,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "#\"SE-\\d{4}\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "extractSERefs",
+   "file": "Sources/SwiftAssist/Skills/Authoring/PatternMarkdownParser.swift",
+   "group": "funnel",
+   "handling": "HANDLES-NIL",
+   "line": 182,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"^\\([^)]*Series\\)\\s*\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "init",
+   "file": "Sources/SwiftAssist/Indexing/BookTitle.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 31,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\"\\b(19|20)\\d{2}\\b\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "firstYear",
+   "file": "Sources/SwiftAssist/Indexing/BookTitle.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 65,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [],
+   "enclosing": "parseDiagnostics",
+   "file": "Sources/SwiftAssist/Reflection/BuildRunner.swift",
+   "group": "funnel",
+   "handling": "HANDLES-NIL",
+   "line": 93,
+   "options": ".anchorsMatchLines",
+   "outcome": "LITERAL",
+   "subject": "SwiftAssist"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "#\"(?<![:/])//.*$\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "highlightLine",
+   "file": "SwiftMarkdownWiki/Editor/SwiftSyntaxHighlighter.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 39,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftMarkdownWiki"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "#\"&quot;([^&]*?)&quot;\"#",
+   "chased": [],
+   "elements": [],
+   "enclosing": "highlightCode",
+   "file": "SwiftMarkdownWiki/Editor/SwiftSyntaxHighlighter.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 53,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftMarkdownWiki"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "pattern",
+   "chased": [
+    "pattern: parameter of wrapMatches"
+   ],
+   "elements": [],
+   "enclosing": "wrapMatches",
+   "file": "SwiftMarkdownWiki/Editor/SwiftSyntaxHighlighter.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 74,
+   "options": ".regularExpression",
+   "outcome": "WRAPPER",
+   "subject": "SwiftMarkdownWiki"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"^#{1,6}[ \\t]+\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "strippingHeadingMarkers",
+   "file": "SwiftMarkdownWiki/Editor/EditorFormatter.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 36,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftMarkdownWiki"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: parameter of processKebapCaseRegex"
+   ],
+   "elements": [],
+   "enclosing": "processKebapCaseRegex",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/Theme.swift",
+   "group": "funnel",
+   "handling": "HANDLES-NIL",
+   "line": 32,
+   "options": "[]",
+   "outcome": "WRAPPER",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"\\\\<.*\\\\>\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "removeAngleBracketsWithContent",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 54,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"\\\\<.*\\\\>\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "getAngleBracketsWithContent",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift",
+   "group": "funnel",
+   "handling": "HANDLES-CATCH",
+   "line": 59,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"[.+(){}^$\\\\\\\\|]\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "globPatternToRegex",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 103,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "pattern",
+   "chased": [
+    "pattern: let"
+   ],
+   "elements": [
+    {
+     "class": "QUALIFYING",
+     "labels": [],
+     "name": "globPatternToRegex",
+     "producer": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968",
+     "status": "resolved"
+    }
+   ],
+   "enclosing": "isMatching",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift",
+   "group": "funnel",
+   "handling": "HANDLES-NIL",
+   "line": 125,
+   "options": "[]",
+   "outcome": "QUALIFYING",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"\\\\([^)]+\\\\)\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "description",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 41,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"\\\\{[^}]+\\\\}\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "expandGlobs",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 160,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"[.+(){\\\\\\\\|]\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "expandGlobs",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+   "group": "funnel",
+   "handling": "SILENT",
+   "line": 162,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "regex",
+   "chased": [
+    "regex: let",
+    "tokens: var (through a receiver or argument)"
+   ],
+   "elements": [
+    {
+     "class": "QUALIFYING",
+     "labels": [
+      "anchor",
+      "pattern",
+      "tokens"
+     ],
+     "name": "globRegexPattern",
+     "producer": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491",
+     "status": "resolved"
+    }
+   ],
+   "enclosing": "expandGlobs",
+   "file": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift",
+   "group": "funnel",
+   "handling": "HANDLES-CATCH",
+   "line": 176,
+   "options": "[]",
+   "outcome": "QUALIFYING",
+   "subject": "SwiftUMLStudio"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"<body[^>]*>\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "injectCustomTemplate",
+   "file": "Sources/DocCCommandLine/Action/Actions/Convert/ConvertFileWritingConsumer.swift",
+   "group": "unmet",
+   "handling": "SILENT",
+   "line": 265,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"<body[^>]*>\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "init",
+   "file": "Sources/DocCCommandLine/Action/Actions/Convert/FileWritingHTMLContentConsumer.swift",
+   "group": "unmet",
+   "handling": "SILENT",
+   "line": 35,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "term.expression",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "expression",
+     "status": "external"
+    }
+   ],
+   "enclosing": "matchingRanges",
+   "file": "Sources/SwiftDocC/Checker/Checkers/NonInclusiveLanguageChecker.swift",
+   "group": "unmet",
+   "handling": "ASSERTS",
+   "line": 117,
+   "options": "[.caseInsensitive]",
+   "outcome": "STORED",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "term.expression",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "expression",
+     "status": "external"
+    }
+   ],
+   "enclosing": "",
+   "file": "Sources/SwiftDocC/Checker/Checkers/NonInclusiveLanguageChecker.swift",
+   "group": "unmet",
+   "handling": "HANDLES-NIL",
+   "line": 170,
+   "options": ".caseInsensitive",
+   "outcome": "STORED",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"(\\\\b|`)(error|fail(ure)?s?|nil|null)(\\\\b|`)\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "",
+   "file": "Sources/SwiftDocC/Model/ParametersAndReturnValidator.swift",
+   "group": "unmet",
+   "handling": "ASSERTS",
+   "line": 782,
+   "options": ".caseInsensitive",
+   "outcome": "LITERAL",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"\\\\{\\\\w+\\\\}\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "tokensFor",
+   "file": "Sources/SwiftDocC/Model/Rendering/RenderSectionTranslator/HTTPEndpointSectionTranslator.swift",
+   "group": "unmet",
+   "handling": "SILENT",
+   "line": 59,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"(?!^)\\(self.darkSuffix)(?=[.$]|@)\"",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "darkSuffix",
+     "status": "external"
+    }
+   ],
+   "enclosing": "",
+   "file": "Sources/SwiftDocC/Infrastructure/Bundle Assets/DataAssetManager.swift",
+   "group": "unmet",
+   "handling": "ASSERTS",
+   "line": 57,
+   "options": "",
+   "outcome": "STORED",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "\"(?!^)(?<=@)[1|2|3]x(?=\\\\.\\\\w*$)\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "",
+   "file": "Sources/SwiftDocC/Infrastructure/Bundle Assets/DataAssetManager.swift",
+   "group": "unmet",
+   "handling": "ASSERTS",
+   "line": 60,
+   "options": "",
+   "outcome": "LITERAL",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "swiftEntityPattern",
+   "chased": [
+    "swiftEntityPattern: let"
+   ],
+   "elements": [],
+   "enclosing": "isSwiftEntity",
+   "file": "Sources/SwiftDocC/Servers/FileServer.swift",
+   "group": "unmet",
+   "handling": "SILENT",
+   "line": 319,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "swift-docc"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"\\\\([^)]+\\\\)\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "description",
+   "file": "Sources/Globs.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 68,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"\\\\{[^}]+\\\\}\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "expandGlobs",
+   "file": "Sources/Globs.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 86,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"[.+(){\\\\\\\\|]\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "expandGlobs",
+   "file": "Sources/Globs.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 88,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"[.+(){\\\\\\\\|]\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "expandGlobs",
+   "file": "Sources/Globs.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 110,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "NSRegularExpression",
+   "argument": "regex",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "regex",
+     "status": "external"
+    }
+   ],
+   "enclosing": "expandGlobs",
+   "file": "Sources/Globs.swift",
+   "group": "upstream",
+   "handling": "ASSERTS",
+   "line": 118,
+   "options": "[]",
+   "outcome": "STORED",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "\"\\\\d{1,4}[-/.]\\\\d{1,2}[-/.]\\\\d{1,4}\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "dateSubstrings",
+   "file": "Sources/Arguments.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 184,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "silent:range",
+   "argument": "rule",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "rule",
+     "status": "external"
+    }
+   ],
+   "enclosing": "singularized",
+   "file": "Sources/Singularize.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 83,
+   "options": "[.regularExpression, .caseInsensitive]",
+   "outcome": "STORED",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "rule",
+   "chased": [],
+   "elements": [
+    {
+     "class": "EXTERNAL",
+     "labels": null,
+     "name": "rule",
+     "status": "external"
+    }
+   ],
+   "enclosing": "singularized",
+   "file": "Sources/Singularize.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 87,
+   "options": "[.regularExpression, .caseInsensitive]",
+   "outcome": "STORED",
+   "subject": "SwiftFormat"
+  },
+  {
+   "acceptor": "silent:replacingOccurrences",
+   "argument": "\"^/(\\\\s+)\"",
+   "chased": [],
+   "elements": [],
+   "enclosing": "",
+   "file": "Sources/Rules/Todos.swift",
+   "group": "upstream",
+   "handling": "SILENT",
+   "line": 35,
+   "options": ".regularExpression",
+   "outcome": "LITERAL",
+   "subject": "SwiftFormat"
+  }
+ ],
+ "subjects": [
+  {
+   "also": [],
+   "files": 204,
+   "group": "manifest",
+   "outcomes": {
+    "EXTERNAL": 1,
+    "LITERAL": 3
+   },
+   "population": 0,
+   "revision": "810a155245cd972fe202ba7bae6b3de0b3422ff7",
+   "root": "~/xcode_projects/SwiftInferProperties-666",
+   "roots": [
+    "Sources/SwiftInferCore"
+   ],
+   "rows": 4,
+   "skipped": {},
+   "subject": "swift-infer-core",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 96,
+   "group": "manifest",
+   "outcomes": {
+    "AMBIGUOUS": 1
+   },
+   "population": 0,
+   "revision": "9c9a9fabd886519f81fd768b3feb79dd9de25641",
+   "root": "~/GitHub_projects/swift-format",
+   "roots": [
+    "Sources/SwiftFormat"
+   ],
+   "rows": 1,
+   "skipped": {},
+   "subject": "swift-format",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 167,
+   "group": "manifest",
+   "outcomes": {
+    "EXTERNAL": 1,
+    "LITERAL": 5,
+    "WRAPPER": 2
+   },
+   "population": 0,
+   "revision": "0d8cf958b4b66a0473ec6e6986eb9da462171da9",
+   "root": "~/GitHub_projects/GRDB.swift",
+   "roots": [
+    "GRDB"
+   ],
+   "rows": 8,
+   "skipped": {},
+   "subject": "grdb",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 574,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "f96b909e1a9e469620bc5037c1e24e00153f376f",
+   "root": "~/GitHub_projects/swift-collections",
+   "roots": [
+    "Sources",
+    "Sources/Collections"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "swift-collections",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 88,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "4a71c31565fff8a05f89aafa959e06fc902c7abc",
+   "root": "~/GitHub_projects/swift-syntax",
+   "roots": [
+    "Sources/SwiftSyntax"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "swift-syntax",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 71,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "8c063f043d94c120d0f8d6303ef4fc7918e3561d",
+   "root": "~/GitHub_projects/swift-nio",
+   "roots": [
+    "Sources/NIOCore"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "swift-nio",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 78,
+   "group": "manifest",
+   "outcomes": {
+    "STORED": 2
+   },
+   "population": 0,
+   "revision": "d274b839a3c44a3f436aede221b75506ad363ed2",
+   "root": "~/GitHub_projects/swift-package-manager",
+   "roots": [
+    "Sources/Basics"
+   ],
+   "rows": 2,
+   "skipped": {},
+   "subject": "swift-package-manager",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 11,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "899af71c0256d0ad181e3b7eb3453c1065d928a5",
+   "root": "~/github_projects/swift-numerics",
+   "roots": [
+    "Sources/RealModule"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "swift-numerics",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 28,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "5b7143f8e291dee0e14c118fd0212487f0b37af5",
+   "root": "~/github_projects/swift-algorithms",
+   "roots": [
+    "Sources/Algorithms"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "swift-algorithms",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 52,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "efd239f0055b3d6b6cc122a786c46a0ea8d0235b",
+   "root": "~/GitHub_projects/swift-argument-parser",
+   "roots": [
+    "Sources/ArgumentParser"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "swift-argument-parser",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 273,
+   "group": "manifest",
+   "outcomes": {
+    "LITERAL": 4,
+    "STORED": 2,
+    "WRAPPER": 1
+   },
+   "population": 0,
+   "revision": "aadd9259be076a86a7e7918b938751d69dfe1198",
+   "root": "~/GitHub_projects/swift-foundation",
+   "roots": [
+    "Sources/FoundationEssentials"
+   ],
+   "rows": 7,
+   "skipped": {},
+   "subject": "swift-foundation",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 258,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "e739e65153fd564ac1cb9f4140d7130e7d099e16",
+   "root": "~/GitHub_projects/swift",
+   "roots": [
+    "stdlib/public/core"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "swiftlang-swift",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 48,
+   "group": "manifest",
+   "outcomes": {
+    "EXTERNAL": 1,
+    "LITERAL": 1,
+    "WRAPPER": 3
+   },
+   "population": 0,
+   "revision": "41923397b3034b375dd1486139448eb1bc38ff22",
+   "root": "~/GitHub_projects/Harmonize",
+   "roots": [
+    "Sources/Harmonize"
+   ],
+   "rows": 5,
+   "skipped": {},
+   "subject": "harmonize",
+   "unparsed": 0
+  },
+  {
+   "also": [
+    "funnel:SwiftProjectLint"
+   ],
+   "files": 607,
+   "group": "manifest",
+   "outcomes": {
+    "AMBIGUOUS": 1,
+    "EXTERNAL": 1,
+    "LITERAL": 9,
+    "STORED": 1
+   },
+   "population": 0,
+   "revision": "eec21fbb23f225b05c53ac7271113c0ae005d08b",
+   "root": "~/xcode_projects/SwiftProjectLint",
+   "roots": [
+    ".",
+    "Packages",
+    "Sources",
+    "Sources/Core"
+   ],
+   "rows": 12,
+   "skipped": {
+    "*Tests": 1,
+    "Tests": 533,
+    "hidden": 13714
+   },
+   "subject": "swift-project-lint",
+   "unparsed": 0
+  },
+  {
+   "also": [
+    "funnel:SwiftPropertyLaws"
+   ],
+   "files": 184,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "9e774fb84293658d9d0c4620f8cfcff26a8bfbb5",
+   "root": "~/xcode_projects/SwiftPropertyLaws",
+   "roots": [
+    ".",
+    "Sources/PropertyLawKit"
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 199,
+    "hidden": 16571
+   },
+   "subject": "swift-property-laws",
+   "unparsed": 0
+  },
+  {
+   "also": [
+    "funnel:SwiftEffectInference"
+   ],
+   "files": 25,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "f5014fb0f11f0893529ce21e3bff9c2e52fccddd",
+   "root": "~/xcode_projects/SwiftEffectInference",
+   "roots": [
+    ".",
+    "Sources/SwiftEffectInference"
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 36,
+    "hidden": 3693
+   },
+   "subject": "swift-effect-inference",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 28,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "3c861967fabcd06012638476d99204ce3ff80049",
+   "root": "~/xcode_projects/MacCloud_client_iOS",
+   "roots": [
+    "MacCloud_client_iOS"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "maccloud-client-ios",
+   "unparsed": 0
+  },
+  {
+   "also": [
+    "funnel:SwiftLintRuleStudio"
+   ],
+   "files": 214,
+   "group": "manifest",
+   "outcomes": {
+    "EXTERNAL": 1,
+    "LITERAL": 14,
+    "STORED": 1
+   },
+   "population": 0,
+   "revision": "8b99ba71977798c3278eac65a4f8e3937b9d7dee",
+   "root": "~/xcode_projects/SwiftLintRuleStudio",
+   "roots": [
+    ".",
+    "SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore",
+    "UI"
+   ],
+   "rows": 16,
+   "skipped": {
+    "*Tests": 147,
+    "*UITests": 5,
+    "Tests": 133,
+    "hidden": 8507
+   },
+   "subject": "swiftlint-rule-studio",
+   "unparsed": 0
+  },
+  {
+   "also": [
+    "funnel:SwiftFormatRuleStudio"
+   ],
+   "files": 65,
+   "group": "manifest",
+   "outcomes": {
+    "WRAPPER": 1
+   },
+   "population": 0,
+   "revision": "149526de878e9d6ee388b3ab9eec3b22c6cba3ec",
+   "root": "~/xcode_projects/SwiftFormatRuleStudio",
+   "roots": [
+    ".",
+    "SwiftFormatRuleStudioCore"
+   ],
+   "rows": 1,
+   "skipped": {
+    "Tests": 44,
+    "hidden": 985
+   },
+   "subject": "swiftformat-rule-studio",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 2,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "810a155245cd972fe202ba7bae6b3de0b3422ff7",
+   "root": "~/xcode_projects/SwiftInferProperties-666/fixtures/planted-defect-arm",
+   "roots": [
+    "Sources/PlantedDefectArm"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "planted-defect-arm",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 1,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "810a155245cd972fe202ba7bae6b3de0b3422ff7",
+   "root": "~/xcode_projects/SwiftInferProperties-666/fixtures/cycle27-surface",
+   "roots": [
+    "Sources/Cycle27SurfaceFixture"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "cycle27-surface",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 4,
+   "group": "manifest",
+   "outcomes": {},
+   "population": 0,
+   "revision": "810a155245cd972fe202ba7bae6b3de0b3422ff7",
+   "root": "~/xcode_projects/SwiftInferProperties-666/fixtures/leaderboard-sort",
+   "roots": [
+    "Sources/LeaderboardSort"
+   ],
+   "rows": 0,
+   "skipped": {},
+   "subject": "leaderboard-sort",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 28,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "73e31b105524b23669d3f569587217f505d27054",
+   "root": "~/xcode_projects/LintStudioUI",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 14,
+    "hidden": 1
+   },
+   "subject": "LintStudioUI",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 58,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "a7376fd798f6366becc5da434a7eac4fcfe61633",
+   "root": "~/xcode_projects/MacCloud_client_MacOS",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "*Tests": 28,
+    "*UITests": 2,
+    "build": 1
+   },
+   "subject": "MacCloud_client_MacOS",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 31,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "51c91cf076bdc2635f30cb621f0f79b8b33a422f",
+   "root": "~/xcode_projects/MacCloud_server",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 24,
+    "hidden": 5537
+   },
+   "subject": "MacCloud_server",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 64,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "3b8ff81648c2dff6d5cf82044a5c481e0b965c9e",
+   "root": "~/xcode_projects/pbt-book",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 64,
+    "hidden": 4601
+   },
+   "subject": "pbt-book",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 16,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "0ea4b2270037c6db35df88e7dbd0879930071360",
+   "root": "~/xcode_projects/pbt-workbook-corpus",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 10,
+    "hidden": 65
+   },
+   "subject": "pbt-workbook-corpus",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 6,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "79e6c81380fe19a830cd31d9014e8c96499964a0",
+   "root": "~/xcode_projects/pbt-workbook-grader",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 2,
+    "hidden": 57
+   },
+   "subject": "pbt-workbook-grader",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 7,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "0e0779528f4427b3cd27f0e205aba2a4dab768f8",
+   "root": "~/xcode_projects/pbt-workbook-sampler",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 2,
+    "hidden": 65
+   },
+   "subject": "pbt-workbook-sampler",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 4,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "959937ed90f425fadde215d1ade6e9141b1a8a5a",
+   "root": "~/xcode_projects/pbt-workbook",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 4,
+    "hidden": 91
+   },
+   "subject": "pbt-workbook",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 511,
+   "group": "funnel",
+   "outcomes": {
+    "LITERAL": 11,
+    "QUALIFYING": 1,
+    "STORED": 2
+   },
+   "population": 1,
+   "revision": "697484273556ace4b6ac19fc22d8e042fbed46e8",
+   "root": "~/xcode_projects/SwiftAssist",
+   "roots": [
+    "."
+   ],
+   "rows": 14,
+   "skipped": {
+    "Tests": 449,
+    "hidden": 39371
+   },
+   "subject": "SwiftAssist",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 46,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "c21171e2109e0edb60a032ed9655b0939392746b",
+   "root": "~/xcode_projects/SwiftCloneDetector",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 14,
+    "hidden": 909
+   },
+   "subject": "SwiftCloneDetector",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 30,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "5863dadc9a6da422a8939710858d588d3dd001c9",
+   "root": "~/xcode_projects/SwiftIdempotency",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 27,
+    "hidden": 18607
+   },
+   "subject": "SwiftIdempotency",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 47,
+   "group": "funnel",
+   "outcomes": {},
+   "population": 0,
+   "revision": "7789bde63dddc94a2e0c12266da91598ba6259d5",
+   "root": "~/xcode_projects/SwiftLintRuleStudioTeam",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "*UITests": 2,
+    "Tests": 8,
+    "hidden": 272
+   },
+   "subject": "SwiftLintRuleStudioTeam",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 110,
+   "group": "funnel",
+   "outcomes": {
+    "LITERAL": 3,
+    "WRAPPER": 1
+   },
+   "population": 0,
+   "revision": "2a6d0d59440b96fcf2882fa3ce2f69fff07eba38",
+   "root": "~/xcode_projects/SwiftMarkdownWiki",
+   "roots": [
+    "."
+   ],
+   "rows": 4,
+   "skipped": {
+    "*Tests": 76,
+    "*UITests": 2,
+    "hidden": 2969
+   },
+   "subject": "SwiftMarkdownWiki",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 193,
+   "group": "funnel",
+   "outcomes": {
+    "LITERAL": 6,
+    "QUALIFYING": 2,
+    "WRAPPER": 1
+   },
+   "population": 2,
+   "revision": "b8b152068a3b57181d98ccb5061401e95a745c35",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "roots": [
+    "."
+   ],
+   "rows": 9,
+   "skipped": {
+    "*Tests": 63,
+    "*UITests": 9,
+    "Tests": 115,
+    "hidden": 1069
+   },
+   "subject": "SwiftUMLStudio",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 54,
+   "group": "unmet",
+   "outcomes": {},
+   "population": 0,
+   "revision": "a597cf5bbe693793bfe96e3ce703b74b87c981b8",
+   "root": "~/github_projects/Euclid",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "*Tests": 2,
+    "Tests": 40
+   },
+   "subject": "Euclid",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 584,
+   "group": "unmet",
+   "outcomes": {
+    "LITERAL": 6,
+    "STORED": 3
+   },
+   "population": 0,
+   "revision": "f14e4a4922a0317d49caca1545c6946c6ef22bd8",
+   "root": "~/github_projects/swift-docc",
+   "roots": [
+    "."
+   ],
+   "rows": 9,
+   "skipped": {
+    "Tests": 333,
+    "hidden": 1802
+   },
+   "subject": "swift-docc",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 197,
+   "group": "unmet",
+   "outcomes": {},
+   "population": 0,
+   "revision": "41a79a6a175db7da4e238d2f9b42b1c88accc3f8",
+   "root": "~/github_projects/OpenAPIKit",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 155,
+    "hidden": 195
+   },
+   "subject": "OpenAPIKit",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 84,
+   "group": "unmet",
+   "outcomes": {},
+   "population": 0,
+   "revision": "373c40c23640063b65c76465d934ecf76b3b190a",
+   "root": "~/github_projects/jwt-kit",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 18,
+    "hidden": 2991
+   },
+   "subject": "jwt-kit",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 42,
+   "group": "unmet",
+   "outcomes": {},
+   "population": 0,
+   "revision": "1b452c2996c677d8e435bf0b766fc927176d8c77",
+   "root": "~/github_projects/swift-system",
+   "roots": [
+    "."
+   ],
+   "rows": 0,
+   "skipped": {
+    "Tests": 23,
+    "hidden": 2073
+   },
+   "subject": "swift-system",
+   "unparsed": 0
+  },
+  {
+   "also": [],
+   "files": 193,
+   "group": "upstream",
+   "outcomes": {
+    "LITERAL": 6,
+    "STORED": 3
+   },
+   "population": 0,
+   "revision": "75e09c0e05f63bc83391b81a4055e3b7d829d1c7",
+   "root": "a shallow clone of github.com/nicklockwood/SwiftFormat",
+   "roots": [
+    "Sources"
+   ],
+   "rows": 9,
+   "skipped": {},
+   "subject": "SwiftFormat",
+   "unparsed": 0
+  }
+ ],
+ "unparsed": []
+}
