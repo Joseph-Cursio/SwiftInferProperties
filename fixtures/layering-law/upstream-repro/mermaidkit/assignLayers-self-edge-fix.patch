@@ -1,0 +1,13 @@
+diff --git a/Sources/MermaidLayout/DiagramLayoutLayering.swift b/Sources/MermaidLayout/DiagramLayoutLayering.swift
+index f025123..8b8fde5 100644
+--- a/Sources/MermaidLayout/DiagramLayoutLayering.swift
++++ b/Sources/MermaidLayout/DiagramLayoutLayering.swift
+@@ -87,7 +87,7 @@ extension DiagramLayoutEngine {
+         for id in ids { layerOf[id] = 0 }
+         for _ in 0..<(ids.count + 1) {
+             var changed = false
+-            for (from, to) in edges {
++            for (from, to) in edges where from != to {
+                 guard let a = layerOf[from], let b = layerOf[to] else { continue }
+                 if b < a + 1 { layerOf[to] = a + 1; changed = true }
+             }

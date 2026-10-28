@@ -1,0 +1,3411 @@
+[
+ {
+  "label": "packet-01/1",
+  "A": {
+   "label": "packet-01/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Removes a node from the layerless-nodes list; assigns no layer or position."
+  },
+  "B": {
+   "label": "packet-01/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Removes a node from the layerless-nodes list; assigns no layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LGraph.swift:65"
+ },
+ {
+  "label": "packet-01/2",
+  "A": {
+   "label": "packet-01/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts north/south port crossings inside one layer; returns a crossing count, not a layering."
+  },
+  "B": {
+   "label": "packet-01/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts north/south port crossings within one given layer; returns a count, not a layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_CrossingsCounter.swift:46"
+ },
+ {
+  "label": "packet-01/3",
+  "A": {
+   "label": "packet-01/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It is barycenter crossing minimization: it reorders nodes inside layers it is given and drops empty layers. It assigns no layer, and nothing in its contract says the position must increase along edges."
+  },
+  "B": {
+   "label": "packet-01/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering: takes layers as input and only reorders nodes within each layer (barycenter crossing minimization), dropping empty layers. It assigns no node to a layer."
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayout.swift:826"
+ },
+ {
+  "label": "packet-01/4",
+  "A": {
+   "label": "packet-01/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It copies the existing ranks of a compound node's border-top and border-bottom nodes into minRank and maxRank."
+  },
+  "B": {
+   "label": "packet-01/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering: copies the existing ranks of border nodes into minRank/maxRank on compound nodes."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Layout/Layout.swift:252"
+ },
+ {
+  "label": "packet-01/5",
+  "A": {
+   "label": "packet-01/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It shifts ranks that are already assigned by a constant so the minimum is 0, and computes no ranks of its own."
+  },
+  "B": {
+   "label": "packet-01/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering: shifts ranks that were already assigned so the minimum is 0. It computes no layering."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:229"
+ },
+ {
+  "label": "packet-01/6",
+  "A": {
+   "label": "packet-01/6",
+   "verdict": "LAYERING",
+   "reason": "Network-simplex rank assignment (Gansner et al.). It assigns every node an integer rank with rank(w) - rank(v) >= minlen(e) on every edge, and minlen defaults to 1 and is at least 1 throughout this pipeline. It starts from LongestPath ranks and pivots while staying feasible, then copies the ranks back onto g's nodes. The input is the DAG left after the acyclic pass.",
+   "result_kind": "map",
+   "direction": "along each edge v->w, rank increases from source to target by at least minlen",
+   "excluded": "none",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-01/6",
+   "verdict": "LAYERING",
+   "reason": "Network simplex rank assignment (Gansner et al.): starts from a longest-path ranking, then pivots while keeping the ranking feasible, so rank(w) >= rank(v) + minlen on every edge v->w (minlen defaults to 1). It runs over a general DAG, writes an integer rank onto every node label, and copies it back to the input graph.",
+   "result_kind": "map",
+   "direction": "along each edge v->w (source to target), rank(w) >= rank(v) + minlen, with minlen >= 1 by default",
+   "excluded": "none",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Rank/NetworkSimplex.swift:12"
+ },
+ {
+  "label": "packet-01/7",
+  "A": {
+   "label": "packet-01/7",
+   "verdict": "LAYERING",
+   "reason": "Its doc says it is longest-path layering. It reverses the edges in `reversed`, puts the graph in Kahn topological order, then sets rank(v) = max over predecessors u of rank(u) + length, with length >= 1. On the expected input, where `reversed` has broken every cycle, every edge strictly increases rank. If cycles remain, the fallback order can break this on edges off those cycles. That input lies outside the stated post-cycle-break precondition.",
+   "result_kind": "map",
+   "direction": "from edge.from to edge.to, or from edge.to to edge.from for edges in `reversed`; rank increases by at least max(1, length)",
+   "excluded": "none",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-01/7",
+   "verdict": "LAYERING",
+   "reason": "Documented as longest-path layering. The body runs a Kahn topological order, then sets rank(v) = max(rank(u) + length), with length clamped to >= 1, over edges whose direction is flipped where the reversed set says so. It returns a [String: Int] map over a general digraph.",
+   "result_kind": "map",
+   "direction": "from -> to after applying the reversed set; rank(to) >= rank(from) + max(1, length)",
+   "excluded": "none (a node named only as the source of an edge and absent from `nodes` is never ranked)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Sources/Mermaid/Flowchart/FlowchartLayout.swift:232"
+ },
+ {
+  "label": "packet-01/8",
+  "A": {
+   "label": "packet-01/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Looks up the node at (layer, index) in a nodeOrder it is given and collects its nested graph. It reads a layering and assigns none."
+  },
+  "B": {
+   "label": "packet-01/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering: looks up one node in a given nodeOrder [[LNode]] and records its nested graph."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_GraphInfoHolder.swift:205"
+ },
+ {
+  "label": "packet-02/1",
+  "A": {
+   "label": "packet-02/1",
+   "verdict": "ORDERING",
+   "reason": "Kahn's algorithm returning a flat [Int] topological order (every parent before its child), nil on a cycle; a sequence, not layer numbers or levels."
+  },
+  "B": {
+   "label": "packet-02/1",
+   "verdict": "ORDERING",
+   "reason": "Kahn's algorithm returning a flat [Int] topological order (every parent before its child), or nil on a cycle; no per-node layer or grouping into levels."
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/GitLogParser.swift:159"
+ },
+ {
+  "label": "packet-02/2",
+  "A": {
+   "label": "packet-02/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: returns a single Double, the maximum height of any layer in an existing layering (forwards to getMaxHeight); it assigns no layers."
+  },
+  "B": {
+   "label": "packet-02/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: returns a scalar Double, the maximum height of any layer of an existing layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:91"
+ },
+ {
+  "label": "packet-02/3",
+  "A": {
+   "label": "packet-02/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Draws one edge's stroke and arrowhead into a SwiftUI GraphicsContext. 'Layer' here is a drawing layer, not a graph layering."
+  },
+  "B": {
+   "label": "packet-02/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Draws one edge's stroke and arrowhead into a SwiftUI GraphicsContext; 'layer' is a drawing layer, nothing is assigned to graph nodes."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Views/GraphCanvasView.swift:923"
+ },
+ {
+  "label": "packet-02/4",
+  "A": {
+   "label": "packet-02/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Works out a node's architectural layer label from its tags, path, name or product metadata. That is a classification of one node, not a layering derived from graph edges."
+  },
+  "B": {
+   "label": "packet-02/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Resolves a node's architectural-layer label (a String) from tags, path, name or product markers; it does not use graph edges, and the result has no ordering law."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Services/SpiderGraphImporter.swift:367"
+ },
+ {
+  "label": "packet-02/5",
+  "A": {
+   "label": "packet-02/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Per-port initialization callback that only increments a port counter (nPorts += 1); it computes no layering."
+  },
+  "B": {
+   "label": "packet-02/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "A visitor callback that only increments a port counter; it computes no layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_GreedySwitchHeuristic.swift:116"
+ },
+ {
+  "label": "packet-02/6",
+  "A": {
+   "label": "packet-02/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: computes barycenters for crossing minimization (weighted mean of in-neighbours' existing order values). It assigns no layers."
+  },
+  "B": {
+   "label": "packet-02/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes barycenters, the weighted mean of predecessors' in-layer order, for crossing minimisation inside a layer. It reads a layering and assigns no layers."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/SortSubgraph.swift:128"
+ },
+ {
+  "label": "packet-02/7",
+  "A": {
+   "label": "packet-02/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: copies the index of an existing nodeOrder layer into layer.id and sizes the barycenter state. It computes no layers from edges."
+  },
+  "B": {
+   "label": "packet-02/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: given nodeOrder ([[LNode]]) computed elsewhere, it sets layer.id = l and grows the barycenter state's capacity."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_BarycenterHeuristic.swift:295"
+ },
+ {
+  "label": "packet-02/8",
+  "A": {
+   "label": "packet-02/8",
+   "verdict": "LAYERING",
+   "reason": "Doc 'Determine the optimal layering'; owner's postcondition: every node gets a layer and edges connect only layers with increasing indices. It is the no-argument entry point and delegates to execute(monitor), which resets and computes NNode.layer by network simplex over a general acyclic digraph (multiple predecessors allowed). Strictness depends on edge delta >= 1 (the default is 1; the builder can set 0).",
+   "result_kind": "map",
+   "direction": "source to target: layer(target) >= layer(source) + delta, strictly increasing for delta >= 1",
+   "excluded": "none (subtree leaves removed for speed are reattached and layered)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-02/8",
+   "verdict": "LAYERING",
+   "reason": "The doc says 'Determine the optimal layering'. The owner's stated postcondition is that edges connect only nodes in layers with increasing indices, over a DAG precondition, and a general DAG lets a node have several predecessors. It is a convenience overload that delegates to execute(monitor), which writes node.layer for every node of the receiver's graph (network simplex, normalised to start at 0). Caveat: an NEdge's minimum length (delta) defaults to 1 but is documented as any non-negative integer, so strictness holds only for edges with delta >= 1.",
+   "result_kind": "map",
+   "direction": "source to target: layer(target) >= layer(source) + delta, so layers increase along each edge (strictly when delta >= 1, the default)",
+   "excluded": "none (every node of the graph is layered; subtrees removed for speed are reattached before return)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:242"
+ },
+ {
+  "label": "packet-03/1",
+  "A": {
+   "label": "packet-03/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Runs a SQL query and returns its result table rows as [[String]]; no graph or layer assignment (table rows)."
+  },
+  "B": {
+   "label": "packet-03/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Runs a SQL query and parses the output into table rows ([[String]]); no graph and no layers."
+  },
+  "C": null,
+  "id": "yahirvitelugardo__Graffle:Sources/Graffle/Database/DatabaseConnector.swift:203"
+ },
+ {
+  "label": "packet-03/2",
+  "A": {
+   "label": "packet-03/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the integer range 0..<limit; no graph input at all."
+  },
+  "B": {
+   "label": "packet-03/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the integers 0..<limit. It is an integer-range utility with no graph and no edges."
+  },
+  "C": null,
+  "id": "lukilabs__dagre-swift:Sources/SwiftDagre/Util/GraphUtil.swift:407"
+ },
+ {
+  "label": "packet-03/3",
+  "A": {
+   "label": "packet-03/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns positions to ports around nodes within a single layer for in-layer crossing counting and resets a binary indexed tree; positions are an ordering of ports on a side, not a layering that respects edge direction."
+  },
+  "B": {
+   "label": "packet-03/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Numbers the ports on one side of a single layer to count crossings inside that layer, and resets a binary indexed tree. Positions inside one layer carry no contract that they rise across edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_CrossingsCounter.swift:60"
+ },
+ {
+  "label": "packet-03/4",
+  "A": {
+   "label": "packet-03/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes evenly spaced cut indexes from a precomputed longest-path length and chunk count for graph wrapping; reads a layering, assigns no layers."
+  },
+  "B": {
+   "label": "packet-03/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Turns a layer count it reads (gs.longestPath) into evenly spaced cut indices for graph wrapping. It reads a layering computed elsewhere and assigns no layers to nodes."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_ARDCutIndexHeuristic.swift:12"
+ },
+ {
+  "label": "packet-03/5",
+  "A": {
+   "label": "packet-03/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: returns the maximum node width of a given layer by forwarding to determineLayerWidth."
+  },
+  "B": {
+   "label": "packet-03/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the maximum width of any node in a given layer. This is a geometric measurement that reads a layering computed elsewhere."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:61"
+ },
+ {
+  "label": "packet-03/6",
+  "A": {
+   "label": "packet-03/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Abstract stub for port rank (barycenter) calculation that asserts and returns 0; a rank for crossing minimization, not a layering."
+  },
+  "B": {
+   "label": "packet-03/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "An abstract stub for port ranks in the barycenter crossing-minimisation heuristic. It ranks ports within one node or layer, has no contract across edges, and its body only asserts and returns 0."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:74"
+ },
+ {
+  "label": "packet-03/7",
+  "A": {
+   "label": "packet-03/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a setter that moves the node into a given layer at a given index; it records a layer assignment computed elsewhere and makes no edge-direction contract."
+  },
+  "B": {
+   "label": "packet-03/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "A setter that moves one node into a layer the caller supplies, at a given index. It computes no layering, so it only stores a layering computed elsewhere."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LNode.swift:83"
+ },
+ {
+  "label": "packet-03/8",
+  "A": {
+   "label": "packet-03/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts in-layer edge crossings on one side of a list of nodes; returns a crossing count, not a layering."
+  },
+  "B": {
+   "label": "packet-03/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts edge crossings among the ports on one side of the nodes in a layer. It returns a crossing count, not a layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_CrossingsCounter.swift:38"
+ },
+ {
+  "label": "packet-04/1",
+  "A": {
+   "label": "packet-04/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Filters a node set to those with no ancestor (via parentID chain) in the same set; returns an unordered Set, assigns no layers or depths."
+  },
+  "B": {
+   "label": "packet-04/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Filters a node set to those with no ancestor (via single parentID chain) inside the set; returns an unordered Set, assigns no layer or level."
+  },
+  "C": null,
+  "id": "1amageek__swift-flow:Sources/SwiftFlow/Store/FlowStore.swift:1733"
+ },
+ {
+  "label": "packet-04/2",
+  "A": {
+   "label": "packet-04/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Maps a node's product type string (app/framework/other) to a fixed sort rank; not derived from edges."
+  },
+  "B": {
+   "label": "packet-04/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Maps a node's product kind string (app/framework/other) to a fixed sort rank; depends on no edges."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:1978"
+ },
+ {
+  "label": "packet-04/3",
+  "A": {
+   "label": "packet-04/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Swaps a node's TOP/BOTTOM in-layer constraint property when mirroring; assigns no layer."
+  },
+  "B": {
+   "label": "packet-04/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Swaps a node's TOP/BOTTOM in-layer constraint property when mirroring; assigns no layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_GraphTransformer.swift:362"
+ },
+ {
+  "label": "packet-04/4",
+  "A": {
+   "label": "packet-04/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Trims whitespace from an optional layer-name string and returns nil if empty; string normalization only."
+  },
+  "B": {
+   "label": "packet-04/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Trims whitespace from an optional layer-name string and returns nil if empty; string normalisation, no graph."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Services/SpiderGraphImporter.swift:453"
+ },
+ {
+  "label": "packet-04/5",
+  "A": {
+   "label": "packet-04/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: forwards two existing adjacent layers to a crossings counter for initialization."
+  },
+  "B": {
+   "label": "packet-04/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: forwards two already-computed adjacent layers to a crossings counter's initialisation."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_GreedyPortDistributor.swift:115"
+ },
+ {
+  "label": "packet-04/6",
+  "A": {
+   "label": "packet-04/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builds text sections (header, attributes, methods) for rendering a class box; no graph or layering."
+  },
+  "B": {
+   "label": "packet-04/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builds text sections (header, attributes, methods) for one class box in an ASCII diagram; no graph edges involved."
+  },
+  "C": null,
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_ascii_class_diagram.swift:98"
+ },
+ {
+  "label": "packet-04/7",
+  "A": {
+   "label": "packet-04/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Runs a SQL query and returns result table rows as [[String]]; table rows, not graph levels."
+  },
+  "B": {
+   "label": "packet-04/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Runs a SQL query and returns its result as table rows of strings."
+  },
+  "C": null,
+  "id": "yahirvitelugardo__Graffle:Sources/Graffle/Database/DatabaseConnector.swift:83"
+ },
+ {
+  "label": "packet-04/8",
+  "A": {
+   "label": "packet-04/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: sums node heights, margins and spacing over the nodes of an already-computed layer."
+  },
+  "B": {
+   "label": "packet-04/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: sums node heights, margins and spacing within one already-assigned layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:226"
+ },
+ {
+  "label": "packet-05/1",
+  "A": {
+   "label": "packet-05/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean check that a stored layer index is greater than zero; assigns no layers."
+  },
+  "B": {
+   "label": "packet-05/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean check that a stored layer index is greater than zero; assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_BetweenLayerEdgeTwoNodeCrossingsCounter.swift:29"
+ },
+ {
+  "label": "packet-05/2",
+  "A": {
+   "label": "packet-05/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "A network-simplex pivot step. Its stated contract is to swap a tree edge for a non-tree edge, shift the existing layers of the nodes outside the head component, and recompute cut values. It keeps a layering held in shared state rather than producing one; the layering contract belongs to the class's execute."
+  },
+  "B": {
+   "label": "packet-05/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "A network-simplex pivot step. It swaps a tree edge for a non-tree edge and shifts the existing layers of nodes outside the head component by a delta. Its contract is the tree exchange and the cut-value update, not producing a layering. Feasibility depends on the caller choosing the entering edge."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:750"
+ },
+ {
+  "label": "packet-05/3",
+  "A": {
+   "label": "packet-05/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Java-style getter that returns a label placement's container row (a table row), not a graph layer."
+  },
+  "B": {
+   "label": "packet-05/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Java-style getter that returns a label placement's container row (a table/grid row), not a graph layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/nodespacing/internal/org_eclipse_elk_alg_common_nodespacing_internal_NodeLabelLocation.swift:154"
+ },
+ {
+  "label": "packet-05/4",
+  "A": {
+   "label": "packet-05/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean permission check on whether a node's layer classification can be persisted; computes no layering."
+  },
+  "B": {
+   "label": "packet-05/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean permission check on whether a node's layer classification can be persisted; computes no layering."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/ViewModels/TuistSpiderViewModel.swift:892"
+ },
+ {
+  "label": "packet-05/5",
+  "A": {
+   "label": "packet-05/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: computes the maximum node width plus spacing within one existing layer."
+  },
+  "B": {
+   "label": "packet-05/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes a layer's width (max node width plus spacing), a geometric measure. It reads a layering and assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:197"
+ },
+ {
+  "label": "packet-05/6",
+  "A": {
+   "label": "packet-05/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Type-erasing factory that wraps an LGraph layout processor in a closure; assigns no layers."
+  },
+  "B": {
+   "label": "packet-05/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Type-erasing factory that wraps an LGraph layout processor in a closure; computes no layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/core/alg/org_eclipse_elk_core_alg_ILayoutProcessor.swift:97"
+ },
+ {
+  "label": "packet-05/7",
+  "A": {
+   "label": "packet-05/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a port rank computed elsewhere, from the port distributor's array. That rank is a position in an ordering, not a layer along edges."
+  },
+  "B": {
+   "label": "packet-05/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a port's rank from a port distributor's array, a sort rank used for barycenter crossing minimisation. It only reads values computed elsewhere."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_BarycenterHeuristic.swift:315"
+ },
+ {
+  "label": "packet-05/8",
+  "A": {
+   "label": "packet-05/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Factory that creates a NetworkSimplex instance and stores the graph on it; the layering itself is done later by execute."
+  },
+  "B": {
+   "label": "packet-05/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Static factory that builds a NetworkSimplex instance and stores the graph; assigns no layers itself."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:125"
+ },
+ {
+  "label": "packet-06/1",
+  "A": {
+   "label": "packet-06/1",
+   "verdict": "LAYERING",
+   "reason": "Doc: targets grouped by longest chain length starting at that target; body computes depth = 1 + max over in-scope dependencies (longest-path depth) on a target dependency DAG, returned as [Int: Set<TargetID>] levels.",
+   "result_kind": "levels",
+   "direction": "along each dependency edge t -> d (t depends on d), depth(t) > depth(d): depth strictly decreases from dependent to dependency",
+   "excluded": "nodes outside `scope`; dependency edges leaving the scope are ignored",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-06/1",
+   "verdict": "LAYERING",
+   "reason": "Groups targets of a dependency DAG by longest-chain depth: depth(t) = 1 + max over in-scope dependencies, so across every dependency edge the dependent's depth strictly exceeds the dependency's. Targets can have several dependents, so this is a DAG, not a tree.",
+   "result_kind": "levels",
+   "direction": "depth strictly decreases along each dependency edge (dependent -> dependency); equivalently it increases from dependency to dependent",
+   "excluded": "targets outside `scope` (edges leaving scope are ignored)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "Ryu0118__swift-module-graph:Sources/SwiftModuleGraph/ModuleGraph.swift:126"
+ },
+ {
+  "label": "packet-06/2",
+  "A": {
+   "label": "packet-06/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: sets port positions on the layers adjacent to the free layer for crossing counting"
+  },
+  "B": {
+   "label": "packet-06/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Sets port positions in the two layers next to the free layer, for counting crossings. It reads an existing layering and assigns no layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_BetweenLayerEdgeTwoNodeCrossingsCounter.swift:20"
+ },
+ {
+  "label": "packet-06/3",
+  "A": {
+   "label": "packet-06/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: copies an existing layer index from nodeOrder onto the layer's id and sizes per-layer info arrays"
+  },
+  "B": {
+   "label": "packet-06/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: stores the given layer index on the layer object of an already-layered nodeOrder and sets up per-layer storage"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_LayerSweepTypeDecider.swift:183"
+ },
+ {
+  "label": "packet-06/4",
+  "A": {
+   "label": "packet-06/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "computes port barycenters from neighbouring ports' ranks and collects in-layer ports; reads a layering, assigns no layers"
+  },
+  "B": {
+   "label": "packet-06/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes port barycenters from neighbouring port ranks, for crossing minimisation. It assigns no layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:107"
+ },
+ {
+  "label": "packet-06/5",
+  "A": {
+   "label": "packet-06/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: writes the layer's existing index in nodeOrder to its id"
+  },
+  "B": {
+   "label": "packet-06/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: records the index l as the id of the layer holding nodeOrder[l]"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_GreedySwitchHeuristic.swift:120"
+ },
+ {
+  "label": "packet-06/6",
+  "A": {
+   "label": "packet-06/6",
+   "verdict": "TREE-DEPTH",
+   "reason": "Hierarchy level of a nested graph relative to a top-level graph, counting parent-node hops up a compound-graph hierarchy where each nested graph has exactly one parent node: depth(child) = depth(parent) + 1."
+  },
+  "B": {
+   "label": "packet-06/6",
+   "verdict": "TREE-DEPTH",
+   "reason": "Hierarchy level of a nested graph in ELK's compound-graph tree. Each graph has at most one parent node, and the level is the number of parent steps up to the top-level graph, so depth(child) = depth(parent) + 1."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/compound/org_eclipse_elk_alg_layered_compound_CrossHierarchyEdgeComparator.swift:51"
+ },
+ {
+  "label": "packet-06/7",
+  "A": {
+   "label": "packet-06/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "classifies a module name into an architectural layer label by substring rules; no graph and no edges"
+  },
+  "B": {
+   "label": "packet-06/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Infers an architecture-layer label (a String) from a module name by matching substrings. No graph and no integer layer are involved."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Services/SpiderGraphImporter.swift:478"
+ },
+ {
+  "label": "packet-06/8",
+  "A": {
+   "label": "packet-06/8",
+   "verdict": "LAYERING",
+   "reason": "Doc: network-simplex layer assignment over acyclic edges, starting from and falling back to longest-path layers; returns [String: Int] with rank(head) >= rank(tail) + 1 kept feasible, each component normalized to start at 0.",
+   "result_kind": "map",
+   "direction": "from -> to: layer strictly increases from an edge's source to its target",
+   "excluded": "none (self-edges and edges naming ids not in `ids` are ignored; input is assumed acyclic)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-06/8",
+   "verdict": "LAYERING",
+   "reason": "Layer assignment by network simplex, seeded by and falling back to longest path, over acyclic input edges. Every non-self edge spans at least one layer (layer(to) >= layer(from) + 1), and each component is normalised to start at 0. The edges form a general DAG.",
+   "result_kind": "map",
+   "direction": "layer strictly increases along each edge from -> to (tail to head)",
+   "excluded": "none (self-edges and edges with endpoints not in ids are ignored; every id gets a layer)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutLayering.swift:19"
+ },
+ {
+  "label": "packet-07/1",
+  "A": {
+   "label": "packet-07/1",
+   "verdict": "LAYERING",
+   "reason": "The doc comment says the class diagram is laid out \"layered so parents sit above children\". Inheritance and realization edges are flipped for layering. Through scaledLayout -> layeredRoutes, the function drops DFS back edges and assigns layers by network simplex, falling back to longest path, so every forward edge spans at least one layer. Each box frame's y is that layer's top, and the next layer starts below the tallest box plus a gap, so box y strictly increases along every off-cycle layering edge. Class relations admit several predecessors per class. The function computes the layering from its own input through its private helpers rather than reading one, so it is not a forwarder.",
+   "result_kind": "coordinate",
+   "direction": "top-down (y increases): for an inheritance or realization relation, from relation.to (the parent) to relation.from (the child); for every other relation, from relation.from to relation.to",
+   "excluded": "none (every declared class gets a frame; a relation naming an undeclared class is not layered)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-07/1",
+   "verdict": "LAYERING",
+   "reason": "Class-diagram layout. Its doc says boxes are 'layered so parents sit above children', with inheritance/realization edges flipped for layering. layeredRoutes drops DFS back edges and calls assignLayers (network simplex seeded from longest path; every edge spans at least 1 layer). It then gives every box in a layer the same frame.minY, with y growing by layerHeight + layerGap from layer to layer. So across every off-cycle layering edge the box's y strictly increases. The owner doc says 'longest-path', but the body now uses network simplex. The strict-increase law holds either way, so this is not a contract disagreement.",
+   "result_kind": "coordinate",
+   "direction": "For each relation, inheritance/realization oriented parent->child (relation.to above relation.from) and every other kind from->to: the source's frame.minY is strictly less than the target's (top-down).",
+   "excluded": "Relation endpoints that are not declared classes (they get no frame), self-loops, and DFS back edges (on cycles).",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutBoxDiagrams.swift:22"
+ },
+ {
+  "label": "packet-07/2",
+  "A": {
+   "label": "packet-07/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it groups nodes by the node.rank values assigned elsewhere and only fixes the order within each rank by DFS visit order (Gansner's initial order)."
+  },
+  "B": {
+   "label": "packet-07/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It buckets nodes by the node.rank already stored on the DagreGraph (computed elsewhere). Its own contract is the initial order within each rank (DFS visit order), not the layer assignment."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/InitOrder.swift:15"
+ },
+ {
+  "label": "packet-07/3",
+  "A": {
+   "label": "packet-07/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Breadth-first distance from a start node, capped at maxDepth. This is shortest-path distance, not a layering."
+  },
+  "B": {
+   "label": "packet-07/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Breadth-first, shortest-path distance from startID, capped at maxDepth (first-discovery distance, not longest path)."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:1900"
+ },
+ {
+  "label": "packet-07/4",
+  "A": {
+   "label": "packet-07/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it shallow-copies an existing per-layer node order and computes nothing."
+  },
+  "B": {
+   "label": "packet-07/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It only copies an existing per-layer node order ([[LNode]]?)."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_SweepCopy.swift:49"
+ },
+ {
+  "label": "packet-07/5",
+  "A": {
+   "label": "packet-07/5",
+   "verdict": "LAYERING",
+   "reason": "The doc comment says nodes are assigned to columns by longest-path depth from the sources. The body computes depth = max over predecessors of depth+1, with a cycle guard, and places each node's bar at x = originX + column * columnSpacing. Off-cycle edges therefore go to a strictly later column; the code's own comment says a target's column is always strictly greater than its source's. One undocumented refinement: every node with zero total outflow (a sink) is moved to the deepest column. Under Link's documented precondition (value > 0) that still keeps the law. A hand-built link with value <= 0 would give its source zero outflow, move it to the last column, and break strict increase. Sankey nodes admit several predecessors.",
+   "result_kind": "coordinate",
+   "direction": "left to right: x (column) increases from link.source to link.target",
+   "excluded": "none (every node gets a column; a link naming an unknown node is ignored)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-07/5",
+   "verdict": "LAYERING",
+   "reason": "Sankey layout. Its doc says nodes go into columns by longest-path depth from the sources (memoized 1 + max over predecessors, with a cycle guard). Column c becomes rect x = originX + c*columnSpacing. The body also moves sinks (outValue <= 0) to the deepest column (d3 'justify'). That still keeps every off-cycle link strictly left-to-right, since a non-sink source's depth is below its target's and below the deepest column, and the inline comment says so. Caveat: a link with value <= 0 makes its source count as a sink and can break strictness. That is a degenerate input, not the stated contract.",
+   "result_kind": "coordinate",
+   "direction": "source -> target along d.links: the target's column (rect.minX) is strictly greater than the source's (left to right).",
+   "excluded": "none (links naming unknown nodes are ignored; duplicate names get only the first index)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutSankey.swift:13"
+ },
+ {
+  "label": "packet-07/6",
+  "A": {
+   "label": "packet-07/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it sets port ids and hyperedge flags for crossing counting over an existing node order."
+  },
+  "B": {
+   "label": "packet-07/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It assigns sequential port ids and flags hyperedges for one port, using an existing layer/node order."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_AllCrossingsCounter.swift:85"
+ },
+ {
+  "label": "packet-07/7",
+  "A": {
+   "label": "packet-07/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Here \"layer\" is a user-chosen architecture classification name stored on a module node and saved to a snapshot, not an integer layer over graph edges."
+  },
+  "B": {
+   "label": "packet-07/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "'Layer' here is a user-chosen architectural classification label for a module. The function updates the node and persists a snapshot. There is no graph layering."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/ViewModels/TuistSpiderViewModel.swift:909"
+ },
+ {
+  "label": "packet-07/8",
+  "A": {
+   "label": "packet-07/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it returns the minimum-slack edge crossing the tight tree, using layers computed elsewhere (a network simplex helper)."
+  },
+  "B": {
+   "label": "packet-07/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Network-simplex helper. It returns the non-tree edge with minimal slack. It reads existing layers and assigns none."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:522"
+ },
+ {
+  "label": "packet-08/1",
+  "A": {
+   "label": "packet-08/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean predicate comparing an index against the node-order count; it assigns no layers."
+  },
+  "B": {
+   "label": "packet-08/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a Bool saying whether the free layer's index is below the last index of the node order; it assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_BetweenLayerEdgeTwoNodeCrossingsCounter.swift:33"
+ },
+ {
+  "label": "packet-08/2",
+  "A": {
+   "label": "packet-08/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Matches a bundle's edges to indices in the graph's edge array; this is edge lookup, not layering."
+  },
+  "B": {
+   "label": "packet-08/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Finds the graph's edge indices that match a bundle's edges; it assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_ascii_edge_bundling.swift:67"
+ },
+ {
+  "label": "packet-08/3",
+  "A": {
+   "label": "packet-08/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "An acyclicity check that returns a Bool. It builds a longest-path layer array internally only to test for back edges and never returns it."
+  },
+  "B": {
+   "label": "packet-08/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a Bool, an acyclicity check. The longest-path layer array it builds is internal and never returned."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NGraph.swift:91"
+ },
+ {
+  "label": "packet-08/4",
+  "A": {
+   "label": "packet-08/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the sum of a layer's node heights, a geometric statistic of a layer computed elsewhere (reads a layering)."
+  },
+  "B": {
+   "label": "packet-08/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the sum of one layer's node heights, a geometric measure. It reads a layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:86"
+ },
+ {
+  "label": "packet-08/5",
+  "A": {
+   "label": "packet-08/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts edge crossings between two given layers; it assigns no layers."
+  },
+  "B": {
+   "label": "packet-08/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts edge crossings between two adjacent layers; it assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_CrossingsCounter.swift:29"
+ },
+ {
+  "label": "packet-08/6",
+  "A": {
+   "label": "packet-08/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns one global critical path (its length and node chain) for the whole scope, not a layer per node. The per-node longest-path memo is internal and is not part of the result."
+  },
+  "B": {
+   "label": "packet-08/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns one value for the whole scope: the longest dependency chain and its length (the critical path). It gives no layer per node. The memoised longest-path depth sits in a nested helper and is not exposed."
+  },
+  "C": null,
+  "id": "Ryu0118__swift-module-graph:Sources/SwiftModuleGraph/ModuleGraph.swift:96"
+ },
+ {
+  "label": "packet-08/7",
+  "A": {
+   "label": "packet-08/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the height of a pie-chart legend row from font measurement; no graph is involved."
+  },
+  "B": {
+   "label": "packet-08/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the height of a pie-chart legend row, a font-scaled constant. It involves no graph."
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutFlowchart.swift:2064"
+ },
+ {
+  "label": "packet-08/8",
+  "A": {
+   "label": "packet-08/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Propagates FIRST/LAST layer-constraint properties onto an opposite node when an edge is hidden. It sets constraint flags and does not compute a layering."
+  },
+  "B": {
+   "label": "packet-08/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Sets the hidden-node-connection and FIRST/LAST layer-constraint properties on one node. It is constraint bookkeeping and assigns no integer layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_LayerConstraintPreprocessor.swift:82"
+ },
+ {
+  "label": "packet-09/1",
+  "A": {
+   "label": "packet-09/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Initialization helper for the network simplex layerer: resets node/edge attributes, re-indexes nodes and edges, collects sources. It assigns no layer itself; the layering is computed elsewhere in execute."
+  },
+  "B": {
+   "label": "packet-09/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Initialization helper of the network simplex layerer: resets tree flags, re-indexes nodes and edges, collects sources and edges. It assigns no layers; the owner's layering contract belongs to execute, not this function."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:180"
+ },
+ {
+  "label": "packet-09/2",
+  "A": {
+   "label": "packet-09/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts in-layer edges for a crossing counter over an already-given node order; it assigns no layer (reads a layering)."
+  },
+  "B": {
+   "label": "packet-09/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Increments a per-layer counter of in-layer edges for a crossing counter; it reads an existing layer assignment and assigns no layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_AllCrossingsCounter.swift:112"
+ },
+ {
+  "label": "packet-09/3",
+  "A": {
+   "label": "packet-09/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Mirrors a node's FIRST/LAST layer-constraint property for a graph transformation; it computes no layering."
+  },
+  "B": {
+   "label": "packet-09/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Swaps a node's FIRST/LAST layer-constraint property when the graph is mirrored; it computes no layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_GraphTransformer.swift:231"
+ },
+ {
+  "label": "packet-09/4",
+  "A": {
+   "label": "packet-09/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: sets each existing layer's id to its index in layeredGraph.layers; it assigns no layers to nodes."
+  },
+  "B": {
+   "label": "packet-09/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it numbers the graph's existing Layer objects by their position in the list and assigns nothing to nodes."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_LabelDummySwitcher.swift:46"
+ },
+ {
+  "label": "packet-09/5",
+  "A": {
+   "label": "packet-09/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Looks up a port's barycenter rank from a precomputed array; reads a rank, does not compute a layering."
+  },
+  "B": {
+   "label": "packet-09/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it looks up a precomputed barycenter port rank by port id."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:359"
+ },
+ {
+  "label": "packet-09/6",
+  "A": {
+   "label": "packet-09/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Numbers ports sequentially within one layer's node order (within-layer position for crossing counting), not a layer that increases across edges."
+  },
+  "B": {
+   "label": "packet-09/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Numbers ports consecutively within a single layer in node order and side order, for crossing counting. That is a within-layer position, not a layer across edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_BetweenLayerEdgeTwoNodeCrossingsCounter.swift:37"
+ },
+ {
+  "label": "packet-09/7",
+  "A": {
+   "label": "packet-09/7",
+   "verdict": "LAYERING",
+   "reason": "Longest-path numbering over the hyperedge segment dependency DAG (cycles broken beforehand): routingSlot(target) = max(routingSlot(target), routingSlot(source)+1), processed Kahn-style. Segments can have several incoming dependencies. The rightward pass only raises sink slots to maxRank and never lowers a slot below its predecessor's + 1, so slot strictly increases along every processed dependency.",
+   "result_kind": "coordinate",
+   "direction": "routing slot strictly increases from a dependency's source segment to its target segment",
+   "excluded": "segments on or downstream of a remaining dependency cycle (their in-weight never reaches 0, so they are never processed)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-09/7",
+   "verdict": "LAYERING",
+   "reason": "The doc says 'topological numbering'. The body is a Kahn-style longest-path ranking over the segment dependency digraph, a general digraph where a segment can have several incoming dependencies: slot(target) = max(slot(target), slot(source)+1). Phase 2 only raises sinks with rightward-only segments to maxRank, and its min() never lowers a slot below source+1, so the slot still strictly increases along every processed dependency.",
+   "result_kind": "coordinate",
+   "direction": "routing slot strictly increases from a dependency's source segment to its target segment (along getOutgoingSegmentDependencies)",
+   "excluded": "Segments that never reach in-weight 0 keep their prior routing slot (default 0) and are not ranked. These are segments on a residual cycle and everything reachable only through one, though the caller breaks cycles first.",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p5edges/orthogonal/org_eclipse_elk_alg_layered_p5edges_orthogonal_OrthogonalRoutingGenerator.swift:331"
+ },
+ {
+  "label": "packet-09/8",
+  "A": {
+   "label": "packet-09/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Sets graph layout options (edge spacing, direction, random seed, straightness, spacings); it computes no layering."
+  },
+  "B": {
+   "label": "packet-09/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Sets graph-level layout options (edge spacing, direction, random seed, favor-straight-edges, port constraints, spacings); it computes no layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/org_eclipse_elk_alg_layered_GraphConfigurator.swift:125"
+ },
+ {
+  "label": "packet-10/1",
+  "A": {
+   "label": "packet-10/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: assigns each node its index within its own layer (the within-layer order on the cross axis), not a layer across edges"
+  },
+  "B": {
+   "label": "packet-10/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns each node its position within its own layer, taken from a layering computed elsewhere. This is the cross-axis order inside a layer, which edges do not constrain. It reads a layering."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/Order.swift:167"
+ },
+ {
+  "label": "packet-10/2",
+  "A": {
+   "label": "packet-10/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "shifts existing ranks of a tree's nodes by a constant delta; it does not compute a layering"
+  },
+  "B": {
+   "label": "packet-10/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Adds a constant delta to existing ranks of the tree's nodes. It shifts a layering computed elsewhere and assigns no layers of its own."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Rank/FeasibleTree.swift:106"
+ },
+ {
+  "label": "packet-10/3",
+  "A": {
+   "label": "packet-10/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean predicate on whether a sweep index is the starting layer index; reads a layering"
+  },
+  "B": {
+   "label": "packet-10/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean query comparing a sweep index with the start index. It reads a layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_BarycenterHeuristic.swift:270"
+ },
+ {
+  "label": "packet-10/4",
+  "A": {
+   "label": "packet-10/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "forwards a string architecture-layer classification (e.g. \"feature\", \"foundation\") from node metadata; not a graph layering"
+  },
+  "B": {
+   "label": "packet-10/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Applies a named architectural layer classification (suggestedLayer string) to one module node, not an edge-respecting integer layer. It forwards a classification computed elsewhere."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/ViewModels/TuistSpiderViewModel.swift:939"
+ },
+ {
+  "label": "packet-10/5",
+  "A": {
+   "label": "packet-10/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "assigns postorder DFS traversal IDs and lowest-descendant postorder IDs over the spanning tree; not a layer assignment"
+  },
+  "B": {
+   "label": "packet-10/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns postorder DFS traversal IDs and lowest-postorder IDs over the spanning tree, which are traversal numbering, not layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:555"
+ },
+ {
+  "label": "packet-10/6",
+  "A": {
+   "label": "packet-10/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: computes the minimal incoming/outgoing edge span from layers assigned elsewhere"
+  },
+  "B": {
+   "label": "packet-10/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes the shortest incoming and outgoing edge span from existing node layers. It reads a layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:460"
+ },
+ {
+  "label": "packet-10/7",
+  "A": {
+   "label": "packet-10/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "assigns each commit a branch name (lane label) by first-parent inheritance; a categorical lane label, not a layer that increases along edges"
+  },
+  "B": {
+   "label": "packet-10/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns each commit a branch-lane name by inheriting along first-parent links. Lanes are categorical and do not strictly increase across edges."
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/GitLogParser.swift:201"
+ },
+ {
+  "label": "packet-10/8",
+  "A": {
+   "label": "packet-10/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean predicate on whether an edge's endpoints share a layer; reads a layering"
+  },
+  "B": {
+   "label": "packet-10/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean test of whether an edge's endpoints share a layer. It reads a layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LEdge.swift:103"
+ },
+ {
+  "label": "packet-11/1",
+  "A": {
+   "label": "packet-11/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the maximum vertical anchor difference of in-layer edges leaving west-side ports in one layer; a geometric measurement, not a layer assignment."
+  },
+  "B": {
+   "label": "packet-11/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the maximum vertical anchor distance of west-side in-layer edges in one layer; a spacing measurement, assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p5edges/org_eclipse_elk_alg_layered_p5edges_PolylineEdgeRouter.swift:239"
+ },
+ {
+  "label": "packet-11/2",
+  "A": {
+   "label": "packet-11/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns Array(0..<limit), an integer range utility with no graph."
+  },
+  "B": {
+   "label": "packet-11/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the integers 0..<limit; a range utility with no graph."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:407"
+ },
+ {
+  "label": "packet-11/3",
+  "A": {
+   "label": "packet-11/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts in-layer edge crossings for two node orders; a crossing count, not a layering."
+  },
+  "B": {
+   "label": "packet-11/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts in-layer edge crossings for two node orders and returns the pair of counts; a crossing count, not a layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_CrossingsCounter.swift:97"
+ },
+ {
+  "label": "packet-11/4",
+  "A": {
+   "label": "packet-11/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering: it post-processes an ELK-computed layout by clustering nodes on their existing flow-axis coordinates and snapping each cluster to a common coordinate. It does not assign layers from edges, and it gives no edge-monotonicity contract."
+  },
+  "B": {
+   "label": "packet-11/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it post-processes ELK's existing coordinates, clustering nodes by flow-axis position into layers and snapping each cluster to its centre. Its contract is alignment, not that layer increases along edges, and edge pairs are inserted in both directions."
+  },
+  "C": null,
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_layout.swift:624"
+ },
+ {
+  "label": "packet-11/5",
+  "A": {
+   "label": "packet-11/5",
+   "verdict": "LAYERING",
+   "reason": "Documented as a layered top-down (Sugiyama) layout in which parents sit above children along layeringEdges. It removes DFS back edges, which always lie on cycles, then layers the acyclic remainder with assignLayers (network simplex with a longest-path fallback; every kept edge spans at least one layer). Each layer gets a single frame minY, and y strictly increases from one layer to the next by layerHeight + layerGap. So for every off-cycle layering edge, frames[to].minY > frames[from].minY, given layerGap > 0.",
+   "result_kind": "coordinate",
+   "direction": "along layeringEdges (from, to): y (frame minY) increases from source to target, top-down",
+   "excluded": "Dummy nodes are removed from the returned frames. Back edges on cycles and self-edges are not constrained. Edge endpoints not in ids are ignored.",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-11/5",
+   "verdict": "LAYERING",
+   "reason": "Layered top-down (Sugiyama) layout. It drops DFS back edges (which lie on cycles), layers the rest with assignLayers, and stacks the layers in order with y += layerHeight + layerGap. Each node's frame minY is therefore a flow-axis coordinate that strictly increases from source to target on every forward layering edge. The doc states the contract: parents sit above children. Over a general digraph, it computes the coordinate itself rather than only forwarding the layer map.",
+   "result_kind": "coordinate",
+   "direction": "along each layeringEdges (from, to) not on a cycle, y of `from` < y of `to` (source above target, top-down)",
+   "excluded": "none (every id gets a layer; only internal dummy nodes are stripped from the result)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayout.swift:873"
+ },
+ {
+  "label": "packet-11/6",
+  "A": {
+   "label": "packet-11/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Maps a connection-kind enum to a fixed sort rank; a sort's rank, not a graph layering."
+  },
+  "B": {
+   "label": "packet-11/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "A sort rank over a connection-kind enum, a fixed switch table."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/ViewModels/TuistSpiderViewModel.swift:1632"
+ },
+ {
+  "label": "packet-11/7",
+  "A": {
+   "label": "packet-11/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the maximum BFS (shortest-path) distance reachable from a root; breadth-first distance, not a layering."
+  },
+  "B": {
+   "label": "packet-11/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Maximum BFS (shortest-path) distance reachable from a root; breadth-first distance, not a layering."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:1805"
+ },
+ {
+  "label": "packet-11/8",
+  "A": {
+   "label": "packet-11/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns rank values to the ports of a single node for crossing minimization; port ordering within one node, not a layer assignment over a digraph's nodes."
+  },
+  "B": {
+   "label": "packet-11/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns rank positions to the ports of one node for port distribution in crossing minimisation; an ordering of ports within a node, not a layering of graph nodes along edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_LayerTotalPortDistributor.swift:21"
+ },
+ {
+  "label": "packet-12/1",
+  "A": {
+   "label": "packet-12/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Bounds-checked index into an existing nodeOrder [[LNode]] that forwards to the per-node initializer of constraint-resolver state; it assigns no layers and only reads a layering computed elsewhere (reads a layering)."
+  },
+  "B": {
+   "label": "packet-12/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Bounds-checks a (layer, index) pair and forwards to the per-node constraint-group initialiser; reads an existing layering (nodeOrder), assigns none."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_ForsterConstraintResolver.swift:42"
+ },
+ {
+  "label": "packet-12/2",
+  "A": {
+   "label": "packet-12/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Sets x/y coordinates of external-port dummy nodes from port side, padding and ratio/position properties and grows graph height; geometric placement, not a layer assignment respecting edges."
+  },
+  "B": {
+   "label": "packet-12/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Sets x/y coordinates of external-port dummy nodes from port side, padding and graph size; geometric placement, not a layering over edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_HierarchicalPortOrthogonalEdgeRouter.swift:513"
+ },
+ {
+  "label": "packet-12/3",
+  "A": {
+   "label": "packet-12/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Network-simplex helper that returns a tree edge with negative cut value (or nil); it returns an edge, not a layer per node. The owning class layers, but this function does not."
+  },
+  "B": {
+   "label": "packet-12/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Network-simplex helper that returns a tree edge with a negative cut value (or nil); it assigns no layers itself."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:695"
+ },
+ {
+  "label": "packet-12/4",
+  "A": {
+   "label": "packet-12/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Packs disconnected component graphs into rows by width (shelf packing) and returns the bounding size; table-like row placement, no edges between components are respected."
+  },
+  "B": {
+   "label": "packet-12/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Packs connected components into rows by width (shelf packing) and returns the bounding size; no graph edges are involved."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/components/org_eclipse_elk_alg_layered_components_ComponentGroupGraphPlacer.swift:196"
+ },
+ {
+  "label": "packet-12/5",
+  "A": {
+   "label": "packet-12/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Dictionary lookup of a stored per-node LayerConstraint option (e.g. FIRST/LAST); it reads a stored property and computes no layering."
+  },
+  "B": {
+   "label": "packet-12/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Dictionary lookup of a node's LayerConstraint option (e.g. first/last); reads a stored constraint, computes no layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p1cycles/org_eclipse_elk_alg_layered_p1cycles_GroupModelOrderCalculator.swift:30"
+ },
+ {
+  "label": "packet-12/6",
+  "A": {
+   "label": "packet-12/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view that renders a diagnostics row listing child nodes, child edges and a descendant count; UI display, not a layering."
+  },
+  "B": {
+   "label": "packet-12/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view that displays child node ids, child edge ids and a descendant count for one node; diagnostics display only."
+  },
+  "C": null,
+  "id": "1amageek__swift-flow:Sources/SwiftFlow/Previews/FlowCanvasLivePreview.swift:704"
+ },
+ {
+  "label": "packet-12/7",
+  "A": {
+   "label": "packet-12/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Initializes constraint-group and barycenter state for a node at its existing layer/node index; it reads a layering (layer.id) computed elsewhere and assigns none."
+  },
+  "B": {
+   "label": "packet-12/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Initialises constraint-group and barycenter state for a node at its existing layer/index and records layout units; reads a layering, assigns none."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_ForsterConstraintResolver.swift:66"
+ },
+ {
+  "label": "packet-12/8",
+  "A": {
+   "label": "packet-12/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view showing a notice that a node's architectural layer/tag classification can be edited; 'layer' is a user category label, not a graph layering."
+  },
+  "B": {
+   "label": "packet-12/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI notice view about editing a node's architectural layer tag; 'layer' is a classification label, not a graph layering."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Views/ContentView.swift:772"
+ },
+ {
+  "label": "packet-13/1",
+  "A": {
+   "label": "packet-13/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Crossing-minimization step: reorders nodes within the first layer and returns whether it improved; no layer assignment."
+  },
+  "B": {
+   "label": "packet-13/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Crossing-minimization step: reorders nodes within the first layer of an existing layering and reports improvement; assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_LayerSweepCrossingMinimizer.swift:718"
+ },
+ {
+  "label": "packet-13/2",
+  "A": {
+   "label": "packet-13/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Moves label dummy nodes adjacent to a node into a given label layer (a mutation step); states no contract that layers increase along edges."
+  },
+  "B": {
+   "label": "packet-13/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Moves label dummy nodes adjacent to one node into a given label layer; a local fix-up, not a layering with a per-edge contract."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_LayerConstraintPostprocessor.swift:74"
+ },
+ {
+  "label": "packet-13/3",
+  "A": {
+   "label": "packet-13/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Picks cut indexes for graph wrapping from cumulative layer widths and heights; it does not assign layers to nodes."
+  },
+  "B": {
+   "label": "packet-13/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes cut indexes for graph wrapping from accumulated layer widths and heights; it reads a layering and returns cut positions, not node layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_MSDCutIndexHeuristic.swift:18"
+ },
+ {
+  "label": "packet-13/4",
+  "A": {
+   "label": "packet-13/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Distributes ports on the nodes of one layer during a crossing-minimization sweep and returns whether that improved anything."
+  },
+  "B": {
+   "label": "packet-13/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Distributes ports on the nodes of one layer to reduce crossings; returns a Bool."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_GreedyPortDistributor.swift:24"
+ },
+ {
+  "label": "packet-13/5",
+  "A": {
+   "label": "packet-13/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "B": {
+   "label": "packet-13/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LGraph.swift:39"
+ },
+ {
+  "label": "packet-13/6",
+  "A": {
+   "label": "packet-13/6",
+   "verdict": "LAYERING",
+   "reason": "The doc says network-simplex layer assignment gives every node a global column. The body strips self-loops and DFS back edges, layers the rest with assignLayers (every edge spans at least 1 layer), and turns each column into a strictly increasing x band (columnX[c+1] >= columnX[c] + columnWidth[c] + gap). So every node frame's x strictly increases from an edge's source to its target. The function produces coordinates rather than forwarding the layering.",
+   "result_kind": "coordinate",
+   "direction": "from -> to: the target node's frame lies in a strictly later column, so it has a strictly larger x (left to right)",
+   "excluded": "Self-loops and DFS back edges (each lies on a cycle). Nodes whose laneID names no lane in diagram.lanes are never placed.",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-13/6",
+   "verdict": "LAYERING",
+   "reason": "The doc says network-simplex layer assignment gives every node a global column. The body drops self-loops, strips DFS back edges, layers the remaining DAG with assignLayers and turns each layer into a column x coordinate. Columns are laid out left to right with a positive gap between them, so every off-cycle edge goes to a strictly later x. Swimlane diagrams are general digraphs, so a node can have several predecessors.",
+   "result_kind": "coordinate",
+   "direction": "along each edge from -> to, the column and the node frame's x strictly increase (left to right)",
+   "excluded": "nodes whose laneID names no lane in diagram.lanes are not placed in the output",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutSwimlane.swift:39"
+ },
+ {
+  "label": "packet-13/7",
+  "A": {
+   "label": "packet-13/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean configuration check for whether to turn on the greedy-switch processor; no layering."
+  },
+  "B": {
+   "label": "packet-13/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean configuration check for whether to activate greedy switch."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/org_eclipse_elk_alg_layered_GraphConfigurator.swift:370"
+ },
+ {
+  "label": "packet-13/8",
+  "A": {
+   "label": "packet-13/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "B": {
+   "label": "packet-13/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LGraph.swift:69"
+ },
+ {
+  "label": "packet-14/1",
+  "A": {
+   "label": "packet-14/1",
+   "verdict": "LAYERING",
+   "reason": "Longest-path topological numbering. Processing nodes in topological order (Kahn's algorithm from the given roots), it sets target.layer = max(target.layer, source.layer + edge.delta) along every outgoing edge. The owner's documented postcondition is that edges connect only from lower to higher layer indices, and NEdge.delta defaults to 1. The doc comment mentions a `reverse` mode that the signature does not have. That is a stale doc artifact; the layering the body computes matches the stated contract.",
+   "result_kind": "map",
+   "direction": "along outgoing edges, source to target: layer(target) >= layer(source) + delta, with delta 1 by default",
+   "excluded": "nodes never reached from initialRootNodes, or whose in-edges are not all processed, are never enqueued; they keep their prior layer or get only a partial update",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-14/1",
+   "verdict": "LAYERING",
+   "reason": "Network simplex initial feasible layering: owner postcondition says edges connect layers with increasing indices; body is a weighted longest-path numbering from the given roots (tgt.layer = max(tgt.layer, src.layer + edge.delta), node processed once all its predecessors are), over a general DAG (nodes may have several incoming edges). Strictness needs edge.delta >= 1 (the NEdge default is 1, but delta can be set to 0). The doc mentions a `reverse` mode that this function has no parameter for, but the stated contract (a feasible minimal topological numbering) matches what the body does.",
+   "result_kind": "map",
+   "direction": "source to target: layer(target) >= layer(source) + edge.delta, so the layer increases along outgoing edges",
+   "excluded": "nodes not reached from initialRootNodes with all their predecessors processed (e.g. nodes with a predecessor unreachable from the roots, and nodes on or downstream of a cycle); these keep their prior layer",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:428"
+ },
+ {
+  "label": "packet-14/2",
+  "A": {
+   "label": "packet-14/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It turns one existing layer's nodes into an auxiliary network-simplex graph for vertical node placement and chains consecutive nodes with spacing edges; it assigns no layers."
+  },
+  "B": {
+   "label": "packet-14/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builds the node-placement auxiliary graph for one existing layer, adding spacing-constraint edges between consecutive nodes; it reads a layer and assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p4nodes/org_eclipse_elk_alg_layered_p4nodes_NetworkSimplexPlacer.swift:176"
+ },
+ {
+  "label": "packet-14/3",
+  "A": {
+   "label": "packet-14/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. A per-node initialisation hook over an existing nodeOrder [[LNode]] that only records whether layer l contains a NORTH_SOUTH_PORT node."
+  },
+  "B": {
+   "label": "packet-14/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a per-node init hook that only records whether layer l holds a NORTH_SOUTH_PORT node in a nodeOrder computed elsewhere"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_AllCrossingsCounter.swift:72"
+ },
+ {
+  "label": "packet-14/4",
+  "A": {
+   "label": "packet-14/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. A per-node initialisation hook over an existing nodeOrder that only adds the node's port count to a running total."
+  },
+  "B": {
+   "label": "packet-14/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a per-node init hook that only adds up port counts over a nodeOrder computed elsewhere"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_GreedyPortDistributor.swift:182"
+ },
+ {
+  "label": "packet-14/5",
+  "A": {
+   "label": "packet-14/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Breadth-first shortest-path distances with a parent tree. On r->a, r->b, a->b it gives d(a) == d(b), so it is not a layering."
+  },
+  "B": {
+   "label": "packet-14/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Breadth-first shortest-path distances and a parent tree from one start node; BFS distance, not a longest-path layering"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:586"
+ },
+ {
+  "label": "packet-14/6",
+  "A": {
+   "label": "packet-14/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Lists architectural layer names, taken from each node's primaryLayer, sorted alphabetically, then adds fixed buckets (new modules, unclassified, external). Graph edges play no part, so nothing is ordered along edges."
+  },
+  "B": {
+   "label": "packet-14/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Groups nodes into canvas bands by their declared architectural layer name (sorted alphabetically) plus new/unclassified/external buckets; no edges are consulted"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:1563"
+ },
+ {
+  "label": "packet-14/7",
+  "A": {
+   "label": "packet-14/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. A predicate testing whether an edge's endpoints sit in different layers."
+  },
+  "B": {
+   "label": "packet-14/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a predicate testing whether an edge's endpoints lie in different layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_BetweenLayerEdgeTwoNodeCrossingsCounter.swift:163"
+ },
+ {
+  "label": "packet-14/8",
+  "A": {
+   "label": "packet-14/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Creates an empty Layer container and appends it to the graph's layers list; it assigns no nodes and computes no layering."
+  },
+  "B": {
+   "label": "packet-14/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Appends a new empty Layer container to the graph's layer list; assigns no node to a layer and consults no edges"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LGraph.swift:53"
+ },
+ {
+  "label": "packet-15/1",
+  "A": {
+   "label": "packet-15/1",
+   "verdict": "LAYERING",
+   "reason": "Longest-path depth over a target-dependency DAG: depth(node) = 1 + max depth(dependency) over in-scope dependencies, leaves = 1. The enclosing depthLevels doc confirms it ('the longest chain length starting at that target'). A target can have several dependents, so it is a DAG, not a tree.",
+   "result_kind": "per-node query",
+   "direction": "strictly decreasing along each dependent -> dependency edge (strictly increasing from dependency to dependent)",
+   "excluded": "nodes outside `scope`; dependency edges leaving scope are ignored",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-15/1",
+   "verdict": "LAYERING",
+   "reason": "Longest-path depth over a target dependency DAG: depth(node) = 1 + max depth over in-scope dependencies (sinks get 1). Its caller, depthLevels, groups targets by this value. A target can have several dependents, so the graph is a DAG, not a tree.",
+   "result_kind": "per-node query",
+   "direction": "strictly decreases along each dependency edge (dependent -> dependency): depth(dependent) >= depth(dependency) + 1, counted from the leaf side",
+   "excluded": "targets outside `scope`; edges to out-of-scope dependencies are ignored",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "Ryu0118__swift-module-graph:Sources/SwiftModuleGraph/ModuleGraph.swift:129"
+ },
+ {
+  "label": "packet-15/2",
+  "A": {
+   "label": "packet-15/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Gives ranks to the ports of nodes inside a single layer, for barycenter crossing minimisation. That is an order within a layer, not a layer per node across edges."
+  },
+  "B": {
+   "label": "packet-15/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns cumulative port ranks to the nodes of one layer in order (barycenter crossing minimization). This is a position within a layer, not a layer across edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:64"
+ },
+ {
+  "label": "packet-15/3",
+  "A": {
+   "label": "packet-15/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It records the maximum non-dummy node width for each existing layer of the LGraph."
+  },
+  "B": {
+   "label": "packet-15/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Records the maximum non-dummy node width of each existing layer. It reads a layering and assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_LabelDummySwitcher.swift:72"
+ },
+ {
+  "label": "packet-15/4",
+  "A": {
+   "label": "packet-15/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It is a wrapper that forwards an existing [[LNode]] layer order to the inout overload for crossing-minimisation sweeps."
+  },
+  "B": {
+   "label": "packet-15/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Forwards to the inout overload, which sets the in-layer node order of the first layer during crossing minimization. This is ordering within a layer, not layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_MedianHeuristic.swift:40"
+ },
+ {
+  "label": "packet-15/5",
+  "A": {
+   "label": "packet-15/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It is a getter that returns the stored nodeOrder ([[LNode]]) of a sweep copy."
+  },
+  "B": {
+   "label": "packet-15/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_SweepCopy.swift:63"
+ },
+ {
+  "label": "packet-15/6",
+  "A": {
+   "label": "packet-15/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It sets up per-layer barycenter and constraint-group arrays sized to an existing layer's node count."
+  },
+  "B": {
+   "label": "packet-15/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Initializes per-layer barycenter and constraint-group state arrays for one layer index. It assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_ForsterConstraintResolver.swift:33"
+ },
+ {
+  "label": "packet-15/7",
+  "A": {
+   "label": "packet-15/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering. It returns a node's stored LayerConstraint property (for example FIRST, LAST or NONE), defaulting to NONE, and computes no layer."
+  },
+  "B": {
+   "label": "packet-15/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a node's LayerConstraint property (for example FIRST, LAST or NONE), defaulting to .NONE. It reads a property and computes no layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p1cycles/org_eclipse_elk_alg_layered_p1cycles_GroupModelOrderCalculator.swift:132"
+ },
+ {
+  "label": "packet-15/8",
+  "A": {
+   "label": "packet-15/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Its documented contract is to build a tight feasible spanning tree and compute cut values for network simplex. The initial layering comes from layeringTopologicalNumbering, which it calls. Here it only shifts the layers of tree nodes to tighten a minimal-slack edge, and edge minimal lengths (delta) are not guaranteed to be at least 1."
+  },
+  "B": {
+   "label": "packet-15/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Its own contract is building a tight feasible spanning tree and its cut values (a network simplex helper). The initial layering is delegated to layeringTopologicalNumbering, and this function only shifts tree nodes to keep edges feasible by edge.delta, which promises no strict increase of its own. The layering postcondition belongs to the owning class, not to this helper."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:389"
+ },
+ {
+  "label": "packet-16/1",
+  "A": {
+   "label": "packet-16/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Crossing-minimization step: randomly shuffles the node order within the first layer and stores 1-based in-layer positions as weights; no edge-respecting layer assignment."
+  },
+  "B": {
+   "label": "packet-16/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Crossing-minimization step: randomly permutes the nodes within one already-assigned layer (first or last) and stores positions as weights; it orders nodes inside a layer and assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_MedianHeuristic.swift:15"
+ },
+ {
+  "label": "packet-16/2",
+  "A": {
+   "label": "packet-16/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Barycenter heuristic that orders nodes within one rank of a layer graph (in-layer order for crossing minimization), with border nodes at the ends; not a layer assignment along edges."
+  },
+  "B": {
+   "label": "packet-16/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Barycenter-based ordering of the nodes within one rank of a layer graph (crossing minimization); it orders nodes inside a layer and does not assign layers across edges."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/SortSubgraph.swift:31"
+ },
+ {
+  "label": "packet-16/3",
+  "A": {
+   "label": "packet-16/3",
+   "verdict": "ORDERING",
+   "reason": "Doc and body: a stable Kahn topological sort of linear segments in the segment-ordering graph, returned as a flat list (leftovers on cycles appended); the ids it writes are positions in that flat order."
+  },
+  "B": {
+   "label": "packet-16/3",
+   "verdict": "ORDERING",
+   "reason": "Per its doc and its body (a stable Kahn topological sort), it returns a flat topological order of linear segments over the segment dependency graph. The ids it writes are the sequence index, not a layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p4nodes/org_eclipse_elk_alg_layered_p4nodes_LinearSegmentsNodePlacer.swift:158"
+ },
+ {
+  "label": "packet-16/4",
+  "A": {
+   "label": "packet-16/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Runs layout processors in lockstep across nested graphs; it schedules processors and assigns no layers. The bottom-up graph collection happens in another function."
+  },
+  "B": {
+   "label": "packet-16/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Schedules layout processors across nested graphs (innermost first) in lockstep; it computes no layer or position for graph nodes."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/org_eclipse_elk_alg_layered_ElkLayered.swift:76"
+ },
+ {
+  "label": "packet-16/5",
+  "A": {
+   "label": "packet-16/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "B": {
+   "label": "packet-16/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:218"
+ },
+ {
+  "label": "packet-16/6",
+  "A": {
+   "label": "packet-16/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: finds a neighbor of a dummy node that sits in the same, already-assigned layer"
+  },
+  "B": {
+   "label": "packet-16/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_SortByInputModelProcessor.swift:470"
+ },
+ {
+  "label": "packet-16/7",
+  "A": {
+   "label": "packet-16/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Greedy-switch crossing minimization of the node order within the first layer of an existing layering; in-layer order, not a layer assignment."
+  },
+  "B": {
+   "label": "packet-16/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Greedy-switch crossing minimization of the node order inside the first layer of an existing layering; it assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/greedyswitch/org_eclipse_elk_alg_layered_intermediate_greedyswitch_GreedySwitchHeuristic.swift:37"
+ },
+ {
+  "label": "packet-16/8",
+  "A": {
+   "label": "packet-16/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Barycenter crossing minimization that reorders the nodes within the first layer of an existing layering; in-layer order, not a layer assignment."
+  },
+  "B": {
+   "label": "packet-16/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Barycenter crossing minimization that reorders the nodes inside one existing layer; it assigns no layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_BarycenterHeuristic.swift:243"
+ },
+ {
+  "label": "packet-17/1",
+  "A": {
+   "label": "packet-17/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it returns the summed width of the layers of an existing layering via getSumWidth and assigns no layers."
+  },
+  "B": {
+   "label": "packet-17/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: returns the summed width of an existing layering's layers (forwards getSumWidth); assigns no layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:66"
+ },
+ {
+  "label": "packet-17/2",
+  "A": {
+   "label": "packet-17/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Bookkeeping only: it grows the nodePositions jagged array so a row exists for layerId with at least nodeCount slots. It assigns no layer to any node."
+  },
+  "B": {
+   "label": "packet-17/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "array bookkeeping: grows the nodePositions table so a row exists for layerId with nodeCount slots; assigns no layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:339"
+ },
+ {
+  "label": "packet-17/3",
+  "A": {
+   "label": "packet-17/3",
+   "verdict": "LAYERING",
+   "reason": "Network simplex rank step. It walks the spanning tree in preorder and sets each non-root node's rank to the parent's rank plus or minus the edge's minlen, so for every tree edge rank(target) = rank(source) + minlen. The owner's contract is optimal rank assignment over a general DAG, and a feasible tree keeps the inequality on non-tree edges too. The law holds only when the tree is a feasible tight spanning tree, and the tree's parent pointers come from initLowLimValues, a separate call.",
+   "result_kind": "map",
+   "direction": "source to target: rank(w) >= rank(v) + minlen for edge v->w, increasing along the edge",
+   "excluded": "none (the root keeps its existing rank; nodes the preorder walk does not reach keep their previous rank)",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-17/3",
+   "verdict": "LAYERING",
+   "reason": "The network simplex rank assignment (Gansner et al.) writes an integer rank to every node of the DAG g. Walking the tight spanning tree in preorder, it sets each node's rank to its tree parent's rank plus or minus the edge's minlen. In context the ranking is feasible, so rank(w) >= rank(v) + minlen on every edge v->w. That holds only when t is the feasible tree produced by the pivot, so the law does not hold for an arbitrary tree.",
+   "result_kind": "map",
+   "direction": "rank increases along each edge v->w (rank(w) >= rank(v) + minlen, minlen >= 1)",
+   "excluded": "none (the tree root keeps its existing rank; the spanning tree covers every node)",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Rank/NetworkSimplex.swift:260"
+ },
+ {
+  "label": "packet-17/4",
+  "A": {
+   "label": "packet-17/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Per-node initialisation: it sets node.id to its index within its layer and resets nodeInfo. It reads a layering (nodeOrder) and does not compute one."
+  },
+  "B": {
+   "label": "packet-17/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "per-node initialization: sets the node's id to its index within an existing layer and resets its NodeInfo; reads a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_LayerSweepTypeDecider.swift:196"
+ },
+ {
+  "label": "packet-17/5",
+  "A": {
+   "label": "packet-17/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes coordinates of the routing slots for one node's self-loops on each port side. These are not graph nodes layered along edges."
+  },
+  "B": {
+   "label": "packet-17/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "computes coordinates of self-loop routing slots per port side from slot counts, label heights and spacing; routing slots are not graph nodes being layered"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/loops/routing/org_eclipse_elk_alg_layered_intermediate_loops_routing_OrthogonalSelfLoopRouter.swift:123"
+ },
+ {
+  "label": "packet-17/6",
+  "A": {
+   "label": "packet-17/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean predicate: whether a long-edge dummy node has an in-layer edge. It assigns no layer."
+  },
+  "B": {
+   "label": "packet-17/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean predicate: whether a long-edge dummy node has an in-layer edge"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p5edges/org_eclipse_elk_alg_layered_p5edges_PolylineEdgeRouter.swift:282"
+ },
+ {
+  "label": "packet-17/7",
+  "A": {
+   "label": "packet-17/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Maps a project path string to an architectural layer name by substring rules. It never looks at graph edges."
+  },
+  "B": {
+   "label": "packet-17/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "string matching: infers an architecture-layer name from path markers in a project path; no graph layering"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Services/SpiderGraphImporter.swift:465"
+ },
+ {
+  "label": "packet-17/8",
+  "A": {
+   "label": "packet-17/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it initialises a node's id and its position within its existing layer (nodePositions[l][n] = n), an in-layer order index, not a layer along edges."
+  },
+  "B": {
+   "label": "packet-17/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: records each node's index within its existing layer (id and nodePositions[l][n] = n); assigns no layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:320"
+ },
+ {
+  "label": "packet-18/1",
+  "A": {
+   "label": "packet-18/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "A comparator helper that returns -1/1/0 depending on which of two nodes appears first in a given layer list. It assigns no layer."
+  },
+  "B": {
+   "label": "packet-18/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Comparator helper: returns -1/1/0 according to which of two nodes appears first in an already-ordered layer list; it assigns no layers (reads a layering)."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_SortByInputModelProcessor.swift:594"
+ },
+ {
+  "label": "packet-18/2",
+  "A": {
+   "label": "packet-18/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Initialisation only: it sizes a node-position row for layer l from nodeOrder[l].count. It computes no layering."
+  },
+  "B": {
+   "label": "packet-18/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Initialisation hook that sizes a per-layer node-position row from an existing node order; it computes no layering (reads a layering)."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:315"
+ },
+ {
+  "label": "packet-18/3",
+  "A": {
+   "label": "packet-18/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a spacing value (the gap between layers) from a config knob. It assigns no layers."
+  },
+  "B": {
+   "label": "packet-18/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a spacing constant (the gap between layers, in points); it has nothing to do with assigning nodes to layers."
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramSpacing.swift:90"
+ },
+ {
+  "label": "packet-18/4",
+  "A": {
+   "label": "packet-18/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it buckets nodes by a levels map passed in and counts same-level edges. The levels are computed elsewhere."
+  },
+  "B": {
+   "label": "packet-18/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it buckets nodes by a levels map passed in from elsewhere (BFS distance from a root, computed at the call site) and counts same-level edges. It computes no levels itself."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:917"
+ },
+ {
+  "label": "packet-18/5",
+  "A": {
+   "label": "packet-18/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns Array(start..<limit), an integer range utility."
+  },
+  "B": {
+   "label": "packet-18/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Utility that returns Array(start..<limit), an integer range; it has no graph semantics."
+  },
+  "C": null,
+  "id": "lukilabs__dagre-swift:Sources/SwiftDagre/Util/GraphUtil.swift:412"
+ },
+ {
+  "label": "packet-18/6",
+  "A": {
+   "label": "packet-18/6",
+   "verdict": "LAYERING",
+   "reason": "The doc says it determines the optimal layering. The class postcondition: all nodes get a layer and edges connect only layers with increasing indices (precondition: acyclic NGraph, a general digraph). The body resets node.layer, builds a feasible tree from a topological numbering, pivots while keeping feasibility, re-attaches removed leaf subtrees at placed.layer +/- delta, then normalizes or balances. Strictness relies on edge delta >= 1; NEdge.delta defaults to 1 but can be set to 0.",
+   "result_kind": "map",
+   "direction": "source to target: layer(target) >= layer(source) + delta, so it increases along every edge",
+   "excluded": "none (removed leaf subtrees are re-attached and layered)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-18/6",
+   "verdict": "LAYERING",
+   "reason": "The owning class's documented postcondition is that every node of the acyclic NGraph gets a layer, with edges connecting only layers of increasing index. The function's doc says 'Determine the optimal layering'. The body resets node.layer, starts from a longest-path topological numbering (tgt.layer = max(tgt.layer, src.layer + delta)), and keeps tgt.layer - src.layer >= delta through the simplex exchanges, normalize and balance. Caveat: NEdge.delta defaults to 1 but the API allows 0 (NGraph.makeConnected adds zero-delta edges), and strict increase holds only for delta >= 1. A generator must keep deltas >= 1, and presumably the graph connected, because the tight-tree DFS starts at nodes[0].",
+   "result_kind": "map",
+   "direction": "source to target: layer(target) >= layer(source) + delta, so strictly increasing along each edge for delta >= 1",
+   "excluded": "none",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:251"
+ },
+ {
+  "label": "packet-18/7",
+  "A": {
+   "label": "packet-18/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it finds a port whose incoming edge's source sits in layer id nodeLayerId - 1, reading layer ids assigned elsewhere."
+  },
+  "B": {
+   "label": "packet-18/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: finds an incoming port whose source node's existing layer id equals this node's layer id minus 1."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_SortByInputModelProcessor.swift:356"
+ },
+ {
+  "label": "packet-18/8",
+  "A": {
+   "label": "packet-18/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "A network simplex pivot helper. It picks the non-tree edge with minimal slack to enter the spanning tree, and returns an edge rather than a layering."
+  },
+  "B": {
+   "label": "packet-18/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Network-simplex helper that picks the minimum-slack non-tree edge to replace a leaving tree edge; it reads current layers but assigns none."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:715"
+ },
+ {
+  "label": "packet-19/1",
+  "A": {
+   "label": "packet-19/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Collects and alphabetically sorts architecture-layer NAME strings (primaryLayer/suggestedLayer) for a picker; assigns no integer layer and reads no edges."
+  },
+  "B": {
+   "label": "packet-19/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Collects architecture layer NAME strings from nodes and returns them sorted alphabetically as UI options; assigns no layer and reads no edges."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/ViewModels/TuistSpiderViewModel.swift:897"
+ },
+ {
+  "label": "packet-19/2",
+  "A": {
+   "label": "packet-19/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Places edge-label captions along route polylines by obstacle-clearance scoring; geometry of labels, not a layering of graph nodes."
+  },
+  "B": {
+   "label": "packet-19/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Places edge-label captions along route segments by scoring candidate positions against obstacles. It is geometric label placement, not a layering of nodes."
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutFlowchart.swift:395"
+ },
+ {
+  "label": "packet-19/3",
+  "A": {
+   "label": "packet-19/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: compacts/renumbers ranks already assigned elsewhere by removing empty ranks (a monotone shift); it does not itself establish the edge-direction law."
+  },
+  "B": {
+   "label": "packet-19/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Post-processes a rank assignment computed elsewhere: it shifts existing ranks down to drop empty ranks, and with the default factor it is a no-op. It never reads edges, and its contract is removing gaps, not computing layers (it adjusts a layering it reads)."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:257"
+ },
+ {
+  "label": "packet-19/4",
+  "A": {
+   "label": "packet-19/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Draws an ASCII/Unicode box character canvas for one node; drawing, not layering."
+  },
+  "B": {
+   "label": "packet-19/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Draws a node's ASCII box onto a character canvas; this is rendering, not layering."
+  },
+  "C": null,
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_ascii_grid.swift:607"
+ },
+ {
+  "label": "packet-19/5",
+  "A": {
+   "label": "packet-19/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a setter that moves one node into the Layer object it is handed; the layer choice is computed elsewhere."
+  },
+  "B": {
+   "label": "packet-19/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Setter that moves the node into a Layer object chosen by the caller. It forwards a layering computed elsewhere (reads a layering)."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LNode.swift:73"
+ },
+ {
+  "label": "packet-19/6",
+  "A": {
+   "label": "packet-19/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Network-simplex helper that grows a tight spanning tree by DFS and returns its node count; it reads the existing layering (tgt.layer - src.layer) but assigns no layers."
+  },
+  "B": {
+   "label": "packet-19/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Network-simplex helper that grows a tight spanning tree by DFS and returns its node count. It reads a layering (tgt.layer - src.layer) and does not assign one."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:494"
+ },
+ {
+  "label": "packet-19/7",
+  "A": {
+   "label": "packet-19/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Increments a port counter; all parameters are ignored. No layering."
+  },
+  "B": {
+   "label": "packet-19/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Only increments a port counter during traversal initialization; ignores all of its arguments."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_GraphInfoHolder.swift:220"
+ },
+ {
+  "label": "packet-19/8",
+  "A": {
+   "label": "packet-19/8",
+   "verdict": "LAYERING",
+   "reason": "Longest-path depth: depth(n) = 1 + max over incoming (dependent) predecessors, 0 for sources, over the DAG left after back edges are removed; enclosing doc calls it longest-path layering where a node sits below everything that depends on it.",
+   "result_kind": "per-node query",
+   "direction": "increases along each edge from dependent (from) to dependency (to): depth(to) >= depth(from) + 1",
+   "excluded": "none (back edges closing cycles are excluded from the edge set beforehand)",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-19/8",
+   "verdict": "LAYERING",
+   "reason": "Longest-path layering: depth(n) = 1 + max over incoming (dependent) nodes, 0 for sources, over the DAG left after the DFS back edges are removed. The enclosing comment says 'Longest-path layering: a node sits below everything that depends on it'. Dependency graphs admit nodes with several predecessors.",
+   "result_kind": "per-node query",
+   "direction": "Layer strictly increases along every non-back edge from dependent (edge.from) to dependency (edge.to): depth(to) >= depth(from) + 1.",
+   "excluded": "none (only the cycle-closing back edges are dropped from the edge set)",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "yahirvitelugardo__Graffle:Sources/Graffle/Architecture/GraphLayout.swift:47"
+ },
+ {
+  "label": "packet-20/1",
+  "A": {
+   "label": "packet-20/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns manually configured wrapping cut indexes read from a graph property; it assigns no layers to nodes."
+  },
+  "B": {
+   "label": "packet-20/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns manually specified cut indexes read from a graph property for graph wrapping. It assigns no layers to nodes."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_ICutIndexCalculator.swift:23"
+ },
+ {
+  "label": "packet-20/2",
+  "A": {
+   "label": "packet-20/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns fractional ranks to the ports of a single node for crossing minimization (port order along a node side), not layers to graph nodes across edges."
+  },
+  "B": {
+   "label": "packet-20/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns fractional ranks to one node's ports for crossing minimisation (a port ordering within a node). It is not a layering of graph nodes over edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_NodeRelativePortDistributor.swift:21"
+ },
+ {
+  "label": "packet-20/3",
+  "A": {
+   "label": "packet-20/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: groups nodes by their already-computed rank (node.rank/minRank/maxRank) and builds one layer graph per requested rank."
+  },
+  "B": {
+   "label": "packet-20/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: it buckets nodes by their precomputed rank, min rank and max rank, then builds one layer graph per rank."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/Order.swift:100"
+ },
+ {
+  "label": "packet-20/4",
+  "A": {
+   "label": "packet-20/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Collects ports of two nodes connected by edges and sorts them by in-layer position; a positional sort, not a layering."
+  },
+  "B": {
+   "label": "packet-20/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Collects the in-layer ports connected to two nodes and sorts them by their position within the layer (a sort by position, not a layering)."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_CrossingsCounter.swift:140"
+ },
+ {
+  "label": "packet-20/5",
+  "A": {
+   "label": "packet-20/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Boolean predicate over spanning-tree postorder ids deciding whether a node is in an edge's head or tail component; assigns no layers."
+  },
+  "B": {
+   "label": "packet-20/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "A Boolean membership query: is the node in the head or the tail component of a spanning-tree edge, decided by postorder IDs. It assigns no layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:583"
+ },
+ {
+  "label": "packet-20/6",
+  "A": {
+   "label": "packet-20/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builds an intermediate-processor configuration from graph properties; no node layering."
+  },
+  "B": {
+   "label": "packet-20/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builds a processor configuration for the layout pipeline from graph properties. No node layering."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/org_eclipse_elk_alg_layered_GraphConfigurator.swift:222"
+ },
+ {
+  "label": "packet-20/7",
+  "A": {
+   "label": "packet-20/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builder setter that stores previous per-layer node counts and returns self; it only forwards layering data."
+  },
+  "B": {
+   "label": "packet-20/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a builder setter that stores per-layer node counts from a previous layering and returns self."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:153"
+ },
+ {
+  "label": "packet-20/8",
+  "A": {
+   "label": "packet-20/8",
+   "verdict": "LAYERING",
+   "reason": "Reassigns node.layer to balance layer widths. Its doc and the owner's postcondition say feasibility is kept, so every edge still goes from a lower layer to a strictly higher one. The body keeps each node within (layer - minInSpan, layer + minOutSpan), which preserves strict increase.",
+   "result_kind": "map",
+   "direction": "source to target: layer strictly increases along each edge",
+   "excluded": "none",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-20/8",
+   "verdict": "LAYERING",
+   "reason": "Rebalances the network-simplex layering in place. It moves nodes whose in-degree equals their out-degree to the least-filled layer strictly inside their minimal incoming and outgoing spans. Its documented contract is to keep the layering feasible, so every edge still goes to a strictly higher layer. It writes node.layer, so it does more than read a layering.",
+   "result_kind": "map",
+   "direction": "increasing from edge source to edge target",
+   "excluded": "none",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:842"
+ },
+ {
+  "label": "packet-21/1",
+  "A": {
+   "label": "packet-21/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Maps each long-edge target node to the minimum model order of non-reversed outgoing edges reaching it from one node's ports; a model-order lookup cached on the node, not a layer assignment."
+  },
+  "B": {
+   "label": "packet-21/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Maps each long-edge target node to the minimum model order of the non-reversed edges reaching it from this node's ports; this is an ordering key, not a layer that increases along edges. It is also cached in a node property."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_SortByInputModelProcessor.swift:86"
+ },
+ {
+  "label": "packet-21/2",
+  "A": {
+   "label": "packet-21/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the integer range start..<limit as an array; no graph involved."
+  },
+  "B": {
+   "label": "packet-21/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the integer range start..<limit; it involves no graph."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:412"
+ },
+ {
+  "label": "packet-21/3",
+  "A": {
+   "label": "packet-21/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a stepped integer range; no graph involved."
+  },
+  "B": {
+   "label": "packet-21/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a stepped integer range; it involves no graph."
+  },
+  "C": null,
+  "id": "lukilabs__dagre-swift:Sources/SwiftDagre/Util/GraphUtil.swift:417"
+ },
+ {
+  "label": "packet-21/4",
+  "A": {
+   "label": "packet-21/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: counts weighted edge crossings between two adjacent, already-assigned layers using an accumulator tree; returns a crossing count."
+  },
+  "B": {
+   "label": "packet-21/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Counts weighted edge crossings between two given adjacent layers with an accumulator tree; it reads a layering and does not assign one."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/CrossCount.swift:19"
+ },
+ {
+  "label": "packet-21/5",
+  "A": {
+   "label": "packet-21/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a SwiftUI view that lists the nodes of one precomputed level group; it is UI rendering only."
+  },
+  "B": {
+   "label": "packet-21/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a SwiftUI view that renders the nodes of a level group that was computed elsewhere."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Views/ContentView.swift:846"
+ },
+ {
+  "label": "packet-21/6",
+  "A": {
+   "label": "packet-21/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builds an undirected adjacency list of node indices, adding each edge in both directions; no layer or level is assigned."
+  },
+  "B": {
+   "label": "packet-21/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Builds an undirected adjacency list (index lists in both directions) from the graph's edges; it assigns no layers."
+  },
+  "C": null,
+  "id": "nmandica__DirectedGraph:Sources/Views/GraphViewModel.swift:55"
+ },
+ {
+  "label": "packet-21/7",
+  "A": {
+   "label": "packet-21/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a predicate that says whether an edge's source and target nodes sit in the same, already-assigned layer."
+  },
+  "B": {
+   "label": "packet-21/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a predicate that is true when an edge's source and target nodes share a layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/counting/org_eclipse_elk_alg_layered_p3order_counting_CrossingsCounter.swift:422"
+ },
+ {
+  "label": "packet-21/8",
+  "A": {
+   "label": "packet-21/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: decides whether a cut is allowed before a given layer, from the incoming edges of that layer's nodes; returns a Bool."
+  },
+  "B": {
+   "label": "packet-21/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: decides whether a cut is allowed before a given layer, from the edges entering that layer."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:289"
+ },
+ {
+  "label": "packet-22/1",
+  "A": {
+   "label": "packet-22/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes barycenter values for in-layer ports to order ports on a node; it assigns no layer to graph nodes."
+  },
+  "B": {
+   "label": "packet-22/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "Computes barycenter values for in-layer ports from positions of connected nodes in the same layer; a port-ordering heuristic, not an assignment of layers to graph nodes."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:178"
+ },
+ {
+  "label": "packet-22/2",
+  "A": {
+   "label": "packet-22/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Adds up chunk heights for a set of cut indices to estimate a Double height. It reads an existing layering and assigns no layers."
+  },
+  "B": {
+   "label": "packet-22/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a single Double estimating the height of a chunk-based layering given cut indices; an aggregate metric that reads a layering, not one that assigns layers."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:96"
+ },
+ {
+  "label": "packet-22/3",
+  "A": {
+   "label": "packet-22/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Registers the layered layout algorithm with the metadata service; it does no graph computation."
+  },
+  "B": {
+   "label": "packet-22/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Registers the layered layout algorithm with a metadata service under a lock; no graph or layering involved."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/Bridge/ELK.swift:42"
+ },
+ {
+  "label": "packet-22/4",
+  "A": {
+   "label": "packet-22/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view that groups nodes by their architectural layer label, counts each group and sorts the groups by name. These are named categories, not graph layers."
+  },
+  "B": {
+   "label": "packet-22/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view that groups a level group's nodes by layer label string and shows counts; display code that reads a layering."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Views/ContentView.swift:802"
+ },
+ {
+  "label": "packet-22/5",
+  "A": {
+   "label": "packet-22/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Parses a 'layer:' tag string into a normalized layer name. This is string handling, not graph layering."
+  },
+  "B": {
+   "label": "packet-22/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Parses a 'layer:' prefixed tag string into a normalized layer name; string parsing, not graph layering."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Services/SpiderGraphImporter.swift:444"
+ },
+ {
+  "label": "packet-22/6",
+  "A": {
+   "label": "packet-22/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns sequential integer ids to ports while iterating a layered node order. It reads a layering and gives ports a counter; it assigns no layers."
+  },
+  "B": {
+   "label": "packet-22/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Assigns sequential integer ids to ports while iterating a node order; an id counter, not a layer assignment along edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_AbstractBarycenterPortDistributor.swift:327"
+ },
+ {
+  "label": "packet-22/7",
+  "A": {
+   "label": "packet-22/7",
+   "verdict": "LAYERING",
+   "reason": "Dagre longest-path ranking. Each node's rank is the minimum over its successors of (rank(w) - minlen), and sinks get 0, so for every edge v->w, rank(w) >= rank(v) + minlen (minlen defaults to 1). This holds over a general DAG. Note that the owner doc says 'longest path to each node from sources' while the body anchors at sinks and counts down, but the layering law is the same either way.",
+   "result_kind": "map",
+   "direction": "rank strictly increases from an edge's source to its target (rank(w) - rank(v) >= minlen, default 1)",
+   "excluded": "nodes not reachable from any source node (possible only in graphs with cycles), and nodes with no label",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-22/7",
+   "verdict": "LAYERING",
+   "reason": "Dagre longest-path ranking over a general digraph: rank(v) = min over successors of (rank(w) - minlen), sinks get 0, DFS from sources. For every off-cycle edge v->w, rank(w) >= rank(v) + minlen with minlen defaulting to 1, so rank strictly increases from edge source to target. The doc says 'longest path ... from sources', but the body anchors at sinks (non-positive ranks). That still satisfies the longest-path layering contract and matches the cited TypeScript, so the body is not counted as disagreeing.",
+   "result_kind": "map",
+   "direction": "rank strictly increases from edge source to edge target (rank(w) - rank(v) >= minlen >= 1); ranks are non-positive with sinks at 0",
+   "excluded": "nodes unreachable from any source (for example, components that are only cycles), which keep their previous rank; nodes without a label",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Rank/LongestPath.swift:20"
+ },
+ {
+  "label": "packet-22/8",
+  "A": {
+   "label": "packet-22/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Finds DFS back edges (cycle-closing edge indices) so that a later layering can ignore them. It returns a set of edges, not a layer per node."
+  },
+  "B": {
+   "label": "packet-22/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns the set of back-edge indices found by DFS (cycle-closing edges that layering should ignore); cycle detection that feeds a layering, not a layering itself."
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayout.swift:802"
+ },
+ {
+  "label": "packet-23/1",
+  "A": {
+   "label": "packet-23/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: sums two-layer crossing counts over a given [[String]] layering; computes no layers"
+  },
+  "B": {
+   "label": "packet-23/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: sums two-layer crossing counts over a layering given as input"
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/CrossCount.swift:9"
+ },
+ {
+  "label": "packet-23/2",
+  "A": {
+   "label": "packet-23/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "configuration setter on the network simplex layerer (sets a balance flag and returns self); assigns no layers"
+  },
+  "B": {
+   "label": "packet-23/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "builder-style configuration setter that stores a balancing flag and returns self; it assigns no layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:140"
+ },
+ {
+  "label": "packet-23/3",
+  "A": {
+   "label": "packet-23/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "computes cut values of spanning-tree edges for network simplex; produces edge weights, not node layers"
+  },
+  "B": {
+   "label": "packet-23/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "computes network-simplex cut values for spanning-tree edges, not a layer per node"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:615"
+ },
+ {
+  "label": "packet-23/4",
+  "A": {
+   "label": "packet-23/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view builder for an architectural-layer classification editor; 'layer' is a user-chosen label, not a graph layering"
+  },
+  "B": {
+   "label": "packet-23/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view builder for an architecture-layer classification editor; no graph layering is computed"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Views/ContentView.swift:731"
+ },
+ {
+  "label": "packet-23/5",
+  "A": {
+   "label": "packet-23/5",
+   "verdict": "LAYERING",
+   "reason": "Documented longest-path layering of a dependency digraph after breaking cycles at DFS back edges: depth(n) = 1 + max over predecessors, and layerOf is returned. Source nodes are pulled down to one above their lowest successor, which keeps every edge strictly increasing. y-origins also increase strictly along edges. By contract, the optional `bottom` tiers override placement.",
+   "result_kind": "map",
+   "direction": "increases from edge.from (dependent) to edge.to (dependency): dependents on top, dependencies below",
+   "excluded": "none of `nodes`; edges naming nodes outside `nodes` and self-loops are dropped, and back edges count as cycle edges. Nodes in the optional `bottom` sets are placed into fixed bottom rows by contract, so the law holds as stated only with bottom = [] or on edges not touching those tiers",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-23/5",
+   "verdict": "LAYERING",
+   "reason": "Sugiyama-style longest-path layering over a dependency digraph after cycle-breaking: layer(n) = 1 + max over DAG predecessors. Sources are then pulled down to min(successor layer) - 1, which keeps every edge strict. The result is returned as Result.layerOf. The doc says dependents go on top and dependencies below; the caller-supplied bottom tiers override this for their own nodes.",
+   "result_kind": "map",
+   "direction": "from dependent (Edge.from) to dependency (Edge.to): layer strictly increases along every non-back edge",
+   "excluded": "nodes in the caller-supplied `bottom` tiers (forced below everything else, so edges out of them or within a tier can break the law); DFS back edges are reported in cycleEdges and left out; self-loops and edges to unknown nodes are dropped",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "yahirvitelugardo__Graffle:Sources/Graffle/Architecture/GraphLayout.swift:17"
+ },
+ {
+  "label": "packet-23/6",
+  "A": {
+   "label": "packet-23/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "approximates child sizes and runs layout on one hierarchy level to return a child-area size vector; no node layering"
+  },
+  "B": {
+   "label": "packet-23/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "approximates a hierarchical node's size by running layout on its children; the 'next level' is compound-node nesting, not a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/core/options/org_eclipse_elk_core_options_TopdownSizeApproximator.swift:160"
+ },
+ {
+  "label": "packet-23/7",
+  "A": {
+   "label": "packet-23/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "configuration setter for the network simplex iteration limit; assigns no layers"
+  },
+  "B": {
+   "label": "packet-23/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "builder-style configuration setter for the iteration limit; it assigns no layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:165"
+ },
+ {
+  "label": "packet-23/8",
+  "A": {
+   "label": "packet-23/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "swaps a node's layer-constraint and in-layer-constraint properties during graph transposition; assigns no layers"
+  },
+  "B": {
+   "label": "packet-23/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "swaps a node's layer and in-layer constraint properties during graph transposition; it computes no layer from edges"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_GraphTransformer.swift:511"
+ },
+ {
+  "label": "packet-24/1",
+  "A": {
+   "label": "packet-24/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: takes a precomputed levels map and aggregates edge counts between level pairs; it assigns no layers"
+  },
+  "B": {
+   "label": "packet-24/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: aggregates graph edges into counts between already-assigned levels (from the levels map input)"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:942"
+ },
+ {
+  "label": "packet-24/2",
+  "A": {
+   "label": "packet-24/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "classifies a node into an architectural canvas layer kind (external / new / named layer / unclassified) from node flags; no graph edges or ordering involved"
+  },
+  "B": {
+   "label": "packet-24/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "classifies a single node into a canvas category (external / new / architectural layer / unclassified); no graph edges involved"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:1588"
+ },
+ {
+  "label": "packet-24/3",
+  "A": {
+   "label": "packet-24/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: shifts an already-computed network-simplex layering so the lowest layer is 0 and returns per-layer node counts; the layering itself is computed elsewhere"
+  },
+  "B": {
+   "label": "packet-24/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: shifts an already-computed layering so the lowest layer is 0 and returns per-layer node counts; it does not assign layers from edges"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/common/networksimplex/org_eclipse_elk_alg_common_networksimplex_NetworkSimplex.swift:800"
+ },
+ {
+  "label": "packet-24/4",
+  "A": {
+   "label": "packet-24/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view builder for a layer-classification inspector panel; no graph layering"
+  },
+  "B": {
+   "label": "packet-24/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "SwiftUI view builder for a node's layer-classification inspector"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Views/ContentView.swift:415"
+ },
+ {
+  "label": "packet-24/5",
+  "A": {
+   "label": "packet-24/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "parses layer-name tags from a node's metadata strings and returns the first as primary layer; string parsing, not a graph layering"
+  },
+  "B": {
+   "label": "packet-24/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "parses layer names out of metadata tags into a primary layer label; string parsing, no graph"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Services/SpiderGraphImporter.swift:414"
+ },
+ {
+  "label": "packet-24/6",
+  "A": {
+   "label": "packet-24/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a getter returning stored per-layer node order computed elsewhere"
+  },
+  "B": {
+   "label": "packet-24/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: accessor returning a stored [[LNode]] node order computed elsewhere"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_GraphInfoHolder.swift:129"
+ },
+ {
+  "label": "packet-24/7",
+  "A": {
+   "label": "packet-24/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "edge routing: inserts a bend point for an in-layer edge from port anchor coordinates; assigns no layers"
+  },
+  "B": {
+   "label": "packet-24/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "edge routing: inserts a bend point for an in-layer edge; computes coordinates for an edge, not node layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p5edges/org_eclipse_elk_alg_layered_p5edges_PolylineEdgeRouter.swift:220"
+ },
+ {
+  "label": "packet-24/8",
+  "A": {
+   "label": "packet-24/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "builds a list of depth-filter menu options 1...maxDepth plus .all from a cached reachable depth; reads a depth computed elsewhere and assigns nothing to nodes"
+  },
+  "B": {
+   "label": "packet-24/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "builds a list of UI depth-filter options 1...maxDepth from a cached reachable depth; not a per-node layering"
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/ViewModels/TuistSpiderViewModel.swift:1340"
+ },
+ {
+  "label": "packet-25/1",
+  "A": {
+   "label": "packet-25/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: a getter returning the node's already-assigned layer."
+  },
+  "B": {
+   "label": "packet-25/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: an accessor that returns the node's stored Layer, assigned elsewhere"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LNode.swift:69"
+ },
+ {
+  "label": "packet-25/2",
+  "A": {
+   "label": "packet-25/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reorders a parent node's hierarchical ports to match dummy positions in the last layer. It reads the layer order and assigns no layers."
+  },
+  "B": {
+   "label": "packet-25/2",
+   "verdict": "NOT-LAYERING",
+   "reason": "reorders the parent node's ports to match the external-port dummies in the last layer; reads a layering and computes no layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p3order/org_eclipse_elk_alg_layered_p3order_LayerSweepCrossingMinimizer.swift:506"
+ },
+ {
+  "label": "packet-25/3",
+  "A": {
+   "label": "packet-25/3",
+   "verdict": "TREE-DEPTH",
+   "reason": "Computes depth over the compound parent/children hierarchy, where each node has one parent (setParent/parent). Top-level children get depth 1, and each child gets its parent's depth plus 1."
+  },
+  "B": {
+   "label": "packet-25/3",
+   "verdict": "TREE-DEPTH",
+   "reason": "documented as the depth of each node in the compound hierarchy. A DFS over g.children (each node has one parent) gives depth(child) = depth(parent) + 1, with the root's children at depth 1"
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Nesting/NestingGraph.swift:139"
+ },
+ {
+  "label": "packet-25/4",
+  "A": {
+   "label": "packet-25/4",
+   "verdict": "LAYERING",
+   "reason": "This is Gansner network-simplex layer assignment, per the doc and the file header: it minimizes the sum of rank(head) minus rank(tail), with every edge spanning at least one layer, over an acyclic digraph that allows multiple predecessors. It writes an integer rank per node through the inout rank array. The body keeps a feasible ranking (slack >= 0) while it tightens and optimizes.",
+   "result_kind": "map",
+   "direction": "tail -> head: rank(head) >= rank(tail) + 1 (slack = rank[head] - rank[tail] - 1 >= 0)",
+   "excluded": "Nodes outside the given connected component (only `nodes` and the edges in `edgeIndices` are ranked). Self-edges are dropped by the caller.",
+   "expressible": false,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-25/4",
+   "verdict": "LAYERING",
+   "reason": "Gansner network-simplex layer assignment on one connected component. It updates the inout rank so that every edge keeps rank[head] - rank[tail] >= 1 (slack >= 0) while it minimises total edge length, over an acyclic general digraph (assignLayers strips back-edges first). It keeps a layering feasible rather than creating one: the inout seed must already be feasible (the caller passes longest-path ranks). On a false return (iteration cap hit) the caller discards the result and falls back to longest path",
+   "result_kind": "map",
+   "direction": "tail to head: rank strictly increases along each edge",
+   "excluded": "nodes outside the given component (it only changes ranks of nodes in `nodes`); self-edges are already removed by the caller",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": {
+   "label": "packet-25/4",
+   "verdict": "LAYERING",
+   "reason": "Gansner et al. network-simplex rank assignment on one weakly-connected component of a DAG (flowchart/class/ER diagrams, so nodes can have several predecessors). It rewrites the inout `rank` array and keeps every edge feasible throughout, so slack = rank[head] - rank[tail] - 1 >= 0 on every edge. The tight-tree shifts move the tree by the minimum crossing slack, and the pivot shifts tailSide down by the entering edge's minimum slack. The result is a layering where rank strictly increases from tail to head, with total edge length minimised. Preconditions: the input rank must already be feasible (the caller seeds it with longestPathLayers), the edges must be acyclic (the caller strips back-edges), and there are no self-edges. Feasibility holds even when the function returns false because it hit the iteration cap.",
+   "result_kind": "map",
+   "direction": "tail -> head: rank[head] >= rank[tail] + 1 for every edge in edgeIndices",
+   "excluded": "nodes outside the given component (`nodes`); their rank entries are left untouched",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutLayering.swift:101"
+ },
+ {
+  "label": "packet-25/5",
+  "A": {
+   "label": "packet-25/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Returns a Double width estimate for a chunked layering. reads a layering"
+  },
+  "B": {
+   "label": "packet-25/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "returns an approximate width (a Double) for a chunked layering; reads a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/wrapping/org_eclipse_elk_alg_layered_intermediate_wrapping_GraphStats.swift:71"
+ },
+ {
+  "label": "packet-25/6",
+  "A": {
+   "label": "packet-25/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Adds auxiliary edges to the network-simplex auxiliary graph for in-layer edges. It is graph construction and assigns no layers."
+  },
+  "B": {
+   "label": "packet-25/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "adds auxiliary edges to the network-simplex graph for in-layer edges, oriented by the order of nodes within a layer; creates edges and assigns no layers"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p4nodes/org_eclipse_elk_alg_layered_p4nodes_NetworkSimplexPlacer.swift:350"
+ },
+ {
+  "label": "packet-25/7",
+  "A": {
+   "label": "packet-25/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Removes one layer object from the graph's layer list by identity. A list mutation, not a layer assignment."
+  },
+  "B": {
+   "label": "packet-25/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "removes one Layer object from the graph's layer list; changes the list and computes no layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LGraph.swift:60"
+ },
+ {
+  "label": "packet-25/8",
+  "A": {
+   "label": "packet-25/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Edge routing: it adjusts bend-point y coordinates for E/W external-port dummies in one layer."
+  },
+  "B": {
+   "label": "packet-25/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "edge routing: sets bend-point y coordinates for external-port dummies in one layer; reads a layering"
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/intermediate/org_eclipse_elk_alg_layered_intermediate_HierarchicalPortOrthogonalEdgeRouter.swift:602"
+ },
+ {
+  "label": "packet-26/1",
+  "A": {
+   "label": "packet-26/1",
+   "verdict": "LAYERING",
+   "reason": "Documented as a layered Sugiyama/dagre layout with cycle-safe layer assignment where layers stack top-down (left-to-right for LR/RL). On flat charts the body breaks cycles with DFS back edges, assigns layers to the forward edges and places each layer along the main axis, so every off-cycle edge advances along that axis. The body departs from that once subgraphs exist. layoutClustered folds each subgraph into a placeholder, so a->Y, Y->b with a and b in subgraph S becomes the reduced cycle S->Y->S, and one edge of an acyclic chart gets reversed. A subgraph's own `direction` override also lays its inner edges across the chart's main axis.",
+   "result_kind": "coordinate",
+   "direction": "tail to head along the main axis: y increases for TD/BT (both laid top-down), x increases for LR/RL (both laid left-to-right)",
+   "excluded": "none",
+   "expressible": true,
+   "body_disagrees": true
+  },
+  "B": {
+   "label": "packet-26/1",
+   "verdict": "LAYERING",
+   "reason": "Documented as a Sugiyama/dagre layered layout. It breaks cycles at DFS back edges, then assigns layers on the forward edges (longest-path seed refined by network simplex), with stand-in ranks for long links. Layers stack along the main axis, and each node's frame gives its position on that axis. Flowcharts are general digraphs.",
+   "result_kind": "coordinate",
+   "direction": "source to target along the main axis: increasing y (top-down) for TD/BT, increasing x for LR/RL (BT and RL are not mirrored, as the doc says)",
+   "excluded": "none (a subgraph that declares its own direction lays its interior out along that subgraph's axis)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutFlowchart.swift:102"
+ },
+ {
+  "label": "packet-26/2",
+  "A": {
+   "label": "packet-26/2",
+   "verdict": "LAYERING",
+   "reason": "Documented as relationship-layered rows. The body takes the longest path from sources by repeated relaxation (layer[t] = layer[f]+1), groups elements by layer into rows of at most 6 and places the rows top-down, so on a DAG every relation's target sits in a strictly lower row. The body departs from that on cyclic input. The cap layer[f]+1 <= n stops relaxation, so an off-cycle edge downstream of a cycle can point upward. Example: relations A->B, B->A, B->C give layers A=2, B=3, C=2, so the off-cycle edge B->C goes up.",
+   "result_kind": "coordinate",
+   "direction": "from a relation's `from` element (higher row) to its `to` element (lower row): y increases from tail to head",
+   "excluded": "none (self-relations and relations to unknown aliases add no edge)",
+   "expressible": true,
+   "body_disagrees": true
+  },
+  "B": {
+   "label": "packet-26/2",
+   "verdict": "LAYERING",
+   "reason": "Documented as 'relationship-layered' rows. The body computes a longest-path layer from sources over the relations and places rows top-down by layer, so each box's y coordinate is the layering. Relations form a general digraph. The body breaks the law only on cyclic input: the `layer[f] + 1 <= n` cap stops relaxation, so an off-cycle edge leaving a cycle can end flat or upward. Example: with 3 elements and relations a->b, b->a, b->c, c ends on layer 2, above b on layer 3. On acyclic relations it holds.",
+   "result_kind": "coordinate",
+   "direction": "relation source (from) to target (to), top to bottom (increasing y)",
+   "excluded": "none (relations to unknown aliases and self-relations are ignored)",
+   "expressible": true,
+   "body_disagrees": true
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutC4.swift:66"
+ },
+ {
+  "label": "packet-26/3",
+  "A": {
+   "label": "packet-26/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Turns a product or kind string into an architecture-layer label ('testing'/'app'). It assigns no graph layer."
+  },
+  "B": {
+   "label": "packet-26/3",
+   "verdict": "NOT-LAYERING",
+   "reason": "Classifies a product or kind string into an architectural layer label ('testing'/'app'). No graph and no edges."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Services/SpiderGraphImporter.swift:490"
+ },
+ {
+  "label": "packet-26/4",
+  "A": {
+   "label": "packet-26/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Crossing-minimisation sweep that orders nodes within existing layers. It reads a layering and assigns within-layer order."
+  },
+  "B": {
+   "label": "packet-26/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Crossing minimization: sets each node's order within its existing layer (barycenter sweep). This is a cross-axis position with no edge-direction law, and it returns nothing."
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Order/Order.swift:133"
+ },
+ {
+  "label": "packet-26/5",
+  "A": {
+   "label": "packet-26/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "Reads a layering: an accessor that returns the stored list of nodes not yet assigned to a layer."
+  },
+  "B": {
+   "label": "packet-26/5",
+   "verdict": "NOT-LAYERING",
+   "reason": "An accessor that returns the stored list of nodes not yet assigned to a layer. It computes nothing."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/graph/org_eclipse_elk_alg_layered_graph_LGraph.swift:35"
+ },
+ {
+  "label": "packet-26/6",
+  "A": {
+   "label": "packet-26/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Partitions the dependency graph into strongly connected components (cycle membership). The contract says nothing about level order, and the group order comes from an external library's scc()."
+  },
+  "B": {
+   "label": "packet-26/6",
+   "verdict": "NOT-LAYERING",
+   "reason": "Partitions the graph into strongly connected components, each sorted by name. Its contract is the partition. The order of the groups comes from an external scc() and is not part of the contract, so these are not levels."
+  },
+  "C": null,
+  "id": "swift-compositions__swift-package-graph:Sources/Package Graph/Package.Graph.swift:163"
+ },
+ {
+  "label": "packet-26/7",
+  "A": {
+   "label": "packet-26/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Splits nodes into connected components by DFS, largest component first. These are components, not levels."
+  },
+  "B": {
+   "label": "packet-26/7",
+   "verdict": "NOT-LAYERING",
+   "reason": "Groups nodes into connected components, putting the largest first. The order is by size, not by edges."
+  },
+  "C": null,
+  "id": "lukilabs__elk-swift:Sources/ElkSwift/ELK/org/eclipse/elk/alg/layered/p2layers/org_eclipse_elk_alg_layered_p2layers_NetworkSimplexLayerer.swift:86"
+ },
+ {
+  "label": "packet-26/8",
+  "A": {
+   "label": "packet-26/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Breadth-first shortest-path distance from a start node, which gives d(a) == d(b) on r->a, r->b, a->b."
+  },
+  "B": {
+   "label": "packet-26/8",
+   "verdict": "NOT-LAYERING",
+   "reason": "Breadth-first shortest-path distance from a start node. On r->a, r->b, a->b it gives d(a) == d(b)."
+  },
+  "C": null,
+  "id": "leejungyeob__TuistSpider:App/Sources/Models/SpiderGraph.swift:565"
+ },
+ {
+  "label": "packet-27/1",
+  "A": {
+   "label": "packet-27/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: groups nodes into levels by label.rank, which is computed elsewhere, and sorts each level by order"
+  },
+  "B": {
+   "label": "packet-27/1",
+   "verdict": "NOT-LAYERING",
+   "reason": "reads a layering: groups nodes into a matrix by the rank already stored on each node label (computed elsewhere) and sorts each row by the stored order; it assigns no layers itself"
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:143"
+ },
+ {
+  "label": "packet-27/2",
+  "A": {
+   "label": "packet-27/2",
+   "verdict": "ORDERING",
+   "reason": "Returns a flat topological order (reversed) of package names, and throws on cycles; it gives no layers."
+  },
+  "B": {
+   "label": "packet-27/2",
+   "verdict": "ORDERING",
+   "reason": "returns a flat list of package names in reversed topological traversal order, and throws on cycles; this is a topological sort, not a layer assignment"
+  },
+  "C": null,
+  "id": "swift-compositions__swift-package-graph:Sources/Package Graph/Package.Graph.swift:150"
+ },
+ {
+  "label": "packet-27/3",
+  "A": {
+   "label": "packet-27/3",
+   "verdict": "LAYERING",
+   "reason": "Longest-path layering by Bellman-Ford-style relaxation over a general edge list: layer(to) >= layer(from)+1 on every edge. The doc says 'relax until every edge spans at least one layer', and the caller strips back-edges before calling it.",
+   "result_kind": "map",
+   "direction": "from -> to: layer increases from an edge's source to its target",
+   "excluded": "nodes not in ids (edges touching them are skipped); self-edges cannot be satisfied",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "B": {
+   "label": "packet-27/3",
+   "verdict": "LAYERING",
+   "reason": "Longest-path layering by Bellman-Ford-style relaxation: for each edge (from, to) it raises layer(to) to at least layer(from)+1, so every edge spans at least one layer. The doc says it is the longest-path seed/fallback for the Sugiyama layering, and its caller says the input edges are acyclic. Over a DAG, ids.count+1 passes are enough for it to converge.",
+   "result_kind": "map",
+   "direction": "from -> to (layer strictly increases from an edge's tail to its head)",
+   "excluded": "none (every id gets a layer; edges with an endpoint not in ids are ignored)",
+   "expressible": true,
+   "body_disagrees": false
+  },
+  "C": null,
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/DiagramLayoutLayering.swift:85"
+ },
+ {
+  "label": "packet-27/4",
+  "A": {
+   "label": "packet-27/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "Integer range generator with a step; it involves no graph."
+  },
+  "B": {
+   "label": "packet-27/4",
+   "verdict": "NOT-LAYERING",
+   "reason": "generates an arithmetic range of integers with a step; no graph involved"
+  },
+  "C": null,
+  "id": "Australware__swift-mermaid:Vendor/MermaidLayoutDagre/Util/GraphUtil.swift:417"
+ }
+]

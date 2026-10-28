@@ -118,6 +118,21 @@ Suggested:
 
 `computeLayout`, `computeRows`, `edgePoint`, `componentSVGLines`, `renderMessage`, `renderForwardEdge`/`renderBackEdge`, `buildMermaidText`, `traverse`. This is the largest single stage and the core of the library; the hand-written suite kills 255 of these mutants. No template proposes anything refutable for geometry. Candidate laws: node rectangles do not overlap, every edge endpoint lies on a node, total size bounds every node, output order is stable under input permutation. This is a catalogue gap, not a filter problem.
 
+> **Annotation, 2026-10-28 (#667).** One geometry law of this kind was prototyped by hand and mutation-scored:
+> the layering law, under which every edge off a cycle descends. It was checked over `computeRows` and both
+> `computeLayout`s at `c6c82e3`, after SwiftUMLStudio#53 was fixed.
+>
+> - Of the 91 mutants on its call tree, it detects 42 and the suite 54.
+> - It catches 37 of 38 in the layering logic and 5 of 53 in placement, so most x-coordinate and size
+>   changes stay out of its reach. It would catch three more size and centre mutants only with a generator
+>   that draws larger components.
+> - With PR #64's three law-derived tests left out, it alone catches 4. One of them is M020, `height / 2` →
+>   `height * 2` in Activity's `centerY`, which no test catches even with them.
+>
+> The law is declined on population: the decision universe holds two layerings, both in SwiftUMLStudio. The
+> other candidates above (no overlap, endpoints on nodes, size bounds) are still unmeasured. See
+> `docs/measurements/layering-law-census.md`.
+
 ### F7. Smaller items
 
 - A stub for a `private` subject was still emitted (`StateMachineExtractor.buildCandidates`, `sorted-output`). The fixpoint set it aside, but with F1 present it took the whole package down.

@@ -1,0 +1,3946 @@
+{
+ "candidates": [
+  {
+   "callees": [],
+   "callers": [
+    "_forEach"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-collections:Sources/HeapModule/_HeapNode.swift:59",
+   "judged": true,
+   "key": "557b7f9a24c2f303",
+   "labels": [
+    "forOffset"
+   ],
+   "line": 59,
+   "name": "level",
+   "owner": "_HeapNode",
+   "owner_doc": "",
+   "path": "Sources/HeapModule/_HeapNode.swift",
+   "repo": "swift-collections",
+   "result": "Int",
+   "root": "~/GitHub_projects/swift-collections",
+   "stratum": "name-graph",
+   "text": "  internal static func level(forOffset offset: Int) -> Int {\n    (offset &+ 1)._binaryLogarithm()\n  }",
+   "toplevel": "~/GitHub_projects/swift-collections",
+   "visibility": "internal"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-collections:Sources/HeapModule/_HeapNode.swift:76",
+   "judged": true,
+   "key": "809f4e3f27d4a0b9",
+   "labels": [
+    "_"
+   ],
+   "line": 76,
+   "name": "isMinLevel",
+   "owner": "_HeapNode",
+   "owner_doc": "",
+   "path": "Sources/HeapModule/_HeapNode.swift",
+   "repo": "swift-collections",
+   "result": "Bool",
+   "root": "~/GitHub_projects/swift-collections",
+   "stratum": "name-graph",
+   "text": "  internal static func isMinLevel(_ level: Int) -> Bool {\n    level & 0b1 == 0\n  }",
+   "toplevel": "~/GitHub_projects/swift-collections",
+   "visibility": "internal"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "parent"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-foundation:Sources/FoundationEssentials/Codable/IterativeParsingSupport.swift:91",
+   "judged": true,
+   "key": "9f72ca73fcf7c682",
+   "labels": [
+    "after"
+   ],
+   "line": 91,
+   "name": "nextLevel",
+   "owner": "NullFilter",
+   "owner_doc": "",
+   "path": "Sources/FoundationEssentials/Codable/IterativeParsingSupport.swift",
+   "repo": "swift-foundation",
+   "result": "Int?",
+   "root": "~/GitHub_projects/swift-foundation",
+   "stratum": "name-graph",
+   "text": "    @inline(__always) borrowing func nextLevel(after parentLevel: Int?) -> Int? { nil }",
+   "toplevel": "~/GitHub_projects/swift-foundation",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "nodes",
+     "successors"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Implements a pre-order depth-first search.  The cycles are handled by skipping cycle points but it should be possible to to extend this in the future to provide a callback for every cycle.  - Parameters: - nodes: The list of input nodes to sort. - successors: A closure for fetching the successors of a particular node. - onUnique: A callback to indicate the the given node is being processed for the first time. - onDuplicate: A callback to indicate that the node was already processed at least once.  - Complexity: O(v + e) where (v, e) are the number of vertices and edges reachable from the input nodes via the relation.",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-package-manager:Sources/Basics/Graph/GraphAlgorithms.swift:28",
+   "judged": true,
+   "key": "eef6f82d1701b14a",
+   "labels": [
+    "_",
+    "successors"
+   ],
+   "line": 28,
+   "name": "depthFirstSearch",
+   "owner": "",
+   "owner_doc": "",
+   "path": "Sources/Basics/Graph/GraphAlgorithms.swift",
+   "repo": "swift-package-manager",
+   "result": "",
+   "root": "~/GitHub_projects/swift-package-manager",
+   "stratum": "name-graph",
+   "text": "public func depthFirstSearch<T: Hashable>(\n    _ nodes: [T],\n    successors: (T) throws -> [T],\n    onUnique: (T) throws -> Void,\n    onDuplicate: (T, T) -> Void\n) rethrows {\n    var stack = OrderedSet<T>()\n    var visited = Set<T>()\n\n    for node in nodes {\n        precondition(stack.isEmpty)\n        stack.append(node)\n\n        while !stack.isEmpty {\n            let curr = stack.removeLast()\n\n            let visitResult = visited.insert(curr)\n            if visitResult.inserted {\n                try onUnique(curr)\n            } else {\n                onDuplicate(visitResult.memberAfterInsert, curr)\n                continue\n            }\n\n            for succ in try successors(curr) {\n                stack.append(succ)\n            }\n        }\n    }\n}",
+   "toplevel": "~/GitHub_projects/swift-package-manager",
+   "visibility": "public"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "nodes",
+     "successors"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-package-manager:Sources/Basics/Graph/GraphAlgorithms.swift:59",
+   "judged": true,
+   "key": "f61d4e0709479506",
+   "labels": [
+    "_",
+    "successors"
+   ],
+   "line": 59,
+   "name": "depthFirstSearch",
+   "owner": "",
+   "owner_doc": "",
+   "path": "Sources/Basics/Graph/GraphAlgorithms.swift",
+   "repo": "swift-package-manager",
+   "result": "",
+   "root": "~/GitHub_projects/swift-package-manager",
+   "stratum": "name-graph",
+   "text": "public func depthFirstSearch<T: Hashable>(\n    _ nodes: [T],\n    successors: (T) async throws -> [T],\n    onUnique: (T) async throws -> Void,\n    onDuplicate: (T, T) async -> Void\n) async rethrows {\n    var stack = OrderedSet<T>()\n    var visited = Set<T>()\n\n    for node in nodes {\n        precondition(stack.isEmpty)\n        stack.append(node)\n\n        while !stack.isEmpty {\n            let curr = stack.removeLast()\n\n            let visitResult = visited.insert(curr)\n            if visitResult.inserted {\n                try await onUnique(curr)\n            } else {\n                await onDuplicate(visitResult.memberAfterInsert, curr)\n                continue\n            }\n\n            for succ in try await successors(curr) {\n                stack.append(succ)\n            }\n        }\n    }\n}",
+   "toplevel": "~/GitHub_projects/swift-package-manager",
+   "visibility": "public"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "nodes",
+     "parent",
+     "successors"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Implements a pre-order depth-first search that traverses the whole graph and doesn't distinguish between unique and duplicate nodes. The method expects the graph to be acyclic but doesn't check that.  - Parameters: - nodes: The list of input nodes to sort. - successors: A closure for fetching the successors of a particular node. - onNext: A callback to indicate the node currently being processed including its parent (if any) and its depth.  - Complexity: O(v + e) where (v, e) are the number of vertices and edges reachable from the input nodes via the relation.",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-package-manager:Sources/Basics/Graph/GraphAlgorithms.swift:107",
+   "judged": true,
+   "key": "03dd044d8a6ed2df",
+   "labels": [
+    "_",
+    "successors",
+    "_"
+   ],
+   "line": 107,
+   "name": "depthFirstSearch",
+   "owner": "",
+   "owner_doc": "",
+   "path": "Sources/Basics/Graph/GraphAlgorithms.swift",
+   "repo": "swift-package-manager",
+   "result": "",
+   "root": "~/GitHub_projects/swift-package-manager",
+   "stratum": "name-graph",
+   "text": "public func depthFirstSearch<T: Hashable>(\n    _ nodes: [T],\n    successors: (T) throws -> [T],\n    onNext: (T, _ parent: T?) throws -> Void\n) rethrows {\n    var stack = OrderedSet<TraversalNode<T>>()\n\n    for node in nodes {\n        precondition(stack.isEmpty)\n        stack.append(TraversalNode(parent: nil, curr: node))\n\n        while !stack.isEmpty {\n            let node = stack.removeLast()\n\n            try onNext(node.curr, node.parent)\n\n            for succ in try successors(node.curr) {\n                stack.append(\n                    TraversalNode(\n                        parent: node.curr,\n                        curr: succ\n                    )\n                )\n            }\n        }\n    }\n}",
+   "toplevel": "~/GitHub_projects/swift-package-manager",
+   "visibility": "public"
+  },
+  {
+   "callees": [
+    "seedModelTiers"
+   ],
+   "callers": [
+    "build"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [
+     "tiers"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:115",
+   "judged": true,
+   "key": "1b6733035c2e5691",
+   "labels": [
+    "graph"
+   ],
+   "line": 115,
+   "name": "populateModelTiers",
+   "owner": "KnowledgeGraphBuilder",
+   "owner_doc": "Stateless builder that populates the KnowledgeGraph with deterministic seed data.  Call `build(graph:)` for a full populate, or individual `populate*` methods for testing. All operations are idempotent (upsert semantics).",
+   "path": "Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift",
+   "repo": "SwiftAssist",
+   "result": "Int",
+   "root": "~/xcode_projects/SwiftAssist",
+   "stratum": "name-graph",
+   "text": "    public func populateModelTiers(graph: KnowledgeGraph) async throws -> Int {\n        let tiers = Self.seedModelTiers(for: stack)\n        for tier in tiers {\n            try await graph.skills.upsertModelTier(tier)\n        }\n        return tiers.count\n    }",
+   "toplevel": "~/xcode_projects/SwiftAssist",
+   "visibility": "public"
+  },
+  {
+   "callees": [],
+   "callers": [
+    "populateModelTiers"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "tiers"
+    ],
+    "SHAPE": null
+   },
+   "doc": "One `ModelTier` node per router tier: the model `stack` serves on it and the context window it is served with (the nano window for embeddings, the shared generative window otherwise).",
+   "gated": false,
+   "group": "decision",
+   "id": "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:126",
+   "judged": true,
+   "key": "8a1747ddab699882",
+   "labels": [
+    "for"
+   ],
+   "line": 126,
+   "name": "seedModelTiers",
+   "owner": "KnowledgeGraphBuilder",
+   "owner_doc": "Stateless builder that populates the KnowledgeGraph with deterministic seed data.  Call `build(graph:)` for a full populate, or individual `populate*` methods for testing. All operations are idempotent (upsert semantics).",
+   "path": "Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift",
+   "repo": "SwiftAssist",
+   "result": "[KGModelTierNode]",
+   "root": "~/xcode_projects/SwiftAssist",
+   "stratum": "name-graph",
+   "text": "    static func seedModelTiers(for stack: ModelStack) -> [KGModelTierNode] {\n        ModelRouter.Tier.allCases.map { tier in\n            KGModelTierNode(\n                id: tier.rawValue,\n                modelId: stack.spec(for: tier).id.rawValue,\n                contextWindow: tier == .nano\n                    ? ContextBudgetManager.contextWindow(for: .nano)\n                    : ModelRouter.servedGenerativeWindow\n            )\n        }\n    }",
+   "toplevel": "~/xcode_projects/SwiftAssist",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "layered"
+    ],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "tier"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": true,
+   "group": "decision",
+   "id": "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:104",
+   "judged": true,
+   "key": "05024bd114e9fa5d",
+   "labels": [
+    "_"
+   ],
+   "line": 104,
+   "name": "modelTierForSkill",
+   "owner": "SkillGraphStore",
+   "owner_doc": "Focused store for the knowledge-core domain: `Skill`, `Concept`, `Proposal`, `Framework`, `SwiftVersion`, `Recipe`, `ModelTier`, `AntiPattern`, and `Error` nodes \u2014 their CRUD, the queries that connect them, skill migration/conflict analysis, error provenance, and the list-all queries used by InsightsEngine.  These domains share one store because the conflict and error-provenance queries are layered directly on the skill/concept queries.  Vended by `KnowledgeGraph.skills`.",
+   "path": "Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift",
+   "repo": "SwiftAssist",
+   "result": "(skill: KGSkillNode, tier: KGModelTierNode?)?",
+   "root": "~/xcode_projects/SwiftAssist",
+   "stratum": "full",
+   "text": "    public func modelTierForSkill(\n        _ skillId: String\n    ) async throws -> (skill: KGSkillNode, tier: KGModelTierNode?)? {\n        try await schemaGate.ensureCreated()\n        guard let row = try await database.getNode(table: \"Skill\", id: skillId) else {\n            return nil\n        }\n        guard let skill = KGSkillNode(graphRow: row) else { return nil }\n        let tierRow = try await database.getNode(table: \"ModelTier\", id: skill.preferredTier)\n        let tier = tierRow.flatMap { KGModelTierNode(graphRow: $0) }\n        return (skill: skill, tier: tier)\n    }",
+   "toplevel": "~/xcode_projects/SwiftAssist",
+   "visibility": "public"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "layered"
+    ],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "tier"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": true,
+   "group": "decision",
+   "id": "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:63",
+   "judged": true,
+   "key": "2b104e8b259066be",
+   "labels": [
+    "_"
+   ],
+   "line": 63,
+   "name": "upsertModelTier",
+   "owner": "SkillGraphStore",
+   "owner_doc": "Focused store for the knowledge-core domain: `Skill`, `Concept`, `Proposal`, `Framework`, `SwiftVersion`, `Recipe`, `ModelTier`, `AntiPattern`, and `Error` nodes \u2014 their CRUD, the queries that connect them, skill migration/conflict analysis, error provenance, and the list-all queries used by InsightsEngine.  These domains share one store because the conflict and error-provenance queries are layered directly on the skill/concept queries.  Vended by `KnowledgeGraph.skills`.",
+   "path": "Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift",
+   "repo": "SwiftAssist",
+   "result": "",
+   "root": "~/xcode_projects/SwiftAssist",
+   "stratum": "full",
+   "text": "    public func upsertModelTier(_ tier: KGModelTierNode) async throws {\n        try await schemaGate.ensureCreated()\n        try await database.upsertNode(table: \"ModelTier\", id: tier.id, properties: [\n            \"modelId\": .string(tier.modelId),\n            \"contextWindow\": .int(tier.contextWindow)\n        ])\n    }",
+   "toplevel": "~/xcode_projects/SwiftAssist",
+   "visibility": "public"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "row"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "SwiftAssist:Sources/SwiftAssistApp/Symbols/SymbolReferencesPanel.swift:87",
+   "judged": true,
+   "key": "4bb661e54cd3ad10",
+   "labels": [
+    "_"
+   ],
+   "line": 87,
+   "name": "referenceRow",
+   "owner": "SymbolReferencesPanel",
+   "owner_doc": "",
+   "path": "Sources/SwiftAssistApp/Symbols/SymbolReferencesPanel.swift",
+   "repo": "SwiftAssist",
+   "result": "some View",
+   "root": "~/xcode_projects/SwiftAssist",
+   "stratum": "name-graph",
+   "text": "    private func referenceRow(_ symbol: KGSCIPSymbolNode) -> some View {\n        VStack(alignment: .leading, spacing: 2) {\n            HStack {\n                Text(symbol.name)\n                    .font(.callout)\n                Spacer()\n                SymbolKindBadge(kind: symbol.kind)\n            }\n            Text(\"\\(symbol.file):\\(symbol.line)\")\n                .font(.caption)\n                .foregroundStyle(.secondary)\n                .lineLimit(1)\n                .truncationMode(.middle)\n        }\n        .padding(.vertical, 2)\n    }",
+   "toplevel": "~/xcode_projects/SwiftAssist",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "row"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "SwiftAssist:Sources/SwiftAssistApp/Symbols/SymbolSearchPanel.swift:144",
+   "judged": true,
+   "key": "7bbab014429da203",
+   "labels": [
+    "_"
+   ],
+   "line": 144,
+   "name": "symbolRow",
+   "owner": "SymbolSearchPanel",
+   "owner_doc": "",
+   "path": "Sources/SwiftAssistApp/Symbols/SymbolSearchPanel.swift",
+   "repo": "SwiftAssist",
+   "result": "some View",
+   "root": "~/xcode_projects/SwiftAssist",
+   "stratum": "name-graph",
+   "text": "    private func symbolRow(_ symbol: KGSCIPSymbolNode) -> some View {\n        VStack(alignment: .leading, spacing: 2) {\n            HStack {\n                Text(symbol.name)\n                    .font(.body)\n                    .fontWeight(symbol.id == viewModel.selectedSymbol?.id ? .semibold : .regular)\n                Spacer()\n                SymbolKindBadge(kind: symbol.kind)\n            }\n            Text(symbol.file)\n                .font(.caption)\n                .foregroundStyle(.secondary)\n                .lineLimit(1)\n                .truncationMode(.middle)\n        }\n        .padding(.vertical, 2)\n    }",
+   "toplevel": "~/xcode_projects/SwiftAssist",
+   "visibility": "private"
+  },
+  {
+   "callees": [
+    "collectTopLevelKeyValues"
+   ],
+   "callers": [
+    "serialize"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Build the ordered list of (key, value) pairs for the top-level mapping.  Order priority: 1. Keys in `config.keyOrder` (preserves the user's original file layout) 2. Reserved SwiftLint keys not yet emitted, in `defaultTopLevelKeyOrder` 3. Per-rule configuration keys, alphabetically (stable output)",
+   "gated": false,
+   "group": "decision",
+   "id": "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:71",
+   "judged": true,
+   "key": "bbaae070e9291193",
+   "labels": [
+    "for"
+   ],
+   "line": 71,
+   "name": "orderedTopLevelPairs",
+   "owner": "YAMLConfigurationEngine",
+   "owner_doc": "Service for safely editing SwiftLint YAML configuration files with comment preservation and validation",
+   "path": "SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift",
+   "repo": "swiftlint-rule-studio",
+   "result": "[(Node, Node)]",
+   "root": "~/xcode_projects/SwiftLintRuleStudio",
+   "stratum": "name-graph",
+   "text": "    private static func orderedTopLevelPairs(for config: YAMLConfig) throws -> [(Node, Node)] {\n        let keyValues = try collectTopLevelKeyValues(from: config)\n        var pairs: [(Node, Node)] = []\n        var seen: Set<String> = []\n\n        for key in config.keyOrder {\n            guard !seen.contains(key), let value = keyValues[key] else { continue }\n            pairs.append((Node(key), value))\n            seen.insert(key)\n        }\n\n        for key in Self.defaultTopLevelKeyOrder where !seen.contains(key) {\n            if let value = keyValues[key] {\n                pairs.append((Node(key), value))\n                seen.insert(key)\n            }\n        }\n\n        let remaining = keyValues.keys.filter { !seen.contains($0) }.sorted()\n        for key in remaining {\n            if let value = keyValues[key] {\n                pairs.append((Node(key), value))\n            }\n        }\n\n        return pairs\n    }",
+   "toplevel": "~/xcode_projects/SwiftLintRuleStudio",
+   "visibility": "private"
+  },
+  {
+   "callees": [
+    "ruleNode"
+   ],
+   "callers": [
+    "orderedTopLevelPairs"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Collect every top-level YAML key the config wants to emit, mapped to its already-serialized Node value.",
+   "gated": false,
+   "group": "decision",
+   "id": "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:101",
+   "judged": true,
+   "key": "0b8bbf53326303b2",
+   "labels": [
+    "from"
+   ],
+   "line": 101,
+   "name": "collectTopLevelKeyValues",
+   "owner": "YAMLConfigurationEngine",
+   "owner_doc": "Service for safely editing SwiftLint YAML configuration files with comment preservation and validation",
+   "path": "SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift",
+   "repo": "swiftlint-rule-studio",
+   "result": "[String: Node]",
+   "root": "~/xcode_projects/SwiftLintRuleStudio",
+   "stratum": "name-graph",
+   "text": "    private static func collectTopLevelKeyValues(from config: YAMLConfig) throws -> [String: Node] {\n        var result: [String: Node] = [:]\n\n        if let included = config.included { result[\"included\"] = try Node(included) }\n        if let excluded = config.excluded { result[\"excluded\"] = try Node(excluded) }\n        if let reporter = config.reporter { result[\"reporter\"] = Node(reporter) }\n        if let disabledRules = config.disabledRules, !disabledRules.isEmpty {\n            result[\"disabled_rules\"] = try Node(disabledRules)\n        }\n        if let optInRules = config.optInRules { result[\"opt_in_rules\"] = try Node(optInRules) }\n        if let analyzerRules = config.analyzerRules { result[\"analyzer_rules\"] = try Node(analyzerRules) }\n        if let onlyRules = config.onlyRules { result[\"only_rules\"] = try Node(onlyRules) }\n\n        // A disabled rule is expressed only via `disabled_rules`, never as a config\n        // mapping. Verified against SwiftLint 0.65.0: a config carrying both emits\n        // \"Found a configuration for 'line_length' rule, but it is disabled in\n        // 'disabled_rules'.\" in the user's own lint output. Note this means a rule's\n        // severity/parameter overrides are dropped when it is disabled \u2014 that is the\n        // cost of not provoking the warning, not an oversight.\n        //\n        // `disabled_rules` itself is emitted verbatim from `config.disabledRules`.\n        // Do NOT fold `config.rules` entries with `enabled == false` into it: only\n        // *default* rules are disabled that way. Opt-in and analyzer rules are\n        // disabled by absence from `opt_in_rules` / `analyzer_rules`, and this layer\n        // cannot tell which kind a rule is \u2014 `YAMLConfig` carries no rule metadata.\n        // The callers that know the kind (RuleDetailViewModel.addDisabledRuleIfNeeded,\n        // RuleBrowserViewModel.disableSelectedRules) own that decision.\n        for (ruleId, ruleConfig) in config.rules where ruleConfig.enabled {\n            if let node = try ruleNode(ruleId: ruleId, ruleConfig: ruleConfig, config: config) {\n                result[ruleId] = node\n            }\n        }\n\n        // Re-emit unmodeled top-level keys (custom_rules, etc.) exactly as parsed.\n        for (key, node) in config.passthroughNodes where result[key] == nil {\n            result[key] = node\n        }\n\n        return result\n    }",
+   "toplevel": "~/xcode_projects/SwiftLintRuleStudio",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [
+    "collectDeclarationIfEligible"
+   ],
+   "copies": [
+    "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:222"
+   ],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:311",
+   "judged": true,
+   "key": "a60fafad2d94f7a3",
+   "labels": [
+    "_"
+   ],
+   "line": 311,
+   "name": "isTopLevel",
+   "owner": "CouldBePrivateVisitor",
+   "owner_doc": "A cross-file visitor that detects top-level types with internal (default) access that are only referenced in their declaring file and could be narrowed to `private`.  **Phase 1 (walk):** Collects all top-level type declarations and all type references across every file. **Phase 2 (finalizeAnalysis):** Compares declarations against references. Types that are never referenced outside their declaring file are flagged.",
+   "path": "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift",
+   "repo": "swift-project-lint",
+   "result": "Bool",
+   "root": "~/xcode_projects/SwiftProjectLint",
+   "stratum": "name-graph",
+   "text": "    func isTopLevel(_ node: Syntax) -> Bool {\n        guard let parent = node.parent,\n              parent.is(CodeBlockItemSyntax.self),\n              let grandparent = parent.parent,\n              grandparent.is(CodeBlockItemListSyntax.self),\n              let greatGrandparent = grandparent.parent,\n              greatGrandparent.is(SourceFileSyntax.self) else { return false }\n        return true\n    }",
+   "toplevel": "~/xcode_projects/SwiftProjectLint",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [
+    "barItemsOfOnlyChild",
+    "onlyChild"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "One level below the receiver, reported when it is the second since the anchor. A step that crosses into another view's layout \u2014 `view(AppRow.self)` inside a test-declared host \u2014 is judged in the layout it leaves; the layout it enters is walked from its top, as `find(AppRow.self)` would reach it.",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:227",
+   "judged": true,
+   "key": "c942290b1a7916ca",
+   "labels": [
+    "from",
+    "to",
+    "ownership",
+    "step",
+    "written",
+    "node"
+   ],
+   "line": 227,
+   "name": "oneLevelDown",
+   "owner": "InspectionStep",
+   "owner_doc": "One call in a chain on an inspected view, and what it does to the chain's state.  Whether an accessor moves depends on its receiver (see `ReceiverKind`). After `find(viewWithAccessibilityIdentifier:)` the receiver is the found view itself, so `.text()` only checks its type \u2014 the shape the rule recommends. After `inspect()` on an app view, `.vStack()` reaches the body's root: one level. The first level below an anchor only asserts what the anchor reached; the second has to walk.",
+   "path": "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift",
+   "repo": "swift-project-lint",
+   "result": "ChainEvaluation",
+   "root": "~/xcode_projects/SwiftProjectLint",
+   "stratum": "name-graph",
+   "text": "    static func oneLevelDown(\n        from state: InspectionChainState,\n        to kind: ReceiverKind,\n        ownership: LayoutOwnership,\n        step: String,\n        written: String,\n        node: Syntax\n    ) -> ChainEvaluation {\n        var next = state.advanced(by: step, to: kind, ownership: ownership)\n        let walks = next.stepsSinceAnchor >= 2\n        if next.ownership != state.ownership {\n            next.stepsSinceAnchor = 0\n        }\n        guard walks else { return ChainEvaluation(state: next) }\n        return .reporting(PositionalStep(kind: .descent(written), node: node), from: state, leaving: next)\n    }",
+   "toplevel": "~/xcode_projects/SwiftProjectLint",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [
+    "collectOnceReachDepths",
+    "runOneOnceReachPass"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [],
+    "NAME": [
+     "depths"
+    ],
+    "SHAPE": "[I]"
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:189",
+   "judged": true,
+   "key": "4ff4e64f8288de7b",
+   "labels": [
+    "in"
+   ],
+   "line": 189,
+   "name": "collectOnceReachDepths",
+   "owner": "ContextSymbolTable",
+   "owner_doc": "Cross-file lookup for the **execution-context** axis: `@lint.context replayable`, `retry_safe`, `once`, `strict_replayable`.  This is the linter's own axis and is orthogonal to the effect lattice. It never reads an effect, and the effect lattice never reads a context \u2014 they meet only in the rule visitors that consult both. `SwiftEffectInference.EffectSymbolTable` is the single oracle for effects; this table is the single oracle for contexts, and it lives here because a retry context is a linting concept that `swift-infer`, SEI's other consumer, has no use for.  ## Collision policy  Mirrors the effect table's, on the context axis: one annotated declaration of a signature is authoritative; several that agree count as one; several that disagree withdraw the entry, because guessing which one a call site meant is worse than staying silent.",
+   "path": "Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift",
+   "repo": "swift-project-lint",
+   "result": "[Int]",
+   "root": "~/xcode_projects/SwiftProjectLint",
+   "stratum": "full",
+   "text": "    private func collectOnceReachDepths(in syntax: Syntax) -> [Int] {\n        var out: [Int] = []\n        collectOnceReachDepths(in: syntax, accumulator: &out)\n        return out\n    }",
+   "toplevel": "~/xcode_projects/SwiftProjectLint",
+   "visibility": "private"
+  },
+  {
+   "callees": [
+    "forwardEdges"
+   ],
+   "callers": [
+    "computeLayout"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "layering",
+     "longest-path"
+    ],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [
+     "rows"
+    ],
+    "SHAPE": "[K: I]"
+   },
+   "doc": "",
+   "gated": true,
+   "group": "decision",
+   "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:121",
+   "judged": true,
+   "key": "807e84cd365c59d5",
+   "labels": [
+    "graph"
+   ],
+   "line": 121,
+   "name": "computeRows",
+   "owner": "ActivitySVGRenderer",
+   "owner_doc": "Lays out and renders activity diagrams as SVG without dagre.  Uses a simple longest-path layering: each node gets a row equal to 1 + max row of any non-back-edge predecessor, where back-edges are those a DFS from the start node finds closing a cycle. Within each row, nodes are spread horizontally in creation order. Back-edges (loop \u2192 loopStart) are rendered as dashed curves going upward.",
+   "path": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "repo": "SwiftUMLStudio",
+   "result": "[Int: Int]",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "stratum": "full",
+   "text": "    static func computeRows(graph: ActivityGraph) -> [Int: Int] {\n        var rows: [Int: Int] = [:]\n        guard let start = graph.startNode else {\n            for node in graph.nodes { rows[node.id] = 0 }\n            return rows\n        }\n\n        // Kahn's algorithm over the acyclic forward edges, so a node is placed only after\n        // every predecessor has its final row \u2014 a join always lands below its longest branch.\n        var successors: [Int: [Int]] = [:]\n        var inDegree: [Int: Int] = [:]\n        for edge in forwardEdges(from: start.id, in: graph.edges) {\n            successors[edge.fromId, default: []].append(edge.toId)\n            inDegree[edge.toId, default: 0] += 1\n        }\n        rows[start.id] = 0\n        var ready = [start.id]\n        while let nodeId = ready.popLast() {\n            let nextRow = (rows[nodeId] ?? 0) + 1\n            for target in successors[nodeId] ?? [] {\n                rows[target] = max(rows[target] ?? 0, nextRow)\n                inDegree[target, default: 0] -= 1\n                if inDegree[target] == 0 { ready.append(target) }\n            }\n        }\n\n        for node in graph.nodes where rows[node.id] == nil {\n            rows[node.id] = 0\n        }\n        return rows\n    }",
+   "toplevel": "~/xcode_projects/SwiftUMLStudio",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [
+    "computeLayout"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "layering",
+     "longest-path"
+    ],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [],
+    "SHAPE": "[K: I]"
+   },
+   "doc": "",
+   "gated": true,
+   "group": "decision",
+   "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:185",
+   "judged": true,
+   "key": "7cf8a13ef9b8418e",
+   "labels": [
+    "graph",
+    "rows"
+   ],
+   "line": 185,
+   "name": "computeColumns",
+   "owner": "ActivitySVGRenderer",
+   "owner_doc": "Lays out and renders activity diagrams as SVG without dagre.  Uses a simple longest-path layering: each node gets a row equal to 1 + max row of any non-back-edge predecessor, where back-edges are those a DFS from the start node finds closing a cycle. Within each row, nodes are spread horizontally in creation order. Back-edges (loop \u2192 loopStart) are rendered as dashed curves going upward.",
+   "path": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "repo": "SwiftUMLStudio",
+   "result": "[Int: Int]",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "stratum": "full",
+   "text": "    static func computeColumns(graph: ActivityGraph, rows: [Int: Int]) -> [Int: Int] {\n        var perRow: [Int: [Int]] = [:]\n        for node in graph.nodes {\n            perRow[rows[node.id] ?? 0, default: []].append(node.id)\n        }\n        var columns: [Int: Int] = [:]\n        for (_, ids) in perRow {\n            let sorted = ids.sorted()\n            let count = sorted.count\n            for (index, identifier) in sorted.enumerated() {\n                columns[identifier] = index - (count - 1) / 2\n            }\n        }\n        return columns\n    }",
+   "toplevel": "~/xcode_projects/SwiftUMLStudio",
+   "visibility": ""
+  },
+  {
+   "callees": [
+    "chainDepth"
+   ],
+   "callers": [
+    "computeLayout"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [],
+    "NAME": [
+     "levels"
+    ],
+    "SHAPE": "[[T]]"
+   },
+   "doc": "Group components into rows so each row's components depend only on components in *later* rows. Row 0 is the top of the canvas (the most \"dependent\" targets), the last row is the bottom (the most depended-on leaf libraries).",
+   "gated": false,
+   "group": "decision",
+   "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift:107",
+   "judged": true,
+   "key": "224a201f450771d9",
+   "labels": [
+    "for"
+   ],
+   "line": 107,
+   "name": "dependencyLevels",
+   "owner": "ComponentSVGRenderer",
+   "owner_doc": "Computes a positioned `ComponentLayout` from a `ComponentModel` and emits an SVG representation. Components are arranged in dependency-level rows: \"leaf\" components (the ones every other target depends on) at the bottom, dependent components stacked above them. Within a row, components are laid out left-to-right and centered horizontally.",
+   "path": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "repo": "SwiftUMLStudio",
+   "result": "[[String]]",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "stratum": "full",
+   "text": "    static func dependencyLevels(for model: ComponentModel) -> [[String]] {\n        let names = model.components.map(\\.name)\n        if names.isEmpty { return [] }\n\n        // outDegree[\"A\"] = depth of A's dependency chain.\n        // Compute by traversing the `from -> to` adjacency.\n        var adjacency: [String: [String]] = [:]\n        for dependency in model.dependencies {\n            adjacency[dependency.from, default: []].append(dependency.to)\n        }\n\n        var depthCache: [String: Int] = [:]\n        let depths = names.map {\n            (name: $0, depth: chainDepth(of: $0, adjacency: adjacency, cache: &depthCache))\n        }\n        let maxDepth = depths.map(\\.depth).max() ?? 0\n        var rows = Array(repeating: [String](), count: maxDepth + 1)\n        for entry in depths {\n            // Row 0 = highest-depth (most \"consumer\"-y) at the top.\n            let row = maxDepth - entry.depth\n            rows[row].append(entry.name)\n        }\n        return rows\n    }",
+   "toplevel": "~/xcode_projects/SwiftUMLStudio",
+   "visibility": ""
+  },
+  {
+   "callees": [
+    "enter"
+   ],
+   "callers": [
+    "dependencyLevels"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "adjacency"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "How many dependencies deep `start`'s longest chain goes, with a dependency already on the walk's path counting as zero, so a cycle does not loop. Each finished target's depth goes into `cache`, which later walks read first.  The walk keeps its own path instead of recursing: a target line a few hundred long overflowed the cooperative thread's stack that the CLI and Studio call this on (#149).",
+   "gated": false,
+   "group": "decision",
+   "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift:138",
+   "judged": true,
+   "key": "0189788a614d337a",
+   "labels": [
+    "of",
+    "adjacency",
+    "cache"
+   ],
+   "line": 138,
+   "name": "chainDepth",
+   "owner": "ComponentSVGRenderer",
+   "owner_doc": "Computes a positioned `ComponentLayout` from a `ComponentModel` and emits an SVG representation. Components are arranged in dependency-level rows: \"leaf\" components (the ones every other target depends on) at the bottom, dependent components stacked above them. Within a row, components are laid out left-to-right and centered horizontally.",
+   "path": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "repo": "SwiftUMLStudio",
+   "result": "Int",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "stratum": "name-graph",
+   "text": "    private static func chainDepth(\n        of start: String,\n        adjacency: [String: [String]],\n        cache: inout [String: Int]\n    ) -> Int {\n        /// A target the walk is inside, the index of its next dependency, and the deepest\n        /// chain found below it so far.\n        struct Step {\n            let name: String\n            var nextDependency = 0\n            var deepest = 0\n        }\n        var path: [Step] = []\n        var onPath = Set<String>()\n\n        /// The depth of `name` when it is known without walking further; otherwise steps into it\n        /// and returns nil.\n        func enter(_ name: String) -> Int? {\n            if let cached = cache[name] { return cached }\n            if onPath.contains(name) { return 0 }\n            if (adjacency[name] ?? []).isEmpty {\n                cache[name] = 0\n                return 0\n            }\n            path.append(Step(name: name))\n            onPath.insert(name)\n            return nil\n        }\n\n        if let known = enter(start) { return known }\n        while let step = path.last {\n            let downstream = adjacency[step.name] ?? []\n            if step.nextDependency < downstream.count {\n                path[path.count - 1].nextDependency += 1\n                if let known = enter(downstream[step.nextDependency]) {\n                    path[path.count - 1].deepest = max(step.deepest, known)\n                }\n                continue\n            }\n            path.removeLast()\n            onPath.remove(step.name)\n            let depth = 1 + step.deepest\n            cache[step.name] = depth\n            guard !path.isEmpty else { return depth }\n            path[path.count - 1].deepest = max(path[path.count - 1].deepest, depth)\n        }\n        return 0\n    }",
+   "toplevel": "~/xcode_projects/SwiftUMLStudio",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [
+    "mergedAlias",
+    "recordAliasSpelledMembers",
+    "unlistedMembers"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [
+     "rank"
+    ],
+    "SHAPE": null
+   },
+   "doc": "The scope a typealias an extension in `adding` adds to a type in `type` ranks by: the type's, as a member of it, where a lookup of the type finds it, when the two share a module; else its own module's, in no file. A module cannot import one that depends on it, so ranked as the type, ModB's `Foo.X` would come first in ModA's own file, where ModA's own `Foo.X` is meant.",
+   "gated": true,
+   "group": "decision",
+   "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:269",
+   "judged": true,
+   "key": "01e73193602d0833",
+   "labels": [
+    "adding",
+    "to"
+   ],
+   "line": 269,
+   "name": "memberRank",
+   "owner": "TypeLookup",
+   "owner_doc": "Which declaration a type's name means where it is written. `EdgeEndIds` resolves edge ends by it, and `mergeExtensions` picks the type an extension merges into by it, so the box that shows an extension's members is the box its nested types hang off (#107).",
+   "path": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift",
+   "repo": "SwiftUMLStudio",
+   "result": "LayoutGraphBuilder.Scope",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "stratum": "full",
+   "text": "    private func memberRank(\n        adding scope: LayoutGraphBuilder.Scope, to type: LayoutGraphBuilder.Scope\n    ) -> LayoutGraphBuilder.Scope {\n        guard let module = scope.module, let typeModule = type.module, module != typeModule else { return type }\n        return LayoutGraphBuilder.Scope(filePath: nil, module: module)\n    }",
+   "toplevel": "~/xcode_projects/SwiftUMLStudio",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [
+    "buildNodes"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "decision",
+   "id": "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:109",
+   "judged": true,
+   "key": "49497f8cd9589d6c",
+   "labels": [
+    "entries",
+    "depth",
+    "basePath"
+   ],
+   "line": 109,
+   "name": "buildLevel",
+   "owner": "FileNode",
+   "owner_doc": "",
+   "path": "SwiftUMLStudio/FileNode.swift",
+   "repo": "SwiftUMLStudio",
+   "result": "[FileNode]",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "stratum": "name-graph",
+   "text": "    private static func buildLevel(entries: [Entry], depth: Int, basePath: URL) -> [FileNode] {\n        // Group entries by the component at the current depth\n        var groups: [String: [Entry]] = [:]\n        for entry in entries {\n            guard depth < entry.relativeComponents.count else { continue }\n            let key = entry.relativeComponents[depth]\n            groups[key, default: []].append(entry)\n        }\n\n        var nodes: [FileNode] = []\n        for (name, groupEntries) in groups {\n            let dirURL = basePath.appendingPathComponent(name, isDirectory: true)\n\n            // Leaf files: entries where this is the last component\n            let leaves = groupEntries.filter { $0.relativeComponents.count == depth + 1 }\n            // Subtree entries: entries with more components\n            let deeper = groupEntries.filter { $0.relativeComponents.count > depth + 1 }\n\n            if !deeper.isEmpty {\n                // This is a directory\n                let childNodes = buildLevel(entries: deeper, depth: depth + 1, basePath: dirURL)\n                let leafNodes = leaves.map { entry in\n                    FileNode(id: entry.url, name: entry.url.lastPathComponent,\n                             url: entry.url, isDirectory: false, children: nil)\n                }\n                // If the directory has only subdirectory children (no leaf files at this level),\n                // just add the child nodes. Otherwise combine.\n                let allChildren = (childNodes + leafNodes).sorted {\n                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending\n                }\n                nodes.append(FileNode(\n                    id: dirURL, name: name, url: dirURL,\n                    isDirectory: true, children: allChildren\n                ))\n            } else {\n                // All entries are leaf files\n                for entry in leaves {\n                    nodes.append(FileNode(\n                        id: entry.url, name: name,\n                        url: entry.url, isDirectory: false, children: nil\n                    ))\n                }\n            }\n        }\n\n        // Sort: directories first, then files, both alphabetically\n        return nodes.sorted { lhs, rhs in\n            if lhs.isDirectory != rhs.isDirectory { return lhs.isDirectory }\n            return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending\n        }\n    }",
+   "toplevel": "~/xcode_projects/SwiftUMLStudio",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [
+    "indexingRecords"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "unmet",
+   "id": "swift-docc:Sources/SwiftDocC/Indexing/RenderNode+Indexable.swift:37",
+   "judged": true,
+   "key": "566601025fbb8736",
+   "labels": [],
+   "line": 37,
+   "name": "topLevelIndexingRecord",
+   "owner": "RenderNode",
+   "owner_doc": "A rendering-friendly representation of a documentation node.  A render node contains all the data required for a renderer to display a topic's documentation. This includes the topic's authored markup documentation, hierarchy information (the topic's curation), API availability, and more.  The fields of a render node are populated depending on the documentation page's type. For example, reference documentation pages (i.e., symbols and articles) have their child topics listed in ``topicSections``, but for Tutorial pages, that field is empty.  Information about external resources such as other documentation pages or media is stored in the ``references`` dictionary.  An OpenAPI specification for render node is available in the repo at `Sources/SwiftDocC/SwiftDocC.docc/Resources/RenderNode.spec.json`.  ### Versioning  The render node schema constantly evolves to support new documentation features. To help clients maintain compatibility, we associate each schema with a version. See ``schemaVersion`` for more details.  ### Variants  Different variants of a documentation page can be represented by a single render node using the ``variantOverrides`` property. This property holds overrides that clients should apply to the render JSON when processing documentation for specific programming languages. The overrides are organized by traits (e.g., language) and it's up to the client to determine which trait is most appropriate for them. For example, a client that wants to process the Objective-C version of documentation should apply the overrides associated with the `interfaceLanguage: objc` trait.  Use the ``RenderJSONEncoder/makeEncoder(prettyPrint:emitVariantOverrides:assetPrefixComponent:)`` API to instantiate a JSON encoder that's configured to accumulate variant overrides and emit them to the ``variantOverrides`` property.  The overrides are emitted in the [JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) format.  To apply variants onto a render node using `SwiftDocC`, use the ``RenderNodeVariantOverridesApplier`` API.  ## Topics  ### General  - ``schemaVersion`` - ``kind`` - ``sections`` - ``references`` - ``hierarchy`` - ``metadata``  ### Reference Documentation Data  Data specific for reference documentation nodes.  - ``abstract`` - ``primaryContentSections`` - ``topicSections`` - ``relationshipSections`` - ``defaultImplementationsSections`` - ``seeAlsoSections`` - ``deprecationSummary`` - ``variants`` - ``diffAvailability``  ### Multi-Language Reference Documentation Data  Data specific for reference documentation nodes that are available in multiple programming languages.  - ``abstractVariants`` - ``primaryContentSectionsVariants`` - ``topicSectionsVariants`` - ``relationshipSectionsVariants`` - ``defaultImplementationsSectionsVariants`` - ``seeAlsoSectionsVariants`` - ``deprecationSummaryVariants``  ### Sample Code Data  Data specific for sample code nodes.  - ``sampleDownload``  ### Models  - ``Variant``",
+   "path": "Sources/SwiftDocC/Indexing/RenderNode+Indexable.swift",
+   "repo": "swift-docc",
+   "result": "IndexingRecord?",
+   "root": "~/github_projects/swift-docc",
+   "stratum": "name-graph",
+   "text": "    func topLevelIndexingRecord() -> IndexingRecord? {\n        let kind: IndexingRecord.Kind\n        switch self.kind {\n        case .tutorial:\n            kind = .tutorial\n        case .section:\n            kind = .tutorialSection\n        case .overview:\n            kind = .overview\n        case .article:\n            kind = .article\n        case .symbol:\n            kind = .symbol\n        }\n        \n        guard let title = metadata.title, !title.isEmpty else {\n            // Nodes without a title are erroneous entries in the symbol graph.\n            // A search result cannot be constructed without a title, meaning that\n            // an indexing record for this node is useless. The node is skipped.\n            assertionFailure(\"\\(identifier.absoluteString.singleQuoted) has an empty title, and cannot have a usable search result\")\n            return nil\n        }\n        \n        let summaryParagraph: RenderBlockContent?\n        if let abstract = self.abstract {\n            summaryParagraph = RenderBlockContent.paragraph(.init(inlineContent: abstract))\n        } else if let intro = self.sections.first as? IntroRenderSection, let firstBlock = intro.content.first, case .paragraph = firstBlock {\n            summaryParagraph = firstBlock\n        } else {\n            summaryParagraph = nil\n        }\n\n        let summary = summaryParagraph?.rawIndexableTextContent(references: references) ?? \"\"\n        \n        return IndexingRecord(kind: kind, location: .topLevelPage(identifier), title: title, summary: summary, headings: self.headings, rawIndexableTextContent: self.rawIndexableTextContent, platforms: metadata.platforms)\n    }",
+   "toplevel": "~/GitHub_projects/swift-docc",
+   "visibility": ""
+  },
+  {
+   "callees": [
+    "nodeWithReference"
+   ],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Returns a sequence that traverses the topic graph in depth first order from a given reference, without visiting the same node more than once.",
+   "gated": false,
+   "group": "unmet",
+   "id": "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:276",
+   "judged": true,
+   "key": "ec0508657788c738",
+   "labels": [
+    "from"
+   ],
+   "line": 276,
+   "name": "depthFirstSearch",
+   "owner": "TopicGraph",
+   "owner_doc": "A directed graph of topics.  Nodes represent a pointer to a `DocumentationNode`, the source of its contents, and a short title.  > Important: > The topic graph has no awareness of source language specific edges. > > If an edge exist between two nodes and those nodes have representations in a given source language it *doesn't* mean that that edge exist in that language. > If you need information about source language specific edged between nodes, you need to query another source of information.",
+   "path": "Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift",
+   "repo": "swift-docc",
+   "result": "some Sequence<Node>",
+   "root": "~/github_projects/swift-docc",
+   "stratum": "name-graph",
+   "text": "    func depthFirstSearch(from reference: ResolvedTopicReference) -> some Sequence<Node> {\n        edgesGraph\n            .depthFirstSearch(from: reference)\n            .lazy\n            .map { nodeWithReference($0)! }\n    }",
+   "toplevel": "~/GitHub_projects/swift-docc",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [
+    "dump"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Push `node` to the current path and descend into the children, popping `node` from the path when returning.  - parameter node: The parent node you're descending into.",
+   "gated": false,
+   "group": "unmet",
+   "id": "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:87",
+   "judged": true,
+   "key": "9f7392f01566fa0b",
+   "labels": [
+    "_"
+   ],
+   "line": 87,
+   "name": "increasingDepth",
+   "owner": "SemanticTreeDumper",
+   "owner_doc": "A ``SemanticWalker`` that dumps a textual representation of a ``Semantic`` tree for debugging.  - Note: This type is utilized by a public ``Semantic.dump()`` method available on all semantic nodes.",
+   "path": "Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift",
+   "repo": "swift-docc",
+   "result": "",
+   "root": "~/github_projects/swift-docc",
+   "stratum": "name-graph",
+   "text": "    private mutating func increasingDepth(_ node: Semantic) {\n        descendIntoChildren(of: node)\n        path.removeLast()\n    }",
+   "toplevel": "~/GitHub_projects/swift-docc",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Returns a sequence that traverses the graph in depth first order from a given element, without visiting the same node more than once.",
+   "gated": false,
+   "group": "unmet",
+   "id": "swift-docc:Sources/SwiftDocC/Utility/Graphs/DirectedGraph+Traversal.swift:18",
+   "judged": true,
+   "key": "5d37f0c0fb0e4485",
+   "labels": [
+    "from"
+   ],
+   "line": 18,
+   "name": "depthFirstSearch",
+   "owner": "DirectedGraph",
+   "owner_doc": "A directed, unweighted graph of nodes.  Use a `DirectedGraph` to operate on data that describe the edges between nodes in a directed graph.  ## Topics  ### Search  - ``breadthFirstSearch(from:)`` - ``depthFirstSearch(from:)``  ### Paths  - ``shortestFinitePaths(from:)`` - ``allFinitePaths(from:)`` - ``reachableLeafNodes(from:)``  ### Cycle detection  - ``firstCycle(from:)`` - ``cycles(from:)``  ### Low-level path traversal  - ``accumulatingPaths(from:)``",
+   "path": "Sources/SwiftDocC/Utility/Graphs/DirectedGraph+Traversal.swift",
+   "repo": "swift-docc",
+   "result": "some Sequence<Node>",
+   "root": "~/github_projects/swift-docc",
+   "stratum": "name-graph",
+   "text": "    func depthFirstSearch(from startingPoint: Node) -> some Sequence<Node> {\n        IteratorSequence(GraphNodeIterator(from: startingPoint, traversal: .depthFirst, in: self))\n    }",
+   "toplevel": "~/GitHub_projects/swift-docc",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "edge"
+    ],
+    "NAME": [
+     "row"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "wide",
+   "id": "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:47",
+   "judged": true,
+   "key": "43e70ba8e6adc965",
+   "labels": [],
+   "line": 47,
+   "name": "listRowInsets",
+   "owner": "InspectableView",
+   "owner_doc": "",
+   "path": "Sources/ViewInspector/SwiftUI/List.swift",
+   "repo": "ViewInspector",
+   "result": "EdgeInsets",
+   "root": "~/github_projects/ViewInspector",
+   "stratum": "name-graph",
+   "text": "    func listRowInsets() throws -> EdgeInsets {\n        return try modifierAttribute(\n            modifierName: \"_TraitWritingModifier<ListRowInsetsTraitKey>\",\n            path: \"modifier|value|some\", type: EdgeInsets.self, call: \"listRowInsets\")\n    }",
+   "toplevel": "~/GitHub_projects/ViewInspector",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [
+    "listRowBackground"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "parent"
+    ],
+    "NAME": [
+     "row"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "wide",
+   "id": "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:79",
+   "judged": true,
+   "key": "4800052dc683d9a7",
+   "labels": [
+    "parent",
+    "index"
+   ],
+   "line": 79,
+   "name": "listRowBackground",
+   "owner": "Content",
+   "owner_doc": "",
+   "path": "Sources/ViewInspector/SwiftUI/List.swift",
+   "repo": "ViewInspector",
+   "result": "InspectableView<ViewType.ClassifiedView>",
+   "root": "~/github_projects/ViewInspector",
+   "stratum": "name-graph",
+   "text": "    func listRowBackground(parent: UnwrappedView, index: Int?) throws -> InspectableView<ViewType.ClassifiedView> {\n        let view = try modifierAttribute(\n            modifierName: \"_TraitWritingModifier<ListRowBackgroundTraitKey>\",\n            path: \"modifier|value|some|storage|view\", type: Any.self,\n            call: \"listRowBackground\", index: index ?? 0)\n        let medium = self.medium.resettingViewModifiers()\n        let content = try Inspector.unwrap(content: Content(view, medium: medium))\n        let call = ViewType.inspectionCall(\n            base: \"listRowBackground(\\(ViewType.indexPlaceholder))\", index: index)\n        return try .init(content, parent: parent, call: call, index: index)\n    }",
+   "toplevel": "~/GitHub_projects/ViewInspector",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [
+    "composableNestedBind"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "layered",
+     "topological"
+    ],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [],
+    "SHAPE": "[I]"
+   },
+   "doc": "Finds outermost active binds with a numeric controller below this bind's bound child. More than one marks a branching dependency, so composition does not descend through it.",
+   "gated": true,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+BindLookup.swift:32",
+   "judged": true,
+   "key": "ab99fa70cdc8ba83",
+   "labels": [
+    "under"
+   ],
+   "line": 32,
+   "name": "directNestedBindNodeIDs",
+   "owner": "ChoiceGraph",
+   "owner_doc": "A layered multigraph representing the generator's value structure for reduction.  Built from a ``ChoiceTree`` and its flattened ``ChoiceSequence`` via ``ChoiceGraphBuilder``. Captures six node types (chooseBits, pick, bind, zip, sequence, just) and four edge layers (dependency, containment, self-similarity, type-compatibility).  ## Edge Layers  - **Dependency** (directed): bind-inner \u2192 bound content. Ordering constraint \u2014 parent before child. Topological sort and reachability operate here. - **Containment** (directed, no ordering constraint): parent \u2192 child in the tree. Lets deletion traversal prefer outer sequences and prune descendants whose containing elements are removed. - **Self-similarity** (undirected): between active pick nodes with matching fingerprint. Substitution candidates. - **Type-compatibility** (undirected): between compatible value leaves in a sequence-sibling or zip cross-slot context. Redistribution candidates. Computed on demand as a non-caching computed property.  ## Lifecycle  Rebuilt from the tree on every structural acceptance. All derived data (live node IDs, leaf nodes, topological order, dependency adjacency) is computed eagerly during ``ChoiceGraphBuilder/assembleGraph()`` and stored as immutable fields. Infrequently-accessed derived data (type-compatibility edges) is recomputed on each access without caching.  Value-only leaf changes (no reshape) are applied in place via ``apply(_:)`` without rebuilding. Reshape and structural mutations return ``ChangeApplication/requiresFullRebuild`` true, delegating the rebuild to the scheduler.  ## File Layout  This file holds the struct definition, eagerly-computed fields, the convergence-record helpers, and the init/build plumbing. Read-only graph queries live in `ChoiceGraph+Queries.swift`, and type-compatibility edge enumeration lives in ``TypeCompatibilityCursor``. Dependency traversal lives in ``DependencyReachability`` so graph queries and scope cursors can share it without retaining mutable graph nodes. The mutation entry point (`apply`) lives in `ChoiceGraph+Lifecycle.swift`. Scope query families live in the Reduction/Queries directory.  - SeeAlso: ``ChoiceGraphBuilder``, ``ChoiceGraphNode``, ``DependencyEdge``, ``ContainmentEdge``, ``TypeCompatibilityEdge``",
+   "path": "Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+BindLookup.swift",
+   "repo": "exhaust",
+   "result": "[Int]",
+   "root": "~/github_projects/exhaust",
+   "stratum": "full",
+   "text": "    private func directNestedBindNodeIDs(under bindNodeID: Int) -> [Int] {\n        guard bindNodeID < nodes.count,\n              case let .bind(metadata) = nodes[bindNodeID].kind,\n              nodes[bindNodeID].children.count > metadata.boundChildIndex\n        else {\n            return []\n        }\n\n        let boundChildID = nodes[bindNodeID].children[metadata.boundChildIndex]\n        var nestedBindNodeIDs: [Int] = []\n        var stack = [boundChildID]\n        while let nodeID = stack.popLast() {\n            let node = nodes[nodeID]\n            guard node.positionRange != nil else {\n                continue\n            }\n            if case let .bind(nestedMetadata) = node.kind,\n               node.children.count > max(\n                   nestedMetadata.innerChildIndex,\n                   nestedMetadata.boundChildIndex\n               )\n            {\n                let innerChildID = node.children[nestedMetadata.innerChildIndex]\n                let nestedBoundChildID = node.children[nestedMetadata.boundChildIndex]\n                if case .chooseBits = nodes[innerChildID].kind,\n                   nodes[nestedBoundChildID].positionRange != nil\n                {\n                    nestedBindNodeIDs.append(nodeID)\n                    continue\n                }\n            }\n            stack.append(contentsOf: node.children.reversed())\n        }\n        return nestedBindNodeIDs\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": "private"
+  },
+  {
+   "callees": [
+    "subtreeFingerprint"
+   ],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "layered",
+     "topological"
+    ],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [
+     "topologies"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Observes bind topology from the current graph state and classifies binds whose upstream value has changed since the last observation.  For each non-getSize bind node, reads the upstream leaf's current bit pattern from the graph and computes the bound subtree's topology fingerprint from `tree`. Compares against the stored ``BindTopologyObservation``: - Upstream unchanged: updates the stored downstream fingerprint (structural ops may have changed it independently). - Upstream changed, downstream fingerprint same: classifies as `.identical` \u2014 the bind produces the same shape for different upstream values. - Upstream changed, downstream fingerprint different: classifies as `.divergent` \u2014 the bind reshapes under upstream variation.  Call after each graph rebuild. Avoids the two materialization probes that ``classifyBind`` requires by observing natural upstream variation across rebuild cycles.",
+   "gated": true,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:175",
+   "judged": true,
+   "key": "bd4e9ce1ac30662e",
+   "labels": [
+    "tree"
+   ],
+   "line": 175,
+   "name": "observeBindTopologies",
+   "owner": "ChoiceGraph",
+   "owner_doc": "A layered multigraph representing the generator's value structure for reduction.  Built from a ``ChoiceTree`` and its flattened ``ChoiceSequence`` via ``ChoiceGraphBuilder``. Captures six node types (chooseBits, pick, bind, zip, sequence, just) and four edge layers (dependency, containment, self-similarity, type-compatibility).  ## Edge Layers  - **Dependency** (directed): bind-inner \u2192 bound content. Ordering constraint \u2014 parent before child. Topological sort and reachability operate here. - **Containment** (directed, no ordering constraint): parent \u2192 child in the tree. Lets deletion traversal prefer outer sequences and prune descendants whose containing elements are removed. - **Self-similarity** (undirected): between active pick nodes with matching fingerprint. Substitution candidates. - **Type-compatibility** (undirected): between compatible value leaves in a sequence-sibling or zip cross-slot context. Redistribution candidates. Computed on demand as a non-caching computed property.  ## Lifecycle  Rebuilt from the tree on every structural acceptance. All derived data (live node IDs, leaf nodes, topological order, dependency adjacency) is computed eagerly during ``ChoiceGraphBuilder/assembleGraph()`` and stored as immutable fields. Infrequently-accessed derived data (type-compatibility edges) is recomputed on each access without caching.  Value-only leaf changes (no reshape) are applied in place via ``apply(_:)`` without rebuilding. Reshape and structural mutations return ``ChangeApplication/requiresFullRebuild`` true, delegating the rebuild to the scheduler.  ## File Layout  This file holds the struct definition, eagerly-computed fields, the convergence-record helpers, and the init/build plumbing. Read-only graph queries live in `ChoiceGraph+Queries.swift`, and type-compatibility edge enumeration lives in ``TypeCompatibilityCursor``. Dependency traversal lives in ``DependencyReachability`` so graph queries and scope cursors can share it without retaining mutable graph nodes. The mutation entry point (`apply`) lives in `ChoiceGraph+Lifecycle.swift`. Scope query families live in the Reduction/Queries directory.  - SeeAlso: ``ChoiceGraphBuilder``, ``ChoiceGraphNode``, ``DependencyEdge``, ``ContainmentEdge``, ``TypeCompatibilityEdge``",
+   "path": "Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift",
+   "repo": "exhaust",
+   "result": "",
+   "root": "~/github_projects/exhaust",
+   "stratum": "full",
+   "text": "    mutating func observeBindTopologies(tree: ChoiceTree) {\n        for nodeID in liveNodeIDs {\n            let node = nodes[nodeID]\n            guard case let .bind(metadata) = node.kind else { continue }\n            guard metadata.isStructurallyConstant == false else { continue }\n            if bindClassifications[metadata.fingerprint] != nil { continue }\n            guard node.children.count >= 2 else { continue }\n\n            let innerChildID = node.children[metadata.innerChildIndex]\n            guard innerChildID < nodes.count else { continue }\n            guard case let .chooseBits(leafMetadata) = nodes[innerChildID].kind else { continue }\n\n            let boundChildID = node.children[metadata.boundChildIndex]\n            guard boundChildID < nodes.count else { continue }\n\n            guard let boundSubtree = Self.extractBoundSubtree(\n                from: tree,\n                matchingPath: metadata.bindPath\n            ) else { continue }\n\n            let upstreamBitPattern = leafMetadata.value.bitPattern64\n            let downstreamFingerprint = Self.subtreeFingerprint(boundSubtree)\n\n            let newObservation = BindTopologyObservation(\n                upstreamBitPattern: upstreamBitPattern,\n                downstreamFingerprint: downstreamFingerprint\n            )\n\n            guard let previous = bindTopologyObservations[metadata.fingerprint] else {\n                bindTopologyObservations[metadata.fingerprint] = newObservation\n                continue\n            }\n\n            if previous.upstreamBitPattern == upstreamBitPattern {\n                bindTopologyObservations[metadata.fingerprint] = newObservation\n                continue\n            }\n\n            let topology: BindTopology = previous.downstreamFingerprint == downstreamFingerprint\n                ? .identical\n                : .divergent\n            let classification = BindClassification(topology: topology, liftability: .both)\n            bindClassifications[metadata.fingerprint] = classification\n            bindTopologyObservations.removeValue(forKey: metadata.fingerprint)\n        }\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": ""
+  },
+  {
+   "callees": [
+    "unwrapTransparent"
+   ],
+   "callers": [
+    "computeClassification"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "layered",
+     "topological"
+    ],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [
+     "topology"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Whether two lifted bound subtrees have the same skeleton.  Same node kind at each corresponding position, and same child counts at every non-leaf position, with these relaxations: - Leaf-level descriptors on ``ChoiceTree/choice(_:_:)`` (tag, width, range) are not compared \u2014 they are the signal expensive encoders operate on. - ``ChoiceTree/sequence(elements:metadata:)`` element counts may differ; elements are compared pairwise up to the shared prefix. A sequence that shifts length but keeps element shape stable (Coupling's `int(in: 0...n).array(length: 2 ... max(2, n+1))`) remains ``BindTopology/identical``. - Transparent wrappers (``ChoiceTree/branch(fingerprint:weight:id:branchCount:choice:isSelected:)``) pass through without requiring a matching wrapper on the other side.",
+   "gated": true,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:263",
+   "judged": true,
+   "key": "09741f54f0dd1db6",
+   "labels": [
+    "_",
+    "_"
+   ],
+   "line": 263,
+   "name": "sameTopology",
+   "owner": "ChoiceGraph",
+   "owner_doc": "A layered multigraph representing the generator's value structure for reduction.  Built from a ``ChoiceTree`` and its flattened ``ChoiceSequence`` via ``ChoiceGraphBuilder``. Captures six node types (chooseBits, pick, bind, zip, sequence, just) and four edge layers (dependency, containment, self-similarity, type-compatibility).  ## Edge Layers  - **Dependency** (directed): bind-inner \u2192 bound content. Ordering constraint \u2014 parent before child. Topological sort and reachability operate here. - **Containment** (directed, no ordering constraint): parent \u2192 child in the tree. Lets deletion traversal prefer outer sequences and prune descendants whose containing elements are removed. - **Self-similarity** (undirected): between active pick nodes with matching fingerprint. Substitution candidates. - **Type-compatibility** (undirected): between compatible value leaves in a sequence-sibling or zip cross-slot context. Redistribution candidates. Computed on demand as a non-caching computed property.  ## Lifecycle  Rebuilt from the tree on every structural acceptance. All derived data (live node IDs, leaf nodes, topological order, dependency adjacency) is computed eagerly during ``ChoiceGraphBuilder/assembleGraph()`` and stored as immutable fields. Infrequently-accessed derived data (type-compatibility edges) is recomputed on each access without caching.  Value-only leaf changes (no reshape) are applied in place via ``apply(_:)`` without rebuilding. Reshape and structural mutations return ``ChangeApplication/requiresFullRebuild`` true, delegating the rebuild to the scheduler.  ## File Layout  This file holds the struct definition, eagerly-computed fields, the convergence-record helpers, and the init/build plumbing. Read-only graph queries live in `ChoiceGraph+Queries.swift`, and type-compatibility edge enumeration lives in ``TypeCompatibilityCursor``. Dependency traversal lives in ``DependencyReachability`` so graph queries and scope cursors can share it without retaining mutable graph nodes. The mutation entry point (`apply`) lives in `ChoiceGraph+Lifecycle.swift`. Scope query families live in the Reduction/Queries directory.  - SeeAlso: ``ChoiceGraphBuilder``, ``ChoiceGraphNode``, ``DependencyEdge``, ``ContainmentEdge``, ``TypeCompatibilityEdge``",
+   "path": "Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift",
+   "repo": "exhaust",
+   "result": "Bool",
+   "root": "~/github_projects/exhaust",
+   "stratum": "full",
+   "text": "    static func sameTopology(_ low: ChoiceTree, _ high: ChoiceTree) -> Bool {\n        // Strip transparent wrappers symmetrically before comparing.\n        let lhs = unwrapTransparent(low)\n        let rhs = unwrapTransparent(high)\n        switch (lhs, rhs) {\n            case (.choice, .choice):\n                return true\n            case (.just, .just):\n                return true\n            case (.getSize, .getSize):\n                return true\n            case let (.sequence(lowElements, _), .sequence(highElements, _)):\n                let shared = min(lowElements.count, highElements.count)\n                var index = 0\n                while index < shared {\n                    if sameTopology(lowElements[index], highElements[index]) == false {\n                        return false\n                    }\n                    index += 1\n                }\n                return true\n            case let (.bind(_, lowInner, lowBound), .bind(_, highInner, highBound)):\n                return sameTopology(lowInner, highInner) && sameTopology(lowBound, highBound)\n            case let (.group(lowArray, _, _), .group(highArray, _, _)):\n                if lowArray.count != highArray.count { return false }\n                var index = 0\n                while index < lowArray.count {\n                    if sameTopology(lowArray[index], highArray[index]) == false {\n                        return false\n                    }\n                    index += 1\n                }\n                return true\n            case let (.resize(_, lowChoices), .resize(_, highChoices)):\n                if lowChoices.count != highChoices.count { return false }\n                var index = 0\n                while index < lowChoices.count {\n                    if sameTopology(lowChoices[index], highChoices[index]) == false {\n                        return false\n                    }\n                    index += 1\n                }\n                return true\n            default:\n                return false\n        }\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": ""
+  },
+  {
+   "callees": [
+    "build"
+   ],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [
+     "topological"
+    ],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [
+     "topology"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Builds controller topology for intermediate bind composition.  Scalar arrays keep their complete spans but have no element nodes or child indexes, so the result answers bind lookup, span, and nested-bind questions only. It must not drive terminal searches or become the live reducer graph.",
+   "gated": false,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:51",
+   "judged": true,
+   "key": "fa9adb1896117491",
+   "labels": [
+    "from"
+   ],
+   "line": 51,
+   "name": "buildControllerTopology",
+   "owner": "ChoiceGraphBuilder",
+   "owner_doc": "Constructs a ``ChoiceGraph`` from a ``ChoiceTree`` and its flattened ``ChoiceSequence``.  A single recursive walk of the tree produces nodes and containment/dependency edges. ``assembleGraph()`` then computes self-similarity groups, live node IDs, leaf nodes, dependency adjacency, and topological order \u2014 all stored eagerly on the resulting struct.  The walk mirrors the offset arithmetic of ``ChoiceSequence/flatten(_:includingAllBranches:)`` to maintain position-to-node correspondence.  Active branches carry position ranges and offset arithmetic. Inactive branches (unselected pick alternatives) are walked with `isActive: false`, which emits nodes with nil position ranges and skips offset tracking.",
+   "path": "Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift",
+   "repo": "exhaust",
+   "result": "ChoiceGraph",
+   "root": "~/github_projects/exhaust",
+   "stratum": "full",
+   "text": "    static func buildControllerTopology(from tree: ChoiceTree) -> ChoiceGraph {\n        build(from: tree, omittingScalarSequenceElements: true)\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": ""
+  },
+  {
+   "callees": [
+    "depthZeroLeafExpansions"
+   ],
+   "callers": [
+    "buildDescendantPromotionCandidate",
+    "buildSelfSimilarCandidate"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Expands depth-0 leaf entries for depth-crossing promotions.  Two wrapping modes depending on the recursion pattern: - **Pick wrapping** (direct recursion like BinaryHeap): the base case is inside a `oneOf`. Wrap in `group(true), branch(leafID), entry, group(false)`. - **Bind wrapping** (`Gen.recursive`): the base case is inside a `._bound`. Wrap in `bind(true), value(0), entry, bind(false)`, selecting `layers[0]` = the base generator.",
+   "gated": false,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:309",
+   "judged": true,
+   "key": "59ddaf85ca361d89",
+   "labels": [
+    "_",
+    "donorNodeID",
+    "donorRangeStart",
+    "graph"
+   ],
+   "line": 309,
+   "name": "expandDepthZeroLeaves",
+   "owner": "GraphStructuralEncoder",
+   "owner_doc": "Applies a scope-determined structural mutation to the base sequence.  Handles all pure (stateless) graph operations: removal, replacement, and migration. For most operations the scope fully determines the probe \u2014 one scope, one probe, one ``nextProbe(into:lastAccepted:)`` call. The exception is ``RemovalScope/coveringAligned(_:)``, which carries a ``BalancedCoveringArrayGenerator`` and emits one probe per covering array row until the generator is exhausted or a probe is accepted.  Permutation (sibling swap) is handled by the stateful ``GraphSwapEncoder``, which supports adaptive rightward extension after a successful swap.  The operation-specific candidate construction methods are delegated to dedicated extensions: - `GraphStructuralEncoder+Removal.swift` - `GraphStructuralEncoder+Replacement.swift` - `GraphStructuralEncoder+Migration.swift`",
+   "path": "Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift",
+   "repo": "exhaust",
+   "result": "[ChoiceSequenceValue]",
+   "root": "~/github_projects/exhaust",
+   "stratum": "name-graph",
+   "text": "    static func expandDepthZeroLeaves(\n        _ entries: [ChoiceSequenceValue],\n        donorNodeID: Int,\n        donorRangeStart: Int,\n        graph: ChoiceGraph\n    ) -> [ChoiceSequenceValue] {\n        guard case let .pick(donorMeta) = graph.nodes[donorNodeID].kind else { return entries }\n\n        let leafExpansions = depthZeroLeafExpansions(\n            donorNodeID: donorNodeID,\n            fingerprint: donorMeta.fingerprint,\n            graph: graph\n        )\n\n        guard leafExpansions.isEmpty == false else { return entries }\n\n        var result: [ChoiceSequenceValue] = []\n        result.reserveCapacity(entries.count + leafExpansions.count * 3)\n\n        for (index, entry) in entries.enumerated() {\n            let absolutePosition = donorRangeStart + index\n            if let wrapping = leafExpansions[absolutePosition] {\n                switch wrapping {\n                    case let .pick(branchID, branchCount, fingerprint):\n                        result.append(.group(true))\n                        result.append(.branch(.init(id: branchID, branchCount: branchCount, fingerprint: fingerprint)))\n                        result.append(entry)\n                        result.append(.group(false))\n                    case let .bind(depthSelectorEntry):\n                        result.append(.bind(true))\n                        result.append(depthSelectorEntry)\n                        result.append(entry)\n                        result.append(.bind(false))\n                }\n            } else {\n                result.append(entry)\n            }\n        }\n        return result\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": ""
+  },
+  {
+   "callees": [
+    "collectBaseCasesFromInnermostPick",
+    "collectSelfSimilarPicks",
+    "slotFamilies",
+    "wrappingForInnermostPick",
+    "zip",
+    "zipSlotFamilies"
+   ],
+   "callers": [
+    "expandDepthZeroLeaves"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Collects depth-0 base case positions and their wrapping kinds for the donor's subtree.  Two-phase approach: first reads, per arm, which pick family occupies each zip slot, then applies those layouts at innermost picks of the donor's family. A slot that holds a pick at the observed depth but a bare leaf at the innermost depth is a base case, and it is wrapped with the leaf branch of the family the slot expects. That family need not be the donor's own: a recursive generator whose arms zip children of two mutually recursive families bottoms out in each slot with that slot's family's leaf.  A layout is read from every branch alternative of every pick in the family, keyed by branch identifier, because the graph carries the inactive alternatives and an arm's layout is the same wherever it appears. Keying by arm is what matters: two arms of one pick can zip the same families in a different order, and a layout read from the wrong arm wraps the wrong slot. The innermost pick's own zip is read from its active branch only.",
+   "gated": false,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:355",
+   "judged": true,
+   "key": "4d00feef438794be",
+   "labels": [
+    "donorNodeID",
+    "fingerprint",
+    "graph"
+   ],
+   "line": 355,
+   "name": "depthZeroLeafExpansions",
+   "owner": "GraphStructuralEncoder",
+   "owner_doc": "Applies a scope-determined structural mutation to the base sequence.  Handles all pure (stateless) graph operations: removal, replacement, and migration. For most operations the scope fully determines the probe \u2014 one scope, one probe, one ``nextProbe(into:lastAccepted:)`` call. The exception is ``RemovalScope/coveringAligned(_:)``, which carries a ``BalancedCoveringArrayGenerator`` and emits one probe per covering array row until the generator is exhausted or a probe is accepted.  Permutation (sibling swap) is handled by the stateful ``GraphSwapEncoder``, which supports adaptive rightward extension after a successful swap.  The operation-specific candidate construction methods are delegated to dedicated extensions: - `GraphStructuralEncoder+Removal.swift` - `GraphStructuralEncoder+Replacement.swift` - `GraphStructuralEncoder+Migration.swift`",
+   "path": "Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift",
+   "repo": "exhaust",
+   "result": "[Int: LeafWrapping]",
+   "root": "~/github_projects/exhaust",
+   "stratum": "name-graph",
+   "text": "    private static func depthZeroLeafExpansions(\n        donorNodeID: Int,\n        fingerprint: UInt64,\n        graph: ChoiceGraph\n    ) -> [Int: LeafWrapping] {\n        var branchSlotFamilies: [UInt64: [Int: UInt64]] = [:]\n        let allGroupPicks = graph.selfSimilarityGroups[fingerprint] ?? []\n        for pickID in allGroupPicks {\n            guard case let .pick(pickMeta) = graph.nodes[pickID].kind else { continue }\n            let node = graph.nodes[pickID]\n            for (childIndex, childID) in node.children.enumerated() {\n                guard childIndex < pickMeta.branchElements.count,\n                      case let .branch(branch) = pickMeta.branchElements[childIndex],\n                      branchSlotFamilies[branch.id] == nil,\n                      let zipID = zip(below: childID, fingerprint: fingerprint, graph: graph, activeOnly: false)\n                else {\n                    continue\n                }\n                let slotFamilies = slotFamilies(ofZip: zipID, graph: graph)\n                guard slotFamilies.values.contains(fingerprint) else {\n                    continue\n                }\n                branchSlotFamilies[branch.id] = slotFamilies\n            }\n        }\n\n        var allPicks: [Int] = []\n        collectSelfSimilarPicks(rootID: donorNodeID, fingerprint: fingerprint, graph: graph, into: &allPicks)\n\n        var familyWrappings: [UInt64: LeafWrapping?] = [:]\n        var expansions: [Int: LeafWrapping] = [:]\n        for pickID in allPicks {\n            guard case let .pick(pickMeta) = graph.nodes[pickID].kind else { continue }\n            guard let slotFamilies = zipSlotFamilies(pickID: pickID, fingerprint: fingerprint, graph: graph) else {\n                continue\n            }\n            guard slotFamilies.values.contains(fingerprint) == false else {\n                continue\n            }\n            let mask = branchSlotFamilies[pickMeta.selectedID]\n\n            // The donor family's wrapping is decided at the innermost pick itself: its parent tells whether the family recurses through `._bound`, in which case the depth selector already handles depth-crossing and no expansion is needed.\n            familyWrappings[fingerprint] = wrappingForInnermostPick(pickID: pickID, fingerprint: fingerprint, pickMetadata: pickMeta, graph: graph)\n\n            collectBaseCasesFromInnermostPick(\n                pickID: pickID,\n                donorFingerprint: fingerprint,\n                mask: mask,\n                graph: graph,\n                familyWrappings: &familyWrappings,\n                expansions: &expansions\n            )\n        }\n        return expansions\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "One transformation per depth-control leaf, or none when the graph holds no depth control.  The structural benefit is the leaf's distance to its floor: every layer dropped removes a whole subtree, which is structural rather than value work, and the deepest leaf is tried first. The cost is the binary search's step count over that distance.",
+   "gated": false,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/Queries/CandidateSource+ValueSearch.swift:149",
+   "judged": true,
+   "key": "842699d93c3de90c",
+   "labels": [
+    "graph"
+   ],
+   "line": 149,
+   "name": "buildDepthCollapseCandidates",
+   "owner": "CandidateSourceBuilder",
+   "owner_doc": "Builds the collection of candidate sources from a graph.",
+   "path": "Sources/ExhaustCore/Reduction/Queries/CandidateSource+ValueSearch.swift",
+   "repo": "exhaust",
+   "result": "[GraphTransformation]",
+   "root": "~/github_projects/exhaust",
+   "stratum": "name-graph",
+   "text": "    static func buildDepthCollapseCandidates(graph: ChoiceGraph) -> [GraphTransformation] {\n        DepthCollapseQuery.build(graph: graph).map { scope in\n            GraphTransformation(\n                operation: .minimize(scope),\n                priority: DispatchPriority(\n                    structuralBenefit: DepthCollapseQuery.distanceToFloor(of: scope, graph: graph),\n                    valueBenefit: 0,\n                    reductionMagnitude: 0,\n                    estimatedCost: DepthCollapseQuery.estimatedProbes(of: scope, graph: graph)\n                )\n            )\n        }\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": ""
+  },
+  {
+   "callees": [],
+   "callers": [
+    "build"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "graph",
+     "node"
+    ],
+    "NAME": [
+     "depth"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": false,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Reduction/Queries/ReorderingQuery.swift:151",
+   "judged": true,
+   "key": "f2521f2dcfbffeb4",
+   "labels": [
+    "nodeID",
+    "graph"
+   ],
+   "line": 151,
+   "name": "nodeDepth",
+   "owner": "ReorderingQuery",
+   "owner_doc": "Static scope builder for the numeric reordering pass.  Derives pre-filtered sibling groups from graph ``SequenceMetadata/childPositionRanges`` and bind node metadata.",
+   "path": "Sources/ExhaustCore/Reduction/Queries/ReorderingQuery.swift",
+   "repo": "exhaust",
+   "result": "Int",
+   "root": "~/github_projects/exhaust",
+   "stratum": "name-graph",
+   "text": "    private static func nodeDepth(nodeID: Int, graph: ChoiceGraph) -> Int {\n        var depth = 0\n        var current = graph.nodes[nodeID].parent\n        while let parentID = current {\n            depth += 1\n            current = graph.nodes[parentID].parent\n        }\n        return depth\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [
+    "discriminate"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "edge"
+    ],
+    "NAME": [
+     "ranked"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Ranks edges by discriminative power, keeping edges that discriminate at all (power above 1) up to `limit`.  Edges hit by every signature on both sides are common code (function entry, setup) and are excluded by the power cutoff, not by special-casing. The default limit is the candidate pool the report folds by source location; several edges of one function usually rank together, and folding after symbolization is what keeps the printed list from spending its slots on one function's offsets.",
+   "gated": true,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustCore/Runners/Fuzzing/CoverageDiscrimination.swift:83",
+   "judged": true,
+   "key": "5a7b0657fbdc57ac",
+   "labels": [
+    "failingSignatures",
+    "passing",
+    "limit"
+   ],
+   "line": 83,
+   "name": "rankedEdges",
+   "owner": "CoverageDiscrimination",
+   "owner_doc": "Pure functions computing edge discrimination over accumulated signatures. Runs once at report time; the live loop only stores per-cluster signatures.  The failing sample is the cluster's post-reduction signatures rather than raw failing attempts: reduction strips incidental coverage (setup, logging, branches taken by coincidence), so the reduced signature has much higher signal density. The passing sample is the corpus's passing entries, a coverage-novelty-biased sample, which is fine for ranking: bias toward diverse passing paths widens the denominator's coverage rather than distorting which edges only failures hit.  Ranking is the one analysis. A necessary-edge intersection and a near-miss differential (the necessary edges the closest passing signatures lack) name nothing a reader acts on: the near-miss set points at the validity checks that reject almost-failing runs, never at the faulty code the ranking already found.",
+   "path": "Sources/ExhaustCore/Runners/Fuzzing/CoverageDiscrimination.swift",
+   "repo": "exhaust",
+   "result": "[EdgeDiscrimination]",
+   "root": "~/github_projects/exhaust",
+   "stratum": "full",
+   "text": "    package static func rankedEdges(\n        failingSignatures: [BitSet],\n        passing: PassingSample,\n        limit: Int = FuzzTunables.discriminatingEdgeCandidateLimit\n    ) -> [EdgeDiscrimination] {\n        guard failingSignatures.isEmpty == false else {\n            return []\n        }\n        var failCounts: [Int: Int] = [:]\n        for signature in failingSignatures {\n            signature.forEachIndex { edge in\n                failCounts[edge, default: 0] += 1\n            }\n        }\n\n        let failTotal = Double(failingSignatures.count)\n        let passTotal = Double(max(1, passing.sampleSize))\n        // Floor the pass fraction at \"less than one passing run\" so never-passing edges rank highest with a finite power instead of dividing by zero.\n        let passFloor = 1.0 / (passTotal + 1.0)\n\n        var statistics: [EdgeDiscrimination] = []\n        for (edge, failCount) in failCounts {\n            let failFraction = Double(failCount) / failTotal\n            let passFraction = Double(passing[edge]) / passTotal\n            let power = failFraction / max(passFraction, passFloor)\n            guard power > 1.0 else {\n                continue\n            }\n            statistics.append(EdgeDiscrimination(\n                edge: edge,\n                failureHitFraction: failFraction,\n                passingHitFraction: passFraction,\n                power: power\n            ))\n        }\n        statistics.sort { lhs, rhs in\n            if lhs.power != rhs.power {\n                return lhs.power > rhs.power\n            }\n            return lhs.edge < rhs.edge\n        }\n        return Array(statistics.prefix(limit))\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": "package"
+  },
+  {
+   "callees": [
+    "generator"
+   ],
+   "callers": [
+    "root"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "nodes"
+    ],
+    "NAME": [
+     "layer"
+    ],
+    "SHAPE": null
+   },
+   "doc": "",
+   "gated": true,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:52",
+   "judged": true,
+   "key": "29ad0a55ebb7bd13",
+   "labels": [
+    "for",
+    "recursion",
+    "nodes",
+    "domain"
+   ],
+   "line": 52,
+   "name": "rootLayer",
+   "owner": "BudgetedGeneratorDerivation",
+   "owner_doc": "Builds recursion-limited derivations under a structural-node ceiling. Construction caches include the allocated allowance; sharing generators never replenishes the allowance of a value occurrence. Runtime closures retain completed layers, not this mutable builder.",
+   "path": "Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift",
+   "repo": "exhaust",
+   "result": "ReflectiveGenerator<Value>",
+   "root": "~/github_projects/exhaust",
+   "stratum": "full",
+   "text": "    private func rootLayer<Value: __Exhaustable.Conformance>(\n        for type: Value.Type,\n        recursion: RootRecursionBudget,\n        nodes: Int,\n        domain: ExhaustableDomain\n    ) -> ReflectiveGenerator<Value> {\n        switch recursion {\n            case let .pinned(recursion):\n                return generator(for: type, recursion: recursion, nodes: nodes, domain: domain)\n            case let .drawn(ceiling, scaling):\n                guard let minimum = (0 ... ceiling).first(where: { candidate in\n                    guard let cost = budget.minimumNodes(for: ObjectIdentifier(type), recursion: candidate) else {\n                        return false\n                    }\n                    return cost <= nodes\n                }) else {\n                    preconditionFailure(\"A validated root allowance must admit a recursion at or below its ceiling\")\n                }\n                let layers = (minimum ... ceiling).map { generator(for: type, recursion: $0, nodes: nodes, domain: domain) }\n                return Gen.chooseDepth(in: UInt64(minimum) ... UInt64(ceiling), scaling: scaling)._bound(\n                    forward: { selected in layers[Int(selected) - minimum].gen.erase() },\n                    backward: { (_: Value) in UInt64(ceiling) }\n                ).wrapped(isReflective: layers.allSatisfy { $0.isReflective })\n        }\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": "private"
+  },
+  {
+   "callees": [
+    "payloadGenerator"
+   ],
+   "callers": [
+    "buildContainer"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "nodes"
+    ],
+    "NAME": [
+     "layered"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Shares completed count-specific layers by their exact recursive and node allowances. Reflection can retain more layers than sampling selects.",
+   "gated": true,
+   "group": "wide",
+   "id": "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:311",
+   "judged": true,
+   "key": "f2b6fa8d85512aa8",
+   "labels": [
+    "_",
+    "children",
+    "recursionAllowance",
+    "nodes",
+    "domain",
+    "maximumGeneratedCount",
+    "maximumBuiltCount"
+   ],
+   "line": 311,
+   "name": "buildLayeredContainer",
+   "owner": "BudgetedGeneratorDerivation",
+   "owner_doc": "Builds recursion-limited derivations under a structural-node ceiling. Construction caches include the allocated allowance; sharing generators never replenishes the allowance of a value occurrence. Runtime closures retain completed layers, not this mutable builder.",
+   "path": "Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift",
+   "repo": "exhaust",
+   "result": "ReflectiveGenerator<Any>",
+   "root": "~/github_projects/exhaust",
+   "stratum": "full",
+   "text": "    private func buildLayeredContainer(\n        _ recipe: DerivedContainerRecipe,\n        children: [PayloadPlan],\n        recursionAllowance: PayloadRecursionAllowance,\n        nodes: Int,\n        domain: ExhaustableDomain,\n        maximumGeneratedCount: Int,\n        maximumBuiltCount: Int\n    ) -> ReflectiveGenerator<Any> {\n        var layers = [recipe.empty.wrapped(isReflective: true)]\n        for elementIndex in 0 ..< maximumBuiltCount {\n            let elementCount = elementIndex + 1\n            let entryRecursionAllowance = PayloadRecursionAllowance(\n                source: recursionAllowance.source,\n                inherited: recursionAllowance.inherited,\n                recursive: recursionAllowance.recursive / elementCount\n            )\n            let recursionAllowances = Array(repeating: entryRecursionAllowance, count: children.count)\n            guard let minima = budget.minimumNodes(\n                for: children,\n                recursionAllowances: recursionAllowances\n            ),\n                let nodeAllowances = budget.split((nodes - 1) / elementCount, minima: minima)\n            else {\n                break\n            }\n            let key = CountedContainerKey(\n                type: ObjectIdentifier(recipe.type),\n                count: elementCount,\n                recursionAllowance: entryRecursionAllowance,\n                nodeAllowances: nodeAllowances,\n                domain: domain\n            )\n            switch countedContainers[key] {\n                case let .some(existing):\n                    layers.append(existing)\n                    continue\n                case .none:\n                    break\n            }\n            let generators = children.indices.map { childIndex in\n                payloadGenerator(\n                    for: children[childIndex],\n                    recursionAllowance: recursionAllowances[childIndex],\n                    nodes: nodeAllowances[childIndex],\n                    domain: domain\n                )\n            }\n            let layer = recipe.build(.exactly(elementCount), generators.map { $0.gen }).wrapped(\n                isReflective: recipe.isReflective && generators.allSatisfy { $0.isReflective }\n            )\n            countedContainers[key] = layer\n            layers.append(layer)\n        }\n        let builtMaximum = layers.count - 1\n        let sampledMaximum = min(maximumGeneratedCount, builtMaximum)\n        return recipe.selectCount(sampledMaximum, layers.map { $0.gen }).wrapped(\n            isReflective: layers.allSatisfy { $0.isReflective }\n        )\n    }",
+   "toplevel": "~/GitHub_projects/exhaust",
+   "visibility": "private"
+  },
+  {
+   "callees": [
+    "scaledCopyForChildGroup",
+    "shapeRenderGroups"
+   ],
+   "callers": [
+    "setUpRepeater",
+    "setupGroups"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "parent"
+    ],
+    "NAME": [
+     "layers"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Creates a `GroupLayer` for each `Group` in the given list of `ShapeItem`s - Each `Group` item becomes its own `GroupLayer` sublayer. - Other `ShapeItem` are applied to all sublayers",
+   "gated": true,
+   "group": "wide",
+   "id": "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:253",
+   "judged": true,
+   "key": "fb33cc3fcec2381f",
+   "labels": [
+    "from",
+    "parentGroup",
+    "parentGroupPath",
+    "context"
+   ],
+   "line": 253,
+   "name": "makeGroupLayers",
+   "owner": "CALayer",
+   "owner_doc": "",
+   "path": "Sources/Private/CoreAnimation/Layers/ShapeLayer.swift",
+   "repo": "lottie-ios",
+   "result": "[GroupLayer]",
+   "root": "~/github_projects/lottie-ios",
+   "stratum": "full",
+   "text": "  private func makeGroupLayers(\n    from items: [ShapeItemLayer.Item],\n    parentGroup: Group?,\n    parentGroupPath: [String],\n    context: LayerContext\n  ) throws -> [GroupLayer] {\n    var groupItems = items.compactMap { $0.item as? Group }.filter { !$0.hidden }\n    var otherItems = items.filter { !($0.item is Group) && !$0.item.hidden }\n\n    // Handle the top-level `shapeLayer.items` array. This is typically just a single `Group`,\n    // but in practice can be any combination of items. The implementation expects all path-drawing\n    // shape items to be managed by a `GroupLayer`, so if there's a top-level path item we\n    // have to create a placeholder group.\n    if parentGroup == nil, otherItems.contains(where: { $0.item.drawsCGPath }) {\n      groupItems = [Group(items: items.map { $0.item }, name: \"\")]\n      otherItems = []\n    }\n\n    // Any child items that wouldn't be included in a valid shape render group\n    // need to be applied to child groups (otherwise they'd be silently ignored).\n    let inheritedItemsForChildGroups = otherItems\n      .shapeRenderGroups(groupHasChildGroupsToInheritUnusedItems: !groupItems.isEmpty)\n      .unusedItems\n\n    // Groups are listed from front to back,\n    // but `CALayer.sublayers` are listed from back to front.\n    let groupsInZAxisOrder = groupItems.reversed()\n\n    return try groupsInZAxisOrder.compactMap { group in\n      var pathForChildren = parentGroupPath\n      if !group.name.isEmpty {\n        pathForChildren.append(group.name)\n      }\n\n      let childItems = group.items\n        .filter { !$0.hidden }\n        .map { ShapeItemLayer.Item(item: $0, groupPath: pathForChildren) }\n\n      // Some shape item properties are affected by scaling (e.g. stroke width).\n      // The child group may have a `ShapeTransform` that affects the scale of its items,\n      // but shouldn't affect the scale of any inherited items. To prevent this scale\n      // from affecting inherited items, we have to apply an inverse scale to them.\n      let inheritedItems = try inheritedItemsForChildGroups.map { item in\n        ShapeItemLayer.Item(\n          item: try item.item.scaledCopyForChildGroup(group, context: context),\n          groupPath: item.groupPath\n        )\n      }\n\n      return try GroupLayer(\n        group: group,\n        items: childItems + inheritedItems,\n        groupPath: pathForChildren,\n        context: context\n      )\n    }\n  }",
+   "toplevel": "~/GitHub_projects/lottie-ios",
+   "visibility": "private"
+  },
+  {
+   "callees": [],
+   "callers": [
+    "buildTargets"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "dependents"
+    ],
+    "NAME": [
+     "depths"
+    ],
+    "SHAPE": "[K: I]"
+   },
+   "doc": "The root targets of the project have depth of 0 and all target dependencies have a greater depth than the target itself.",
+   "gated": false,
+   "group": "wide",
+   "id": "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1448",
+   "judged": true,
+   "key": "f28e4986ba009800",
+   "labels": [
+    "for"
+   ],
+   "line": 1448,
+   "name": "targetDepthsAndDependents",
+   "owner": "BuildServerManager",
+   "owner_doc": "Entry point for all build server queries.",
+   "path": "Sources/BuildServerIntegration/BuildServerManager.swift",
+   "repo": "sourcekit-lsp",
+   "result": "(depths: [BuildTargetIdentifier: Int], dependents: [BuildTargetIdentifier: Set<BuildTargetIdentifier>])",
+   "root": "~/github_projects/sourcekit-lsp",
+   "stratum": "full",
+   "text": "  private func targetDepthsAndDependents(\n    for buildTargets: [BuildTarget]\n  ) -> (depths: [BuildTargetIdentifier: Int], dependents: [BuildTargetIdentifier: Set<BuildTargetIdentifier>]) {\n    var nonRoots: Set<BuildTargetIdentifier> = []\n    for buildTarget in buildTargets {\n      nonRoots.formUnion(buildTarget.dependencies)\n    }\n    let targetsById = Dictionary(elements: buildTargets, keyedBy: \\.id)\n    var dependents: [BuildTargetIdentifier: Set<BuildTargetIdentifier>] = [:]\n    var depths: [BuildTargetIdentifier: Int] = [:]\n    let rootTargets = buildTargets.filter { !nonRoots.contains($0.id) }\n    var worksList: [(target: BuildTargetIdentifier, depth: Int)] = rootTargets.map { ($0.id, 0) }\n    while let (target, depth) = worksList.popLast() {\n      depths[target] = max(depths[target, default: 0], depth)\n      for dependency in targetsById[target]?.dependencies ?? [] {\n        dependents[dependency, default: []].insert(target)\n        // Check if we have already recorded this target with a greater depth, in which case visiting it again will\n        // not increase its depth or any of its children.\n        if depths[dependency, default: 0] < depth + 1 {\n          worksList.append((dependency, depth + 1))\n        }\n      }\n    }\n    return (depths, dependents)\n  }",
+   "toplevel": "~/GitHub_projects/sourcekit-lsp",
+   "visibility": "private"
+  },
+  {
+   "callees": [
+    "serializeArray",
+    "serializeDictionary",
+    "serializePrimitiveKeyValuePair",
+    "unwrapPrimitiveOrArrayOfPrimitives",
+    "unwrapPrimitiveValue"
+   ],
+   "callers": [
+    "serializeNode"
+   ],
+   "copies": [],
+   "cues": {
+    "DOC-OWN": [],
+    "DOC-OWNER": [],
+    "GRAPH": [
+     "node"
+    ],
+    "NAME": [
+     "level"
+    ],
+    "SHAPE": null
+   },
+   "doc": "Serializes the provided value into the underlying string. - Parameters: - value: The value to serialize. - key: The key to serialize the value under (details depend on the style and explode parameters in the configuration). - Throws: An error if serialization of the value fails.",
+   "gated": false,
+   "group": "wide",
+   "id": "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:121",
+   "judged": true,
+   "key": "42fd376082c2c826",
+   "labels": [
+    "_",
+    "forKey"
+   ],
+   "line": 121,
+   "name": "serializeTopLevelNode",
+   "owner": "URISerializer",
+   "owner_doc": "A type that serializes a `URIEncodedNode` to a URI-encoded string.",
+   "path": "Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift",
+   "repo": "swift-openapi-runtime",
+   "result": "",
+   "root": "~/github_projects/swift-openapi-runtime",
+   "stratum": "name-graph",
+   "text": "    private mutating func serializeTopLevelNode(_ value: URIEncodedNode, forKey key: String) throws {\n        func unwrapPrimitiveValue(_ node: URIEncodedNode) throws -> URIEncodedNode.Primitive {\n            guard case let .primitive(primitive) = node else { throw SerializationError.nestedContainersNotSupported }\n            return primitive\n        }\n        func unwrapPrimitiveOrArrayOfPrimitives(_ node: URIEncodedNode) throws\n            -> URIEncodedNode.PrimitiveOrArrayOfPrimitives\n        {\n            if case let .primitive(primitive) = node { return .primitive(primitive) }\n            if case let .array(array) = node {\n                let primitives = try array.map(unwrapPrimitiveValue)\n                return .arrayOfPrimitives(primitives)\n            }\n            throw SerializationError.nestedContainersNotSupported\n        }\n        switch value {\n        case .unset:\n            // Nothing to serialize.\n            break\n        case .primitive(let primitive):\n            let keyAndValueSeparator: String?\n            switch configuration.style {\n            case .form: keyAndValueSeparator = \"=\"\n            case .simple: keyAndValueSeparator = nil\n            case .deepObject: throw SerializationError.deepObjectsWithPrimitiveValuesNotSupported\n            }\n            try serializePrimitiveKeyValuePair(primitive, forKey: key, separator: keyAndValueSeparator)\n        case .array(let array): try serializeArray(array.map(unwrapPrimitiveValue), forKey: key)\n        case .dictionary(let dictionary):\n            try serializeDictionary(dictionary.mapValues(unwrapPrimitiveOrArrayOfPrimitives), forKey: key)\n        }\n    }",
+   "toplevel": "~/GitHub_projects/swift-openapi-runtime",
+   "visibility": "private"
+  }
+ ],
+ "candidates_before_copy_merge": 44,
+ "probes": {
+  "R2": [
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:40",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:64",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:70",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:115",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:123",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:130",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:136",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:141",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:146",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:151",
+   "swift-collections:Sources/HeapModule/_HeapNode.swift:167",
+   "swift-foundation:Sources/FoundationEssentials/Codable/IterativeParsingSupport.swift:37",
+   "swift-foundation:Sources/FoundationEssentials/Codable/IterativeParsingSupport.swift:84",
+   "swift-foundation:Sources/FoundationEssentials/Codable/IterativeParsingSupport.swift:85",
+   "swift-foundation:Sources/FoundationEssentials/Codable/IterativeParsingSupport.swift:94",
+   "swift-foundation:Sources/FoundationEssentials/Codable/IterativeParsingSupport.swift:100",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:48",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:55",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:64",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:66",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:73",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:75",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:82",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:84",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:91",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:93",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:99",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:103",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:114",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:127",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:132",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:141",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:162",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:213",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:224",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:244",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:251",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:272",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:285",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:291",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:298",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/CouldBePrivateVisitor.swift:333",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:24",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:33",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:38",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:43",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:48",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:53",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:116",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:139",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:150",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:168",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/MultipleTypesPerFileVisitor.swift:203",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:17",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:64",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:93",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:121",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:140",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:170",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:184",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:209",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:246",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:261",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:267",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:288",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:293",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:303",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:366",
+   "swift-project-lint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Testability/Visitors/InspectionStep.swift:372",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:55",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:62",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:85",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:103",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:114",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:135",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:143",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:159",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:170",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:195",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:232",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:237",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:251",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:256",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:271",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:278",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:287",
+   "swift-project-lint:Packages/SwiftProjectLintVisitors/Sources/SwiftProjectLintVisitors/ContextSymbolTable.swift:302",
+   "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:8",
+   "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:31",
+   "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:54",
+   "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:144",
+   "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:159",
+   "swiftlint-rule-studio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+Serialization.swift:189",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:24",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:60",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:79",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:86",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:94",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:101",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:108",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/KnowledgeGraphBuilder.swift:141",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:6",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:13",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:20",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:26",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:36",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:46",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+ErrorProvenance.swift:92",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:4",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:14",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:29",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:38",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:46",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:55",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:71",
+   "SwiftAssist:Sources/SwiftAssist/Knowledge/SkillGraphStore+Upsert.swift:80",
+   "SwiftAssist:Sources/SwiftAssistApp/Symbols/SymbolReferencesPanel.swift:18",
+   "SwiftAssist:Sources/SwiftAssistApp/Symbols/SymbolSearchPanel.swift:131",
+   "SwiftAssist:Sources/SwiftAssistApp/Symbols/SymbolSearchPanel.swift:139",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:43",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:81",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:115",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:157",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:201",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:213",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift:36",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift:47",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift:155",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift:189",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift:205",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:11",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:24",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:42",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:64",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:108",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:128",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:145",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:166",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:189",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:216",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:243",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:255",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:285",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:316",
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/LayoutGraphBuilder+ResolvedNames.swift:323",
+   "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:17",
+   "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:21",
+   "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:27",
+   "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:50",
+   "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:67",
+   "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:98",
+   "SwiftUMLStudio:SwiftUMLStudio/FileNode.swift:162",
+   "swift-docc:Sources/SwiftDocC/Indexing/RenderNode+Indexable.swift:74",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:41",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:54",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:104",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:113",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:121",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:142",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:150",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:188",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:197",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:214",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:226",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:237",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:253",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:266",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:284",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:302",
+   "swift-docc:Sources/SwiftDocC/Infrastructure/Topic Graph/TopicGraph.swift:326",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:27",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:50",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:92",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:96",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:100",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:104",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:108",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:113",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:117",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:122",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:126",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:130",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:138",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:141",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:154",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:158",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:162",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:166",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:170",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:174",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:178",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:182",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:186",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:191",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:207",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:211",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:215",
+   "swift-docc:Sources/SwiftDocC/Semantics/Walker/Walkers/SemanticTreeDumper.swift:219",
+   "swift-docc:Sources/SwiftDocC/Utility/Graphs/DirectedGraph+Traversal.swift:13",
+   "swift-docc:Sources/SwiftDocC/Utility/Graphs/DirectedGraph+Traversal.swift:43",
+   "swift-docc:Sources/SwiftDocC/Utility/Graphs/DirectedGraph+Traversal.swift:54",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+BindLookup.swift:3",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+BindLookup.swift:13",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:23",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:46",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:114",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:146",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:229",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:312",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:324",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraph+Classification.swift:330",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:44",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:55",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:81",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:172",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:285",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:356",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:435",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:529",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:545",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:576",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:590",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:614",
+   "exhaust:Sources/ExhaustCore/Reduction/ChoiceGraph/ChoiceGraphBuilder.swift:627",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:8",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:41",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:69",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:96",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:112",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:167",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:190",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:242",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:267",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:412",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:435",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:455",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:465",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:476",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:490",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:518",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:537",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:572",
+   "exhaust:Sources/ExhaustCore/Reduction/Encoders/GraphStructuralEncoder+Replacement.swift:604",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/CandidateSource+ValueSearch.swift:10",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/CandidateSource+ValueSearch.swift:62",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/CandidateSource+ValueSearch.swift:123",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/CandidateSource+ValueSearch.swift:133",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/ReorderingQuery.swift:19",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/ReorderingQuery.swift:77",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/ReorderingQuery.swift:93",
+   "exhaust:Sources/ExhaustCore/Reduction/Queries/ReorderingQuery.swift:138",
+   "exhaust:Sources/ExhaustCore/Runners/Fuzzing/CoverageDiscrimination.swift:69",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:18",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:81",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:148",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:172",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:206",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:234",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:277",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:372",
+   "exhaust:Sources/ExhaustGenerators/BudgetedGeneratorDerivation.swift:433",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:38",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:79",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:110",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:174",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:226",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:353",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:381",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:400",
+   "lottie-ios:Sources/Private/CoreAnimation/Layers/ShapeLayer.swift:439",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:84",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:155",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:167",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:206",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:241",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:366",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:371",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:377",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:443",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:637",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:720",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:760",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:766",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:784",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:796",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:822",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:870",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:886",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:906",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:919",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:933",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:973",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:995",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1006",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1025",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1047",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1069",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1080",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1088",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1097",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1133",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1179",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1208",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1234",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1302",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1328",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1432",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1475",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1527",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1538",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1552",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1557",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1561",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1605",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1611",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1647",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1654",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1661",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1673",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1682",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1729",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1743",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1758",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1777",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1807",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1848",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1854",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1904",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1937",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:1947",
+   "sourcekit-lsp:Sources/BuildServerIntegration/BuildServerManager.swift:2034",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:46",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:92",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:108",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:122",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:126",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:157",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:177",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:195",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:211",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:235",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:265",
+   "swift-openapi-runtime:Sources/OpenAPIRuntime/URICoder/Serialization/URISerializer.swift:269",
+   "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:16",
+   "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:27",
+   "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:37",
+   "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:53",
+   "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:57",
+   "ViewInspector:Sources/ViewInspector/SwiftUI/List.swift:68"
+  ],
+  "R3": [
+   "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:185"
+  ],
+  "R4": [
+   {
+    "callees": [],
+    "callers": [
+     "areNodesConnected"
+    ],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "adjacency",
+      "node"
+     ],
+     "NAME": [],
+     "SHAPE": "[I]"
+    },
+    "doc": "",
+    "gated": false,
+    "group": "decision",
+    "id": "swift-package-manager:Sources/Basics/Graph/UndirectedGraph.swift:60",
+    "judged": true,
+    "key": "022e2f387d30c6d4",
+    "labels": [
+     "_"
+    ],
+    "line": 60,
+    "name": "nodesAdjacentTo",
+    "owner": "AdjacencyMatrix",
+    "owner_doc": "A matrix storing bits of `true`/`false` state for a given combination of row and column indices. Used as a square matrix indicating edges in graphs, where rows and columns are indices in a storage of graph's nodes.  For example, in a graph that contains 3 nodes `matrix[row: 1, column: 2]` evaluating to `true` means an edge between nodes with indices `1` and `2` exists. `matrix[row: 1, column: 2]` evaluating to `false` means that no edge exists.  See https://en.wikipedia.org/wiki/Adjacency_matrix for more details.",
+    "path": "Sources/Basics/Graph/UndirectedGraph.swift",
+    "repo": "swift-package-manager",
+    "result": "[Int]",
+    "root": "~/GitHub_projects/swift-package-manager",
+    "text": "    func nodesAdjacentTo(_ nodeIndex: Int) -> [Int] {\n        var result = [Int]()\n\n        for i in 0..<self.rows where self[i, nodeIndex] {\n            result.append(i)\n        }\n\n        return result\n    }",
+    "toplevel": "~/GitHub_projects/swift-package-manager",
+    "visibility": ""
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "parent"
+     ],
+     "NAME": [],
+     "SHAPE": "[I]"
+    },
+    "doc": "",
+    "gated": false,
+    "group": "decision",
+    "id": "swift-foundation:Sources/FoundationEssentials/ProgressManager/ProgressManager+Properties+Definitions.swift:240",
+    "judged": true,
+    "key": "b92b6a53ba43a775",
+    "labels": [
+     "_",
+     "_"
+    ],
+    "line": 240,
+    "name": "finalSummary",
+    "owner": "Throughput",
+    "owner_doc": "",
+    "path": "Sources/FoundationEssentials/ProgressManager/ProgressManager+Properties+Definitions.swift",
+    "repo": "swift-foundation",
+    "result": "[UInt64]",
+    "root": "~/GitHub_projects/swift-foundation",
+    "text": "            public static func finalSummary(_ parentSummary: [UInt64], _ selfSummary: [UInt64]) -> [UInt64] {\n                return parentSummary + selfSummary\n            }",
+    "toplevel": "~/GitHub_projects/swift-foundation",
+    "visibility": "public"
+   },
+   {
+    "callees": [
+     "expectations",
+     "unwrappingOptional"
+    ],
+    "callers": [
+     "candidates"
+    ],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "node"
+     ],
+     "NAME": [],
+     "SHAPE": "[[T]]"
+    },
+    "doc": "The types an expression must produce where it is written \u2014 what a base-less `.init(\u2026)` builds \u2014 as written components; empty when the syntax does not say.",
+    "gated": false,
+    "group": "decision",
+    "id": "swift-effect-inference:Sources/SwiftEffectInference/Internal/ConstructionChecker.swift:169",
+    "judged": true,
+    "key": "c61db9743e936ef2",
+    "labels": [
+     "of"
+    ],
+    "line": 169,
+    "name": "expectedTypes",
+    "owner": "ConstructionChecker",
+    "owner_doc": "Finds a construction of a refuted type. **Never a bare mention of a type** \u2014 a parameter type, a return type, `T.self` outside a decode and a static member are not constructions.",
+    "path": "Sources/SwiftEffectInference/Internal/ConstructionChecker.swift",
+    "repo": "swift-effect-inference",
+    "result": "[[String]]",
+    "root": "~/xcode_projects/SwiftEffectInference",
+    "text": "    func expectedTypes(of node: Syntax) -> [[String]] {\n        expectations(of: node).compactMap { expectation in\n            switch expectation {\n            case .type(let type): return TypeShapeCollector.components(of: Self.unwrappingOptional(type))\n            case .selfType: return [\"Self\"]\n            }\n        }\n    }",
+    "toplevel": "~/xcode_projects/SwiftEffectInference",
+    "visibility": ""
+   },
+   {
+    "callees": [],
+    "callers": [
+     "color"
+    ],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "graph"
+     ],
+     "NAME": [],
+     "SHAPE": "[I]"
+    },
+    "doc": "",
+    "gated": false,
+    "group": "decision",
+    "id": "pbt-workbook-corpus:Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift:51",
+    "judged": true,
+    "key": "cd89023fdddd0144",
+    "labels": [
+     "_"
+    ],
+    "line": 51,
+    "name": "color",
+    "owner": "GreedyColorer",
+    "owner_doc": "Greedy: for each vertex in order, take the smallest colour no already-coloured neighbour is using. Proper, complete, and within the `maxDegree + 1` bound.",
+    "path": "Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift",
+    "repo": "pbt-workbook-corpus",
+    "result": "[Int]",
+    "root": "~/xcode_projects/pbt-workbook-corpus",
+    "text": "    func color(_ graph: SimpleGraph) -> [Int] {\n        var colors = Array(repeating: -1, count: graph.vertexCount)\n        for vertex in 0..<graph.vertexCount {\n            let taken = Set(graph.adjacency[vertex].compactMap { colors[$0] == -1 ? nil : colors[$0] })\n            var candidate = 0\n            while taken.contains(candidate) { candidate += 1 }\n            colors[vertex] = candidate\n        }\n        return colors\n    }",
+    "toplevel": "~/xcode_projects/pbt-workbook-corpus",
+    "visibility": ""
+   },
+   {
+    "callees": [],
+    "callers": [
+     "color"
+    ],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "graph"
+     ],
+     "NAME": [],
+     "SHAPE": "[I]"
+    },
+    "doc": "",
+    "gated": false,
+    "group": "decision",
+    "id": "pbt-workbook-corpus:Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift:66",
+    "judged": true,
+    "key": "0215ac98c1d1e58f",
+    "labels": [
+     "_"
+    ],
+    "line": 66,
+    "name": "color",
+    "owner": "FirstNeighbourColorer",
+    "owner_doc": "The bug: only avoids the *first* neighbour's colour, ignoring the rest \u2014 so a vertex with two like-coloured neighbours can collide with the second.",
+    "path": "Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift",
+    "repo": "pbt-workbook-corpus",
+    "result": "[Int]",
+    "root": "~/xcode_projects/pbt-workbook-corpus",
+    "text": "    func color(_ graph: SimpleGraph) -> [Int] {\n        var colors = Array(repeating: -1, count: graph.vertexCount)\n        for vertex in 0..<graph.vertexCount {\n            let firstColored = graph.adjacency[vertex].first { colors[$0] != -1 }\n            let forbidden = firstColored.map { colors[$0] } ?? -1\n            colors[vertex] = (forbidden == 0) ? 1 : 0\n        }\n        return colors\n    }",
+    "toplevel": "~/xcode_projects/pbt-workbook-corpus",
+    "visibility": ""
+   },
+   {
+    "callees": [],
+    "callers": [],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "graph"
+     ],
+     "NAME": [],
+     "SHAPE": "[I]"
+    },
+    "doc": "",
+    "gated": false,
+    "group": "decision",
+    "id": "pbt-workbook-corpus:Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift:80",
+    "judged": true,
+    "key": "ca636aeb53c06c26",
+    "labels": [
+     "_"
+    ],
+    "line": 80,
+    "name": "color",
+    "owner": "SkipsIsolatedColorer",
+    "owner_doc": "The bug: leaves isolated vertices (degree 0) uncoloured, at the sentinel -1. Proper and within bounds \u2014 just not *complete*.",
+    "path": "Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift",
+    "repo": "pbt-workbook-corpus",
+    "result": "[Int]",
+    "root": "~/xcode_projects/pbt-workbook-corpus",
+    "text": "    func color(_ graph: SimpleGraph) -> [Int] {\n        var colors = GreedyColorer().color(graph)\n        for vertex in 0..<graph.vertexCount where graph.adjacency[vertex].isEmpty {\n            colors[vertex] = -1\n        }\n        return colors\n    }",
+    "toplevel": "~/xcode_projects/pbt-workbook-corpus",
+    "visibility": ""
+   },
+   {
+    "callees": [],
+    "callers": [
+     "color"
+    ],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "graph"
+     ],
+     "NAME": [],
+     "SHAPE": "[I]"
+    },
+    "doc": "",
+    "gated": false,
+    "group": "decision",
+    "id": "pbt-workbook-corpus:Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift:95",
+    "judged": true,
+    "key": "4b90ef1772020523",
+    "labels": [
+     "_"
+    ],
+    "line": 95,
+    "name": "color",
+    "owner": "WastefulColorer",
+    "owner_doc": "The bug this set exists for: a *fresh* colour for every vertex. Proper (no two vertices share a colour, so no edge is monochromatic) and complete \u2014 but it uses `vertexCount` colours where `maxDegree + 1` suffice. Only the quality bound catches it, and on a complete graph (where the two numbers coincide) it is genuinely optimal, so the bound spares it there.",
+    "path": "Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift",
+    "repo": "pbt-workbook-corpus",
+    "result": "[Int]",
+    "root": "~/xcode_projects/pbt-workbook-corpus",
+    "text": "    func color(_ graph: SimpleGraph) -> [Int] { Array(0..<graph.vertexCount) }",
+    "toplevel": "~/xcode_projects/pbt-workbook-corpus",
+    "visibility": ""
+   },
+   {
+    "callees": [],
+    "callers": [
+     "color"
+    ],
+    "cues": {
+     "DOC-OWN": [],
+     "DOC-OWNER": [],
+     "GRAPH": [
+      "graph"
+     ],
+     "NAME": [],
+     "SHAPE": "[I]"
+    },
+    "doc": "",
+    "gated": false,
+    "group": "decision",
+    "id": "pbt-workbook-corpus:Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift:104",
+    "judged": true,
+    "key": "99c779004673afd0",
+    "labels": [
+     "_"
+    ],
+    "line": 104,
+    "name": "color",
+    "owner": "ReverseGreedyColorer",
+    "owner_doc": "Honest non-defect \u2014 greedy over the *reverse* vertex order. A correct, proper, complete, in-bounds colouring that assigns different specific colours than the reference. `public` and kept OUT of the corpus, so a property that over-fits to the reference's exact assignment is caught in the tests.",
+    "path": "Sources/WorkbookCorpus/Set12VerifiedAlgorithms.swift",
+    "repo": "pbt-workbook-corpus",
+    "result": "[Int]",
+    "root": "~/xcode_projects/pbt-workbook-corpus",
+    "text": "    public func color(_ graph: SimpleGraph) -> [Int] {\n        var colors = Array(repeating: -1, count: graph.vertexCount)\n        for vertex in (0..<graph.vertexCount).reversed() {\n            let taken = Set(graph.adjacency[vertex].compactMap { colors[$0] == -1 ? nil : colors[$0] })\n            var candidate = 0\n            while taken.contains(candidate) { candidate += 1 }\n            colors[vertex] = candidate\n        }\n        return colors\n    }",
+    "toplevel": "~/xcode_projects/pbt-workbook-corpus",
+    "visibility": "public"
+   }
+  ]
+ },
+ "subjects": [
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 204,
+   "group": "decision",
+   "name": "swift-infer-core",
+   "revision": "a1f08f2d433fcfc5222c42d6e07dafd9a2ea5897",
+   "root": "~/xcode_projects/SwiftInferProperties-667",
+   "skipped": {},
+   "toplevel": "~/xcode_projects/SwiftInferProperties-667"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 96,
+   "group": "decision",
+   "name": "swift-format",
+   "revision": "9c9a9fabd886519f81fd768b3feb79dd9de25641",
+   "root": "~/GitHub_projects/swift-format",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-format"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 167,
+   "group": "decision",
+   "name": "grdb",
+   "revision": "0d8cf958b4b66a0473ec6e6986eb9da462171da9",
+   "root": "~/GitHub_projects/GRDB.swift",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/GRDB.swift"
+  },
+  {
+   "also": [],
+   "candidates": 2,
+   "dirty": true,
+   "files": 574,
+   "group": "decision",
+   "name": "swift-collections",
+   "revision": "f96b909e1a9e469620bc5037c1e24e00153f376f",
+   "root": "~/GitHub_projects/swift-collections",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-collections"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 88,
+   "group": "decision",
+   "name": "swift-syntax",
+   "revision": "4a71c31565fff8a05f89aafa959e06fc902c7abc",
+   "root": "~/GitHub_projects/swift-syntax",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-syntax"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 71,
+   "group": "decision",
+   "name": "swift-nio",
+   "revision": "8c063f043d94c120d0f8d6303ef4fc7918e3561d",
+   "root": "~/GitHub_projects/swift-nio",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-nio"
+  },
+  {
+   "also": [],
+   "candidates": 3,
+   "dirty": false,
+   "files": 78,
+   "group": "decision",
+   "name": "swift-package-manager",
+   "revision": "d274b839a3c44a3f436aede221b75506ad363ed2",
+   "root": "~/GitHub_projects/swift-package-manager",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-package-manager"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 11,
+   "group": "decision",
+   "name": "swift-numerics",
+   "revision": "899af71c0256d0ad181e3b7eb3453c1065d928a5",
+   "root": "~/github_projects/swift-numerics",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-numerics"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 28,
+   "group": "decision",
+   "name": "swift-algorithms",
+   "revision": "5b7143f8e291dee0e14c118fd0212487f0b37af5",
+   "root": "~/github_projects/swift-algorithms",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-algorithms"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 52,
+   "group": "decision",
+   "name": "swift-argument-parser",
+   "revision": "efd239f0055b3d6b6cc122a786c46a0ea8d0235b",
+   "root": "~/GitHub_projects/swift-argument-parser",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-argument-parser"
+  },
+  {
+   "also": [],
+   "candidates": 1,
+   "dirty": false,
+   "files": 273,
+   "group": "decision",
+   "name": "swift-foundation",
+   "revision": "aadd9259be076a86a7e7918b938751d69dfe1198",
+   "root": "~/GitHub_projects/swift-foundation",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift-foundation"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 258,
+   "group": "decision",
+   "name": "swiftlang-swift",
+   "revision": "e739e65153fd564ac1cb9f4140d7130e7d099e16",
+   "root": "~/GitHub_projects/swift",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/swift"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 48,
+   "group": "decision",
+   "name": "harmonize",
+   "revision": "41923397b3034b375dd1486139448eb1bc38ff22",
+   "root": "~/GitHub_projects/Harmonize",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/Harmonize"
+  },
+  {
+   "also": [
+    "SwiftProjectLint"
+   ],
+   "candidates": 4,
+   "dirty": false,
+   "files": 607,
+   "group": "decision",
+   "name": "swift-project-lint",
+   "revision": "eec21fbb23f225b05c53ac7271113c0ae005d08b",
+   "root": "~/xcode_projects/SwiftProjectLint",
+   "skipped": {
+    "*Tests": 1,
+    "Tests": 533,
+    "hidden": 13714
+   },
+   "toplevel": "~/xcode_projects/SwiftProjectLint"
+  },
+  {
+   "also": [
+    "SwiftPropertyLaws"
+   ],
+   "candidates": 0,
+   "dirty": false,
+   "files": 184,
+   "group": "decision",
+   "name": "swift-property-laws",
+   "revision": "9e774fb84293658d9d0c4620f8cfcff26a8bfbb5",
+   "root": "~/xcode_projects/SwiftPropertyLaws",
+   "skipped": {
+    "Tests": 199,
+    "hidden": 16571
+   },
+   "toplevel": "~/xcode_projects/SwiftPropertyLaws"
+  },
+  {
+   "also": [
+    "SwiftEffectInference"
+   ],
+   "candidates": 0,
+   "dirty": true,
+   "files": 25,
+   "group": "decision",
+   "name": "swift-effect-inference",
+   "revision": "f5014fb0f11f0893529ce21e3bff9c2e52fccddd",
+   "root": "~/xcode_projects/SwiftEffectInference",
+   "skipped": {
+    "Tests": 36,
+    "hidden": 3693
+   },
+   "toplevel": "~/xcode_projects/SwiftEffectInference"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 28,
+   "group": "decision",
+   "name": "maccloud-client-ios",
+   "revision": "3c861967fabcd06012638476d99204ce3ff80049",
+   "root": "~/xcode_projects/MacCloud_client_iOS",
+   "skipped": {},
+   "toplevel": "~/xcode_projects/MacCloud_client_iOS"
+  },
+  {
+   "also": [
+    "SwiftLintRuleStudio"
+   ],
+   "candidates": 2,
+   "dirty": false,
+   "files": 214,
+   "group": "decision",
+   "name": "swiftlint-rule-studio",
+   "revision": "8b99ba71977798c3278eac65a4f8e3937b9d7dee",
+   "root": "~/xcode_projects/SwiftLintRuleStudio",
+   "skipped": {
+    "*Tests": 147,
+    "*UITests": 5,
+    "Tests": 133,
+    "hidden": 8507
+   },
+   "toplevel": "~/xcode_projects/SwiftLintRuleStudio"
+  },
+  {
+   "also": [
+    "SwiftFormatRuleStudio"
+   ],
+   "candidates": 0,
+   "dirty": false,
+   "files": 65,
+   "group": "decision",
+   "name": "swiftformat-rule-studio",
+   "revision": "149526de878e9d6ee388b3ab9eec3b22c6cba3ec",
+   "root": "~/xcode_projects/SwiftFormatRuleStudio",
+   "skipped": {
+    "Tests": 44,
+    "hidden": 985
+   },
+   "toplevel": "~/xcode_projects/SwiftFormatRuleStudio"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 2,
+   "group": "decision",
+   "name": "planted-defect-arm",
+   "revision": "a1f08f2d433fcfc5222c42d6e07dafd9a2ea5897",
+   "root": "~/xcode_projects/SwiftInferProperties-667/fixtures/planted-defect-arm",
+   "skipped": {},
+   "toplevel": "~/xcode_projects/SwiftInferProperties-667"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 1,
+   "group": "decision",
+   "name": "cycle27-surface",
+   "revision": "a1f08f2d433fcfc5222c42d6e07dafd9a2ea5897",
+   "root": "~/xcode_projects/SwiftInferProperties-667/fixtures/cycle27-surface",
+   "skipped": {},
+   "toplevel": "~/xcode_projects/SwiftInferProperties-667"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 4,
+   "group": "decision",
+   "name": "leaderboard-sort",
+   "revision": "a1f08f2d433fcfc5222c42d6e07dafd9a2ea5897",
+   "root": "~/xcode_projects/SwiftInferProperties-667/fixtures/leaderboard-sort",
+   "skipped": {},
+   "toplevel": "~/xcode_projects/SwiftInferProperties-667"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 28,
+   "group": "decision",
+   "name": "LintStudioUI",
+   "revision": "73e31b105524b23669d3f569587217f505d27054",
+   "root": "~/xcode_projects/LintStudioUI",
+   "skipped": {
+    "Tests": 14,
+    "hidden": 1
+   },
+   "toplevel": "~/xcode_projects/LintStudioUI"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 58,
+   "group": "decision",
+   "name": "MacCloud_client_MacOS",
+   "revision": "a7376fd798f6366becc5da434a7eac4fcfe61633",
+   "root": "~/xcode_projects/MacCloud_client_MacOS",
+   "skipped": {
+    "*Tests": 28,
+    "*UITests": 2,
+    "build": 1
+   },
+   "toplevel": "~/xcode_projects/MacCloud_client_MacOS"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 31,
+   "group": "decision",
+   "name": "MacCloud_server",
+   "revision": "51c91cf076bdc2635f30cb621f0f79b8b33a422f",
+   "root": "~/xcode_projects/MacCloud_server",
+   "skipped": {
+    "Tests": 24,
+    "hidden": 5537
+   },
+   "toplevel": "~/xcode_projects/MacCloud_server"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 64,
+   "group": "decision",
+   "name": "pbt-book",
+   "revision": "3b8ff81648c2dff6d5cf82044a5c481e0b965c9e",
+   "root": "~/xcode_projects/pbt-book",
+   "skipped": {
+    "Tests": 64,
+    "hidden": 4601
+   },
+   "toplevel": "~/xcode_projects/pbt-book"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 16,
+   "group": "decision",
+   "name": "pbt-workbook-corpus",
+   "revision": "0ea4b2270037c6db35df88e7dbd0879930071360",
+   "root": "~/xcode_projects/pbt-workbook-corpus",
+   "skipped": {
+    "Tests": 10,
+    "hidden": 65
+   },
+   "toplevel": "~/xcode_projects/pbt-workbook-corpus"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 6,
+   "group": "decision",
+   "name": "pbt-workbook-grader",
+   "revision": "79e6c81380fe19a830cd31d9014e8c96499964a0",
+   "root": "~/xcode_projects/pbt-workbook-grader",
+   "skipped": {
+    "Tests": 2,
+    "hidden": 57
+   },
+   "toplevel": "~/xcode_projects/pbt-workbook-grader"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 7,
+   "group": "decision",
+   "name": "pbt-workbook-sampler",
+   "revision": "0e0779528f4427b3cd27f0e205aba2a4dab768f8",
+   "root": "~/xcode_projects/pbt-workbook-sampler",
+   "skipped": {
+    "Tests": 2,
+    "hidden": 65
+   },
+   "toplevel": "~/xcode_projects/pbt-workbook-sampler"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 4,
+   "group": "decision",
+   "name": "pbt-workbook",
+   "revision": "959937ed90f425fadde215d1ade6e9141b1a8a5a",
+   "root": "~/xcode_projects/pbt-workbook",
+   "skipped": {
+    "Tests": 4,
+    "hidden": 91
+   },
+   "toplevel": "~/xcode_projects/pbt-workbook"
+  },
+  {
+   "also": [],
+   "candidates": 6,
+   "dirty": false,
+   "files": 511,
+   "group": "decision",
+   "name": "SwiftAssist",
+   "revision": "697484273556ace4b6ac19fc22d8e042fbed46e8",
+   "root": "~/xcode_projects/SwiftAssist",
+   "skipped": {
+    "Tests": 449,
+    "hidden": 39371
+   },
+   "toplevel": "~/xcode_projects/SwiftAssist"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 46,
+   "group": "decision",
+   "name": "SwiftCloneDetector",
+   "revision": "c21171e2109e0edb60a032ed9655b0939392746b",
+   "root": "~/xcode_projects/SwiftCloneDetector",
+   "skipped": {
+    "Tests": 14,
+    "hidden": 909
+   },
+   "toplevel": "~/xcode_projects/SwiftCloneDetector"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 30,
+   "group": "decision",
+   "name": "SwiftIdempotency",
+   "revision": "5863dadc9a6da422a8939710858d588d3dd001c9",
+   "root": "~/xcode_projects/SwiftIdempotency",
+   "skipped": {
+    "Tests": 27,
+    "hidden": 18607
+   },
+   "toplevel": "~/xcode_projects/SwiftIdempotency"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 47,
+   "group": "decision",
+   "name": "SwiftLintRuleStudioTeam",
+   "revision": "7789bde63dddc94a2e0c12266da91598ba6259d5",
+   "root": "~/xcode_projects/SwiftLintRuleStudioTeam",
+   "skipped": {
+    "*UITests": 2,
+    "Tests": 8,
+    "hidden": 272
+   },
+   "toplevel": "~/xcode_projects/SwiftLintRuleStudioTeam"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 110,
+   "group": "decision",
+   "name": "SwiftMarkdownWiki",
+   "revision": "2a6d0d59440b96fcf2882fa3ce2f69fff07eba38",
+   "root": "~/xcode_projects/SwiftMarkdownWiki",
+   "skipped": {
+    "*Tests": 76,
+    "*UITests": 2,
+    "hidden": 2969
+   },
+   "toplevel": "~/xcode_projects/SwiftMarkdownWiki"
+  },
+  {
+   "also": [],
+   "candidates": 6,
+   "dirty": false,
+   "files": 227,
+   "group": "decision",
+   "name": "SwiftUMLStudio",
+   "revision": "c6c82e3de1c27a72bcab2b5325d51f52e2e6b6a0",
+   "root": "~/xcode_projects/SwiftUMLStudio",
+   "skipped": {
+    "*Tests": 69,
+    "*UITests": 9,
+    "Tests": 213,
+    "hidden": 1069
+   },
+   "toplevel": "~/xcode_projects/SwiftUMLStudio"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 54,
+   "group": "unmet",
+   "name": "Euclid",
+   "revision": "a597cf5bbe693793bfe96e3ce703b74b87c981b8",
+   "root": "~/github_projects/Euclid",
+   "skipped": {
+    "*Tests": 2,
+    "Tests": 40
+   },
+   "toplevel": "~/GitHub_projects/Euclid"
+  },
+  {
+   "also": [],
+   "candidates": 4,
+   "dirty": false,
+   "files": 584,
+   "group": "unmet",
+   "name": "swift-docc",
+   "revision": "f14e4a4922a0317d49caca1545c6946c6ef22bd8",
+   "root": "~/github_projects/swift-docc",
+   "skipped": {
+    "Tests": 333,
+    "hidden": 1802
+   },
+   "toplevel": "~/GitHub_projects/swift-docc"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 197,
+   "group": "unmet",
+   "name": "OpenAPIKit",
+   "revision": "41a79a6a175db7da4e238d2f9b42b1c88accc3f8",
+   "root": "~/github_projects/OpenAPIKit",
+   "skipped": {
+    "Tests": 155,
+    "hidden": 195
+   },
+   "toplevel": "~/GitHub_projects/OpenAPIKit"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 84,
+   "group": "unmet",
+   "name": "jwt-kit",
+   "revision": "373c40c23640063b65c76465d934ecf76b3b190a",
+   "root": "~/github_projects/jwt-kit",
+   "skipped": {
+    "Tests": 18,
+    "hidden": 2991
+   },
+   "toplevel": "~/GitHub_projects/jwt-kit"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 42,
+   "group": "unmet",
+   "name": "swift-system",
+   "revision": "1b452c2996c677d8e435bf0b766fc927176d8c77",
+   "root": "~/github_projects/swift-system",
+   "skipped": {
+    "Tests": 23,
+    "hidden": 2073
+   },
+   "toplevel": "~/GitHub_projects/swift-system"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 0,
+   "group": "wide",
+   "name": "aider",
+   "revision": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+   "root": "~/github_projects/aider",
+   "skipped": {
+    "tests": 1
+   },
+   "toplevel": "~/GitHub_projects/aider"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 56,
+   "group": "wide",
+   "name": "Alamofire",
+   "revision": "3494b7c1d4e08be98bbb2244fd55ca5a029ff4a2",
+   "root": "~/github_projects/Alamofire",
+   "skipped": {
+    "Tests": 45
+   },
+   "toplevel": "~/GitHub_projects/Alamofire"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 974,
+   "group": "wide",
+   "name": "algoliasearch-client-swift",
+   "revision": "ff989f1e137c7a37d15855b83f78427c4bea2ce1",
+   "root": "~/github_projects/algoliasearch-client-swift",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/algoliasearch-client-swift"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 5,
+   "group": "wide",
+   "name": "AnyCodable",
+   "revision": "862808b2070cd908cb04f9aafe7de83d35f81b05",
+   "root": "~/github_projects/AnyCodable",
+   "skipped": {
+    "Tests": 3
+   },
+   "toplevel": "~/GitHub_projects/AnyCodable"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 135,
+   "group": "wide",
+   "name": "apollo-ios",
+   "revision": "9fd8728931062467cae259de8b1dea5a7a1c06eb",
+   "root": "~/github_projects/apollo-ios",
+   "skipped": {},
+   "toplevel": "~/GitHub_projects/apollo-ios"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 77,
+   "group": "wide",
+   "name": "async-http-client",
+   "revision": "f95c908967e98c68c5ce3fd61a7974e7e869e303",
+   "root": "~/github_projects/async-http-client",
+   "skipped": {
+    "Tests": 63
+   },
+   "toplevel": "~/GitHub_projects/async-http-client"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 28,
+   "group": "wide",
+   "name": "BigInt",
+   "revision": "63feef7820abb1a8fb08587d7da56bb0b7db8751",
+   "root": "~/github_projects/BigInt",
+   "skipped": {
+    "Tests": 18
+   },
+   "toplevel": "~/GitHub_projects/BigInt"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 41,
+   "group": "wide",
+   "name": "CombineExt",
+   "revision": "96a7610ca165e027b24710fc2f04c9ba8d2ce0e6",
+   "root": "~/github_projects/CombineExt",
+   "skipped": {
+    "Tests": 34
+   },
+   "toplevel": "~/GitHub_projects/CombineExt"
+  },
+  {
+   "also": [],
+   "candidates": 11,
+   "dirty": false,
+   "files": 555,
+   "group": "wide",
+   "name": "exhaust",
+   "revision": "1bc70312762383b5a918b17b02d9ffe1a1af4116",
+   "root": "~/github_projects/exhaust",
+   "skipped": {
+    "Tests": 458,
+    "hidden": 1769
+   },
+   "toplevel": "~/GitHub_projects/exhaust"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 3281,
+   "group": "wide",
+   "name": "FHIRModels",
+   "revision": "3fdead0f6459d7d3480d12c514ae27da31974a41",
+   "root": "~/github_projects/FHIRModels",
+   "skipped": {
+    "Tests": 24
+   },
+   "toplevel": "~/GitHub_projects/FHIRModels"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 123,
+   "group": "wide",
+   "name": "fluent-kit",
+   "revision": "6f8844284df4f797d2a81721511d053357d97b56",
+   "root": "~/github_projects/fluent-kit",
+   "skipped": {
+    "Tests": 47
+   },
+   "toplevel": "~/GitHub_projects/fluent-kit"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 407,
+   "group": "wide",
+   "name": "IceCubesApp",
+   "revision": "b2db3033fbf67a97b54d25d6dac2df8a029b26b1",
+   "root": "~/github_projects/IceCubesApp",
+   "skipped": {
+    "Tests": 21,
+    "hidden": 106
+   },
+   "toplevel": "~/GitHub_projects/IceCubesApp"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 58,
+   "group": "wide",
+   "name": "indexstore-db",
+   "revision": "441ead7772cc391e2a0cc8318292bc4aaa8c3a6d",
+   "root": "~/github_projects/indexstore-db",
+   "skipped": {
+    "Tests": 16,
+    "hidden": 14
+   },
+   "toplevel": "~/GitHub_projects/indexstore-db"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 13,
+   "group": "wide",
+   "name": "KeychainAccess",
+   "revision": "e0c7eebc5a4465a3c4680764f26b7a61f567cdaf",
+   "root": "~/github_projects/KeychainAccess",
+   "skipped": {
+    "*Tests": 4
+   },
+   "toplevel": "~/GitHub_projects/KeychainAccess"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 148,
+   "group": "wide",
+   "name": "Kingfisher",
+   "revision": "0b5a9e490d68fb08728fb1bb9187d40439a9d52d",
+   "root": "~/github_projects/Kingfisher",
+   "skipped": {
+    "Tests": 28
+   },
+   "toplevel": "~/GitHub_projects/Kingfisher"
+  },
+  {
+   "also": [],
+   "candidates": 1,
+   "dirty": true,
+   "files": 302,
+   "group": "wide",
+   "name": "lottie-ios",
+   "revision": "8384dfbc429a5b3748e51d2744cbaad9ecb7a6fe",
+   "root": "~/github_projects/lottie-ios",
+   "skipped": {
+    "Tests": 20
+   },
+   "toplevel": "~/GitHub_projects/lottie-ios"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 16,
+   "group": "wide",
+   "name": "Mastermind",
+   "revision": "880a3ba79a782319007d956a458a8378ad18c582",
+   "root": "~/github_projects/Mastermind",
+   "skipped": {
+    "Tests": 12
+   },
+   "toplevel": "~/GitHub_projects/Mastermind"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 41,
+   "group": "wide",
+   "name": "Moya",
+   "revision": "24c26671a2f0fc26b53c9fa2410c97987fb0f05a",
+   "root": "~/github_projects/Moya",
+   "skipped": {
+    "Tests": 23
+   },
+   "toplevel": "~/GitHub_projects/Moya"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 72,
+   "group": "wide",
+   "name": "Nimble",
+   "revision": "727f75d91a0f7501d08d938966d17e6728b76a2a",
+   "root": "~/github_projects/Nimble",
+   "skipped": {
+    "Tests": 55
+   },
+   "toplevel": "~/GitHub_projects/Nimble"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 193,
+   "group": "wide",
+   "name": "OpenAI",
+   "revision": "a532be89be9a30ec003e4ba0974a52a88d26fc6d",
+   "root": "~/github_projects/OpenAI",
+   "skipped": {
+    "Tests": 41,
+    "hidden": 2348
+   },
+   "toplevel": "~/GitHub_projects/OpenAI"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 146,
+   "group": "wide",
+   "name": "opentelemetry-swift",
+   "revision": "1ada76dc2334fc6d37880635b3f0d10cc3b40a16",
+   "root": "~/github_projects/opentelemetry-swift",
+   "skipped": {
+    "Tests": 94
+   },
+   "toplevel": "~/GitHub_projects/opentelemetry-swift"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 62,
+   "group": "wide",
+   "name": "pkl-swift",
+   "revision": "00f4b15c0941e137bf90de712b6fb643c9f0880a",
+   "root": "~/github_projects/pkl-swift",
+   "skipped": {
+    "Tests": 24
+   },
+   "toplevel": "~/GitHub_projects/pkl-swift"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 148,
+   "group": "wide",
+   "name": "postgres-nio",
+   "revision": "a61b4cb0e848f1889dc6b81415594a6075704126",
+   "root": "~/github_projects/postgres-nio",
+   "skipped": {
+    "Tests": 84
+   },
+   "toplevel": "~/GitHub_projects/postgres-nio"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 53,
+   "group": "wide",
+   "name": "Quick",
+   "revision": "2b4547b230e94d84320724fd6df65e418b058be2",
+   "root": "~/github_projects/Quick",
+   "skipped": {
+    "Tests": 60
+   },
+   "toplevel": "~/GitHub_projects/Quick"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 513,
+   "group": "wide",
+   "name": "RxSwift",
+   "revision": "3e33f90c1bcd3cdea25bdb49bd4a594a50c3ab84",
+   "root": "~/github_projects/RxSwift",
+   "skipped": {
+    "*Tests": 9,
+    "*UITests": 2,
+    "Tests": 186
+   },
+   "toplevel": "~/GitHub_projects/RxSwift"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 42,
+   "group": "wide",
+   "name": "SnapKit",
+   "revision": "250529bec615066185ff328984855101820fcbee",
+   "root": "~/github_projects/SnapKit",
+   "skipped": {
+    "Tests": 1
+   },
+   "toplevel": "~/GitHub_projects/SnapKit"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 106,
+   "group": "wide",
+   "name": "soto-core",
+   "revision": "1d9969e7740456bb6f2c1ce950bf64a021c7b4aa",
+   "root": "~/github_projects/soto-core",
+   "skipped": {
+    "Tests": 46
+   },
+   "toplevel": "~/GitHub_projects/soto-core"
+  },
+  {
+   "also": [],
+   "candidates": 1,
+   "dirty": false,
+   "files": 341,
+   "group": "wide",
+   "name": "sourcekit-lsp",
+   "revision": "a463483aba304581bad19a0d96d80091af3c8b52",
+   "root": "~/github_projects/sourcekit-lsp",
+   "skipped": {
+    "Tests": 112
+   },
+   "toplevel": "~/GitHub_projects/sourcekit-lsp"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 251,
+   "group": "wide",
+   "name": "supabase-swift",
+   "revision": "25cb523c8fd47fceb936f6a63b6b231f9705dcc5",
+   "root": "~/github_projects/supabase-swift",
+   "skipped": {
+    "Tests": 151
+   },
+   "toplevel": "~/GitHub_projects/supabase-swift"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 45,
+   "group": "wide",
+   "name": "SwaggerParser",
+   "revision": "ed87dda717392ce07eb0cdc706596e0a1180581f",
+   "root": "~/github_projects/SwaggerParser",
+   "skipped": {
+    "Tests": 11
+   },
+   "toplevel": "~/GitHub_projects/SwaggerParser"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 23,
+   "group": "wide",
+   "name": "swift-asn1",
+   "revision": "3b6410f7dee09eb33cdd26260c5fd47fda19b0e2",
+   "root": "~/github_projects/swift-asn1",
+   "skipped": {
+    "Tests": 9
+   },
+   "toplevel": "~/GitHub_projects/swift-asn1"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 88,
+   "group": "wide",
+   "name": "swift-async-algorithms",
+   "revision": "11645b8feb9081ecf0f27b6f4d0821bd550fed01",
+   "root": "~/github_projects/swift-async-algorithms",
+   "skipped": {
+    "Tests": 60
+   },
+   "toplevel": "~/GitHub_projects/swift-async-algorithms"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 20,
+   "group": "wide",
+   "name": "swift-atomics",
+   "revision": "bc30c67cf0c4479633621ad7950d71494a07390f",
+   "root": "~/github_projects/swift-atomics",
+   "skipped": {
+    "Tests": 38
+   },
+   "toplevel": "~/GitHub_projects/swift-atomics"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 28,
+   "group": "wide",
+   "name": "swift-aws-lambda-events",
+   "revision": "d18360e63624019bddf418de28d83007acd60956",
+   "root": "~/github_projects/swift-aws-lambda-events",
+   "skipped": {
+    "Tests": 25,
+    "hidden": 2099
+   },
+   "toplevel": "~/GitHub_projects/swift-aws-lambda-events"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 116,
+   "group": "wide",
+   "name": "swift-certificates",
+   "revision": "c8aece90ea05f9866bd392a5bf13b5cae56c0e03",
+   "root": "~/github_projects/swift-certificates",
+   "skipped": {
+    "Tests": 25
+   },
+   "toplevel": "~/GitHub_projects/swift-certificates"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 682,
+   "group": "wide",
+   "name": "swift-composable-architecture",
+   "revision": "377da4061db10d26337a71bb279c506bb951f50f",
+   "root": "~/github_projects/swift-composable-architecture",
+   "skipped": {
+    "*Tests": 26,
+    "*UITests": 33,
+    "Tests": 56
+   },
+   "toplevel": "~/GitHub_projects/swift-composable-architecture"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 66,
+   "group": "wide",
+   "name": "swift-configuration",
+   "revision": "ceb6593dd4e8c6920c00760bfcb682bcb8ce9c42",
+   "root": "~/github_projects/swift-configuration",
+   "skipped": {
+    "Tests": 52
+   },
+   "toplevel": "~/GitHub_projects/swift-configuration"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 175,
+   "group": "wide",
+   "name": "swift-crypto",
+   "revision": "da9d28d69ebe3894b18376c8f2395c2f37b8448f",
+   "root": "~/github_projects/swift-crypto",
+   "skipped": {
+    "Tests": 77
+   },
+   "toplevel": "~/GitHub_projects/swift-crypto"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 58,
+   "group": "wide",
+   "name": "swift-docc-symbolkit",
+   "revision": "c1f9484553d29afb981b95458b37c1c3d3e1bcd7",
+   "root": "~/github_projects/swift-docc-symbolkit",
+   "skipped": {
+    "Tests": 23
+   },
+   "toplevel": "~/GitHub_projects/swift-docc-symbolkit"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 21,
+   "group": "wide",
+   "name": "swift-http-types",
+   "revision": "bff4b6903cdc99dda49649dd52f46c11cfd3ed50",
+   "root": "~/github_projects/swift-http-types",
+   "skipped": {
+    "Tests": 7,
+    "hidden": 1
+   },
+   "toplevel": "~/GitHub_projects/swift-http-types"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 94,
+   "group": "wide",
+   "name": "swift-markdown",
+   "revision": "75e3df1d7b664ef3c96595de36c243b98599b3bc",
+   "root": "~/github_projects/swift-markdown",
+   "skipped": {
+    "Tests": 43
+   },
+   "toplevel": "~/GitHub_projects/swift-markdown"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 226,
+   "group": "wide",
+   "name": "swift-openapi-generator",
+   "revision": "39d49cf22abab58a07f02bb76808b5d2839b294a",
+   "root": "~/github_projects/swift-openapi-generator",
+   "skipped": {
+    "*Tests": 1,
+    "*UITests": 1,
+    "Tests": 53
+   },
+   "toplevel": "~/GitHub_projects/swift-openapi-generator"
+  },
+  {
+   "also": [],
+   "candidates": 1,
+   "dirty": true,
+   "files": 74,
+   "group": "wide",
+   "name": "swift-openapi-runtime",
+   "revision": "9e53df53e043b53046a371b31aaf0a1e26eef946",
+   "root": "~/github_projects/swift-openapi-runtime",
+   "skipped": {
+    "Tests": 46,
+    "hidden": 2091
+   },
+   "toplevel": "~/GitHub_projects/swift-openapi-runtime"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 35,
+   "group": "wide",
+   "name": "swift-property-based",
+   "revision": "7d405e77a7b729390ed1d9a66e1f80a707fd03c4",
+   "root": "~/github_projects/swift-property-based",
+   "skipped": {
+    "Tests": 21
+   },
+   "toplevel": "~/GitHub_projects/swift-property-based"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 290,
+   "group": "wide",
+   "name": "swift-protobuf",
+   "revision": "87d0393435df31637c947d42f340b811049539c6",
+   "root": "~/github_projects/swift-protobuf",
+   "skipped": {
+    "*Tests": 24,
+    "Tests": 186
+   },
+   "toplevel": "~/GitHub_projects/swift-protobuf"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 52,
+   "group": "wide",
+   "name": "swift-sdk",
+   "revision": "a0ae212ebf6eab5f754c3129608bc5557637e605",
+   "root": "~/github_projects/swift-sdk",
+   "skipped": {
+    "Tests": 37,
+    "hidden": 4151
+   },
+   "toplevel": "~/GitHub_projects/swift-sdk"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 15,
+   "group": "wide",
+   "name": "swift-service-lifecycle",
+   "revision": "1a025bed06a6bd2da85db4171d0acd4fb8b6afbb",
+   "root": "~/github_projects/swift-service-lifecycle",
+   "skipped": {
+    "Tests": 8
+   },
+   "toplevel": "~/GitHub_projects/swift-service-lifecycle"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 210,
+   "group": "wide",
+   "name": "swift-testing",
+   "revision": "c7d68ca20cd7d09d93ad3bd939704d202244f58e",
+   "root": "~/github_projects/swift-testing",
+   "skipped": {
+    "*Tests": 7,
+    "Tests": 83
+   },
+   "toplevel": "~/GitHub_projects/swift-testing"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 573,
+   "group": "wide",
+   "name": "SwiftLint",
+   "revision": "ec4691d9e813a1d3358e82917326b56b0a71d3c9",
+   "root": "~/github_projects/SwiftLint",
+   "skipped": {
+    "Tests": 205
+   },
+   "toplevel": "~/GitHub_projects/SwiftLint"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 355,
+   "group": "wide",
+   "name": "SwiftPackageIndex-Server",
+   "revision": "60a1531d35830f6bb9b2979a04238552e2cf6e29",
+   "root": "~/github_projects/SwiftPackageIndex-Server",
+   "skipped": {
+    "Tests": 148
+   },
+   "toplevel": "~/GitHub_projects/SwiftPackageIndex-Server"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": true,
+   "files": 37,
+   "group": "wide",
+   "name": "SwiftPlantUML",
+   "revision": "0f5875ec7d4f1ef9ff98079babed44ccf3437fd6",
+   "root": "~/github_projects/SwiftPlantUML",
+   "skipped": {
+    "Tests": 34,
+    "hidden": 1
+   },
+   "toplevel": "~/GitHub_projects/SwiftPlantUML"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 5,
+   "group": "wide",
+   "name": "SwiftyJSON",
+   "revision": "3d2544101a03f22b2217d464dc7d359eeb86e159",
+   "root": "~/github_projects/SwiftyJSON",
+   "skipped": {
+    "Tests": 18
+   },
+   "toplevel": "~/GitHub_projects/SwiftyJSON"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 6,
+   "group": "wide",
+   "name": "TestableView",
+   "revision": "7d541adbdfcbe77848f7d4566bd730ddec85730c",
+   "root": "~/github_projects/TestableView",
+   "skipped": {
+    "*Tests": 3
+   },
+   "toplevel": "~/GitHub_projects/TestableView"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 200,
+   "group": "wide",
+   "name": "vapor",
+   "revision": "38c47ccb1dd6dad7b1c0b6027907b6a359063106",
+   "root": "~/github_projects/vapor",
+   "skipped": {
+    "Tests": 51
+   },
+   "toplevel": "~/GitHub_projects/vapor"
+  },
+  {
+   "also": [],
+   "candidates": 2,
+   "dirty": false,
+   "files": 125,
+   "group": "wide",
+   "name": "ViewInspector",
+   "revision": "55373fc4e4e60ec26d7cabef23d875582ad2f316",
+   "root": "~/github_projects/ViewInspector",
+   "skipped": {
+    "Tests": 145,
+    "hidden": 2
+   },
+   "toplevel": "~/GitHub_projects/ViewInspector"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 78,
+   "group": "wide",
+   "name": "XcodeGen",
+   "revision": "8445e778451c7e44237b90281bde622d764b0084",
+   "root": "~/github_projects/XcodeGen",
+   "skipped": {
+    "Tests": 71
+   },
+   "toplevel": "~/GitHub_projects/XcodeGen"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 132,
+   "group": "wide",
+   "name": "XcodeProj",
+   "revision": "4e227e5e1102cf8edf8084c00b74d15afc564728",
+   "root": "~/github_projects/XcodeProj",
+   "skipped": {
+    "*Tests": 2,
+    "Tests": 84
+   },
+   "toplevel": "~/GitHub_projects/XcodeProj"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 23,
+   "group": "wide",
+   "name": "Yams",
+   "revision": "df801bc4f158f107035d2e14f6d0d8d31eb31ddb",
+   "root": "~/github_projects/Yams",
+   "skipped": {
+    "Tests": 22
+   },
+   "toplevel": "~/GitHub_projects/Yams"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 11,
+   "group": "wide",
+   "name": "Checkout",
+   "revision": "0c7f00c16e64d12550ec3f49ce0633a3b20deab6",
+   "root": "~/xcode_projects/Checkout",
+   "skipped": {
+    "hidden": 65
+   },
+   "toplevel": "~/xcode_projects/Checkout"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 2,
+   "group": "wide",
+   "name": "Hudson_ProSwiftUI_1_1",
+   "revision": "df5c7f8a2a47ef48d2c6799dd759b48c7a0611c7",
+   "root": "~/xcode_projects/Hudson_ProSwiftUI_1_1",
+   "skipped": {
+    "*Tests": 1,
+    "*UITests": 2
+   },
+   "toplevel": "~/xcode_projects/Hudson_ProSwiftUI_1_1"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 146,
+   "group": "wide",
+   "name": "Hummingbird",
+   "revision": "0806106c27df99018d302d9eaaea2ae105cddf10",
+   "root": "~/xcode_projects/Hummingbird",
+   "skipped": {
+    "Tests": 44
+   },
+   "toplevel": "~/xcode_projects/Hummingbird"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 13,
+   "group": "wide",
+   "name": "IdempotencySpike",
+   "revision": null,
+   "root": "~/xcode_projects/IdempotencySpike",
+   "skipped": {
+    "Tests": 8,
+    "hidden": 13918
+   },
+   "toplevel": "~/xcode_projects/IdempotencySpike"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 160,
+   "group": "wide",
+   "name": "muter-upstream",
+   "revision": "2e302a3fe59d41fdbe92e76be8b265b012244f0e",
+   "root": "~/xcode_projects/muter-upstream",
+   "skipped": {
+    "*Tests": 7,
+    "Tests": 129,
+    "hidden": 1658
+   },
+   "toplevel": "~/xcode_projects/muter-upstream"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 14,
+   "group": "wide",
+   "name": "Sitrep",
+   "revision": "ae446f9142c5be08a88b8452f015ed1e5284bca4",
+   "root": "~/xcode_projects/Sitrep",
+   "skipped": {
+    "Tests": 14
+   },
+   "toplevel": "~/xcode_projects/Sitrep"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 150,
+   "group": "wide",
+   "name": "swift-aws-lambda-runtime",
+   "revision": "8abd464310c7e052c481f74e52dcd05da5f915d1",
+   "root": "~/xcode_projects/swift-aws-lambda-runtime",
+   "skipped": {
+    "Tests": 42
+   },
+   "toplevel": "~/xcode_projects/swift-aws-lambda-runtime"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 141,
+   "group": "wide",
+   "name": "SwiftCompilerFlagStudio",
+   "revision": "a2fd371565891dfe9291dd1c0b3ffc4f00fe67f8",
+   "root": "~/xcode_projects/SwiftCompilerFlagStudio",
+   "skipped": {
+    "*Tests": 67,
+    "*UITests": 2
+   },
+   "toplevel": "~/xcode_projects/SwiftCompilerFlagStudio"
+  },
+  {
+   "also": [],
+   "candidates": 0,
+   "dirty": false,
+   "files": 231,
+   "group": "wide",
+   "name": "SwiftMutator",
+   "revision": "af38f174a6c3992d6ac9628480e63648f00b83be",
+   "root": "~/xcode_projects/SwiftMutator",
+   "skipped": {
+    "*Tests": 8,
+    "Tests": 192,
+    "hidden": 3315
+   },
+   "toplevel": "~/xcode_projects/SwiftMutator"
+  }
+ ],
+ "wide_sha256": "c7ad7e6c379c03144bc370d778edc97632f09318219065b7155e723471d5f270"
+}
