@@ -2,8 +2,8 @@
 
 #669's census (`docs/measurements/uniquifier-law-census.md`) flagged functions whose bodies break the uniquifier
 law: one receiver, n calls, n distinct results. Issue #691 tracks the reachable ones. This directory holds each
-reproduced at upstream HEAD as a test, with a minimal patch and a draft issue. **None is filed upstream.** Filing
-needs the user's approval.
+reproduced at upstream HEAD as a test, with a minimal patch and the issue text. **All three were filed on
+2026-10-28**, with the user's approval: MarcoEidinger/SwiftPlantUML#87, jpsim/Yams#490 and groue/GRDB.swift#1892.
 
 | repository @ revision (upstream `main` on 2026-10-28) | defect | test file → destination in the package | patch |
 |---|---|---|---|
@@ -11,7 +11,7 @@ needs the user's approval.
 | jpsim/Yams @ `df801bc` | under either redundancy aliasing strategy, a dictated anchor and a counter anchor collide, and an alias decodes to the wrong value | `AnchorCollisionTests.swift` → `Tests/YamsTests/` | `anchor-collision-fix.patch` |
 | groue/GRDB.swift @ `0d8cf95` | a generated table alias takes a user alias's name when a table name ends in a digit: the statement fails to prepare, or the row's scopes hold another table's columns | `AssociationTableAliasDigitSuffixTests.swift` → `Tests/GRDBTests/QueryInterface/Association/`; `DigitSuffixedTableAliasTests.swift` (the draft's self-contained repro) → `Tests/GRDBTests/` | `alias-collision-fix.patch` |
 
-Each directory's `issue-draft.md` is the text proposed for the upstream issue, as of 2026-10-28.
+Each directory's `issue-draft.md` is the text filed, its first line the issue's title.
 
 ## Run one
 
