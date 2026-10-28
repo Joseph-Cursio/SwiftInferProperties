@@ -707,4 +707,9 @@ and `origin` URLs. #667's grep result came from #667.
 
 ## Amendments
 
-None yet.
+**1 — 2026-10-28: a test log that ends inside a character.** The kill arm stopped after M070, with every
+runner control before it passed. While reading M071's reduced-suite log, `_run` raised `UnicodeDecodeError`,
+because the log ended inside a UTF-8 character, as a run killed mid-write can. `_run` now reads the log with
+bad bytes replaced, and a self-test check covers it; with the fix removed, the check fails. No outcome rule,
+mutant, law, or control changed. The run resumed from its report, which §5.5 allows only when the law's file
+and the export tree hash as before, and that guard held. M001–M070 were not re-run.

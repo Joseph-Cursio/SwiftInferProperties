@@ -400,8 +400,9 @@ def _kill(process, export):
 
 def _run(command, cwd, limit, export, watch_memory):
     """`(code, output, seconds, stopped)`: `stopped` is None, "TIMEOUT" or "MEMORY". Output goes to a file, so an
-    orphan holding it cannot block the read."""
-    with tempfile.TemporaryFile(mode="w+") as log:
+    orphan holding it cannot block the read. A run killed mid-write can end inside a character, so a bad byte
+    is replaced, never fatal (scope amendment 1)."""
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8", errors="replace") as log:
         started = time.time()
         process = subprocess.Popen(command, cwd=cwd, stdout=log, stderr=subprocess.STDOUT, text=True,
                                    start_new_session=True)
@@ -815,6 +816,9 @@ def self_test():
     checks.append(("an ordering site gives both of the tool's rewrites",
                    sorted(r for o, x, r in got if o == "relational" and x == ">") == ["<", ">="]))
     checks += _runner_checks()
+    cut = _run([sys.executable, "-c", "import sys; sys.stdout.buffer.write(b'ok \\xe2')"], os.getcwd(), 30,
+               f"/nonexistent/layering-self-test-{os.getpid()}", False)
+    checks.append(("a log that ends inside a character is read, not fatal", cut[1].startswith("ok ")))
     failed = [label for label, passed in checks if not passed]
     for label in failed:
         print(f"  FAIL {label}")
