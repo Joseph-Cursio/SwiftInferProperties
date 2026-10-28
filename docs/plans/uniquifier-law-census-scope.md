@@ -1,9 +1,10 @@
 # Does the uniquifier law have a population, and does it catch what a suite misses? (#669)
 
-> **Status:** `proposed` · **As of:** 2026-10-28
+> **Status:** `shipped` · **As of:** 2026-10-28
 >
-> **Frozen** by the commit that adds this file: nothing below changes after the census reads a subject or the
-> law runs, except by a dated amendment. §10 lists everything read, written and run before the freeze.
+> **Run 2026-10-28. Result: BUILD, with N = 7 over 5 repositories, gate precision 8 of 9 and a decisive count of
+> 5. Written up in `docs/measurements/uniquifier-law-census.md`.** The rule below is as frozen at `36103bd7`, with
+> no amendment. Under §8, #669 stays open, and the build is a separate issue.
 
 #669 asks for a law the catalogue does not have. For a **uniquifier**, a stateful function that hands out names
 and remembers which names it has handed out, the law is:
