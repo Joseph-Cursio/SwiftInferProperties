@@ -1,6 +1,11 @@
-# Does the layering law have a population? — No: two layerings in one repository, and #667's gate is right 1 time in 5 (#667)
+# Does the layering law have a population? — In a graph-layout corpus, yes: 15 groups across 5 repositories; but #667's gate is right on about 1 row in 9 it admits (#667)
 
 > **Status:** `measured` · **As of:** 2026-10-28
+>
+> **Two runs, both 2026-10-28.** The local universe gave DECLINE (population), with 2 groups in one repository.
+> Its frozen reopen condition, a corpus of graph-layout packages, gave **DECLINE (gate precision)**: the
+> population exists, but only 11% of the rows #667's gate admits (16 of 149) are layerings. §"The reopen
+> condition" reports the second run. Under that scope's §4, #667 closes once the user approves.
 
 #667 asked for a law the catalogue does not have. For a function that assigns each node of a directed graph a
 layer, the law is: for every edge `u → v` the layering covers, with `v` unable to reach `u`,
@@ -23,15 +28,33 @@ This doc reports both. Everything it rests on was committed in this order, on br
 | amendment 1 | `4bd7bbb3` | the kill arm reads a log that ends inside a UTF-8 character; it resumed after M070 |
 | results | `062ce24c` | `fixtures/layering-law/census-2026-10-28.json`, `judgements.json`, `judge-workflow-output.json`, `kill-arm-2026-10-28.json` |
 | equivalence | `02686596` | `fixtures/layering-law/equivalence-workflow.js`, `equivalence-2026-10-28.json` |
-| this doc | this commit | this doc, both index rows, the scope's status, and F6's annotation in `roadtest-swiftumlstudio-mutation.md` |
+| this doc | `8cad032c` | this doc, both index rows, the scope's status, and F6's annotation in `roadtest-swiftumlstudio-mutation.md` |
+| corpus mode | `e4d7ad38` | `run-corpus`, `decide-corpus` and R5 in `scripts/layering_census.py`; 255 controls |
+| corpus scope | `a330611b` | `docs/plans/layering-law-graph-layout-corpus-scope.md`: 18 clones, the corpus alone deciding, 8 predictions, frozen before any corpus file was opened |
+| corpus results | `5cc86d1d` | `fixtures/layering-law/census-graph-layout-2026-10-28.json`, `judgements-graph-layout.json`, `judge-workflow-output-graph-layout.json` |
+| corpus re-read | `f2e37d51` | `fixtures/layering-law/reread-workflow.js`, `reread-graph-layout-2026-10-28.json` |
+| corpus write-up | this commit | §"The reopen condition", both index rows, and the corpus scope's status |
 
-**In short: DECLINE (population).**
+**In short: DECLINE, twice, for two different reasons.**
 
-- The decision universe of 36 subjects holds two layerings, both in SwiftUMLStudio, against a bar of 5 across
-  2 repositories.
-- The gate #667 proposed is right 1 time in 5.
-- On its witness, the hand-written law catches 42 of 91 mutants, against the suite's 54.
-- With PR #64's three law-derived tests left out, the law alone catches 4.
+- **The local universe: DECLINE (population).** Its 36 decision subjects hold two layerings, both in
+  SwiftUMLStudio, against a bar of 5 across 2 repositories. The gate #667 proposed is right 1 time in 5.
+- **The graph-layout corpus, #667's reopen condition: DECLINE (gate precision).**
+  - 18 packages hold 15 LAYERING ∧ EXPRESSIBLE groups across 5 repositories, or 12–13 after an adversarial
+    re-read, so the population exists.
+  - The gate is right on 16 of the 149 rows it admits.
+  - The cues cannot see any of ELK's five working layerer classes.
+- **The law on its witness.** The hand-written law catches 42 of 91 mutants, against the suite's 54. With PR
+  #64's three law-derived tests left out, the law alone catches 4.
+- **Suspected defects to offer upstream.** Reading the corpus turned up four. None has been run, and none is
+  filed:
+  - a porting defect in dagre-swift's undirected `setEdge`, which can leave a network-simplex DAG edge at equal
+    or reversed rank;
+  - MermaidKit's C4 rows, where an edge below a cycle can point up;
+  - MermaidKit's clustered flowcharts, which can draw an edge upward, perhaps by design;
+  - a latent one in MermaidKit's `assignLayers`, whose doc says self-edges are ignored when they are not.
+
+The first run's decision line:
 
 ```
 DECISION: DECLINE (population)  N = 2 over 1 local repositories (bar: ≥ 5 across ≥ 2)  N_gated = 1  gate precision 20%
@@ -290,8 +313,8 @@ each time.
   accounted for (scope §5.3).
 - **The cues reach only what they name.** A layering inside a larger function, or in a computed property, is
   missed, as is a coordinate layout named `layout` (scope §9).
-- **Local clones only.** The universe has no dedicated graph-layout package, which is the corpus most likely to
-  hold the population. That is the reopen condition (§"So what").
+- **Local clones only.** The local universe has no dedicated graph-layout package. That was the reopen
+  condition, measured in §"The reopen condition".
 - **One subject for the kill arm.** Its counts are SwiftUMLStudio's, against a suite that already holds PR
   #64's examples and `GraphWalkParityTests`. They are not a rate. They compare within this run, not with the
   road test's 1,300 mutants (scope §9).
@@ -300,12 +323,238 @@ each time.
   depends on what it can compose, and this arm does not measure that (scope §9). M057, M058 and M090 are
   misses of this generator.
 
+## The reopen condition: a graph-layout corpus (2026-10-28)
+
+The first run's §8 kept #667 open on one frozen condition: at least 5 LAYERING ∧ EXPRESSIBLE groups across at
+least 2 repositories in a corpus of graph-layout packages. `docs/plans/layering-law-graph-layout-corpus-scope.md`
+built that corpus and was frozen at `a330611b`, before any corpus file was opened. Two adversarial reviews
+reshaped it first. Its rules differ from the first run's in four places:
+
+- **The corpus alone decides.** SwiftUMLStudio's two groups are reported beside the decision, never in it.
+- **Every candidate is judged.** There is no sampling above 300.
+- **Lines beside the decision:** the layout packages only, the groups by kind, and the owners, with
+  same-owner, same-name groups merged.
+- **R5,** a list of role-named declarations.
+
+### The corpus
+
+These are 18 public packages, found by a GitHub search that read names and descriptions only. The user approved
+them, and they were cloned `--depth 1` on 2026-10-28 (scope §2.1):
+
+- **10 layout packages:** dagre-swift and elk-swift (lukilabs), beautiful-mermaid-swift (lukilabs), MermaidKit,
+  swift-mermaid, DirectedGraph, swift-flow, SwiftFlow, Graffle and SwiftGraphvizLayout;
+- **6 dependency tools:** swift-module-graph, spmgraph, dependency-graph, TuistSpider,
+  SwiftDependencyGraphExplorer and swift-package-graph;
+- **2 commit-graph drawers:** Maple and GitGraphRender.
+
+```
+DECISION: DECLINE (gate precision)  N = 15 over 5 local repositories (bar: ≥ 5 across ≥ 2)  N_gated = 11  gate precision 11%
+law-only (reduced suite): 4 by assertion (1 layering, 3 placement), 0 by crash/timeout/memory
+law-only (full suite): 1   law 42, suite 54, reduced 51, viable 91   N_unmet 0  N_wide 0  N_undetermined 0
+```
+
+The kill lines are the first run's report. The scope pins it by hash and reads it unchanged (scope §2.3).
+
+**What the census found:**
+
+- **Files read:** 1,270 after the skip rule.
+- **Candidates:** 208 before the copy merge and 188 after, in 9 of the 18 packages. All 188 were judged, with
+  R4's 24 rows, in 27 packets.
+- **Calibration** passed, and one row went to a third judge, on EXPRESSIBLE.
+- **Final verdicts:** 161 NOT-LAYERING, 22 LAYERING, 3 ORDERING, 2 TREE-DEPTH, 0 UNDETERMINED. R4 has no
+  layering.
+- **The copy merge:** it merged 20 rows.
+  - **18 are dagre-swift's.** swift-mermaid vendors dagre-swift under `Vendor/MermaidLayoutDagre/`, and
+    `Vendor` is not a skipped folder. Every one of dagre-swift's 18 candidates is byte-identical to its vendored
+    copy, so each counts once. `Australware__swift-mermaid` sorts first, so dagre's longest-path and
+    network-simplex rankers count under swift-mermaid's name.
+  - **2 are MermaidKit's.** Its ER and state-diagram `layout` wrappers (`DiagramLayoutBoxDiagrams.swift:103`
+    and `:188`) are textually identical to the class-diagram one at `:22`, although each forwards to its own
+    overload.
+
+### The population exists
+
+| repository | group (functions) | kind | GATED | re-read (below) |
+|---|---|---|---|---|
+| MermaidKit | `assignLayers`, `longestPathLayers`, `networkSimplex` | map | yes | holds; `assignLayers` flagged *body disagrees* (self-edges), one EXPRESSIBLE dissent on `networkSimplex` |
+| MermaidKit | `layeredRoutes` | coordinate | yes | holds |
+| MermaidKit | `layout`, class diagrams (the ER and state wrappers merged as copies) | coordinate | yes | holds |
+| MermaidKit | `layout`, Sankey | coordinate | yes | holds |
+| MermaidKit | `layout`, swimlane | coordinate | no | holds |
+| MermaidKit | `layout`, C4 | coordinate | yes | holds, *body disagrees* |
+| MermaidKit | `layout`, flowchart | coordinate | yes | **disputed**, *body disagrees* |
+| swift-mermaid | `assignRanks` (its own flowchart ranker) | map | yes | holds |
+| swift-mermaid | dagre's `LongestPath.run` | map | yes | holds |
+| swift-mermaid | dagre's `NetworkSimplex.run` | map | no | holds, *body disagrees* (a defect, below) |
+| swift-module-graph | `depthLevels`, `depth` | levels | no | holds |
+| elk-swift | `OrthogonalRoutingGenerator.topologicalNumbering` | coordinate | no | holds |
+| elk-swift | `NetworkSimplex.execute()` | map | yes | **refuted** |
+| elk-swift | `NetworkSimplex.execute(_:)`, `balance` | map | yes | **refuted** |
+| Graffle | `GraphLayout.layered`, `depth` | map | yes | holds |
+
+The lines beside the decision all clear the population half too, so scope §4 asks the decision paragraph to
+disclose nothing:
+
+- with the witness's first-run groups: 17 over 6;
+- layout packages only: 14 over 4;
+- by kind: 14 layout, 1 dependency, 0 commit;
+- repositories counted by owner: 5;
+- same-owner, same-name groups merged: 9 over 5 owners.
+
+The unmerged count is 21. N without EXPRESSIBLE is 17.
+
+### The gate admits too much
+
+#667's gate admits 149 decision rows, and 16 are LAYERING: **10.7% precision**, against a bar of 70%. It does
+reach most of the population: 11 of the 15 groups have a GATED member, over 4 repositories, so the signal half
+clears. Precision decides. In the 10 layout packages alone, the gate admits 129 rows, of which 16 are layerings
+(12.4%). It admits two kinds of look-alike:
+
+- **elk-swift:** 98 GATED rows, 4 of them judged LAYERING, and the re-read refutes 2 of those. ELK's layered pipeline is built around a `Layer` type, so its
+  setters, sweeps, port ranks and crossing-minimisation steps are all named for layers.
+- **TuistSpider:** 20 GATED rows, none LAYERING. There, "layer" is an architecture-layer label a user assigns to a
+  module.
+
+Of the 133 GATED rows that are not LAYERING, the judges gave 48 the reason *reads a layering*. The first run's
+gate was right on 1 row in 5 it admitted. On a corpus chosen for graph layout it is right on 1 in 9. Layout code
+names much of its API after layers, and one dependency tool uses "layer" as an architecture label.
+
+### What the census cannot see: ELK's layerers (R5)
+
+R5 lists 22 role-named declarations. Twenty of them belong to nine distinct elk-swift type names that end in
+`Layerer`:
+
+- **Five are implemented:** `LongestPath`, `LongestPathSource`, `NetworkSimplex`, `Interactive` and
+  `BreadthFirstModelOrder`. Each does its layering in a `process(_:)` method that mutates an `LGraph`.
+- **Four are unported stubs:** `CoffmanGraham`, `MinWidth`, `StretchWidth` and `DepthFirstModelOrder`. Each
+  class holds only an `init`, and its `process` is an empty body in an extension.
+
+**None of the nine `process` methods is a candidate:** none has NAME or SHAPE, and none has a layering phrase in
+its own doc comment. ELK's layering reached the census only twice:
+
+- through an orthogonal-routing slot numbering, `topologicalNumbering`;
+- through its general network-simplex solver, which the re-read refutes.
+
+The other two R5 declarations are dagre's `LongestPath` enum and its vendored copy, which the census does reach.
+In the corpus's richest layout engine, then, a template keyed on these cues would see none of the five working
+layerers, although the gate admits 98 of ELK's other functions. This is the first scope's §9 limit, measured.
+
+### The re-read, beside the decision
+
+Three refuters re-read each of the 17 rows judged LAYERING ∧ EXPRESSIBLE, and two counterexample builders took
+each row on the *body disagrees* line (`fixtures/layering-law/reread-workflow.js`). They could read the row's
+repository and run Python models, but never build or run its code.
+
+| outcome | rows |
+|---|---|
+| **confirmed by all three** | 10: MermaidKit's `longestPathLayers`, `layeredRoutes` and the class, Sankey and swimlane `layout`s; swift-mermaid's `assignRanks` and dagre's `LongestPath.run`; `depthLevels`; `topologicalNumbering`; Graffle's `layered` |
+| **confirmed by all three, and all three flag *body disagrees*** | MermaidKit's `assignLayers`. Its doc says self-edges are ignored, but it passes them to `longestPathLayers`, which then cannot keep an off-cycle edge strict. The defect is latent, because every caller strips self-loops first |
+| **confirmed, with one dissent** | MermaidKit's `networkSimplex`. One refuter says EXPRESSIBLE fails, because the function needs a feasible ranking on entry |
+| **LAYERING with *body disagrees*, all three** | MermaidKit's C4 `layout`, voted UNSURE ×3, each vote saying the classification stands with the flag; and dagre's `NetworkSimplex.run`, voted CONFIRMED, UNSURE, CONFIRMED, where all three found the same defect (below) |
+| **refuted, all three** | both rows of ELK's `NetworkSimplex.execute`. It is a general difference-constraint solver, with `layer(t) − layer(s) ≥ delta` and `delta ≥ 0`, and ELK uses it for node placement as well as layering. Its contract is not strict |
+| **disputed, three votes NOT-LAYERING** | MermaidKit's flowchart `layout`. A chart with subgraphs takes `layoutClustered`, which breaks the layering the doc states. The refuters would judge `layoutFlat` instead. Under the first scope's §4.4, a stated contract whose body contradicts it stays LAYERING, flagged |
+
+Two consequences:
+
+- **After the re-read, N is 12 or 13, over the same 5 repositories.**
+- **Gate precision falls to 13 or 14 of 149** over the rows the re-read covered. ELK's `balance` and
+  `layeringTopologicalNumbering` are GATED LAYERING rows of the same solver, under the same `delta ≥ 0`, but
+  were not re-read because they are not EXPRESSIBLE. Carrying the refutation to them gives 11 or 12, about 8%,
+  and none of ELK's 98 GATED rows a layering.
+- **The frozen outcome does not move.**
+- **Two instrument quirks, pulling opposite ways.**
+  - ELK's `execute()` only forwards to `execute(_:)`. The helper merge works by name, and a function never
+    counts its own name as a callee, so two overloads never merge. Read as one row, N would have been 14 before
+    the re-read.
+  - The copy merge joins MermaidKit's three identical `layout` wrappers, so only the class-diagram one was
+    judged. Judged separately, the ER and state wrappers might have added up to 2 groups. That was not measured.
+
+### Suspected defects the law points at
+
+All four come from reading and from Python models. None has been run, and none is filed. Revisions are the
+corpus scope's §2.1 revisions.
+
+1. **dagre-swift, `Graph.setEdge` on an undirected graph**: lukilabs/dagre-swift at `92efb78`,
+   `Sources/SwiftDagre/Graph/Graph.swift:246–276`. Also in Australware/swift-mermaid at `ee4b50b`,
+   `Vendor/MermaidLayoutDagre/Graph/Graph.swift`.
+   - **The defect.** It normalises the edge id to `(min, max)`, then appends that id under the endpoints as
+     passed: `_out[v]`, `_in[w]`. graphlib's JavaScript reassigns `v` and `w` from the normalised edge first.
+     So a tree edge added with `v > w` drops out of `neighbors`, and `removeEdgeById` clears the wrong lists.
+   - **Why ranks go wrong.** Network simplex works on an undirected tight tree. With the tree walked as a
+     forest, cut values go stale, `enterEdge` can pick a tree edge, and `updateRanks` can leave a DAG edge at
+     equal or reversed rank.
+   - **Evidence.** All three refuters of dagre's `NetworkSimplex.run` found it independently, each with its own
+     counterexample:
+     - a 7-node DAG on which `a → h` ends at equal rank;
+     - a 9-node DAG on which `b → c` ends at equal rank;
+     - a 9-node DAG on which `rh → fz` goes from rank −1 to −2.
+
+     Their Python models of the port give 5 violations in 150,000 random DAGs, 1 in about 9,800, and 2 in
+     6,000. With the adjacency fixed, the first model gives none.
+   - **Not yet shown.** Nobody has run the Swift code. swift-mermaid's vendored `Graph.swift` is
+     byte-identical.
+   - **Why it matters.** This is the layering law pointing at a real defect in a corpus subject, and at a low
+     rate. A generated test would need the right shape of graph to see it.
+2. **MermaidKit's C4 `layout`**: 2389-research/MermaidKit at `64c19fb`,
+   `Sources/MermaidLayout/DiagramLayoutC4.swift:66`. Rows are longest-path depths, capped so that cycles
+   terminate. On `a → b`, `b → a`, `b → c`, the off-cycle edge `b → c` does not descend. Both counterexample
+   builders found it.
+3. **MermaidKit's flowchart `layout`**: MermaidKit at `64c19fb`,
+   `Sources/MermaidLayout/DiagramLayoutFlowchart.swift:102`. Take `flowchart TD` with a subgraph `S` holding `X`
+   and `Y`, and edges `X → A → Y`. `layoutClustered` draws an edge upward. Both builders found it. It may be a
+   known limit of cluster layout rather than a bug.
+4. **MermaidKit's `assignLayers`**: MermaidKit at `64c19fb`, `Sources/MermaidLayout/DiagramLayoutLayering.swift:19`.
+   - **The defect.** Its doc says self-edges are ignored, but it passes them to `longestPathLayers`, which
+     relaxes a self-edge on every pass. On ids `[x, y]` and edges `x → y`, `x → x`, it returns `x = 3`, `y = 3`.
+   - **Why it is latent.** Every caller strips self-loops first.
+   - **Evidence.** All three refuters flagged it.
+
+Filing any of these upstream is the user's call. Items 2 and 3 are the two rows on the frozen *body disagrees*
+line. Items 1 and 4 come from the re-read. Item 1 should be confirmed by a test against dagre-swift first, which
+means building a cloned package.
+
+### The corpus predictions, scored
+
+| # | prediction (corpus scope §6) | result |
+|---|---|---|
+| 1 | the population clears on the corpus alone, with N between 5 and 12 | **missed on the range**: it clears, but N = 15 (12–13 after the re-read) |
+| 2 | it also clears on layout packages only, and with repositories counted by owner | **held**: 14 over 4, and 5 owners |
+| 3 | gate precision below 70% | **held**: 10.7% |
+| 4 | DECLINE (gate precision) | **held** |
+| 5 | ≥ 3 elk-swift `…Layerer` type names, ≥ 3 of them with a `process` that is not a candidate | **held**: 9 and 9 under its frozen rule; 5 and 5 if only the implemented layerers count |
+| 6 | ORDERING ≥ 3 | **held**: 3 |
+| 7 | more than 300 decision candidates | **missed**: 188 |
+| 8 | N_undetermined ≤ 3, and an empty *body disagrees* line | **missed**: 0 undetermined, but 2 rows flagged |
+
+Five of eight held. Prediction 7 overrated how often layout code puts a layering cue on a function. R5 is one
+instance of that, since ELK's layerers carry the cue on their type. But it accounts for a few dozen functions at
+most, not the 112 by which the prediction missed.
+
+### Disposition
+
+**DECLINE (gate precision).** The reopen condition's population exists: 15 groups across 5 repositories, or 12–13
+after the re-read. But the gate #667 proposes is right on 16 of the 149 rows it admits, and the cues reach none
+of ELK's five working layerers. Under the corpus scope's §4, #667 closes. Closing it and commenting on it are
+the user's to approve.
+
+**Not answered here:**
+
+- the kill arm's counts are still SwiftUMLStudio's alone;
+- the corpus figures are counts over what a search found, not rates;
+- the suspected defects come from reading and Python models.
+
 ## So what
 
-- **No template.** #667's law has no population in the decision universe: two layerings, both in
-  SwiftUMLStudio. The wide group adds a third, sourcekit-lsp's, outside the decision. The gate it proposes admits four look-alikes for every layering. Under §8, #667 stays open on one
-  frozen condition: at least 5 LAYERING ∧ EXPRESSIBLE groups across at least 2 repositories in a corpus of
-  graph-layout packages. That corpus needs clones, so it needs the user's approval.
+- **No template.**
+  - **Locally, there is no population.** The local universe has two layerings, both in SwiftUMLStudio. The wide
+    group adds a third, sourcekit-lsp's, outside the decision.
+  - **In a graph-layout corpus there is one.** It has 15 groups across 5 repositories (§"The reopen
+    condition"), 14 across 4 in the layout packages alone.
+  - **The gate is what fails.** It admits four look-alikes for every layering locally, and eight for every one
+    in the graph-layout corpus (seven in its layout packages). Its cues reach none of ELK's five working
+    layerers.
+  - **#667 closes under the corpus scope's §4.** A template for this law would need a different gate: one that
+    reads a layering's role off its type, or off the graph it mutates, not off a function's name.
 - **As a test SwiftUMLStudio could own, the law is close to redundant today, and the margin it has is real.**
   - It catches 37 of the 38 layering-logic mutants, and so does the suite. Only one of the suite's 37, M035,
     depends on the examples PR #64 wrote for #53. Without them the suite catches 36.
@@ -335,4 +584,15 @@ python3 scripts/layering_census.py decide census.json judgements.json kill-arm.j
 # then run fixtures/layering-law/equivalence-workflow.js over the mutants neither the law nor the suite caught
 ```
 
-The census needs the frozen universe (scope §2) on this machine, and the kill arm needs Xcode 27's Swift 6.4.
+The graph-layout corpus (corpus scope §2.1) reruns as:
+
+```bash
+python3 scripts/layering_census.py run-corpus census.json   # the 18 clones at their frozen revisions
+python3 scripts/layering_census.py packets census.json packets/
+# judge as above, then join
+python3 scripts/layering_census.py decide-corpus census.json judgements.json fixtures/layering-law/kill-arm-2026-10-28.json
+# then run fixtures/layering-law/reread-workflow.js over the rows judged LAYERING and EXPRESSIBLE
+```
+
+The census needs the frozen universe (scope §2) on this machine, or the 18 clones for the corpus, and the kill
+arm needs Xcode 27's Swift 6.4.

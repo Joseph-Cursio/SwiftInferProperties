@@ -1,8 +1,11 @@
 # Does a graph-layout corpus hold the layering law's population? (#667's reopen condition)
 
-> **Status:** `proposed` · **As of:** 2026-10-28
+> **Status:** `shipped` · **As of:** 2026-10-28
 >
-> Frozen before any corpus subject is read. §8 lists what was read, written and run before the freeze.
+> **Run 2026-10-28. Result: DECLINE (gate precision).** N = 15 over 5 repositories, and the gate is right on 16
+> of the 149 rows it admits. Written up in `docs/measurements/layering-law-census.md`, §"The reopen condition".
+> The rule below is as frozen at `a330611b`, before any corpus subject was read. §8 lists what was read, written
+> and run before the freeze. No amendment was made.
 
 `layering-law-census-scope.md` measured #667's layering law and declined it on population. Over 36 decision
 subjects it found 2 LAYERING ∧ EXPRESSIBLE groups, both in SwiftUMLStudio, against a bar of at least 5 across at
