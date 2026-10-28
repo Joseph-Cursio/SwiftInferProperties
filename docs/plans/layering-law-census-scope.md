@@ -1,9 +1,10 @@
 # Does the layering law have a population, and does it catch what a suite misses? (#667)
 
-> **Status:** `proposed` · **As of:** 2026-10-28
+> **Status:** `shipped` · **As of:** 2026-10-28
 >
-> **Frozen** by the commit that adds this file: nothing below changes after the census reads a subject or the
-> law runs, except by a dated amendment.
+> **Run 2026-10-28. Result: DECLINE (population), N = 2 over 1 repository. Written up in
+> `docs/measurements/layering-law-census.md`.** The rule below is as frozen at `b9649973`. One dated amendment
+> changed the kill arm's log reading, and no outcome rule.
 
 #667 asks for a law the catalogue does not have. For a function that assigns each node of a directed graph a
 layer, the law is:
