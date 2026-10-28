@@ -1,0 +1,14 @@
+diff --git a/Sources/SwiftDagre/Graph/Graph.swift b/Sources/SwiftDagre/Graph/Graph.swift
+index 3ba8f0a..96e3f69 100644
+--- a/Sources/SwiftDagre/Graph/Graph.swift
++++ b/Sources/SwiftDagre/Graph/Graph.swift
+@@ -245,6 +245,9 @@ public final class Graph<NodeLabel, EdgeLabel> {
+     @discardableResult
+     public func setEdge(_ v: String, _ w: String, label: EdgeLabel? = nil, name: String? = nil) throws -> Self {
+         let edgeId = makeEdgeId(v, w, name)
++        // TypeScript: v = edgeObj.v; w = edgeObj.w; — store undirected edges under their normalized endpoints
++        let v = edgeId.v
++        let w = edgeId.w
+ 
+         // Ensure both nodes exist
+         if !hasNode(v) { setNode(v) }

@@ -46,13 +46,13 @@ This doc reports both. Everything it rests on was committed in this order, on br
   - The cues cannot see any of ELK's five working layerer classes.
 - **The law on its witness.** The hand-written law catches 42 of 91 mutants, against the suite's 54. With PR
   #64's three law-derived tests left out, the law alone catches 4.
-- **Suspected defects to offer upstream.** Reading the corpus turned up four. None has been run, and none is
-  filed:
-  - a porting defect in dagre-swift's undirected `setEdge`, which can leave a network-simplex DAG edge at equal
-    or reversed rank;
-  - MermaidKit's C4 rows, where an edge below a cycle can point up;
-  - MermaidKit's clustered flowcharts, which can draw an edge upward, perhaps by design;
-  - a latent one in MermaidKit's `assignLayers`, whose doc says self-edges are ignored when they are not.
+- **Four layering defects, reproduced and filed upstream.** Reading the corpus turned up four. Each then
+  reproduced on the real code at upstream HEAD, and is filed (tracked in #687):
+  - **lukilabs/dagre-swift#1:** a porting defect in the undirected `setEdge`, which leaves a network-simplex
+    DAG edge at equal or reversed rank, and shows through `layout()`;
+  - **2389-research/MermaidKit#102:** C4 rows, where an edge below a cycle points up;
+  - **#103:** clustered flowcharts, which draw an edge upward, perhaps by design;
+  - **#104:** a latent defect in `assignLayers`, whose doc says self-edges are ignored when they are not.
 
 The first run's decision line:
 
@@ -469,10 +469,13 @@ Two consequences:
   - The copy merge joins MermaidKit's three identical `layout` wrappers, so only the class-diagram one was
     judged. Judged separately, the ER and state wrappers might have added up to 2 groups. That was not measured.
 
-### Suspected defects the law points at
+### Defects the law points at, reproduced and filed
 
-All four come from reading and from Python models. None has been run, and none is filed. Revisions are the
-corpus scope's §2.1 revisions.
+All four came from reading and from Python models. On 2026-10-28, with the user's approval, each was reproduced
+by an XCTest on a scratch copy of its package, built with Swift 6.4 (Xcode 27). Every control passed. The
+revisions are the corpus scope's §2.1 revisions, which were still upstream HEAD. The tests and the patches are in
+`fixtures/layering-law/upstream-repro/`. All four are filed, and Joseph-Cursio/SwiftInferProperties#687 tracks
+them.
 
 1. **dagre-swift, `Graph.setEdge` on an undirected graph**: lukilabs/dagre-swift at `92efb78`,
    `Sources/SwiftDagre/Graph/Graph.swift:246–276`. Also in Australware/swift-mermaid at `ee4b50b`,
@@ -491,27 +494,41 @@ corpus scope's §2.1 revisions.
 
      Their Python models of the port give 5 violations in 150,000 random DAGs, 1 in about 9,800, and 2 in
      6,000. With the adjacency fixed, the first model gives none.
-   - **Not yet shown.** Nobody has run the Swift code. swift-mermaid's vendored `Graph.swift` is
-     byte-identical.
+   - **Reproduced.** All three DAGs give exactly the refuters' ranks.
+     - `neighbors()` misses a reversed undirected edge, and `removeEdge` leaves it behind.
+     - Through the public `layout()`, the second DAG draws `b` and `c` at one height (y 290).
+     - With graphlib's reassignment (a 3-line patch), every case comes out feasible, and all 89 tests pass: the
+       package's 83 and the 6 new ones.
+     - Random graphs hit it in none of 20,000 rank runs and none of 3,000 layouts.
+   - **Filed** as lukilabs/dagre-swift#1. swift-mermaid's vendored `Graph.swift` is byte-identical, and is not
+     filed separately.
    - **Why it matters.** This is the layering law pointing at a real defect in a corpus subject, and at a low
      rate. A generated test would need the right shape of graph to see it.
 2. **MermaidKit's C4 `layout`**: 2389-research/MermaidKit at `64c19fb`,
    `Sources/MermaidLayout/DiagramLayoutC4.swift:66`. Rows are longest-path depths, capped so that cycles
    terminate. On `a → b`, `b → a`, `b → c`, the off-cycle edge `b → c` does not descend. Both counterexample
    builders found it.
+   - **Reproduced.** C sits at y 28, above B at 142. Without `b → a`, the rows are A 28, B 142, C 256.
+   - **The fix** is to drop DFS back edges first, as flowcharts do. With it, C4 descends and the rest of
+     `MermaidLayoutTests` passes.
+   - **Filed** as 2389-research/MermaidKit#102.
 3. **MermaidKit's flowchart `layout`**: MermaidKit at `64c19fb`,
    `Sources/MermaidLayout/DiagramLayoutFlowchart.swift:102`. Take `flowchart TD` with a subgraph `S` holding `X`
    and `Y`, and edges `X → A → Y`. `layoutClustered` draws an edge upward. Both builders found it. It may be a
    known limit of cluster layout rather than a bug.
+   - **Reproduced.** A sits at y 12, with X and Y at 136. Flat, the rows are 12, 102 and 192.
+   - **Filed** as MermaidKit#103, as a question with no fix.
 4. **MermaidKit's `assignLayers`**: MermaidKit at `64c19fb`, `Sources/MermaidLayout/DiagramLayoutLayering.swift:19`.
    - **The defect.** Its doc says self-edges are ignored, but it passes them to `longestPathLayers`, which
      relaxes a self-edge on every pass. On ids `[x, y]` and edges `x → y`, `x → x`, it returns `x = 3`, `y = 3`.
    - **Why it is latent.** Every caller strips self-loops first.
    - **Evidence.** All three refuters flagged it.
+   - **Reproduced.** It returns `{x: 3, y: 3}`, and `{n0: 0, n1: 1, n2: 1}` on three ids. The public flowchart
+     layout with self-loops is unaffected.
+   - **The fix** is to skip self-edges in `longestPathLayers`, one line. With it, `MermaidLayoutTests` passes.
+   - **Filed** as MermaidKit#104.
 
-Filing any of these upstream is the user's call. Items 2 and 3 are the two rows on the frozen *body disagrees*
-line. Items 1 and 4 come from the re-read. Item 1 should be confirmed by a test against dagre-swift first, which
-means building a cloned package.
+Items 2 and 3 are the two rows on the frozen *body disagrees* line. Items 1 and 4 come from the re-read.
 
 ### The corpus predictions, scored
 
@@ -541,7 +558,7 @@ the user's to approve.
 
 - the kill arm's counts are still SwiftUMLStudio's alone;
 - the corpus figures are counts over what a search found, not rates;
-- the suspected defects come from reading and Python models.
+- the four defects were reproduced only on the inputs shown; no rate is claimed for any of them.
 
 ## So what
 
@@ -593,6 +610,11 @@ python3 scripts/layering_census.py packets census.json packets/
 python3 scripts/layering_census.py decide-corpus census.json judgements.json fixtures/layering-law/kill-arm-2026-10-28.json
 # then run fixtures/layering-law/reread-workflow.js over the rows judged LAYERING and EXPRESSIBLE
 ```
+
+The four defects reproduce from `fixtures/layering-law/upstream-repro/`. Copy each `.swift` file into that
+package's test target, at `92efb78` for dagre-swift (`Tests/SwiftDagreTests/`) and at `64c19fb` for MermaidKit
+(`Tests/MermaidLayoutTests/`). Run `swift test --filter` on its class, then again with the patch beside it
+applied.
 
 The census needs the frozen universe (scope §2) on this machine, or the 18 clones for the corpus, and the kill
 arm needs Xcode 27's Swift 6.4.
