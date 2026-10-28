@@ -1,6 +1,10 @@
 # Does "the pattern a producer builds compiles" have a population? (#666)
 
-> **Status:** `proposed` · **As of:** 2026-10-27
+> **Status:** `shipped` · **As of:** 2026-10-27
+>
+> **Run 2026-10-27; result in `docs/measurements/regex-acceptor-census.md`: DECLINE (population), N = 3.** The rule
+> below is as frozen at `28aece5f`; nothing in it was changed after the pass read any subject beyond §10's dry run
+> on the two witnesses.
 
 #666 asks for a law the catalogue does not have. For a producer `f` whose result the module passes to a
 throwing regex acceptor `A`, the law is:
