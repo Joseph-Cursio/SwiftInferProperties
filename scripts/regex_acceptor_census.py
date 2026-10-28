@@ -10,7 +10,7 @@ and all three of #666's witness calls are member calls).
 Each row is one acceptor call site, with one outcome from scope §1.5. The population is the union,
 over all rows, of QUALIFYING elements of the row's scan set. Section numbers below are the scope's.
 
-  --self-test                  the scope's pass controls, C1-C30 (no siblings; joins `make measurement-selftest`)
+  --self-test                  the scope's pass controls, C1-C52 (no siblings; joins `make measurement-selftest`)
   run <out.json> NAME=PATH…    census the frozen universe (§2), plus each `upstream` clone given as NAME=PATH
   packets <census.json> <dir> NAME=PATH…   write §5's blind judging packets, one per producer, in seeded order
 """
