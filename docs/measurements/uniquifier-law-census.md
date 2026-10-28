@@ -244,7 +244,10 @@ never check either against the other.
   `resetIdCounter()` ("for testing") resets it. That is a setup call, so the row stays non-EXPRESSIBLE.
 - **Graffle's `Writer.id`** has the same no-separator shape. Its two callers pass `grad` and `shadow`.
 
-The reachable two are offered for upstream filing (scope §8); filing needs the user's approval. Results and
+The reachable two were offered for upstream filing (scope §8). Both now reproduce at upstream HEAD as tests with
+minimal patches, in `fixtures/uniquifier-law/upstream-repro/` (tracked in #691). So does the GRDB `resolvedNames`
+collision #669 had reasoned about without running it. With the user's approval all three were filed on 2026-10-28:
+MarcoEidinger/SwiftPlantUML#87, jpsim/Yams#490 and groue/GRDB.swift#1892. Results and
 the agents' traces are in `fixtures/uniquifier-law/handcheck-2026-10-28.json`, from
 `fixtures/uniquifier-law/handcheck-workflow.js`.
 
@@ -433,8 +436,8 @@ would be:
   Its 5 decisive kills are caught by the suites PR #65 and PR #52 wrote for the same defects. Without those
   suites, it catches 5 of the 6 issuing mutants the rest of the suite misses. That matches #667.
 - **The law paid off outside its witness.** Reading the population turned up two reachable defects in other
-  repositories: SwiftPlantUML's (#669's own shape) and Yams's (a caller's names beside generated ones). Neither
-  is reported upstream. Filing them is the user's call.
+  repositories: SwiftPlantUML's (#669's own shape) and Yams's (a caller's names beside generated ones). Both are
+  now filed upstream, with a GRDB alias collision #669 had only reasoned about.
 
 ## Reproducing
 

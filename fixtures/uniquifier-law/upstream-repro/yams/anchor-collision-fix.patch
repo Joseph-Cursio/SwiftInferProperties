@@ -1,0 +1,77 @@
+--- a/Sources/Yams/Encoder.swift
++++ b/Sources/Yams/Encoder.swift
+@@ -37,7 +37,13 @@
+                                    mappingStyle: options.mappingStyle,
+                                    newlineScalarStyle: options.newLineScalarStyle)
+             var container = encoder.singleValueContainer()
+-            try container.encode(value)
++            do {
++                try container.encode(value)
++            } catch {
++                // Release here too, or a strategy reused for the next document keeps this one's anchors.
++                try? options.redundancyAliasingStrategy?.releaseAnchorReferences()
++                throw error
++            }
+             try options.redundancyAliasingStrategy?.releaseAnchorReferences()
+             return try serialize(node: encoder.node, options: options)
+         } catch let error as EncodingError {
+--- a/Sources/Yams/RedundancyAliasingStrategy.swift
++++ b/Sources/Yams/RedundancyAliasingStrategy.swift
+@@ -74,10 +74,12 @@
+ 
+     public func releaseAnchorReferences() throws {
+         hashesToAliases.removeAll()
++        uniqueAliasProvider.releaseAnchorReferences()
+     }
+ 
+     public func remit(anchor: Anchor) throws {
+         hashesToAliases.remove(keysForValue: anchor)
++        uniqueAliasProvider.remit(anchor: anchor)
+     }
+ }
+ 
+@@ -107,25 +109,42 @@
+ 
+     public func releaseAnchorReferences() throws {
+         codedToAliases.removeAll()
++        uniqueAliasProvider.releaseAnchorReferences()
+     }
+ 
+     public func remit(anchor: Anchor) throws {
+         codedToAliases.remove(keysForValue: anchor)
++        uniqueAliasProvider.remit(anchor: anchor)
+     }
+ }
+ 
++/// Issues anchors which are unique among those issued since the last release.
++/// A value's own `yamlAnchor` is used unless that name was already issued for another value,
++/// in which case the value gets the next unused counter anchor, as a value without one would.
+ class UniqueAliasProvider {
+     private var counter = 0
++    private var issuedAnchors: Set<String> = []
+ 
+     func uniqueAlias(for encodable: any Encodable) -> Anchor {
+         if let anchorProviding = encodable as? YamlAnchorProviding,
+-           let anchor = anchorProviding.yamlAnchor {
++           let anchor = anchorProviding.yamlAnchor,
++           issuedAnchors.insert(anchor.rawValue).inserted {
+             return anchor
+         } else {
+-            counter += 1
++            repeat {
++                counter += 1
++            } while !issuedAnchors.insert(String(counter)).inserted
+             return Anchor(rawValue: String(counter))
+         }
+     }
++
++    func remit(anchor: Anchor) {
++        issuedAnchors.remove(anchor.rawValue)
++    }
++
++    func releaseAnchorReferences() {
++        issuedAnchors.removeAll()
++    }
+ }
+ 
+ extension CodingUserInfoKey {
