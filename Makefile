@@ -183,7 +183,9 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 #
 # #669's uniquifier census joined after it: the pass's cue, candidate and gate controls (#669's witnesses
 # at both revisions, its `uniqueId` counterexample, one synthetic source per rule), the copy merge, every
-# §8 outcome, the label join's refusals and the calibration check. No compiler, ~0.1s.
+# §8 outcome, the label join's refusals and the calibration check. Its kill arm's checks cover the plan,
+# the suite filters and the reduced-suite and flake rules against a scripted suite; its runner controls
+# build an export and stay out of here. No compiler, ~0.1s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
@@ -197,6 +199,7 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 	@python3 scripts/layering_census.py --self-test
 	@python3 scripts/layering_kill_arm.py --self-test
 	@python3 scripts/uniquifier_census.py --self-test
+	@python3 scripts/uniquifier_kill_arm.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \
