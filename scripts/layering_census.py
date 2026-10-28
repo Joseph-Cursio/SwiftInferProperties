@@ -12,6 +12,11 @@ Section numbers below are the scope's.
   packets <census.json> <dir> write §4's blind judging packets, at most eight rows each, in seeded order
   join <index.json> <workflow.json> <judgements.json>       §4.3: the judge workflow's labels joined to row ids
   decide <census.json> <judgements.json> <kill-arm.json>   §8's outcome, figures and sensitivity lines
+
+`layering-law-graph-layout-corpus-scope.md` reruns the same pass over a graph-layout corpus (C56-C61):
+
+  run-corpus <out.json>       census the 18 clones as the decision group, every candidate judged
+  decide-corpus <census.json> <judgements.json> <kill-arm.json>   §8 over the corpus, the lines beside it, and R5
 """
 import collections
 import hashlib
@@ -114,6 +119,51 @@ WIDE = [
     ("xcode_projects/SwiftMutator", "https://github.com/joseph-cursio/swiftmutator"),
 ]
 WIDE_SHA256 = "c7ad7e6c379c03144bc370d778edc97632f09318219065b7155e723471d5f270"
+
+# The graph-layout corpus (`layering-law-graph-layout-corpus-scope.md` §2): 18 public packages found by a GitHub
+# search of names and descriptions only, cloned `--depth 1` with the user's approval on 2026-10-28. Each entry is
+# the directory under CORPUS_DIR, its `origin`, the revision read, and its kind from its description (layout,
+# dependency or commit). CORPUS_SHA256 is the hash that scope's §2.3 records.
+CORPUS_DIR = "github_projects/graph-layout-corpus"
+CORPUS = [
+    ("lukilabs__dagre-swift", "https://github.com/lukilabs/dagre-swift",
+     "92efb78b73a8b665ee74bacfb0f1f5b17bbe1b38", "layout"),
+    ("lukilabs__elk-swift", "https://github.com/lukilabs/elk-swift",
+     "32f8042e3509a4819f00ff9cd46e829ec2b26da0", "layout"),
+    ("lukilabs__beautiful-mermaid-swift", "https://github.com/lukilabs/beautiful-mermaid-swift",
+     "6a23a29e91af8f5b3e9fc09945332ca193bd69ec", "layout"),
+    ("2389-research__MermaidKit", "https://github.com/2389-research/mermaidkit",
+     "64c19fbddf5604122b01563b3ab727dbadf0ee95", "layout"),
+    ("Australware__swift-mermaid", "https://github.com/australware/swift-mermaid",
+     "ee4b50bc15ad6e9b9f88bc320f2c42ba9a55a804", "layout"),
+    ("nmandica__DirectedGraph", "https://github.com/nmandica/directedgraph",
+     "4aba72560eafae0f778666d0bc08376737dacd9a", "layout"),
+    ("1amageek__swift-flow", "https://github.com/1amageek/swift-flow",
+     "538588ebc739e945826c0ba8b4309a630ea0a61a", "layout"),
+    ("aaurelions__SwiftFlow", "https://github.com/aaurelions/swiftflow",
+     "3515701fad73d3c6f8722bd65c22ef0813dc11a0", "layout"),
+    ("yahirvitelugardo__Graffle", "https://github.com/yahirvitelugardo/graffle",
+     "53b93b0560d89d3e97acdb6b020e9ef73054a83d", "layout"),
+    ("Vithanco__SwiftGraphvizLayout", "https://github.com/vithanco/swiftgraphvizlayout",
+     "083fb3cf0c32b5e83adf4432eb3b0fc742789fa5", "layout"),
+    ("Ryu0118__swift-module-graph", "https://github.com/ryu0118/swift-module-graph",
+     "86c7dde938409df1bb3d8ef8bb75133d74d3e9a7", "dependency"),
+    ("getyourguide__spmgraph", "https://github.com/getyourguide/spmgraph",
+     "47ad8ac436a4f342145f3a3a612736d91e4882cd", "dependency"),
+    ("simonbs__dependency-graph", "https://github.com/simonbs/dependency-graph",
+     "6c89d4be7c90bdaea7feecf979f9ccab947c3188", "dependency"),
+    ("leejungyeob__TuistSpider", "https://github.com/leejungyeob/tuistspider",
+     "01aaa140dbcccabfcea90b04d099439cae2dd118", "dependency"),
+    ("GlitchLoom__SwiftDependencyGraphExplorer", "https://github.com/glitchloom/swiftdependencygraphexplorer",
+     "f93a3430a4fedd6872907fb0939180efb11d352a", "dependency"),
+    ("swift-compositions__swift-package-graph", "https://github.com/swift-compositions/swift-package-graph",
+     "d783a2c9fe3a02c507fd7ec398b61fe07632caf2", "dependency"),
+    ("poolcamacho__Maple", "https://github.com/poolcamacho/maple",
+     "9255de96fd57c7d28bb7876616a8a0ddb3b8aa5a", "commit"),
+    ("tengla__GitGraphRender", "https://github.com/tengla/gitgraphrender",
+     "1197ce47afd1b765f4d4b3bf7016bc4e11ef773d", "commit"),
+]
+CORPUS_SHA256 = "7272bb357b918c606dde71690763adf474d8c9034bcd2adfeae57177b6b45046"
 
 # ── The cues (§1.2) ───────────────────────────────────────────────────────────────────────────────
 NAME_PREFIXES = ("layer", "rank", "tier", "stratif", "topo", "sugiyama", "coffman")
@@ -472,9 +522,168 @@ def universe():
     return groups
 
 
-def choose(report):
+def corpus_hash():
+    text = "\n".join(" ".join(entry) for entry in sorted(CORPUS, key=lambda entry: entry[0].lower()))
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def corpus_universe():
+    """The corpus scope's §2, asserted: the 18 clones, each at its frozen revision with a clean tree, all in the
+    decision group. The witness is not read again; its first-run groups are reported beside (§2.2)."""
+    if corpus_hash() != CORPUS_SHA256:
+        raise SystemExit(f"the corpus list hashes to {corpus_hash()}, not the frozen {CORPUS_SHA256}")
+    groups = []
+    for directory, url, sha, _ in CORPUS:
+        root = os.path.join(HOME, CORPUS_DIR, directory)
+        if not os.path.isdir(root):
+            raise SystemExit(f"the corpus lacks {directory}")
+        if origin(root) != url or revision(root) != sha or git(root, "status", "--porcelain"):
+            raise SystemExit(f"{directory} is not {url} at {sha} with a clean tree")
+        groups.append(("decision", directory, root, [root]))
+    return groups
+
+
+# R5 (the corpus scope's §5): a declaration named for a layering role, and which of its functions the cues reach.
+ROLE_ENDINGS = {("layerer",), ("layerers",), ("layering",), ("layerings",), ("ranker",), ("rankers",), ("ranking",),
+                ("rankings",), ("longest", "path"), ("layer", "assigner"), ("layer", "assignment"), ("rank", "assigner"),
+                ("rank", "assignment")}
+
+
+def is_role(name):
+    """A role name ends in one of ROLE_ENDINGS, word by word: `LongestPathLayerer`, never `LayeringStrategy`."""
+    found = words(name)
+    return any(tuple(found[-len(ending):]) == ending for ending in ROLE_ENDINGS if len(found) >= len(ending))
+
+
+def type_spans(text):
+    """`[(first line, last line, kind, name)]`: every type, extension and protocol declaration with a body, as
+    `declarations` finds them."""
+    masked, _ = mask(text)
+    pairs = brace_pairs(masked)
+    spans = []
+    for match in DECL.finditer(masked):
+        if match.group(1) == "class" and match.group(2) in CLASS_MODIFIED:
+            continue
+        brace = masked.find("{", match.end())
+        if brace < 0 or masked[match.end():brace].count("\n") > 3:
+            continue
+        end = pairs.get(brace, len(masked) - 1)
+        spans.append((text.count("\n", 0, match.start()) + 1, text.count("\n", 0, end) + 1, match.group(1),
+                      base_name(match.group(2))))
+    return spans
+
+
+def role_types(files, candidates, others, root, repo):
+    """R5 over one subject: `[{repo, path, line, kind, name, functions, candidates}]`, one per role-named
+    declaration. Its functions are those whose innermost declaration is it and which are not nested in another
+    function; `candidates` names those of them that are candidates. Never judged and never in N."""
+    is_candidate_row = {id(row): True for row in candidates}
+    rows_by_path = collections.defaultdict(list)
+    for row in candidates + others:
+        rows_by_path[row["path"]].append(row)
+    entries = []
+    for path in sorted(files):
+        relative = os.path.relpath(path, root)
+        spans = type_spans(files[path])
+        functions = rows_by_path.get(relative, []) or rows_by_path.get(path, [])
+        ranges = [(row["line"], row["line"] + row["text"].count("\n"), row) for row in functions]
+        direct = [row for first, _, row in ranges
+                  if not any(other is not row and start < first <= stop for start, stop, other in ranges)]
+        for first, last, kind, name in spans:
+            if not is_role(name):
+                continue
+            mine = [row for row in direct if first <= row["line"] <= last
+                    and min((span for span in spans if span[0] <= row["line"] <= span[1]),
+                            key=lambda span: span[1] - span[0]) == (first, last, kind, name)]
+            entries.append({"repo": repo, "path": relative, "line": first, "kind": kind, "name": name,
+                            "functions": [row["name"] for row in mine],
+                            "candidates": [row["name"] for row in mine if is_candidate_row.get(id(row))]})
+    return entries
+
+
+def witness_groups():
+    """§2.2: SwiftUMLStudio's LAYERING ∧ EXPRESSIBLE groups as the first run judged them, from its fixtures."""
+    here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fixtures", "layering-law")
+    report = json.load(open(os.path.join(here, "census-2026-10-28.json"), encoding="utf-8"))
+    judgements = json.load(open(os.path.join(here, "judgements.json"), encoding="utf-8"))
+    verdicts = {entry["id"]: final_record(entry) for entry in judgements}
+    rows = [row for row in report["candidates"] if row["repo"] == WITNESS and row.get("judged")]
+    return tally(rows, verdicts)[1]
+
+
+WITNESS = "SwiftUMLStudio"
+CORPUS_KIND = {directory: kind for directory, _, _, kind in CORPUS}
+CORPUS_OWNER = {directory: url.split("/")[-2] for directory, url, _, _ in CORPUS}
+
+
+# The corpus scope's §4: the kill report it reads, by the sha256 of its JSON with sorted keys.
+KILL_ARM_SHA256 = "83aeacfa3ec829f133ef624b9379a1a0252f12ab6ca78f8ee40925bcfc235b0c"
+
+
+def content_hash(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+
+
+def body_flags(rows, judgements):
+    """The corpus scope's §4: the ids of `rows` whose final verdict is LAYERING and which a judge holding that final
+    verdict flagged *body disagrees* — A or B when they agree, the third judge otherwise."""
+    by_id = {entry["id"]: entry for entry in judgements}
+    flagged = []
+    for row in rows:
+        entry = by_id.get(row["id"])
+        final = final_record(entry) if entry else {}
+        if final.get("verdict") != "LAYERING":
+            continue
+        holders = [entry.get("A"), entry.get("B")] if final is entry.get("A") else [entry.get("C")]
+        if any(holder and holder.get("body_disagrees") for holder in holders):
+            flagged.append(row["id"])
+    return sorted(flagged)
+
+
+def decide_corpus(report, judgements, kills, witness=None, frozen_kills=True):
+    """The corpus scope's §4: §8's `decide` over the corpus, which alone decides, then the lines beside it. Refuses
+    a census of another universe or corpus list, and any kill report but the 2026-10-28 one (`frozen_kills`)."""
+    if report.get("universe") != "graph-layout corpus" or report.get("corpus_sha256") != CORPUS_SHA256:
+        raise SystemExit("decide-corpus reads a run-corpus census of the frozen corpus only")
+    if not kills or (frozen_kills and content_hash(kills) != KILL_ARM_SHA256):
+        raise SystemExit("decide-corpus reads the 2026-10-28 kill report only")
+    outcome, figures, sensitivity = decide(report, judgements, kills)
+    witness = witness_groups() if witness is None else witness
+    by_id = {row["id"]: row for row in report["candidates"]}
+    groups = [[by_id[row_id] for row_id in ids] for ids in figures["groups"]]
+
+    def places(group):
+        """Every subject holding a member of the group or a copy of one, first copy first."""
+        found = []
+        for row in group:
+            for repo in [row["repo"]] + [where.split(":", 1)[0] for where in row.get("copies", [])]:
+                if repo not in found:
+                    found.append(repo)
+        return found
+
+    layout = [next(repo for repo in places(group) if CORPUS_KIND.get(repo) == "layout") for group in groups
+              if any(CORPUS_KIND.get(repo) == "layout" for repo in places(group))]
+    first_repos = [group[0]["repo"] for group in groups]
+    owner_named = {(CORPUS_OWNER.get(group[0]["repo"], group[0]["repo"]), group[0]["name"]) for group in groups}
+    by_judgement = {entry["id"]: entry for entry in judgements}
+    judged = [row for row in report["candidates"] if row.get("judged") and row["group"] == "decision"]
+    beside = {
+        "with_witness": {"N": figures["N"] + len(witness),
+                         "repositories": figures["repositories"] + len(toplevels(witness))},
+        "layout_only": {"N": len(layout), "repositories": len(set(layout))},
+        "by_kind": {kind: sum(CORPUS_KIND.get(repo) == kind for repo in first_repos)
+                    for kind in ("layout", "dependency", "commit")},
+        "owners": len({CORPUS_OWNER.get(repo, repo) for repo in first_repos}),
+        "owner_merged": {"N": len(owner_named), "owners": len({owner for owner, _ in owner_named})},
+        "verdicts": dict(collections.Counter(final_record(by_judgement[row["id"]])["verdict"] for row in judged)),
+        "body_disagrees": body_flags(judged, judgements),
+    }
+    return outcome, figures, sensitivity, beside
+
+
+def choose(report, cap=DECISION_CAP):
     """§4.1: mark what is judged. Decision and unmet candidates in full, unless decision candidates exceed
-    DECISION_CAP: then every candidate with SHAPE, a doc cue or GATED is judged in full and the rest (the
+    `cap` (DECISION_CAP; the corpus scope's §4 passes None, judging every decision candidate): then every candidate with SHAPE, a doc cue or GATED is judged in full and the rest (the
     NAME ∧ GRAPH-only stratum) is sampled. Wide in full up to WIDE_CAP, else sampled; R4 in full up to R4_CAP,
     else sampled. Each sample is its own `random.Random(SEED)` over the rows sorted by id."""
     def sample(rows, size):
@@ -487,7 +696,7 @@ def choose(report):
         row["stratum"] = "full" if full else "name-graph"
     decision = [row for row in rows if row["group"] == "decision"]
     judged = set()
-    if len(decision) > DECISION_CAP:
+    if cap is not None and len(decision) > cap:
         judged |= {row["id"] for row in decision if row["stratum"] == "full"}
         judged |= {row["id"] for row in sample([r for r in decision if r["stratum"] == "name-graph"], NAME_GRAPH_SAMPLE)}
     else:
@@ -501,18 +710,21 @@ def choose(report):
         row["judged"] = row["id"] in r4
 
 
-def run(out_path):
+def run(out_path, groups=None):
+    """§1–§4 over `groups`, §2's frozen universe by default; `run-corpus` passes the corpus scope's."""
     if not self_test():
         raise SystemExit("a control failed — not reporting candidates")
     by_root = collections.OrderedDict()
-    for group, name, root, roots in universe():
+    for group, name, root, roots in (universe() if groups is None else groups):
         key = os.path.realpath(root)
         entry = by_root.setdefault(key, {"group": group, "name": name, "root": root, "roots": [], "also": []})
         if entry["name"] != name:
             entry["also"].append(name)
         entry["roots"].extend(roots)
-    report = {"subjects": [], "candidates": [], "probes": {"R2": [], "R3": [], "R4": []},
-              "wide_sha256": wide_hash()}
+    report = {"subjects": [], "candidates": [], "probes": {"R2": [], "R3": [], "R4": [], "R5": []},
+              "wide_sha256": wide_hash(), "universe": "frozen" if groups is None else "graph-layout corpus"}
+    if groups is not None:
+        report["corpus_sha256"] = corpus_hash()
     # §1.2: an extension's type docs come from the whole repository, every subject sharing its git toplevel.
     read = {key: subject_files(entry["root"], entry["roots"]) for key, entry in by_root.items()}
     tops = {key: toplevel(entry["root"]) for key, entry in by_root.items()}
@@ -535,6 +747,7 @@ def run(out_path):
             row.update(group=entry["group"], repo=entry["name"], root=key, toplevel=top)
             row["id"] = f"{entry['name']}:{row['path']}:{row['line']}"
         before_copy_merge += candidates
+        report["probes"]["R5"] += role_types(files, candidates, others, key, entry["name"])
         for row in others:
             if os.path.join(key, row["path"]) in candidate_paths:
                 report["probes"]["R2"].append(row["id"])
@@ -545,7 +758,7 @@ def run(out_path):
     for row in report["candidates"]:
         if row["group"] == "decision" and not row["cues"]["NAME"] and (row["cues"]["DOC-OWN"] or row["cues"]["DOC-OWNER"]):
             report["probes"]["R3"].append(row["id"])
-    choose(report)
+    choose(report, DECISION_CAP if groups is None else None)
     with open(out_path, "w", encoding="utf-8") as handle:
         json.dump(report, handle, indent=1, sort_keys=True)
     for group in ("decision", "unmet", "wide"):
@@ -555,6 +768,7 @@ def run(out_path):
               f"  {dict(repos.most_common(6))}")
     print(f"  R4: {len(report['probes']['R4'])} rows, {sum(r['judged'] for r in report['probes']['R4'])} judged;"
           f" R3: {len(report['probes']['R3'])}; before the copy merge {report['candidates_before_copy_merge']}")
+    print(f"  R5: {len(report['probes']['R5'])} role-named declarations (a list to read, not a figure)")
 
 
 def packets(census_path, out_dir):
@@ -1151,6 +1365,121 @@ def decision_controls():
     _, figures, _ = outcome(rows + wide_rows, judge(rows) + judge(wide_rows[:2]), kills_build)
     checks.append(("C55 N_wide from 2 of 4 judged is estimated as 4", figures["N_wide"] == 2
                    and figures["N_wide_estimate"] == 4.0))
+    # C56: the corpus list is the frozen one: each directory its origin's owner__repo, each revision a full SHA,
+    # ten layout packages, six dependency tools and two commit-graph drawers.
+    kinds = collections.Counter(kind for _, _, _, kind in CORPUS)
+    checks.append(("C56 the corpus list hashes to CORPUS_SHA256: 18 entries, owner__repo, full SHAs, kinds 10/6/2",
+                   corpus_hash() == CORPUS_SHA256 and len(CORPUS) == 18
+                   and all(directory.lower() == "__".join(url.split("/")[-2:]) and re.fullmatch(r"[0-9a-f]{40}", sha)
+                           for directory, url, sha, _ in CORPUS)
+                   and kinds == {"layout": 10, "dependency": 6, "commit": 2}))
+    # C57: the corpus alone decides; the witness, the layout-only line, the kinds and the owners are beside it.
+    corpus_report = {"universe": "graph-layout corpus", "corpus_sha256": CORPUS_SHA256, "probes": {"R4": []}}
+
+    def corpus(rows, judgements=None, witness_rows=(), kills=kills_build, frozen=False, report=None):
+        return decide_corpus(dict(report or corpus_report, candidates=rows),
+                             judge(rows) if judgements is None else judgements, kills, list(witness_rows), frozen)
+
+    dagre = [row("lukilabs__dagre-swift", f"layers{n}", path=f"D{n}.swift") for n in range(3)]
+    witness = [[row(WITNESS, f"layers{n}", path=f"W{n}.swift")] for n in range(2)]
+    decided, figures, _, beside = corpus(dagre, witness_rows=witness)
+    checks.append(("C57 three corpus groups and the witness's two: DECLINE (population); with the witness, 5 over 2",
+                   decided == "DECLINE (population)" and figures["N"] == 3
+                   and beside["with_witness"] == {"N": 5, "repositories": 2}))
+    elk = [row("lukilabs__elk-swift", f"layers{n}", path=f"E{n}.swift") for n in range(2)]
+    decided, figures, _, beside = corpus(dagre + elk)
+    checks.append(("C57 five groups in two lukilabs repositories: the bar clears, and they are one owner",
+                   decided == "BUILD" and figures["repositories"] == 2 and beside["owners"] == 1
+                   and beside["layout_only"] == {"N": 5, "repositories": 2}))
+    spm = [row("getyourguide__spmgraph", f"layers{n}", path=f"S{n}.swift") for n in range(2)]
+    decided, figures, _, beside = corpus(dagre + spm)
+    checks.append(("C57 three layout and two dependency groups: the bar clears; layout only, 3 over 1",
+                   decided == "BUILD" and beside["layout_only"] == {"N": 3, "repositories": 1} and beside["owners"] == 2
+                   and beside["by_kind"] == {"layout": 3, "dependency": 2, "commit": 0}
+                   and beside["verdicts"] == {"LAYERING": 5}))
+    # A group whose first copy is a dependency tool's, with a copy in a layout package, is in the layout line.
+    shared = [dict(row("GlitchLoom__SwiftDependencyGraphExplorer", "layersShared", path="G.swift"),
+                   copies=["lukilabs__elk-swift:Shared.swift:3"])]
+    decided, figures, _, beside = corpus(shared + elk)
+    checks.append(("C57 a layout copy puts a dependency tool's first copy in the layout line, at the layout repository",
+                   beside["layout_only"] == {"N": 3, "repositories": 1} and beside["by_kind"]["dependency"] == 1))
+    # Same-owner groups that share a name count once in the owner-merged line.
+    lineage = [row(repo, "longestPath", path=f"{repo}.swift") for repo in
+               ("lukilabs__dagre-swift", "lukilabs__elk-swift", "lukilabs__beautiful-mermaid-swift")]
+    mermaid = [row("2389-research__MermaidKit", f"layers{n}", path=f"M{n}.swift") for n in range(2)]
+    decided, figures, _, beside = corpus(lineage + mermaid)
+    checks.append(("C57 three same-name lukilabs groups and two MermaidKit groups: N 5 over 4, owner-merged 3 over 2",
+                   figures["N"] == 5 and figures["repositories"] == 4
+                   and beside["owner_merged"] == {"N": 3, "owners": 2}))
+    checks.append(("C57 decide-corpus refuses a census with neither label nor hash",
+                   refuses(lambda: corpus(dagre, report={"probes": {"R4": []}}))))
+    checks.append(("C57 decide-corpus refuses the right label with another corpus hash",
+                   refuses(lambda: corpus(dagre, report=dict(corpus_report, corpus_sha256="0" * 64)))))
+    checks.append(("C57 decide-corpus refuses the right hash under another label",
+                   refuses(lambda: corpus(dagre, report=dict(corpus_report, universe="frozen")))))
+    checks.append(("C57 decide-corpus refuses a missing kill report", refuses(lambda: corpus(dagre, kills=None))))
+    checks.append(("C57 decide-corpus refuses a kill report other than the 2026-10-28 one",
+                   refuses(lambda: corpus(dagre, frozen=True))))
+    here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fixtures", "layering-law")
+    frozen_kills = json.load(open(os.path.join(here, "kill-arm-2026-10-28.json"), encoding="utf-8"))
+    checks.append(("C57 decide-corpus reads the 2026-10-28 kill report: decisive 4, every runner control passed",
+                   content_hash(frozen_kills) == KILL_ARM_SHA256
+                   and corpus(dagre + elk, kills=frozen_kills, frozen=True)[0] == "BUILD"))
+    # body_flags: a flag from either agreeing judge counts; a flag on a row whose final verdict is not LAYERING, or
+    # from a judge the third overruled, does not.
+    agreed = dict(votes("LAYERING"), id="a")
+    agreed["B"] = dict(agreed["B"], body_disagrees=True)
+    overruled = {"id": "b", "A": {"verdict": "LAYERING", "expressible": True, "body_disagrees": True},
+                 "B": {"verdict": "NOT-LAYERING"}, "C": {"verdict": "LAYERING", "expressible": True}}
+    not_layering = {"id": "c", "A": {"verdict": "NOT-LAYERING", "body_disagrees": True},
+                    "B": {"verdict": "NOT-LAYERING", "body_disagrees": True}, "C": None}
+    checks.append(("C57 body disagrees: B's flag on an agreed LAYERING row counts; an overruled or non-LAYERING flag does not",
+                   body_flags([{"id": "a"}, {"id": "b"}, {"id": "c"}], [agreed, overruled, not_layering]) == ["a"]))
+    # C58: a role name, by its last words: a layerer or a ranking is one; a strategy, a placer or a view is not.
+    for name in ("LongestPathLayerer", "NetworkSimplexLayerer", "CoffmanGrahamLayerer", "MinWidthLayerer", "Layering",
+                 "NodeRanker", "GraphRanking", "LongestPath", "LayerAssigner", "LayerAssignment", "RankAssigner",
+                 "RankAssignment", "Rankers", "Layerers", "Layerings", "NodeRankings"):
+        checks.append((f"C58 {name} is a role name", is_role(name)))
+    for name in ("LayeringStrategy", "NetworkSimplexPlacer", "NetworkSimplex", "SimplexNoise", "RankingService",
+                 "LongestPathFinder", "PathLongest", "LongestSimplePath", "LayerView", "CALayer", "RankedList",
+                 "SugiyamaLayout", "Assignment", "Path", ""):
+        checks.append((f"C58 {name or '(top level)'} is not a role name", not is_role(name)))
+    # C59: R5 lists every role-named declaration: a class, a protocol, a type with no function, an extension, two
+    # namesakes. A function nested in a method or in a nested type is not the type's own; an init is not a function.
+    layered = {"/repo/A.swift": ("/** The most basic layering algorithm: layers by longest paths. */\n"
+                                  "final class LongestPathLayerer {\n    init(graph: LGraph) { }\n"
+                                  "    private struct Frame {\n        func walk(_ node: LNode) { }\n    }\n"
+                                  "    func process(_ graph: LGraph) {\n        func visit(_ node: LNode) -> Int { 0 }\n    }\n}\n"
+                                  "protocol NodeRanker {\n    func rank(_ graph: Graph) -> [Node: Int]\n}\n"
+                                  "final class LayerView {\n    func depth(of node: Node) -> Int { 0 }\n}\n"
+                                  "final class Layering {\n    var layers: [[Node]] { [] }\n}\n"
+                                  "final class GraphRanking {\n    func process(_ g: G) { }\n}\n"),
+               "/repo/B.swift": ("extension LongestPathLayerer {\n    func layers(of graph: Graph) -> [[Node]] { [] }\n}\n"
+                                 "final class GraphRanking {\n    func rank(_ graph: Graph) -> [Node: Int] { [:] }\n}\n")}
+    roles = role_types(layered, *census(layered), "/repo", "X")
+    checks.append(("C59 R5: six role declarations, each with its own functions and candidates",
+                   [(entry["repo"], entry["path"], entry["kind"], entry["name"], entry["functions"], entry["candidates"])
+                    for entry in roles]
+                   == [("X", "A.swift", "class", "LongestPathLayerer", ["process"], []),
+                       ("X", "A.swift", "protocol", "NodeRanker", [], []),
+                       ("X", "A.swift", "class", "Layering", [], []),
+                       ("X", "A.swift", "class", "GraphRanking", ["process"], []),
+                       ("X", "B.swift", "extension", "LongestPathLayerer", ["layers"], ["layers"]),
+                       ("X", "B.swift", "class", "GraphRanking", ["rank"], ["rank"])]))
+    # C60: the corpus judges every decision candidate; §4.1's cap still samples the first scope's universe.
+    many = {"candidates": [{"id": f"r{n:03d}", "group": "decision", "gated": False,
+                            "cues": {"SHAPE": "", "DOC-OWN": [], "DOC-OWNER": []}} for n in range(400)],
+            "probes": {"R4": []}}
+    choose(many, None)
+    uncapped = sum(r["judged"] for r in many["candidates"])
+    choose(many)
+    checks.append(("C60 with no cap all 400 decision candidates are judged; with §4.1's cap, 40",
+                   uncapped == 400 and sum(r["judged"] for r in many["candidates"]) == 40))
+    # C61: the witness line reads the first run's own verdicts: two groups, in one repository.
+    witnessed = witness_groups()
+    checks.append(("C61 the witness's first-run groups: computeRows, and dependencyLevels with chainDepth",
+                   len(witnessed) == 2 and len(toplevels(witnessed)) == 1
+                   and sorted(group[0]["name"] for group in witnessed) == ["computeRows", "dependencyLevels"]))
     return checks
 
 
@@ -1178,6 +1507,9 @@ def main(argv):
             json.dump(joined, handle, indent=1)
         print(f"{len(joined)} judgements joined → {argv[4]}")
         return 0
+    if len(argv) == 3 and argv[1] == "run-corpus":
+        run(argv[2], corpus_universe())
+        return 0
     if len(argv) == 5 and argv[1] == "decide":
         report = json.load(open(argv[2], encoding="utf-8"))
         judgements = json.load(open(argv[3], encoding="utf-8"))
@@ -1187,6 +1519,26 @@ def main(argv):
         for line in sensitivity:
             print(f"  sensitivity: the decline rests on {line}")
         print(json.dumps(figures, indent=1))
+        return 0
+    if len(argv) == 5 and argv[1] == "decide-corpus":
+        report = json.load(open(argv[2], encoding="utf-8"))
+        judgements = json.load(open(argv[3], encoding="utf-8"))
+        kills = json.load(open(argv[4], encoding="utf-8")) if os.path.exists(argv[4]) else None
+        outcome, figures, sensitivity, beside = decide_corpus(report, judgements, kills)
+        print(decision_line(outcome, figures, kills))
+        for line in sensitivity:
+            print(f"  sensitivity: the decline rests on {line}")
+        print(f"beside: with the witness's first-run groups, N = {beside['with_witness']['N']} over "
+              f"{beside['with_witness']['repositories']} repositories; layout packages only, N = "
+              f"{beside['layout_only']['N']} over {beside['layout_only']['repositories']}; groups by kind "
+              f"{beside['by_kind']}; repositories counted by owner {beside['owners']}; same-owner same-name groups "
+              f"merged, N = {beside['owner_merged']['N']} over {beside['owner_merged']['owners']} owners")
+        print(f"beside: final verdicts on judged decision candidates {beside['verdicts']}; body disagrees "
+              f"{beside['body_disagrees']}")
+        for entry in report["probes"].get("R5", []):
+            print(f"R5 {entry['repo']}:{entry['path']}:{entry['line']} {entry['kind']} {entry['name']}: functions "
+                  f"{entry['functions']}, candidates {entry['candidates']}")
+        print(json.dumps(dict(figures, beside=beside), indent=1))
         return 0
     print(__doc__)
     return 2
