@@ -1,6 +1,6 @@
 // @producer-id SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968
 // @rows SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:125
-// @subject SwiftUMLStudio b8b1520 (HEAD on 2026-10-27)
+// @subject SwiftUMLStudio b8b1520, the local checkout on 2026-10-27 (origin/main was c6c82e3, 299 commits on)
 // @producer String+Extensions.swift:102 String.globPatternToRegex(), verbatim (doc comment dropped)
 // @argument `pattern`, bound by `let pattern = searchPattern.globPatternToRegex()` (isMatching), inlined
 // @drives the receiver

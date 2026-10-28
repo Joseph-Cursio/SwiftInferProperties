@@ -1,6 +1,6 @@
 // @producer-id SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936
 // @rows Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:244
-// @subject SwiftAssist 6974842 (HEAD on 2026-10-27; this file is unchanged since 12b0e90)
+// @subject SwiftAssist 6974842, the local checkout on 2026-10-27 and origin/main too (this file is unchanged since 12b0e90)
 // @producer FilesystemTools.swift:296 GlobTool.translate(glob:), verbatim
 // @argument `"^" + translated + "$"`, with `let translated = Self.translate(glob: pattern)`, inlined
 // @drives `glob`

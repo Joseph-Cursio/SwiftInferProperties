@@ -22,7 +22,7 @@ This doc reports that gate. Everything it rests on was committed in this order:
 
 ```
 DECISION: DECLINE (population)  N = 3 (bar: > 10)  population 3, all judged TRANSLATOR  stubbed 3 of 3
-in-domain refutations at HEAD: 0 (D4 0, D4x 0)  N_wide 3  N_escape 3  N_unmet 0  concentration 2 of 3 (SwiftUMLStudio)
+in-domain refutations, as checked out: 0 (D4 0, D4x 0)  N_wide 3  N_escape 3  N_unmet 0  concentration 2 of 3 (SwiftUMLStudio)
 ```
 
 ## The census
@@ -62,7 +62,7 @@ APIs that take `options: .regularExpression`.
 
 ## The population
 
-| producer | subject at HEAD | input | evidence | its caller | verdict |
+| producer | subject, as checked out | input | evidence | its caller | verdict |
 |---|---|---|---|---|---|
 | `GlobTool.translate(glob:)` | SwiftAssist `6974842` | the `glob` parameter | a per-character loop (`glob[`) | `"^" + translated + "$"` in a `do`/`catch` | TRANSLATOR, glob |
 | `String.globPatternToRegex()` | SwiftUMLStudio `b8b1520` | the receiver | a replacement (`replacingOccurrences`) | `isMatching(searchPattern:)`, `try?` | TRANSLATOR, glob, rule from its doc |
@@ -100,10 +100,10 @@ code.
   `translate(glob:)`. It reaches the pattern only through `translate`, so R7, translators the transform rule
   drops, is empty.
 
-## Precision at HEAD
+## Precision, as checked out
 
 Every judged TRANSLATOR was stubbed and run: four stubs for three producers. Each producer's body is
-byte-identical to its HEAD source, the stubs differing only in a shell type around `translate`.
+byte-identical to its source as checked out, the stubs differing only in a shell type around `translate`.
 
 **`globRegexPattern` was driven once through each String parameter**, with the other's representative
 recorded in the stub. `tokens` was fixed to `[:]`, because at the call site it is not a literal. So its own
@@ -122,7 +122,7 @@ after the harness controls PC1–PC9 held again.
 
 - **No in-domain refutation, no trap, no declined input, no EMPTY group.** Clause 2 holds, with refutations
   absent, but clause 1 has already failed.
-- **The balanced domain does on HEAD what #666's transcription said it does on the two witnesses.** Every D4
+- **The balanced domain does on the checked-out code what #666's transcription said it does on the two witnesses.** Every D4
   and D4x input compiles on all four stubs. Unfiltered, RAW2 rejects exactly its 32 inputs that contain `[`
   on the three stubs that drive a glob, and none on the `anchor` stub. All 32 lie outside the balanced domain,
   and each shrinks to the single input `[`.
@@ -150,7 +150,7 @@ The verdicts are in `refutation-judgements.json`.
 | 6 | COMBINATOR rows outnumber QUALIFYING rows | **0** against 3 | ❌ |
 | 7 | ≥ 1 AMBIGUOUS row | 2 | ✅ |
 | 8 | ≥ 80% of stubbed producers in N have no D4 group but EMPTY | 3 of 3 | ✅ |
-| 9 | 0 REAL in-domain groups at HEAD | 0 | ✅ |
+| 9 | 0 REAL in-domain groups at HEAD (here, as checked out) | 0 | ✅ |
 | 10 | R1 adds no more producers than the population | 0 | ✅ |
 | 11 | upstream SwiftFormat contributes 0 | 0 | ✅ |
 | 12 | ≥ 1 producer in R7 | **0** | ❌ |
@@ -159,7 +159,7 @@ The verdicts are in `refutation-judgements.json`.
 **10 of 13 held, but three of them were not blind.**
 
 - **Prediction 3** restates the disclosed dry run.
-- **Predictions 8 and 9** were settled for two of the three producers before the freeze. Their HEAD bodies are
+- **Predictions 8 and 9** were settled for two of the three producers before the freeze. Their checked-out bodies are
   byte-identical to the PC3 and PC4 control bodies, which ran then with D4 = D4x = 0. The third producer's
   stub, with `tokens = [:]`, reduces to the second behind an escaped literal prefix.
 
@@ -199,20 +199,35 @@ None of this enters N.
   - SwiftProjectLint's `DefaultIsolationDetector` builds `#"\b\#(name)\b"#` from a closure parameter that holds
     a Swift identifier, which cannot carry a regex metacharacter.
 
-## Found in review: a brace glob SwiftUMLStudio cannot compile
+## The checkouts against upstream
 
-This is outside the census. It is outside D4, because the stubs fix `tokens = [:]`, and it was not judged. It
-is listed so it can be filed.
+The census read each subject as checked out on 2026-10-27, which is the convention of every census here.
+After the run, the two subjects with producers were compared with their `origin/main`:
 
-**The defect.** `expandGlobs`' brace step (SwiftUMLStudio `b8b1520`, `Glob.swift:160-167`) escapes each brace
-option with the pre-fix class `[.+(){\\|]`, and it never expands the option's own wildcards. With the tokens it
-builds, `globRegexPattern` turns the well-formed glob `{*.swift,*.h}` into `^\/repo\/Sources\/(*\.swift|*\.h)$`.
-ICU rejects that: nothing to repeat. `expandGlobs`' `catch` logs the error and falls back to a literal path,
-so the glob matches nothing. This was verified by compiling HEAD's brace step and `globRegexPattern`
-together.
+- **SwiftAssist is current.** Its checkout `6974842` is `origin/main`.
+- **SwiftUMLStudio's checkout `b8b1520` (2026-10-13) is 299 commits behind** `origin/main` at `c6c82e3`
+  (2026-10-27).
 
-**The related defect #666 noted is still there.** `{a^b,c}` becomes `(a^b|c)`, which compiles and never
-matches `a^b`. `{a,b}.swift` and `{a.b,c}` are fine.
+**Run over `c6c82e3`, outside the frozen universe, the frozen pass finds the same two producers.**
+
+- **`globPatternToRegex`'s body is byte-identical.**
+- **`globRegexPattern` has lost its `tokens` parameter.** Brace expansion moved into its own step with
+  SwiftUMLStudio#110. Its body is now the checked-out one without the token loop, which is exactly what the
+  `tokens = [:]` stubs ran, so the precision results hold upstream as they stand.
+- **Upstream, N would be 2, not 3.** `globRegexPattern` now only delegates, and the frozen thin-wrapper merge
+  would apply. DECLINE either way.
+
+The other 40 checkouts were not compared with their origins.
+
+## Found in review, and already fixed upstream
+
+The review of this doc found that the checked-out `expandGlobs` turns the brace glob `{*.swift,*.h}` into
+`^\/repo\/Sources\/(*\.swift|*\.h)$`. ICU rejects that pattern, and the `catch` falls back to a literal path,
+so the glob matches nothing. This was verified by compiling `b8b1520`'s brace step and `globRegexPattern`
+together. It lies outside D4, because the stubs fix `tokens = [:]`.
+
+**It was not filed: SwiftUMLStudio#58 reported exactly this on 2026-10-10**, along with `{a^b,c}` selecting
+the wrong files. #110 fixed both on 2026-10-14. The census's stale checkout predates the fix.
 
 ## Disclosures and instrument limits
 
@@ -259,12 +274,12 @@ matches `a^b`. `{a,b}.swift` and `{a.b,c}` are fine.
     (4).
   - **The pattern matches escaping.** Translating into a regex is application code here, as escaping for
     output formats was (`replacement-chain-idempotence-census.md`).
-- **Nothing in the population is rejected in-domain at HEAD.** G2 was fixed in `8fc0cde`.
+- **Nothing in the population is rejected in-domain, as checked out or upstream.** G2 was fixed in `8fc0cde`.
   - **In the domain**, none of the three rejects an input under the balanced domain.
   - **On RAW2**, each rejects only inputs containing `[`, which its doc or the default glob rule calls
     malformed.
-  - **The bounds.** The claim is bounded by the domain and by the `tokens = [:]` representative. The brace
-    glob above shows what lies past both.
+  - **The bounds.** The claim is bounded by the domain and by the `tokens = [:]` representative. The
+    brace-glob defect past both was already reported and fixed upstream (SwiftUMLStudio#58).
 - **What would reopen it** is a corpus with more than ten translators into an acceptor's language. More glob
   tools would do, or generated-pattern code that does not write patterns as literals. The decline covers
   regex translators only. #668 is the same law with `XMLParser`, a separate population, and URL, UUID and

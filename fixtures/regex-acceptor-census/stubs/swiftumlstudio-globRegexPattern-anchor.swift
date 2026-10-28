@@ -1,6 +1,6 @@
 // @producer-id SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491
 // @rows SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:176
-// @subject SwiftUMLStudio b8b1520 (HEAD on 2026-10-27)
+// @subject SwiftUMLStudio b8b1520, the local checkout on 2026-10-27 (origin/main was c6c82e3, 299 commits on)
 // @producer Glob.swift:136 globRegexPattern(anchor:pattern:tokens:), verbatim (doc comment dropped), with its
 //           helper String.globPatternToRegex() (String+Extensions.swift:102) verbatim
 // @argument `regex`, bound by `let regex = globRegexPattern(anchor: anchor, pattern: pattern, tokens: tokens)`
