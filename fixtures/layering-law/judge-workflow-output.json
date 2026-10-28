@@ -1,0 +1,891 @@
+{
+ "calibration": {
+  "passed": true,
+  "answers": [
+   {
+    "verdicts": [
+     {
+      "label": "calibration/1",
+      "verdict": "LAYERING",
+      "reason": "Owner doc states longest-path layering (row = 1 + max row of any non-back-edge predecessor) over an activity graph whose joins have several predecessors; body runs Kahn over the DFS forward edges from the start node and takes the max, so it matches.",
+      "result_kind": "map",
+      "direction": "row strictly increases along each forward edge fromId -> toId (downward from the start node)",
+      "excluded": "nodes unreachable from the start node (given row 0 as a fallback); every node when the graph has no start node",
+      "expressible": true,
+      "body_disagrees": false
+     },
+     {
+      "label": "calibration/2",
+      "verdict": "LAYERING",
+      "reason": "Same owner contract: longest-path layering, row = 1 + max row of any non-back-edge predecessor. The body does not do this: it skips any edge whose target row is already <= the source row and never raises an assigned row (newRow > existing is unreachable after that guard), so rows are first-assignment in edge-list order. On r->a, r->b, a->b with r->b listed first, it gives row(a) == row(b).",
+      "result_kind": "map",
+      "direction": "row strictly increases along each non-back edge fromId -> toId (downward from the start node)",
+      "excluded": "nodes unreachable from the start node (given row 0 as a fallback); every node when the graph has no start node",
+      "expressible": true,
+      "body_disagrees": true
+     },
+     {
+      "label": "calibration/3",
+      "verdict": "LAYERING",
+      "reason": "Doc: groups components into rows so each row's components depend only on components in later rows. Component dependencies form a general digraph. Body takes the longest dependency-chain depth (chainDepth = 1 + deepest dependency, cycles cut) and puts each component at row maxDepth - depth, so from -> to always lands in a strictly later row. The depth cache is local to the call.",
+      "result_kind": "levels",
+      "direction": "each dependency edge from -> to goes from an earlier row to a strictly later row (dependents above, depended-on leaves at the bottom)",
+      "excluded": "none",
+      "expressible": true,
+      "body_disagrees": false
+     },
+     {
+      "label": "calibration/4",
+      "verdict": "NOT-LAYERING",
+      "reason": "reads a layering: it takes the rows computed elsewhere and centres the nodes horizontally within each row by sorted id. The columns carry no edge contract."
+     },
+     {
+      "label": "calibration/5",
+      "verdict": "NOT-LAYERING",
+      "reason": "Breadth-first distance from the root: each task's level is fixed the first time it is reached, so on r->a, r->b, a->b it gives level(a) == level(b). The doc only says 'level' and states no longest-path contract."
+     },
+     {
+      "label": "calibration/6",
+      "verdict": "ORDERING",
+      "reason": "Kahn topological sort: a flat sequence in which each task comes after everything it depends on."
+     },
+     {
+      "label": "calibration/7",
+      "verdict": "TREE-DEPTH",
+      "reason": "An outline where every heading has at most one parent; depth counts parent hops to the root, so depth(child) = depth(parent) + 1."
+     },
+     {
+      "label": "calibration/8",
+      "verdict": "LAYERING",
+      "reason": "Doc: the longest chain of dependencies below a target in a dependency graph that may have cycles. Body computes 1 + max depth over dependencies and cuts cycles through the visiting set. That is a longest-path depth, but it is remembered in a depthCache shared across calls.",
+      "result_kind": "per-node query",
+      "direction": "depth strictly decreases along each dependency edge t -> dependency (strictly increases from a dependency to its dependent)",
+      "excluded": "none",
+      "expressible": false,
+      "body_disagrees": false
+     }
+    ]
+   },
+   {
+    "verdicts": [
+     {
+      "label": "calibration/1",
+      "verdict": "LAYERING",
+      "reason": "Longest-path layering stated by the owner's doc: row = 1 + max row of any non-back-edge predecessor. The body runs Kahn's algorithm over forwardEdges, the edges a DFS from the start node keeps after dropping those that close a cycle, so each row is one plus the maximum over its predecessors. An activity graph has joins, so a node can have two or more predecessors.",
+      "result_kind": "map",
+      "direction": "row strictly increases from source to target (from -> to, downward) across every forward (non-back) edge",
+      "excluded": "nodes unreachable from graph.startNode (they get row 0 as a fallback, and no claim is made for edges touching them); every node when there is no start node",
+      "expressible": true,
+      "body_disagrees": false
+     },
+     {
+      "label": "calibration/2",
+      "verdict": "LAYERING",
+      "reason": "The owner's doc states a longest-path layering (row = 1 + max row of any non-back-edge predecessor). The body contradicts it: the guard `if let toRow = rows[edge.toId], toRow <= fromRow { continue }` means an assigned row is only ever revisited when it already exceeds fromRow, so `newRow > existing` can never be true and no row is ever raised. With edges in the order r->a, r->b, a->b, a and b both get row 1, which breaks the law on a->b.",
+      "result_kind": "map",
+      "direction": "row strictly increases from source to target (from -> to, downward) across non-back edges",
+      "excluded": "nodes unreachable from graph.startNode (row 0 fallback); every node when there is no start node",
+      "expressible": true,
+      "body_disagrees": true
+     },
+     {
+      "label": "calibration/3",
+      "verdict": "LAYERING",
+      "reason": "The doc states that each row's components depend only on components in later rows. chainDepth is a longest-path depth (1 + max over dependencies, leaves 0, a node already on the path counts as 0), and row = maxDepth - depth, so every off-cycle dependency edge goes from an earlier row to a strictly later one. A component can be depended on by several others, so the graph is a DAG, not a tree. The depth cache is local to one call.",
+      "result_kind": "levels",
+      "direction": "each dependency edge from -> to goes from an earlier row (dependent, top) to a strictly later row (depended-on, bottom)",
+      "excluded": "none",
+      "expressible": true,
+      "body_disagrees": false
+     },
+     {
+      "label": "calibration/4",
+      "verdict": "NOT-LAYERING",
+      "reason": "reads a layering: it takes rows computed by computeRows and assigns horizontal column offsets within each row, centred and in sorted id order. It makes no claim about edges."
+     },
+     {
+      "label": "calibration/5",
+      "verdict": "NOT-LAYERING",
+      "reason": "Breadth-first distance from root: each node keeps the level of the first time BFS reaches it. On r->a, r->b, a->b it gives level(a) == level(b). The doc's word 'level' is consistent with a BFS level and states no strict-increase-across-every-edge contract."
+     },
+     {
+      "label": "calibration/6",
+      "verdict": "ORDERING",
+      "reason": "Kahn's topological sort that returns a flat [TaskID] in which each task comes after everything it depends on."
+     },
+     {
+      "label": "calibration/7",
+      "verdict": "TREE-DEPTH",
+      "reason": "Each heading has at most one parent. depth counts the parent links up to the root, so depth(child) = depth(parent) + 1."
+     },
+     {
+      "label": "calibration/8",
+      "verdict": "LAYERING",
+      "reason": "The doc states the longest chain of dependencies below target, and the body computes 1 + max over dependencies (leaf 0, a node on the visiting stack counts as 0). Build targets can have multiple dependents, and the graph may have cycles. The law is not expressible because it depends on depthCache, which is shared across calls. Called alone with a fresh cache, it can break the law on an off-cycle edge: take t->e, t->d, a cycle d<->e, and e->h with a long chain below h. depth(d) called alone enters the cycle at d and gets a larger value than the one cached while computing depth(t), so depth(t) == depth(d).",
+      "result_kind": "per-node query",
+      "direction": "depth(t) > depth(d) for every off-cycle dependency edge t -> d (depth strictly decreases along the dependency edge)",
+      "excluded": "none",
+      "expressible": false,
+      "body_disagrees": false
+     }
+    ]
+   }
+  ]
+ },
+ "judgements": [
+  {
+   "label": "packet-01/1",
+   "A": {
+    "label": "packet-01/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Semantic-tree walker that recurses into a node's children and pops it from the dump path. It assigns no layer, and the depth involved is tree or syntax nesting used for debug printing."
+   },
+   "B": {
+    "label": "packet-01/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Tree-walker helper for a debug dump: descends into a semantic node's children and pops the path. It assigns no layer to any node, and the only depth involved is syntax nesting and indentation."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-01/2",
+   "A": {
+    "label": "packet-01/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Collects depth-0 base-case positions and their leaf wrappings for a donor subtree, returned as a map from position to LeafWrapping. It assigns no layer and has no contract along edges."
+   },
+   "B": {
+    "label": "packet-01/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Collects base-case positions and their leaf wrappings for a donor subtree, returning node-to-LeafWrapping. 'Depth-0' names a recursion level of the generator; no layer is assigned across graph edges."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-01/3",
+   "A": {
+    "label": "packet-01/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "Orders YAML top-level key/value pairs by the user's original layout, then the reserved key order, then alphabetically. There is no graph and no edge contract."
+   },
+   "B": {
+    "label": "packet-01/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "Orders the top-level YAML key/value pairs by the user's original order, then reserved keys, then alphabetically. There is no graph and no edges, so this is table-row ordering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-01/4",
+   "A": {
+    "label": "packet-01/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "Boolean structural comparison of two ChoiceTree skeletons. It assigns no layer or position."
+   },
+   "B": {
+    "label": "packet-01/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "A Boolean structural comparison of two choice-tree skeletons. It assigns no layer or position to nodes."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-01/5",
+   "A": {
+    "label": "packet-01/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Parity predicate on a min-max heap level computed elsewhere (a tree level). It reads a level and does not assign one."
+   },
+   "B": {
+    "label": "packet-01/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Min-max heap parity predicate on an integer level: it tests whether a level is even. It only reads a level number that is given to it and does not compute any layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-01/6",
+   "A": {
+    "label": "packet-01/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Graph colouring that gives every vertex a fresh colour. The contract is a proper colouring, not a layer that increases across edges."
+   },
+   "B": {
+    "label": "packet-01/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Graph colouring that gives each vertex its own colour. A colour is not a layer, and no direction across edges is claimed."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-01/7",
+   "A": {
+    "label": "packet-01/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Reads a layering: it takes the row layering computed elsewhere and spreads nodes horizontally within each row by id. The column has no contract across edges."
+   },
+   "B": {
+    "label": "packet-01/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "reads a layering: takes the rows already computed by the longest-path layering and assigns within-row horizontal column offsets, centred, in node-id order. Columns carry no edge-direction contract."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-01/8",
+   "A": {
+    "label": "packet-01/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds a reduced ChoiceGraph (controller topology) from a tree by forwarding to build. It assigns no layers itself."
+   },
+   "B": {
+    "label": "packet-01/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Forwards to build(from:omittingScalarSequenceElements:) to construct a ChoiceGraph. It returns a graph, not a layer or level assignment."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/1",
+   "A": {
+    "label": "packet-02/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Rewrites a choice-sequence entry list, wrapping depth-0 leaf entries in group/bind markers; assigns no layer to graph nodes."
+   },
+   "B": {
+    "label": "packet-02/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Rewrites a choice sequence by wrapping depth-0 leaf entries in group/bind markers; it assigns no layers to graph nodes."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/2",
+   "A": {
+    "label": "packet-02/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Collects YAML top-level keys into a [String: Node] dictionary for serialization; no graph or layering."
+   },
+   "B": {
+    "label": "packet-02/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Collects YAML top-level keys into a dictionary of serialized nodes. There is no graph and no layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/3",
+   "A": {
+    "label": "packet-02/3",
+    "verdict": "TREE-DEPTH",
+    "reason": "Counts ancestors along the single optional parent pointer (ChoiceGraphNode.parent, 'Nil only for the root'), so depth(child) = depth(parent) + 1 over a tree."
+   },
+   "B": {
+    "label": "packet-02/3",
+    "verdict": "TREE-DEPTH",
+    "reason": "Counts the hops up the single optional `parent` chain (ChoiceGraphNode.parent: Int?), so each node has at most one parent and depth(child) = depth(parent) + 1."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/4",
+   "A": {
+    "label": "packet-02/4",
+    "verdict": "TREE-DEPTH",
+    "reason": "Level of a binary-heap slot, floor(log2(offset+1)), is depth in the implicit binary tree where each node has one parent."
+   },
+   "B": {
+    "label": "packet-02/4",
+    "verdict": "TREE-DEPTH",
+    "reason": "Gives the level of a binary-heap offset as floor(log2(offset+1)). In the heap's implicit tree, children 2i+1 and 2i+2 get level(i)+1, and each node has one parent."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/5",
+   "A": {
+    "label": "packet-02/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds a recursion-depth-selecting generator from per-recursion-budget 'layers'; it constructs generators and does not assign layers to graph nodes."
+   },
+   "B": {
+    "label": "packet-02/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds a generator that picks a recursion depth from a set of per-depth generators ('layers'). Nodes of a directed graph get no layers."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/6",
+   "A": {
+    "label": "packet-02/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Upserts seed model tiers into a knowledge graph and returns the count; 'tiers' are data records, not a layering of graph nodes."
+   },
+   "B": {
+    "label": "packet-02/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Upserts seed model tiers into a knowledge graph and returns how many it wrote. 'Tiers' here are seed data, not graph layers."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/7",
+   "A": {
+    "label": "packet-02/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Concatenates two throughput summary arrays; no graph or layering."
+   },
+   "B": {
+    "label": "packet-02/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Joins the parent and self throughput summary arrays. No graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-02/8",
+   "A": {
+    "label": "packet-02/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Maps depth-collapse scopes to prioritized reduction transformations, using a distance-to-floor computed elsewhere; it assigns no layers itself."
+   },
+   "B": {
+    "label": "packet-02/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Maps depth-collapse scopes to prioritised transformations using distance-to-floor values computed elsewhere. It does not compute a layering itself."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/1",
+   "A": {
+    "label": "packet-03/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds a file-system tree of FileNode values by grouping path components; the depth argument is recursion position into path components, and no layer or depth is assigned or returned per node."
+   },
+   "B": {
+    "label": "packet-03/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds a file-system tree of FileNode from path components; the depth parameter is the recursion index into path components, and the result is sorted siblings, not an integer layer per node or a list of levels."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/2",
+   "A": {
+    "label": "packet-03/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Creates CALayer GroupLayer sublayers for shape groups in z-axis order; a CALayer, not a graph layering."
+   },
+   "B": {
+    "label": "packet-03/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Creates CALayer GroupLayer sublayers for shape groups in z-axis order; a CALayer, not a graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/3",
+   "A": {
+    "label": "packet-03/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "SwiftUI view builder for a symbol reference row; no graph or layering."
+   },
+   "B": {
+    "label": "packet-03/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "SwiftUI view builder for one symbol reference row; no graph or layer assignment."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/4",
+   "A": {
+    "label": "packet-03/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "ViewInspector accessor that unwraps a listRowBackground modifier into an inspectable view; no graph layering."
+   },
+   "B": {
+    "label": "packet-03/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "ViewInspector accessor that unwraps a listRowBackground modifier's view; no graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/5",
+   "A": {
+    "label": "packet-03/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Chooses the lookup scope a typealias in an extension ranks by (type scope vs own module scope); a scope choice, not a layer assignment over graph nodes."
+   },
+   "B": {
+    "label": "packet-03/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Chooses the lookup scope a typealias ranks by (type's scope or its own module's); a name-resolution rank, not a layer over graph edges."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/6",
+   "A": {
+    "label": "packet-03/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Classifies bind nodes as identical/divergent by comparing upstream bit patterns and downstream fingerprints across rebuilds; mutates classification state and assigns no layers."
+   },
+   "B": {
+    "label": "packet-03/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Classifies bind nodes as identical/divergent by comparing upstream bit patterns and downstream fingerprints across rebuilds; no layer or order is assigned."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/7",
+   "A": {
+    "label": "packet-03/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Depth-first traversal sequence from a start node, visiting each node once; DFS preorder is not a topological order and assigns no layers."
+   },
+   "B": {
+    "label": "packet-03/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Depth-first traversal sequence from a start node, visiting each node once; DFS preorder does not respect edges on a DAG (r->a, r->b, b->a can yield r,a,b), so it is neither a layering nor a topological ordering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-03/8",
+   "A": {
+    "label": "packet-03/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds a search IndexingRecord for a render node from its kind, title and abstract; no graph layering."
+   },
+   "B": {
+    "label": "packet-03/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds a search IndexingRecord (kind, title, summary) for a render node; no graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/1",
+   "A": {
+    "label": "packet-04/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Returns the indices adjacent to a node in an adjacency matrix (a neighbour query); assigns no layer or depth."
+   },
+   "B": {
+    "label": "packet-04/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Lists the neighbours of a node from an adjacency matrix column. It assigns no layer or level."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/2",
+   "A": {
+    "label": "packet-04/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Walks a function body's syntax and collects hop counts to `once` callees. The caller takes the minimum of those counts, so this is shortest-path reach distance, not a layering."
+   },
+   "B": {
+    "label": "packet-04/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Collects stored hop distances for the call sites in a syntax body: 0 for a direct once callee, otherwise the depth already recorded for that callee. It only reads values computed elsewhere, and its caller takes the minimum plus one, which is a shortest-hop distance, not a longest-path layer."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/3",
+   "A": {
+    "label": "packet-04/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "A pre-order depth-first traversal that reports each node to callbacks. Pre-order visiting is not meant to respect every edge, and the function assigns no layer or depth. The doc's 'nodes to sort' wording is left over from another function and is not this function's contract."
+   },
+   "B": {
+    "label": "packet-04/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "A pre-order depth-first traversal that reports first visits and duplicates through callbacks. It returns no layer, and its visit order is not a topological order: siblings are popped off the stack in reverse, so a successor can be visited before its predecessor."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/4",
+   "A": {
+    "label": "packet-04/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "Ranks coverage edges by discriminative power, a fail/pass hit-fraction ratio. That is a sort's rank, not a layering of a graph's nodes."
+   },
+   "B": {
+    "label": "packet-04/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "Ranks coverage edges by a discrimination-power statistic, a sort rank over edge IDs. No graph layering is involved."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/5",
+   "A": {
+    "label": "packet-04/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "A graph-colouring function (a deliberately buggy colourer that leaves isolated vertices at -1). Colours are not layers and need not increase along edges."
+   },
+   "B": {
+    "label": "packet-04/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Graph colouring (greedy colours, with isolated vertices left at -1). A colour is not a layer and is not ordered along edges."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/6",
+   "A": {
+    "label": "packet-04/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "A greedy graph colourer (deliberately buggy). It assigns colours 0 or 1 to avoid a neighbour's colour; no layer increases along edges."
+   },
+   "B": {
+    "label": "packet-04/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Graph colouring that avoids only the first coloured neighbour's colour. It assigns colours 0 or 1, not layers along edges."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/7",
+   "A": {
+    "label": "packet-04/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Its 'layers' are generators built for each container element count and cached by allowance. They are not graph nodes layered along edges."
+   },
+   "B": {
+    "label": "packet-04/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Its 'layers' are cached generators indexed by container element count, from which a count is then selected. It does not layer the nodes of a graph."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-04/8",
+   "A": {
+    "label": "packet-04/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Always returns nil: the null filter applies to no depth. Even the protocol's contract is a decoder container's nesting level, which is syntax-style nesting depth, not a layering of a digraph."
+   },
+   "B": {
+    "label": "packet-04/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "A constant nil 'next level' for a parsing nesting filter. That is syntax nesting depth, not a graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/1",
+   "A": {
+    "label": "packet-05/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "A pre-order depth-first traversal that reports each node and its parent to a callback; it assigns no layer and does not deduplicate, so it is a visitor, not a layering or a topological order."
+   },
+   "B": {
+    "label": "packet-05/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "A pre-order depth-first traversal that hands each visit (node, parent) to a callback. It assigns no layer: the signature has no depth parameter, despite the doc's mention of depth, and duplicates are revisited per path."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/2",
+   "A": {
+    "label": "packet-05/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Greedy graph colouring of an undirected graph. Colours are the smallest unused integer among neighbours, with no edge-direction or monotonicity contract."
+   },
+   "B": {
+    "label": "packet-05/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Greedy graph colouring of an undirected graph. Adjacent vertices get different colours, but colours need not increase along any edge direction."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/3",
+   "A": {
+    "label": "packet-05/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "A SwiftUI view builder that renders one symbol row; there is no graph computation."
+   },
+   "B": {
+    "label": "packet-05/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "A SwiftUI view builder for one row of a symbol search list; no graph computation."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/4",
+   "A": {
+    "label": "packet-05/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "A database lookup that fetches a skill node and its preferred model-tier node; there is no layering."
+   },
+   "B": {
+    "label": "packet-05/4",
+    "verdict": "NOT-LAYERING",
+    "reason": "Database lookup of a skill and its preferred model tier; no layering over a graph."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/5",
+   "A": {
+    "label": "packet-05/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Forwards to edgesGraph.depthFirstSearch and maps the references to nodes. Depth-first visit order with deduplication is a traversal order, not a topological sort or a layering."
+   },
+   "B": {
+    "label": "packet-05/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Returns the depth-first traversal order computed by edgesGraph.depthFirstSearch, mapped to nodes. A DFS visit order is neither a layering nor a topological ordering, and the function only forwards a traversal computed elsewhere."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/6",
+   "A": {
+    "label": "packet-05/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Checks whether a syntax node sits at file top level, which is syntax nesting and not a graph layering."
+   },
+   "B": {
+    "label": "packet-05/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Syntax-tree check of whether a declaration sits directly under the SourceFileSyntax, i.e. syntax nesting; no graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/7",
+   "A": {
+    "label": "packet-05/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "A depth-first traversal with callbacks for first visits and duplicate visits. It produces no layer, and its visit order is not a topological order."
+   },
+   "B": {
+    "label": "packet-05/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Depth-first traversal with onUnique/onDuplicate callbacks; it assigns no layer or level to nodes."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-05/8",
+   "A": {
+    "label": "packet-05/8",
+    "verdict": "LAYERING",
+    "reason": "The doc states that root targets have depth 0 and every dependency has a greater depth than the target that depends on it. The body computes the longest-path depth from the roots, propagating max(depth)+1 along dependency edges. The graph is a build-target DAG, where a dependency can have several dependents.",
+    "result_kind": "map",
+    "direction": "from a target to each of its dependencies: depth(dependency) > depth(target), so depth increases toward dependencies",
+    "excluded": "targets not reachable from a root target, meaning a target nothing else depends on (for example, targets only on a cycle with no root above them)",
+    "expressible": true,
+    "body_disagrees": false
+   },
+   "B": {
+    "label": "packet-05/8",
+    "verdict": "LAYERING",
+    "reason": "The doc says root targets have depth 0 and every dependency has a greater depth than the target itself. The body computes a longest-path depth (max over all paths from roots) on the target dependency DAG, where a shared dependency can have several dependents.",
+    "result_kind": "map",
+    "direction": "increases from a target to each of its dependencies (dependent -> dependency)",
+    "excluded": "targets not reachable from any root target (only possible inside a dependency cycle with no root above it); dependency IDs absent from buildTargets are still layered",
+    "expressible": true,
+    "body_disagrees": false
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/1",
+   "A": {
+    "label": "packet-06/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Serializes a top-level URI-encoded node (primitive/array/dictionary) into a string; no graph layering."
+   },
+   "B": {
+    "label": "packet-06/1",
+    "verdict": "NOT-LAYERING",
+    "reason": "Serializes a URI-encoded node tree into a string by style; no graph layering, depth or ordering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/2",
+   "A": {
+    "label": "packet-06/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Maps router tiers to seed knowledge-graph nodes with model id and context window; no edges or layers computed."
+   },
+   "B": {
+    "label": "packet-06/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Builds one ModelTier seed node per router tier with a model id and context window; no graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/3",
+   "A": {
+    "label": "packet-06/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "A DFS search returning the outermost nested bind node IDs below a bind's bound child; a filtered set, not a layer assignment or level list."
+   },
+   "B": {
+    "label": "packet-06/3",
+    "verdict": "NOT-LAYERING",
+    "reason": "Collects the outermost nested bind nodes below a bind's bound child by a stack search; returns a set of node IDs, not layers or an order."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/4",
+   "A": {
+    "label": "packet-06/4",
+    "verdict": "LAYERING",
+    "reason": "The owner's doc states a longest-path layering: row = 1 + max row of any non-back-edge predecessor. The body runs Kahn's algorithm over the DFS forward edges and takes the max, so a join lands below its longest branch. Activity graphs have joins and merges, so a node can have several predecessors.",
+    "result_kind": "map",
+    "direction": "row strictly increases from edge.fromId to edge.toId (downward), over non-back edges",
+    "excluded": "nodes unreachable from the start node (and every node when there is no start node) are put at row 0 and not constrained; DFS back edges are dropped",
+    "expressible": true,
+    "body_disagrees": false
+   },
+   "B": {
+    "label": "packet-06/4",
+    "verdict": "LAYERING",
+    "reason": "The owner's doc states longest-path layering: row = 1 + max row of any non-back-edge predecessor. The body runs Kahn's algorithm over the acyclic forward edges with rows[target] = max(rows[target], rows[source] + 1). Activity graphs have joins and merges, so a node can have several predecessors.",
+    "result_kind": "map",
+    "direction": "along each edge from fromId to toId (the row increases downward from the start node)",
+    "excluded": "nodes the start node does not reach (forced to row 0), and every node when the graph has no start node (all row 0); DFS back-edges are dropped, and those always lie on cycles",
+    "expressible": true,
+    "body_disagrees": false
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/5",
+   "A": {
+    "label": "packet-06/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Greedy graph colouring over the reverse vertex order; adjacent vertices get different colours, with no ordering along edges."
+   },
+   "B": {
+    "label": "packet-06/5",
+    "verdict": "NOT-LAYERING",
+    "reason": "Greedy vertex colouring of an undirected graph in reverse vertex order; colours are not layers along directed edges."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/6",
+   "A": {
+    "label": "packet-06/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Advances an inspection-chain state by one step and reports a descent when stepsSinceAnchor >= 2; a step counter along a call chain, not a graph layering."
+   },
+   "B": {
+    "label": "packet-06/6",
+    "verdict": "NOT-LAYERING",
+    "reason": "Advances an inspection-chain state by one step and reports a descent; this counts steps along a call chain, not graph layers."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/7",
+   "A": {
+    "label": "packet-06/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Returns the expected type components of a syntax node from its expectations; no graph layering."
+   },
+   "B": {
+    "label": "packet-06/7",
+    "verdict": "NOT-LAYERING",
+    "reason": "Returns the type components an expression is expected to produce; this is syntax analysis with no graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-06/8",
+   "A": {
+    "label": "packet-06/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Reads the listRowInsets modifier attribute from an inspected SwiftUI view; no graph layering."
+   },
+   "B": {
+    "label": "packet-06/8",
+    "verdict": "NOT-LAYERING",
+    "reason": "Reads the listRowInsets modifier attribute from an inspected SwiftUI view; no graph."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-07/1",
+   "A": {
+    "label": "packet-07/1",
+    "verdict": "LAYERING",
+    "reason": "The doc states that each row's components depend only on components in later rows. The body computes a longest-chain depth (1 + max over dependencies) with one cache local to the call, and places each node at row maxDepth - depth. For every off-cycle edge from->to, depth(from) >= 1 + depth(to), so row(from) < row(to). A component can be depended on by several others, so the graph is a general digraph.",
+    "result_kind": "levels",
+    "direction": "Along ComponentDependency from -> to (dependent -> dependency), the row index strictly increases: dependents sit in earlier (upper) rows, depended-on leaves in later rows.",
+    "excluded": "none (every model.components name is placed; dependency endpoints that are not components are not placed)",
+    "expressible": true,
+    "body_disagrees": false
+   },
+   "B": {
+    "label": "packet-07/1",
+    "verdict": "LAYERING",
+    "reason": "Doc contract: rows ordered so each row's components depend only on components in later rows. Body puts each component in row maxDepth - longestChainDepth, where depth is 1 + max over dependencies (a longest path). SPM target dependencies form a general digraph, so a target can have several dependents. Every off-cycle edge from->to goes from an earlier row to a strictly later one. A back edge sees a node still on the walk's path, which closes a cycle, so it is exempt.",
+    "result_kind": "levels",
+    "direction": "for each edge from->to (dependent -> dependency), row(from) < row(to): row index increases along edges, top = most dependent",
+    "excluded": "dependency endpoints that are not listed in model.components get no row",
+    "expressible": true,
+    "body_disagrees": false
+   },
+   "C": null
+  },
+  {
+   "label": "packet-07/2",
+   "A": {
+    "label": "packet-07/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "It upserts one ModelTier node's properties into a database. It computes no graph layering or level."
+   },
+   "B": {
+    "label": "packet-07/2",
+    "verdict": "NOT-LAYERING",
+    "reason": "Upserts a ModelTier node's properties into a database; no graph layering."
+   },
+   "C": null
+  },
+  {
+   "label": "packet-07/3",
+   "A": {
+    "label": "packet-07/3",
+    "verdict": "LAYERING",
+    "reason": "The doc gives the longest dependency-chain depth of start, and the body computes it as 1 + max over successors, with leaves at 0 and a node already on the path counting as 0. That is a longest-path depth over successors on a general dependency digraph.",
+    "result_kind": "per-node query",
+    "direction": "Along adjacency edges from -> to (dependent -> dependency), depth strictly decreases: depth(from) >= 1 + depth(to).",
+    "excluded": "none",
+    "expressible": false,
+    "body_disagrees": false
+   },
+   "B": {
+    "label": "packet-07/3",
+    "verdict": "LAYERING",
+    "reason": "Per-node longest-path depth over dependency edges: leaves (no dependencies) are 0, otherwise 1 + max over successors. A node on the current walk path counts 0, so cycles terminate. Across an off-cycle edge from->to, depth(from) > depth(to).",
+    "result_kind": "per-node query",
+    "direction": "for edge from->to (dependent -> dependency), depth(from) > depth(to); depth counts up from leaf dependencies",
+    "excluded": "none",
+    "expressible": false,
+    "body_disagrees": false
+   },
+   "C": null
+  }
+ ]
+}
