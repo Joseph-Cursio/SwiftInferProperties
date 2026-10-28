@@ -1,0 +1,41 @@
+--- a/Sources/SwiftPlantUMLFramework/Internal/PlantUMLContext.swift
++++ b/Sources/SwiftPlantUMLFramework/Internal/PlantUMLContext.swift
+@@ -7,6 +7,8 @@
+     var uniqueNameForElement: [SyntaxStructure: String] = [:]
+ 
+     var uniqElementNames: [String] = []
++    // decorated names (e.g. "aPublicStruct0") issued so far; never issued twice
++    var decoratedElementNames: [String] = []
+     var uniqElementAndTypes: [String: String] = [:]
+     // var style: [String: String] = [:]
+     private(set) var connections: [String] = []
+@@ -86,10 +88,15 @@
+         guard let name = item.fullName else { return "" }
+         var newName = name
+         let linkTypeKey = name + "LinkType"
+-        if uniqElementNames.contains(name) {
+-            newName += "\(index)"
+-            index += 1
+-            if item.kind == ElementKind.extension,
++        // true if an earlier element has this name (not merely a decorated alias spelled like it)
++        let nameSeen = uniqElementNames.contains(name)
++        if nameSeen || decoratedElementNames.contains(name) {
++            repeat {
++                newName = name + "\(index)"
++                index += 1
++            } while uniqElementNames.contains(newName) || decoratedElementNames.contains(newName)
++            decoratedElementNames.append(newName)
++            if item.kind == ElementKind.extension, nameSeen,
+                uniqueNameForElement.keys.first(where: { $0.name == name && $0.kind != .extension }) != nil
+             {
+                 var connect = "\(name) \(linkTypeDependency) \(newName)"
+@@ -99,7 +106,8 @@
+                 connect += " : \(configuration.relationships.dependency?.label ?? relationship)"
+                 extnConnections.append(connect) // "aPublicStruct <.. aPublicStruct0 : ext"
+             }
+-        } else {
++        }
++        if !nameSeen {
+             uniqElementNames.append(name)
+             uniqElementAndTypes[name] = relationship
+ 

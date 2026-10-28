@@ -244,7 +244,9 @@ never check either against the other.
   `resetIdCounter()` ("for testing") resets it. That is a setup call, so the row stays non-EXPRESSIBLE.
 - **Graffle's `Writer.id`** has the same no-separator shape. Its two callers pass `grad` and `shadow`.
 
-The reachable two are offered for upstream filing (scope §8); filing needs the user's approval. Results and
+The reachable two are offered for upstream filing (scope §8); filing needs the user's approval. Both now
+reproduce at upstream HEAD as tests with minimal patches, in `fixtures/uniquifier-law/upstream-repro/` (tracked in
+#691). So does the GRDB `resolvedNames` collision #669 had reasoned about without running it. Results and
 the agents' traces are in `fixtures/uniquifier-law/handcheck-2026-10-28.json`, from
 `fixtures/uniquifier-law/handcheck-workflow.js`.
 
