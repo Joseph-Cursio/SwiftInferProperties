@@ -1,0 +1,368 @@
+{
+ "domains": {
+  "D4": 11177,
+  "D4x": 31115,
+  "FREE3": 2955,
+  "RAW2": 273
+ },
+ "machine": {
+  "macos": "27.2",
+  "macos_build": "26B123",
+  "sdk": "27.0",
+  "swiftc": "Apple Swift version 6.4.1 (swift-6.4.1-RELEASE)"
+ },
+ "producers": {
+  "SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936": {
+   "status": "RUN",
+   "statuses": [
+    "RUN"
+   ],
+   "stubs": [
+    "fixtures/regex-acceptor-census/stubs/swiftassist-translate.swift"
+   ]
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968": {
+   "status": "RUN",
+   "statuses": [
+    "RUN"
+   ],
+   "stubs": [
+    "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globPatternToRegex.swift"
+   ]
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491": {
+   "status": "RUN",
+   "statuses": [
+    "RUN",
+    "RUN"
+   ],
+   "stubs": [
+    "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globRegexPattern-pattern.swift",
+    "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globRegexPattern-anchor.swift"
+   ]
+  }
+ },
+ "stubs": {
+  "fixtures/regex-acceptor-census/stubs/swiftassist-translate.swift": {
+   "producer_id": "SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936",
+   "results": {
+    "D4": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 11177,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "D4x": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 31115,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "FREE3": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 2955,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "RAW2": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {
+      "[": 32
+     },
+     "inputs": 273,
+     "rejected": [
+      "[",
+      "a[",
+      ".[",
+      "([",
+      ")[",
+      "+[",
+      "|[",
+      "^[",
+      "$[",
+      "{[",
+      "}[",
+      "\\[",
+      "*[",
+      "?[",
+      "/[",
+      "[a",
+      "[.",
+      "[(",
+      "[)",
+      "[+",
+      "[|",
+      "[^",
+      "[$",
+      "[{",
+      "[}",
+      "[\\",
+      "[*",
+      "[?",
+      "[/",
+      "[[",
+      "[]",
+      "]["
+     ],
+     "trapped": [],
+     "trapped_groups": {}
+    }
+   },
+   "rows": [
+    "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:244"
+   ],
+   "status": "RUN",
+   "typed": false
+  },
+  "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globPatternToRegex.swift": {
+   "producer_id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968",
+   "results": {
+    "D4": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 11177,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "D4x": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 31115,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "FREE3": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 2955,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "RAW2": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {
+      "[": 32
+     },
+     "inputs": 273,
+     "rejected": [
+      "[",
+      "a[",
+      ".[",
+      "([",
+      ")[",
+      "+[",
+      "|[",
+      "^[",
+      "$[",
+      "{[",
+      "}[",
+      "\\[",
+      "*[",
+      "?[",
+      "/[",
+      "[a",
+      "[.",
+      "[(",
+      "[)",
+      "[+",
+      "[|",
+      "[^",
+      "[$",
+      "[{",
+      "[}",
+      "[\\",
+      "[*",
+      "[?",
+      "[/",
+      "[[",
+      "[]",
+      "]["
+     ],
+     "trapped": [],
+     "trapped_groups": {}
+    }
+   },
+   "rows": [
+    "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:125"
+   ],
+   "status": "RUN",
+   "typed": false
+  },
+  "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globRegexPattern-anchor.swift": {
+   "producer_id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491",
+   "results": {
+    "D4": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 11177,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "D4x": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 31115,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "FREE3": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 2955,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "RAW2": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 273,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    }
+   },
+   "rows": [
+    "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:176"
+   ],
+   "status": "RUN",
+   "typed": false
+  },
+  "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globRegexPattern-pattern.swift": {
+   "producer_id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491",
+   "results": {
+    "D4": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 11177,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "D4x": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 31115,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "FREE3": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {},
+     "inputs": 2955,
+     "rejected": [],
+     "trapped": [],
+     "trapped_groups": {}
+    },
+    "RAW2": {
+     "capture_type": [],
+     "capture_type_groups": {},
+     "declined": [],
+     "dialect_gap": [],
+     "groups": {
+      "[": 32
+     },
+     "inputs": 273,
+     "rejected": [
+      "[",
+      "a[",
+      ".[",
+      "([",
+      ")[",
+      "+[",
+      "|[",
+      "^[",
+      "$[",
+      "{[",
+      "}[",
+      "\\[",
+      "*[",
+      "?[",
+      "/[",
+      "[a",
+      "[.",
+      "[(",
+      "[)",
+      "[+",
+      "[|",
+      "[^",
+      "[$",
+      "[{",
+      "[}",
+      "[\\",
+      "[*",
+      "[?",
+      "[/",
+      "[[",
+      "[]",
+      "]["
+     ],
+     "trapped": [],
+     "trapped_groups": {}
+    }
+   },
+   "rows": [
+    "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:176"
+   ],
+   "status": "RUN",
+   "typed": false
+  }
+ }
+}

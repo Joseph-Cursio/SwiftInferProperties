@@ -1,0 +1,110 @@
+{
+ "calibration": [
+  {
+   "domain": "D4",
+   "id": "CAL-1",
+   "judge_a": {
+    "pattern_reaching_acceptor": "^\\{a}$",
+    "reason": "I ruled out STUB first. In the stub (fixtures/regex-acceptor-census/stubs/controls/g2-111d8bd.swift), lines 13-20 and 25 match the real code at SwiftUMLStudio 111d8bd line for line: the producer at String+Extensions.swift:48-55 and the call site at :58-59, `try? NSRegularExpression(pattern: pattern, options: [])`. There is no wrapper text and the options are empty. Neither caller adds a guard on the input: SyntaxStructure+EmitterShared.swift:59 and DependencyGraphGenerator.swift:273 pass the configured exclude patterns straight to isMatching. EMPTY-PATTERN does not apply because the input is not empty. I traced the producer on \"{a}\". It wraps the input to \"^{a}$\". The escape regex's character class `[.+(){\\\\|]` contains `{` but not `}`, so only the opening brace gets a backslash, giving `^\\{a}$`. None of `?`, `**/`, `**` or `*` occur, so nothing else changes. I compiled the stub and ran it: accepts(\"^\\\\{a}$\") is false, because ICU rejects the bare `}`. The probe also shows \"a}\" and \"}\" are rejected for the same reason, while \"{a\" and \"{\" are accepted. Under the quoted rule, \"{a}\" is well-formed: its brace pair is balanced, and the only malformed case the rule names is an unbalanced bracket or brace. The doc comment promises to escape regex metacharacters, but the producer escapes `{` and misses its partner `}`. So a well-formed input yields a pattern the acceptor rejects, and the bug is the producer's.",
+    "rule_quoted": "From the producer's doc comment at SwiftUMLStudio 111d8bd (String+Extensions.swift:46-47): \"Translate this glob pattern into an anchored regular-expression string (`^\u2026$`): escape regex metacharacters, then expand `?`, `**/`, `**`, and `*`.\" Default glob rule otherwise: `[ ] { }` are glob syntax, a bracket or brace the glob leaves unbalanced is malformed, every other character is literal.",
+    "verdict": "REAL"
+   },
+   "judge_b": {
+    "pattern_reaching_acceptor": "^\\{a}$",
+    "reason": "The stub is faithful. Lines 13-20 of the stub match the producer at SwiftUMLStudio 111d8bd String+Extensions.swift:48-55 character for character. The acceptor at line 25, NSRegularExpression(pattern:options: []), matches the call site at line 59. Neither caller, SyntaxStructure+EmitterShared.swift:59 or DependencyGraphGenerator.swift:273, checks the pattern's content; they only nil-check it. The input \"{a}\" is well-formed under the rule: its brace is balanced and 'a' is a literal. The producer becomes \"^{a}$\". Its escape class [.+(){\\\\|] contains '{' but not '}', so the open brace is escaped and the close brace is not. The result, \"^\\{a}$\", is rejected by ICU (I compiled the stub and confirmed accepts() returns false). The bare \"}\" alone is also rejected (\"^}$\"). The producer escapes half of a metacharacter pair on a well-formed glob, so the bug is the producer's.",
+    "rule_quoted": "\"Translate this glob pattern into an anchored regular-expression string (`^\u2026$`): escape regex metacharacters, then expand `?`, `**/`, `**`, and `*`.\" Default glob rule otherwise: `[ ] { }` are glob syntax, a bracket or brace the glob leaves unbalanced is malformed, every other character is literal.",
+    "verdict": "REAL"
+   },
+   "minimal": "{a}",
+   "stub": "fixtures/regex-acceptor-census/stubs/controls/g2-111d8bd.swift",
+   "tiebreak": null,
+   "verdict": "REAL",
+   "want": "REAL"
+  },
+  {
+   "domain": "RAW2",
+   "id": "CAL-2",
+   "judge_a": {
+    "pattern_reaching_acceptor": "^[$",
+    "reason": "The stub is faithful. Its producer matches globPatternToRegex() at SwiftUMLStudio e36da59 (String+Extensions.swift:77-88) line for line. The acceptor in stub line 27, NSRegularExpression(pattern:options: []), matches the call site isMatching(searchPattern:) at line 99. No guard on the input's path to the call was omitted, because the function's only guard is the try? on that compile. The minimal input is not empty, so EMPTY-PATTERN does not apply. For the input \"[\", the escape class [.+(){}^$\\\\|] does not include `[`, so it passes through unchanged. The anchors are added, and none of the ?, ** or * replacements fire. The pattern that reaches the acceptor is \"^[$\". I compiled and ran the stub, which printed \"^[$\" and accepts == false. ICU rejects it because the `[` character class is never closed. The input is a lone, unbalanced `[`. The producer's recorded rule calls this exact case \"a malformed glob rather than a translation bug\", so the input is malformed under that rule.",
+    "rule_quoted": "\"`[` and `]` are deliberately still not escaped. They are glob syntax ... An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug\" (SwiftUMLStudio e36da59, String+Extensions.swift:64-68)",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "judge_b": {
+    "pattern_reaching_acceptor": "^[$",
+    "reason": "The stub matches the real code. I compared it with `git show e36da59` of SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift. The producer at lines 77-88 is copied exactly, and only the doc comment was dropped. The call site `isMatching(searchPattern:)` at lines 98-100 passes `searchPattern.globPatternToRegex()` straight to `NSRegularExpression(pattern: pattern, options: [])`, with no guard on the input first. That is the same acceptor and options as stub line 27, so the verdict is not STUB. The input is not empty, so it is not EMPTY-PATTERN. For the input \"[\", the escape class `[.+(){}^$\\\\|]` leaves `[` alone, and wrapping it gives \"^[$\". None of the `?`, `**/`, `**` or `*` rewrites apply, so the acceptor gets \"^[$\". ICU rejects that because the bracket is never closed. The input is a single unbalanced `[`. The producer's own rule calls exactly this a malformed glob, not a translation bug, so the input is MALFORMED and the verdict is not REAL.",
+    "rule_quoted": "\"`[` and `]` are deliberately still not escaped. They are glob syntax ... An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug\" (SwiftUMLStudio e36da59, String+Extensions.swift:63-68)",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "minimal": "[",
+   "stub": "fixtures/regex-acceptor-census/stubs/controls/glob-e36da59.swift",
+   "tiebreak": null,
+   "verdict": "MALFORMED-INPUT",
+   "want": "MALFORMED-INPUT"
+  }
+ ],
+ "calibration_passed": true,
+ "groups": [
+  {
+   "domain": "RAW2",
+   "judge_a": {
+    "pattern_reaching_acceptor": "^[$",
+    "reason": "The stub matches the real call site. I compared it with SwiftAssist at 6974842, Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift. translate(glob:) at :296 is copied verbatim into stub lines 13-40. The wrapper `\"^\" + translated + \"$\"` at :244 matches stub line 43. The acceptor at :244 is `NSRegularExpression(pattern:)` with no options, and stub line 45 compiles it the same way. The only guard on the path, `call.string(\"pattern\")` at :235, just rejects a missing argument, so leaving it out changes nothing for the input \"[\". Because the stub is faithful, the verdict is not STUB. The input is not empty, so it is not EMPTY-PATTERN. translate passes '[' through the default arm unchanged, so the acceptor receives \"^[$\". That is an unterminated character class, and NSRegularExpression throws on it. At the real call site the throw is caught at :245-246 and reported as \"glob: invalid pattern\". Under the recorded rule, `[...]` is the notation's bracket syntax and an unbalanced '[' is malformed. The minimal input \"[\" is exactly that: an opening bracket with no closing one. The verdict is MALFORMED-INPUT, not REAL.",
+    "rule_quoted": "Neither the doc comment nor the caller states a well-formedness rule, so the default glob rule applies: '[', ']', '{', '}' are syntax, a bracket or brace that the notation's own reading leaves unbalanced is malformed, and every other character is literal. The doc names `[...]` as the bracket syntax (FilesystemTools.swift:295, \"Translates a simple glob (`*`, `**`, `?`, `[...]`) into a regex.\"), and the body escapes '{' and '}' to literals, so in practice an unbalanced '[' or ']' is the malformed case.",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "judge_b": {
+    "pattern_reaching_acceptor": "^[$",
+    "reason": "The stub is faithful to the real call site. I checked it against SwiftAssist at 6974842, Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift. The acceptor is `NSRegularExpression(pattern:)` with no options, at :244 in the source and stub line 45. The wrapper is `\"^\" + translated + \"$\"` with `translated = Self.translate(glob: pattern)`, at :243-244 in the source and stub line 43. translate(glob:) at :296-321 is copied verbatim into stub lines 13-40. The only guard on the input's path is `call.string(\"pattern\")` at :236, which admits any string. So the STUB verdict does not apply. The minimal input is \"[\", which is not empty, so EMPTY-PATTERN does not apply either. translate leaves '[' unescaped because it falls to `default: result.append(char)`, so the pattern that reaches the acceptor is \"^[$\", an unterminated character class that NSRegularExpression rejects. Under the recorded rule, `[...]` is this notation's bracket syntax. A lone '[' is a bracket that the notation's own reading leaves unbalanced, so the input is malformed and REAL does not apply. The real caller handles the rejection: it catches the throw at :245-246 and returns \"glob: invalid pattern\".",
+    "rule_quoted": "Default glob rule, recorded by both judges: \"'[', ']', '{', '}' are syntax, a bracket or brace that the notation's own reading leaves unbalanced is malformed, and every other character is literal ... So in practice an unbalanced '[' or ']' is the malformed case.\" The notation's bracket syntax comes from the doc comment at FilesystemTools.swift:295: \"Translates a simple glob (`*`, `**`, `?`, `[...]`) into a regex.\"",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "minimal": "[",
+   "producer": "SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936",
+   "stub": "fixtures/regex-acceptor-census/stubs/swiftassist-translate.swift",
+   "tiebreak": null,
+   "verdict": "MALFORMED-INPUT"
+  },
+  {
+   "domain": "RAW2",
+   "judge_a": {
+    "pattern_reaching_acceptor": "^[$",
+    "reason": "This is not a STUB case. I compared the stub with SwiftUMLStudio at b8b1520, String+Extensions.swift:102-113 and :123-127, and they match. The function body is copied word for word. The acceptor is the same `NSRegularExpression(pattern:options: [])` that isMatching uses at :125. The input is passed in as the receiver, as `searchPattern.globPatternToRegex()` is at :124. No text is wrapped around the pattern, and isMatching checks nothing before the call. The rejected pattern is the producer's output for \"[\", worked out by hand. The escape class `[.+(){}^$\\\\|]` does not contain `[`, so the escaped string stays \"[\". Adding the anchors gives \"^[$\". None of the replacements for `?`, `**/`, `**` or `*` apply. ICU rejects \"^[$\" because the set is never closed. The minimal input is not empty, so this is not EMPTY-PATTERN. It is a single `[` with no closing `]`. The producer's own doc says an unbalanced `[` is a malformed glob and not a translation bug. So the input is malformed under the recorded rule, and the bug is not the producer's.",
+    "rule_quoted": "\"An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug\" (SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:91-92, doc comment of globPatternToRegex; corroborated by isMatching's doc: \"a malformed glob \u2014 an unbalanced `[`, say\")",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "judge_b": {
+    "pattern_reaching_acceptor": "^[$",
+    "reason": "The stub is faithful. Its globPatternToRegex body (stub lines 11-22) matches String+Extensions.swift:102-113 at SwiftUMLStudio b8b1520 line for line. Its acceptor, `try? NSRegularExpression(pattern: pattern, options: [])` (stub line 27), matches the guard in isMatching at :125: same initializer, same empty options. The input reaches the call site as the receiver, `searchPattern.globPatternToRegex()` at :124, with no guard on the way. For the input \"[\", the escape class `[.+(){}^$\\\\|]` does not include `[`, so `escaped` is \"[\". Wrapping gives \"^[$\". None of the `?`, `**/`, `**` or `*` replacements apply, so \"^[$\" is the pattern ICU sees. ICU rejects it because the character class is never closed. The input is not empty, so EMPTY-PATTERN does not apply. A lone \"[\" is exactly the unbalanced `[` that the producer's own doc calls a malformed glob rather than a translation bug, so the input is malformed under the recorded rule.",
+    "rule_quoted": "\"An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug\" (SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:91-92, doc comment of globPatternToRegex; line 88: \"`[` and `]` are deliberately still not escaped. They are glob syntax\"; isMatching's doc at :117-118 names \"a malformed glob \u2014 an unbalanced `[`, say\").",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "minimal": "[",
+   "producer": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968",
+   "stub": "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globPatternToRegex.swift",
+   "tiebreak": null,
+   "verdict": "MALFORMED-INPUT"
+  },
+  {
+   "domain": "RAW2",
+   "judge_a": {
+    "pattern_reaching_acceptor": "^\\/repo\\/Sources\\/[$",
+    "reason": "The stub matches the real call site. I checked it against SwiftUMLStudio at b8b1520. globRegexPattern (stub lines 28-38) is a verbatim copy of Glob.swift:136-146, and globPatternToRegex (stub lines 14-25) is a verbatim copy of String+Extensions.swift:102-113. The acceptor `NSRegularExpression(pattern:options: [])` is the one expandGlobs uses at Glob.swift:176. Nothing on the way to the call stops \"[\": pathContainsGlobSyntax (Glob.swift:12) treats '[' as glob syntax, the brace-token loop leaves it alone, parseCommaDelimitedList only trims, and splitGlobEntry hands back pattern \"[\" under the search-directory anchor. The minimal input is not empty. I ran the stub, and for \"[\" it produces the Swift literal \"^\\\\/repo\\\\/Sources\\\\/[$\" (regex ^\\/repo\\/Sources\\/[$). The acceptor rejects it because the character class is never closed. Under the rule, a lone '[' is an unbalanced bracket and therefore a malformed glob. So the rejection comes from malformed input, not from a bug in the producer.",
+    "rule_quoted": "Default glob rule (Judges A and B agree): \"'[', ']', '{', '}' are syntax. A bracket or brace that the notation's own reading leaves unbalanced is malformed, and every other character is literal.\" The callee's doc backs this up: \"An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug\" (String+Extensions.swift:91-92).",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "judge_b": {
+    "pattern_reaching_acceptor": "^\\/repo\\/Sources\\/[",
+    "reason": "Not STUB: the stub copies globRegexPattern (Glob.swift:136-146) and String.globPatternToRegex (String+Extensions.swift:102-113) verbatim. Its acceptor, NSRegularExpression(pattern:options: []), matches the real call at Glob.swift:176. The guards on the input's path don't exclude \"[\": pathContainsGlobSyntax (Glob.swift:11-12) is true for '[', and the fileExists check (Glob.swift:170) doesn't filter out a missing path. Not EMPTY-PATTERN: the input is \"[\", not the empty string. globPatternToRegex escapes `.+(){}^$\\|` but deliberately passes '[' through. dropFirst() removes the leading '^', and that also drops the '$' after '['? No: dropFirst removes only the '^'. The '$' stays, so the producer's own output is \"[$\". I compiled the anchor plus '[' with swift and NSRegularExpression rejected it. Under the recorded rule, '[' is glob syntax and a lone '[' is an unbalanced bracket, so the minimal input is a malformed glob. The callee's doc names exactly this case as a malformed glob, not a translation bug.",
+    "rule_quoted": "Default glob rule: '[', ']', '{', '}' are syntax. A bracket or brace that the notation's own reading leaves unbalanced is malformed, and every other character is literal. The anchor is a path, so every anchor string is well-formed. (Corroborated by the callee's doc, String+Extensions.swift:91-92: \"An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob\")",
+    "verdict": "MALFORMED-INPUT"
+   },
+   "minimal": "[",
+   "producer": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491",
+   "stub": "fixtures/regex-acceptor-census/stubs/swiftumlstudio-globRegexPattern-pattern.swift",
+   "tiebreak": null,
+   "verdict": "MALFORMED-INPUT"
+  }
+ ],
+ "protocol": "Scope \u00a74.3: each group (by minimal input) judged by two independent judges against the producer's well-formedness rule recorded in judgements.json, a third on disagreement (toward MALFORMED-INPUT); two calibration groups first, which must come out as #666 found them, else the arm stops."
+}

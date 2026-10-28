@@ -166,6 +166,11 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 #
 # The mutation check joined with it: a hung law's sweep kills only its own package's test helpers,
 # never another session's. No compiler, ~0.1s.
+#
+# #666's regex-acceptor census joined next: the pass's 52 controls (the two witnesses verbatim at
+# three revisions, the rest one synthetic source per rule) and the precision arm's four domain counts,
+# which are #666's own, its balanced-domain membership and its shrink rule. The harness's compiled
+# controls (`regex_acceptor_precision.py controls`) need swiftc and stay out of here. No compiler, ~0.15s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
@@ -174,6 +179,8 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 	@python3 scripts/predicate_outcome_reach.py --self-test
 	@python3 scripts/generator_diversity.py --self-test
 	@python3 scripts/mutation_check.py --self-test
+	@python3 scripts/regex_acceptor_census.py --self-test
+	@python3 scripts/regex_acceptor_precision.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \

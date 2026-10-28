@@ -1,0 +1,158 @@
+{
+ "census": "fixtures/regex-acceptor-census/census-2026-10-27.json",
+ "producers": {
+  "SwiftAssist:Sources/SwiftAssist/Agent/ToolCall.swift:367": {
+   "judge_a": {
+    "notation": "name (an argument key looked up in the tool call's arguments dictionary; returns the stored string value)",
+    "reason": "The declaration at Sources/SwiftAssist/Agent/ToolCall.swift:14 is the function the call site calls: `ToolCall.string(_:)`, called as `call.string(\"pattern\")` at FilesystemTools.swift:235. So it is a producer, and the first verdict does not apply. Its output, `pattern`, never becomes part of the regex pattern itself. It goes in as an argument to `Self.translate(glob: pattern)` (FilesystemTools.swift:243). The pattern is built from that function's result: `\"^\" + translated + \"$\"` (FilesystemTools.swift:244). Under rule 2, output passed as an argument to another function whose result is the pattern does not count as reaching. This is the only call site in the packet, so the function reaches no acceptor's pattern. The glob translation belongs to `translate(glob:)`, not to this function.",
+    "rows_reach": [
+     {
+      "call_site": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:244 (NSRegularExpression)",
+      "reaches": false
+     }
+    ],
+    "verdict": "NOT-REACHING",
+    "wellformed_rule": {
+     "source": "default (name: every string is well-formed)",
+     "syntax_chars": "none",
+     "text": "Not applicable: the verdict is NOT-REACHING, so no well-formedness rule is recorded. For reference, the input is a key name, and under the default every string is well-formed."
+    }
+   },
+   "judge_b": {
+    "notation": "name (a dictionary key); it returns the raw string value of a tool-call argument, here a glob",
+    "reason": "The call site is GlobTool.execute(call: ToolCall, ...), and `call.string(\"pattern\")` there resolves to ToolCall.string(_:) (Sources/SwiftAssist/Agent/ToolCall.swift:14), so this is the right producer. Its output is bound to `pattern` at FilesystemTools.swift:235. Line 243 then passes it only as an ARGUMENT, `Self.translate(glob: pattern)`. Line 244 builds the acceptor's pattern from translate's RESULT: `\"^\" + translated + \"$\"`. This function's output is never itself a '+' operand or interpolation segment of the pattern; it reaches only through another function, translate(glob:). By rule 2 that does not count as reaching, so on the only call site shown the output does not become part of the pattern.",
+    "rows_reach": [
+     {
+      "call_site": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:244 (NSRegularExpression)",
+      "reaches": false
+     }
+    ],
+    "verdict": "NOT-REACHING",
+    "wellformed_rule": {
+     "source": "default (name: every string is well-formed)",
+     "syntax_chars": "none",
+     "text": "Not applicable. The verdict is NOT-REACHING, so no translator rule is recorded. The input is a key name, and under the default every name string is well-formed."
+    }
+   },
+   "kind": "combinator",
+   "packet": "P001",
+   "tiebreak": null,
+   "verdict": "NOT-REACHING"
+  },
+  "SwiftAssist:Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:12936": {
+   "judge_a": {
+    "notation": "glob",
+    "reason": "The declaration is the function that is called: line 243 calls Self.translate(glob: pattern) inside GlobTool, where it is declared at line 296. Its output, `translated`, is a '+' operand of the NSRegularExpression pattern at line 244, so it reaches the pattern. The doc comment says it 'Translates a simple glob (`*`, `**`, `?`, `[...]`) into a regex', and the only production caller passes the user/model-supplied 'pattern' argument, described as a 'Glob pattern, e.g. Sources/**/*.swift'. The tests (FilesystemToolsTests.swift:257-259) pass globs as well. So the input is a glob, another notation, not regex fragments: this is a TRANSLATOR. The body escapes some regex metacharacters but passes '[' and ']' (and anything in the default arm, such as '-' and ']') through verbatim, so an unbalanced '[' in the glob produces an invalid regex. The caller catches that error as 'glob: invalid pattern'.",
+    "rows_reach": [
+     {
+      "call_site": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:244 NSRegularExpression(pattern: \"^\" + translated + \"$\")",
+      "reaches": true
+     }
+    ],
+    "verdict": "TRANSLATOR",
+    "wellformed_rule": {
+     "source": "default (glob); notation's constructs from FilesystemTools.swift:295 doc comment",
+     "syntax_chars": "[ ] { }  (wildcards * ** ? also syntax but never malformed; this body passes '[' and ']' through verbatim and escapes '{' '}')",
+     "text": "Neither the doc comment nor the caller states a well-formedness rule, so the default glob rule applies: '[', ']', '{', '}' are syntax, a bracket or brace that the notation's own reading leaves unbalanced is malformed, and every other character is literal. The doc says which constructs this notation reads (FilesystemTools.swift:295: \"Translates a simple glob (`*`, `**`, `?`, `[...]`) into a regex.\"), so `[...]` is its bracket syntax. The body's own reading treats '{' and '}' as literals: it escapes them at FilesystemTools.swift:314 (`case \".\", \"(\", \")\", \"+\", \"|\", \"^\", \"$\", \"{\", \"}\", \"\\\\\":`). So in practice an unbalanced '[' or ']' is the malformed case. '*' and '?' are wildcards and are always well-formed. The caller's GlobTool parameter description (FilesystemTools.swift:226) gives only examples ('Sources/**/*.swift'), not a rule."
+    }
+   },
+   "judge_b": {
+    "notation": "glob",
+    "reason": "This declaration (FilesystemTools.swift:296, GlobTool.translate(glob:)) is the only `translate(glob` declaration in SwiftAssist, and the caller's `Self.translate(glob:)` inside GlobTool resolves to it, so the producer is real. At :243-244 its output `translated` is a direct '+' operand of the NSRegularExpression pattern, so it reaches. The input is `pattern` from `call.string(\"pattern\")`, the model-supplied argument of the `glob` tool, which the descriptor (:226) calls a \"Glob pattern, e.g. 'Sources/**/*.swift'\". The doc comment calls the input \"a simple glob (`*`, `**`, `?`, `[...]`)\". The tests (FilesystemToolsTests.swift:257-259) pass globs such as \"*.swift\" and \"**/*.swift\". The input is therefore a glob, not regex, and the body escapes regex metacharacters (. ( ) + | ^ $ { } \\). No well-formedness rule is stated anywhere, so the glob default applies.",
+    "rows_reach": [
+     {
+      "call_site": "Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:244 \u2014 NSRegularExpression(pattern: \"^\" + translated + \"$\")",
+      "reaches": true
+     }
+    ],
+    "verdict": "TRANSLATOR",
+    "wellformed_rule": {
+     "source": "default (glob); no rule in the doc comment at Sources/SwiftAssist/Agent/Tools/FilesystemTools.swift:295, in the caller at :243, or in the tool descriptor at :226 (\"Glob pattern, e.g. 'Sources/**/*.swift' or 'Tests/*.swift'.\")",
+     "syntax_chars": "[ ] { } (default glob syntax); the doc also names the wildcards * ** ? and the bracket form [...]",
+     "text": "No stated rule; default applied for a glob: '[', ']', '{', '}' are syntax, and a bracket or brace the notation's own reading leaves unbalanced is malformed; every other character is literal. The doc comment (FilesystemTools.swift:295, \"Translates a simple glob (`*`, `**`, `?`, `[...]`) into a regex.\") names only `[...]` as a bracket form. The body escapes '{' and '}' to literals (line 27 of the packet's declaration, `case \".\", \"(\", \")\", \"+\", \"|\", \"^\", \"$\", \"{\", \"}\", \"\\\\\":`) and passes '[' and ']' through unchanged, so in practice an unbalanced '[' or ']' is the malformed case. NSRegularExpression throws on it, and the throw is caught at FilesystemTools.swift:245-246 as \"glob: invalid pattern\"."
+    }
+   },
+   "kind": "population",
+   "packet": "P003",
+   "tiebreak": null,
+   "verdict": "TRANSLATOR"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:4968": {
+   "judge_a": {
+    "notation": "glob",
+    "reason": "The declaration shown is the callee: line 124 calls searchPattern.globPatternToRegex() on a String, matching this String extension. Its output is bound to `pattern` and passed directly as NSRegularExpression's pattern at line 125, so it reaches the acceptor. The doc comment (line 71) says it will \"Translate this glob pattern into an anchored regular-expression string\", and the body escapes the regex metacharacters before expanding the glob wildcards. So the input is a glob, not regex, which makes this a TRANSLATOR. The doc states the well-formedness rule itself: [ and ] are glob syntax and pass through, and an unbalanced [ is a malformed glob (lines 91-92). The second caller, Glob.swift:140, applies dropFirst() and token replacement before its result reaches any acceptor, and it is not a call site in the packet.",
+    "rows_reach": [
+     {
+      "call_site": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:125 (NSRegularExpression(pattern: pattern), pattern = searchPattern.globPatternToRegex())",
+      "reaches": true
+     }
+    ],
+    "verdict": "TRANSLATOR",
+    "wellformed_rule": {
+     "source": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:91-92 (doc comment of globPatternToRegex); line 88 also says \"`[` and `]` are deliberately still not escaped. They are glob syntax\"",
+     "syntax_chars": "[ ] (glob character class; an unbalanced [ is malformed), plus ? * ** **/ as wildcards; every other character, including . + ( ) { } ^ $ \\ |, is glob-literal and escaped by the body",
+     "text": "An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug"
+    }
+   },
+   "judge_b": {
+    "notation": "glob",
+    "reason": "The one call site is String+Extensions.swift:125. There, `pattern` is bound at :124 to `searchPattern.globPatternToRegex()` and passed unchanged as NSRegularExpression's pattern, so the output reaches the acceptor and the function is not NOT-REACHING. The declaration shown at :102 is the only definition of globPatternToRegex in the repo (grep finds one), so it is the real callee. Both the doc comment and the callers say the input is glob notation, not regex. The doc opens \"Translate this glob pattern into an anchored regular-expression string\". The body escapes regex metacharacters, then expands ? and the ** and * forms. isMatching's doc (:115) says the search pattern is \"read as a glob\". The other caller, Glob.swift:140 (globRegexPattern), passes the glob part split off a path entry by splitGlobEntry. The input is another notation, so the verdict is TRANSLATOR. The doc states the well-formedness rule outright: an unbalanced `[` is a malformed glob, because `[` and `]` pass through as character-class syntax. It also calls `}`, `^` and `$` glob-literal, and the escape class `[.+(){}^$\\\\|]` escapes { and }, so braces are literal here, not syntax as in the default glob rule.",
+    "rows_reach": [
+     {
+      "call_site": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:125 (NSRegularExpression(pattern: pattern), pattern = searchPattern.globPatternToRegex() at :124)",
+      "reaches": true
+     }
+    ],
+    "verdict": "TRANSLATOR",
+    "wellformed_rule": {
+     "source": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/String+Extensions.swift:88-93 (doc comment of globPatternToRegex, declared at :102); corroborated by isMatching's doc at :117-118 (\"a malformed glob \u2014 an unbalanced `[`, say\")",
+     "syntax_chars": "* ? [ ] (plus the multi-character forms ** and **/); every other character is literal, including { } ^ $ . + ( ) | and \\",
+     "text": "\"An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug\". The doc also says `[` and `]` \"are glob syntax\", and that `}`, `^` and `$` are \"glob-literal\". So in this notation braces are literal, not syntax, and they are escaped."
+    }
+   },
+   "kind": "population",
+   "packet": "P004",
+   "tiebreak": null,
+   "verdict": "TRANSLATOR"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:6491": {
+   "judge_a": {
+    "notation": "glob (with a path prefix). `pattern` is the glob part of an include/exclude entry. The caller's splitGlobEntry produces it, and globPatternToRegex translates it. Its {\u2026} groups have already become `<<<n>>>` tokens. `anchor` is a literal filesystem path, and the doc says it is \"a literal path, so it is escaped whole\". `tokens` maps each `<<<n>>>` token to a regex alternation that the caller expandGlobs already built and escaped (Glob.swift:160-167). That is the only regex-language input, and it is substituted for the token, not the main input.",
+    "reason": "The declaration at Glob.swift:136 is the function the caller at Glob.swift:174 calls. Its return value is bound to `regex` and passed unchanged as the pattern to NSRegularExpression at Glob.swift:176, so it reaches the acceptor. The input is not regex. The doc calls `anchor` \"a literal path, so it is escaped whole\" (Glob.swift:133), and the body passes it to NSRegularExpression.escapedPattern. `pattern` is the glob rest of an entry from splitGlobEntry (Glob.swift:110: \"The `pattern` is the rest\"). The body translates it with globPatternToRegex, which the callee's doc describes as translating \"this glob pattern into an anchored regular-expression string\". Only the `tokens` values are already regex: they are alternations the caller built and escaped for brace groups. They are spliced in, and the main input still arrives in glob/path notation, so this is a TRANSLATOR, not a REGEX-INPUT combinator. Neither the producer's doc nor its caller states a well-formedness rule, so the default glob rule applies. The callee's doc supports it for an unbalanced '['.",
+    "rows_reach": [
+     {
+      "call_site": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:176 \u2014 NSRegularExpression(pattern: regex, options: []), where regex = globRegexPattern(anchor:pattern:tokens:) at Glob.swift:174",
+      "reaches": true
+     }
+    ],
+    "verdict": "TRANSLATOR",
+    "wellformed_rule": {
+     "source": "default (glob). Neither globRegexPattern's own doc (Glob.swift:131-135) nor its only caller, expandGlobs (Glob.swift:148-182), states a rule. The supporting quote for '[' is from the callee's doc at String+Extensions.swift:91-92, which is not the producer's doc and not a caller.",
+     "syntax_chars": "[ ] { } (plus the glob wildcards * ? and ** that globPatternToRegex expands, String+Extensions.swift:108-111)",
+     "text": "Default glob rule: '[', ']', '{', '}' are syntax. A bracket or brace that the notation's own reading leaves unbalanced is malformed, and every other character is literal. The anchor is a path, so every anchor string is well-formed. The doc of the callee globPatternToRegex supports this for '[': \"An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob\" (String+Extensions.swift:91-92). That doc also says '}' is \"glob-literal\" (String+Extensions.swift:76), and the callee escapes `{` and `}`. So a brace left over after expandGlobs replaces each `\\{[^}]+\\}` group with a token still compiles to valid regex. Only '[' / ']' pass through unescaped (String+Extensions.swift:103-107: `of: \"[.+(){}^$\\\\\\\\|]\"`)."
+    }
+   },
+   "judge_b": {
+    "notation": "glob (an include/exclude path entry, split into a literal-path anchor plus a glob pattern whose `{a,b}` groups were already replaced by `<<<n>>>` tokens; the `tokens` dictionary carries those groups pre-translated to regex alternations)",
+    "reason": "Call site: at Glob.swift:174 the sole caller, expandGlobs, binds `let regex = globRegexPattern(anchor:pattern:tokens:)`. At :176 that value is passed straight in as the `pattern:` of NSRegularExpression, so the output is the whole pattern and reaches it directly. It is not an argument to some other function. Where the inputs come from: `anchor` and `pattern` come from splitGlobEntry(entry, in: directory) at :173, and `entry` is a comma-separated item of the user's include/exclude glob list (FileCollector.swift:26-27 passes include/exclude.joined(separator: \",\")). `anchor` is a canonicalised literal directory path. `pattern` is the rest of the glob entry after the first component that has glob syntax, with `{\u2026}` groups already swapped for `<<<n>>>` tokens at :160-167. The `tokens` values are regex alternations that expandGlobs built and escaped itself. The declaration's doc agrees. It calls the input \"an entry split by `splitGlobEntry`\" and says the anchor is a literal path that is escaped whole, because reading it as glob syntax broke `Proj [old]`. The body escapes the anchor with NSRegularExpression.escapedPattern and translates the pattern with globPatternToRegex. So the main input is a glob plus a literal path, not regex. The token fragments are substituted in after the translator has already produced them, so the function is not a regex combinator. Verdict: TRANSLATOR from a glob. The doc and the caller state no well-formedness rule, so the default glob rule applies. The callee globPatternToRegex's doc agrees that an unbalanced `[` is a malformed glob.",
+    "rows_reach": [
+     {
+      "call_site": "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:176 (NSRegularExpression(pattern: regex, options: []))",
+      "reaches": true
+     }
+    ],
+    "verdict": "TRANSLATOR",
+    "wellformed_rule": {
+     "source": "default (glob); anchor is literal path per SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/Glob.swift:133",
+     "syntax_chars": "[ ] { }",
+     "text": "Default glob rule applied (neither globRegexPattern's doc comment at Glob.swift:131-135 nor its sole caller expandGlobs at Glob.swift:149-182 states a well-formedness rule): '[', ']', '{', '}' are syntax; a bracket or brace the glob's own reading leaves unbalanced is malformed; every other character is literal. The anchor half is a literal path (doc, Glob.swift:133: \"The anchor is a literal path, so it is escaped whole\"), so every anchor string is well-formed. Corroborating, though from a callee rather than the doc or a caller: String+Extensions.swift:91-92 says \"An *unbalanced* `[` still produces an invalid pattern, and that is a malformed glob rather than a translation bug\"."
+    }
+   },
+   "kind": "population",
+   "packet": "P002",
+   "tiebreak": null,
+   "verdict": "TRANSLATOR"
+  }
+ },
+ "protocol": "Scope \u00a75: two independent judges per packet (A reads the declaration and doc first; B starts from the call sites and callers), a third only where they disagree. Judges saw the packet and the two subject repositories, never the scope's \u00a77/\u00a78, the census JSON, the pass's outcome label or any count. Packets were built by `regex_acceptor_census.py packets` in seeded order (20261027)."
+}

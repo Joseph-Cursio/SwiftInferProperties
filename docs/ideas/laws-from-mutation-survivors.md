@@ -37,6 +37,7 @@ For each node or edge name in the input, `output.contains(name)`. A stronger for
 - **Evidence:** law G2 in [`roadtest-swiftumlstudio.md`](../measurements/roadtest-swiftumlstudio.md); no existing template can propose it.
 - **Measured:** **refutes the real code.** `globPatternToRegex("a[^\\")` is not a valid regex: brackets pass through unescaped by design, so an unbalanced one breaks the pattern. (`}` is now escaped; G2's `a}b` no longer refutes.) On bracket-free globs the law holds and kills 5 of 6 hand mutants, matching the hand-written suite.
 - **Closest existing:** none.
+- **2026-10-27 (#666): DECLINED on population, for regex translators.** A census frozen before it read any subject, beyond a disclosed dry run on the two witnesses, followed every regex acceptor call in 42 repositories back to what builds its pattern: 101 calls, 3 of them built by a producer. Two are #666's witnesses, this entry's `globPatternToRegex` and SwiftAssist's `GlobTool.translate(glob:)`. The third is `globRegexPattern`, which SwiftUMLStudio added after #666 was written; it delegates to the first and substitutes its own tokens. That is N = 3 against a bar of more than 10. Under the balanced-bracket domain #666 proposed, none of the three rejects an input at HEAD. See [`regex-acceptor-census.md`](../measurements/regex-acceptor-census.md). URL, UUID and JSON were dropped by #666's grep, and the XML arm is #668.
 
 ## 4. IDs and aliases never collide
 
