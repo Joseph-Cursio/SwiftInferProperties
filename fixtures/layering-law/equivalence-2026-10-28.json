@@ -1,0 +1,1360 @@
+[
+ {
+  "mutant": {
+   "id": "M001",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 50,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "-",
+   "replacement": "+",
+   "before": "        let columnCount = max(1, maxCol - minCol + 1)",
+   "after": "        let columnCount = max(1, maxCol + minCol + 1)"
+  },
+  "A": {
+   "id": "M001",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 1, action 2, action 3], edges: []) with no start node: computeRows puts all three in row 0, and computeColumns gives columns -1, 0, 1 (index - (3-1)/2), so minCol=-1 and maxCol=1. columnCount goes from max(1, 1-(-1)+1)=3 to max(1, 1+(-1)+1)=1, so totalWidth goes from 40+40+3*200=680 to 280.",
+   "law_witness": "",
+   "reason": "Line 50: columnCount feeds only totalWidth (line 52). When minCol == 0, maxCol+minCol+1 equals maxCol-minCol+1. minCol < 0 only when some row holds 3 or more nodes. The law never reads totalWidth, and rows and centerY are untouched."
+  },
+  "B": {
+   "id": "M001",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action id 0, action id 1, action id 2], edges: []). There is no start node, so all three nodes go to row 0 and get columns -1, 0, 1 (index - (3-1)/2), giving minCol = -1 and maxCol = 1. columnCount goes from max(1, 1-(-1)+1) = 3 to max(1, 1+(-1)+1) = 1, so totalWidth goes from 40+40+3*200 = 680 to 40+40+1*200 = 280. Node centres are unchanged.",
+   "law_witness": "",
+   "reason": "columnCount feeds only totalWidth (line 52). centerOrigin and centerX do not use it, and rows and centerY are untouched, so L1, L2 and L3 cannot see the change. The two formulas differ whenever minCol != 0, which happens when some row holds 3 or more nodes."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M002",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 50,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let columnCount = max(1, maxCol - minCol + 1)",
+   "after": "        let columnCount = max(1, maxCol - minCol - 1)"
+  },
+  "A": {
+   "id": "M002",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 1, action 2]) with no start node and no edges: both nodes land in row 0, with columns 0 and 1. columnCount goes from max(1, 1-0+1)=2 to max(1, 1-0-1)=1, so totalWidth goes from 480 to 280. With one node or none, both versions give 1.",
+   "law_witness": "",
+   "reason": "Line 50: columnCount is used only in totalWidth. The law checks rows and centerY, never the canvas width."
+  },
+  "B": {
+   "id": "M002",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action id 0, action id 1], edges: []). Both nodes are in row 0 with columns 0 and 1, so minCol = 0 and maxCol = 1. columnCount goes from 2 to max(1, 1-0-1) = 1, so totalWidth goes from 480 to 280.",
+   "law_witness": "",
+   "reason": "With d = maxCol - minCol >= 0, the original gives d+1 and the mutant gives max(1, d-1). They agree only when d = 0. The result reaches only totalWidth, never rows or centerY, so the law is blind to it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M003",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 52,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let totalWidth = leftMargin + rightMargin + Double(columnCount) * columnSpacing",
+   "after": "        let totalWidth = leftMargin - rightMargin + Double(columnCount) * columnSpacing"
+  },
+  "A": {
+   "id": "M003",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "Empty ActivityGraph(): columnCount=1, so totalWidth goes from 40+40+200=280 to 40-40+200=200. Any graph differs by 80.",
+   "law_witness": "",
+   "reason": "Line 52 changes only totalWidth, which the law does not check."
+  },
+  "B": {
+   "id": "M003",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph() (empty). columnCount = 1, so totalWidth goes from 40+40+200 = 280 to 40-40+200 = 200. Any graph shows the same -80 change.",
+   "law_witness": "",
+   "reason": "leftMargin - rightMargin = 0 instead of 80, so totalWidth always drops by 80. Only totalWidth changes; rows and centerY do not, so the law cannot see it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M005",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 52,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "        let totalWidth = leftMargin + rightMargin + Double(columnCount) * columnSpacing",
+   "after": "        let totalWidth = leftMargin + rightMargin + Double(columnCount) / columnSpacing"
+  },
+  "A": {
+   "id": "M005",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "Empty ActivityGraph(): totalWidth goes from 40+40+1*200=280 to 40+40+1/200=80.005.",
+   "law_witness": "",
+   "reason": "Line 52 changes only totalWidth. Node positions, rows and centerY are unaffected, so the law cannot see it."
+  },
+  "B": {
+   "id": "M005",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph() (empty). totalWidth goes from 80 + 1*200 = 280 to 80 + 1/200 = 80.005.",
+   "law_witness": "",
+   "reason": "Dividing instead of multiplying changes totalWidth for every input, because columnCount >= 1. Only the canvas width changes, so the law is blind to it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M006",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 53,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let totalHeight = topMargin + bottomMargin + Double(maxRow + 1) * rowSpacing",
+   "after": "        let totalHeight = topMargin - bottomMargin + Double(maxRow + 1) * rowSpacing"
+  },
+  "A": {
+   "id": "M006",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "Empty ActivityGraph(): maxRow=0, so totalHeight goes from 40+40+92=172 to 40-40+92=92. Any graph differs by 80.",
+   "law_witness": "",
+   "reason": "Line 53 changes only totalHeight. The law checks per-node centerY, not the canvas height."
+  },
+  "B": {
+   "id": "M006",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph() (empty). maxRow = 0, so totalHeight goes from 40+40+92 = 172 to 40-40+92 = 92.",
+   "law_witness": "",
+   "reason": "topMargin - bottomMargin = 0 instead of 80, so totalHeight always drops by 80. centerY uses topMargin directly, not totalHeight, so L2 is unaffected."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M008",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 53,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let totalHeight = topMargin + bottomMargin + Double(maxRow + 1) * rowSpacing",
+   "after": "        let totalHeight = topMargin + bottomMargin + Double(maxRow - 1) * rowSpacing"
+  },
+  "A": {
+   "id": "M008",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "Empty ActivityGraph(): maxRow=0, so totalHeight goes from 80+1*92=172 to 80+(-1)*92=-12. Any graph differs by 184.",
+   "law_witness": "",
+   "reason": "Line 53 changes only totalHeight, which the law never reads."
+  },
+  "B": {
+   "id": "M008",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph() (empty). maxRow = 0, so totalHeight goes from 80 + 1*92 = 172 to 80 + (-1)*92 = -12.",
+   "law_witness": "",
+   "reason": "(maxRow-1) instead of (maxRow+1) always lowers totalHeight by 184. Only totalHeight changes; rows and centerY do not, so the law cannot see it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M009",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 53,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "        let totalHeight = topMargin + bottomMargin + Double(maxRow + 1) * rowSpacing",
+   "after": "        let totalHeight = topMargin + bottomMargin + Double(maxRow + 1) / rowSpacing"
+  },
+  "A": {
+   "id": "M009",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "Empty ActivityGraph(): totalHeight goes from 80+1*92=172 to 80+1/92=80.01086956521739.",
+   "law_witness": "",
+   "reason": "Line 53 changes only totalHeight. Rows and centerY are untouched."
+  },
+  "B": {
+   "id": "M009",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "witness": "ActivityGraph() (empty). totalHeight goes from 172 to 80 + 1/92 = 80.01086956521739.",
+   "law_witness": "",
+   "reason": "Dividing by rowSpacing changes totalHeight for every input. totalHeight is not read by the centerY computation, so the law is blind to it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M010",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 55,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let centerOrigin = leftMargin + Double(-minCol) * columnSpacing + columnSpacing / 2",
+   "after": "        let centerOrigin = leftMargin - Double(-minCol) * columnSpacing + columnSpacing / 2"
+  },
+  "A": {
+   "id": "M010",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 1, action 2, action 3]) with no start node and no edges: all three are in row 0 with columns -1, 0, 1, so minCol=-1. centerOrigin goes from 40+200+100=340 to 40-200+100=-60. Node 1 (column -1) has centerX 140 before and -260 after. When minCol == 0 the term is 0.0 and nothing changes.",
+   "law_witness": "",
+   "reason": "Line 55: centerOrigin feeds only centerX (line 63). centerY and rows do not depend on it, so the layering law cannot see it."
+  },
+  "B": {
+   "id": "M010",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 0, action 1, action 2], edges: []): all in row 0 with columns -1, 0, 1, so minCol = -1. centerOrigin goes from 40+200+100 = 340 to 40-200+100 = -60. Node 0's centerX goes from 140 to -260 (node 1: 340 to -60; node 2: 540 to 140).",
+   "law_witness": "",
+   "reason": "The two formulas agree when minCol = 0, because Double(-0) * 200 = 0.0. They differ when minCol < 0, which needs a row with 3 or more nodes. Only centerX moves; rows and centerY are untouched, so L1 to L3 cannot see it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M011",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 55,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "        let centerOrigin = leftMargin + Double(-minCol) * columnSpacing + columnSpacing / 2",
+   "after": "        let centerOrigin = leftMargin + Double(-minCol) / columnSpacing + columnSpacing / 2"
+  },
+  "A": {
+   "id": "M011",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 1, action 2, action 3]) with no edges and no start node: minCol=-1, so centerOrigin goes from 340 to 40+1/200+100=140.005. Node 1 (column -1) has centerX 140 before and -59.995000000000005 after. When minCol == 0, 0.0/200 equals 0.0*200 and nothing changes.",
+   "law_witness": "",
+   "reason": "Line 55 affects only centerX. The law checks rows and centerY only."
+  },
+  "B": {
+   "id": "M011",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 0, action 1, action 2], edges: []): minCol = -1. centerOrigin goes from 340 to 40 + 1/200 + 100 = 140.005. Node 1's centerX goes from 340 to 140.005; node 0's goes from 140 to -59.995000000000005.",
+   "law_witness": "",
+   "reason": "Double(-minCol)/200 differs from Double(-minCol)*200 whenever minCol != 0. The change reaches only centerX, never rows or centerY."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M012",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 55,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let centerOrigin = leftMargin + Double(-minCol) * columnSpacing + columnSpacing / 2",
+   "after": "        let centerOrigin = leftMargin + Double(-minCol) * columnSpacing - columnSpacing / 2"
+  },
+  "A": {
+   "id": "M012",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [start 0]): centerOrigin goes from 40+0+100=140 to 40+0-100=-60, so the start node's centerX goes from 140 to -60. Every node shifts by -200.",
+   "law_witness": "",
+   "reason": "Line 55: a uniform horizontal shift of every centerX. centerY and rows are unchanged, so the law cannot see it."
+  },
+  "B": {
+   "id": "M012",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [start id 0]). centerX goes from 40 + 0 + 100 = 140 to 40 + 0 - 100 = -60.",
+   "law_witness": "",
+   "reason": "centerOrigin drops by 200 for every non-empty graph, so every node moves 200 to the left. The law reads only rows and centerY."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M013",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 55,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "/",
+   "replacement": "*",
+   "before": "        let centerOrigin = leftMargin + Double(-minCol) * columnSpacing + columnSpacing / 2",
+   "after": "        let centerOrigin = leftMargin + Double(-minCol) * columnSpacing + columnSpacing * 2"
+  },
+  "A": {
+   "id": "M013",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [start 0]): the start node's centerX goes from 40+100=140 to 40+400=440. Every node shifts by +300.",
+   "law_witness": "",
+   "reason": "Line 55: a uniform horizontal shift of centerX only. The law checks only vertical order and rows."
+  },
+  "B": {
+   "id": "M013",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [start id 0]). centerX goes from 140 to 40 + 0 + 400 = 440.",
+   "law_witness": "",
+   "reason": "columnSpacing*2 (400) replaces columnSpacing/2 (100), so every centerX shifts by +300. The law does not read centerX."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M014",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 58,
+   "function": "computeLayout",
+   "operator": "remove-side-effects",
+   "original": "positioned.reserveCapacity(graph.nodes.count)",
+   "replacement": "",
+   "before": "        positioned.reserveCapacity(graph.nodes.count)",
+   "after": "        "
+  },
+  "A": {
+   "id": "M014",
+   "verdict": "EQUIVALENT",
+   "changes": "none",
+   "law_reachable": false,
+   "witness": "",
+   "law_witness": "",
+   "reason": "Line 58: reserveCapacity only pre-allocates storage. The appends that follow produce the same array contents in the same order, so only performance changes."
+  },
+  "B": {
+   "id": "M014",
+   "verdict": "EQUIVALENT",
+   "changes": "none",
+   "law_reachable": false,
+   "witness": "",
+   "law_witness": "",
+   "reason": "reserveCapacity only pre-sizes the array. The appends that follow produce the same contents in the same order, so the change affects performance only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "EQUIVALENT",
+   "reach": false
+  },
+  "refutations": [
+   {
+    "refuted": false,
+    "evidence": "Not refuted: M014 is EQUIVALENT. changes: none. law_reachable: false.\n\nThe removed line is `positioned.reserveCapacity(graph.nodes.count)` at ActivitySVGRenderer.swift:58. `positioned` is a local `[PositionedActivityNode]` that starts as `[]`. A loop over `graph.nodes` then appends exactly one value per node, in order. Each value is computed only from `rows`, `columns`, `nodeSize(kind:)` and the layout constants. `reserveCapacity` changes only the array's storage capacity, never its count, elements or order. So the array passed as `ActivityLayout(nodes: positioned, ...)` holds the same elements with or without the call.\n\nNothing reads that capacity:\n- `totalWidth`, `totalHeight`, `title` and `edges` are computed before the call or apart from it, and never touch `positioned`.\n- A case-sensitive grep for \"capacity\" and \"withUnsafe\" over SwiftUMLBridge/Sources and Tests found nothing. Since grep was case-sensitive it would miss \"reserveCapacity\", so it does not show other call sites, but it does show no read of `.capacity` and no unsafe-pointer access.\n- `ActivityLayout` (Model/ActivityLayout.swift) is a plain struct of five stored fields (`nodes`, `edges`, `title`, `totalWidth`, `totalHeight`). Its `node(withId:)` uses `nodes.first(where:)`, which depends only on order and contents.\n- Array equality and iteration ignore capacity.\n\nSo for every input, from an empty graph to any graph with or without a start node, all fields of the layout and the rendered SVG are identical. The edit affects only allocation performance. The layering law cannot see it: L1 uses `computeRows`, which this edit does not touch, and L2 reads `centerY`, which is unchanged. L3 is about the component renderer and does not involve this function.",
+    "input": "No refuting input exists. Example tried: a graph with a start node and two actions (start -> A -> B). The original and the mutant return the same node array ([start, A, B], in order, with the same centerX/centerY/width/height) and the same totalWidth, totalHeight, title and edges. Only the array's reserved capacity can differ."
+   }
+  ]
+ },
+ {
+  "mutant": {
+   "id": "M015",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 63,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "            let centerXValue = centerOrigin + Double(column) * columnSpacing",
+   "after": "            let centerXValue = centerOrigin - Double(column) * columnSpacing"
+  },
+  "A": {
+   "id": "M015",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 1, action 2]) with no start node and no edges: both are in row 0 with columns 0 and 1, so minCol=0 and centerOrigin=140. Node 2 has centerX 140+200=340 before and 140-200=-60 after. Column-0 nodes are unchanged.",
+   "law_witness": "",
+   "reason": "Line 63 changes only centerX for nodes with a nonzero column. centerY (line 64) and rows are independent of it."
+  },
+  "B": {
+   "id": "M015",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 0, action 1], edges: []): row 0 with columns 0 and 1, so centerOrigin = 140. Node 1's centerX goes from 140 + 200 = 340 to 140 - 200 = -60.",
+   "law_witness": "",
+   "reason": "Any node in a nonzero column is mirrored about centerOrigin, which only changes centerX. rows and centerY (line 64) do not depend on column."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M016",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 63,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "            let centerXValue = centerOrigin + Double(column) * columnSpacing",
+   "after": "            let centerXValue = centerOrigin + Double(column) / columnSpacing"
+  },
+  "A": {
+   "id": "M016",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 1, action 2]) with no start node and no edges: node 2 (column 1) has centerX 340 before and 140+1/200=140.005 after.",
+   "law_witness": "",
+   "reason": "Line 63 changes only centerX. The law never reads x positions."
+  },
+  "B": {
+   "id": "M016",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [action 0, action 1], edges: []). Node 1 (column 1) has centerX going from 340 to 140 + 1/200 = 140.005.",
+   "law_witness": "",
+   "reason": "column/200 differs from column*200 for every nonzero column. Only centerX changes, so the law cannot see it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M019",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 64,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "            let centerYValue = topMargin + Double(row) * rowSpacing + height / 2 + 20",
+   "after": "            let centerYValue = topMargin + Double(row) * rowSpacing - height / 2 + 20"
+  },
+  "A": {
+   "id": "M019",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": false,
+   "witness": "Smallest input: ActivityGraph(nodes: [start 0]), whose centerY goes from 40+0+14+20=74 to 40+0-14+20=46. Flip example: ActivityGraph(nodes: [action 1, decision 2], edges: [1->2]) with no start node puts both nodes in row 0. Before, centerY(1)=82 and centerY(2)=90; after, they are 38 and 30, so the order across edge 1->2 reverses.",
+   "law_witness": "",
+   "reason": "Line 64: the mutant subtracts height/2 where the original added it, so each centerY drops by the node's own height (8 to 60, depending on kind). An edge between two same-row nodes of different heights can flip order, but such an edge is never covered by the law. Every covered edge (u reachable, v unable to reach u) is a DFS forward edge, so Kahn gives row(v) >= row(u)+1. The mutated gap is 92*dr - (hv-hu)/2 >= 92 - 26 = 66 > 0, so L2 holds. L1 and L3 are untouched."
+  },
+  "B": {
+   "id": "M019",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [start id 0]): centerY goes from 40+0+14+20 = 74 to 40+0-14+20 = 46. To show a flip, use ActivityGraph(nodes: [action id 0, end id 1], edges: [0->1]) with no start node, so both nodes are in row 0. Before: y(0) = 82 > y(1) = 74. After: y(0) = 38 < y(1) = 46, so the order across the edge flips.",
+   "law_witness": "",
+   "reason": "centerY changes by -height for each node, which is not uniform: heights are 28, 44, 60, 30 or 8. Flips happen only between endpoints in the same row, meaning nodes with no start node or nodes unreachable from start, all placed in row 0. Every law-covered edge (u reachable, v unable to reach u) is a DFS forward edge, and Kahn's algorithm gives it row(v) >= row(u)+1. Its centerY gap after the edit is >= 92 - |h_v - h_u|/2 >= 92 - 26 = 66 > 0, so L2 still holds, and L1 and L3 do not read this code."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M021",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 64,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "            let centerYValue = topMargin + Double(row) * rowSpacing + height / 2 + 20",
+   "after": "            let centerYValue = topMargin + Double(row) * rowSpacing + height / 2 - 20"
+  },
+  "A": {
+   "id": "M021",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-shift-uniform",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [start 0]): the start node's centerY goes from 40+0+14+20=74 to 40+0+14-20=34. Every node shifts by -40.",
+   "law_witness": "",
+   "reason": "Line 64: a constant -40 on every centerY. The values are exact small integers or half-integers, so every pairwise difference, and with it L2's ordering, is preserved exactly. Rows and the component layout are untouched."
+  },
+  "B": {
+   "id": "M021",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-shift-uniform",
+   "law_reachable": false,
+   "witness": "ActivityGraph(nodes: [start id 0]). centerY goes from 40+0+14+20 = 74 to 40+0+14-20 = 34.",
+   "law_witness": "",
+   "reason": "Every node's centerY moves by exactly -40. All operands are small integers, so the arithmetic is exact. Every centerY difference is unchanged, so L2 holds exactly as before; rows (L1) and component layout (L3) are untouched."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M043",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 195,
+   "function": "computeColumns",
+   "operator": "arithmetic",
+   "original": "-",
+   "replacement": "+",
+   "before": "                columns[identifier] = index - (count - 1) / 2",
+   "after": "                columns[identifier] = index + (count - 1) / 2"
+  },
+  "A": {
+   "id": "M043",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "ActivityGraph(nodes: [ActivityNode(id: 0, kind: .start, label: \"s\"), ActivityNode(id: 1, kind: .action, label: \"a\"), ActivityNode(id: 2, kind: .action, label: \"b\"), ActivityNode(id: 3, kind: .action, label: \"c\")], edges: [0->1, 0->2, 0->3]). Rows: start 0; a, b, c 1. Row 1 has count 3, so (count-1)/2 = 1. Original columns are start 0 and a/b/c -1, 0, 1, giving minCol -1, maxCol 1 and columnCount 3. Mutated columns are start 0 and a/b/c 1, 2, 3, giving minCol 0, maxCol 3 and columnCount 4. Start node centerX goes 340 -> 140, and a/b/c centerX goes 140/340/540 -> 340/540/740. totalWidth goes 680 -> 880. This is the smallest witness: 4 nodes are needed, since a row only differs when count >= 3 (for count <= 2, (count-1)/2 == 0) and a second row is needed to break the uniform shift.",
+   "reason": "computeColumns (line 195) feeds only centerX (line 63) and minCol/maxCol/totalWidth (lines 48-52). For count 1 or 2, (count-1)/2 is 0, so + and - agree. For count >= 3, the mutated row is shifted right by 2*((count-1)/2) relative to a row of count <= 2. That shift survives the global minCol normalisation whenever another row exists, so centerX and totalWidth change. Rows, centerY, width and height do not depend on columns. L1, L2 and L3 read only rows, centerY and the component layout, so the law cannot see this edit."
+  },
+  "B": {
+   "id": "M043",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "Graph with nodes id0 .start, id1 .action, id2 .action, id3 .action and one edge 0->1. computeRows gives row 0 to {0,2,3} (2 and 3 are unreachable, so they default to 0) and row 1 to {1}. Original columns: row 0 is -1,0,1 and row 1 is 0, so minCol=-1, maxCol=1, totalWidth=40+40+3*200=680, and centerX(0,1,2,3) = 140,340,340,540. Mutated columns: row 0 is 1,2,3 and row 1 is 0, so minCol=0, maxCol=3, totalWidth=880, and centerX(0,1,2,3) = 340,140,540,740. Node 1's centerX goes from 340 to 140 and totalWidth from 680 to 880.",
+   "reason": "computeColumns line 195 now uses index + (count-1)/2. That shifts a row by 2*((count-1)/2): no shift when a row has 1 or 2 nodes (Swift integer division gives 0), +2 when it has 3 or 4. computeLayout cancels a shift only when every row moves by the same amount, because centerX = leftMargin + (column - minCol)*columnSpacing + columnSpacing/2 and columnCount = maxCol - minCol + 1. Rows with 3 nodes and rows with 1 node shift by different amounts, so centerX and totalWidth change. The edit cannot reach the law. computeRows is untouched, so L1 sees the same rows. centerY = topMargin + row*rowSpacing + height/2 + 20 (line 64) does not read columns, so L2 is unaffected. L3 runs on ComponentSVGRenderer, which this code does not touch.",
+   "law_witness": ""
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M045",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift",
+   "line": 195,
+   "function": "computeColumns",
+   "operator": "arithmetic",
+   "original": "/",
+   "replacement": "*",
+   "before": "                columns[identifier] = index - (count - 1) / 2",
+   "after": "                columns[identifier] = index - (count - 1) * 2"
+  },
+  "A": {
+   "id": "M045",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "ActivityGraph(nodes: [ActivityNode(id: 0, kind: .start, label: \"s\"), ActivityNode(id: 1, kind: .action, label: \"a\"), ActivityNode(id: 2, kind: .action, label: \"b\")], edges: [0->1, 0->2]). Rows: start 0; a, b 1. Original columns are start 0 and a/b 0, 1, giving minCol 0, maxCol 1 and columnCount 2. Mutated columns are start 0 and a/b -2, -1 (index - (2-1)*2), giving minCol -2, maxCol 0 and columnCount 3. Start node centerX goes 140 -> 540; a/b stay at 140/340. totalWidth goes 480 -> 680. This is minimal: 2 nodes give either two rows of count 1 (column 0 in both versions) or one row of 2 (a uniform shift removed by minCol normalisation).",
+   "reason": "computeColumns (line 195) uses (count-1)*2 instead of integer (count-1)/2. Count 1 gives 0 in both versions, but count 2 gives 2 instead of 0. A row of count >= 2 is therefore offset differently from a count-1 row, and with two or more rows the minCol/maxCol normalisation (lines 48-55) no longer cancels it. centerX and totalWidth change. Columns never reach rows or centerY (line 64, which uses row and height only) or the component layout. L1, L2 and L3 test only row and centerY order, so the law cannot see this edit."
+  },
+  "B": {
+   "id": "M045",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "witness": "Graph with nodes id0 .start, id1 .action, id2 .action and one edge 0->1. Rows: {0,2} in row 0 (2 is unreachable, so it defaults to 0) and {1} in row 1. Original columns: row 0 is 0,1 and row 1 is 0, so minCol=0, maxCol=1, totalWidth=40+40+2*200=480, and centerX(0,1,2) = 140,140,340. Mutated columns: row 0 is index-2, giving -2,-1, and row 1 is 0, so minCol=-2, maxCol=0, totalWidth=680, centerOrigin=540, and centerX(0,1,2) = 140,540,340. Node 1's centerX goes from 140 to 540 and totalWidth from 480 to 680.",
+   "reason": "The mutated offset is (count-1)*2 instead of (count-1)/2. The two agree only when a row has 1 node. With 2 nodes the shift is -2 instead of 0. computeLayout normalises a uniform shift through minCol, but rows of different sizes shift by different amounts, so their relative columns change. That moves centerX and widens totalWidth. The edit cannot reach the law. Rows come from computeRows, which is unchanged, so L1 is unaffected. centerY (line 64) depends only on row and node height, never on column, so L2 is unaffected. L3 is about the component renderer, which this code does not touch.",
+   "law_witness": ""
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M048",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 68,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "            return boxes.reduce(0, +) + Double(boxes.count - 1) * horizontalGap",
+   "after": "            return boxes.reduce(0, +) - Double(boxes.count - 1) * horizontalGap"
+  },
+  "A": {
+   "id": "M048",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "Two components A and B (kind .library, no interfaces), no dependencies. Both have depth 0, so there is one row [A, B] and each box is 140 wide (\"\u00ablibrary\u00bb A\" is 11 chars * 7.5 + 20 = 102.5, which rounds up to minBoxWidth 140). The row width goes from 140+140+50 = 330 to 280-50 = 230, so totalWidth goes from 390 to 290. With more than one row, centerX also changes for the narrower rows. Example: A->C with B independent gives rows [[A],[B,C]], and A.centerX goes from 195 to 145.",
+   "reason": "Line 68 feeds only rowWidths. rowWidths sets canvasWidth (line 70) and the starting cursorX of each row (line 79), so it moves only totalWidth and centerX. cursorY, rowHeight, centerY and totalHeight (lines 74-89) never read rowWidths, so none of L1, L2 or L3 can see it. With one box per row, the count-1 term is 0 and nothing changes."
+  },
+  "B": {
+   "id": "M048",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "Components A and B (both .library, no interfaces, each box 140 wide), no dependencies, so one row [A, B]. rowWidth goes from 140+140+1*50 = 330 to 280-50 = 230, so totalWidth goes from 390 to 290. With A -> B and A -> C (rows [[A],[B,C]]), A.centerX also moves, from (390-140)/2+70 = 195 to (290-140)/2+70 = 145.",
+   "reason": "Line 68: for a row of n>=2 boxes, the gap term (n-1)*horizontalGap is subtracted instead of added. That changes rowWidths, which feeds canvasWidth (line 70) and each row's starting cursorX (line 79). With n=1 the gap term is 0, so nothing changes. centerY (line 83) and cursorY never read rowWidths, so L3 cannot see the edit, and L1/L2 are activity-only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M050",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 68,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "            return boxes.reduce(0, +) + Double(boxes.count - 1) * horizontalGap",
+   "after": "            return boxes.reduce(0, +) + Double(boxes.count - 1) / horizontalGap"
+  },
+  "A": {
+   "id": "M050",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "Two components A and B (.library, no interfaces), no dependencies, so one row of two 140-wide boxes. The row width goes from 330 to 280 + 1/50 = 280.02, so totalWidth goes from 390 to 340.02, and the SVG header width from 390 to 341. In multi-row inputs (A->C, B independent), A.centerX goes from 195 to 170.01.",
+   "reason": "Only rowWidths changes, and with it canvasWidth and each row's starting x (lines 70 and 79). The vertical placement (lines 74-89) never reads rowWidths, so centerY values, rows and totalHeight are unchanged and the layering law cannot see the edit."
+  },
+  "B": {
+   "id": "M050",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "Components A and B (no interfaces, width 140 each), no dependencies, one row [A, B]. rowWidth goes from 330 to 280 + 1/50 = 280.02, so totalWidth goes from 390 to 340.02. With rows of different lengths (A -> B, A -> C), A.centerX also changes.",
+   "reason": "Line 68: (n-1)/horizontalGap replaces (n-1)*horizontalGap. For a row of 2 or more, that changes rowWidths, and through them canvasWidth and the starting cursorX. A one-box row gives 0 either way. Vertical placement (lines 76-87) does not depend on rowWidths, so L3 is blind to it, and L1/L2 are activity-only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M051",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 70,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let canvasWidth = (rowWidths.max() ?? 0) + canvasMargin * 2",
+   "after": "        let canvasWidth = (rowWidths.max() ?? 0) - canvasMargin * 2"
+  },
+  "A": {
+   "id": "M051",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "One component A (.library, no interfaces), width 140. canvasWidth goes from 140+60 = 200 to 140-60 = 80, so totalWidth goes from 200 to 80. cursorX goes from (200-140)/2 = 30 to (80-140)/2 = -30, so A.centerX goes from 100 to 40. Every centerX shifts by -60.",
+   "reason": "canvasWidth is used only for totalWidth and for the starting cursorX at line 79. Every centerX moves left by 60 and totalWidth drops by 120. centerY (line 83) and canvasHeight never read canvasWidth, so L1, L2 and L3 are unaffected."
+  },
+  "B": {
+   "id": "M051",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "A single component A (.library, no interfaces, width 140), no dependencies: totalWidth goes from 200 to 80, and A.centerX from 100 to (80-140)/2+70 = 40. Even computeLayout(ComponentModel()) changes: totalWidth goes from 60 to -60.",
+   "reason": "Line 70: canvasWidth = max - 60 instead of max + 60. That changes totalWidth and every row's starting cursorX = (canvasWidth - rowWidth)/2, so every centerX moves by -60. centerY is computed from cursorY alone (lines 74, 83, 87), so L3 cannot see the edit, and L1/L2 are activity-only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M052",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 70,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "        let canvasWidth = (rowWidths.max() ?? 0) + canvasMargin * 2",
+   "after": "        let canvasWidth = (rowWidths.max() ?? 0) + canvasMargin / 2"
+  },
+  "A": {
+   "id": "M052",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "One component A (.library, no interfaces), width 140. canvasWidth goes from 200 to 140+15 = 155, so totalWidth goes from 200 to 155. cursorX goes from 30 to 7.5, so A.centerX goes from 100 to 77.5.",
+   "reason": "Only canvasWidth changes, which moves totalWidth and shifts every centerX by -22.5 through line 79. The vertical layout (cursorY, rowHeight, centerY, canvasHeight) does not depend on it, so the layering law cannot see the edit."
+  },
+  "B": {
+   "id": "M052",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "A single component A (no interfaces), no dependencies: totalWidth goes from 140+60 = 200 to 140+15 = 155, and A.centerX from 100 to 77.5. On an empty model, totalWidth goes from 60 to 15.",
+   "reason": "Line 70: canvasMargin/2 (15) replaces canvasMargin*2 (60). That changes totalWidth and shifts every centerX by -22.5 through line 79. Vertical layout does not read canvasWidth, so L3 is blind to it, and L1/L2 are activity-only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M057",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 83,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "                component.centerY = cursorY + rowHeight / 2",
+   "after": "                component.centerY = cursorY - rowHeight / 2"
+  },
+  "A": {
+   "id": "M057",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": true,
+   "law_witness": "Components A (.library, no interfaces) and B (.library, 14 provided interfaces, e.g. I0..I13), with dependency A -> B. A has depth 1, so it is in row 0 with height 40. B has depth 0, so it is in row 1 with height 30 + (14*16+10) + 10 = 274. Row 1 starts at cursorY = 30+40+70 = 140. Unmutated: A.centerY = 50 and B.centerY = 277, which passes. Mutated: A.centerY = 30-20 = 10 and B.centerY = 140-137 = 3, so centerY(to) = 3 < centerY(from) = 10 and L3 fails. With 13 interfaces, B = 11 > 10, so 14 is the minimum for adjacent rows.",
+   "witness": "One component A (.library, no interfaces): centerY goes from 30+20 = 50 to 30-20 = 10.",
+   "reason": "Line 83 now places each row at cursorY - rowHeight/2 instead of cursorY + rowHeight/2. The shift is -rowHeight, which differs per row, so it is not uniform. Between adjacent rows the gap becomes 1.5*h_i + 70 - h_{i+1}/2. That gap is negative once the lower row is taller than 3*h_i + 140, which takes 14 interfaces when the upper box is 40 tall."
+  },
+  "B": {
+   "id": "M057",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": true,
+   "law_witness": "Components A (.library, no interfaces, height 40) and B (.library, 14 short interfaces such as I0..I13, height 30+14*16+10+10 = 274), with dependency A -> B (B cannot reach A). Rows are [[A],[B]]. Original: A.centerY = 30+20 = 50 and B.centerY = 140+137 = 277, so L3 passes. Mutated: A.centerY = 30-20 = 10 and B.centerY = 140-137 = 3, so centerY(B) < centerY(A) and L3 fails.",
+   "witness": "A single component A (no interfaces): centerY goes from 30+40/2 = 50 to 30-20 = 10.",
+   "reason": "Line 83 subtracts rowHeight/2 from the row's top cursorY instead of adding it. The shift is -rowHeight per row, so it is not uniform across rows of different heights. Consecutive rows are separated only by h_prev + 70, so a tall lower row (h_to/2 > 1.5*h_from + 70) puts the dependency's centre above its dependent's."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": true
+  },
+  "refutations": [
+   {
+    "refuted": false,
+    "evidence": "M057 (ComponentSVGRenderer.swift:83, computeLayout): verdict NOT-EQUIVALENT. Changes: vertical-order-can-flip. law_reachable = true, and the claimed witness holds.\n\nWitness: Component A (.library, no interfaces) and Component B (.library, providedInterfaces I0..I13, so 14 of them), with ComponentDependency(from: \"A\", to: \"B\"). Both use the public inits in ComponentModel.swift lines 9, 29 and 42.\n\nSizes, from boxSize (lines 189-200):\n- A's height is headerHeight 30 + 0 + boxPadding 10 = 40.\n- B's interface area is 14*16 + 10 = 234, so B's height is 30 + 234 + 10 = 274.\n\nRows, from dependencyLevels:\n- adjacency is A -> [B].\n- chainDepth(B) = 0, because B has no outgoing edges. chainDepth(A) = 1 + 0 = 1.\n- maxDepth is 1, so A goes to row 0 and B to row 1. Levels are [[A],[B]].\n\nPlacement, from computeLayout:\n- cursorY starts at canvasMargin 30.\n- Row 0 has rowHeight 40. Original A.centerY = 30 + 20 = 50; mutated = 30 - 20 = 10.\n- cursorY becomes 30 + 40 + 70 = 140.\n- Row 1 has rowHeight 274. Original B.centerY = 140 + 137 = 277; mutated = 140 - 137 = 3.\n\nL3 covers the edge A -> B, because B cannot reach A. The original passes (277 > 50). The mutated code fails (3 < 10). I checked the arithmetic with python3.\n\nWith 13 interfaces, mutated B.centerY is 11, which is still above 10, so 14 interfaces is the minimum for two adjacent rows. That matches the readers' claim.\n\nThe edit also changes every centre y on its own: the mutated centre is the row's top minus half the row's height, instead of the top plus half. Even a single component with no interfaces moves from 50 to 10. Because each row moves by its own row height, the y order between rows can flip, as the witness shows. totalHeight and the x values do not change.",
+    "input": "ComponentModel(components: [Component(name: \"A\", kind: .library), Component(name: \"B\", kind: .library, providedInterfaces: [\"I0\",\"I1\",\"I2\",\"I3\",\"I4\",\"I5\",\"I6\",\"I7\",\"I8\",\"I9\",\"I10\",\"I11\",\"I12\",\"I13\"])], dependencies: [ComponentDependency(from: \"A\", to: \"B\")]) -> L3 edge A->B: centerY(A)=50 vs 10 mutated, centerY(B)=277 vs 3 mutated"
+   }
+  ]
+ },
+ {
+  "mutant": {
+   "id": "M058",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 83,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "/",
+   "replacement": "*",
+   "before": "                component.centerY = cursorY + rowHeight / 2",
+   "after": "                component.centerY = cursorY + rowHeight * 2"
+  },
+  "A": {
+   "id": "M058",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": true,
+   "law_witness": "Components A (.library, 7 provided interfaces) and B (.library, no interfaces), with dependency A -> B. A is in row 0 with height 30 + (7*16+10) + 10 = 162. B is in row 1 with height 40, and row 1 starts at cursorY = 30+162+70 = 262. Unmutated: A.centerY = 111 and B.centerY = 282, which passes. Mutated: A.centerY = 30 + 2*162 = 354 and B.centerY = 262 + 80 = 342, so centerY(to) = 342 < centerY(from) = 354 and L3 fails. With 6 interfaces, 326 > 322, so 7 is the minimum.",
+   "witness": "One component A (.library, no interfaces): centerY goes from 30+20 = 50 to 30+80 = 110.",
+   "reason": "Line 83 now places each row at cursorY + 2*rowHeight. Between adjacent rows the gap becomes 70 - h_i + 2*h_{i+1}. That gap is negative when the upper row is taller than 70 + 2*h_{i+1}, which takes at least 150 when the lower box is 40 tall, so 7 interfaces on the dependent component flip the order."
+  },
+  "B": {
+   "id": "M058",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": true,
+   "law_witness": "Components A (.library, 7 short interfaces, height 30+7*16+10+10 = 162) and B (.library, no interfaces, height 40), with dependency A -> B (B cannot reach A). Rows are [[A],[B]]. Original: A.centerY = 30+81 = 111 and B.centerY = 262+20 = 282, so L3 passes. Mutated: A.centerY = 30+324 = 354 and B.centerY = 262+80 = 342, so centerY(B) < centerY(A) and L3 fails.",
+   "witness": "A single component A (no interfaces): centerY goes from 30+40/2 = 50 to 30+80 = 110.",
+   "reason": "Line 83: rowHeight*2 replaces rowHeight/2, adding 1.5*rowHeight per row. That is non-uniform. A tall upper row pushes its centre below the next row's when h_from > 70 + 2*h_to, which flips the order across a dependency edge."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": true
+  },
+  "refutations": [
+   {
+    "refuted": false,
+    "evidence": "The witness holds. I recomputed it from the code in ComponentSVGRenderer.swift (computeLayout, lines 47-99; dependencyLevels and chainDepth; boxSize, lines 189-201) using the constants headerHeight=30, interfaceLineHeight=16, boxPadding=10, verticalGap=70 and canvasMargin=30.\n\nInput: ComponentModel(components: [Component(name: \"A\", kind: .library, providedInterfaces: 7 short names), Component(name: \"B\", kind: .library)], dependencies: [ComponentDependency(from: \"A\", to: \"B\")]). All of these public inits exist in Model/ComponentModel.swift.\n\nRows: chainDepth(B)=0 and chainDepth(A)=1+0=1, so maxDepth=1. dependencyLevels gives rows [[A],[B]]. B cannot reach A, so the edge A -> B is covered by L3.\n\nHeights (boxSize):\n- A: 30 + (7*16 + 10) + 10 = 162.\n- B: 30 + 0 + 10 = 40.\n\nRow 0 starts at cursorY=30, with rowHeight 162. Row 1 starts at cursorY = 30 + 162 + 70 = 262, with rowHeight 40.\n\nUnmutated (cursorY + rowHeight / 2): A.centerY = 30 + 81 = 111 and B.centerY = 262 + 20 = 282. Since 282 > 111, L3 passes.\n\nMutated (cursorY + rowHeight * 2): A.centerY = 30 + 324 = 354 and B.centerY = 262 + 80 = 342. Since 342 < 354, L3 fails.\n\nI checked the arithmetic with python3, which printed 162 40 111.0 354 282.0 342. With 6 interfaces A's height is 146, which gives 322 for A and 326 for B, so L3 still passes; 7 is the smallest count of short interfaces that fails it.\n\nThe mutant is NOT-EQUIVALENT. The edit changes each component's centerY: it now shifts by 1.5 \u00d7 that row's height, which differs from row to row, so the order across an edge can flip (vertical-order-can-flip). canvasHeight does not change, because it reads only cursorY. law_reachable = true, with this witness.",
+    "input": "Components A (.library, 7 provided interfaces with short names) and B (.library, no interfaces); dependency A -> B. The edge's centerY values, A then B: unmutated 111 then 282; mutated 354 then 342."
+   }
+  ]
+ },
+ {
+  "mutant": {
+   "id": "M059",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 85,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "                cursorX += component.width + horizontalGap",
+   "after": "                cursorX += component.width - horizontalGap"
+  },
+  "A": {
+   "id": "M059",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "Two components A and B (.library, no interfaces), no dependencies, so one row [A, B]; canvas 390, start cursorX 30. A.centerX = 100 in both versions. B's cursorX goes from 30+140+50 = 220 to 30+140-50 = 120, so B.centerX goes from 290 to 190. totalWidth is unchanged at 390.",
+   "reason": "Line 85 advances only cursorX within a row, so only the centerX of the second and later boxes in a row changes. cursorY, centerY, rows and the canvas size are untouched, so L1, L2 and L3, which look only at rows and centerY, cannot see it."
+  },
+  "B": {
+   "id": "M059",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "x-position",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "Components A and B (no interfaces, width 140 each), no dependencies, one row [A, B]. A.centerX stays 100. B.centerX goes from 30+190+70 = 290 to 30+90+70 = 190.",
+   "reason": "Line 85 advances cursorX by width - gap instead of width + gap, which moves the 2nd and later boxes in any row of 2 or more. cursorX feeds only centerX (line 82). centerY, rowWidths, canvas width and height are untouched, so L3 cannot see it, and L1/L2 are activity-only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M061",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 89,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "-",
+   "replacement": "+",
+   "before": "        let canvasHeight = cursorY - verticalGap + canvasMargin",
+   "after": "        let canvasHeight = cursorY + verticalGap + canvasMargin"
+  },
+  "A": {
+   "id": "M061",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "One component A (.library, no interfaces), height 40. After the loop cursorY = 30+40+70 = 140. totalHeight goes from 140-70+30 = 100 to 140+70+30 = 240, and the SVG header height from 100 to 240.",
+   "reason": "canvasHeight (line 89) is computed after the loop and feeds only totalHeight. No centerY or row reads it, so the layering law cannot see the edit."
+  },
+  "B": {
+   "id": "M061",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "A single component A (no interfaces): cursorY ends at 30+40+70 = 140, so totalHeight goes from 140-70+30 = 100 to 140+70+30 = 240. On an empty model, it goes from -10 to 130.",
+   "reason": "Line 89 only computes canvasHeight (totalHeight), now always 2*verticalGap = 140 larger. It runs after every centerY is assigned, so no position changes and L3 cannot see it. L1/L2 are activity-only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M062",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 89,
+   "function": "computeLayout",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let canvasHeight = cursorY - verticalGap + canvasMargin",
+   "after": "        let canvasHeight = cursorY - verticalGap - canvasMargin"
+  },
+  "A": {
+   "id": "M062",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "One component A (.library, no interfaces). cursorY after the loop is 140, and totalHeight goes from 140-70+30 = 100 to 140-70-30 = 40.",
+   "reason": "Only totalHeight changes, by -60. canvasHeight is computed after every centerY is assigned and nothing in the layout reads it, so L1, L2 and L3 are unaffected."
+  },
+  "B": {
+   "id": "M062",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "canvas-or-total-size",
+   "law_reachable": false,
+   "law_witness": "",
+   "witness": "A single component A (no interfaces): totalHeight goes from 140-70+30 = 100 to 140-70-30 = 40. On an empty model, it goes from -10 to -70.",
+   "reason": "Line 89: canvasHeight is now always 2*canvasMargin = 60 smaller. Only totalHeight is affected, after all centres are placed, so L3 cannot see it, and L1/L2 are activity-only."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M078",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 178,
+   "function": "chainDepth",
+   "operator": "remove-side-effects",
+   "original": "onPath.remove(step.name)",
+   "replacement": "",
+   "before": "            onPath.remove(step.name)",
+   "after": "            "
+  },
+  "A": {
+   "id": "M078",
+   "verdict": "EQUIVALENT",
+   "changes": "none",
+   "law_reachable": false,
+   "law_witness": "",
+   "reason": "onPath is local to one chainDepth call and is read in only one place, enter(_:) at line 157, and enter checks cache[name] first at line 156. The deleted line 178 removes a target from onPath just after the walk finishes it, and line 180 then always sets cache[step.name] = depth. Nothing removes cache entries. With the mutation, onPath holds the targets currently on the path plus targets this call has already finished, and every finished target is in cache. A later enter of a finished target therefore returns the cached depth at line 156 and never reaches the onPath check. For every target not yet finished, onPath.contains gives the same answer as in the original code. All enter results are the same, so depthCache, dependencyLevels' rows, every centerX/centerY/width/height and the canvas size are unchanged for every ComponentModel. The only change is that the set can stay larger. L1, L2 and L3 cannot see this edit because no output value changes."
+  },
+  "B": {
+   "id": "M078",
+   "verdict": "EQUIVALENT",
+   "changes": "none",
+   "law_reachable": false,
+   "reason": "In chainDepth, onPath is a local Set that only enter(_:) reads, at line 157 (`if onPath.contains(name) { return 0 }`). That check runs after the cache check at line 156 (`if let cached = cache[name] { return cached }`). Every node removed from the path at line 177 is written to the cache at line 180 (`cache[step.name] = depth`) before anything else runs. So a finished node that the mutant leaves in onPath is always answered from the cache first, and the stale onPath entry is never consulted. A node can't be pushed twice, because enter only pushes names that are neither cached nor on the path. Nothing else changes either: the cache gets the same depth for every node, and the return values are the same. onPath is thrown away when the call returns at line 181, and each call to chainDepth from dependencyLevels starts with an empty onPath. dependencyLevels therefore returns the same rows, and computeLayout produces the same centres, sizes and canvas for every ComponentModel.",
+   "law_witness": "None. The edit changes no output, so L3 sees the same component centerY values as on unmutated code. L1 and L2 are about the activity renderer, which this function does not touch."
+  },
+  "C": null,
+  "final": {
+   "verdict": "EQUIVALENT",
+   "reach": false
+  },
+  "refutations": [
+   {
+    "refuted": false,
+    "evidence": "I could not refute it. M078 is EQUIVALENT. Changes: none. law_reachable: false.\n\nThe mutant deletes `onPath.remove(step.name)` in `chainDepth` (ComponentSVGRenderer.swift, line 178), so a target stays in `onPath` after its walk has finished. That set is only read in `enter(_:)`, and only after the cache has been checked: `if let cached = cache[name] { return cached }` comes before `if onPath.contains(name) { return 0 }`.\n\nThe line right after the deleted one, `cache[step.name] = depth`, runs on the same path every time a step is popped. So any name that stays in `onPath` after the mutation already has a cache entry. When `enter` meets that name again it returns the cached depth and never reaches the `onPath` check, exactly as the original code does.\n\nNothing else reads `onPath`. It is a local, so it is rebuilt empty on every call. The cache is only ever added to, never cleared or changed by anything else. `chainDepth` is private and its only caller is `dependencyLevels`.\n\nSo for every model, every depth comes out the same, and with it `dependencyLevels`' rows, every component's centre x/y, width and height, the canvas size and the SVG. Because no row or centre y changes, L3 sees the same values as the original and cannot fail. L1 and L2 are about the activity renderer, which this function does not touch. The only effect is extra memory for the larger set, which does not count as observable here."
+   }
+  ]
+ },
+ {
+  "mutant": {
+   "id": "M083",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 191,
+   "function": "boxSize",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "        var maxLabel = Double(headerString.count) * charWidth",
+   "after": "        var maxLabel = Double(headerString.count) / charWidth"
+  },
+  "A": {
+   "id": "M083",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "width-or-height",
+   "law_reachable": false,
+   "witness": "ComponentModel(components: [Component(name: \"Main\", kind: .executable)]), no dependencies. The header \"\u00abexecutable\u00bb Main\" has 17 characters. Before: maxLabel = 17*7.5 = 127.5, so width = max(147.5, 140) = 147.5. After: maxLabel = 17/7.5 = 2.2667, so width = max(22.27, 140) = 140. totalWidth goes 207.5 -> 200 and centerX goes 103.75 -> 100.",
+   "law_witness": "",
+   "reason": "boxSize line 191 sets only the header's share of maxLabel, which feeds only `width` (line 195). In computeLayout, width feeds only rowWidths, canvasWidth and centerX (lines 65-85). centerY comes from cursorY and rowHeight, which are built from heights alone (lines 76-87), and the rows come from dependencyLevels, which never reads a size. So L1, L2 and L3 see nothing: the edit changes no row and no centerY."
+  },
+  "B": {
+   "id": "M083",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "width-or-height",
+   "law_reachable": false,
+   "witness": "One component name \"abcd\", kind .executable, no interfaces, no dependencies. The header \"\u00abexecutable\u00bb abcd\" is 17 characters. Before: maxLabel = 17*7.5 = 127.5, so width = max(147.5, 140) = 147.5. After: maxLabel = 17/7.5 = 2.27, so width = 140. centerX goes from 103.75 to 100, and totalWidth goes from 207.5 to 200.",
+   "law_witness": "",
+   "reason": "The edit only shrinks the header term of maxLabel (count/7.5 instead of count*7.5). The interface terms in the loop are unchanged. maxLabel only feeds width, and width only feeds centerX, rowWidths and canvasWidth (lines 65-85). Height, rows and centerY do not depend on it, so L1, L2 and L3 (which look at rows and centerY only) cannot see the change."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M085",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 195,
+   "function": "boxSize",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let width = max(maxLabel + boxPadding * 2, minBoxWidth)",
+   "after": "        let width = max(maxLabel - boxPadding * 2, minBoxWidth)"
+  },
+  "A": {
+   "id": "M085",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "width-or-height",
+   "law_reachable": false,
+   "witness": "A single Component(name: \"Main\", kind: .executable), no interfaces (a 17-character header, so maxLabel = 127.5). Width before: max(127.5+20, 140) = 147.5. After: max(127.5-20, 140) = 140. totalWidth goes 207.5 -> 200 and centerX goes 103.75 -> 100.",
+   "law_witness": "",
+   "reason": "The edit changes only `width` (line 195), and only when maxLabel > 120. Width reaches only rowWidths, canvasWidth and centerX. Height, the rows and every centerY are untouched, so L1, L2 and L3 cannot see it."
+  },
+  "B": {
+   "id": "M085",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "width-or-height",
+   "law_reachable": false,
+   "witness": "One component name \"abcd\", kind .executable, no interfaces. maxLabel = 127.5. Before: width = max(127.5+20, 140) = 147.5. After: width = max(127.5-20, 140) = 140. centerX goes from 103.75 to 100, and totalWidth from 207.5 to 200.",
+   "law_witness": "",
+   "reason": "Line 195's width now subtracts the padding. width only drives the x placement and the canvas width. computeLayout's cursorY and centerY use only heights, and the rows come from dependencyLevels, which is independent of size. So the layering law cannot observe the change."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M086",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 195,
+   "function": "boxSize",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "        let width = max(maxLabel + boxPadding * 2, minBoxWidth)",
+   "after": "        let width = max(maxLabel + boxPadding / 2, minBoxWidth)"
+  },
+  "A": {
+   "id": "M086",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "width-or-height",
+   "law_reachable": false,
+   "witness": "A single Component(name: \"Main\", kind: .executable), no interfaces (maxLabel = 127.5). Width before: max(127.5+20, 140) = 147.5. After: max(127.5+5, 140) = 140. totalWidth goes 207.5 -> 200 and centerX goes 103.75 -> 100.",
+   "law_witness": "",
+   "reason": "The edit changes only `width` (line 195), whenever maxLabel > 120. Width does not reach rows, height or centerY, so no layering check can see it."
+  },
+  "B": {
+   "id": "M086",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "width-or-height",
+   "law_reachable": false,
+   "witness": "One component name \"abcd\", kind .executable, no interfaces. maxLabel = 127.5. Before: width = 147.5. After: width = max(127.5+5, 140) = 140. centerX goes from 103.75 to 100, and totalWidth from 207.5 to 200.",
+   "law_witness": "",
+   "reason": "The padding term becomes boxPadding/2 = 5 instead of 20. This changes width only, and therefore centerX and canvas width. It does not touch height, rows or centerY, so L1, L2 and L3 cannot see it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M087",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 197,
+   "function": "boxSize",
+   "operator": "swap-ternary",
+   "original": " 0\n            : Double(component.providedInterfaces.count) * interfaceLineHeight + boxPadding",
+   "replacement": " Double(component.providedInterfaces.count) * interfaceLineHeight + boxPadding : 0",
+   "before": "            ? 0\n            : Double(component.providedInterfaces.count) * interfaceLineHeight + boxPadding",
+   "after": "            ? Double(component.providedInterfaces.count) * interfaceLineHeight + boxPadding : 0"
+  },
+  "A": {
+   "id": "M087",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "A single Component(name: \"A\", kind: .library), no interfaces. Before: interfaceArea = 0, height 40, centerY 50, totalHeight 100. After: interfaceArea = 0*16+10 = 10, height 50, centerY 55, totalHeight 110. A component with one interface instead goes from height 66 to 40 (centerY 63 -> 50).",
+   "law_witness": "",
+   "reason": "Swapping the branches gives an empty component an interface area of 10 (n = 0) and a non-empty one an area of 0. Every height stays positive (50 or 40). Rows do not change: dependencyLevels never reads sizes. Between consecutive rows centerY grows by h_r/2 + 70 + h_{r+1}/2 > 0, so a 'to' in a later row keeps a strictly larger centerY. L3 holds, and L1 and L2 (the activity renderer) are untouched."
+  },
+  "B": {
+   "id": "M087",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "One component \"A\", kind .library, no interfaces. Before: interfaceArea = 0, so height = 40 and centerY = 30 + 20 = 50. After: interfaceArea = 0*16 + 10 = 10, so height = 50 and centerY = 55. totalHeight goes from 100 to 110. With one interface, height goes from 66 to 40.",
+   "law_witness": "",
+   "reason": "Swapping the ternary arms changes box heights, which then change rowHeight, centerY and the canvas height. Every height stays positive: it is 50 with no interfaces and 40 otherwise. Adjacent rows therefore keep centerY(r+1) - centerY(r) = h_r/2 + 70 + h_{r+1}/2 > 0. The rows from dependencyLevels are unchanged, so no edge's vertical order can flip, and L3 cannot fail. L1 and L2 concern the activity renderer, which this edit does not touch."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M088",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 198,
+   "function": "boxSize",
+   "operator": "arithmetic",
+   "original": "*",
+   "replacement": "/",
+   "before": "            : Double(component.providedInterfaces.count) * interfaceLineHeight + boxPadding",
+   "after": "            : Double(component.providedInterfaces.count) / interfaceLineHeight + boxPadding"
+  },
+  "A": {
+   "id": "M088",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "A single Component(name: \"A\", kind: .library, providedInterfaces: [\"P\"]). Before: interfaceArea = 1*16+10 = 26, height 66, centerY 63, totalHeight 126. After: interfaceArea = 1/16+10 = 10.0625, height 50.0625, centerY 55.03125, totalHeight 110.0625.",
+   "law_witness": "",
+   "reason": "The edit changes height only for components that have interfaces. The new height n/16+50 is still positive, and the rows are unchanged, so every row-to-row centerY step (h_r/2 + 70 + h_{r+1}/2) stays positive and no dependency edge flips. L3 holds, and L1 and L2 are in another renderer."
+  },
+  "B": {
+   "id": "M088",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "One component \"A\" with providedInterfaces [\"I\"]. Before: interfaceArea = 1*16 + 10 = 26, so height = 66 and centerY = 63. After: interfaceArea = 1/16 + 10 = 10.0625, so height = 50.0625 and centerY = 55.03125.",
+   "law_witness": "",
+   "reason": "The edit only changes the height of boxes that have interfaces. Those heights stay positive (40 + n/16 + 10). Row heights stay at least 0, so centerY stays strictly increasing in row index. dependencyLevels is unchanged, so every edge keeps the same vertical order, and L3 holds wherever it held before."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M089",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 198,
+   "function": "boxSize",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "            : Double(component.providedInterfaces.count) * interfaceLineHeight + boxPadding",
+   "after": "            : Double(component.providedInterfaces.count) * interfaceLineHeight - boxPadding"
+  },
+  "A": {
+   "id": "M089",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "A single Component(name: \"A\", kind: .library, providedInterfaces: [\"P\"]). Before: interfaceArea 26, height 66, centerY 63, totalHeight 126. After: interfaceArea 1*16-10 = 6, height 46, centerY 53, totalHeight 106.",
+   "law_witness": "",
+   "reason": "For n >= 1 interfaces the height becomes 16n+30, which is at least 46, so it stays positive. Rows are unchanged, so centerY still rises strictly from each row to the next and no edge flips. L3 holds, and L1 and L2 are untouched."
+  },
+  "B": {
+   "id": "M089",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "One component \"A\" with providedInterfaces [\"I\"]. Before: interfaceArea = 26, so height = 66 and centerY = 63. After: interfaceArea = 16 - 10 = 6, so height = 46 and centerY = 53.",
+   "law_witness": "",
+   "reason": "With n >= 1 interfaces the height becomes 30 + 16n - 10 + 10, which is at least 46, so it is always positive. Positive row heights keep centerY strictly increasing in row index (gap h_r/2 + 70 + h_{r+1}/2). The row assignment is unchanged, so L3 cannot see the edit, only the centerY and height values."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ },
+ {
+  "mutant": {
+   "id": "M090",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 199,
+   "function": "boxSize",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let height = headerHeight + interfaceArea + boxPadding",
+   "after": "        let height = headerHeight - interfaceArea + boxPadding"
+  },
+  "A": {
+   "id": "M090",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": true,
+   "witness": "A single Component(name: \"A\", kind: .library, providedInterfaces: [\"P\"]). Before: height 30+26+10 = 66, centerY 63. After: height 30-26+10 = 14, centerY 37, totalHeight 126 -> 74.",
+   "law_witness": "Components A (library) with providedInterfaces [\"a1\",\"a2\",\"a3\",\"a4\",\"a5\",\"a6\",\"a7\"] and B (library) with [\"b1\",\"b2\",\"b3\",\"b4\",\"b5\",\"b6\"]; one dependency A -> B (B cannot reach A). Rows: [A],[B]. Unmutated: heights 162 and 146; centerY(A) = 30+81 = 111 and centerY(B) = 30+162+70+73 = 335, so the check passes. Mutated: height = 30-16n gives -82 and -66; centerY(A) = 30-41 = -11; cursorY = 30-82+70 = 18; centerY(B) = 18-33 = -15. Since -15 is not greater than -11, L3 fails.",
+   "reason": "The height becomes 40 - (16n+10) = 30 - 16n, which is negative for n >= 2. rowHeight is the row's max height, so a row made only of such components gets a negative height. The step between consecutive rows, h_r/2 + 70 + h_{r+1}/2, goes to zero or below once the two rows hold 13 or more interfaces in total, and the 'to' row then sits at or above the 'from' row. That is L3."
+  },
+  "B": {
+   "id": "M090",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-can-flip",
+   "law_reachable": true,
+   "witness": "One component \"A\" with providedInterfaces [\"I\"]. Before: height = 30 + 26 + 10 = 66 and centerY = 63. After: height = 30 - 26 + 10 = 14 and centerY = 37.",
+   "law_witness": "Components A (kind .library, providedInterfaces I1..I7, 7 names) and B (kind .library, providedInterfaces J1..J6, 6 names), with the dependency A -> B (B cannot reach A). Rows are [[A],[B]]. Mutated heights: A = 40 - (7*16+10) = -82 and B = 40 - (6*16+10) = -66. centerY(A) = 30 - 41 = -11. cursorY = 30 - 82 + 70 = 18, so centerY(B) = 18 - 33 = -15. That gives centerY(B) = -15 < centerY(A) = -11, so L3 fails. Unmutated, the heights are 162 and 146, centerY(A) = 111 and centerY(B) = 335, so L3 passes.",
+   "reason": "height = 40 - (16n + 10) = 30 - 16n becomes negative for n >= 2 interfaces. computeLayout advances cursorY by rowHeight + 70, so the centre gap between adjacent rows is h_r/2 + 70 + h_{r+1}/2. That gap goes to 0 or below once the two rows' heights sum to -140 or less, which first happens at 13 interfaces in total, split as 7/6 or 12/1. A row whose every component has many interfaces then sits below the row that depends on it."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": true
+  },
+  "refutations": [
+   {
+    "refuted": false,
+    "evidence": "M090 (ComponentSVGRenderer.swift:199, boxSize): the edit changes `headerHeight + interfaceArea + boxPadding` to `headerHeight - interfaceArea + boxPadding`. Verdict: NOT-EQUIVALENT. changes: width-or-height, which in turn moves the row centres. law_reachable: true. The witness is confirmed.\n\nHow the code handles the witness:\n- Constants: headerHeight is 30, boxPadding is 10 and interfaceLineHeight is 16. For n > 0 interfaces, interfaceArea is 16n + 10. The unmutated height is 50 + 16n and the mutated height is 30 - 16n. With no interfaces, interfaceArea is 0, so the height stays 40.\n- Input: A (.library) has 7 provided interfaces and B (.library) has 6, with one dependency A -> B. B has no outgoing edges, so B cannot reach A.\n- Rows: chainDepth gives A 1 and B 0, and maxDepth is 1. dependencyLevels therefore returns [[A],[B]].\n- Each row's centreY is cursorY + rowHeight/2, and the next row starts at cursorY + rowHeight + 70 (computeLayout, lines 76-87).\n- Unmutated: the heights are 162 and 146. centerY(A) = 30 + 81 = 111. cursorY = 30 + 162 + 70 = 262, so centerY(B) = 262 + 73 = 335. 335 > 111, so L3 passes.\n- Mutated: the heights are -82 and -66. centerY(A) = 30 - 41 = -11. cursorY = 30 - 82 + 70 = 18, so centerY(B) = 18 - 33 = -15. -15 is not greater than -11, so L3 fails.\n- I checked these numbers with python3.\n\nGeneral condition: for a two-row chain, centerY(B) - centerY(A) = (hA + hB)/2 + 70. Under the mutation this is negative exactly when a + b >= 13 (both components having interfaces). 7 + 6 = 13 is the smallest total that works, and it gives a difference of -4.\n\nOther observable changes: the mutation also changes each PositionedComponent's height (162 becomes -82), totalHeight, and the SVG text.\n\nBoth submitted witnesses describe the same input and are correct."
+   }
+  ]
+ },
+ {
+  "mutant": {
+   "id": "M091",
+   "path": "EXPORT/SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer.swift",
+   "line": 199,
+   "function": "boxSize",
+   "operator": "arithmetic",
+   "original": "+",
+   "replacement": "-",
+   "before": "        let height = headerHeight + interfaceArea + boxPadding",
+   "after": "        let height = headerHeight + interfaceArea - boxPadding"
+  },
+  "A": {
+   "id": "M091",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "A single Component(name: \"A\", kind: .library), no interfaces. Before: height 40, centerY 50, totalHeight 100. After: height 30+0-10 = 20, centerY 40, totalHeight 80.",
+   "law_witness": "",
+   "reason": "Every height drops by exactly 20, to 16n+30 or to 20 when there are no interfaces, and all stay positive. The shift is not uniform: row r moves up by 20r+10, because earlier rows each lose 20 of height. But each row-to-row step h_r/2 + 70 + h_{r+1}/2 stays positive and the rows are unchanged, so no edge's centerY order flips. L3 holds, and L1 and L2 are untouched."
+  },
+  "B": {
+   "id": "M091",
+   "verdict": "NOT-EQUIVALENT",
+   "changes": "vertical-order-preserving",
+   "law_reachable": false,
+   "witness": "One component \"A\", kind .library, no interfaces. Before: height = 30 + 0 + 10 = 40 and centerY = 50. After: height = 30 + 0 - 10 = 20 and centerY = 40. totalHeight goes from 100 to 80.",
+   "law_witness": "",
+   "reason": "Every box loses 20 px of height, but the height stays positive: at least 20, and 30 + 16n + 10 - 10 with interfaces. The centre gap between adjacent rows (h_r/2 + 70 + h_{r+1}/2) stays positive, and the rows are unchanged, so centerY order along every dependency is preserved and L3 cannot fail."
+  },
+  "C": null,
+  "final": {
+   "verdict": "NOT-EQUIVALENT",
+   "reach": false
+  },
+  "refutations": []
+ }
+]
