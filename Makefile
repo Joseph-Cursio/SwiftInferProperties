@@ -171,6 +171,10 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 # three revisions, the rest one synthetic source per rule) and the precision arm's four domain counts,
 # which are #666's own, its balanced-domain membership and its shrink rule. The harness's compiled
 # controls (`regex_acceptor_precision.py controls`) need swiftc and stay out of here. No compiler, ~0.15s.
+#
+# #667's layering census joined after it: the pass's and decision's 208 checks (every cue word and phrase,
+# every SHAPE spelling and skip name, against the controls' own copy of the frozen lists; the label join;
+# every §8 outcome and sensitivity line). No compiler, ~0.1s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
@@ -181,6 +185,7 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 	@python3 scripts/mutation_check.py --self-test
 	@python3 scripts/regex_acceptor_census.py --self-test
 	@python3 scripts/regex_acceptor_precision.py --self-test
+	@python3 scripts/layering_census.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \
