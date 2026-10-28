@@ -172,9 +172,10 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 # which are #666's own, its balanced-domain membership and its shrink rule. The harness's compiled
 # controls (`regex_acceptor_precision.py controls`) need swiftc and stay out of here. No compiler, ~0.15s.
 #
-# #667's layering census joined after it: the pass's and decision's 208 checks (every cue word and phrase,
+# #667's layering census joined after it: the pass's and decision's 255 checks (every cue word and phrase,
 # every SHAPE spelling and skip name, against the controls' own copy of the frozen lists; the label join;
-# every §8 outcome and sensitivity line). No compiler, ~0.1s.
+# every §8 outcome and sensitivity line; the corpus mode's universe, hash and kill-arm refusals and its
+# role-name probe). No compiler, ~0.1s.
 #
 # Its kill arm joined with it: the operator rewrites on a fixture snippet, every rewrite of the road test's
 # tool, and the reduced-suite and flake rules against a scripted suite. The runner controls (RC1-RC7)
