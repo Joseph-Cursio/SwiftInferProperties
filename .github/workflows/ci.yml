@@ -1,6 +1,15 @@
 name: CI
 
+# Runs on pushes to main and on pull requests into main; it can also be
+# started by hand from the Actions tab. The job uses a standard GitHub-hosted
+# runner (`macos-15`), which is free because this repository is public.
+# Minutes become billable if the repository goes private or a job moves to a
+# larger runner (e.g. `macos-15-xlarge`).
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
