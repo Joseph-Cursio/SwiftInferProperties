@@ -78,9 +78,12 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `f34cee3` (bumped 2026-10-14, jointly with SwiftProjectLint), and
-`SEICrossRepoPinTests` is green as of that day's `make test-fast`** — the guard compares this manifest against
-SwiftProjectLint's, so green means the pins agree, and the figures below were taken at `3ea25f2`.
+**Both repos pin SEI `5fbee6f` (bumped 2026-10-30, jointly with SwiftProjectLint), and
+`SEICrossRepoPinTests` is green as of that day's `make test`** — the guard compares this manifest against
+SwiftProjectLint's, so green means the pins agree. **`5fbee6f` is `f34cee3` plus SEI's swift-syntax
+603 pin and nothing else**: it was cut from `f34cee3` so that the move to swift-syntax 603 left the
+oracle unchanged, and SEI's later refutations (its #30 and #31) arrive at the next deliberate bump.
+The figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
 oracle, and that guard is the only thing that can say so. **⚠ Since construction facts were wired
@@ -433,4 +436,4 @@ it, and `make test` does not run it.
 - SwiftLint config at `.swiftlint.yml`; `swiftlint lint --quiet --strict` must stay at **zero**, and `make test-fast` gates on it.
 - **`orphaned_doc_comment` is on, and the comment order it wants is load-bearing**: `swiftprojectlint:disable:next` directive, then any maintainer note, then the `///` block on its declaration. Do not reorder. **Verify a suppression by removing it and watching the rule fire** — five current `parallel-enum-shape` directives suppress nothing and are kept only as guards.
 - **`MemoryCeilingPerformanceTests` flakes under full-suite parallel load** — ~150 MB in isolation against an 800 MB budget, ~4800 MB when it trips. It is a process-wide peak-RSS reading. Rerun before blaming your edit.
-- **Macro goldens go through `Tests/SwiftInferMacroTests/AssertMacroExpansion.swift`, not `SwiftSyntaxMacrosTestSupport`.** In swift-syntax 602, which this package pins, that module's `assertMacroExpansion` reports a mismatch through `XCTFail`, and Swift 6.4 records an `XCTFail` inside a `@Test` as a warning ("An API was misused") and passes the test. So no golden could fail, and 7 of the 12 had drifted unnoticed (2026-10-30). All 7 were stale expectations, not macro bugs: closures now formatted across lines, the edge-biased String generator, the `.todo` marker comment, the escaped key path in the invariant message, and the `.roundTrip` diagnostic pointing to SwiftIdempotency since `.idempotent`'s deprecation. The helper takes the same arguments and records an issue through swift-syntax's framework-neutral `SwiftSyntaxMacrosGenericTestSupport`. swift-syntax 603 fixes the upstream function. Moving every repo to 603 was approved on 2026-10-30 and has not been done; this package's exact pin moves together with SwiftEffectInference's and SwiftProjectLint's. The helper works on either version, and becomes removable once the pin is 603.
+- **Macro goldens call `SwiftSyntaxMacrosTestSupport.assertMacroExpansion` directly, and on swift-syntax 603 a mismatch fails the test.** In 602 that function reported a mismatch through `XCTFail`, and Swift 6.4 records an `XCTFail` inside a `@Test` as a warning ("An API was misused") and passes the test. So no golden could fail, and 7 of the 12 had drifted unnoticed (2026-10-30). All 7 were stale expectations, not macro bugs: closures now formatted across lines, the edge-biased String generator, the `.todo` marker comment, the escaped key path in the invariant message, and the `.roundTrip` diagnostic pointing to SwiftIdempotency since `.idempotent`'s deprecation. A test-local `AssertMacroExpansion.swift` recorded the issue through swift-syntax's framework-neutral `SwiftSyntaxMacrosGenericTestSupport` until the pin moved to 603, the same day, and was then deleted. A golden broken on purpose fails on 603 (`roundTripArmRejectsSameTypeShape`), and the 12 goldens needed no change for 603's formatting. ⚠ **Do not move back to 602**, or bring back a helper, without proving a broken golden fails.

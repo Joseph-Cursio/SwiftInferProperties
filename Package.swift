@@ -109,17 +109,22 @@ let package = Package(
         // with the discover-side composite fallback so ordinary 11–14-member
         // value types (a `Violation`, and its `[Violation]` carrier) derive
         // instead of reading "not derived" (SwiftLintRuleStudio road-test Fix 2).
+        // The exact swift-syntax 603 pin below resolves a release on 603, since
+        // 4.10.0 and earlier cap swift-syntax below 603. The floor stays at 4.10.0
+        // because it is also every synthesized verifier's floor
+        // (`VerifierWorkdir.swiftPropertyLawsRequirement`): a corpus pinning
+        // swift-syntax 602 still resolves a verifier against 4.10.0.
         .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", from: "4.10.0"),
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "602.0.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", exact: "603.0.2"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
         // Idea #4 — the shared effect-vocabulary leaf. Owns the `Effect` lattice
         // and the canonical `PurityInferrer`. `SoundPurity` composes SIP's
         // `ReducerPurityAnalyzer` with SEI's purity oracle. Revision-pinned
         // (SEI carries no version tags yet); both this package and SEI pin
-        // swift-syntax at exactly 602.0.0, so there is no version conflict.
+        // swift-syntax at exactly 603.0.2, so there is no version conflict.
         .package(
             url: "https://github.com/Joseph-Cursio/SwiftEffectInference.git",
-            revision: "f34cee3df22710de75f952ac021debdb19a14a1b"
+            revision: "5fbee6f7fa984b5f2990a9cce0c8b049a3d8e45b"
         )
     ],
     targets: [
@@ -339,7 +344,7 @@ let package = Package(
                 // `@testable import SwiftInferCore` in both expansion suites;
                 // previously reachable only through the macro targets.
                 "SwiftInferCore",
-                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax")
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
             ]
         ),
         // SwiftInferIntegrationTests — M1.6 perf integration tests against
