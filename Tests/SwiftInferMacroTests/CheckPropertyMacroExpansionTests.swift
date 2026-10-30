@@ -1,7 +1,7 @@
 @testable import SwiftInferCore
 @testable import SwiftInferMacroImpl
 import SwiftSyntaxMacros
-import SwiftSyntaxMacrosTestSupport
+import SwiftSyntaxMacrosGenericTestSupport
 import Testing
 
 @Suite("@CheckProperty macro — round-trip + preserves-invariant expansion")
