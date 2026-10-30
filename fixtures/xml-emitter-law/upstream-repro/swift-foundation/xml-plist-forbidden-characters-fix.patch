@@ -1,0 +1,44 @@
+diff --git a/Sources/FoundationEssentials/PropertyList/XMLPlistEncodingFormat.swift b/Sources/FoundationEssentials/PropertyList/XMLPlistEncodingFormat.swift
+index 22dd73b..46d1de3 100644
+--- a/Sources/FoundationEssentials/PropertyList/XMLPlistEncodingFormat.swift
++++ b/Sources/FoundationEssentials/PropertyList/XMLPlistEncodingFormat.swift
+@@ -875,12 +875,17 @@ struct _XMLPlistEncodingFormat : PlistEncodingFormat {
+                     let subBuffer = UnsafeBufferPointer(start: ptr, count: end - ptr)
+                     let nextToEscapeIdx = try subBuffer.firstIndex {
+                         switch $0 {
+-                        case ._openangle, ._closeangle, ._ampersand:
++                        case ._openangle, ._closeangle, ._ampersand, 0xEF:
+                             return true
+                         case 0x00:
+                             throw CocoaError(.propertyListWriteInvalid, userInfo: [
+                                 NSDebugDescriptionErrorKey: "Property list strings cannot contain embedded null characters in XML format."
+                             ])
++                        case 0x01...0x08, 0x0B, 0x0C, 0x0E...0x1F:
++                            // XML 1.0 allows no other C0 control, not even as a character reference.
++                            throw CocoaError(.propertyListWriteInvalid, userInfo: [
++                                NSDebugDescriptionErrorKey: "Property list strings cannot contain control characters other than tab, line feed and carriage return in XML format."
++                            ])
+                         default:
+                             return false
+                         }
+@@ -889,7 +894,19 @@ struct _XMLPlistEncodingFormat : PlistEncodingFormat {
+                     if let nextToEscapeIdx {
+                         let bufferToNextEscaped = UnsafeBufferPointer(rebasing: subBuffer[..<nextToEscapeIdx])
+                         append(bufferToNextEscaped)
+-                        appendEscaped(subBuffer[nextToEscapeIdx])
++                        if subBuffer[nextToEscapeIdx] == 0xEF {
++                            // EF BF BE and EF BF BF are U+FFFE and U+FFFF, which XML 1.0 does not allow. Any other
++                            // lead byte EF is copied, and the scan goes on from the byte after it.
++                            if nextToEscapeIdx + 2 < subBuffer.count,
++                               subBuffer[nextToEscapeIdx + 1] == 0xBF, subBuffer[nextToEscapeIdx + 2] & 0xFE == 0xBE {
++                                throw CocoaError(.propertyListWriteInvalid, userInfo: [
++                                    NSDebugDescriptionErrorKey: "Property list strings cannot contain U+FFFE or U+FFFF in XML format."
++                                ])
++                            }
++                            append(UnsafeBufferPointer(rebasing: subBuffer[nextToEscapeIdx ..< nextToEscapeIdx + 1]))
++                        } else {
++                            appendEscaped(subBuffer[nextToEscapeIdx])
++                        }
+                         ptr = ptr.advanced(by: nextToEscapeIdx + 1)
+                     } else {
+                         append(subBuffer)

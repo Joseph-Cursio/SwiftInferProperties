@@ -1,0 +1,1140 @@
+{
+ "calibration": [
+  {
+   "records": [
+    {
+     "label": "calibration/1",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "\"\" when layout.components is empty",
+     "law2": "OWES",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "Documented as a standalone SVG document. Every input type (ComponentLayout, PositionedComponent, ComponentDependency, ComponentKind) is public with a public initialiser. Names and interfaces go through xmlEscaped, which escapes markup and replaces forbidden characters; the numbers come from a locale-free %.1f format, and a non-finite size traps rather than producing bad text. The only reference, url(#arrow), names the marker that arrowMarkerDefs always writes whenever any edge can be written."
+    },
+    {
+     "label": "calibration/2",
+     "verdict": "FRAGMENT",
+     "expressible": null,
+     "ambient": null,
+     "sentinel": "none",
+     "law2": null,
+     "body_disagrees": null,
+     "refs_dangle": null,
+     "witness": "",
+     "reason": "It returns only the unclosed <svg \u2026> start tag, which renderSVG then wraps, so on its own the result is not a document."
+    },
+    {
+     "label": "calibration/3",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "OWES",
+     "body_disagrees": true,
+     "refs_dangle": false,
+     "witness": "LayoutGraph with one node whose label is \"a--b\" (or one cluster labelled \"a--b\"): renderNode writes <!-- a--b -->, a comment holding --. Also, a label holding U+0001 passes through this xmlEscaped, which only escapes & < > \".",
+     "reason": "Documented as rendering the graph to an SVG XML string. The input types are public with public initialisers. Every marker-end url(#\u2026) names one of the four markers arrowMarkers always defines (association writes none). But node and cluster labels are written inside XML comments, and escaping does not remove -- there, so a label can make the document malformed."
+    },
+    {
+     "label": "calibration/4",
+     "verdict": "HTML",
+     "expressible": null,
+     "ambient": null,
+     "sentinel": "none",
+     "law2": null,
+     "body_disagrees": null,
+     "refs_dangle": null,
+     "witness": "",
+     "reason": "It returns an HTML page (<!DOCTYPE html>, <html>, <h1>, <br>) with an inline SVG chart, so the result is HTML, not an XML document."
+    },
+    {
+     "label": "calibration/5",
+     "verdict": "NOT-EMITTER",
+     "expressible": null,
+     "ambient": null,
+     "sentinel": "none",
+     "law2": null,
+     "body_disagrees": null,
+     "refs_dangle": null,
+     "witness": "",
+     "reason": "It is a format sniffer: \"<?xml\" is only a prefix it matches against, and it returns a format name, never XML."
+    },
+    {
+     "label": "calibration/6",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "NOT-SVG",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "It returns a complete Checkstyle XML document with one <checkstyle> root. Every interpolated string goes through escaped, which escapes & < > \" ' and replaces forbidden controls and U+FFFE/U+FFFF; line is an Int, and an internal Issue can be built under @testable import."
+    },
+    {
+     "label": "calibration/7",
+     "verdict": "DOCUMENT",
+     "expressible": false,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "VACUOUS",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "It returns one complete <svg> root wrapping inner. But inner's own contract makes it caller-built SVG markup, so it is correct only when the caller passes well-formed markup, and a test cannot draw it without its own law. The unit itself writes no same-document reference."
+    },
+    {
+     "label": "calibration/8",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "EXTERNAL",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "It returns one complete inline <svg> root element, a DOCUMENT even though the page embeds it. By design, its <use href=\"#icon-\u2026\"> names a symbol in the sprite sheet the host page embeds, not in this result."
+    },
+    {
+     "label": "calibration/9",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "VACUOUS",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "Documented as a standalone SVG document with one <svg> root. Only numbers are interpolated: Int sizes, which trap rather than produce bad text when not finite, and %.1f points, where even nan or inf stays well-formed attribute text. It writes no same-document reference."
+    },
+    {
+     "label": "calibration/10",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "NOT-SVG",
+     "body_disagrees": true,
+     "refs_dangle": false,
+     "witness": "posts = [(title: \"Q&A\", link: URL(string: \"https://example.com/q\")!)] produces <item><title>Q&A</title>\u2026, a raw & in text. The same happens with a link such as https://example.com/?a=1&b=2, or a siteTitle holding '<'.",
+     "reason": "It returns an RSS 2.0 document with one <rss> root, and all its inputs can be built. But the titles (documented as plain text as the author typed it), siteTitle and the URLs' absoluteString are interpolated without escaping, so an & or < makes the result malformed."
+    }
+   ]
+  },
+  {
+   "records": [
+    {
+     "label": "calibration/1",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "\"\" when layout.components is empty",
+     "law2": "OWES",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "Documented as a standalone SVG document. Its only reference, url(#arrow), names the marker that arrowMarkerDefs always writes. Every caller string goes through xmlEscaped, which handles & < > \" and the forbidden characters. Numbers go through a locale-free %.1f format, and a NaN or infinite size traps rather than producing malformed text."
+    },
+    {
+     "label": "calibration/2",
+     "verdict": "FRAGMENT",
+     "expressible": null,
+     "ambient": null,
+     "sentinel": "none",
+     "law2": null,
+     "body_disagrees": null,
+     "refs_dangle": null,
+     "witness": "",
+     "reason": "It returns only an unclosed <svg ...> start tag, which renderSVG completes, so the result alone is not a document."
+    },
+    {
+     "label": "calibration/3",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "OWES",
+     "body_disagrees": true,
+     "refs_dangle": false,
+     "witness": "LayoutGraph(nodes: [LayoutNode(id: \"a\", label: \"a--b\", stereotype: nil, compartments: [], posX: 0, posY: 0, width: 100, height: 40)], edges: []) yields the comment \"<!-- a--b -->\" (xmlEscaped leaves '-' alone); a cluster label \"x--y\" likewise yields \"<!-- module: x--y -->\", and a label holding U+0001 passes through, since xmlEscaped only replaces & < > \"",
+     "reason": "The result is a complete <svg> root whose marker-end references name the four arrow-* markers that arrowMarkers() always defines. But node and cluster labels are written into XML comments without removing '--', so a label like \"a--b\" makes the document malformed."
+    },
+    {
+     "label": "calibration/4",
+     "verdict": "HTML",
+     "expressible": null,
+     "ambient": null,
+     "sentinel": "none",
+     "law2": null,
+     "body_disagrees": null,
+     "refs_dangle": null,
+     "witness": "",
+     "reason": "It returns a whole HTML page (<!DOCTYPE html>, <html>, <h1>, <br>) with an inline SVG inside it."
+    },
+    {
+     "label": "calibration/5",
+     "verdict": "NOT-EMITTER",
+     "expressible": null,
+     "ambient": null,
+     "sentinel": "none",
+     "law2": null,
+     "body_disagrees": null,
+     "refs_dangle": null,
+     "witness": "",
+     "reason": "It is a format sniffer: \"<?xml\" is a prefix it matches against, and the unit returns a short format name rather than XML."
+    },
+    {
+     "label": "calibration/6",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "NOT-SVG",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "It returns a complete Checkstyle XML document (prolog plus one <checkstyle> root, even for no issues). Every string goes through escaped(), which entity-escapes & < > \" ' and replaces forbidden C0 controls and U+FFFE and U+FFFF, and line is an Int, so no input yields malformed text."
+    },
+    {
+     "label": "calibration/7",
+     "verdict": "DOCUMENT",
+     "expressible": false,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "VACUOUS",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "It wraps its input in one complete <svg> root, but `inner` is documented as caller-built SVG markup. A test therefore cannot draw a valid input without a well-formedness law of its own, and the unit itself writes no same-document reference."
+    },
+    {
+     "label": "calibration/8",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "EXTERNAL",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "It returns one complete inline <svg> root element. Its <use href=\"#icon-...\"> names a <symbol> in the sprite sheet that the host page embeds, by design, so the reference is external; the only interpolations are an Int size and the Icon's raw value."
+    },
+    {
+     "label": "calibration/9",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "VACUOUS",
+     "body_disagrees": false,
+     "refs_dangle": false,
+     "witness": "",
+     "reason": "Documented as a standalone SVG document holding a single polyline and no same-document reference. Only numbers are interpolated, through a locale-free %.1f format (NaN prints as \"nan\"), and a non-finite size traps in Int(...) rather than producing malformed text."
+    },
+    {
+     "label": "calibration/10",
+     "verdict": "DOCUMENT",
+     "expressible": true,
+     "ambient": false,
+     "sentinel": "none",
+     "law2": "NOT-SVG",
+     "body_disagrees": true,
+     "refs_dangle": false,
+     "witness": "posts: [(title: \"Q&A\", link: URL(string: \"https://example.com/a\")!)] yields \"<item><title>Q&A</title>...\"; a raw '&' in text is malformed, and siteTitle and a URL with a query such as \"?a=1&b=2\" are interpolated unescaped in the same way",
+     "reason": "It returns a complete RSS 2.0 XML document. The post title, documented as plain text as the author typed it, is interpolated without escaping, as are siteTitle and the link URLs, so a title containing '&' or '<' breaks well-formedness."
+    }
+   ]
+  }
+ ],
+ "calibrationMisses": [
+  [],
+  []
+ ],
+ "judged": [
+  {
+   "packet": "packet-01",
+   "split": [],
+   "records": {
+    "A": [
+     {
+      "label": "packet-01/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "colors.bg = \"\\\"\" gives the root start tag <svg ... style=\"--bg:\";--fg:...;background:var(--bg)\">, where the attribute closes early. Also font = \"A<B\" gives `text { font-family: 'A<B', system-ui, sans-serif; }` inside <style>, an unescaped '<'.",
+      "reason": "The class-diagram renderer returns one complete <svg> root (open tag, style, defs, body, </svg>), and its marker-start/marker-end url(#cls-*) references always name markers that _relationshipMarkerDefs defines. All inputs are memberwise-constructible structs, and the identical public forwarder renderClassSvg reaches the unit, but svgOpenTag interpolates the color strings and buildStyleBlock interpolates the font name without escaping."
+     },
+     {
+      "label": "packet-01/2",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It is a self-test step builder that returns an array of named test closures; its XML (pbxproj plists, workspace data, csproj files) is fixture text written to disk, not returned."
+     },
+     {
+      "label": "packet-01/3",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It is S3 request middleware that returns Void and, only for an empty-bodied CreateBucket call, stores a CreateBucketConfiguration payload in the inout request's HTTP body; the XML is an outgoing request side effect, not a returned document."
+     },
+     {
+      "label": "packet-01/4",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "serializePlist(.string(\"\\u{1}\")) gives ...<plist version=\"1.0\">\\n<string>\\u{1}</string>\\n</plist>: appendEscaped escapes only < > & and throws only on NUL, so U+0001 (or U+FFFE) passes through raw.",
+      "reason": "The XML plist Writer returns the UTF-8 bytes of a complete plist document (header with prolog and doctype, the encoded value, </plist>); the internal Reference and Writer types are reachable with @testable import, and dates use a fixed GMT calendar, but string values pass forbidden control characters through."
+     },
+     {
+      "label": "packet-01/5",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It writes the resource bundle's Info.plist to the file system and returns a Bool, so the XML is written to disk rather than returned."
+     },
+     {
+      "label": "packet-01/6",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "A relationship with two distinct points and cardinality1 = \"a\\\"b\" gives <polyline ... data-cardinality1=\"a\"b\" ...>. Also an ErAttribute with keys [\"<PK\"] gives <text ...><PK</text>. Also colors.bg = \"\\\"\" breaks the root style attribute.",
+      "reason": "The ER renderer returns one complete <svg> root with an empty <defs> and no same-document references; all inputs are memberwise-constructible and the public renderErSvg forwards to it, but cardinality strings, attribute keys, colors and the font name are interpolated without escaping."
+     },
+     {
+      "label": "packet-01/7",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "Document(rootElement: Element(name: \"a\")) with addAttribute(.attribute(withName: \"x\", stringValue: \"\\\"\")) gives <?xml version=\"1.0\" encoding=\"UTF-8\"?><a x=\"\"\"></a>. Also version = \"\\\"\" breaks the prolog, and Document() with no root returns only the prolog <?xml version=\"1.0\" encoding=\"UTF-8\"?>, which has no root element.",
+      "reason": "XML.Document.xmlString serializes the document as an XML declaration followed by its root element's markup, which is built from a public node tree, but attribute values, comments, version and encoding are written without escaping, and a document with no root yields the prolog alone."
+     },
+     {
+      "label": "packet-01/8",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "SVGRenderer.render returns one complete <svg> root whose only references, marker-end url(#arrow-*), name the four markers arrowMarkers always defines (association emits none); every label goes through xmlEscaped, which also replaces forbidden characters, and only a non-finite size traps in Int(...)."
+     }
+    ],
+    "B": [
+     {
+      "label": "packet-01/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "font = \"A&B\" (any diagram, colors) -> the <style> block holds `text { font-family: 'A&B', system-ui, sans-serif; }` with a bare `&`; likewise colors.bg = \"\\\"\" gives `style=\"--bg:\";--fg:...\"`",
+      "reason": "Builds a whole <svg> class diagram whose marker-start/marker-end url(#cls-*) references all name markers its own <defs> defines, but svgOpenTag and buildStyleBlock interpolate the color strings and font name without escaping (all inputs are public memberwise structs, reached through the public pass-through renderClassSvg)."
+     },
+     {
+      "label": "packet-01/2",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "A self-test step builder that returns closures; the XML it holds (pbxproj plists, csproj, workspace data) is fixture text written to disk as parser input, never returned."
+     },
+     {
+      "label": "packet-01/3",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Request middleware that returns Void and writes the CreateBucketConfiguration XML into an inout request body (an empty body for us-east-1) rather than returning a document."
+     },
+     {
+      "label": "packet-01/4",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "ref = .string(\"\\u{1}\") -> `...<plist version=\"1.0\">\\n<string>\\u{1}</string>\\n</plist>\\n`; appendEscaped escapes only < > & and rejects only NUL, so other C0 controls (and U+FFFE/U+FFFF) pass through raw",
+      "reason": "serializePlist returns the full XML plist (header, DOCTYPE, one <plist> root) as Data, and the internal Reference enum and Writer() are reachable with @testable import, but forbidden control characters in strings and keys are written out unescaped."
+     },
+     {
+      "label": "packet-01/5",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Writes the Info.plist text to the file system and returns only a Bool, so the XML is written to disk rather than returned."
+     },
+     {
+      "label": "packet-01/6",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "an entity attribute with keys = [\"<PK\"] -> `<text ... fill=\"var(--_text-sec)\"><PK</text>` (keys are interpolated unescaped in _renderAttribute); also font = \"A&B\" gives a bare `&` in the <style> block",
+      "reason": "Builds a whole <svg> ER diagram with an empty <defs> and no url(#...) or href references, but attribute keys, the font name and the color strings are interpolated without escaping (inputs are public memberwise structs, reached through the public pass-through renderErSvg)."
+     },
+     {
+      "label": "packet-01/7",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "the bare prolog `<?xml version=\"1.0\" encoding=\"UTF-8\"?>` for a Document with no root element",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "Document(rootElement: e) where e = Element(name: \"r\") with addAttribute(.attribute(withName: \"k\", stringValue: \"&\")) -> `<?xml version=\"1.0\" encoding=\"UTF-8\"?><r k=\"&\"></r>`; also version = \"1\\\"0\" breaks the prolog, and a comment node holding \"--\" is written raw",
+      "reason": "Document.xmlString serializes a prolog plus the root element of a freshly buildable node tree, but attribute values, namespace values, comment text and the version/encoding strings are not escaped (only text nodes are)."
+     },
+     {
+      "label": "packet-01/8",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "render returns a whole <svg> whose marker-end url(#arrow-*) references take every non-empty id from the four markers arrowMarkers defines; every label, item and stereotype goes through xmlEscaped, which escapes & < > \" and replaces forbidden scalars, and the rest are constants or formatted numbers (Int(width) on NaN/inf only traps)."
+     }
+    ],
+    "C": []
+   },
+   "retried": []
+  },
+  {
+   "packet": "packet-02",
+   "split": [
+    "packet-02/3"
+   ],
+   "records": {
+    "A": [
+     {
+      "label": "packet-02/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "Returns one complete <svg> root built from a public, freely constructible SequenceLayout, every caller string goes through xmlEscaped (which escapes markup and replaces XML-forbidden characters), and its only references, url(#seq-arrow) and url(#seq-arrow-open), name markers its own literal always defines."
+     },
+     {
+      "label": "packet-02/2",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "Returns one complete <svg> root from a public, constructible ActivityLayout, with the title, node labels and edge labels all passed through xmlEscaped, and every edge's url(#act-arrow) names the marker its own defs literal always writes."
+     },
+     {
+      "label": "packet-02/3",
+      "verdict": "DOCUMENT",
+      "expressible": false,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "drawing.layers = [Layer(name: \"a\\u{1}b\")] (visible) -> <g id=\"layer-\u2026\" data-name=\"a\\u{1}b\"> : SVGExport.escape only replaces & < > \" so the U+0001 control character XML forbids passes into the attribute value (shape text with a control character reaches <tspan> the same way)",
+      "reason": "Writes a full <?xml?> + <svg> document whose url(#gradN)/url(#shadowN) references name ids it appends to its own defs, but it is a method of a private struct no test can reach even with @testable import, its text positions depend on the system's installed fonts through NSFont/NSLayoutManager, and its escape lets C0 control characters through."
+     },
+     {
+      "label": "packet-02/4",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Returns only an <svg \u2026> start tag, which callers complete with content and a closing tag, so the result alone is not a document."
+     },
+     {
+      "label": "packet-02/5",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "RenderScene(size: CGSize(width: 10, height: 10), background: c, elements: [.text(.init(string: \"\\u{1}\", center: .zero, fontSize: 12, color: c))]) -> <text \u2026>\\u{1}</text> : escape() passes the forbidden U+0001 through; likewise string \"<\\u{301}\" goes out as a raw '<' because escape compares whole grapheme clusters",
+      "reason": "The contract is a standalone <svg> document built from a public, constructible RenderScene, and it writes no same-document references, but its escape neither removes XML-forbidden control characters nor catches a '<' or '&' carrying a combining mark."
+     },
+     {
+      "label": "packet-02/6",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The plist text is a constant written to disk via settingsPath.write, and the function returns Void."
+     },
+     {
+      "label": "packet-02/7",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "[StyleViolation with reason \"a\\u{1}b\"] -> <error \u2026 message=\"a\\u{1}b\" \u2026/> : escapedForXML replaces only & \" ' > < so the forbidden U+0001 control character passes into the attribute",
+      "reason": "Returns a complete Checkstyle document (XML declaration plus one <checkstyle> root) from constructible StyleViolations, but its escapedForXML leaves C0 control characters in file paths and messages."
+     },
+     {
+      "label": "packet-02/8",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Each call returns one piece of a streamed JUnit report: the XML declaration and an open <testsuites> on runStarted, the <testsuite> body and closing </testsuites> on runEnded, and nil otherwise, so no single result is a complete document."
+     }
+    ],
+    "B": [
+     {
+      "label": "packet-02/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "Returns one complete <svg> root built from a publicly constructible SequenceLayout. Every caller string (title, participant names, labels, notes) passes through xmlEscaped, which also replaces forbidden controls and U+FFFE/U+FFFF. Its only references are url(#seq-arrow) and url(#seq-arrow-open), and both markers are always defined in its own <defs>."
+     },
+     {
+      "label": "packet-02/2",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "Returns one complete <svg> root from a publicly constructible ActivityLayout. The title, node labels and edge labels are all xmlEscaped, and its only reference, url(#act-arrow), names the marker that is always written in its own <defs>."
+     },
+     {
+      "label": "packet-02/3",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "Drawing() whose only visible layer is Layer(name: \"\\u{0001}\") gives <g id=\"layer-xxxxxxxx\" data-name=\"\\u{0001}\">, a forbidden C0 control in an attribute, because SVGExport.escape only replaces & < > \".",
+      "reason": "Builds an XML prolog plus one <svg> root whose url(#gradN)/url(#shadowN) references all name defs this Writer appends before writing <defs>. It is reached with fresh state through internal SVGExport.svg(for:bounds:). Text layout depends on the machine's installed fonts (ambient: NSFont/NSFontManager.shared/NSLayoutManager metrics), and escape lets control characters through."
+     },
+     {
+      "label": "packet-02/4",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Returns only the opening <svg ...> start tag, which callers complete with content and a closing tag, so the result alone is not a document."
+     },
+     {
+      "label": "packet-02/5",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "witness": "RenderScene(size: CGSize(width: 10, height: 10), background: DiagramColor(red: 1, green: 1, blue: 1), elements: [.text(.init(string: \"\\u{0001}\", center: .zero, fontSize: 12, color: DiagramColor(red: 0, green: 0, blue: 0)))]) gives <text ...>\\u{0001}</text>, a forbidden C0 control; likewise a string \"<\\u{301}\" passes a raw '<' because escape matches whole Characters.",
+      "refs_dangle": false,
+      "reason": "Documented as a standalone <svg>\u2026</svg> document built from a publicly constructible RenderScene and never writes a same-document reference. Its escape covers only the five markup characters, per Character, so control characters (and a '<' that a combining mark follows) pass through."
+     },
+     {
+      "label": "packet-02/6",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Writes a constant plist text to disk and returns Void, so it returns no document."
+     },
+     {
+      "label": "packet-02/7",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "A StyleViolation with reason \"\\u{0001}\" gives <error line=\"0\" column=\"0\" severity=\"warning\" message=\"\\u{0001}\" .../>, a forbidden C0 control, because escapedForXML only replaces & \" ' > <.",
+      "reason": "Returns an XML prolog plus one complete <checkstyle> root built from publicly constructible StyleViolations. Its escapedForXML lets forbidden control characters in a reason or file path through."
+     },
+     {
+      "label": "packet-02/8",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "nil",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Each event returns one piece of a streamed report: runStarted gives the prolog plus an unclosed <testsuites>, and runEnded gives the <testsuite> body and the closing </testsuites>. No single return is a complete document."
+     }
+    ],
+    "C": [
+     {
+      "label": "packet-02/3",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "Drawing(layers: [Layer(name: \"\\u{0001}\")]) with any bounds yields `<g id=\"layer-xxxxxxxx\" data-name=\"\\u{0001}\">`. SVGExport.escape only rewrites & < > \", so the forbidden C0 control U+0001 passes into the attribute value and the document is not well-formed. Shape text holding U+0001 does the same inside a <tspan>.",
+      "reason": "The unit always returns an XML prolog plus a single <svg> root. A test reaches it with a fresh Writer through the internal SVGExport.svg(for:bounds:) and a buildable Drawing. Its fill=\"url(#gradN)\" and filter=\"url(#shadowN)\" references point at ids that fillAttrs and shadowFilter add to the emitted <defs>, so none dangles. Its escape lets C0 controls through. Text line breaks, baselines and label sizes depend on the machine's installed font database through NSFont and NSLayoutManager, which is why ambient is true."
+     }
+    ]
+   },
+   "retried": []
+  },
+  {
+   "packet": "packet-03",
+   "split": [],
+   "records": {
+    "A": [
+     {
+      "label": "packet-03/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "A StyleViolation whose reason is \"a\\u{0001}b\": escapedForXML only replaces & \" ' > <, so the result holds <failure message='a\\u{0001}b'>, a C0 control XML 1.0 forbids.",
+      "reason": "Builds a complete JUnit XML report (prolog plus one <testsuites> root) from violations a test can construct via public RuleDescription/Location/StyleViolation inits, but control characters in the reason or path pass through unescaped."
+     },
+     {
+      "label": "packet-03/2",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The workspace XML is written to contents.xcworkspacedata on disk and the function returns Void, so nothing is returned."
+     },
+     {
+      "label": "packet-03/3",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "Returns only an unclosed <svg ...> start tag, which renderSVG puts at the top of a larger document."
+     },
+     {
+      "label": "packet-03/4",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "An AEXMLDocument whose root is AEXMLElement(name: \"a b\"): the name is interpolated unescaped, giving <a b>\\n</a b>, which is malformed (attribute keys and options.documentHeader.encoding are interpolated unescaped too).",
+      "reason": "Serializes an AEXMLDocument as an XML prolog plus its single root element in Xcode's attribute layout, and the receiver can be built from AEXML's public API as the repo's own tests do, but element names, attribute keys and the encoding are written without escaping."
+     },
+     {
+      "label": "packet-03/5",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "A StyleViolation from RuleDescription(identifier: \"a<b\", ...) with no file: ruleIdentifier is not escaped, giving <testcase name='warning: a<b in <nopath>'> and Rule: a<b in the failure text, which is malformed.",
+      "reason": "Builds a complete GitLab JUnit XML report with one <testsuites> root, but the file name goes through relativeDisplayPath, which reads the current working directory (task-local override or FileManager.currentDirectoryPath), and the rule identifier is interpolated unescaped."
+     },
+     {
+      "label": "packet-03/6",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "A private self-test harness that returns Void; its SVG/XML literals are inputs fed to SVGImport.parse or checks on exported data, and none is returned."
+     },
+     {
+      "label": "packet-03/7",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The plist of random seed numbers is printed to stdout and the function returns Void, so no document is returned."
+     },
+     {
+      "label": "packet-03/8",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "\"\" for a layout with no components",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "Documented as a standalone SVG document with one <svg> root built from a publicly constructible ComponentLayout; all caller text goes through xmlEscaped, which also replaces forbidden characters, and every edge's url(#arrow) resolves to the <marker id=\"arrow\"> the always-emitted arrowMarkerDefs defines (NaN or huge sizes trap in Int(), which is not malformed text)."
+     }
+    ],
+    "B": [
+     {
+      "label": "packet-03/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "One StyleViolation whose reason is \"\\u{0001}\" (any RuleDescription, Location(file: nil)): escapedForXML escapes only & \" ' < >, so the result contains <failure message='\\u{0001}'>Warning:Line:0</failure>, with the C0 control U+0001 that XML 1.0 forbids.",
+      "reason": "A JUnit reporter that returns a prolog plus one <testsuites> root built from public, constructible StyleViolations; it reads no ambient state (URL.path is stored), but caller text passes through an escape that keeps forbidden control characters."
+     },
+     {
+      "label": "packet-03/2",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The unit returns Void and writes the .xcworkspacedata XML to disk (dataPath.write) and then generates schemes, so the XML is written to disk rather than returned."
+     },
+     {
+      "label": "packet-03/3",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "svgHeader returns only the opening <svg ...> start tag, which renderSVG closes later, so the result alone is not a document."
+     },
+     {
+      "label": "packet-03/4",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "An AEXMLDocument whose root is AEXMLElement(name: \"a\", value: \"\\u{0001}\"): AEXML's xmlEscaped escapes only & < > ' \", so the result is <?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n<a>\\n>\\n\\u{0001}</a>, which contains the forbidden U+0001. An unescaped element name such as \"a b\" also gives malformed text: <a b>.",
+      "reason": "It returns an XML prolog plus the document's single root element serialized in Xcode's format, built from a constructible AEXMLDocument with no ambient reads, but element names, attribute keys and forbidden characters in values pass through unchecked."
+     },
+     {
+      "label": "packet-03/5",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "NOT-SVG",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "One StyleViolation whose reason is \"\\u{0001}\": escapedForXML keeps control characters, so the result contains <failure>Severity: warning\\nRule: \u2026\\nReason: \\u{0001}\u2026</failure> with the forbidden U+0001. In addition, ruleIdentifier is interpolated with no escaping at all into name='\u2026' and the failure text.",
+      "reason": "A GitLab JUnit reporter that returns a prolog plus one <testsuites> root; it reads the process working directory through URL.relativeDisplayPath (URL.cwd / FileManager.default.currentDirectoryPath), and caller text is escaped incompletely or not at all."
+     },
+     {
+      "label": "packet-03/6",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "runSelfTest is a Void developer self-test driver; its SVG text is test fixture input written to files or handed to parsers, not a returned result."
+     },
+     {
+      "label": "packet-03/7",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "generateSeed returns Void and prints a random plist to stdout, so the XML text is output and is never returned."
+     },
+     {
+      "label": "packet-03/8",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "\"\" when layout.components is empty",
+      "law2": "OWES",
+      "body_disagrees": false,
+      "refs_dangle": false,
+      "witness": "",
+      "reason": "It returns a standalone <svg> document from a publicly constructible ComponentLayout; every caller string goes through the robust xmlEscaped, attributes are constants or %.1f numbers, and every marker-end url(#arrow) names the <marker id=\"arrow\"> that arrowMarkerDefs always writes into the document."
+     }
+    ],
+    "C": []
+   },
+   "retried": []
+  },
+  {
+   "packet": "packet-04",
+   "split": [
+    "packet-04/6"
+   ],
+   "records": {
+    "A": [
+     {
+      "label": "packet-04/1",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The base-class Node.xmlString body only serializes leaf kinds (escaped text, an attribute `name=\"value\"`, a `<!--\u2026-->` comment, an `xmlns=` declaration) and returns \"\" otherwise; documents and elements are serialized by subclass overrides, so its results are pieces of a larger document, never one with a root element."
+     },
+     {
+      "label": "packet-04/2",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "font = \"A&B\" (any chart, default colors) -> buildStyleBlock writes `<style>\u2026 text { font-family: 'A&B', system-ui, sans-serif; } \u2026` into the SVG, a bare `&` in element text (also: tick.textAnchor = \"\\\"\" -> `text-anchor=\"\"\"`)",
+      "reason": "The public renderXYChartSvg returns one complete <svg>\u2026</svg> built from constructible public/memberwise-init structs; it writes no #-references (only an external @import url), its dot-overlay order depends on Dictionary iteration over `columns` (per-process hash seed) and NumberFormatter uses the current locale, and the font, colors and textAnchor are interpolated unescaped."
+     },
+     {
+      "label": "packet-04/3",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The xUnit XML is written to disk via fileSystem.writeFileContents and the function returns Void, so nothing is returned."
+     },
+     {
+      "label": "packet-04/4",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It is part of an XML property-list parser that consumes input bytes and emits parse events; XML is its input, not its output."
+     },
+     {
+      "label": "packet-04/5",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "MermaidScene(size: CGSize(width: 10, height: 10), backgroundColor: nil, elements: [.text(\"a\\u{0001}b\", origin: .zero, font: FontSpec(), color: CGColor(gray: 0, alpha: 1), anchor: .start)]) -> `<text \u2026>a\\u{0001}b</text>`, a C0 control escapeText passes through",
+      "reason": "Documented as a standalone SVG document and always one <svg>\u2026</svg> root built from a public init over CoreGraphics values; it writes no same-document references, reads no ambient state, but escapeText/escapeAttr only escape &, <, > (and \") so forbidden control characters in text or font family pass through."
+     },
+     {
+      "label": "packet-04/6",
+      "verdict": "DOCUMENT",
+      "expressible": false,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": true,
+      "witness": "body: font = \"A&B\" -> `<style>\u2026 text { font-family: 'A&B', system-ui, sans-serif; } \u2026` (bare `&`); refs: a flowchart node with inlineStyle [\"fill\": \"url(#missing)\"] -> `<rect \u2026 fill=\"url(#missing)\" \u2026/>` with no id=\"missing\" in the result",
+      "reason": "It returns one complete <svg> whose marker-end/start url(#arrowhead\u2026) references name markers it defines in <defs>, but it is a private top-level function a test cannot call (only via the public renderSvg wrapper), its <defs> order follows iteration of a Set<String> (per-process hash seed), the font and colors are interpolated unescaped, and caller inline styles can carry dangling url(#\u2026) references."
+     },
+     {
+      "label": "packet-04/7",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The .xcscheme XML is written to disk with path.write and the function returns Void."
+     },
+     {
+      "label": "packet-04/8",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It is a format sniffer that checks whether a buffer starts with `<?xml` and returns an index, not XML text."
+     }
+    ],
+    "B": [
+     {
+      "label": "packet-04/1",
+      "verdict": "FRAGMENT",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "The base-class xmlString returns only the text of a text, attribute, comment or namespace node (Document and Element override it), so its result is never one complete root element."
+     },
+     {
+      "label": "packet-04/2",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "font = \"a<b\" (any chart, any colors): buildStyleBlock writes it raw into the style element, giving `text { font-family: 'a<b', system-ui, sans-serif; }`, so a bare `<` appears in text",
+      "reason": "It returns a complete <svg>\u2026</svg> document with no same-document references. The output varies with process-wide state: _formatTipValue uses a NumberFormatter on the current locale, and the order of `columns.values` follows the per-process hash seed. Caller strings (font, colors, textAnchor) are interpolated without escaping."
+     },
+     {
+      "label": "packet-04/3",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It writes the xUnit XML to a file through fileSystem.writeFileContents and returns nothing."
+     },
+     {
+      "label": "packet-04/4",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It is part of an XML property-list parser: it consumes tags and emits parse events, so the XML is its input, not its output."
+     },
+     {
+      "label": "packet-04/5",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "VACUOUS",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "elements = [.text(\"\\u{0001}\", origin: .zero, font: FontSpec(), color: black, anchor: .start)]: escapeText only replaces & < >, so the output holds `dominant-baseline=\"alphabetic\">\\u{0001}</text>`, a C0 control that XML 1.0 forbids",
+      "reason": "Documented as a standalone SVG document, it builds one <svg> root from stored properties only and writes no url(#)/href references. escapeText and escapeAttr let forbidden control characters through."
+     },
+     {
+      "label": "packet-04/6",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": true,
+      "witness": "body: font = \"a<b\" gives `text { font-family: 'a<b', system-ui, sans-serif; }` in the style element (raw `<`); refs: a flowchart node with inlineStyle [\"fill\": \"url(#missing)\"] gives `<rect ... fill=\"url(#missing)\" .../>`, and no element has id=\"missing\"",
+      "reason": "It returns a complete <svg> document. Its marker-end/start url(#arrowhead\u2026) references name markers it defines in its own <defs>, but caller style values (url(#\u2026)) pass through unchecked and the font is written raw. The marker order follows Set<String> iteration, which depends on the per-process hash seed."
+     },
+     {
+      "label": "packet-04/7",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It builds an .xcscheme XML text but writes it to disk with path.write and returns nothing."
+     },
+     {
+      "label": "packet-04/8",
+      "verdict": "NOT-EMITTER",
+      "expressible": null,
+      "ambient": null,
+      "sentinel": "none",
+      "law2": null,
+      "body_disagrees": null,
+      "refs_dangle": null,
+      "witness": "",
+      "reason": "It is a format sniffer: it checks whether a buffer starts with `<?xml` and returns an index, not XML text."
+     }
+    ],
+    "C": [
+     {
+      "label": "packet-04/6",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": true,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": true,
+      "witness": "Law 1: font = \"A&B\" makes buildStyleBlock write `text { font-family: 'A&B', system-ui, sans-serif; }` inside <style>, a bare & that is not an entity. colors.bg = `a\"b` also breaks it, because svgOpenTag writes it unescaped into `style=\"--bg:a\"b;--fg:...\"`. Law 2: a node whose inlineStyle is [\"fill\": \"url(#g)\"] gets `fill=\"url(#g)\"` through _escapeAttr, and the result defines no id=\"g\".",
+      "reason": "The unit returns one complete <svg> root (open tag, style, marker defs, groups, edges, labels, nodes, </svg>), and it is reachable 1:1 through the public renderSvg with buildable inputs; its own marker-end/marker-start url(#arrowhead\u2026) references always name defs it writes. The font and the theme colors are interpolated unescaped, and caller style values can carry dangling url(#\u2026) paint references. The order of the per-color marker defs follows Set<String> iteration, which depends on the per-process random hash seed (the ambient source)."
+     }
+    ]
+   },
+   "retried": []
+  },
+  {
+   "packet": "packet-05",
+   "split": [],
+   "records": {
+    "A": [
+     {
+      "label": "packet-05/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "font = \"<\" (any diagram, any colors): buildStyleBlock writes the font name raw into the <style> text, giving `  text { font-family: '<', system-ui, sans-serif; }`, a bare '<'. Also PositionedSequenceActor.type = \"\\\"\" gives `data-type=\"\"\"` in renderActor, and DiagramColors.bg = \"\\\"\" breaks the svg style attribute.",
+      "reason": "It returns one complete <svg> root (open tag, style, defs, body, </svg>) built from plain public value inputs that a test reaches through the pass-through public renderSequenceSvg; it reads no ambient state, its only url(#\u2026) references name seq-arrow and seq-arrow-open, which arrowMarkerDefs always defines, and the font name, the actor type, the message lineStyle/arrowHead and the colors are interpolated without escaping."
+     }
+    ],
+    "B": [
+     {
+      "label": "packet-05/1",
+      "verdict": "DOCUMENT",
+      "expressible": true,
+      "ambient": false,
+      "sentinel": "none",
+      "law2": "OWES",
+      "body_disagrees": true,
+      "refs_dangle": false,
+      "witness": "font = \"A&B\" (any diagram) writes `text { font-family: 'A&B', system-ui, sans-serif; }` inside <style>, which leaves a bare `&`. Also actor.type = \"a\\\"b\" writes `data-type=\"a\"b\"` without escaping, and colors.bg = \"x\\\"\" breaks the svg tag's style attribute.",
+      "reason": "It builds the whole sequence-diagram SVG (svg open tag, style, defs, body, </svg>) from struct inputs and module constants that a test can construct through @testable import (memberwise inits), and reads no ambient state. Its only same-document references, url(#seq-arrow) and url(#seq-arrow-open), are always defined by arrowMarkerDefs. But the font, the colors, actor.type, lineStyle and arrowHead are written into the output without escaping, and labels keep any C0 control characters."
+     }
+    ],
+    "C": []
+   },
+   "retried": []
+  }
+ ]
+}

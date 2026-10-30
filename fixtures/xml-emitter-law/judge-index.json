@@ -1,0 +1,134 @@
+[
+ {
+  "label": "packet-01/1",
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_class_renderer.swift:21"
+ },
+ {
+  "label": "packet-01/2",
+  "id": "yahirvitelugardo__Graffle:Sources/Graffle/Architecture/ArchitectureSelfTest.swift:5"
+ },
+ {
+  "label": "packet-01/3",
+  "id": "soto-core:Sources/SotoCore/Middleware/Middleware/S3Middleware.swift:268"
+ },
+ {
+  "label": "packet-01/4",
+  "id": "swift-foundation:Sources/FoundationEssentials/PropertyList/XMLPlistEncodingFormat.swift:732"
+ },
+ {
+  "label": "packet-01/5",
+  "id": "swift-package-manager:Sources/Build/BuildPlan/BuildPlan.swift:1374"
+ },
+ {
+  "label": "packet-01/6",
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_er_renderer.swift:21"
+ },
+ {
+  "label": "packet-01/7",
+  "id": "soto-core:Sources/SotoXML/XML.swift:203"
+ },
+ {
+  "label": "packet-01/8",
+  "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/SVGRenderer.swift:31"
+ },
+ {
+  "label": "packet-02/1",
+  "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/SequenceSVGRenderer.swift:125"
+ },
+ {
+  "label": "packet-02/2",
+  "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:81"
+ },
+ {
+  "label": "packet-02/3",
+  "id": "yahirvitelugardo__Graffle:Sources/Graffle/SVGExport.swift:98"
+ },
+ {
+  "label": "packet-02/4",
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_theme.swift:297"
+ },
+ {
+  "label": "packet-02/5",
+  "id": "2389-research__MermaidKit:Sources/MermaidLayout/SVGRenderer.swift:14"
+ },
+ {
+  "label": "packet-02/6",
+  "id": "swiftlang-swift:utils/swift-dev-utils/Sources/SwiftXcodeGen/Generator/SchemeGenerator.swift:82"
+ },
+ {
+  "label": "packet-02/7",
+  "id": "SwiftLint:Source/SwiftLintFramework/Reporters/CheckstyleReporter.swift:12"
+ },
+ {
+  "label": "packet-02/8",
+  "id": "swift-testing:Sources/Testing/Events/Recorder/Event.JUnitXMLRecorder.swift:92"
+ },
+ {
+  "label": "packet-03/1",
+  "id": "SwiftLint:Source/SwiftLintFramework/Reporters/JUnitReporter.swift:11"
+ },
+ {
+  "label": "packet-03/2",
+  "id": "swiftlang-swift:utils/swift-dev-utils/Sources/SwiftXcodeGen/Generator/WorkspaceGenerator.swift:31"
+ },
+ {
+  "label": "packet-03/3",
+  "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer+SVG.swift:37"
+ },
+ {
+  "label": "packet-03/4",
+  "id": "XcodeProj:Sources/XcodeProj/Extensions/AEXML+XcodeFormat.swift:5"
+ },
+ {
+  "label": "packet-03/5",
+  "id": "SwiftLint:Source/SwiftLintFramework/Reporters/GitLabJUnitReporter.swift:9"
+ },
+ {
+  "label": "packet-03/6",
+  "id": "yahirvitelugardo__Graffle:Sources/Graffle/AppDelegate.swift:849"
+ },
+ {
+  "label": "packet-03/7",
+  "id": "sourcekit-lsp:Sources/CompletionScoringTestSupport/RepeatableRandomNumberGenerator.swift:63"
+ },
+ {
+  "label": "packet-03/8",
+  "id": "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer+SVG.swift:13"
+ },
+ {
+  "label": "packet-04/1",
+  "id": "soto-core:Sources/SotoXML/XML.swift:125"
+ },
+ {
+  "label": "packet-04/2",
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_xychart_renderer.swift:31"
+ },
+ {
+  "label": "packet-04/3",
+  "id": "swift-package-manager:Sources/Commands/SwiftTestCommand.swift:2137"
+ },
+ {
+  "label": "packet-04/4",
+  "id": "swift-foundation:Sources/FoundationEssentials/PropertyList/XMLPlistScannerEventSource.swift:147"
+ },
+ {
+  "label": "packet-04/5",
+  "id": "Australware__swift-mermaid:Sources/Mermaid/Core/SVGRenderer.swift:8"
+ },
+ {
+  "label": "packet-04/6",
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_renderer.swift:60"
+ },
+ {
+  "label": "packet-04/7",
+  "id": "swiftlang-swift:utils/swift-dev-utils/Sources/SwiftXcodeGen/Generator/SchemeGenerator.swift:105"
+ },
+ {
+  "label": "packet-04/8",
+  "id": "swift-foundation:Sources/FoundationEssentials/PropertyList/PlistDecoder.swift:250"
+ },
+ {
+  "label": "packet-05/1",
+  "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_sequence_renderer.swift:14"
+ }
+]

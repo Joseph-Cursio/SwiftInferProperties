@@ -1,0 +1,287 @@
+{
+ "date": "2026-10-30T17:56:32Z",
+ "results": {
+  "Q1": {
+   "query": "\"<?xml version\" language:Swift",
+   "total_count": 9920,
+   "incomplete_results": false,
+   "top_repositories": [
+    [
+     "pointfreeco/pointfreeco",
+     4
+    ],
+    [
+     "tgu/RosSwift",
+     4
+    ],
+    [
+     "whyisjake/today",
+     3
+    ],
+    [
+     "swiftlang/swift-corelibs-foundation",
+     2
+    ],
+    [
+     "auth0/Auth0.swift",
+     2
+    ],
+    [
+     "nmdias/FeedKit",
+     2
+    ],
+    [
+     "jamf/ReEnroller",
+     2
+    ],
+    [
+     "JohnSundell/Xgen",
+     2
+    ],
+    [
+     "vincentneo/CoreGPX",
+     2
+    ],
+    [
+     "maptiler/maptiler-sdk-swift",
+     2
+    ]
+   ]
+  },
+  "Q2": {
+   "query": "\"xmlns=\" \"</svg>\" language:Swift",
+   "total_count": 2724,
+   "incomplete_results": false,
+   "top_repositories": [
+    [
+     "avatune/avatune",
+     11
+    ],
+    [
+     "pointfreeco/pointfreeco",
+     8
+    ],
+    [
+     "Shpigford/clearly",
+     3
+    ],
+    [
+     "exyte/Macaw",
+     2
+    ],
+    [
+     "makecindy/cindy",
+     2
+    ],
+    [
+     "supabitapp/supaterm-legacy",
+     2
+    ],
+    [
+     "tyrad/nodeseek",
+     2
+    ],
+    [
+     "ivg-design/SidebarFavorites",
+     2
+    ],
+    [
+     "libsdl-org/SDL",
+     1
+    ],
+    [
+     "manaflow-ai/cmux",
+     1
+    ]
+   ]
+  },
+  "Q3": {
+   "query": "\"url(#\" language:Swift",
+   "total_count": 1160,
+   "incomplete_results": false,
+   "top_repositories": [
+    [
+     "EFPrefix/EFQRCode",
+     5
+    ],
+    [
+     "dagronf/QRCode",
+     5
+    ],
+    [
+     "miataru/miataru-ios-client",
+     4
+    ],
+    [
+     "unpeel-com/unpeel",
+     3
+    ],
+    [
+     "schwa/icon-generator",
+     3
+    ],
+    [
+     "pointfreeco/pointfreeco",
+     3
+    ],
+    [
+     "Alexiusy/SVGlib",
+     2
+    ],
+    [
+     "lukilabs/beautiful-mermaid-swift",
+     2
+    ],
+    [
+     "eaviles/Ollin",
+     2
+    ],
+    [
+     "RockxyApp/Rockxy",
+     2
+    ]
+   ]
+  },
+  "Q4": {
+   "query": "\"<!DOCTYPE html\" language:Swift",
+   "total_count": 12688,
+   "incomplete_results": false,
+   "top_repositories": [
+    [
+     "velox-apps/velox",
+     14
+    ],
+    [
+     "Shpigford/clearly",
+     4
+    ],
+    [
+     "lukakerr/Pine",
+     2
+    ],
+    [
+     "sbarex/SourceCodeSyntaxHighlight",
+     2
+    ],
+    [
+     "kylehowells/swift-justhtml",
+     2
+    ],
+    [
+     "Manhhao/Hoshi-Reader",
+     2
+    ],
+    [
+     "matt0975/vory",
+     2
+    ],
+    [
+     "frs0n/placard",
+     1
+    ],
+    [
+     "httpswift/swifter",
+     1
+    ],
+    [
+     "tnantoka/edhita",
+     1
+    ]
+   ]
+  },
+  "Q5": {
+   "query": "\"</checkstyle>\" language:Swift",
+   "total_count": 16,
+   "incomplete_results": false,
+   "top_repositories": [
+    [
+     "ictechgy/cartograph",
+     2
+    ],
+    [
+     "Lore-Hex/QuillCode",
+     2
+    ],
+    [
+     "realm/SwiftLint",
+     1
+    ],
+    [
+     "nicklockwood/SwiftFormat",
+     1
+    ],
+    [
+     "IBDecodable/IBLinter",
+     1
+    ],
+    [
+     "danwood/Treeswift",
+     1
+    ],
+    [
+     "tetrafolium/SwiftLint",
+     1
+    ],
+    [
+     "albovsky/lethen",
+     1
+    ],
+    [
+     "pepaproch/swiftlint",
+     1
+    ],
+    [
+     "MrE-Fog/SwiftLint",
+     1
+    ]
+   ]
+  },
+  "Q6": {
+   "query": "\"</testsuites>\" language:Swift",
+   "total_count": 90,
+   "incomplete_results": false,
+   "top_repositories": [
+    [
+     "juntaki/mutantkit",
+     5
+    ],
+    [
+     "arconsis/derived-data-tool",
+     4
+    ],
+    [
+     "terminaloutcomes/bleat",
+     3
+    ],
+    [
+     "realm/SwiftLint",
+     2
+    ],
+    [
+     "swiftlang/swift-package-manager",
+     2
+    ],
+    [
+     "XCTestHTMLReport/XCTestHTMLReport",
+     2
+    ],
+    [
+     "jfarcand/mirroir-mcp",
+     2
+    ],
+    [
+     "allegro/swift-junit",
+     2
+    ],
+    [
+     "atelier-socle/swift-gherkin-testing",
+     2
+    ],
+    [
+     "mikaryyn/swift-ci",
+     2
+    ]
+   ]
+  }
+ }
+}
