@@ -17,7 +17,8 @@
 >
 > Under §8, #668 was closed as not planned on 2026-10-30, with the user's approval, carrying the two reopen conditions it froze. **Separately,
 > 14 of the 18 owing groups in every group break Law 1** (all but SwiftUMLStudio's four, already fixed), each
-> witness run. Six repositories hold a reachable defect, offered for upstream filing and not yet filed.
+> witness run. Six repositories hold a reachable defect, each filed upstream on 2026-10-30 with the user's
+> approval and tracked in #700.
 
 #668 asked for two laws the catalogue does not have, gated separately, for a function that builds an XML document
 as text:
@@ -140,10 +141,15 @@ reference the unit made; every reference it generates resolves. The hand-check r
 it shows Law 2's limit: a pass-through style is outside what the unit owes.
 
 **Six of the eight repositories hold a reachable defect worth an upstream issue** (SwiftLint, one issue for all
-three reporters; swift-foundation; MermaidKit; swift-mermaid; Graffle; XcodeProj). None has been filed: scope §8
-offers them for filing, and that waits on the user. The common cause is one #80 already fixed in SwiftUMLStudio:
-escaping the five predefined entities is not enough, because XML 1.0 forbids most C0 controls outright, even as a
-character reference.
+three reporters; swift-foundation; MermaidKit; swift-mermaid; Graffle; XcodeProj). Scope §8 offered them for filing,
+and each was filed on 2026-10-30 with the user's approval, after being reproduced at upstream `main` as a test that
+fails there and passes with a proposed patch (`fixtures/xml-emitter-law/upstream-repro/`): realm/SwiftLint#6965,
+swiftlang/swift-foundation#2393, 2389-research/MermaidKit#119, Australware/swift-mermaid#2,
+yahirvitelugardo/Graffle#1 and tuist/XcodeProj#1198, tracked in #700. The common cause is one #80 already fixed in
+SwiftUMLStudio: escaping the five predefined entities is not enough, because XML 1.0 forbids most C0 controls
+outright, even as a character reference. Preparing the filings found a second cause in four of the six (SwiftLint,
+MermaidKit, swift-mermaid, Graffle), which the hand-check did not record: escaping by `Character` misses a `<`, `&` or
+`"` followed by a combining mark, because the two scalars form one `Character`.
 
 ## The kill arm
 
@@ -372,8 +378,8 @@ approval, a result comment and the two reopen conditions frozen before the run:
     each was judged only because it is a candidate, and none is GATED.
   - **HTML.** HTML outnumbers standalone SVG about 4.7 to 1 on GitHub (R5), and the brief reads an HTML-vocabulary
     card as HTML. Law 1 states nothing about it.
-- **Upstream.** The six reachable defects are offered for filing (SwiftLint, one issue for its three reporters;
-  swift-foundation; MermaidKit; swift-mermaid; Graffle; XcodeProj). Filing waits on the user.
+- **Upstream.** The six reachable defects were filed on 2026-10-30 (SwiftLint, one issue for its three reporters;
+  swift-foundation; MermaidKit; swift-mermaid; Graffle; XcodeProj), tracked in #700.
 
 ## Reproducing
 

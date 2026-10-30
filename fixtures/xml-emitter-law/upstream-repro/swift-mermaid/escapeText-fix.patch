@@ -1,0 +1,37 @@
+diff --git a/Sources/Mermaid/Core/SVGRenderer.swift b/Sources/Mermaid/Core/SVGRenderer.swift
+index dcad52a..8e64548 100644
+--- a/Sources/Mermaid/Core/SVGRenderer.swift
++++ b/Sources/Mermaid/Core/SVGRenderer.swift
+@@ -90,15 +90,20 @@ enum SVGPath {
+     }
+ }
+ 
++/// Escapes `&`, `<` and `>`, and writes U+FFFD for a character XML 1.0 cannot hold at all, even as a
++/// reference: a C0 control other than tab, LF and CR, or U+FFFE / U+FFFF. Walks scalars, not Characters:
++/// "<" followed by a combining mark is one Character, and it is not "<".
+ func escapeText(_ s: String) -> String {
+     var out = ""
+-    out.reserveCapacity(s.count)
+-    for ch in s {
+-        switch ch {
++    out.reserveCapacity(s.utf8.count)
++    for scalar in s.unicodeScalars {
++        switch scalar {
+         case "&": out += "&amp;"
+         case "<": out += "&lt;"
+         case ">": out += "&gt;"
+-        default: out.append(ch)
++        case "\t", "\n", "\r": out.unicodeScalars.append(scalar)
++        case "\u{0}"..."\u{1F}", "\u{FFFE}", "\u{FFFF}": out += "\u{FFFD}"
++        default: out.unicodeScalars.append(scalar)
+         }
+     }
+     return out
+@@ -106,6 +111,6 @@ func escapeText(_ s: String) -> String {
+ 
+ func escapeAttr(_ s: String) -> String {
+     var out = escapeText(s)
+-    out = out.replacingOccurrences(of: "\"", with: "&quot;")
++    out = out.replacingOccurrences(of: "\"", with: "&quot;", options: .literal)
+     return out
+ }

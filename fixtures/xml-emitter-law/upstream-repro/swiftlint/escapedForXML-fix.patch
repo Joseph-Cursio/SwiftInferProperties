@@ -1,0 +1,55 @@
+diff --git a/Source/SwiftLintFramework/Extensions/String+XML.swift b/Source/SwiftLintFramework/Extensions/String+XML.swift
+index a6d7e49..2d826e4 100644
+--- a/Source/SwiftLintFramework/Extensions/String+XML.swift
++++ b/Source/SwiftLintFramework/Extensions/String+XML.swift
+@@ -1,19 +1,25 @@
+ import Foundation
+ 
+ extension String {
++    /// Escapes `&`, `"`, `'`, `>` and `<`, and replaces each character XML 1.0 cannot hold at all, not even as a
++    /// character reference, with U+FFFD: the C0 controls other than tab, line feed and carriage return, U+FFFE and
++    /// U+FFFF. Works on Unicode scalars, because `<` followed by a combining mark is one `Character`, and
++    /// `replacingOccurrences(of: "<", …)` does not find the `<` in it.
+     func escapedForXML() -> String {
+-        // & needs to go first, otherwise other replacements will be replaced again
+-        let htmlEscapes = [
+-            ("&", "&amp;"),
+-            ("\"", "&quot;"),
+-            ("'", "&apos;"),
+-            (">", "&gt;"),
+-            ("<", "&lt;"),
+-        ]
+-        var newString = self
+-        for (key, value) in htmlEscapes {
+-            newString = newString.replacingOccurrences(of: key, with: value)
++        var escaped = ""
++        escaped.reserveCapacity(utf8.count)
++        for scalar in unicodeScalars {
++            switch scalar {
++            case "&": escaped += "&amp;"
++            case "\"": escaped += "&quot;"
++            case "'": escaped += "&apos;"
++            case ">": escaped += "&gt;"
++            case "<": escaped += "&lt;"
++            case "\t", "\n", "\r": escaped.unicodeScalars.append(scalar)
++            case "\u{0}"..."\u{1F}", "\u{FFFE}", "\u{FFFF}": escaped += "\u{FFFD}"
++            default: escaped.unicodeScalars.append(scalar)
++            }
+         }
+-        return newString
++        return escaped
+     }
+ }
+diff --git a/Source/SwiftLintFramework/Reporters/GitLabJUnitReporter.swift b/Source/SwiftLintFramework/Reporters/GitLabJUnitReporter.swift
+index 17ad7d8..0005af1 100644
+--- a/Source/SwiftLintFramework/Reporters/GitLabJUnitReporter.swift
++++ b/Source/SwiftLintFramework/Reporters/GitLabJUnitReporter.swift
+@@ -14,7 +14,7 @@ struct GitLabJUnitReporter: Reporter {
+                 let column = violation.location.character.map(String.init)
+ 
+                 let severity = violation.severity.rawValue
+-                let rule = violation.ruleIdentifier
++                let rule = violation.ruleIdentifier.escapedForXML()
+                 let reason = violation.reason.escapedForXML()
+ 
+                 let location = [fileName, line].compactMap(\.self).joined(separator: ":")
