@@ -5,7 +5,7 @@
 > **Run 2026-10-30. Result: both laws DECLINE. Law 1 on kills, with N1 = 8 over 3 repositories, gate precision 7 of 7
 > and a decisive count of 0 (2 with H1–H6 counted); Law 2 on a single subject, with N2 = 4 over 1 (8 over 3 with the
 > outer groups). Written up in `docs/measurements/xml-emitter-census.md`.** The rule below is as frozen at `7300102e`,
-> with no amendment. Under §8, #668 closes as not planned once the user approves.
+> with no amendment. Under §8, #668 was closed as not planned on 2026-10-30, with the user's approval.
 
 #668 asks for two laws the catalogue does not have, gated separately. For a pure, synchronous, non-throwing,
 non-mutating function or computed property that builds an XML document as a `String`:

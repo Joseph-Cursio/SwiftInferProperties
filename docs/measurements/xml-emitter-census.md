@@ -15,7 +15,7 @@
 >   **That rests on the universe's boundary**: the graph-layout corpus holds 4 more owing SVG emitters, in
 >   beautiful-mermaid-swift and Graffle, so the population over every group is 8 over 3 repositories, which clears.
 >
-> Under §8, #668 closes as not planned once the user approves, with the two reopen conditions it froze. **Separately,
+> Under §8, #668 was closed as not planned on 2026-10-30, with the user's approval, carrying the two reopen conditions it froze. **Separately,
 > 14 of the 18 owing groups in every group break Law 1** (all but SwiftUMLStudio's four, already fixed), each
 > witness run. Six repositories hold a reachable defect, offered for upstream filing and not yet filed.
 
@@ -263,8 +263,8 @@ the first paragraph says so: Law 1's decisive count with H1–H6 counted (2), an
 SwiftLint included (5 over 2), and N_gated without the ambient `GitLabJUnitReporter` is 6 over 2. For Law 2 every
 line but the outer groups' stays at 4 over 1.
 
-Under §8's disposition, both laws declining, **#668 closes as not planned once the user approves**, with a result
-comment and the two reopen conditions frozen before the run:
+Under §8's disposition, both laws declining, **#668 was closed as not planned on 2026-10-30**, with the user's
+approval, a result comment and the two reopen conditions frozen before the run:
 
 - **Law 2**, #668's own: a repository not among those this census reports, with an owing SVG emitter; or a later
   census with at least 5 owing groups over at least 2 repositories. This census reports SwiftUMLStudio,
@@ -344,7 +344,7 @@ comment and the two reopen conditions frozen before the run:
 
 ## So what
 
-- **Both laws decline under the frozen rule, and #668 closes as not planned once the user approves.** Neither
+- **Both laws decline under the frozen rule, and #668 is closed as not planned.** Neither
   decline is a finding that the law is wrong or that its population is empty. Each rests on a boundary the scope
   drew before the run, and each boundary is printed above.
 - **Law 1 is right, about real code, at a high rate.** Across every group, 18 groups owe it, and 14 of them break
