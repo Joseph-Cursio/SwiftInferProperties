@@ -344,7 +344,7 @@ let package = Package(
                 // `@testable import SwiftInferCore` in both expansion suites;
                 // previously reachable only through the macro targets.
                 "SwiftInferCore",
-                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax")
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
             ]
         ),
         // SwiftInferIntegrationTests — M1.6 perf integration tests against
