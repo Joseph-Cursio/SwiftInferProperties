@@ -114,8 +114,9 @@ struct CheckPropertyMacroDiagnosticsTests {
             diagnostics: [
                 DiagnosticSpec(
                     message: "@CheckProperty(.roundTrip, pairedWith:) requires the"
-                        + " parameter type and return type to differ. For T -> T"
-                        + " use @CheckProperty(.idempotent).",
+                        + " parameter type and return type to differ. For a T -> T"
+                        + " idempotency check, use SwiftIdempotency's `@Idempotent`"
+                        + " with `@IdempotencyTests`.",
                     line: 1,
                     column: 1
                 )
@@ -163,7 +164,8 @@ struct CheckPropertyMacroIdempotentTests {
         let expected = expectedIdempotentExpansion(
             sourceFunction: "func normalize(_ value: String) -> String { value }",
             funcName: "normalize",
-            generator: "Gen<Character>.letterOrNumber.string(of: 0...8)",
+            valueType: "String",
+            generator: formattedStringGenerator(),
             seed: seed
         )
         assertMacroExpansion(
@@ -183,6 +185,7 @@ struct CheckPropertyMacroIdempotentTests {
         let expected = expectedIdempotentExpansion(
             sourceFunction: "func abs(_ value: Int) -> Int { value < 0 ? -value : value }",
             funcName: "abs",
+            valueType: "Int",
             generator: "Gen<Int>.int()",
             seed: seed
         )
@@ -198,15 +201,16 @@ struct CheckPropertyMacroIdempotentTests {
 
     @Test
     func idempotentExpansionFallsBackToUserGenForCustomType() {
-        // Non-RawType parameters fall through to `<TypeName>.gen()` —
-        // the same convention `DerivationStrategist.userGen` /
-        // `.todo` produce.
+        // Non-RawType parameters fall through to `<TypeName>.gen()` with
+        // the `.todo` marker comment, the same convention
+        // `DerivationStrategist.userGen` / `.todo` produce.
         let canonical = "checkProperty.idempotent|sanitize|(IntSet)->IntSet"
         let seed = SamplingSeed.derive(fromIdentityHash: canonical)
         let expected = expectedIdempotentExpansion(
             sourceFunction: "func sanitize(_ value: IntSet) -> IntSet { value }",
             funcName: "sanitize",
-            generator: "IntSet.gen()",
+            valueType: "IntSet",
+            generator: todoGenerator("IntSet"),
             seed: seed
         )
         assertMacroExpansion(
@@ -227,6 +231,7 @@ struct CheckPropertyMacroIdempotentTests {
 func expectedIdempotentExpansion(
     sourceFunction: String,
     funcName: String,
+    valueType: String,
     generator: String,
     seed: SamplingSeed.Value
 ) -> String {
@@ -248,8 +253,12 @@ func expectedIdempotentExpansion(
             let result = await backend.check(
                 trials: 100,
                 seed: seed,
-                sample: { rng in (\(generator)).run(using: &rng) },
-                property: { value in \(funcName)(\(funcName)(value)) == \(funcName)(value) }
+                sample: { rng in
+                    (\(generator)).run(using: &rng)
+                },
+                property: { (value: \(valueType)) in
+                    \(funcName)(\(funcName)(value)) == \(funcName)(value)
+                }
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
@@ -287,8 +296,12 @@ func expectedRoundTripExpansion(
             let result = await backend.check(
                 trials: 100,
                 seed: seed,
-                sample: { rng in (\(generator)).run(using: &rng) },
-                property: { value in \(inverseName)(\(forwardName)(value)) == value }
+                sample: { rng in
+                    (\(generator)).run(using: &rng)
+                },
+                property: { value in
+                    \(inverseName)(\(forwardName)(value)) == value
+                }
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
@@ -315,6 +328,7 @@ func expectedPreservesInvariantExpansion(
     let suffix = keyPath
         .replacingOccurrences(of: "\\.", with: "")
         .replacingOccurrences(of: ".", with: "_")
+    let escapedKeyPath = keyPath.replacingOccurrences(of: "\\", with: "\\\\")
     return """
         \(sourceFunction)
 
@@ -329,17 +343,52 @@ func expectedPreservesInvariantExpansion(
             let result = await backend.check(
                 trials: 100,
                 seed: seed,
-                sample: { rng in (\(generator)).run(using: &rng) },
-                property: { value in !value[keyPath: \(keyPath)] || \(funcName)(value)[keyPath: \(keyPath)] }
+                sample: { rng in
+                    (\(generator)).run(using: &rng)
+                },
+                property: { value in
+                    !value[keyPath: \(keyPath)] || \(funcName)(value) [keyPath: \(keyPath)]
+                }
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "\(funcName)(_:) failed invariant preservation \(keyPath) " +
-                    "at input \\(input). \\(error?.message ?? "")"
+                    "\(funcName)(_:) failed invariant preservation \(escapedKeyPath) \
+        at input \\(input). \\(error?.message ?? "")"
                 )
             }
         }
         """
+}
+
+/// What the macro emits for a type it derives no generator for.
+func todoGenerator(_ typeName: String) -> String {
+    "\(typeName).gen() /* TODO: no generator derived — supply `static func gen()`; this will not compile */"
+}
+
+/// The String generator the macro emits, PropertyLawCore's edge-biased
+/// `RawType.string` expression, as swift-syntax formats it inside the
+/// `sample:` closure. The formatter breaks it at each closure and indents the
+/// pieces from where it sits in the expansion, so it is pinned here as
+/// emitted rather than rebuilt from the kit's one-line source.
+func formattedStringGenerator() -> String {
+    let tokens = ##"Gen<String?>.element(of: ["", " ", "  ", "\n", "\t", "-", "- ", "  -", "- x", "a\n- b", "##
+        + ##"":", "#", "# ", "/"] as [String])"##
+    func indented(_ depth: Int, _ line: String) -> String {
+        String(repeating: " ", count: depth) + line
+    }
+    return [
+        "Gen.frequency((3.0, Gen<Character>.letterOrNumber.string(of: 0 ... 8)), (1.0, \(tokens).map {",
+        indented(28, "$0!"),
+        indented(24, "}), (3.0, \(tokens).map {"),
+        indented(28, "$0!"),
+        indented(24, "} .map {"),
+        indented(28, "$0 + $0"),
+        indented(24, "}), (1.0, zip(\(tokens).map {"),
+        indented(32, "$0!"),
+        indented(28, "}, Gen<Character>.letterOrNumber.string(of: 0 ... 4)).map {"),
+        indented(28, "$0 + $1"),
+        indented(24, "}))")
+    ].joined(separator: "\n")
 }
 
 func hex16(_ word: UInt64) -> String {

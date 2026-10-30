@@ -21,7 +21,7 @@ struct CheckPropertyMacroExpansionTests {
             sourceFunction: "func encode(_ value: String) -> Int { value.count }",
             forwardName: "encode",
             inverseName: "hash",
-            generator: "Gen<Character>.letterOrNumber.string(of: 0...8)",
+            generator: formattedStringGenerator(),
             seed: seed
         )
         assertMacroExpansion(
@@ -42,7 +42,7 @@ struct CheckPropertyMacroExpansionTests {
             sourceFunction: "func encode(_ value: MyType) -> Data { Data() }",
             forwardName: "encode",
             inverseName: "decode",
-            generator: "MyType.gen()",
+            generator: todoGenerator("MyType"),
             seed: seed
         )
         assertMacroExpansion(
@@ -85,7 +85,7 @@ struct CheckPropertyMacroExpansionTests {
             sourceFunction: "func adjust(_ value: Widget) -> Widget { value }",
             funcName: "adjust",
             keyPath: "\\.isValid",
-            generator: "Widget.gen()",
+            generator: todoGenerator("Widget"),
             seed: seed
         )
         assertMacroExpansion(
