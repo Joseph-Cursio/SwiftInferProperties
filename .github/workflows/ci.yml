@@ -68,8 +68,17 @@ jobs:
       # developer machine). The measured batches and the §13 perf suites are
       # left to `make test`, which runs them one at a time. Keep the pattern in
       # step with the Makefile's SUBPROCESS_RE and PERF_RE.
+      #
+      # The second `--skip` drops three tests that need the measurement
+      # corpora: clones of other projects that sit outside this repository on a
+      # developer machine (`fixtures/corpora/manifest.json`). They assert that
+      # at least eight corpora resolve, that a `~`-rooted one does, and that at
+      # least one pinned revision can be dated, and by design they fail rather
+      # than pass on a machine with none. A runner has none, so on it they can
+      # only fail. They still run locally.
       - name: Run tests
         working-directory: SwiftInferProperties
         run: >-
           swift test --disable-experimental-prebuilts
           --skip 'MeasuredTests|MeasuredExecutionTests|VerifyPipeline|PerformanceTests'
+          --skip 'theManifestResolves|tildePathsResolve|revisionsDoNotPostdateTheirMeasurement'
