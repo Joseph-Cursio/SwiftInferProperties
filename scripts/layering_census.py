@@ -513,7 +513,11 @@ def universe():
         raise SystemExit(f"§2's wide list hashes to {wide_hash()}, not the frozen {WIDE_SHA256}")
     groups = [(("decision" if g in ("manifest", "funnel") else g), name, root, roots) for g, name, root, roots in found]
     for relative, url in WIDE:
+        # The list is frozen with its hash, so a clone moved to `~/github_projects` since
+        # 2026-10-27 is found there, as `subjects()` finds a moved `localPath`.
         root = os.path.join(HOME, relative)
+        if not os.path.isdir(root):
+            root = os.path.join(HOME, "github_projects", os.path.basename(relative))
         if not os.path.isdir(root):
             raise SystemExit(f"§2's wide group lacks {relative}")
         if url is not None and origin(root) != url:
