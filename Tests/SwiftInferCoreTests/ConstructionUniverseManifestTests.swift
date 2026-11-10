@@ -4,7 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
 private typealias Nested = ConstructionUniverseNestedPackageTests
 
 /// **What a manifest is** — the shared spec's amendments F and S. A directory holds one iff it

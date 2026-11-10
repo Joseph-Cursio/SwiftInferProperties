@@ -4,7 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
 private typealias Nested = ConstructionUniverseNestedPackageTests
 
 /// **A package the scan judges is in its universe** — the shared spec's amendment J. A nested

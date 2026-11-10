@@ -140,7 +140,7 @@ public enum RefactorClusterAnalyzer {
     /// The pre-v1.41 fixed priority order (idempotence before
     /// dual-style before round-trip) is retained as the **tie-breaker**
     /// when two per-template shapes have the same count.
-    private struct Candidate {
+    struct Candidate {
         let shape: ClusterShape
         let count: Int
         let tieBreakerIndex: Int
@@ -192,22 +192,5 @@ public enum RefactorClusterAnalyzer {
             counts[entry.templateName, default: 0] += 1
         }
         return counts
-    }
-}
-
-extension RefactorClusterAnalyzer {
-
-    /// Count ascending, tie-breaker index descending — written for `max(by:)`,
-    /// which takes the **greatest** element under this ordering, so the winner
-    /// is the highest count and, among ties, the lowest tie-breaker index.
-    ///
-    /// The direction reads backwards for that reason, and the name states the
-    /// ordering rather than the selection because that is what the laws are
-    /// about: it must still be irreflexive, asymmetric and transitive, and
-    /// `max(by:)` is undefined if it is not.
-    private static func byCountThenTieBreakerIndexDescending(_ lhs: Candidate, _ rhs: Candidate) -> Bool {
-        lhs.count != rhs.count
-            ? lhs.count < rhs.count
-            : lhs.tieBreakerIndex > rhs.tieBreakerIndex
     }
 }

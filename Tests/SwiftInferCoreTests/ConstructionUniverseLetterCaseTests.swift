@@ -4,8 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
-
 /// **The scanned path in its on-disk letter case** — the shared spec's amendment L. On a volume that
 /// folds case a mis-cased `--sources` opens the same directory, so it must build the same universe:
 /// the predicate reads names (`MyTests` is a test directory, `Mytests` is not), and the build order and

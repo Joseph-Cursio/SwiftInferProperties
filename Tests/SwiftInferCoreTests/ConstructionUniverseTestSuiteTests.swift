@@ -4,8 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
-
 /// **A test suite's folder** — the shared spec's amendment 5 (W). The swift compiler keeps its tests
 /// in `test/` and `validation-test/`, one test program per file, and with no root manifest all
 /// 22,600 of them were one table: every name had a namesake, and the facts did not finish building.
