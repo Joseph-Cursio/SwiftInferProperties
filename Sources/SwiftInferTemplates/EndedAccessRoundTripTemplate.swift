@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// **Same-end access round-trip** — adding at one end and removing from that end returns

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftEffectInference
 import SwiftInferTemplates
 import Testing

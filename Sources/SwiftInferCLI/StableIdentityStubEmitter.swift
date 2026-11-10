@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// PROTOTYPE — emits a verifier that checks an identity-stability candidate

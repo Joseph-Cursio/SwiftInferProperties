@@ -1,4 +1,3 @@
-import Foundation
 import SwiftEffectInference
 
 /// Every key a seed's `effect` object carries.

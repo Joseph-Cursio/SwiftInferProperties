@@ -1,5 +1,3 @@
-import Foundation
-
 /// What a seed *is*, which decides what may be done with it.
 ///
 /// A seed is not always a symbol to analyse. Some name a place where pure logic **exists but has no

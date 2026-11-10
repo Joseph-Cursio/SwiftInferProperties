@@ -1,4 +1,3 @@
-@testable import SwiftInferTestLifter
 import Testing
 
 @Suite("AssertCountChangeDetector — empty / degenerate slices (M5.2)")

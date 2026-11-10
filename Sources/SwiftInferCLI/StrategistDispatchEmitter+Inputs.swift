@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// `StrategistDispatchEmitter.Inputs` — everything one verify-stub emission

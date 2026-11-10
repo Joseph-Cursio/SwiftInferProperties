@@ -1,5 +1,3 @@
-import Foundation
-
 /// Renders the corpus registry and its pin status.
 ///
 /// **The summary line always states the denominator.** "Every corpus is at its pin" is a

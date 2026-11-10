@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// The census behind `docs/measurements/interaction-trap-attribution-census.md`:

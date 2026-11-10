@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M5 — classification for one Cardinality field. Hoisted to
 /// file scope to satisfy SwiftLint's 1-level nesting cap; `Field` is
 /// already nested inside `CardinalityWitness`.

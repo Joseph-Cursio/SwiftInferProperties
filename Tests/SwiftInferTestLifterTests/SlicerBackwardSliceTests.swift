@@ -1,5 +1,4 @@
 @testable import SwiftInferTestLifter
-import SwiftSyntax
 import Testing
 
 /// Shared body-slicing helper. Tests construct minimal one-method

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.141 — which index surface(s) `query` returns. The index holds two

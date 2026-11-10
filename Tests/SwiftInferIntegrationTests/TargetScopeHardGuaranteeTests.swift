@@ -1,4 +1,3 @@
-import ArgumentParser
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore

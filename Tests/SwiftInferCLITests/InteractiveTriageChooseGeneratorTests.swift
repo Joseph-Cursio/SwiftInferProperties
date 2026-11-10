@@ -1,7 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 @Suite("InteractiveTriage — chooseGenerator custom-type resolution (#2)")

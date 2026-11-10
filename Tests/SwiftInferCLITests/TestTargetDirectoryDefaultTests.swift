@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// `Sources/<name>` is SwiftPM's default for a `.target`; a `.testTarget` defaults to

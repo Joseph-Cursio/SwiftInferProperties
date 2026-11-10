@@ -1,6 +1,5 @@
 import ArgumentParser
 import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 /// V1.33.C — `swift-infer index` subcommand (PRD §20.1). Builds (or

@@ -1,9 +1,7 @@
 import Foundation
-import PropertyLawCore
 import Testing
 
 @testable import SwiftInferCLI
-@testable import SwiftInferCore
 
 @Suite("StrategistDispatchEmitter — V1.47.E template × emit dispatch")
 struct StrategistDispatchEmitterEmitTests {

@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// PROTOTYPE — end-to-end measured proof that a view model living in its

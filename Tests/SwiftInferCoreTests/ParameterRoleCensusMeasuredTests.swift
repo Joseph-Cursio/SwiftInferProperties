@@ -1,8 +1,4 @@
-import Foundation
 import Testing
-
-@testable import SwiftInferCore
-@testable import SwiftInferTemplates
 
 /// **Do commutativity and associativity fire on operands that cannot be swapped?**
 ///

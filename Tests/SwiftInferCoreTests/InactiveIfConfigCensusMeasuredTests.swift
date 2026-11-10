@@ -1,10 +1,7 @@
 import Foundation
-import SwiftInferTemplates
 import SwiftParser
 import SwiftSyntax
 import Testing
-
-@testable import SwiftInferCore
 
 /// **How many laws does the tool propose for code that is not in the build?**
 ///

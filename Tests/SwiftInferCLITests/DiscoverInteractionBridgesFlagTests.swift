@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 // V1.109 (cycle-103c) — tests for the --interactive-bridges flag

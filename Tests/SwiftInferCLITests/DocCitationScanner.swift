@@ -1,5 +1,4 @@
 import Foundation
-import Testing
 
 /// The shared machinery behind ``DocCitationTests`` and ``DocProseCitationTests``:
 /// pull `docs/…` paths out of a line, and answer whether one exists *with exactly

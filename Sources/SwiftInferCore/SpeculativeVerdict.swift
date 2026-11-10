@@ -1,5 +1,3 @@
-import Foundation
-
 /// A speculative refactor proposal: the patch, the law it unlocks, and what
 /// happened when that law was run.
 ///

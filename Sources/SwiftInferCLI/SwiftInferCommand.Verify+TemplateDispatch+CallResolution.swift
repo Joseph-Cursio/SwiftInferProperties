@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Call-expression resolution for the strategist path: given a SemanticIndex

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **model law**: an operation must agree with the semantics its name claims, checked

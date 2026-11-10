@@ -1,5 +1,3 @@
-import Foundation
-
 /// Shared curated real-axis `Double` edge-case set for the two-pass algebraic
 /// verifier stubs (round-trip / idempotence / commutativity / associativity).
 ///

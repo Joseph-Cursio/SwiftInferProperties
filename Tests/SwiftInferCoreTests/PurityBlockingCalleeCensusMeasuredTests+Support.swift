@@ -1,8 +1,4 @@
-import Foundation
-import SwiftEffectInference
 import SwiftSyntax
-
-@testable import SwiftInferCore
 
 // MARK: - Extraction
 

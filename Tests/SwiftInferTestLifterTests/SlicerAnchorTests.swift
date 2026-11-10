@@ -1,5 +1,4 @@
 @testable import SwiftInferTestLifter
-import SwiftSyntax
 import Testing
 
 @Suite("Slicer — anchor + assertion recognition (M1.2)")

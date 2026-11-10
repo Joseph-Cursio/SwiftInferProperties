@@ -1,5 +1,3 @@
-import Foundation
-
 /// The generator vocabulary for laws whose counterexamples live in **collisions**.
 ///
 /// Every recipe here answers one question: *what has to repeat before this law can fail?* A uniform

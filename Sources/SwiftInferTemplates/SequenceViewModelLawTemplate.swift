@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **sequence-view model law** — the second of the two model-law families.

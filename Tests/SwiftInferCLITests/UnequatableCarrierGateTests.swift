@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// **A law comparing results with `==` cannot be written over a carrier with no `==`.**

@@ -1,5 +1,3 @@
-import Foundation
-
 /// **No filter may take a run to zero refutable laws.**
 ///
 /// A law is *refutable* when there exists an implementation of its subject — type-correct and

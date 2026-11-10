@@ -1,6 +1,5 @@
 import Foundation
 import SwiftParser
-import SwiftSyntax
 
 /// The package-scope entry points: a directory scan, which is two-phase, and the per-file scan
 /// under a package's purity it is built from.

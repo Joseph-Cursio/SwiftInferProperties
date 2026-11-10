@@ -1,6 +1,5 @@
 import Darwin
 import Foundation
-import SwiftInferCore
 import SwiftInferTemplates
 import Testing
 

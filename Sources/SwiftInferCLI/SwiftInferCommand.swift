@@ -1,7 +1,6 @@
 import ArgumentParser
 import Foundation
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// Sink for `Discover.run(directory:output:)`. Production code uses
 /// `PrintOutput`; tests use a recording sink so they can match the rendered

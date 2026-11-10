@@ -1,5 +1,4 @@
 @testable import SwiftInferTestLifter
-import SwiftSyntax
 import Testing
 
 /// Linear-congruential PRNG so the fuzz corpus is byte-identical

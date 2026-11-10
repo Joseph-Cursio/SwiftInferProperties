@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.42.C.2 / V1.43.B / V1.44.B — synthesizes the standalone Swift
 /// source for a round-trip verify subprocess.
 ///

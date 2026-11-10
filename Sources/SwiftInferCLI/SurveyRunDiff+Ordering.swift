@@ -1,6 +1,3 @@
-import Foundation
-import SwiftInferCore
-
 extension SurveyRunDiff {
 
     /// Subject ascending, template ascending as the tiebreak — one subject can

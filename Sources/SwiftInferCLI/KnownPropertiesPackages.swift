@@ -1,5 +1,3 @@
-import Foundation
-
 /// Errors from the package-based `known-properties` verify path.
 enum KnownPropertiesVerifyError: Error, CustomStringConvertible {
     case unmappedModule(String)

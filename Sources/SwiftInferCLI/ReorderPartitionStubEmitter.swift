@@ -1,5 +1,3 @@
-import Foundation
-
 /// Emits a standalone verifier for the **reorder-partition** law — the
 /// measured half of `ReorderPartitionTemplate`.
 ///

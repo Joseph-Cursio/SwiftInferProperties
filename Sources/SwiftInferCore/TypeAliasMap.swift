@@ -1,4 +1,3 @@
-import PropertyLawCore
 import SwiftSyntax
 
 /// Collecting `typealias` declarations for the generator resolver.

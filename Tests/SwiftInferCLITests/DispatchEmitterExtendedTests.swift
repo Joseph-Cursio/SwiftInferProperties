@@ -1,9 +1,7 @@
 import Foundation
-import PropertyLawCore
 import Testing
 
 @testable import SwiftInferCLI
-@testable import SwiftInferCore
 
 // Continuation of StrategistDispatchEmitter tests — signal-driven instance-method
 // shapes and Cycle 149 dual-style-consistency coverage. Kept in a sibling file to

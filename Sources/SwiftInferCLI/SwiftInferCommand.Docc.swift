@@ -1,6 +1,5 @@
 import ArgumentParser
 import Foundation
-import SwiftInferCore
 
 /// V1.142 — `swift-infer docc` subcommand. Emits DocC documentation for the
 /// **verified** properties in `.swiftinfer/index.json` — those with a

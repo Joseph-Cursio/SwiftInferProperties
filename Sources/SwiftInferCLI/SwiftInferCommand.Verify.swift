@@ -1,6 +1,5 @@
 import ArgumentParser
 import Foundation
-import SwiftInferCore
 
 /// Errors surfaced by the `verify` subcommand. Hoisted to file scope
 /// (rather than nested under `SwiftInferCommand.Verify`) to satisfy the

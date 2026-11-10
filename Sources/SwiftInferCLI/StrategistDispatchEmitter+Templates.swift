@@ -1,5 +1,3 @@
-import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 // V1.47.E — per-template Pass 1 composers for the strategist-routed

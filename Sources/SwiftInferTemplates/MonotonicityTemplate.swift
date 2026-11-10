@@ -267,30 +267,4 @@ public enum MonotonicityTemplate {
         }
         return true
     }
-
-    // MARK: - Suggestion construction
-
-    private static func makeExplainability(
-        for summary: FunctionSummary,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let evidence = summary.inferenceEvidence
-        whySuggested.append(
-            "\(evidence.displayName) \(evidence.signature) — \(evidence.location)"
-        )
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "Ordered-codomain assumption breaks under custom Comparable conformances "
-                + "that don't satisfy strict order; the curated codomain set "
-                + "(Int, Double, Float, Date, Duration) is the only one "
-                + "M7.1 recognises.",
-            "Possible-tier by default per the §5.2 caveat — explicit "
-                + "@CheckProperty(.monotonic(over:)) annotation escalates to Likely "
-                + "(M5 macro extension is the opt-in path).",
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
 }

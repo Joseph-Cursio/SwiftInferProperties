@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Split out of `SwiftInferTemplates.swift`, which reached SwiftLint's 400-line file cap when

@@ -1,4 +1,3 @@
-import SwiftInferCore
 import SwiftSyntax
 
 /// TestLifter M7.0 — companion file holding the per-pattern detection

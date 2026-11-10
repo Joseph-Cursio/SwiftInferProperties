@@ -1,5 +1,3 @@
-import Foundation
-
 /// The committed registry of subject codebases the toolchain is measured against.
 ///
 /// ## Why this exists

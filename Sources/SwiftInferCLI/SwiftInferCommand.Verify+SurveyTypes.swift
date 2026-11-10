@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.143 lint pass — the survey-mode public output types, split out of
 // `SwiftInferCommand.Verify+AllFromIndex.swift` (which had hit SwiftLint's 400-line
 // file-length cap). These are the canonical Phase 2 measurement vocabulary

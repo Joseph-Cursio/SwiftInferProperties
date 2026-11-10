@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// **A law that splices a bare call to a `throws` subject cannot be spelled**, so it is not written.

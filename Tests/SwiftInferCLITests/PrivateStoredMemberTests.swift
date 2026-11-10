@@ -1,7 +1,6 @@
 import PropertyLawCore
 import Testing
 
-@testable import SwiftInferCLI
 @testable import SwiftInferCore
 
 /// A `private` stored property makes a struct's synthesized memberwise initializer inaccessible to

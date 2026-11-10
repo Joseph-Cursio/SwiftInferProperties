@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // V2.0 M8.A — `ActionSequenceStubEmitter.Inputs` + `EmitError` lifted

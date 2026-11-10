@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // V2.0 — `makePerStepCheck` / `makePostLoopCheck` / `makeIdempotenceCheck`

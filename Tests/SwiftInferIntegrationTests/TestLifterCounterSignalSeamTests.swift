@@ -2,7 +2,6 @@ import Foundation
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 /// TestLifter M7.0 acceptance bar item (c) — lifted-side suggestions

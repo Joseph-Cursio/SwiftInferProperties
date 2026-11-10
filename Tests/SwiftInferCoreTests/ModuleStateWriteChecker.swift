@@ -1,5 +1,3 @@
-import Foundation
-import SwiftParser
 import SwiftSyntax
 
 // The syntax walkers for `ModuleStateCensusMeasuredTests`. Split out only for the

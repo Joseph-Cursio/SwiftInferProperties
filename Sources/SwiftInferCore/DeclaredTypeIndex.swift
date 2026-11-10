@@ -1,5 +1,4 @@
 import Foundation
-import SwiftSyntax
 
 // Resolving each reducer's Action type to its declaration among the scanned
 // sources. Split out of `ReducerDiscoverer.swift` for the `file_length` cap.

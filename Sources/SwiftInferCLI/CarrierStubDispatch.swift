@@ -1,5 +1,3 @@
-import Foundation
-
 /// The `carrierType` an emitter's `Inputs` carries — the one field
 /// `CarrierStubDispatch.emit` needs to validate and route a request.
 protocol CarrierStubInputs {

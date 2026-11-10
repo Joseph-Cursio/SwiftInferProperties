@@ -1,6 +1,5 @@
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// `measure-non-negativity` gets a writer: a count, size or magnitude is never negative.

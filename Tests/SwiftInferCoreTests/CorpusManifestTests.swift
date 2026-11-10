@@ -1,8 +1,6 @@
 import Foundation
 import Testing
 
-@testable import SwiftInferCore
-
 /// **The guard for the failure that produced this loader.**
 ///
 /// On 2026-08-19 nine censuses ran against **three** corpora while the manifest listed

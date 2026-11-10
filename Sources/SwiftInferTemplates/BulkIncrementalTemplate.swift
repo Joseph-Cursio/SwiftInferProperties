@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **bulk-vs-incremental** law — one call must agree with one element at a time.

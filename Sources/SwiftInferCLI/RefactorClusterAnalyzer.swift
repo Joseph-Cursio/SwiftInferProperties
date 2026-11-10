@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// One per (typeName, cluster-shape) row.

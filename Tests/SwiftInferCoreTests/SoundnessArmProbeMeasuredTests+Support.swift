@@ -10,6 +10,7 @@ import Testing
 /// header.
 extension SoundnessArmProbeMeasuredTests {
 
+    // swiftlint:disable:next unused_declaration - used only by a closure-initialised static, which the index misses
     struct Readings {
         let open: [String: String]
         let denied: [String: String]

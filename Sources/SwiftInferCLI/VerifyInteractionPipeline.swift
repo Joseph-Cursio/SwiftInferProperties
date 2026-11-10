@@ -1,6 +1,5 @@
 import Foundation
 import SwiftInferCore
-import SwiftInferTestLifter
 
 /// V2.0 M3.C → M3.E — orchestration glue for the in-process
 /// interaction verify path. Threads M1's reducer discovery → M1.C's

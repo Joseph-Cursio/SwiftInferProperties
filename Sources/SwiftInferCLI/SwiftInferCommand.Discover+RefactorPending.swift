@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Reporting for seeds that name work a human must do before any tool can help — extractable

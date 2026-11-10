@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.45.A carrier — Complex<Double> two-pass emission.
 extension CommutativityStubEmitter {
 

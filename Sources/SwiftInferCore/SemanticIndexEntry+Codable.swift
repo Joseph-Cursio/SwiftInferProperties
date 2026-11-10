@@ -1,5 +1,3 @@
-import Foundation
-
 /// `SemanticIndexEntry`'s `Codable` conformance, split out when the file hit
 /// SwiftLint's 400-line cap.
 ///

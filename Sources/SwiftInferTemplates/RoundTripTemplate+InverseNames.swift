@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// The curated inverse-name vocabulary `RoundTripTemplate` scores against, and
 /// the one sub-family of it that owes a disclosure.
 ///

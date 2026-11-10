@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.44.B shared section helpers — used by all three per-carrier
 // composers. Pure-text composition; no carrier-specific branching.
 extension RoundTripStubEmitter {

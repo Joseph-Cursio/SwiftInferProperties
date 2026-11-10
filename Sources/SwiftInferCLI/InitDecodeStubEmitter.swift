@@ -1,5 +1,3 @@
-import Foundation
-
 /// Emits a standalone verifier for a codec round-trip whose **decode is an
 /// initializer** — the measured half of Case 7 Part 2.
 ///

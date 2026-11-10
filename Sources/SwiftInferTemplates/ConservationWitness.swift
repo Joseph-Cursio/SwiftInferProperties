@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M4.B — one detected Conservation witness inside a reducer's
 /// State struct: a stored aggregate property paired with a collection
 /// property whose count (or eventual sum) the aggregate should mirror.

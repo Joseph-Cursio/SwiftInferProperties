@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **executed** evidence a discover run folds into its grades.

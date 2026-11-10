@@ -1,5 +1,3 @@
-import Foundation
-
 /// Names for a closure's `$0`, `$1`, … once it has to span lines.
 ///
 /// `shorthand_argument` refuses a `$n` more than four lines below its closure's brace, and a

@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// The equality assertion an emitted law uses, and the helper the approximate form needs.
 ///
 /// Split out of `LiftedTestEmitter.swift` when that file passed SwiftLint's 400-line ceiling —

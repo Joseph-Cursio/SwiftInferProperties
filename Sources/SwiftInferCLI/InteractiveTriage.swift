@@ -1,7 +1,5 @@
 import Foundation
-import PropertyLawCore
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// `swift-infer discover --interactive` triage orchestrator (M6.4 +
 /// M7.5 RefactorBridge extension). Walks each surviving suggestion,

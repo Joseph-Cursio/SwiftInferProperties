@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// #118 — a type declared in a dependency had no recorded shape, so any law whose

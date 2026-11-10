@@ -1,4 +1,4 @@
-import Foundation
+import Darwin
 import Testing
 
 /// **Can §6.3's soundness arm be built from what this toolchain already has?**
@@ -127,14 +127,14 @@ struct SandboxDetectorMechanismMeasuredTests {
         let probe = try Self.ProbeBinary()
         let denied = try probe.run(profile: probe.denyAllProfile)
 
-        #expect(denied[.writeOutside]?.detail == Int(EPERM), """
+        #expect(denied[.writeOutside]?.detail == Int(POSIXErrorCode.EPERM.rawValue), """
         A denied file write no longer reports EPERM. The differential-profile design in \
         `docs/measurements/sandbox-detector-mechanism.md` was chosen because ONE class \
         already misreported; if a second has joined it, re-take the table.
         """)
-        #expect(denied[.connectLoopback]?.detail == Int(EPERM))
+        #expect(denied[.connectLoopback]?.detail == Int(POSIXErrorCode.EPERM.rawValue))
 
-        #expect(denied[.spawn]?.detail != Int(EPERM), """
+        #expect(denied[.spawn]?.detail != Int(POSIXErrorCode.EPERM.rawValue), """
         A denied `process-exec` now reports EPERM. That would be an improvement, and it \
         retires the reason attribution needs differencing rather than the thrown error.
         """)

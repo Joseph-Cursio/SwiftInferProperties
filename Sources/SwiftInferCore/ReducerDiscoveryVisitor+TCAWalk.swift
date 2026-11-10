@@ -1,4 +1,3 @@
-import Foundation
 import SwiftSyntax
 
 // V1.B + V1.D — the TCA-conformance walk leg of the discovery `Visitor`.

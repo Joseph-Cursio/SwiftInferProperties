@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTestLifter
 import Testing
 
 // TestStore Trace Mining (Slices 2–3) — replay-then-extend emission +

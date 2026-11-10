@@ -1,5 +1,4 @@
 import Foundation
-import SwiftEffectInference
 import Testing
 
 @testable import SwiftInferCore

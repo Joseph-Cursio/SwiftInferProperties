@@ -1,7 +1,6 @@
 import Foundation
 import PropertyLawKit
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// V1.35.B — `swift-infer suggest-refactors` filter + render tests.

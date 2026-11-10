@@ -1,8 +1,6 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 /// TestLifter M6.3 acceptance bar item (f) — `.swiftinfer/decisions.json`

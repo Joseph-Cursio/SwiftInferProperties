@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.141.A — one row of the SemanticIndex for the **interaction**
 /// surface (PRD §20.1). The interaction analog of ``SemanticIndexEntry``:
 /// where that type records an algebraic pure-function suggestion, this

@@ -1,5 +1,3 @@
-import Foundation
-
 /// Emits a standalone verifier for the **codable-round-trip** law — the measured
 /// half of `CodableRoundTripTemplate`.
 ///

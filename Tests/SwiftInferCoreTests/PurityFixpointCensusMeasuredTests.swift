@@ -60,7 +60,6 @@ struct PurityFixpointCensusMeasuredTests {
 
     typealias Subject = PurityRefutationCensusMeasuredTests.Subject
     typealias Cause = PurityRefutationCensusMeasuredTests.RefutationCause
-    typealias Callee = PurityAllowlistCensusMeasuredTests.Callee
 
     // MARK: - Shared population
 

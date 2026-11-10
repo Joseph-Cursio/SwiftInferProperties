@@ -1,6 +1,4 @@
-import ArgumentParser
 import Foundation
-import SwiftInferCore
 
 // The two `run` entry points, lifted out of SwiftInferCommand.DiscoverInteraction.swift so that file
 // stays under SwiftLint's file-length and type-body-length caps — the same split pattern as

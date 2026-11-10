@@ -3,8 +3,6 @@ import SwiftParser
 import SwiftSyntax
 import Testing
 
-@testable import SwiftInferCore
-
 /// **Experiment with a standing verdict — read this header before proposing a
 /// domain-transfer veto.** Same form as `TriviaInsensitivityExperimentTests`: a
 /// test file whose job is to hold a measured answer that no doc restates.
@@ -56,14 +54,6 @@ import Testing
 /// first refuting the numbers below.
 @Suite("Experiment — can domain transfer be discriminated from the return expression?")
 struct DomainTransferSignalExperimentTests {
-
-    /// One executed row from the frozen survey: the carrier, the function, and
-    /// whether measured verify REFUTED its idempotence law.
-    private struct Row {
-        let carrier: String
-        let function: String
-        let refuted: Bool
-    }
 
     /// The five refuted rows are the class under study; the rest held.
     /// Transcribed from `fixtures/whole-corpus-survey/2026-08-05-whole-corpus.jsonl`.

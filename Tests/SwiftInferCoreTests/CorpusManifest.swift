@@ -1,7 +1,5 @@
 import Foundation
 
-@testable import SwiftInferCore
-
 /// **The measurement corpora, read from `fixtures/corpora/manifest.json`.**
 ///
 /// ## Why this exists

@@ -1,6 +1,5 @@
 import ArgumentParser
 import Foundation
-import SwiftInferCore
 
 /// V2.0 M3.D — `swift-infer verify-interaction` subcommand surface.
 ///

@@ -1,4 +1,3 @@
-import PropertyLawCore
 import SwiftSyntax
 
 extension FunctionScannerVisitor {

@@ -1,6 +1,3 @@
-import Foundation
-import SwiftInferCore
-
 extension InsightsBuilder {
 
     /// Largest group first, structure label ascending as the tiebreak.

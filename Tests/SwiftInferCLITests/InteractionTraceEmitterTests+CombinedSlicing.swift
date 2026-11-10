@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 // V2.0 M8.D.4 — combined drop-prefix + drop-suffix slicing.

@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-@testable import SwiftInferTemplates
 import Testing
 
 /// Two of the generator gaps measured on SwiftLintRuleStudioCore, where 16 of 34 accepted stubs

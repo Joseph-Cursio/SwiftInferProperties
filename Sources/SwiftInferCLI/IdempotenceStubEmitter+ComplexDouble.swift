@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.44.A carrier — Complex<Double> two-pass emission. Behavior
 // bit-for-bit unchanged from V1.44.A.
 extension IdempotenceStubEmitter {

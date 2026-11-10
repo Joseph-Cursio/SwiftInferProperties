@@ -1,5 +1,3 @@
-import Foundation
-
 // MARK: - The laws
 
 extension RenderShape {

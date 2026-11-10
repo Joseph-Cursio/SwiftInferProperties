@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.B — carrier-kind label inferred at reducer-discovery time. The
 /// PRD §6.4 framing: discovery hands the rest of the v2.0 pipeline a
 /// label distinguishing where the candidate came from, so downstream

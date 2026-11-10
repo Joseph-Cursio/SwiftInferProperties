@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The reference oracle's own declines: shapes `accept`'s determinism stub can still write, because

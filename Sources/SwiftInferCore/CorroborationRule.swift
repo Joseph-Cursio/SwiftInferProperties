@@ -1,5 +1,3 @@
-import Foundation
-
 /// The **corroboration rule** — a prototype, behind a flag, for a defect Q3 measured rather
 /// than argued.
 ///

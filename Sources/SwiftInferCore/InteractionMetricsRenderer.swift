@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.102 (cycle-99 calibration helper) — render
 /// `InteractionDecisionsAggregator.Report` to markdown / plain-text
 /// for `metrics-interaction` stdout + direct paste into the cycle-N

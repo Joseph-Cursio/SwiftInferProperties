@@ -1,7 +1,6 @@
 import Foundation
 import SwiftEffectInference
 @testable import SwiftInferCore
-import SwiftSyntax
 import Testing
 
 /// `EffectResolver` — cross-file, body-derived effects (`--resolve-effects`).

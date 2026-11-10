@@ -284,19 +284,12 @@ public enum TargetIsolation {
         private var entries: [String: DumpedPackage?] = [:]
         private var invocationsByKey: [String: Int] = [:]
 
-        /// How many times SwiftPM has been spawned, process-wide.
+        /// Spawns for ONE package root.
         ///
         /// Exposed so a guard can assert the SHAPE of the cost rather than time it: the
         /// measured defect was one `dump-package` per index entry, and that is a count, not a
         /// duration. A stopwatch on the suite catches it only once it is catastrophic;
         /// counting catches it at the first extra call, on any machine.
-        var spawnCount: Int {
-            lock.lock()
-            defer { lock.unlock() }
-            return invocationsByKey.values.reduce(0, +)
-        }
-
-        /// Spawns for ONE package root.
         ///
         /// **Counted per key because the process-wide total cannot be asserted on.** Suites run
         /// concurrently and at least six of them dump a manifest, so a delta taken around one
@@ -366,10 +359,6 @@ public enum TargetIsolation {
     private static let isolationCache = IsolationCache()
 
     private static let dumpCache = DumpCache()
-
-    /// Process-wide count of `swift package dump-package` spawns. Test-facing; see
-    /// `DumpCache.spawnCount` for why this is a count rather than a timing.
-    static var manifestSpawnCount: Int { dumpCache.spawnCount }
 
     /// Spawns for one package root. **Prefer this in a guard** — the process-wide total
     /// collects concurrent suites' spawns and cannot say whose they were.

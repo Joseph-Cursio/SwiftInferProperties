@@ -1,8 +1,6 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 /// No-op diagnostic sink — the stream-entry tests don't care about the

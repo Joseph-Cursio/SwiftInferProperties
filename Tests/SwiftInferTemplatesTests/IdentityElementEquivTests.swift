@@ -1,12 +1,9 @@
-import PropertyLawCore
 import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
 @Suite("IdentityElementTemplate non-lifted — V1.40.F wrapper-pattern equivalence")
 struct IdentityElementEquivTests {
-
-    private static let loc = SourceLocation(file: "T.swift", line: 1, column: 1)
 
     @Test("V1.40.F — IdentityElement non-lifted: wrapper preserves no-space identity-evidence rendering")
     func wrapperPreservesNoSpaceRendering() throws {

@@ -1,5 +1,3 @@
-import Foundation
-
 /// Which SwiftPM products each verify-workdir mode declares.
 ///
 /// Extracted from `VerifierWorkdir.swift` on 2026-08-04, when adding

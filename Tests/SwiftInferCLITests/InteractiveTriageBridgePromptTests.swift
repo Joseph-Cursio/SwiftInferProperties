@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 @Suite("InteractiveTriage — RefactorBridge prompt + readChoice (M7.5c + M8.4.b.1)")

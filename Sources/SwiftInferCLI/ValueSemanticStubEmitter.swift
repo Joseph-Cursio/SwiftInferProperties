@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// PROTOTYPE — emits a standalone verifier that checks a recognized

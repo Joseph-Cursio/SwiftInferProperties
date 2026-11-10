@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// **What type does a template's generator quantify over?**

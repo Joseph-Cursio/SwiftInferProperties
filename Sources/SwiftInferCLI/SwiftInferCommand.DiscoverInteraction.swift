@@ -1,7 +1,6 @@
 import ArgumentParser
 import Foundation
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// V2.0 M4.E — errors thrown by the discover-interaction pipeline.
 /// File-scope for the SwiftLint nesting cap; public so tests can

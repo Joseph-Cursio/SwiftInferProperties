@@ -1,7 +1,6 @@
 import Foundation
 import PropertyLawCore
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// The triage dependencies `InteractiveTriage` threads through its accept path.
 ///

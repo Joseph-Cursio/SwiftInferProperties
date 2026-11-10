@@ -1,5 +1,3 @@
-import Foundation
-
 /// Split from `StrategistDispatchEmitter+Templates.swift` for `file_length`.
 extension StrategistDispatchEmitter {
 

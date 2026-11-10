@@ -1,5 +1,3 @@
-import Foundation
-import SwiftInferCore
 @testable import SwiftInferTestLifter
 import Testing
 

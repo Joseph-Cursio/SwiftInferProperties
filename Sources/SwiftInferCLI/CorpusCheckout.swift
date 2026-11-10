@@ -80,10 +80,6 @@ struct CorpusStatus: Sendable {
             pin: CorpusPin.verdict(entry: entry, checkout: entryCheckout)
         )
     }
-
-    static func resolveAll(_ manifest: CorpusManifest, repositoryRoot: URL) -> [Self] {
-        manifest.corpora.map { resolve($0, repositoryRoot: repositoryRoot) }
-    }
 }
 
 /// What is actually on disk for a corpus entry, and whether it matches the pin its baseline

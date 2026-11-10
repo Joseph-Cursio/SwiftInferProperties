@@ -2,8 +2,6 @@ import Foundation
 import SwiftEffectInference
 import Testing
 
-@testable import SwiftInferCore
-
 /// Open item 4's **cross-repo half**: do the names this repo recognises equal the
 /// annotations SwiftIdempotency actually ships?
 ///

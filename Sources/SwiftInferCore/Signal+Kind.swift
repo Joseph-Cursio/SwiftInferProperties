@@ -1,5 +1,3 @@
-import Foundation
-
 /// The catalogue of signal kinds the §4 scoring engine recognises.
 ///
 /// Extracted from `Signal.swift`, which crossed SwiftLint's 400-line file cap. The seam

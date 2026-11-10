@@ -1,7 +1,4 @@
-import Foundation
-import PropertyLawCore
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// Which arm writes a suggestion's stub.
 ///

@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
 import Testing

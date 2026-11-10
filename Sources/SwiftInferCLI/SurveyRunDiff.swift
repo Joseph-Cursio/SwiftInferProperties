@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 
 /// Row-level comparison of two `RetainedSurveyRun`s.
 ///

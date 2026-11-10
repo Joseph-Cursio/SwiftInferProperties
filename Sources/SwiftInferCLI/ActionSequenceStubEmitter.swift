@@ -1,5 +1,3 @@
-import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 /// Minimal SipHash-style accumulator — just enough for deterministic

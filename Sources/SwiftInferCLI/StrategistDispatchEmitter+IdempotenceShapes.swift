@@ -1,5 +1,3 @@
-import Foundation
-
 /// The four idempotence *emit shapes*. `composeIdempotencePass` in
 /// `StrategistDispatchEmitter+Templates.swift` stays the dispatcher; the bodies
 /// live here because the fourth shape pushed that file past the 400-line cap.

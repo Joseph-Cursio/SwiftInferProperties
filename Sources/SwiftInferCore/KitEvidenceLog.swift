@@ -1,5 +1,3 @@
-import Foundation
-
 /// **PropertyLawKit results, fed back into inference.**
 ///
 /// Until this existed the toolchain was one-way: `discover` proposed laws, a human wrote

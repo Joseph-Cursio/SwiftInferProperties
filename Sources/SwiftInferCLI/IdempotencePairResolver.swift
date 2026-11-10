@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.44.D — resolves the verifier call expression for an idempotence

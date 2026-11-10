@@ -1,7 +1,5 @@
 import SwiftEffectInference
 @testable import SwiftInferCore
-import SwiftParser
-import SwiftSyntax
 import Testing
 
 /// Open item 4, closed for the names this repo actually depends on.

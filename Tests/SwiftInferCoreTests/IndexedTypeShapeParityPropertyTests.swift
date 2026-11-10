@@ -1,6 +1,6 @@
 import Foundation
+import PropertyBased
 import PropertyLawCore
-import PropertyLawKit
 @testable import SwiftInferCore
 import Testing
 

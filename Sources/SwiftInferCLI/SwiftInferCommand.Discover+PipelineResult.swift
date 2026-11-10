@@ -2,7 +2,6 @@ import Foundation
 import PropertyLawCore
 import SwiftInferCore
 import SwiftInferTemplates
-import SwiftInferTestLifter
 
 /// `PipelineResult` — everything one `discover` pass produced, in one record.
 ///

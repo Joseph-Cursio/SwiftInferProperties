@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 @Suite("RefactorBridgeOrchestrator — M8.4.b.2 Ring detection")

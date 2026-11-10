@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 @Suite("InteractiveTriage — module import in generated stubs (#1 drop-in compile)")

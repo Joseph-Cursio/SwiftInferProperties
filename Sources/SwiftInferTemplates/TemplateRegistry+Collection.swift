@@ -1,5 +1,3 @@
-import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 /// V1.18.A — read-only resolver context threaded into per-summary and

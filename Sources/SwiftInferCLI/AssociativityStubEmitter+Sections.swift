@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.46.A shared section helpers — used by all three per-carrier
 // composers. Pure-text composition; no carrier-specific branching.
 // Mirrors `CommutativityStubEmitter` helpers verbatim; hoist to a

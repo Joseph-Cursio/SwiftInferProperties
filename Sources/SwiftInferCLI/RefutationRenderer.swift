@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The block that shows a law **execution refuted**, on stdout, where a reader is looking.

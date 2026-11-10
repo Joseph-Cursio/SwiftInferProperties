@@ -1,9 +1,7 @@
-import Foundation
 import SwiftEffectInference
 import Testing
 
 @testable import SwiftInferCore
-@testable import SwiftInferTemplates
 
 extension ImpureSubjectVetoTests {
 

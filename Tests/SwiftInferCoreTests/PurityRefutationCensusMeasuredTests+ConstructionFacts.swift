@@ -18,7 +18,7 @@ import Testing
 extension PurityRefutationCensusMeasuredTests {
 
     /// The two arms' function verdicts and SEI first witnesses, aligned with `corpus`.
-    struct FactsArms {
+    struct FactsArms { // swiftlint:disable:this unused_declaration - used only by a closure-initialised static
         let unconfiguredVerdicts: [PurityVerdict]
         let flipped: [String]
         let rewitnessed: [String]

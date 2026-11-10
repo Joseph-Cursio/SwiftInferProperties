@@ -1,5 +1,3 @@
-import Foundation
-
 /// One target a package manifest declares, with the directory it actually occupies.
 ///
 /// **A named type rather than a tuple**, for the reason the linter states and one it does not:

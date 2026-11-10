@@ -314,32 +314,4 @@ public enum CompositionTemplate {
             genericParameters: lifted.originalSummary.genericParameters
         )
     }
-
-    private static func makeExplainability(
-        for lifted: LiftedTransformation,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let evidence = makeEvidence(lifted)
-        whySuggested.append(
-            "\(evidence.displayName) \(evidence.signature) — "
-                + "\(evidence.location)"
-        )
-        whySuggested.append(lifted.rationale)
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "X must conform to AdditiveArithmetic for `a + b` in the property "
-                + "body to compile. Curated set is restricted to stdlib "
-                + "AdditiveArithmetic conformers + Decimal + Duration.",
-            "Property holds iff the mutating method's effect is exactly "
-                + "additive on the parameter — i.e. `op(s, a + b)` is "
-                + "semantically equivalent to `op(op(s, a), b)`. A method "
-                + "named `increment` that clamps at a maximum or "
-                + "non-linearly transforms its argument will fail at "
-                + "sampling time.",
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
 }

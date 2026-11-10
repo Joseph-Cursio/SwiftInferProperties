@@ -1,5 +1,3 @@
-import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 extension InteractiveTriage {

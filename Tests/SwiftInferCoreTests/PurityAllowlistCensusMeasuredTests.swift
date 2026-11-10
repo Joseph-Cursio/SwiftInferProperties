@@ -1,9 +1,6 @@
-import Foundation
 import SwiftEffectInference
 import SwiftSyntax
 import Testing
-
-@testable import SwiftInferCore
 
 /// **Census with a standing verdict — read this header before adding an
 /// allowlist of known-pure operations to `PurityInferrer`.** Same form as

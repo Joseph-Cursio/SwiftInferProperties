@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M10 — one drift-warning row. Carries just enough to render
 /// the §3.6 / §16 #3 CI-annotation-friendly stderr line — identity
 /// hash for grep, family + reducer + predicate for human navigation.

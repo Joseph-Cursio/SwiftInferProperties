@@ -1,4 +1,3 @@
-import SwiftInferCore
 import SwiftSyntax
 
 /// PRD §7.9 row M7 + §4.1 "Counter-signal: asymmetric assertion".

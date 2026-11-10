@@ -1,5 +1,3 @@
-import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 // The `differential-equivalence` composer, in its own file for the reason the

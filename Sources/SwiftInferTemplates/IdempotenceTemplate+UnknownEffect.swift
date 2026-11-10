@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// `@EffectUnknown` — link 3 of the chain that began with SwiftIdempotency
 /// shipping a spelling for the `unknown` tier.
 ///

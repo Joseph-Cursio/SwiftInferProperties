@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V2.0 M6 — Referential Integrity interaction-template family. PRD §5.5.

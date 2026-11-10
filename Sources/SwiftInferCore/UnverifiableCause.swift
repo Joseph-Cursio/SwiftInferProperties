@@ -1,5 +1,3 @@
-import Foundation
-
 /// Why an `architecturalCoveragePending` record did not run — read back off the `detail`
 /// string the verify path wrote.
 ///

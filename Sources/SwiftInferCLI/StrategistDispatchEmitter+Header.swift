@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 
 // Extracted from `StrategistDispatchEmitter.swift` to keep that file under
 // the `file_length` cap. Holds the stub's header-comment composer and the

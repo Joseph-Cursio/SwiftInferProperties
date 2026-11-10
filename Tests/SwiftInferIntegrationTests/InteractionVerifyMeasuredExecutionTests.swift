@@ -1,6 +1,5 @@
 import Foundation
 import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// Cycle 110 (Blocker B) — end-to-end proof that the interaction verify

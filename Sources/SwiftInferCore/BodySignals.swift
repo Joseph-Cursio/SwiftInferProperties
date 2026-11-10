@@ -1,5 +1,3 @@
-import Foundation
-
 // The two value types a `FunctionSummary` is built from, split out when that
 // file hit SwiftLint's 400-line cap. They travel together: `SourceLocation` is
 // where a declaration is, `BodySignals` is what its body does, and both are

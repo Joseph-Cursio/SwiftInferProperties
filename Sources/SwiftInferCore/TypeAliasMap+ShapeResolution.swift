@@ -1,5 +1,4 @@
 import PropertyLawCore
-import SwiftSyntax
 
 extension TypeAliasMap {
 

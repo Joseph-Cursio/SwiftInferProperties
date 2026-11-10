@@ -1,5 +1,3 @@
-import Foundation
-
 /// swift-collections (`apple/swift-collections`) laws. Each type inherits the
 /// standard-library shapes from Appendix A via protocol refinement, plus a
 /// family-specific law the inherited rows don't reach (Deque's double-ended

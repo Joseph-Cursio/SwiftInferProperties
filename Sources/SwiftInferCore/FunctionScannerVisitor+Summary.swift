@@ -1,4 +1,3 @@
-import PropertyLawCore
 import SwiftEffectInference
 import SwiftSyntax
 

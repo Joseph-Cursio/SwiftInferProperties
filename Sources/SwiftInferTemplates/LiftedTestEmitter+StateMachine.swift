@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// One move of a state-machine pair, as the scaffold spells a call to it.
 public struct StateMachineMove: Sendable, Equatable {
     public let name: String

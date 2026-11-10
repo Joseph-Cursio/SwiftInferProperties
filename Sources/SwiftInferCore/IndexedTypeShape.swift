@@ -1,6 +1,3 @@
-import Foundation
-import PropertyLawCore
-
 /// V1.47.A — JSON-encodable mirror of `PropertyLawCore.TypeShape`,
 /// persisted alongside `SemanticIndexEntry` so the verify pipeline
 /// can call `DerivationStrategist.strategy(for:)` at verify time

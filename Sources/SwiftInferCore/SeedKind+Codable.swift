@@ -1,5 +1,3 @@
-import Foundation
-
 extension SeedKind: Codable {
     public init(from decoder: Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)

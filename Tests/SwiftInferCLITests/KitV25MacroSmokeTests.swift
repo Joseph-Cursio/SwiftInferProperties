@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawKit
 import PropertyLawMacro
 import Testing
@@ -50,7 +49,9 @@ enum SmokeMacroFeature {
 struct SmokeMacroCardinality: CardinalityInvariant, Sendable {
     typealias State = SmokeMacroState
 
+    // swiftlint:disable:next unused_declaration - protocol witness read by the macro-expanded suite
     static let initialState = SmokeMacroState(showsA: false, showsB: false)
+    // swiftlint:disable:next unused_declaration - protocol witness read by the macro-expanded suite
     static let reducer: @Sendable (SmokeMacroState, SmokeMacroAction) -> SmokeMacroState =
         SmokeMacroFeature.reduce
 

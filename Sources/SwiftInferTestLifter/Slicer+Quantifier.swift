@@ -1,4 +1,3 @@
-import SwiftInferCore
 import SwiftSyntax
 
 // Quantifier recognition, split out of `Slicer.swift` when that file hit SwiftLint's

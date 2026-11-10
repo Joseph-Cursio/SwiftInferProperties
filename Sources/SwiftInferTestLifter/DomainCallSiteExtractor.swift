@@ -1,4 +1,3 @@
-import SwiftInferCore
 import SwiftSyntax
 
 private final class CallSiteVisitor: SyntaxVisitor {

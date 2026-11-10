@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.48.B — resolves the verifier call expressions for a

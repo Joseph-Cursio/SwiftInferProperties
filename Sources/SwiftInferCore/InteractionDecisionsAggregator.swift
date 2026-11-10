@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.102 (cycle-99 calibration helper) — pure aggregation over
 /// `InteractionDecisions`. Computes per-family + overall acceptance
 /// rates suitable for the cycle-N findings doc table.

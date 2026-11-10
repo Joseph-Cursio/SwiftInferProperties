@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M10 — one entry in `.swiftinfer/interaction-baseline.json`.
 /// Snapshot of a single `InteractionInvariantSuggestion`'s identity
 /// at a checkpoint. Used by `swift-infer drift-interaction` to

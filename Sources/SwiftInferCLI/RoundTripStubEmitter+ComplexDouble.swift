@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.43.B carrier — Complex<Double> two-pass emission. Behavior
 // bit-for-bit unchanged from v1.43.B; carved into its own extension
 // so the body-length cap stays satisfied across the three carriers.

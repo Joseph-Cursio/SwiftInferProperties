@@ -1,5 +1,3 @@
-import Foundation
-
 // V2.0 M1.A / V1.B — the reducer signature-shape + carrier-kind enums,
 // lifted out of `ReducerCandidate.swift` for the `file_length` cap.
 // Pure relocation — no behavior change.

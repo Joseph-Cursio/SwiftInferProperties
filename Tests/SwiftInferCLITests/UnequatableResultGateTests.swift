@@ -1,7 +1,6 @@
 import PropertyLawCore
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// `UnequatableResultGate` — a law that compares two RESULTS is not written over a scanned type

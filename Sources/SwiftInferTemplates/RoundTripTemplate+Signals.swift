@@ -86,34 +86,4 @@ extension RoundTripTemplate {
             detail: "Both halves carry @Discoverable(group: \"\(group)\")"
         )
     }
-
-    // MARK: - Suggestion construction
-
-    static func makeExplainability(
-        for pair: FunctionPair,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let forwardEvidence = pair.forward.inferenceEvidence
-        let reverseEvidence = pair.reverse.inferenceEvidence
-        whySuggested.append(
-            "\(forwardEvidence.displayName) \(forwardEvidence.signature)"
-                + " — \(forwardEvidence.location)"
-        )
-        whySuggested.append(
-            "\(reverseEvidence.displayName) \(reverseEvidence.signature)"
-                + " — \(reverseEvidence.location)"
-        )
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "Throws on either side narrows the property's domain to the success set "
-                + "of the inner function; a generator that produces values outside that "
-                + "set will surface false-positive failures (Appendix B.4).",
-            "T must conform to Equatable for the emitted property to compile. "
-                + "This tool does not verify protocol conformance — confirm before applying.",
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
 }

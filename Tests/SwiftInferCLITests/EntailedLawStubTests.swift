@@ -1,6 +1,5 @@
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// `involution`, `role-postcondition` and `equivalence-relation` get accept-path writers. Each had

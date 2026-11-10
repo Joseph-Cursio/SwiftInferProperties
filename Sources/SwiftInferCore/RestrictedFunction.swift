@@ -1,5 +1,3 @@
-import Foundation
-
 /// Why a property test written in another module cannot call a function.
 ///
 /// The scanner drops these from discovery, and rightly: an external verifier compiles its test in

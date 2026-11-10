@@ -1,7 +1,6 @@
 import PropertyLawCore
 import Testing
 
-@testable import SwiftInferCLI
 @testable import SwiftInferCore
 
 /// A `Sendable` class derives a generator through its initializer (SwiftPropertyLaws 4.9.0) — but

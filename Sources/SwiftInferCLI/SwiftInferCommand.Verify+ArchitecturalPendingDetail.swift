@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 
 /// V1.89 lint pass — extracted from
 /// `SwiftInferCommand.Verify+AllFromIndex.swift` so the main file stays under

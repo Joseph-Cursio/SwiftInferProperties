@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// PROTOTYPE — slice 5b measured proof: verify value-semantics candidates that

@@ -1,7 +1,3 @@
-import PropertyLawCore
-import PropertyLawSyntaxSupport
-import SwiftSyntax
-
 extension MemberBlockInspector {
 
     /// Replace a carrier generic parameter with `Int` inside an array type.

@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.47.D — curated resolver from generic associated-type carrier
 /// names (e.g. `"Base.Index"`) to canonical concrete bindings (e.g.
 /// `"Int"`, the `Index` of `Array<Int>`). The verify pipeline calls

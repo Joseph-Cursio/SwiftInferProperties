@@ -1,5 +1,3 @@
-import Foundation
-import SwiftParser
 import SwiftSyntax
 
 /// V2.0 M3.A — three-state purity classification. Stable rawValues

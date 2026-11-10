@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 
 /// V1.42.C.5 — implicit reindex on demand for `swift-infer verify`.
 ///

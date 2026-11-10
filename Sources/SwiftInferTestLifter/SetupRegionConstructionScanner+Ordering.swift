@@ -1,5 +1,3 @@
-import SwiftSyntax
-
 extension SetupRegionConstructionScanner {
 
     /// Type name ascending, canonical label key ascending as the tiebreak.

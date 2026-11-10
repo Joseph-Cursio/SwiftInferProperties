@@ -137,40 +137,4 @@ extension InversePairTemplate {
             + "PropertyLawKit's `FloatingPointLaws.swift` tolerance posture. v1.5+ "
             + "will surface the generator override automatically."
     }
-
-    // MARK: - Suggestion construction
-
-    static func makeExplainability(
-        for pair: FunctionPair,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let forwardEvidence = pair.forward.inferenceEvidence
-        let reverseEvidence = pair.reverse.inferenceEvidence
-        whySuggested.append(
-            "\(forwardEvidence.displayName) \(forwardEvidence.signature)"
-                + " — \(forwardEvidence.location)"
-        )
-        whySuggested.append(
-            "\(reverseEvidence.displayName) \(reverseEvidence.signature)"
-                + " — \(reverseEvidence.location)"
-        )
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        var caveats: [String] = [
-            "Non-Equatable T means SwiftInfer cannot sample-verify the round-trip — "
-                + "the suggestion is name-and-type-pattern only.",
-            "TestLifter corroboration not yet wired (gated on TestLifter M1).",
-            "Possible-tier by default — escalation requires a custom equality witness "
-                + "or annotation API extension.",
-            "If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case "
-                + "with stronger evidence — inverse-pair only fires when "
-                + "EquatableResolver returns .notEquatable or .unknown for T.",
-        ]
-        if let fpCaveat = floatingPointAdvisory(for: pair) {
-            caveats.append(fpCaveat)
-        }
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
 }

@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.44.A / V1.44.C — synthesizes the standalone Swift source for an
 /// idempotence verify subprocess (`f(f(x)) ≈ f(x)` on a single function
 /// `f: T -> T`).
@@ -49,6 +47,4 @@ public enum IdempotenceStubEmitter: SeededStubEmitter {
             int: composeIntSource
         )
     }
-
-    // MARK: - Carrier dispatch
 }

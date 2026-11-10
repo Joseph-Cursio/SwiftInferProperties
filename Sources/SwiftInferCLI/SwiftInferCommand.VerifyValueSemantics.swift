@@ -1,6 +1,5 @@
 import ArgumentParser
 import Foundation
-import SwiftInferCore
 
 public extension SwiftInferCommand {
 

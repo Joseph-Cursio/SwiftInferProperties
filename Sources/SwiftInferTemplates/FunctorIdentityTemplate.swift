@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// **Functor identity** — mapping the identity function changes nothing.

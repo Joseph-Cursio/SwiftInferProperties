@@ -1,6 +1,4 @@
-import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 // V2.0 M3.D — `verify-interaction` subcommand smoke tests. The

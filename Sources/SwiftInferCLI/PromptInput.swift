@@ -1,5 +1,3 @@
-import Foundation
-
 /// Production `PromptInput` — direct passthrough to `Swift.readLine()`.
 /// Quoted spelling (`Swift.readLine()`) avoids the recursive
 /// shadowing that would happen if the method were just `readLine()`.

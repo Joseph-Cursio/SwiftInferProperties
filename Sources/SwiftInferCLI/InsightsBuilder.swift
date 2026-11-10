@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// One type in a cross-type structure group.

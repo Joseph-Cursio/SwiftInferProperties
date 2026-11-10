@@ -1,6 +1,4 @@
-import Foundation
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// `swift-infer discover --docstring-advice` — pairs a documented function's
 /// docstring with the law it defines.

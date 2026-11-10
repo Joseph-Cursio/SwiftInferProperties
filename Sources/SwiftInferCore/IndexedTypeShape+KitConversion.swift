@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 
 // MARK: - Conversion ↔ kit's TypeShape

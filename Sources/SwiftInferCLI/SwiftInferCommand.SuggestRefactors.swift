@@ -1,6 +1,5 @@
 import ArgumentParser
 import Foundation
-import SwiftInferCore
 
 /// V1.35.B — `swift-infer suggest-refactors` subcommand. Reads
 /// `.swiftinfer/index.json`, runs `RefactorClusterAnalyzer.analyze`,

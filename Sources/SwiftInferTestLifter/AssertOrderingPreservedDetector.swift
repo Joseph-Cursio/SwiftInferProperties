@@ -1,4 +1,3 @@
-import SwiftInferCore
 import SwiftSyntax
 
 /// PRD §7.3 "Assert-Ordering-Preserved → monotonicity" detector. Runs

@@ -1,8 +1,4 @@
-import Foundation
 import Testing
-
-@testable import SwiftInferCore
-@testable import SwiftInferTemplates
 
 /// **Would refactoring toward purity put more code within reach of a law?**
 ///

@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 

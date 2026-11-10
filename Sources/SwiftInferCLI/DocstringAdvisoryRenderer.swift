@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Renders the "Reference definitions from docstrings" advisory block for

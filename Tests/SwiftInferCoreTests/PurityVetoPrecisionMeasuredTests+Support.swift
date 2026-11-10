@@ -9,6 +9,7 @@ extension PurityVetoPrecisionMeasuredTests {
 
     // MARK: - The answer key
 
+    // swiftlint:disable:next unused_declaration - used only by a closure-initialised static, which the index misses
     struct SurveyRow {
         let outcome: String
         let template: String
@@ -69,6 +70,7 @@ extension PurityVetoPrecisionMeasuredTests {
         let witnessBearing: Bool
     }
 
+    // swiftlint:disable:next unused_declaration - used only by a closure-initialised static, which the index misses
     struct Arm {
         let suggestions: Int
         let recorded: Int

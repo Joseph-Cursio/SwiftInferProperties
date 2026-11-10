@@ -1,5 +1,3 @@
-import Foundation
-
 /// Per-template render-time phrasing: **one record per law**, and the fourth enumeration of the
 /// template vocabulary (after `TemplateName.verifiable`, `resolveFunctionCalls`, and the composer
 /// dispatch).
@@ -54,9 +52,7 @@ struct RenderShape {
     let expected: @Sendable (Context) -> String
 
     func subjectLine(context: Context) -> String { subject(context) }
-    func forwardExpression(context: Context) -> String { forward(context) }
     func inverseExpression(context: Context) -> String { inverse(context) }
-    func expectedExpression(context: Context) -> String { expected(context) }
 
     /// The counterexample / advisory value block, owned by the shape because two of the three
     /// framings are not the equation block with different strings in it.

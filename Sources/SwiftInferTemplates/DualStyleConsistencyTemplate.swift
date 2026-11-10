@@ -205,37 +205,4 @@ public enum DualStyleConsistencyTemplate {
             acrossBodiesOf: [pair.mutatingMember, pair.nonMutatingMember]
         ) { "Non-deterministic API in dual-style pair body: \($0)" }
     }
-
-    // MARK: - Suggestion construction
-
-    private static func makeExplainability(
-        for pair: DualStylePair,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let mutEvidence = pair.mutatingMember.inferenceEvidence
-        let nonMutEvidence = pair.nonMutatingMember.inferenceEvidence
-        whySuggested.append(
-            "\(mutEvidence.displayName) \(mutEvidence.signature)"
-                + " — \(mutEvidence.location)"
-        )
-        whySuggested.append(
-            "\(nonMutEvidence.displayName) \(nonMutEvidence.signature)"
-                + " — \(nonMutEvidence.location)"
-        )
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer V1.18 does not verify protocol conformance — "
-                + "confirm before applying.",
-            "Property assumes the non-mutating member is the value-returning "
-                + "counterpart of the mutating member — i.e. both implementations "
-                + "describe the same logical operation. A sibling pair with the "
-                + "matching name shape but divergent semantics will fail at "
-                + "sampling time.",
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
 }

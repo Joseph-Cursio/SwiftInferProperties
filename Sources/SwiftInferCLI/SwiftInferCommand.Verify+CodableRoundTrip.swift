@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // Codable-round-trip's carrier-only verify resolution, split out of

@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 
 /// V1.89 lint pass — memberwise-recipe helpers extracted from

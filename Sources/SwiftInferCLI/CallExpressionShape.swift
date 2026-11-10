@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.52.A — classifies the Swift call-expression shape for a function
 /// indexed under a carrier type.
 ///

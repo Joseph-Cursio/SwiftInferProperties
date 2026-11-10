@@ -1,5 +1,3 @@
-import Foundation
-
 /// The keys inside a seed's `requires` object — enumerated for `SeedFieldParity`, as
 /// `SeedEffectField` is for `effect`.
 public enum SeedRequirementField: String, CodingKey, CaseIterable {

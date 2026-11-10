@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferTemplates
 import Testing
 

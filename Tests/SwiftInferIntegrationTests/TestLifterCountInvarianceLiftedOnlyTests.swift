@@ -2,7 +2,6 @@ import Foundation
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 private struct SilentLiftedOnlyDiagnostics: DiagnosticOutput {

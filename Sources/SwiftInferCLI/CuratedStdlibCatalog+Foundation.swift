@@ -1,5 +1,3 @@
-import Foundation
-
 /// Foundation laws — `Data` (a `RangeReplaceableCollection` of bytes, with a
 /// base64 round-trip) and `IndexSet` (a `SetAlgebra` of non-negative indices).
 /// Foundation is available to the `swift` interpreter, so these carry NO

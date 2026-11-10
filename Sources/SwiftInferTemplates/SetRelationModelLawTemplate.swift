@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **boolean-valued model law** — a set relation must agree with the membership

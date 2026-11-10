@@ -79,5 +79,6 @@ public enum CheckPropertyKind: @unchecked Sendable {
 /// Counterexamples are reported via Swift Testing's `Issue.record`,
 /// matching the kit's `@PropertyLawSuite` convention.
 @attached(peer, names: arbitrary)
+// swiftlint:disable:next unused_declaration - user-facing macro, applied in client test targets
 public macro CheckProperty(_ kind: CheckPropertyKind) =
     #externalMacro(module: "SwiftInferMacroImpl", type: "CheckPropertyMacro")

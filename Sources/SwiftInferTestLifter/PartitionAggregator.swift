@@ -1,5 +1,4 @@
 import SwiftInferCore
-import SwiftSyntax
 
 /// Per-`(predicateName, markerPair)` accumulator backing
 /// `PartitionAggregator.bucketsByKey`. Records positive / negative

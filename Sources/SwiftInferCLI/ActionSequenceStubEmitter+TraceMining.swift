@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // TestStore Trace Mining (Slice 2) — the `main()` loop tail: `var clean = 0`

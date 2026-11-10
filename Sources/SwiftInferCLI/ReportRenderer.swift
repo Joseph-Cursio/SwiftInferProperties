@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.149 — `swift-infer report`: a read-only, one-glance overview of what the

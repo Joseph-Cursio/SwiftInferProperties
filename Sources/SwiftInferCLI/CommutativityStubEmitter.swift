@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.45.A — synthesizes the standalone Swift source for a
 /// commutativity verify subprocess (`f(a, b) ≈ f(b, a)` on a binary
 /// function `f: (T, T) -> T`).

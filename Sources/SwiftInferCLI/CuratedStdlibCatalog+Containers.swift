@@ -1,5 +1,3 @@
-import Foundation
-
 // The container-carrier laws (Optional / Dictionary / Stack / Queue) plus the
 // shared `law` / `caveat` builders, split out of `CuratedStdlibCatalog.swift`
 // to keep each file under the `file_length` cap. No behavior change — `all`

@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 import SwiftParser
 import SwiftSyntax

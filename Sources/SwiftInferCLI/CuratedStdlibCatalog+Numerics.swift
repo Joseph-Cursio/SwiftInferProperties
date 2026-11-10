@@ -1,5 +1,3 @@
-import Foundation
-
 /// swift-numerics (`apple/swift-numerics`) laws — the first external Apple
 /// package in the catalog. `Complex<Double>` is a commutative field under `+`
 /// and `×` for finite inputs, and `conjugate` is an involution. Associativity is

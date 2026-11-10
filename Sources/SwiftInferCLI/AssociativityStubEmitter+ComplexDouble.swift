@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.46.A carrier — Complex<Double> two-pass emission.
 extension AssociativityStubEmitter {
 

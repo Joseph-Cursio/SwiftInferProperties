@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V2.0 M5 — Cardinality interaction-template family. PRD §5.4.

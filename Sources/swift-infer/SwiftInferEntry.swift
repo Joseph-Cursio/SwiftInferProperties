@@ -5,6 +5,7 @@ import SwiftInferCLI
 /// reachable from tests without launching a subprocess.
 @main
 enum SwiftInferEntry {
+    // swiftlint:disable:next unused_declaration - the @main entry point; the runtime calls it
     static func main() async {
         await SwiftInferCommand.main()
     }

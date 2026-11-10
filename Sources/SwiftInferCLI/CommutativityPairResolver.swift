@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.45.B — resolves the verifier call expression for a commutativity

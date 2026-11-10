@@ -1,5 +1,3 @@
-import Foundation
-
 /// **Kit-as-signal post-pass** — folds PropertyLawKit's executed verdicts into suggestion
 /// scores, so the toolchain's only *measured* evidence participates in inference instead of
 /// stopping at the end of the pipeline.

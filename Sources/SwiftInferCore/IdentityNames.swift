@@ -1,5 +1,3 @@
-import Foundation
-
 /// Curated identity-shaped names per PRD §5.2 priority 1. Used by
 /// `FunctionScannerVisitor.captureIdentityCandidates` (declaration
 /// detection), `BodySignalVisitor.isIdentityShapedSeed` (member-access

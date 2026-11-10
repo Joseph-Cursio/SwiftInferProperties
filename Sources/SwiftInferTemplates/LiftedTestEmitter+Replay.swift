@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// Replay-idempotency accept-flow emission for `ReplayIdempotenceTemplate`.
 ///
 /// Split from `LiftedTestEmitter.swift` (which is at the file-length cap) and,

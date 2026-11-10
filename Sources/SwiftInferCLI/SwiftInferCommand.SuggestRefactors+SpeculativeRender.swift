@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Rendering for `suggest-refactors --speculative`, split out at the type-body

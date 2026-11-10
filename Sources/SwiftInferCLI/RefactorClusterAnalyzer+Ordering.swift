@@ -1,6 +1,3 @@
-import Foundation
-import SwiftInferCore
-
 extension RefactorClusterAnalyzer {
 
     /// Count ascending, tie-breaker index descending — written for `max(by:)`,

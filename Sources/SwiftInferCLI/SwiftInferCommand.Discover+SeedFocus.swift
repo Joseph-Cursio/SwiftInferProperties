@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The non-empty-focus path of `discover --seeds`, split out of

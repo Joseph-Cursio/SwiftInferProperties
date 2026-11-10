@@ -1,5 +1,3 @@
-import Foundation
-
 /// The **collision pass** — a second sweep of a binary law under deliberately
 /// narrowed entropy, so that independently-drawn operands share field values.
 ///

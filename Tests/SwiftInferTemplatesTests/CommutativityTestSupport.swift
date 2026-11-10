@@ -1,5 +1,4 @@
 import SwiftInferCore
-@testable import SwiftInferTemplates
 
 // Shared builders for the CommutativityTemplate test suites. Extracted (and made
 // internal) so `CommutativityTemplateTests` and `CommutativityTemplateShapeTests`

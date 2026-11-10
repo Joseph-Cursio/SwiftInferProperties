@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V2.0 M7 — Biconditional / iff interaction-template family. PRD §5.6.

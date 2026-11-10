@@ -1,6 +1,4 @@
 import PropertyLawCore
-@testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// `UnequatableResultGate` judges only the types whose `==` comparing two results actually needs —

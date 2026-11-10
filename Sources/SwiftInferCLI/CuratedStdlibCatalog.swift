@@ -1,5 +1,3 @@
-import Foundation
-
 /// Whether a catalog entry is a known-true law or a caveat: a plausible-looking non-property.
 public enum CuratedEntryKind: String, Sendable, Equatable {
     case law      // known-true; carries a `checkBody` so `--verify` can run it

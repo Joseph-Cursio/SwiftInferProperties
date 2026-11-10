@@ -1,4 +1,3 @@
-@testable import SwiftInferTestLifter
 import Testing
 
 @Suite("AssertReduceEquivalenceDetector — empty / degenerate slices (M5.3)")

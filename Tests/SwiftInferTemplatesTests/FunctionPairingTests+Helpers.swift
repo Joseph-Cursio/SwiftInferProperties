@@ -1,6 +1,5 @@
 import SwiftInferCore
 @testable import SwiftInferTemplates
-import Testing
 
 // Helpers live in an extension so the primary suite body stays under
 // SwiftLint's `type_body_length` cap (extension bodies are exempt).

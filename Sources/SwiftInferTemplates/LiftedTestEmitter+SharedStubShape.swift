@@ -1,4 +1,3 @@
-import PropertyLawCore
 import SwiftInferCore
 
 // V1.43 cleanup — private builders live here so the primary

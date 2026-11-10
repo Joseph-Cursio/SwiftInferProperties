@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **partition / tiling** law: the parts must reconstitute the whole.

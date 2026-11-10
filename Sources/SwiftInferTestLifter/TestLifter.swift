@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// TestLifter — PRD §7 Contribution 2. Analyzes existing XCTest +
 /// Swift Testing suites and emits property-test suggestions derived
 /// from the test-body slice (PRD §7.2).

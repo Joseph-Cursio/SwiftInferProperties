@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// A candidate Redux-distinctive interaction invariant surfaced over a

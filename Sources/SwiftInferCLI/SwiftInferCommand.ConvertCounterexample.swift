@@ -1,7 +1,5 @@
 import ArgumentParser
 import Foundation
-import SwiftInferCore
-import SwiftInferTemplates
 
 /// `swift-infer convert-counterexample` — TestLifter M8.1.
 ///

@@ -1,5 +1,4 @@
 import Foundation
-import PropertyLawKit
 @testable import SwiftInferCore
 import SwiftParser
 import SwiftSyntax

@@ -1,7 +1,6 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import Testing
 
 /// V1.89 lint pass — shared fixture for the verify-pipeline
 /// integration suites. Previously file-private helpers in

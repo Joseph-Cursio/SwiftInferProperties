@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// A stub file, end to end, as `discover --interactive` writes it — pinned whole, because what is

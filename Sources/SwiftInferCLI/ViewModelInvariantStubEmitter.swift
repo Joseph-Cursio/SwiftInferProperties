@@ -1,5 +1,3 @@
-import Foundation
-
 /// PROTOTYPE — emits a verifier that checks a view-model's state invariant is
 /// *maintained* by its actions: construct the view model, assert the predicate
 /// on the initial state, then drive **randomized multi-step action sequences**

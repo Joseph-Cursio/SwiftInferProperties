@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.44.C carrier — Double two-pass idempotence emission. Mirrors
 // `RoundTripStubEmitter+NonComplex.swift`'s `composeDoubleSource` but
 // for the `f(f(x)) ≈ f(x)` shape: emits `onceResult = f(value)` +

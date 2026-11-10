@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 // V2.0 M10 — end-to-end `drift-interaction` orchestration. Builds a

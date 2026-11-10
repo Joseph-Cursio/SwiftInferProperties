@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.46.A — synthesizes the standalone Swift source for an
 /// associativity verify subprocess
 /// (`f(f(a, b), c) ≈ f(a, f(b, c))` on a binary function

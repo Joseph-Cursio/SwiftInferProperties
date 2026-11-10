@@ -1,5 +1,4 @@
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// **The drift guard the catalog's own doc claimed it already had.**

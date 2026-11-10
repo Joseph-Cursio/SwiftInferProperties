@@ -1,5 +1,3 @@
-import Foundation
-
 // V2.0 M3.C — the interaction-verify pipeline error type, lifted out of
 // `VerifyInteractionPipeline.swift` so that file stays under SwiftLint's
 // `file_length` cap (the slice-3 resolver call pushed it over). Pure

@@ -1,7 +1,5 @@
 import Foundation
 import SwiftEffectInference
-import SwiftParser
-import SwiftSyntax
 import Testing
 
 @testable import SwiftInferCore

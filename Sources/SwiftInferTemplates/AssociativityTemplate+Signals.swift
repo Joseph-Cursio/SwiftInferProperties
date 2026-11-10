@@ -141,34 +141,4 @@ extension AssociativityTemplate {
             return []
         }
     }
-
-    // MARK: - Suggestion construction
-
-    static func makeExplainability(
-        for summary: FunctionSummary,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let evidence = summary.inferenceEvidence
-        whySuggested.append(
-            "\(evidence.displayName) \(evidence.signature) — \(evidence.location)"
-        )
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        var caveats: [String] = [
-            "T must conform to Equatable for the emitted property to compile. "
-                + "This tool does not verify protocol conformance — confirm before applying.",
-            "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
-        ]
-        if let fpCaveat = floatingPointAdvisory(for: summary) {
-            caveats.append(fpCaveat)
-        } else {
-            caveats.append(
-                "Floating-point operations are typically not exactly associative under IEEE 754 — "
-                    + "a Double-typed candidate may pass the type pattern but fail sampling under M4."
-            )
-        }
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
-    }
 }

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// **Scaled-unit consistency** — two constructors from one unit family must agree.

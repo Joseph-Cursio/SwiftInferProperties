@@ -1,9 +1,7 @@
 import Foundation
-import PropertyLawCore
 import Testing
 
 @testable import SwiftInferCLI
-@testable import SwiftInferCore
 
 // V1.49.E — unit tests for the V1.49.A stub-preamble channel.
 

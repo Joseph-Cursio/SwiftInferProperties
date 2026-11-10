@@ -1,4 +1,3 @@
-import Foundation
 import SwiftSyntax
 
 /// V1.B — recursive walker over a `var body` subtree that emits one

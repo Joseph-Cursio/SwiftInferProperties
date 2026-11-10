@@ -1,6 +1,5 @@
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// **A reason exactly when no stub.** `deterministicStub` writes from `SubjectCallPlan` and

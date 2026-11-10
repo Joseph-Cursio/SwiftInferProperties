@@ -1,5 +1,3 @@
-import Foundation
-
 // The §4a decision from `docs/plans/kit-suite-backtest-plan.md`, taken 2026-08-08.
 extension KitSuiteEmitter {
 

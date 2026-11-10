@@ -1,5 +1,3 @@
-import Foundation
-
 /// **What would have to move** for a test to reach a seeded symbol, as the linter determined it.
 ///
 /// `SeedKind.restrictedFunction` says a test cannot call the symbol. This says *why*, and the two

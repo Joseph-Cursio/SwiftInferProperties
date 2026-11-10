@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.44.B carrier — Double two-pass emission. The edge generator emits
 // the curated real-axis edge set (`DoubleEdgeCaseStub`: NaN/±Inf/±0/
 // overflow/subnormal at ~10% per trial), inline rather than delegated

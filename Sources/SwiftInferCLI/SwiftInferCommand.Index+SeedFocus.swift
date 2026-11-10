@@ -1,6 +1,3 @@
-import Foundation
-import SwiftInferCore
-
 /// `index --seeds` — the half of the lint→infer loop that lets verify check what
 /// discovery actually found.
 ///

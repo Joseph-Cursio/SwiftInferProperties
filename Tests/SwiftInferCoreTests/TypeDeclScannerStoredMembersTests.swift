@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 @testable import SwiftInferCore
 import Testing

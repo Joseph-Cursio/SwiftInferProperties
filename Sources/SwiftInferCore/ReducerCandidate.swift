@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M1.A — value type representing one detected reducer-shaped
 /// function. The output unit of `ReducerDiscoverer` and the input unit
 /// for every later v2.0 milestone (M2 generates Action sequences for

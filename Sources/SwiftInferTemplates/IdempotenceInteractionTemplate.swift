@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V2.0 M4.C — Idempotence interaction-template family. PRD §5.3.

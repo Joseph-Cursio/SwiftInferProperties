@@ -105,11 +105,6 @@ public enum PartitionPairing {
         return nil
     }
 
-    /// Kept for callers that only need the boolean.
-    static func isTiler(_ summary: FunctionSummary) -> Bool {
-        tilerForm(of: summary) != nil
-    }
-
     /// `(Int) -> Range<Int>` — one integer parameter in, a half-open integer range out.
     ///
     /// `Range<Int>` and `ClosedRange<Int>` both count; `Range<String.Index>` does not, because a

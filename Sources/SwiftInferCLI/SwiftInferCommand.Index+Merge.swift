@@ -1,5 +1,4 @@
 import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 // Extracted from `SwiftInferCommand.Index.swift` when recording dependency type shapes (#118) took

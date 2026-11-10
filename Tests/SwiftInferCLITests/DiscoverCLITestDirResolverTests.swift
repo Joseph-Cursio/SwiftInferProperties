@@ -1,8 +1,5 @@
 import Foundation
 import SwiftInferCLI
-import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 /// TestLifter M6.0 acceptance — `--test-dir` CLI override.

@@ -1,7 +1,4 @@
-import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 @Suite("InteractiveTriage — parameter parsing (determinism stub, any arity)")

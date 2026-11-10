@@ -7,6 +7,7 @@ import Foundation
 /// 400-line file cap; the reasoning lives in that suite's header.
 extension CrossTypePairCensusMeasuredTests {
 
+    // swiftlint:disable:next unused_declaration - used only by a closure-initialised static, which the index misses
     struct Reading {
         let corpus: String
         let roundTrip: Int

@@ -1,5 +1,3 @@
-import Foundation
-
 /// What the kit covers on this corpus, reduced to the three numbers the headline needs.
 ///
 /// Carried on `PipelineResult` so the renderer does not have to re-derive it — and so the

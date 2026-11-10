@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// How many arguments each template's property expression applies to its subject.

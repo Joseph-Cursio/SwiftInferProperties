@@ -1,5 +1,3 @@
-import Foundation
-
 /// Whether a view model is constructible with no arguments — the verify
 /// gate. `.requiresArguments` carries the stored-field names that lack a
 /// default (usually injected dependencies), for a clear skip disclosure.

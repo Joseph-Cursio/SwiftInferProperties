@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // The optional-narrowing type-symmetry signal. A `(T?) -> T` function is still

@@ -1,5 +1,3 @@
-import Foundation
-
 /// The **caveat** half of `CuratedStdlibCatalog` — plausible-looking NON-properties,
 /// documented and never asserted true. `StdlibAnchor` turns a matching caveat into a
 /// "why this might be wrong" line on a discovered candidate.

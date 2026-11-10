@@ -1,5 +1,3 @@
-import Foundation
-
 public extension InteractionInvariantFamily {
 
     /// V2.0 Finding G — the SwiftProjectLint refactor lint a family

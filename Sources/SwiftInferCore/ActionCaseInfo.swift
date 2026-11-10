@@ -1,5 +1,3 @@
-import Foundation
-
 // Cycle 125 + item 2 slices 3/4 — the per-Action-case discovery record and its
 // composition-payload resolution enrichments, lifted out of
 // `ReducerCandidate.swift` so that file stays under SwiftLint's `file_length`

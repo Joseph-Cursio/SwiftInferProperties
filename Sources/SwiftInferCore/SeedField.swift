@@ -1,5 +1,3 @@
-import Foundation
-
 /// Every key a seed carries — the coding keys for `SeedManifest.Seed`, and the **one** place this
 /// build's read-field set is written down.
 ///

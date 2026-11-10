@@ -1,5 +1,3 @@
-import Foundation
-
 /// A node list read as a chain: everything before its first `.call`, then each `.call` with any
 /// property accesses after it.
 struct ChainSegments {

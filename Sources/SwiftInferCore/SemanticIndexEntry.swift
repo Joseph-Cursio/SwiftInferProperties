@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.33.A — one row of the SemanticIndex (PRD §20.1). A pure value type
 /// recording an inferred property suggestion alongside the user's
 /// triage decision (if any) and the first/last times the indexer saw

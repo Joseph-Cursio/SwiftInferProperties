@@ -1,10 +1,7 @@
 import Foundation
-import SwiftInferTemplates
 import SwiftParser
 import SwiftSyntax
 import Testing
-
-@testable import SwiftInferCore
 
 /// Hand-written `Codable` halves: `func encode(to:) throws` and `init(from:) throws`.
 final class CodecFinder: SyntaxVisitor {

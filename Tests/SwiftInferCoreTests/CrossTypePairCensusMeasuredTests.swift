@@ -1,8 +1,4 @@
-import Foundation
 import Testing
-
-@testable import SwiftInferCore
-@testable import SwiftInferTemplates
 
 /// **How general is the cross-type round-trip pairing, and is any of it salvageable?**
 ///

@@ -1,5 +1,4 @@
 import Foundation
-import PropertyLawCore
 
 // Curated generator recipes for **SwiftSyntax node carriers**.
 //

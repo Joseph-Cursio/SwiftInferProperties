@@ -1,8 +1,6 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 // MARK: - Test doubles
@@ -17,7 +15,6 @@ private final class SilentPreconditionDiagnosticOutput: DiagnosticOutput, @unche
 
 private final class RecordingPreconditionOutput: DiscoverOutput, @unchecked Sendable {
     private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
 
     func write(_ text: String) {
         lines.append(text)

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.42.C.6 — resolves the inverse-side function name + the verifier

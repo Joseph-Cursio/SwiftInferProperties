@@ -1,5 +1,3 @@
-import Foundation
-
 /// PROTOTYPE — emits a standalone verifier that checks a view-model action
 /// is idempotent at the State level. Construct the view model, apply the
 /// action, snapshot every State field, apply it *again with the same

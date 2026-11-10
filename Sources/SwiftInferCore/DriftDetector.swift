@@ -1,5 +1,3 @@
-import Foundation
-
 /// One drift-warning row. Carries just enough to render the §9
 /// CI-annotation-friendly stderr line — identity hash for the
 /// `// swiftinfer: skip` workflow, displayName + location for
