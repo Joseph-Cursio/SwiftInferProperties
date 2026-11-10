@@ -14,7 +14,7 @@ struct FloatingPointCounterSignalTests {
     /// the `+40` curated-verb bump, so the score is exactly shape (30) plus the
     /// FP counter under test — which is what these cases isolate. A bare name
     /// like "op" would now be suppressed by B24 before the FP counter matters.
-    private static func binaryOp(name: String = "+", typeText: String) -> FunctionSummary {
+    private static func binaryOp(typeText: String, name: String = "+") -> FunctionSummary {
         FunctionSummary(
             name: name,
             parameters: [
@@ -34,9 +34,9 @@ struct FloatingPointCounterSignalTests {
 
     /// Build a unary-codomain `func forward(_:T) -> U` summary.
     private static func unary(
-        name: String = "encode",
         domain: String,
-        codomain: String
+        codomain: String,
+        name: String = "encode"
     ) -> FunctionSummary {
         FunctionSummary(
             name: name,
@@ -137,8 +137,8 @@ struct FloatingPointCounterSignalTests {
         // name match); -10 FP counter-signal lands Score 15 = Suppressed
         // = `suggest` returns nil. Uses `transform`/`untransform` which
         // aren't in `curatedInversePairs`.
-        let forward = Self.unary(name: "transform", domain: "Double", codomain: "Bytes")
-        let reverse = Self.unary(name: "untransform", domain: "Bytes", codomain: "Double")
+        let forward = Self.unary(domain: "Double", codomain: "Bytes", name: "transform")
+        let reverse = Self.unary(domain: "Bytes", codomain: "Double", name: "untransform")
         let pair = FunctionPair(forward: forward, reverse: reverse)
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil, "FP-typed inverse-pair should suppress to filtered")
@@ -149,8 +149,8 @@ struct FloatingPointCounterSignalTests {
         // Same FP types but with the curated `encode`/`decode` name pair.
         // Score = 25 (typeSymmetry) + 10 (curated) - 10 (FP) = 25 → Possible.
         // The kit-pointer is still surfaced in the explainability block.
-        let forward = Self.unary(name: "encode", domain: "Double", codomain: "Bytes")
-        let reverse = Self.unary(name: "decode", domain: "Bytes", codomain: "Double")
+        let forward = Self.unary(domain: "Double", codomain: "Bytes", name: "encode")
+        let reverse = Self.unary(domain: "Bytes", codomain: "Double", name: "decode")
         let pair = FunctionPair(forward: forward, reverse: reverse)
         let suggestion = try #require(InversePairTemplate.suggest(for: pair))
         #expect(suggestion.score.total == 25)
@@ -163,8 +163,8 @@ struct FloatingPointCounterSignalTests {
     func inversePairNonFPUnchanged() throws {
         // Non-curated, non-FP names. Score = 25 (typeSymmetry only).
         // No FP counter-signal; no FP advisory.
-        let forward = Self.unary(name: "transform", domain: "MyType", codomain: "Bytes")
-        let reverse = Self.unary(name: "untransform", domain: "Bytes", codomain: "MyType")
+        let forward = Self.unary(domain: "MyType", codomain: "Bytes", name: "transform")
+        let reverse = Self.unary(domain: "Bytes", codomain: "MyType", name: "untransform")
         let pair = FunctionPair(forward: forward, reverse: reverse)
         let suggestion = try #require(InversePairTemplate.suggest(for: pair))
         #expect(suggestion.score.total == 25)

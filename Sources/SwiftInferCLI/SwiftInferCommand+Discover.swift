@@ -40,6 +40,7 @@ extension SwiftInferCommand.Discover {
         let seedManifest = try seeds.map { try Self.loadSeedManifest(at: URL(fileURLWithPath: $0)) }
         try Self.run(
             directory: directory,
+            output: PrintOutput(),
             includePossible: SettingOverride(includePossible, enabledBy: .includePossible),
             explicitVocabularyPath: explicitVocabularyPath,
             explicitConfigPath: explicitConfigPath,
@@ -55,7 +56,6 @@ extension SwiftInferCommand.Discover {
             seedManifest: seedManifest,
             requireCorroboration: requireCorroboration,
             resolveEffects: resolveEffects,
-            output: PrintOutput(),
             diagnostics: PrintDiagnosticOutput()
         )
     }
@@ -71,6 +71,7 @@ extension SwiftInferCommand.Discover {
     /// there, falls back to the conventional walk-up location.
     public static func run(
         directory: URL,
+        output: any DiscoverOutput,
         includePossible: SettingOverride = .notGiven,
         explicitVocabularyPath: URL? = nil,
         explicitConfigPath: URL? = nil,
@@ -87,7 +88,6 @@ extension SwiftInferCommand.Discover {
         requireCorroboration: Bool = false,
         resolveEffects: Bool = false,
         promptInput: any PromptInput = StdinPromptInput(),
-        output: any DiscoverOutput,
         diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
     ) throws {
         let evidence = loadEvidence(directory: directory, diagnostics: diagnostics)
@@ -96,6 +96,7 @@ extension SwiftInferCommand.Discover {
         // the pipeline — and not merely survive the focus applied to the pipeline's result.
         let pipeline = try collectVisibleSuggestions(
             directory: directory,
+            diagnostics: diagnostics,
             includePossible: includePossible,
             docstringAdvice: docstringAdvice,
             explicitVocabularyPath: explicitVocabularyPath,
@@ -105,8 +106,7 @@ extension SwiftInferCommand.Discover {
             evidence: evidence,
             seedManifest: seedManifest,
             requireCorroboration: requireCorroboration,
-            resolveEffects: resolveEffects,
-            diagnostics: diagnostics
+            resolveEffects: resolveEffects
         )
         let visible = focus(pipeline, with: seedManifest, diagnostics: diagnostics)
 
@@ -190,14 +190,14 @@ extension SwiftInferCommand.Discover {
             visible: visible,
             statsOnly: context.statsOnly,
             evidenceByIdentity: applicableEvidence,
+            output: output,
             effectAnnotations: context.effectAnnotations
                 ? EffectAnnotationAdvice.adviceList(from: pipeline.summaries) : [],
             docstringAdvice: docstringAdviceIfEnabled(
                 pipeline: pipeline, visible: visible, seedManifest: context.seedManifest
             ),
             refutedLaws: pipeline.refutedLaws,
-            coverage: pipeline.coverage,
-            output: output
+            coverage: pipeline.coverage
         )
     }
 
@@ -279,8 +279,8 @@ extension SwiftInferCommand.Discover {
             output: triageIO.output,
             diagnostics: triageIO.diagnostics,
             outputDirectory: packageRoot,
-            generatedRoot: destination.generatedRoot,
             dryRun: triageIO.dryRun,
+            generatedRoot: destination.generatedRoot,
             proposalsByType: RefactorBridgeOrchestrator.proposals(
                 from: visible,
                 inverseElementPairs: pipeline.inverseElementPairs

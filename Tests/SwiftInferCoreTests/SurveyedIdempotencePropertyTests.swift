@@ -90,13 +90,13 @@ struct SurveyedIdempotencePropertyTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: "idempotence",
-            typeName: "Foo",
             score: score,
             tier: score >= 70 ? "Strong" : "Likely",
             primaryFunctionName: "normalize(_:)",
             location: "/Module.swift:1",
             firstSeenAt: firstSeen,
-            lastSeenAt: "2026-08-08T00:00:00Z"
+            lastSeenAt: "2026-08-08T00:00:00Z",
+            typeName: "Foo"
         )
     }
 

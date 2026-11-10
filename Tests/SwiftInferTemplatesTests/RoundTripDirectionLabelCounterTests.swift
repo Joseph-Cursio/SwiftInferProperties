@@ -43,11 +43,11 @@ struct RoundTripDirectionLabelCounterTests {
         // -15 = +15 → Suppressed tier (< 20).
         let pair = makePair(
             forwardName: "index",
-            forwardLabel: "after",
             reverseName: "index",
-            reverseLabel: "before",
             forwardParam: "Index",
-            forwardReturn: "Index"
+            forwardReturn: "Index",
+            forwardLabel: "after",
+            reverseLabel: "before"
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Direction-labeled round-trip pair should be suppressed")
@@ -88,11 +88,11 @@ struct RoundTripDirectionLabelCounterTests {
     func allCuratedDirectionLabelsSuppressForwardSide(label: String) {
         let pair = makePair(
             forwardName: "step",
-            forwardLabel: label,
             reverseName: "unstep",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: label,
+            reverseLabel: nil
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Forward direction label '\(label)' should suppress")
@@ -112,11 +112,11 @@ struct RoundTripDirectionLabelCounterTests {
         // → Suppressed.
         let pair = makePair(
             forwardName: "transform",
-            forwardLabel: nil,
             reverseName: "untransform",
-            reverseLabel: label,
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: nil,
+            reverseLabel: label
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Reverse direction label '\(label)' should suppress")
@@ -138,11 +138,11 @@ struct RoundTripDirectionLabelCounterTests {
         // separately and is tested in StrideStyleLabelTests).
         let pair = makePair(
             forwardName: "endOfChunk",
-            forwardLabel: "startingAt",
             reverseName: "startOfChunk",
-            reverseLabel: "endingAt",
             forwardParam: "Index",
-            forwardReturn: "Index"
+            forwardReturn: "Index",
+            forwardLabel: "startingAt",
+            reverseLabel: "endingAt"
         )
         // V1.12.1 directionLabelCounterSignal returns nil — stride
         // labels aren't in DirectionLabels.curated.
@@ -162,11 +162,11 @@ struct RoundTripDirectionLabelCounterTests {
         // touch it.
         let pair = makePair(
             forwardName: "encode",
-            forwardLabel: nil,
             reverseName: "decode",
-            reverseLabel: nil,
             forwardParam: "Document",
-            forwardReturn: "Data"
+            forwardReturn: "Data",
+            forwardLabel: nil,
+            reverseLabel: nil
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion?.score.total == 70)
@@ -182,11 +182,11 @@ struct RoundTripDirectionLabelCounterTests {
         // boundary" design intent at the round-trip baseline.
         let pair = makePair(
             forwardName: "encode",
-            forwardLabel: nil,
             reverseName: "decode",
-            reverseLabel: "after",
             forwardParam: "Document",
-            forwardReturn: "Data"
+            forwardReturn: "Data",
+            forwardLabel: nil,
+            reverseLabel: "after"
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion?.score.total == 55)
@@ -210,11 +210,11 @@ struct RoundTripDirectionLabelCounterTests {
         // suite verifies the v1.15 suppression separately.
         let pair = makePair(
             forwardName: "minimumCapacity",
-            forwardLabel: "forScale",
             reverseName: "scale",
-            reverseLabel: "forCapacity",
             forwardParam: "Int",
-            forwardReturn: "Int"
+            forwardReturn: "Int",
+            forwardLabel: "forScale",
+            reverseLabel: "forCapacity"
         )
         // V1.15.1: pair is now Suppressed via the domain-marker counter.
         // Verify the V1.12.1 direction counter specifically didn't fire by
@@ -231,11 +231,11 @@ struct RoundTripDirectionLabelCounterTests {
     func nilLabelsDoNotSuppress() {
         let pair = makePair(
             forwardName: "transform",
-            forwardLabel: nil,
             reverseName: "untransform",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "Bytes"
+            forwardReturn: "Bytes",
+            forwardLabel: nil,
+            reverseLabel: nil
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion?.score.total == 30)
@@ -248,11 +248,11 @@ struct RoundTripDirectionLabelCounterTests {
     func caseSensitive() {
         let pair = makePair(
             forwardName: "step",
-            forwardLabel: "After",
             reverseName: "unstep",
-            reverseLabel: "Before",
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: "After",
+            reverseLabel: "Before"
         )
         // Asserted on the SIGNAL rather than the total. This suite owns the direction-label
         // counter's case-sensitivity, and `Token -> Token ↔ Token -> Token` was only ever a
@@ -280,11 +280,11 @@ struct RoundTripDirectionLabelCounterTests {
         // open-decision-#1 explicitly avoided.
         let curated = makePair(
             forwardName: "encode",
-            forwardLabel: "after",
             reverseName: "decode",
-            reverseLabel: nil,
             forwardParam: "Document",
-            forwardReturn: "Data"
+            forwardReturn: "Data",
+            forwardLabel: "after",
+            reverseLabel: nil
         )
         let suggestion = RoundTripTemplate.suggest(for: curated)
         let directionSignal = suggestion?.score.signals.first { $0.kind == .directionLabel }
@@ -292,11 +292,11 @@ struct RoundTripDirectionLabelCounterTests {
         // Sanity check: bare-shape with direction label suppresses.
         let bare = makePair(
             forwardName: "step",
-            forwardLabel: "after",
             reverseName: "unstep",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: "after",
+            reverseLabel: nil
         )
         #expect(RoundTripTemplate.suggest(for: bare) == nil)
     }
@@ -321,11 +321,11 @@ struct RoundTripDirectionLabelCounterTests {
 
     private func makePair(
         forwardName: String,
-        forwardLabel: String? = nil,
         reverseName: String,
-        reverseLabel: String? = nil,
         forwardParam: String,
-        forwardReturn: String
+        forwardReturn: String,
+        forwardLabel: String? = nil,
+        reverseLabel: String? = nil
     ) -> FunctionPair {
         let forward = makeSummary(
             name: forwardName,

@@ -63,13 +63,13 @@ struct ReferenceOracleDiscoverWitnessTests {
         let pipeline = SwiftInferCommand.Discover.PipelineResult(
             suggestions: [],
             packageRoot: nil,
+            docstringAdvice: true,
             typeShapesByName: Dictionary(uniqueKeysWithValues: shapes.map { ($0.name, $0) }),
             inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: corpus.typeDecls),
             testVisibleTypeNames: SendableShim.testVisibleTypeNames(from: corpus.typeDecls),
             typeAliases: corpus.typeAliases,
             protocolNames: Set(corpus.typeDecls.filter { $0.kind == .protocol }.map(\.qualifiedName)),
-            summaries: corpus.summaries,
-            docstringAdvice: true
+            summaries: corpus.summaries
         )
         return Scan(summaries: corpus.summaries, context: .init(pipeline: pipeline))
     }

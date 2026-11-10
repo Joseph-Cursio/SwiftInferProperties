@@ -14,6 +14,7 @@ extension SwiftInferCommand.Discover {
 
     public static func collectVisibleSuggestions(
         directory: URL,
+        diagnostics: any DiagnosticOutput,
         includePossible: SettingOverride = .notGiven,
         docstringAdvice: SettingOverride = .notGiven,
         explicitVocabularyPath: URL? = nil,
@@ -24,8 +25,7 @@ extension SwiftInferCommand.Discover {
         seedManifest: SeedManifest? = nil,
         requireCorroboration: Bool = false,
         resolveEffects: Bool = false,
-        purity: PackagePurity? = nil,
-        diagnostics: any DiagnosticOutput
+        purity: PackagePurity? = nil
     ) throws -> PipelineResult {
         // A run over an empty corpus must not be mistaken for a run that found nothing in your
         // code. Only the empty case speaks: stderr is byte-stable here, and a per-run line naming
@@ -36,14 +36,14 @@ extension SwiftInferCommand.Discover {
             directory: directory,
             includePossible: includePossible,
             docstringAdvice: docstringAdvice,
-            requireCorroboration: requireCorroboration,
             overrides: ExplicitOverrides(
                 vocabularyPath: explicitVocabularyPath,
                 configPath: explicitConfigPath,
                 testDirectory: explicitTestDirectory,
                 packs: packsOverride
             ),
-            diagnostics: diagnostics
+            diagnostics: diagnostics,
+            requireCorroboration: requireCorroboration
         )
         // TestLifter M1.5 — scan tests for slices feeding the +20 cross-
         // validation seam (PRD §4.1). Production source naturally

@@ -38,12 +38,12 @@ struct NClassDetectorCoversDomainTests {
         }
         return PartitionCandidate(
             predicateName: "size",
+            outlierSiteCount: 0,
             markerPair: nil,
             markerSet: resolvedSet,
             positiveSites: [],
             negativeSites: [],
-            nClassBucketsByMarker: buckets,
-            outlierSiteCount: 0
+            nClassBucketsByMarker: buckets
         )
     }
 
@@ -113,13 +113,14 @@ struct NClassDetectorCoversDomainTests {
         let buckets: [String: Int] = ["Small": 3, "Medium": 3, "Large": 3]
         let candidate = PartitionCandidate(
             predicateName: "size",
+            outlierSiteCount: 0,
             markerPair: nil,
             markerSet: extraMarkerSet,
-            positiveSites: [], negativeSites: [],
+            positiveSites: [],
+            negativeSites: [],
             nClassBucketsByMarker: buckets.mapValues { count in
                 (0..<count).map { PartitionSite(methodName: "test_\($0)") }
-            },
-            outlierSiteCount: 0
+            }
         )
         let hint = NClassEquivalenceClassDetector.detect(
             candidate: candidate,

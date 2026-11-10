@@ -13,8 +13,8 @@ public extension LiftedTestEmitter {
         range: DocumentedRange,
         seed: SamplingSeed.Value,
         generators: [String],
-        argumentTypes: [String] = [],
-        failureLabel: String
+        failureLabel: String,
+        argumentTypes: [String] = []
     ) -> String {
         let isTuple = generators.count > 1
         let bind = generators.isEmpty ? "_"

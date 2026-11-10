@@ -51,13 +51,13 @@ struct VerifiableTemplateReachTests {
         SemanticIndexEntry(
             identityHash: "0xDRIFTGUARD",
             templateName: template.rawValue,
-            typeName: "Int",
             score: 60,
             tier: "Strong",
             primaryFunctionName: "subject(_:)",
             location: "/Module.swift:1",
             firstSeenAt: "2026-08-03T00:00:00Z",
-            lastSeenAt: "2026-08-03T00:00:00Z"
+            lastSeenAt: "2026-08-03T00:00:00Z",
+            typeName: "Int"
         )
     }
 
@@ -110,9 +110,9 @@ struct VerifiableTemplateReachTests {
                 // (does a composer handle this template?) rather than a question about the
                 // fixture. Every other template composes for any name.
                 functionCalls: Self.probeCalls(for: template),
-                extraImports: [],
                 seedHex: .init(stateA: 1, stateB: 2, stateC: 3, stateD: 4),
                 trialBudget: .small,
+                extraImports: [],
                 allShapes: [:],
                 isInstanceMethod: false,
                 isMutatingMethod: false,

@@ -11,10 +11,10 @@ struct StructuralRoundTripTemplateTests {
 
     private static func function(
         _ name: String,
+        returns: String?,
         on owner: String? = "RuleInfoParser",
         isStatic: Bool = true,
-        parameter: String? = "String",
-        returns: String?
+        parameter: String? = "String"
     ) -> FunctionSummary {
         FunctionSummary(
             name: name,
@@ -50,7 +50,7 @@ struct StructuralRoundTripTemplateTests {
 
     /// `parse(_:) -> Self` parses into its own declaring type.
     @Test func selfResolvesToTheDeclaringType() throws {
-        let netrcParser = Self.function("parse", on: "Netrc", returns: "Self")
+        let netrcParser = Self.function("parse", returns: "Self", on: "Netrc")
         let subject = try #require(StructuralRoundTripSubject.candidates(in: [netrcParser]).first)
         #expect(subject.structure == "Netrc")
     }
@@ -60,9 +60,13 @@ struct StructuralRoundTripTemplateTests {
     /// **A type something prints is `round-trip`'s and `normal-form`'s.** SwiftFormatRuleStudio's
     /// `SwiftFormatConfig.parse(_:) -> Self` has `serialized()`, and is not proposed.
     @Test func aTypeWithAPrinterIsLeftToTheRoundTripTemplates() {
-        let configParser = Self.function("parse", on: "SwiftFormatConfig", returns: "Self")
+        let configParser = Self.function("parse", returns: "Self", on: "SwiftFormatConfig")
         let printer = Self.function(
-            "serialized", on: "SwiftFormatConfig", isStatic: false, parameter: nil, returns: "String"
+            "serialized",
+            returns: "String",
+            on: "SwiftFormatConfig",
+            isStatic: false,
+            parameter: nil
         )
         #expect(StructuralRoundTripSubject.candidates(in: [configParser, printer]).isEmpty)
         #expect(StructuralRoundTripSubject.candidates(in: [configParser]).count == 1)
@@ -81,11 +85,14 @@ struct StructuralRoundTripTemplateTests {
     /// generic parameter — no layout of its own, and a printer the textual check cannot see.
     @Test func aMemberOfAnUndeclaredHeadIsDeclined() {
         let strategy = Self.function(
-            "parse", on: "IntegerParseStrategy", isStatic: false, returns: "Format.FormatInput"
+            "parse",
+            returns: "Format.FormatInput",
+            on: "IntegerParseStrategy",
+            isStatic: false
         )
         #expect(StructuralRoundTripSubject.candidates(in: [strategy]).isEmpty)
 
-        let lut = Self.function("parse", on: "C7ColorCube", returns: "C7ColorCube.Resource")
+        let lut = Self.function("parse", returns: "C7ColorCube.Resource", on: "C7ColorCube")
         let lutOwner = FunctionSummary(
             name: "apply", parameters: [], returnTypeText: "Void", isThrows: false, isAsync: false,
             isMutating: false, isStatic: false,

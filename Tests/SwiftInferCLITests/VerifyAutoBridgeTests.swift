@@ -19,13 +19,13 @@ struct VerifyAutoBridgeTests {
         SemanticIndexEntry(
             identityHash: "0xABCDEF0123456789",
             templateName: template,
-            typeName: carrier,
             score: 80,
             tier: "strong",
             primaryFunctionName: primary,
             location: "Sources/Foo.swift:1",
             firstSeenAt: "2026-06-26T00:00:00Z",
             lastSeenAt: "2026-06-26T00:00:00Z",
+            typeName: carrier,
             secondaryFunctionName: secondary
         )
     }

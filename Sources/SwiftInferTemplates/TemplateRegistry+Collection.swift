@@ -231,16 +231,16 @@ extension TemplateRegistry {
     ) {
         if let suggestion = IdempotenceTemplate.suggest(
             forLifted: transformation,
+            carrierKindResolver: resolver,
             vocabulary: context.vocabulary,
-            inheritedTypesByName: context.inheritedTypesByName,
-            carrierKindResolver: resolver
+            inheritedTypesByName: context.inheritedTypesByName
         ) {
             collector.record(suggestion, generatorType: transformation.carrier)
         }
         if let suggestion = CompositionTemplate.suggest(
             forLifted: transformation,
-            vocabulary: context.vocabulary,
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            vocabulary: context.vocabulary
         ) {
             collector.record(suggestion, generatorType: transformation.carrier)
         }

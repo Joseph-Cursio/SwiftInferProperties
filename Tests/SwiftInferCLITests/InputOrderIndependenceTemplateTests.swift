@@ -38,10 +38,10 @@ struct InputOrderIndependenceTemplateTests {
             location: SourceLocation(file: "Derivations.swift", line: 274, column: 1),
             containingTypeName: nil,
             bodySignals: BodySignals(
-                sortedOutput: ordering,
                 hasNonDeterministicCall: false,
                 hasSelfComposition: false,
-                nonDeterministicAPIsDetected: []
+                nonDeterministicAPIsDetected: [],
+                sortedOutput: ordering
             )
         )
     }
@@ -136,8 +136,8 @@ struct InputOrderIndependenceTemplateTests {
             ),
             seed: SamplingSeed.derive(fromIdentityHash: "impact"),
             generators: ["[LintFinding].gen()", "Int?.gen()"],
-            argumentTypes: ["[LintFinding]", "Int?"],
-            failureLabel: "order depends on input order"
+            failureLabel: "order depends on input order",
+            argumentTypes: ["[LintFinding]", "Int?"]
         ))
         #expect(stub.contains(
             "await MainActor.run { return "
@@ -157,8 +157,8 @@ struct InputOrderIndependenceTemplateTests {
             ordering: Self.hotspotOrdering,
             seed: SamplingSeed.derive(fromIdentityHash: "store"),
             generators: ["Store.gen()", "[FleetRepo].gen()"],
-            argumentTypes: ["Store", "[FleetRepo]"],
-            failureLabel: "order depends on input order"
+            failureLabel: "order depends on input order",
+            argumentTypes: ["Store", "[FleetRepo]"]
         ))
         #expect(stub.contains("let output = await args.0.ranked(args.1).map { $0.rule }; "
             + "let fromReversed = await args.0.ranked(Array(args.1.reversed())).map { $0.rule }; "

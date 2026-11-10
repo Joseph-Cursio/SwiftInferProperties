@@ -69,9 +69,9 @@ public extension SwiftInferCommand {
             )
             let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: directory,
+                diagnostics: diagnostics,
                 includePossible: true,
-                evidence: evidence,
-                diagnostics: diagnostics
+                evidence: evidence
             )
             let shapes = pipeline.typeShapesByName
             let findings = ProtocolCoverageAudit.audit(

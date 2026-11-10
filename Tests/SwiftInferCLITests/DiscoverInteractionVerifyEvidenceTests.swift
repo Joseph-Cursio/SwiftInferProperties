@@ -67,8 +67,8 @@ struct DiscoverInteractionVerifyEvidenceTests {
         // Even with --include-possible, a .suppressed pick is never shown.
         let rendered = try Command.runPipeline(
             target: "MyApp",
-            includePossible: true,
             workingDirectory: directory,
+            includePossible: true,
             firstSeenAt: firstSeenAt
         )
         #expect(!rendered.contains("Family:    idempotence"))

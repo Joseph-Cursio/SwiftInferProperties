@@ -26,8 +26,8 @@ struct EquivalenceClassRenderingNClassTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentNCDiagnostics()
+            diagnostics: SilentNCDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         let kind = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
@@ -65,8 +65,8 @@ struct EquivalenceClassRenderingNClassTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentNCDiagnostics()
+            diagnostics: SilentNCDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         let kind = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
@@ -105,8 +105,8 @@ struct EquivalenceClassRenderingNClassTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentNCDiagnostics()
+            diagnostics: SilentNCDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         #expect(advisory.score.tier == .advisory)

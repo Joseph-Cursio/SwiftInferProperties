@@ -28,13 +28,13 @@ struct SurveyRecordTierTests {
         SemanticIndexEntry(
             identityHash: "0xFEEDFACE",
             templateName: "idempotence",
-            typeName: "Carrier",
             score: 30,
             tier: tier,
             primaryFunctionName: "normalize(_:)",
             location: "F.swift:1",
             firstSeenAt: "2026-08-19T00:00:00Z",
-            lastSeenAt: "2026-08-19T00:00:00Z"
+            lastSeenAt: "2026-08-19T00:00:00Z",
+            typeName: "Carrier"
         )
     }
 

@@ -33,13 +33,13 @@ struct ComputedPropertyCallShapeTests {
         SemanticIndexEntry(
             identityHash: "0xDEADBEEF",
             templateName: "idempotence",
-            typeName: "FilePath",
             score: 60,
             tier: "Strong",
             primaryFunctionName: primaryFunctionName,
             location: "/tmp/FilePath.swift:1",
             firstSeenAt: "2026-08-21T00:00:00Z",
             lastSeenAt: "2026-08-21T00:00:00Z",
+            typeName: "FilePath",
             carrierTypeName: "FilePath",
             isInstanceMethod: isInstanceMethod,
             isComputedProperty: isComputedProperty

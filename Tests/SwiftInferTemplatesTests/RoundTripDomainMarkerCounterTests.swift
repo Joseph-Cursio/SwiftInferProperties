@@ -26,9 +26,12 @@ struct RoundTripDomainMarkerCounterTests {
     @Test("V1.15.1 — `min(forScale:) ↔ max(forScale:)` Int->Int pair is suppressed")
     func sameForScalePairSuppressed() {
         let pair = makePair(
-            forwardName: "minimumCapacity", forwardLabel: "forScale",
-            reverseName: "maximumCapacity", reverseLabel: "forScale",
-            paramType: "Int", returnType: "Int"
+            forwardName: "minimumCapacity",
+            reverseName: "maximumCapacity",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "forScale",
+            reverseLabel: "forScale"
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Both-sides forScale pair should be suppressed")
@@ -37,9 +40,12 @@ struct RoundTripDomainMarkerCounterTests {
     @Test("V1.15.1 — `min(forScale:) ↔ scale(forCapacity:)` cross-domain pair is suppressed")
     func crossDomainForScaleForCapacityPairSuppressed() {
         let pair = makePair(
-            forwardName: "minimumCapacity", forwardLabel: "forScale",
-            reverseName: "scale", reverseLabel: "forCapacity",
-            paramType: "Int", returnType: "Int"
+            forwardName: "minimumCapacity",
+            reverseName: "scale",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "forScale",
+            reverseLabel: "forCapacity"
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Cross-domain forScale↔forCapacity pair should be suppressed")
@@ -52,9 +58,12 @@ struct RoundTripDomainMarkerCounterTests {
     )
     func allCuratedCombinationsSuppress(forward: String, reverse: String) {
         let pair = makePair(
-            forwardName: "fwd", forwardLabel: forward,
-            reverseName: "rev", reverseLabel: reverse,
-            paramType: "Int", returnType: "Int"
+            forwardName: "fwd",
+            reverseName: "rev",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: forward,
+            reverseLabel: reverse
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion == nil, "\(forward) ↔ \(reverse) should suppress")
@@ -70,9 +79,12 @@ struct RoundTripDomainMarkerCounterTests {
         // unlabeled-domain "given X" carrier; only one side has the
         // explicit semantic-intent marker).
         let pair = makePair(
-            forwardName: "_value", forwardLabel: "forBucketContents",
-            reverseName: "_bucketContents", reverseLabel: "for",
-            paramType: "UInt64", returnType: "Int"
+            forwardName: "_value",
+            reverseName: "_bucketContents",
+            paramType: "UInt64",
+            returnType: "Int",
+            forwardLabel: "forBucketContents",
+            reverseLabel: "for"
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         let hasDomainMarker = suggestion?.score.signals.contains { signal in
@@ -85,9 +97,12 @@ struct RoundTripDomainMarkerCounterTests {
     @Test("V1.15.1 — `encode(_:) ↔ decode(_:)` (curated names) stays Likely without domain markers")
     func curatedNamesNoLabelStillLikely() {
         let pair = makePair(
-            forwardName: "encode", forwardLabel: nil,
-            reverseName: "decode", reverseLabel: nil,
-            paramType: "Data", returnType: "Token"
+            forwardName: "encode",
+            reverseName: "decode",
+            paramType: "Data",
+            returnType: "Token",
+            forwardLabel: nil,
+            reverseLabel: nil
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         #expect(suggestion?.score.tier == .likely)
@@ -100,9 +115,12 @@ struct RoundTripDomainMarkerCounterTests {
     @Test("V1.15.1 — non-domain `for` label (not in curated set) does NOT trigger counter")
     func nonCuratedForLabelDoesNotTrigger() {
         let pair = makePair(
-            forwardName: "fwd", forwardLabel: "forSlot",
-            reverseName: "rev", reverseLabel: "forIndex",
-            paramType: "Int", returnType: "Int"
+            forwardName: "fwd",
+            reverseName: "rev",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "forSlot",
+            reverseLabel: "forIndex"
         )
         let suggestion = RoundTripTemplate.suggest(for: pair)
         let hasDomainMarker = suggestion?.score.signals.contains { signal in
@@ -116,9 +134,12 @@ struct RoundTripDomainMarkerCounterTests {
     @Test("V1.15.1 — counter weight is exactly -15")
     func counterWeightIsMinusFifteen() {
         let pair = makePair(
-            forwardName: "fwd", forwardLabel: "forScale",
-            reverseName: "rev", reverseLabel: "forCapacity",
-            paramType: "Int", returnType: "Int"
+            forwardName: "fwd",
+            reverseName: "rev",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "forScale",
+            reverseLabel: "forCapacity"
         )
         let signal = RoundTripTemplate.domainMarkerCounterSignal(for: pair)
         #expect(signal?.weight == -15)
@@ -128,9 +149,12 @@ struct RoundTripDomainMarkerCounterTests {
     @Test("V1.15.1 — case-sensitive (`ForScale` does not trigger)")
     func caseSensitive() {
         let pair = makePair(
-            forwardName: "fwd", forwardLabel: "ForScale",
-            reverseName: "rev", reverseLabel: "ForCapacity",
-            paramType: "Int", returnType: "Int"
+            forwardName: "fwd",
+            reverseName: "rev",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "ForScale",
+            reverseLabel: "ForCapacity"
         )
         let signal = RoundTripTemplate.domainMarkerCounterSignal(for: pair)
         #expect(signal == nil, "Case-mismatched labels should not trigger counter")
@@ -153,11 +177,11 @@ struct RoundTripDomainMarkerCounterTests {
 
     private func makePair(
         forwardName: String,
-        forwardLabel: String? = nil,
         reverseName: String,
-        reverseLabel: String? = nil,
         paramType: String,
-        returnType: String
+        returnType: String,
+        forwardLabel: String? = nil,
+        reverseLabel: String? = nil
     ) -> FunctionPair {
         let forward = FunctionSummary(
             name: forwardName,

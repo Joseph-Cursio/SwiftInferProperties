@@ -106,9 +106,9 @@ struct VerifyPipelineStrategistIntegrationTests {
                     typeShape: shape,
                     template: "idempotence",
                     functionCalls: ["{ (x: Unsupported) in x }"],
-                    extraImports: [],
                     seedHex: VerifyPipelineIntegrationFixture.canonicalSeed,
-                    trialBudget: .small
+                    trialBudget: .small,
+                    extraImports: []
                 )
             )
         }

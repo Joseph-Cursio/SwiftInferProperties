@@ -30,8 +30,8 @@ struct MockInferredPreconditionIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentPreconditionDiagnostics()
+            diagnostics: SilentPreconditionDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         #expect(lifted.generator.source == .inferredFromTests)
@@ -79,8 +79,8 @@ struct MockInferredPreconditionIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentPreconditionDiagnostics()
+            diagnostics: SilentPreconditionDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         let mock = try #require(lifted.mockGenerator)
@@ -123,8 +123,8 @@ struct MockInferredPreconditionIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentPreconditionDiagnostics()
+            diagnostics: SilentPreconditionDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         let mock = try #require(lifted.mockGenerator)

@@ -78,8 +78,8 @@ struct CompositionTemplateTests {
         let vocab = Vocabulary(compositionVerbs: ["nudge"])
         let suggestion = try #require(CompositionTemplate.suggest(
             forLifted: lifted("nudge"),
-            vocabulary: vocab,
-            carrierKindResolver: valueSemanticResolver()
+            carrierKindResolver: valueSemanticResolver(),
+            vocabulary: vocab
         ))
         #expect(suggestion.score.total == 85)
     }

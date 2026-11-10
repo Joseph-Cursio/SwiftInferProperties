@@ -24,9 +24,9 @@ struct StrategistDispatchEmitterV148Tests {
             typeShape: nil,
             template: template,
             functionCalls: functionCalls,
-            extraImports: [],
             seedHex: canonicalSeed,
-            trialBudget: .small
+            trialBudget: .small,
+            extraImports: []
         )
     }
 

@@ -103,8 +103,8 @@ public enum ViewModelDiscoverer {
                     typeName: typeName,
                     observability: observability,
                     stateFields: state.sorted { $0.name < $1.name },
-                    excludedFields: excluded.sorted { $0.name < $1.name },
                     actions: actions,
+                    excludedFields: excluded.sorted { $0.name < $1.name },
                     constructibility: constructibility(of: info),
                     initParameters: info.declaredInits.first ?? []
                 )
@@ -190,11 +190,11 @@ public enum ViewModelDiscoverer {
                 ViewModelAction(
                     name: method.name,
                     parameterTypes: method.parameterTypes,
-                    firstParameterLabel: method.firstParameterLabel,
-                    parameters: method.parameters,
                     isAsync: method.isAsync,
                     isThrows: method.isThrows,
                     mutatesStateDirectly: directlyMutates(method),
+                    firstParameterLabel: method.firstParameterLabel,
+                    parameters: method.parameters,
                     isClockDeterministic: method.isClockDeterministic
                 )
             }

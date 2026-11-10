@@ -237,8 +237,8 @@ struct InteractiveTriageBridgeAcceptTests {
             existingDecisions: .empty,
             context: makeRBContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["B", "s"]),
-                output: output,
                 outputDirectory: directory,
+                output: output,
                 proposalsByType: ["IntSet": [proposal]]
             )
         )
@@ -268,8 +268,8 @@ struct InteractiveTriageBridgeAcceptTests {
             existingDecisions: .empty,
             context: makeRBContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["s"]),
-                output: output,
                 outputDirectory: directory,
+                output: output,
                 proposalsByType: ["IntSet": [proposal]]
             )
         )
@@ -296,8 +296,8 @@ struct InteractiveTriageBridgeAcceptTests {
             existingDecisions: .empty,
             context: makeRBContext(
                 prompt: TriageRecordingPromptInput(scriptedLines: ["B"]),
-                output: output,
                 outputDirectory: directory,
+                output: output,
                 dryRun: true,
                 proposalsByType: ["IntSet": [proposal]]
             )
@@ -313,9 +313,9 @@ struct InteractiveTriageBridgeAcceptTests {
 
 func makeRBContext(
     prompt: TriageRecordingPromptInput,
+    outputDirectory: URL,
     output: TriageRecordingOutput = TriageRecordingOutput(),
     diagnostics: TriageRecordingDiagnosticOutput = TriageRecordingDiagnosticOutput(),
-    outputDirectory: URL,
     dryRun: Bool = false,
     proposalsByType: [String: [RefactorBridgeProposal]] = [:]
 ) -> InteractiveTriage.Context {

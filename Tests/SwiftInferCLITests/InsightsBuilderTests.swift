@@ -18,14 +18,14 @@ struct InsightsBuilderTests {
         SemanticIndexEntry(
             identityHash: "0x\(type)\(template)",
             templateName: template,
-            typeName: type,
             score: 80,
             tier: tier,
             primaryFunctionName: function,
             location: "/x.swift:1",
-            decision: decision,
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            typeName: type,
+            decision: decision
         )
     }
 

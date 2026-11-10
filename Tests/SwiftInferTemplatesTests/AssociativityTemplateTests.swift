@@ -14,8 +14,8 @@ struct AssociativityTemplateTypePatternTests {
         // +30, but the B24 counter (-20) drops the net below the Possible floor.
         let summary = makeAssociativitySummary(
             name: "blend",
-            paramTypes: ("Color", "Color"),
-            returnType: "Color"
+            returnType: "Color",
+            paramTypes: ("Color", "Color")
         )
         #expect(AssociativityTemplate.suggest(for: summary) == nil)
         let signals = AssociativityTemplate.accumulatedSignals(
@@ -35,8 +35,8 @@ struct AssociativityTemplateTypePatternTests {
         // curated list with no dedicated `associativityVerbs` vocab key.
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = AssociativityTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 70)
@@ -71,8 +71,8 @@ struct AssociativityTemplateTypePatternTests {
     func mismatchedParamTypesDoNotMatch() {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Array"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Array")
         )
         #expect(AssociativityTemplate.suggest(for: summary) == nil)
     }
@@ -81,8 +81,8 @@ struct AssociativityTemplateTypePatternTests {
     func mismatchedReturnTypeDoesNotMatch() {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Bool"
+            returnType: "Bool",
+            paramTypes: ("Set", "Set")
         )
         #expect(AssociativityTemplate.suggest(for: summary) == nil)
     }
@@ -104,8 +104,8 @@ struct AssociativityTemplateTypePatternTests {
     func mutatingDisqualifies() {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
             returnType: "Set",
+            paramTypes: ("Set", "Set"),
             isMutating: true
         )
         #expect(AssociativityTemplate.suggest(for: summary) == nil)
@@ -115,8 +115,8 @@ struct AssociativityTemplateTypePatternTests {
     func voidReturnRejected() {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Void", "Void"),
-            returnType: "Void"
+            returnType: "Void",
+            paramTypes: ("Void", "Void")
         )
         #expect(AssociativityTemplate.suggest(for: summary) == nil)
     }
@@ -128,8 +128,8 @@ struct AssociativityTemplateTypePatternTests {
         // intentionally not applied as an associativity counter-signal.
         let summary = makeAssociativitySummary(
             name: "concatenate",
-            paramTypes: ("Array", "Array"),
-            returnType: "Array"
+            returnType: "Array",
+            paramTypes: ("Array", "Array")
         )
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
         // Type-symmetry alone → 30, Possible.
@@ -147,8 +147,8 @@ struct AssociativityTemplateBehaviorTests {
     func reducerOpsSignalFiresWhenNamePresent() throws {
         let summary = makeAssociativitySummary(
             name: "combine",
-            paramTypes: ("State", "State"),
-            returnType: "State"
+            returnType: "State",
+            paramTypes: ("State", "State")
         )
         // 30 type + 40 curated `combine` + 20 reducer = 90 → Strong.
         let suggestion = try #require(
@@ -166,8 +166,8 @@ struct AssociativityTemplateBehaviorTests {
     func reducerOpsSignalAbsentWhenNameMissing() throws {
         let summary = makeAssociativitySummary(
             name: "combine",
-            paramTypes: ("State", "State"),
-            returnType: "State"
+            returnType: "State",
+            paramTypes: ("State", "State")
         )
         let suggestion = try #require(
             AssociativityTemplate.suggest(for: summary, reducerOps: ["something_else"])
@@ -183,8 +183,8 @@ struct AssociativityTemplateBehaviorTests {
         // and the total reaches 50 → .likely (40..<75 per PRD §4.2).
         let summary = makeAssociativitySummary(
             name: "fuse",
-            paramTypes: ("Frame", "Frame"),
-            returnType: "Frame"
+            returnType: "Frame",
+            paramTypes: ("Frame", "Frame")
         )
         let suggestion = try #require(
             AssociativityTemplate.suggest(for: summary, reducerOps: ["fuse"])
@@ -199,8 +199,8 @@ struct AssociativityTemplateBehaviorTests {
     func projectVocabularyVerb() {
         let summary = makeAssociativitySummary(
             name: "unionGraphs",
-            paramTypes: ("Graph", "Graph"),
-            returnType: "Graph"
+            returnType: "Graph",
+            paramTypes: ("Graph", "Graph")
         )
         let vocabulary = Vocabulary(commutativityVerbs: ["unionGraphs"])
         let suggestion = AssociativityTemplate.suggest(for: summary, vocabulary: vocabulary)
@@ -212,8 +212,8 @@ struct AssociativityTemplateBehaviorTests {
     func curatedTakesPrecedenceOverProjectVocabulary() throws {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let vocabulary = Vocabulary(commutativityVerbs: ["merge"])
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary, vocabulary: vocabulary))
@@ -228,8 +228,8 @@ struct AssociativityTemplateBehaviorTests {
     func emptyVocabularyLeavesCuratedAlone() {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = AssociativityTemplate.suggest(for: summary, vocabulary: .empty)
         #expect(suggestion?.score.total == 70)
@@ -241,8 +241,8 @@ struct AssociativityTemplateBehaviorTests {
     func nonDeterministicVetoSuppresses() {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
             returnType: "Set",
+            paramTypes: ("Set", "Set"),
             bodySignals: BodySignals(
                 hasNonDeterministicCall: true,
                 hasSelfComposition: false,
@@ -257,9 +257,9 @@ struct AssociativityTemplateBehaviorTests {
 
 func makeAssociativitySummary(
     name: String,
+    returnType: String?,
     paramTypes: (String, String)? = nil,
     parameters explicitParameters: [Parameter]? = nil,
-    returnType: String?,
     isMutating: Bool = false,
     bodySignals: BodySignals = .empty
 ) -> FunctionSummary {
@@ -295,9 +295,9 @@ func makeAssociativitySummary(
 ) -> FunctionSummary {
     makeAssociativitySummary(
         name: name,
+        returnType: returnType,
         paramTypes: nil,
         parameters: parameters,
-        returnType: returnType,
         isMutating: false,
         bodySignals: .empty
     )

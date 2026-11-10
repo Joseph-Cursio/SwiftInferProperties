@@ -92,8 +92,8 @@ struct TestLifterPerformanceTests {
         let elapsed = try measureWall {
             pipelineResult = try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: directory,
-                includePossible: true,
-                diagnostics: SilentPerfDiagnostics()
+                diagnostics: SilentPerfDiagnostics(),
+                includePossible: true
             )
         }
         // V1.6.1 patch — flake-resistant 6.0s budget (cycle-3 priority #7).

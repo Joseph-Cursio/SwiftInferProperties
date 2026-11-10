@@ -58,8 +58,8 @@ extension SpeculativeRefactorRunner {
     static func identities(of sources: URL) throws -> Set<String> {
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: sources,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         return Set(result.suggestions.map(\.identity.display))
     }

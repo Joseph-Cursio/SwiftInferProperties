@@ -159,8 +159,8 @@ struct TestLifterCounterSignalLiftedFilterTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: SilentCounterSignalDiagnostics()
+            diagnostics: SilentCounterSignalDiagnostics(),
+            includePossible: true
         )
         let lifted = result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
@@ -180,8 +180,8 @@ struct TestLifterCounterSignalLiftedFilterTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: SilentCounterSignalDiagnostics()
+            diagnostics: SilentCounterSignalDiagnostics(),
+            includePossible: true
         )
         let lifted = result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"

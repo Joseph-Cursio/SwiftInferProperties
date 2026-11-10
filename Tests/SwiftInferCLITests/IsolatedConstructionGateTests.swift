@@ -137,7 +137,10 @@ struct IsolatedConstructionGateTests {
             bodySignals: .empty
         )
         let pipeline = SwiftInferCommand.Discover.PipelineResult(
-            suggestions: [], packageRoot: root, summaries: [summary], docstringAdvice: false
+            suggestions: [],
+            packageRoot: root,
+            docstringAdvice: false,
+            summaries: [summary]
         )
         let manifest = SeedManifest(seeds: [.init(file: file, line: 1, symbol: "describe")])
         let laws = SwiftInferCommand.Discover.seededFloorLaws(

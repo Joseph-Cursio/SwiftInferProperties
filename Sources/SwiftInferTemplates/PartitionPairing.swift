@@ -53,8 +53,8 @@ public struct PartitionShape: Sendable, Equatable {
     public init(
         typeName: String,
         tiler: FunctionSummary,
-        tilerForm: TilerForm = .range,
-        progress: FunctionSummary?
+        progress: FunctionSummary?,
+        tilerForm: TilerForm = .range
     ) {
         self.typeName = typeName
         self.tiler = tiler
@@ -92,8 +92,8 @@ public enum PartitionPairing {
             return PartitionShape(
                 typeName: type,
                 tiler: tiler,
-                tilerForm: form,
-                progress: members.first(where: isProgress)
+                progress: members.first(where: isProgress),
+                tilerForm: form
             )
         }
     }

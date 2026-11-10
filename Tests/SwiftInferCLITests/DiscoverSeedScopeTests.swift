@@ -49,9 +49,9 @@ struct DiscoverSeedScopeTests {
         let manifest = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 

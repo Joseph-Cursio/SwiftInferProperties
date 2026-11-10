@@ -130,8 +130,8 @@ struct RefutationVisibilityTests {
                 visible: [],
                 statsOnly: statsOnly,
                 evidenceByIdentity: [:],
-                refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])],
-                output: output
+                output: output,
+                refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])]
             )
             #expect(
                 output.written.contains("REFUTED BY MEASUREMENT"),
@@ -149,8 +149,8 @@ struct RefutationVisibilityTests {
             visible: [],
             statsOnly: false,
             evidenceByIdentity: [:],
-            refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])],
-            output: output
+            output: output,
+            refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])]
         )
         #expect(output.written.contains("REFUTED BY MEASUREMENT"))
     }
@@ -161,8 +161,11 @@ struct RefutationVisibilityTests {
         // every clean run, and clean runs are the common case.
         let withEmpty = CapturingDiscoverOutput()
         SwiftInferCommand.Discover.renderAndWrite(
-            visible: [], statsOnly: false, evidenceByIdentity: [:],
-            refutedLaws: [], output: withEmpty
+            visible: [],
+            statsOnly: false,
+            evidenceByIdentity: [:],
+            output: withEmpty,
+            refutedLaws: []
         )
         let withDefault = CapturingDiscoverOutput()
         SwiftInferCommand.Discover.renderAndWrite(

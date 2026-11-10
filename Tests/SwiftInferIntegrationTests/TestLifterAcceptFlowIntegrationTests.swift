@@ -22,8 +22,8 @@ struct TestLifterAcceptFlowIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         #expect(lifted.liftedOrigin?.testMethodName == "testRoundTrip")
@@ -63,8 +63,8 @@ struct TestLifterAcceptFlowIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
 
@@ -107,8 +107,8 @@ struct TestLifterAcceptFlowIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
 

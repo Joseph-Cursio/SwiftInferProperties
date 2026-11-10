@@ -28,11 +28,11 @@ struct InversePairDirectionLabelCounterTests {
         // → Suppressed tier (< 20).
         let pair = makePair(
             forwardName: "index",
-            forwardLabel: "after",
             reverseName: "index",
-            reverseLabel: "before",
             forwardParam: "Index",
-            forwardReturn: "Index"
+            forwardReturn: "Index",
+            forwardLabel: "after",
+            reverseLabel: "before"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Direction-labeled inverse pair should be suppressed")
@@ -42,11 +42,11 @@ struct InversePairDirectionLabelCounterTests {
     func bucketAfterBucketBeforeSuppressed() {
         let pair = makePair(
             forwardName: "bucket",
-            forwardLabel: "after",
             reverseName: "bucket",
-            reverseLabel: "before",
             forwardParam: "Bucket",
-            forwardReturn: "Bucket"
+            forwardReturn: "Bucket",
+            forwardLabel: "after",
+            reverseLabel: "before"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil)
@@ -62,11 +62,11 @@ struct InversePairDirectionLabelCounterTests {
     func allCuratedDirectionLabelsSuppressForwardSide(label: String) {
         let pair = makePair(
             forwardName: "step",
-            forwardLabel: label,
             reverseName: "unstep",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: label,
+            reverseLabel: nil
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Forward direction label '\(label)' should suppress")
@@ -88,11 +88,11 @@ struct InversePairDirectionLabelCounterTests {
         // label -10 = 15 → Suppressed.
         let pair = makePair(
             forwardName: "transform",
-            forwardLabel: nil,
             reverseName: "untransform",
-            reverseLabel: label,
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: nil,
+            reverseLabel: label
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Reverse direction label '\(label)' should suppress")
@@ -109,11 +109,11 @@ struct InversePairDirectionLabelCounterTests {
         // is asymmetric here. Bare-shape Possible is the right baseline.)
         let pair = makePair(
             forwardName: "parse",
-            forwardLabel: nil,
             reverseName: "format",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "String"
+            forwardReturn: "String",
+            forwardLabel: nil,
+            reverseLabel: nil
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion?.score.tier == .possible)
@@ -129,11 +129,11 @@ struct InversePairDirectionLabelCounterTests {
         // matching the v1.11 plan's open-decision-#1 design intent.
         let pair = makePair(
             forwardName: "parse",
-            forwardLabel: "after",
             reverseName: "format",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "String"
+            forwardReturn: "String",
+            forwardLabel: "after",
+            reverseLabel: nil
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion?.score.total == 25)
@@ -146,11 +146,11 @@ struct InversePairDirectionLabelCounterTests {
     func nonDirectionLabelDoesNotSuppress() {
         let pair = makePair(
             forwardName: "transform",
-            forwardLabel: "value",
             reverseName: "untransform",
-            reverseLabel: "value",
             forwardParam: "Token",
-            forwardReturn: "Bytes"
+            forwardReturn: "Bytes",
+            forwardLabel: "value",
+            reverseLabel: "value"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion?.score.total == 25)
@@ -162,11 +162,11 @@ struct InversePairDirectionLabelCounterTests {
     func nilLabelsDoNotSuppress() {
         let pair = makePair(
             forwardName: "transform",
-            forwardLabel: nil,
             reverseName: "untransform",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "Bytes"
+            forwardReturn: "Bytes",
+            forwardLabel: nil,
+            reverseLabel: nil
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion?.score.total == 25)
@@ -181,11 +181,11 @@ struct InversePairDirectionLabelCounterTests {
         // conforming labels don't trigger the counter.
         let pair = makePair(
             forwardName: "step",
-            forwardLabel: "After",
             reverseName: "unstep",
-            reverseLabel: "Before",
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: "After",
+            reverseLabel: "Before"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion?.score.total == 25, "Mismatched case shouldn't trigger the counter")
@@ -198,21 +198,21 @@ struct InversePairDirectionLabelCounterTests {
         // noisy +20 boundary zone.
         let pair = makePair(
             forwardName: "step",
-            forwardLabel: "after",
             reverseName: "unstep",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "Token"
+            forwardReturn: "Token",
+            forwardLabel: "after",
+            reverseLabel: nil
         )
         // The pair lands in Suppressed so .suggest returns nil; verify
         // the weight by introspecting via a curated-name pair instead.
         let curated = makePair(
             forwardName: "parse",
-            forwardLabel: "after",
             reverseName: "format",
-            reverseLabel: nil,
             forwardParam: "Token",
-            forwardReturn: "String"
+            forwardReturn: "String",
+            forwardLabel: "after",
+            reverseLabel: nil
         )
         let suggestion = InversePairTemplate.suggest(for: curated)
         let directionSignal = suggestion?.score.signals.first { $0.kind == .directionLabel }
@@ -242,11 +242,11 @@ struct InversePairDirectionLabelCounterTests {
 
     private func makePair(
         forwardName: String,
-        forwardLabel: String? = nil,
         reverseName: String,
-        reverseLabel: String? = nil,
         forwardParam: String,
-        forwardReturn: String
+        forwardReturn: String,
+        forwardLabel: String? = nil,
+        reverseLabel: String? = nil
     ) -> FunctionPair {
         let forward = FunctionSummary(
             name: forwardName,

@@ -9,8 +9,8 @@ struct ValueSemanticVerifyReportTests {
 
     private func result(
         _ name: String,
-        line: Int = 1,
-        _ status: ValueSemanticVerifyResult.Status
+        _ status: ValueSemanticVerifyResult.Status,
+        line: Int = 1
     ) -> ValueSemanticVerifyResult {
         ValueSemanticVerifyResult(
             typeName: name,
@@ -65,8 +65,8 @@ struct ValueSemanticVerifyReportTests {
     @Test func sortsDeterministicallyWithinGroup() throws {
         let out = ValueSemanticVerifyReport.render(
             results: [
-                result("Zebra", line: 9, .verifiedSafe),
-                result("Apple", line: 3, .verifiedSafe),
+                result("Zebra", .verifiedSafe, line: 9),
+                result("Apple", .verifiedSafe, line: 3),
             ],
             moduleName: "M"
         )

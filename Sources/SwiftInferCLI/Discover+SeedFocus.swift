@@ -28,11 +28,11 @@ extension SwiftInferCommand.Discover {
     /// determinism fallback so `--seeds` surfaces something.
     static func focusOnAnalysableSeeds(
         focusing: [SeedManifest.Seed],
-        inScopeCount: Int? = nil,
         analysableManifest: SeedManifest,
-        pendingKernelCount: Int = 0,
         pipeline: PipelineResult,
-        diagnostics: any DiagnosticOutput
+        diagnostics: any DiagnosticOutput,
+        inScopeCount: Int? = nil,
+        pendingKernelCount: Int = 0
     ) -> [Suggestion] {
         // The base names this run's own sources declare. A lifted law whose subject is not among
         // them is out of any manifest's reach for this scan — see `SeedFocus.isUnseedableLifted`.

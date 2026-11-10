@@ -178,9 +178,9 @@ extension ActionSequenceStubEmitter {
             actionExpr: actionExpr,
             shape: shape,
             reducerCall: reducerCall,
-            actionFirst: actionFirst,
             awaitPrefix: awaitPrefix,
-            assertion: assertion
+            assertion: assertion,
+            actionFirst: actionFirst
         )
     }
 
@@ -191,9 +191,9 @@ extension ActionSequenceStubEmitter {
         actionExpr: String,
         shape: ReducerSignatureShape,
         reducerCall: String,
-        actionFirst: Bool = false,
         awaitPrefix: String,
-        assertion: String
+        assertion: String,
+        actionFirst: Bool = false
     ) -> [String] {
         switch shape {
         case .stateActionReturnsState:

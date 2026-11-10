@@ -9,8 +9,8 @@ struct AssociativityTemplateGoldenTests {
     func evidenceCarriesFunctionMetadata() throws {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
         #expect(suggestion.templateName == "associativity")
@@ -23,8 +23,8 @@ struct AssociativityTemplateGoldenTests {
     func placeholderGeneratorAndSampling() throws {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
         #expect(suggestion.generator.source == .notYetComputed)
@@ -36,8 +36,8 @@ struct AssociativityTemplateGoldenTests {
     func caveatsAlwaysPresent() throws {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
         #expect(suggestion.explainability.whyMightBeWrong.count == 3)
@@ -50,8 +50,8 @@ struct AssociativityTemplateGoldenTests {
     func identityIncludesTemplateID() throws {
         let summary = makeAssociativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
         // Commutativity on the same signature would produce a different

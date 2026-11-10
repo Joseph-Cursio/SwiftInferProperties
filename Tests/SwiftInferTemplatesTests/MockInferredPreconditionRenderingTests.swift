@@ -8,9 +8,9 @@ struct MockInferredPreconditionRenderingTests {
     // MARK: - Helpers
 
     private static func mock(
+        argumentSpec: [MockGenerator.Argument],
         typeName: String = "Doc",
         siteCount: Int = 5,
-        argumentSpec: [MockGenerator.Argument],
         hints: [PreconditionHint] = []
     ) -> MockGenerator {
         MockGenerator(
@@ -190,7 +190,7 @@ struct MockInferredPreconditionRenderingTests {
             suggestedGenerator: "Gen.int(in: 1...)"
         )
         let rendered = LiftedTestEmitter.mockInferredGenerator(
-            Self.mock(siteCount: 1, argumentSpec: [Self.intArg(label: "x")], hints: [hint])
+            Self.mock(argumentSpec: [Self.intArg(label: "x")], siteCount: 1, hints: [hint])
         )
         #expect(rendered.contains("across 1 site"))
         #expect(!rendered.contains("across 1 sites"))

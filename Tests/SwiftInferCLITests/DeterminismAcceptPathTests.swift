@@ -21,8 +21,8 @@ struct DeterminismAcceptPathTests {
     static func summary(
         name: String,
         parameters: [Parameter],
-        returnType: String = "[Token]",
         isStatic: Bool,
+        returnType: String = "[Token]",
         containingType: String? = "SwiftTokenizer",
         globalActor: String? = nil,
         isThrows: Bool = false,
@@ -100,8 +100,8 @@ struct DeterminismAcceptPathTests {
         let stub = try Self.stub(for: Self.summary(
             name: "title",
             parameters: [Self.parameter("for", "Int")],
-            returnType: "String",
             isStatic: true,
+            returnType: "String",
             containingType: "Sidebar",
             globalActor: "MainActor"
         ))
@@ -114,8 +114,8 @@ struct DeterminismAcceptPathTests {
         let stub = try Self.stub(for: Self.summary(
             name: "combine",
             parameters: [Self.parameter(nil, "Int"), Self.parameter("with", "Int")],
-            returnType: "Int",
             isStatic: false,
+            returnType: "Int",
             containingType: nil
         ))
         #expect(stub.contains("let arg0 = (Gen<Int>.int(in: -10_000 ... 10_000)).run(using: &rng)"))
@@ -146,8 +146,8 @@ struct DeterminismAcceptPathTests {
         let law = try Self.law(for: Self.summary(
             name: "consume",
             parameters: [Parameter(label: nil, internalName: "scanner", typeText: "inout Scanner", isInout: true)],
-            returnType: "Token",
-            isStatic: true
+            isStatic: true,
+            returnType: "Token"
         ))
         #expect(InteractiveTriage.deterministicStub(for: law) == nil)
         let reason = try #require(StubApplicationArity.declineReason(for: law))
@@ -178,8 +178,8 @@ extension DeterminismAcceptPathTests {
         let stub = try Self.stub(for: Self.summary(
             name: "prefix",
             parameters: [Self.parameter("utf8Bytes", "Int")],
-            returnType: "(text: String, didTruncate: Bool)",
             isStatic: false,
+            returnType: "(text: String, didTruncate: Bool)",
             containingType: "String"
         ))
         #expect(stub.contains(
@@ -198,8 +198,8 @@ extension DeterminismAcceptPathTests {
         let stub = try Self.stub(for: Self.summary(
             name: "split",
             parameters: [Self.parameter(nil, "Double")],
-            returnType: "(Double, Double)",
             isStatic: false,
+            returnType: "(Double, Double)",
             containingType: nil
         ))
         #expect(stub.contains("{ value in split(value) == split(value) }"))
@@ -215,8 +215,8 @@ extension DeterminismAcceptPathTests {
         let law = try Self.law(for: Self.summary(
             name: "parseOutput",
             parameters: [Self.parameter(nil, "String")],
-            returnType: "(json: String, prompt: String)",
             isStatic: true,
+            returnType: "(json: String, prompt: String)",
             containingType: "SkillAuthor",
             isThrows: true
         ))
@@ -233,8 +233,8 @@ extension DeterminismAcceptPathTests {
         let law = try Self.law(for: Self.summary(
             name: "fetchPair",
             parameters: [Self.parameter(nil, "Int")],
-            returnType: "(Int, Int)",
             isStatic: true,
+            returnType: "(Int, Int)",
             containingType: "Store",
             isThrows: true,
             isAsync: true
@@ -250,8 +250,8 @@ extension DeterminismAcceptPathTests {
         let stub = try Self.stub(for: Self.summary(
             name: "serialize",
             parameters: [Self.parameter(nil, "Int")],
-            returnType: "String",
             isStatic: true,
+            returnType: "String",
             containingType: "Engine",
             isThrows: true
         ))
@@ -276,8 +276,8 @@ extension DeterminismAcceptPathTests {
         let law = try Self.law(for: Self.summary(
             name: "pairs",
             parameters: [Self.parameter(nil, "Int")],
-            returnType: returnType,
             isStatic: false,
+            returnType: returnType,
             containingType: nil
         ))
         #expect(InteractiveTriage.deterministicStub(for: law) == nil)
@@ -291,8 +291,8 @@ extension DeterminismAcceptPathTests {
         let stub = try Self.stub(for: Self.summary(
             name: "spread",
             parameters: [Self.parameter(nil, "Int")],
-            returnType: "(Int, Int, Int, Int, Int, Int)",
             isStatic: false,
+            returnType: "(Int, Int, Int, Int, Int, Int)",
             containingType: nil
         ))
         #expect(stub.contains("{ value in spread(value) == spread(value) }"))
@@ -306,8 +306,8 @@ extension DeterminismAcceptPathTests {
         let law = try Self.law(for: Self.summary(
             name: "makeSwapper",
             parameters: [Self.parameter(nil, "Int")],
-            returnType: "(Int, Int) -> (Int, Int)",
             isStatic: false,
+            returnType: "(Int, Int) -> (Int, Int)",
             containingType: nil,
             isThrows: true
         ))
@@ -327,8 +327,8 @@ extension DeterminismAcceptPathTests {
         let stub = try Self.stub(for: Self.summary(
             name: "corners",
             parameters: [Self.parameter(nil, "Int")],
-            returnType: returnType,
             isStatic: false,
+            returnType: returnType,
             containingType: nil
         ))
         #expect(stub.contains("{ value in corners(value) == corners(value) }"))
@@ -345,8 +345,8 @@ extension DeterminismAcceptPathTests {
         let law = try Self.law(for: Self.summary(
             name: "corners",
             parameters: [Self.parameter(nil, "Int")],
-            returnType: returnType,
             isStatic: false,
+            returnType: returnType,
             containingType: nil,
             isThrows: true
         ))
@@ -366,8 +366,8 @@ extension DeterminismAcceptPathTests {
         let law = try Self.law(for: Self.summary(
             name: "applyPair",
             parameters: [Self.parameter(nil, "@Sendable (Int) throws -> Int"), Self.parameter(nil, "Int")],
-            returnType: "(Int, Int)",
             isStatic: false,
+            returnType: "(Int, Int)",
             containingType: nil
         ))
         #expect(InteractiveTriage.deterministicStub(for: law) == nil)

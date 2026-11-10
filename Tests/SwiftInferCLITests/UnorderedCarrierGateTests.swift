@@ -11,7 +11,7 @@ import Testing
 @Suite("Discover stubs — monotonicity over an unordered project type")
 struct UnorderedCarrierGateTests {
 
-    private static func suggestion(template: String = "monotonicity", signature: String) -> Suggestion {
+    private static func suggestion(signature: String, template: String = "monotonicity") -> Suggestion {
         Suggestion(
             templateName: template,
             evidence: [
@@ -35,7 +35,7 @@ struct UnorderedCarrierGateTests {
         template: String = "monotonicity"
     ) -> String? {
         UnorderedCarrierGate.declineReason(
-            for: suggestion(template: template, signature: signature),
+            for: suggestion(signature: signature, template: template),
             scannedTypeNames: scanned,
             inheritedTypesByName: inherited
         )

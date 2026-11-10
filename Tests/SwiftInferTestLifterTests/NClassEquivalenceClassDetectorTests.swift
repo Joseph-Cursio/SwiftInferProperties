@@ -48,12 +48,12 @@ struct NClassEquivalenceClassDetectorTests {
         }
         return PartitionCandidate(
             predicateName: predicateName,
+            outlierSiteCount: outlierCount,
             markerPair: nil,
             markerSet: resolvedSet,
             positiveSites: [],
             negativeSites: [],
-            nClassBucketsByMarker: buckets,
-            outlierSiteCount: outlierCount
+            nClassBucketsByMarker: buckets
         )
     }
 
@@ -168,11 +168,11 @@ struct NClassEquivalenceClassDetectorTests {
     func twoClassCandidateRejected() {
         let twoClassCandidate = PartitionCandidate(
             predicateName: "isOK",
+            outlierSiteCount: 0,
             markerPair: MarkerPair(positive: "Valid", negative: "Invalid"),
             markerSet: nil,
             positiveSites: (0..<3).map { PartitionSite(methodName: "testValid_\($0)") },
-            negativeSites: (0..<3).map { PartitionSite(methodName: "testInvalid_\($0)") },
-            outlierSiteCount: 0
+            negativeSites: (0..<3).map { PartitionSite(methodName: "testInvalid_\($0)") }
         )
         let hint = NClassEquivalenceClassDetector.detect(
             candidate: twoClassCandidate,
@@ -186,12 +186,12 @@ struct NClassEquivalenceClassDetectorTests {
     func nClassWithoutBucketsRejected() {
         let degenerate = PartitionCandidate(
             predicateName: "size",
+            outlierSiteCount: 0,
             markerPair: nil,
             markerSet: Self.sizesMarkerSet,
             positiveSites: [],
             negativeSites: [],
-            nClassBucketsByMarker: nil,
-            outlierSiteCount: 0
+            nClassBucketsByMarker: nil
         )
         let hint = NClassEquivalenceClassDetector.detect(
             candidate: degenerate,

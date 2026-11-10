@@ -17,8 +17,8 @@ struct LiftTargetsTests {
 
     static func summary(
         _ name: String,
-        file: String = "F.swift",
         line: Int,
+        file: String = "F.swift",
         calls: [String] = []
     ) -> FunctionSummary {
         FunctionSummary(
@@ -95,8 +95,8 @@ struct LiftTargetsTests {
     /// is the assertion that keeps it honest: same name, different file, not a caller.
     @Test("a same-named caller in ANOTHER file is not a caller")
     func otherFileCallerIsNotNamed() {
-        let helper = Self.summary("normalize", file: "A.swift", line: 10)
-        let stranger = Self.summary("elsewhere", file: "B.swift", line: 40, calls: ["normalize"])
+        let helper = Self.summary("normalize", line: 10, file: "A.swift")
+        let stranger = Self.summary("elsewhere", line: 40, file: "B.swift", calls: ["normalize"])
         let targets = LiftTargets.make(
             summaries: [helper, stranger], restrictedFunctions: [Self.restricted(helper)]
         )

@@ -12,8 +12,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.body == "0 suggestions.")
     }
@@ -33,8 +33,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.body == "0 suggestions.")
     }
@@ -52,8 +52,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: true,
-            output: recording
+            output: recording,
+            includePossible: true
         )
         // `process: String -> String` fires idempotence (type-pattern alone,
         // score 30 = Possible) under --include-possible. It no longer also
@@ -81,17 +81,17 @@ struct DiscoverPipelineTests {
         let defaultRun = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: defaultRun
+            output: defaultRun,
+            includePossible: false
         )
         #expect(defaultRun.text.contains("Pure-effect annotations") == false)
 
         let flagged = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: flagged,
             includePossible: false,
-            effectAnnotations: true,
-            output: flagged
+            effectAnnotations: true
         )
         #expect(flagged.text.contains("Pure-effect annotations (1 function):"))
         #expect(flagged.text.contains("normalize(_:)"))
@@ -113,8 +113,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.text.contains("1 suggestion."))
         #expect(recording.text.contains("Template: idempotence"))
@@ -154,8 +154,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.text.contains("Template: filter-subset"))
     }
@@ -174,8 +174,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: true,
-            output: recording
+            output: recording,
+            includePossible: true
         )
         #expect(recording.body == "0 suggestions.")
     }
@@ -197,8 +197,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.text.contains("Template: round-trip"))
         // 30 type + 40 curated + 5 value-semantic carrier (V1.18.A;
@@ -228,8 +228,8 @@ struct DiscoverPipelineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: true,
-            output: recording
+            output: recording,
+            includePossible: true
         )
         #expect(!recording.text.contains("Template: round-trip"))
     }
@@ -254,9 +254,9 @@ struct DiscoverPipelineVocabularyTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             explicitVocabularyPath: vocabularyPath,
-            output: recording,
             diagnostics: diagnostics
         )
         // 30 type + 40 project-vocab + 5 value-semantic = 75 → Strong
@@ -286,9 +286,9 @@ struct DiscoverPipelineVocabularyTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             explicitVocabularyPath: vocabularyPath,
-            output: recording,
             diagnostics: diagnostics
         )
         #expect(recording.text.contains("Template: round-trip"))
@@ -312,9 +312,9 @@ struct DiscoverPipelineVocabularyTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             explicitVocabularyPath: vocabularyPath,
-            output: recording,
             diagnostics: diagnostics
         )
         // Vocabulary fell back to .empty.
@@ -338,8 +338,8 @@ struct DiscoverPipelineVocabularyTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
             output: recording,
+            includePossible: false,
             diagnostics: diagnostics
         )
         #expect(recording.body == "0 suggestions.")

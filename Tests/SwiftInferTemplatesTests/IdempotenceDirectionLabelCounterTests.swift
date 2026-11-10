@@ -62,8 +62,8 @@ struct IdempotenceDirectionLabelCounterTests {
         // no direction counter; curated verb +40 fires; net +70 → Likely.
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = IdempotenceTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 70)
@@ -106,8 +106,8 @@ struct IdempotenceDirectionLabelCounterTests {
     func nilLabelDoesNotSuppress() {
         let summary = makeIdempotenceSummary(
             name: "process",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = IdempotenceTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 30)
@@ -190,8 +190,8 @@ struct IdempotenceDirectionLabelDiscoverTests {
     func normalizeStillSurfaces() {
         let normalize = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestions = TemplateRegistry.discover(in: [normalize], typeDecls: [])
         let idempotence = suggestions.first { $0.templateName == "idempotence" }

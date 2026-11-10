@@ -9,8 +9,8 @@ struct MonotonicityTemplateTypePatternTests {
     func orderedCodomainAlone() {
         let summary = makeMonotonicitySummary(
             name: "calculate",
-            paramType: "Widget",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "Widget"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 25)
@@ -22,8 +22,8 @@ struct MonotonicityTemplateTypePatternTests {
         for codomain in MonotonicityTemplate.comparableCodomains {
             let summary = makeMonotonicitySummary(
                 name: "calculate",
-                paramType: "Widget",
-                returnType: codomain
+                returnType: codomain,
+                paramType: "Widget"
             )
             #expect(
                 MonotonicityTemplate.suggest(for: summary) != nil,
@@ -41,9 +41,10 @@ struct MonotonicityTemplateTypePatternTests {
         // resurrect a String-codomain pick.
         #expect(!MonotonicityTemplate.comparableCodomains.contains("String"))
         let summary = makeMonotonicitySummary(
-            name: "score",            // curated verb — still must not fire on String
-            paramType: "Widget",
-            returnType: "String"
+            name: "score",
+            returnType: "String",
+            // curated verb — still must not fire on String
+            paramType: "Widget"
         )
         #expect(MonotonicityTemplate.suggest(for: summary) == nil)
     }
@@ -52,8 +53,8 @@ struct MonotonicityTemplateTypePatternTests {
     func nonComparableCodomainRejected() {
         let summary = makeMonotonicitySummary(
             name: "calculate",
-            paramType: "Widget",
-            returnType: "[String]"
+            returnType: "[String]",
+            paramType: "Widget"
         )
         #expect(MonotonicityTemplate.suggest(for: summary) == nil)
     }
@@ -62,8 +63,8 @@ struct MonotonicityTemplateTypePatternTests {
     func userDeclaredComparableNotRecognised() {
         let summary = makeMonotonicitySummary(
             name: "score",
-            paramType: "Widget",
-            returnType: "MyScore"
+            returnType: "MyScore",
+            paramType: "Widget"
         )
         #expect(MonotonicityTemplate.suggest(for: summary) == nil)
     }
@@ -105,8 +106,8 @@ struct MonotonicityTemplateTypePatternTests {
     func mutatingDisqualifies() {
         let summary = makeMonotonicitySummary(
             name: "score",
-            paramType: "Widget",
             returnType: "Int",
+            paramType: "Widget",
             isMutating: true
         )
         #expect(MonotonicityTemplate.suggest(for: summary) == nil)
@@ -116,8 +117,8 @@ struct MonotonicityTemplateTypePatternTests {
     func implicitVoidRejected() {
         let summary = makeMonotonicitySummary(
             name: "score",
-            paramType: "Widget",
-            returnType: nil
+            returnType: nil,
+            paramType: "Widget"
         )
         #expect(MonotonicityTemplate.suggest(for: summary) == nil)
     }
@@ -126,8 +127,8 @@ struct MonotonicityTemplateTypePatternTests {
     func sameTypeComparableMatches() {
         let summary = makeMonotonicitySummary(
             name: "calculate",
-            paramType: "Int",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "Int"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 25)
@@ -144,8 +145,8 @@ struct MonotonicityTemplateNamingTests {
     func curatedVerbStaysPossible() {
         let summary = makeMonotonicitySummary(
             name: "length",
-            paramType: "String",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "String"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 35)
@@ -157,8 +158,8 @@ struct MonotonicityTemplateNamingTests {
         for verb in MonotonicityTemplate.curatedVerbs {
             let summary = makeMonotonicitySummary(
                 name: verb,
-                paramType: "Widget",
-                returnType: "Int"
+                returnType: "Int",
+                paramType: "Widget"
             )
             let suggestion = MonotonicityTemplate.suggest(for: summary)
             #expect(suggestion?.score.total == 35, "verb '\(verb)' did not produce 35")
@@ -170,8 +171,8 @@ struct MonotonicityTemplateNamingTests {
     func curatedVerbNeedsCuratedCodomain() {
         let summary = makeMonotonicitySummary(
             name: "length",
-            paramType: "String",
-            returnType: "[Character]"
+            returnType: "[Character]",
+            paramType: "String"
         )
         #expect(MonotonicityTemplate.suggest(for: summary) == nil)
     }
@@ -182,8 +183,8 @@ struct MonotonicityTemplateNamingTests {
     func curatedSuffixCountMatches() {
         let summary = makeMonotonicitySummary(
             name: "userCount",
-            paramType: "Org",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "Org"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 35)
@@ -194,8 +195,8 @@ struct MonotonicityTemplateNamingTests {
     func curatedSuffixSizeMatches() {
         let summary = makeMonotonicitySummary(
             name: "pageSize",
-            paramType: "Document",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "Document"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 35)
@@ -205,8 +206,8 @@ struct MonotonicityTemplateNamingTests {
     func bareSuffixDoesNotDoubleMatch() {
         let summary = makeMonotonicitySummary(
             name: "Count",
-            paramType: "Org",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "Org"
         )
         // `Count` ≠ curated verb `count` (case-sensitive); has no prefix
         // before the suffix. Falls through to the type-pattern signal alone.
@@ -220,8 +221,8 @@ struct MonotonicityTemplateNamingTests {
     func projectVocabularyMatch() {
         let summary = makeMonotonicitySummary(
             name: "rank",
-            paramType: "User",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "User"
         )
         let vocab = Vocabulary(monotonicityVerbs: ["rank"])
         let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: vocab)
@@ -233,8 +234,8 @@ struct MonotonicityTemplateNamingTests {
     func curatedVerbOverridesProjectVocab() {
         let summary = makeMonotonicitySummary(
             name: "length",
-            paramType: "String",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "String"
         )
         let vocab = Vocabulary(monotonicityVerbs: ["length"])
         let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: vocab)
@@ -246,8 +247,8 @@ struct MonotonicityTemplateNamingTests {
     func emptyVocabularyMatchesCuratedOnly() {
         let summary = makeMonotonicitySummary(
             name: "irrelevantName",
-            paramType: "Widget",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "Widget"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary, vocabulary: .empty)
         #expect(suggestion?.score.total == 25)
@@ -259,8 +260,8 @@ struct MonotonicityTemplateNamingTests {
     func maxScoreStaysPossibleWithoutEscalation() {
         let summary = makeMonotonicitySummary(
             name: "length",
-            paramType: "String",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "String"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary)
         let total = try? #require(suggestion?.score.total)
@@ -272,8 +273,8 @@ struct MonotonicityTemplateNamingTests {
     func identityReusesCanonicalSignature() {
         let summary = makeMonotonicitySummary(
             name: "length",
-            paramType: "String",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "String"
         )
         let suggestion = MonotonicityTemplate.suggest(for: summary)
         let identity = try? #require(suggestion?.identity)
@@ -288,9 +289,9 @@ struct MonotonicityTemplateNamingTests {
 
 private func makeMonotonicitySummary(
     name: String,
+    returnType: String?,
     paramType: String? = nil,
     parameters explicitParameters: [Parameter]? = nil,
-    returnType: String?,
     isMutating: Bool = false,
     bodySignals: BodySignals = .empty
 ) -> FunctionSummary {
@@ -323,9 +324,9 @@ private func makeMonotonicitySummary(
 ) -> FunctionSummary {
     makeMonotonicitySummary(
         name: name,
+        returnType: returnType,
         paramType: nil,
         parameters: parameters,
-        returnType: returnType,
         isMutating: false,
         bodySignals: .empty
     )

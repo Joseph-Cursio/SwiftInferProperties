@@ -28,7 +28,7 @@ struct UnequatableResultGateTests {
         )
     }
 
-    static func reason(_ result: String, owner: String? = "Fixer", in scan: Scan) -> String? {
+    static func reason(_ result: String, in scan: Scan, owner: String? = "Fixer") -> String? {
         UnequatableResultGate.declineReason(
             display: "fix(_:)",
             returnTypeText: result,
@@ -66,13 +66,13 @@ struct UnequatableResultGateTests {
     /// `Inner` written inside `Outer` is `Outer.Inner` in the scan's keys.
     @Test func aBareNestedSpellingIsResolvedThroughTheUniverse() throws {
         let scan = Self.scan(["Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}"])
-        let reason = try #require(Self.reason("[Inner]", owner: "Outer", in: scan))
+        let reason = try #require(Self.reason("[Inner]", in: scan, owner: "Outer"))
         #expect(reason.contains("makes Outer.Inner Equatable"))
     }
 
     @Test func selfIsJudgedAsTheOwner() throws {
         let scan = Self.scan(["Counter.swift": "struct Counter { var count: Int }"])
-        let reason = try #require(Self.reason("Self?", owner: "Counter", in: scan))
+        let reason = try #require(Self.reason("Self?", in: scan, owner: "Counter"))
         #expect(reason.contains("returns Self?"))
         #expect(reason.contains("makes Counter Equatable"))
     }
@@ -107,7 +107,7 @@ struct UnequatableResultGateTests {
         ])
         #expect(scan.inherited["Inner"]?.contains("Equatable") == true)
         #expect(scan.inherited["Outer.Inner"] == nil)
-        #expect(Self.reason("Inner", owner: "Outer", in: scan) == nil)
+        #expect(Self.reason("Inner", in: scan, owner: "Outer") == nil)
     }
 
     /// The qualified extension needs no bare read: the index records it under `Outer.Inner`.
@@ -117,7 +117,7 @@ struct UnequatableResultGateTests {
             "Inner+Equatable.swift": "extension Outer.Inner: Equatable {}",
         ])
         #expect(scan.inherited["Outer.Inner"]?.contains("Equatable") == true)
-        #expect(Self.reason("[Inner]", owner: "Outer", in: scan) == nil)
+        #expect(Self.reason("[Inner]", in: scan, owner: "Outer") == nil)
     }
 
     /// Swift synthesises `Equatable` for an enum without payloads; no declaration says so.

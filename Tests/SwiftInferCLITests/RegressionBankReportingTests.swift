@@ -18,13 +18,13 @@ struct RegressionBankReportingTests {
         SemanticIndexEntry(
             identityHash: "abc123",
             templateName: template,
-            typeName: "Widget",
             score: 70,
             tier: "Likely",
             primaryFunctionName: "encode",
             location: "Widget.swift:1",
             firstSeenAt: "2026-08-09",
             lastSeenAt: "2026-08-09",
+            typeName: "Widget",
             secondaryFunctionName: secondary
         )
     }

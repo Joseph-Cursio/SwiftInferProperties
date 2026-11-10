@@ -17,9 +17,9 @@ struct StrategistAlgebraicLawEmitTests {
                 typeShape: nil,
                 template: template,
                 functionCalls: calls,
-                extraImports: [],
                 seedHex: RoundTripStubEmitter.SeedHex(stateA: 1, stateB: 2, stateC: 3, stateD: 4),
-                trialBudget: .small
+                trialBudget: .small,
+                extraImports: []
             )
         )
     }

@@ -153,8 +153,8 @@ struct DiscoverCLITestDirEndToEndTests {
         let prodTarget = directory.appendingPathComponent("Sources/Foo")
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: prodTarget,
-            includePossible: true,
-            diagnostics: SilentTestDirDiagnostics()
+            diagnostics: SilentTestDirDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         #expect(
@@ -181,9 +181,9 @@ struct DiscoverCLITestDirEndToEndTests {
         let prodTarget = directory.appendingPathComponent("Sources/Foo")
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: prodTarget,
+            diagnostics: SilentTestDirDiagnostics(),
             includePossible: true,
-            explicitTestDirectory: customTests,
-            diagnostics: SilentTestDirDiagnostics()
+            explicitTestDirectory: customTests
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })
@@ -204,8 +204,8 @@ struct DiscoverCLITestDirEndToEndTests {
         let prodTarget = directory.appendingPathComponent("Sources/Foo")
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: prodTarget,
-            includePossible: true,
-            diagnostics: SilentTestDirDiagnostics()
+            diagnostics: SilentTestDirDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         let hasCrossValidation = lifted.score.signals.contains { $0.kind == .crossValidation }

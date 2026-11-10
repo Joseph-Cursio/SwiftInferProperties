@@ -10,8 +10,8 @@ struct IdempotenceTemplateTypePatternTests {
     func typeSymmetryAlone() {
         let summary = makeIdempotenceSummary(
             name: "process",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = IdempotenceTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 30)
@@ -22,8 +22,8 @@ struct IdempotenceTemplateTypePatternTests {
     func curatedVerbAdds40() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = IdempotenceTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 70)
@@ -34,8 +34,8 @@ struct IdempotenceTemplateTypePatternTests {
     func curatedVerbPlusSelfComposition() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             bodySignals: BodySignals(
                 hasNonDeterministicCall: false,
                 hasSelfComposition: true,
@@ -64,8 +64,8 @@ struct IdempotenceTemplateTypePatternTests {
     func mismatchedTypesDoNotMatch() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "String"
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
     }
@@ -84,8 +84,8 @@ struct IdempotenceTemplateTypePatternTests {
     func mutatingDisqualifies() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             isMutating: true
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
@@ -95,8 +95,8 @@ struct IdempotenceTemplateTypePatternTests {
     func voidReturnRejected() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "Void",
-            returnType: "Void"
+            returnType: "Void",
+            paramType: "Void"
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
     }
@@ -105,8 +105,8 @@ struct IdempotenceTemplateTypePatternTests {
     func implicitVoidReturnRejected() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: nil
+            returnType: nil,
+            paramType: "String"
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
     }
@@ -119,8 +119,8 @@ struct IdempotenceTemplateVocabularyTests {
     func projectVocabularyVerb() {
         let summary = makeIdempotenceSummary(
             name: "sanitizeXML",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let vocabulary = Vocabulary(idempotenceVerbs: ["sanitizeXML", "rewritePath"])
         let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary)
@@ -132,8 +132,8 @@ struct IdempotenceTemplateVocabularyTests {
     func projectVocabularyDetailLine() throws {
         let summary = makeIdempotenceSummary(
             name: "sanitizeXML",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let vocabulary = Vocabulary(idempotenceVerbs: ["sanitizeXML"])
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary))
@@ -147,8 +147,8 @@ struct IdempotenceTemplateVocabularyTests {
     func curatedTakesPrecedenceOverProjectVocabulary() throws {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let vocabulary = Vocabulary(idempotenceVerbs: ["normalize"])
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary))
@@ -164,8 +164,8 @@ struct IdempotenceTemplateVocabularyTests {
     func emptyVocabularyLeavesCuratedAlone() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: .empty)
         #expect(suggestion?.score.total == 70)
@@ -175,8 +175,8 @@ struct IdempotenceTemplateVocabularyTests {
     func unmatchedNameStillScoresBaseline() {
         let summary = makeIdempotenceSummary(
             name: "process",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let vocabulary = Vocabulary(idempotenceVerbs: ["sanitizeXML"])
         let suggestion = IdempotenceTemplate.suggest(for: summary, vocabulary: vocabulary)
@@ -206,7 +206,7 @@ struct IdempotenceTemplateVocabularyTests {
     func participleVerbIsCurated() {
         #expect(IdempotenceTemplate.curatedVerbs.contains("sorted"))
         #expect(IdempotenceTemplate.curatedVerbs.contains("normalized"))
-        let summary = makeIdempotenceSummary(name: "sorted", paramType: "[Int]", returnType: "[Int]")
+        let summary = makeIdempotenceSummary(name: "sorted", returnType: "[Int]", paramType: "[Int]")
         #expect(IdempotenceTemplate.suggest(for: summary)?.score.tier == .likely)
     }
 
@@ -272,8 +272,8 @@ struct IdempotenceDocstringCorroborationTests {
         // `refresh` is not a curated verb, so shape alone = 30 (Possible, hidden).
         let summary = makeIdempotenceSummary(
             name: "refresh",
-            paramType: "State",
             returnType: "State",
+            paramType: "State",
             docComment: "Recomputes derived state. Calling it on already-current state is idempotent."
         )
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
@@ -286,8 +286,8 @@ struct IdempotenceDocstringCorroborationTests {
     func docstringLiftsCuratedToStrong() throws {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             docComment: "Returns the canonical form of the input."
         )
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
@@ -299,8 +299,8 @@ struct IdempotenceDocstringCorroborationTests {
     func negatedDocstringDoesNotBoost() throws {
         let summary = makeIdempotenceSummary(
             name: "advance",
-            paramType: "State",
             returnType: "State",
+            paramType: "State",
             docComment: "Advances the cursor by one. This is not idempotent."
         )
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
@@ -313,8 +313,8 @@ struct IdempotenceDocstringCorroborationTests {
         // `(A) -> B` is not the idempotence shape; the docstring must not conjure a law.
         let summary = makeIdempotenceSummary(
             name: "encode",
-            paramType: "Model",
             returnType: "Data",
+            paramType: "Model",
             docComment: "Encodes the model. The operation is idempotent."
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
@@ -324,8 +324,8 @@ struct IdempotenceDocstringCorroborationTests {
     func corroborationSignalRendered() throws {
         let summary = makeIdempotenceSummary(
             name: "process",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             docComment: "Idempotent cleanup pass."
         )
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
@@ -339,9 +339,9 @@ struct IdempotenceDocstringCorroborationTests {
 
 func makeIdempotenceSummary(
     name: String,
+    returnType: String?,
     paramType: String? = nil,
     parameters explicitParameters: [Parameter]? = nil,
-    returnType: String?,
     isMutating: Bool = false,
     containingType: String? = nil,
     bodySignals: BodySignals = .empty,
@@ -383,9 +383,9 @@ func makeIdempotenceSummary(
 ) -> FunctionSummary {
     makeIdempotenceSummary(
         name: name,
+        returnType: returnType,
         paramType: nil,
         parameters: parameters,
-        returnType: returnType,
         isMutating: false,
         bodySignals: .empty
     )

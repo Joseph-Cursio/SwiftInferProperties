@@ -45,9 +45,9 @@ struct MonotonicityDomainGateTests {
             typeShape: shape,
             template: "monotonicity",
             functionCalls: ["\(carrier).score", "score(_:)"],
-            extraImports: [],
             seedHex: canonicalSeed,
             trialBudget: .small,
+            extraImports: [],
             allShapes: shape.map { [carrier: $0] } ?? [:]
         )
     }
@@ -87,9 +87,9 @@ struct MonotonicityDomainGateTests {
                 typeShape: nil,
                 template: "monotonicity",
                 functionCalls: ["{ (x: Int) in x }", "score(_:)"],
-                extraImports: [],
                 seedHex: Self.canonicalSeed,
-                trialBudget: .small
+                trialBudget: .small,
+                extraImports: []
             )
         )
         #expect(source.contains("let valueA = min(firstDraw, secondDraw)"))
@@ -122,9 +122,9 @@ struct MonotonicityDomainGateTests {
                 typeShape: nil,
                 template: "monotonicity",
                 functionCalls: ["OrderedSet.index", "index(after:)"],
-                extraImports: [],
                 seedHex: Self.canonicalSeed,
-                trialBudget: .small
+                trialBudget: .small,
+                extraImports: []
             )
         )
         #expect(source.contains("receiver.index(after: lowerIndex)"))

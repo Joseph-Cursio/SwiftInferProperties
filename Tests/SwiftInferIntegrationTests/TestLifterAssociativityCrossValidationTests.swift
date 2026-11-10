@@ -54,8 +54,8 @@ struct TestLifterAssociativityCrossValTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentAssociativityDiagnostics()
+            diagnostics: SilentAssociativityDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "associativity" })
         #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })

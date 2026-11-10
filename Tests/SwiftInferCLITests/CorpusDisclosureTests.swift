@@ -20,13 +20,13 @@ struct CorpusDisclosureTests {
             entry: SemanticIndexEntry(
                 identityHash: "0xAAAA00000000000\(abs(corpusDirectory.hashValue) % 10)",
                 templateName: "idempotence",
-                typeName: "T",
                 score: 50,
                 tier: "Likely",
                 primaryFunctionName: "f()",
                 location: "Sources/T.swift:1",
                 firstSeenAt: "2026-08-08T00:00:00Z",
-                lastSeenAt: "2026-08-08T00:00:00Z"
+                lastSeenAt: "2026-08-08T00:00:00Z",
+                typeName: "T"
             ),
             stubSource: "print(\"PASS\")\n",
             userPackage: VerifierWorkdir.UserPackageReference(
@@ -82,13 +82,13 @@ struct CorpusDisclosureTests {
             entry: SemanticIndexEntry(
                 identityHash: "0xBBBB000000000001",
                 templateName: "idempotence",
-                typeName: "T",
                 score: 50,
                 tier: "Likely",
                 primaryFunctionName: "f()",
                 location: "Sources/T.swift:1",
                 firstSeenAt: "2026-08-08T00:00:00Z",
-                lastSeenAt: "2026-08-08T00:00:00Z"
+                lastSeenAt: "2026-08-08T00:00:00Z",
+                typeName: "T"
             ),
             stubSource: "print(\"PASS\")\n",
             userPackage: nil,
@@ -186,10 +186,15 @@ struct CorpusProvenanceEvidenceTests {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let bare = SharedVerifierPackage.Member(
             entry: SemanticIndexEntry(
-                identityHash: "0xEEEE000000000001", templateName: "idempotence", typeName: "T",
-                score: 50, tier: "Likely", primaryFunctionName: "f()",
+                identityHash: "0xEEEE000000000001",
+                templateName: "idempotence",
+                score: 50,
+                tier: "Likely",
+                primaryFunctionName: "f()",
                 location: "Sources/T.swift:1",
-                firstSeenAt: "2026-08-08T00:00:00Z", lastSeenAt: "2026-08-08T00:00:00Z"
+                firstSeenAt: "2026-08-08T00:00:00Z",
+                lastSeenAt: "2026-08-08T00:00:00Z",
+                typeName: "T"
             ),
             stubSource: "print(\"PASS\")\n", userPackage: nil, mode: .algebraic
         )

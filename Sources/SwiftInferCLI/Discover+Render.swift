@@ -20,13 +20,13 @@ extension SwiftInferCommand.Discover {
         visible: [Suggestion],
         statsOnly: Bool,
         evidenceByIdentity: [String: VerifyEvidence],
+        output: any DiscoverOutput,
         effectAnnotations: [EffectAnnotationAdvice] = [],
         docstringAdvice: DocstringAdvice = DocstringAdvice(),
         refutedLaws: [Suggestion] = [],
         coverage: CoverageSummary = CoverageSummary(
             lawCount: 0, carrierCount: 0, evidenceState: .noEvidence
-        ),
-        output: any DiscoverOutput
+        )
     ) {
         // V1.147 — enrich each candidate's explainability with stdlib-anchor
         // provenance (proven analog / known trap). Score-neutral; fires only

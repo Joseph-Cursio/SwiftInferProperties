@@ -139,8 +139,8 @@ struct AcceptCheckInteractionCommandTests {
                 target: "MyApp",
                 workingDirectory: root,
                 directory: directory,
-                familyFilterRaw: "bogus-family",
-                output: ACRecordingOutput()
+                output: ACRecordingOutput(),
+                familyFilterRaw: "bogus-family"
             )
             Issue.record("expected .unknownFamily")
         } catch let error as AcceptCheckInteractionError {

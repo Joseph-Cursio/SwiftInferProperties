@@ -80,9 +80,9 @@ public struct RefactorBridgeProposal: Sendable, Equatable {
         protocolName: String,
         combineWitness: String,
         identityWitness: String?,
-        inverseWitness: String? = nil,
         explainability: ExplainabilityBlock,
-        relatedIdentities: Set<SuggestionIdentity>
+        relatedIdentities: Set<SuggestionIdentity>,
+        inverseWitness: String? = nil
     ) {
         self.typeName = typeName
         self.protocolName = protocolName

@@ -15,14 +15,14 @@ extension SwiftInferCommand.DiscoverInteraction {
     /// over the multi-module `collectSuggestions(targets:)`.
     static func collectSuggestions(
         target: String,
-        pinRaw: String? = nil,
         workingDirectory: URL,
+        pinRaw: String? = nil,
         firstSeenAt: Date = Date()
     ) throws -> [InteractionInvariantSuggestion] {
         try collectSuggestions(
             targets: [target],
-            pinRaw: pinRaw,
             workingDirectory: workingDirectory,
+            pinRaw: pinRaw,
             firstSeenAt: firstSeenAt
         )
     }
@@ -38,8 +38,8 @@ extension SwiftInferCommand.DiscoverInteraction {
     /// detectors walk the correct sources directory.
     static func collectSuggestions(
         targets: [String],
-        pinRaw: String? = nil,
         workingDirectory: URL,
+        pinRaw: String? = nil,
         firstSeenAt: Date = Date()
     ) throws -> [InteractionInvariantSuggestion] {
         try collectSuggestions(

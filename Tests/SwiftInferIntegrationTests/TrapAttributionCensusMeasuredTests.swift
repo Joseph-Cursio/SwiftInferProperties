@@ -123,8 +123,8 @@ struct TrapAttributionCensusMeasuredTests {
         return try await VerifyInteractionSurvey.run(
             target: corpus.module,
             familyFilter: corpus.family,
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
     }
 

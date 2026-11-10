@@ -211,14 +211,14 @@ public struct BodySignals: Sendable, Equatable {
     public let callsIdempotentWrite: Bool
 
     public init(
+        hasNonDeterministicCall: Bool,
+        hasSelfComposition: Bool,
+        nonDeterministicAPIsDetected: [String],
         guardDomain: GuardDomain? = nil,
         rewritePostcondition: RewritePostcondition? = nil,
         sortedOutput: SortedOutput? = nil,
         markerDispatch: MarkerDispatch? = nil,
         fallbackDelegation: FallbackDelegation? = nil,
-        hasNonDeterministicCall: Bool,
-        hasSelfComposition: Bool,
-        nonDeterministicAPIsDetected: [String],
         reducerOpsReferenced: [String] = [],
         reducerOpsWithIdentitySeed: [String] = [],
         equalityBodyShape: EqualityBodyShape? = nil,

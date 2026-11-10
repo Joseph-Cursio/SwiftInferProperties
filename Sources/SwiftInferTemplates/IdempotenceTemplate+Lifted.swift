@@ -30,9 +30,9 @@ extension IdempotenceTemplate {
     /// emitted explainability block. Behavior preserved bit-for-bit.
     public static func suggest(
         forLifted lifted: LiftedTransformation,
+        carrierKindResolver: CarrierKindResolver,
         vocabulary: Vocabulary = .empty,
-        inheritedTypesByName: [String: Set<String>] = [:],
-        carrierKindResolver: CarrierKindResolver
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         ConstraintRunner.suggest(
             constraint: makeLiftedConstraint(

@@ -109,9 +109,9 @@ public enum IndexStore {
         public var sourceFileByTypeName: [String: String]
 
         public init(
-            schemaVersion: Int = IndexStore.currentSchemaVersion,
             updatedAt: String,
             entries: [SemanticIndexEntry],
+            schemaVersion: Int = IndexStore.currentSchemaVersion,
             typeShapes: [String: IndexedTypeShape] = [:],
             interactionEntries: [InteractionIndexEntry] = [],
             sourceFileByTypeName: [String: String] = [:]
@@ -268,9 +268,9 @@ public enum IndexStore {
         var mergedSourceFiles = existing.sourceFileByTypeName
         mergedSourceFiles.merge(freshSourceFiles) { _, fresh in fresh }
         return Index(
-            schemaVersion: existing.schemaVersion,
             updatedAt: runTimestamp,
             entries: Array(merged),
+            schemaVersion: existing.schemaVersion,
             typeShapes: mergedShapes,
             interactionEntries: existing.interactionEntries,
             sourceFileByTypeName: mergedSourceFiles

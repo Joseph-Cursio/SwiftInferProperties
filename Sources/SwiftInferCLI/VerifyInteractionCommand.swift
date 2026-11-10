@@ -177,10 +177,10 @@ public extension SwiftInferCommand {
                 let rendered = try await VerifyInteractionSurvey.run(
                     targets: target,
                     familyFilter: family,
+                    workingDirectory: workingDirectory,
                     sequenceCount: sequenceCount,
                     userModuleName: userModule,
-                    maxParallel: maxParallel,
-                    workingDirectory: workingDirectory
+                    maxParallel: maxParallel
                 )
                 print(rendered, terminator: "")
                 // Observable Carrier (milestone S4) — additive ViewModel verify
@@ -214,11 +214,11 @@ public extension SwiftInferCommand {
             }
             let rendered = try VerifyInteractionPipeline.runPipeline(
                 target: target[0],
+                workingDirectory: workingDirectory,
                 pinRaw: reducer,
                 sequenceCount: sequenceCount,
                 userModuleName: userModule,
-                traceMining: .init(prefixBias: tracePrefixBias, markov: traceMarkov),
-                workingDirectory: workingDirectory
+                traceMining: .init(prefixBias: tracePrefixBias, markov: traceMarkov)
             )
             print(rendered, terminator: "")
         }

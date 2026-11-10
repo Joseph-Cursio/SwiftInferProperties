@@ -137,12 +137,12 @@ private func assertBAcceptWritesArm(
         protocolName: fixture.arm,
         combineWitness: fixture.combineWitness,
         identityWitness: fixture.identityWitness,
-        inverseWitness: fixture.inverseWitness,
         explainability: ExplainabilityBlock(
             whySuggested: ["RefactorBridge claim: \(fixture.typeName) → \(fixture.arm)"],
             whyMightBeWrong: ["M8 acceptance test"]
         ),
-        relatedIdentities: [assoc.identity]
+        relatedIdentities: [assoc.identity],
+        inverseWitness: fixture.inverseWitness
     )
     let result = try InteractiveTriage.run(
         suggestions: [assoc],

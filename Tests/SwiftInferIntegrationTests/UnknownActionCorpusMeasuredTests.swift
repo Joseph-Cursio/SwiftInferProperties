@@ -39,8 +39,8 @@ struct UnknownActionCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "UnknownActionCorpus",
             familyFilter: "unknown-action-is-no-op",
-            sequenceCount: 64,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 64
         )
         #expect(summary.contains("Identities: 2 (--family unknown-action-is-no-op)"))
         #expect(summary.contains("1 measured-bothPass"))
@@ -53,8 +53,8 @@ struct UnknownActionCorpusMeasuredTests {
 
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "UnknownActionCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         let blocks = discovered.components(separatedBy: "[Interaction-Invariant Suggestion]")
         func noOpBlock(reducer: String) -> String? {

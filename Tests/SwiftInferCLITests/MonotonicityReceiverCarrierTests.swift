@@ -33,13 +33,13 @@ struct MonotonicityReceiverCarrierTests {
         SemanticIndexEntry(
             identityHash: "0x2106920EA35F0592",
             templateName: template,
-            typeName: owner,
             score: 30,
             tier: "Possible",
             primaryFunctionName: "index(before:)",
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-11T00:00:00Z",
             lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: owner,
             carrierTypeName: parameter,
             isInstanceMethod: isInstanceMethod
         )

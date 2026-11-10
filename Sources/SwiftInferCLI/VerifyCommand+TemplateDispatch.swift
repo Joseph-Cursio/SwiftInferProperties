@@ -217,9 +217,9 @@ extension SwiftInferCommand.Verify {
             typeShape: entry.typeShape,
             template: entry.templateName,
             functionCalls: calls.expressions,
-            extraImports: extraImports,
             seedHex: makeSeedHex(from: entry.identityHash),
             trialBudget: budget,
+            extraImports: extraImports,
             // WS-6 Slice 2 — pass the whole-module shape universe so the emitter
             // can build a recursive resolver for nested custom-type carriers.
             allShapes: allShapes,

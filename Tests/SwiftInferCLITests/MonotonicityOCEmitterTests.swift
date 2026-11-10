@@ -33,9 +33,9 @@ struct MonotonicityOCEmitterTests {
             typeShape: nil,
             template: "monotonicity",
             functionCalls: ["\(bareType).index", primaryFunctionName],
-            extraImports: [],
             seedHex: canonicalSeed,
-            trialBudget: .small
+            trialBudget: .small,
+            extraImports: []
         )
     }
 
@@ -129,9 +129,9 @@ struct MonotonicityOCEmitterTests {
                 typeShape: nil,
                 template: "monotonicity",
                 functionCalls: ["{ (x: Int) in x * 2 }", "scale(_:)"],
-                extraImports: [],
                 seedHex: Self.canonicalSeed,
-                trialBudget: .small
+                trialBudget: .small,
+                extraImports: []
             )
         )
         // The else-branch composer reads only functionCalls.first; the

@@ -36,8 +36,8 @@ struct MultiModuleVerifyMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             targets: ["Alpha", "Beta"],
             familyFilter: "determinism",
-            sequenceCount: 64,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 64
         )
         // One determinism identity per module, both verified against their own
         // product — a wrong-product build would have failed the reducer.
@@ -53,8 +53,8 @@ struct MultiModuleVerifyMeasuredTests {
         for (module, reducer) in [("Alpha", "AlphaCounter.reduce"), ("Beta", "BetaCounter.reduce")] {
             let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
                 target: module,
-                includePossible: true,
-                workingDirectory: root
+                workingDirectory: root,
+                includePossible: true
             )
             let block = discovered
                 .components(separatedBy: "[Interaction-Invariant Suggestion]")

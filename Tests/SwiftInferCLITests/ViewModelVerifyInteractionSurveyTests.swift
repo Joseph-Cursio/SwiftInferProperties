@@ -24,8 +24,12 @@ struct ViewModelVerifyInteractionSurveyTests {
             ],
             actions: [
                 ViewModelAction(
-                    name: "selectAll", parameterTypes: [], parameters: [],
-                    isAsync: false, isThrows: false, mutatesStateDirectly: true
+                    name: "selectAll",
+                    parameterTypes: [],
+                    isAsync: false,
+                    isThrows: false,
+                    mutatesStateDirectly: true,
+                    parameters: []
                 ),
             ]
         )

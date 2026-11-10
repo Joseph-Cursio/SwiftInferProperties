@@ -19,15 +19,15 @@ struct RefactorClusterAnalyzerTests {
         SemanticIndexEntry(
             identityHash: identityHex,
             templateName: templateName,
-            typeName: typeName,
             score: score,
             tier: "Possible",
             primaryFunctionName: funcName,
             location: "/x.swift:1",
-            decision: nil,
-            decisionAt: nil,
             firstSeenAt: "2026-05-11T00:00:00Z",
-            lastSeenAt: "2026-05-11T00:00:00Z"
+            lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: typeName,
+            decision: nil,
+            decisionAt: nil
         )
     }
 

@@ -31,8 +31,8 @@ struct MockSynthesisCoverageTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentCovDiagnostics()
+            diagnostics: SilentCovDiagnostics(),
+            includePossible: true
         )
 
         // Round-trip lifted suggestions, one per type — 10 types

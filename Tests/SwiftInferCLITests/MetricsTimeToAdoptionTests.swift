@@ -17,9 +17,9 @@ struct MetricsTimeToAdoptionTests {
 
     private func decision(
         identity: String,
+        at iso: String,
         template: String = "round-trip",
-        decision: Decision = .accepted,
-        at iso: String
+        decision: Decision = .accepted
     ) throws -> DecisionRecord {
         DecisionRecord(
             identityHash: identity,
@@ -35,8 +35,8 @@ struct MetricsTimeToAdoptionTests {
     /// carries — the join normalizes it.
     private func entry(
         displayHash: String,
-        template: String = "round-trip",
-        firstSeenAt: String
+        firstSeenAt: String,
+        template: String = "round-trip"
     ) -> SemanticIndexEntry {
         SemanticIndexEntry(
             identityHash: displayHash,
@@ -91,8 +91,8 @@ struct MetricsTimeToAdoptionTests {
     @Test("rejected/skipped decisions and unmatched hashes do not contribute")
     func onlyAcceptedAndJoined() throws {
         let decisions = Decisions(records: [
-            try decision(identity: "AAA1111111111111", decision: .rejected, at: "2026-05-14T10:05:00Z"),
-            try decision(identity: "BBB2222222222222", decision: .skipped, at: "2026-05-14T10:05:00Z"),
+            try decision(identity: "AAA1111111111111", at: "2026-05-14T10:05:00Z", decision: .rejected),
+            try decision(identity: "BBB2222222222222", at: "2026-05-14T10:05:00Z", decision: .skipped),
             try decision(identity: "CCC3333333333333", at: "2026-05-14T10:05:00Z"), // no index entry
             try decision(identity: "DDD4444444444444", at: "2026-05-14T10:05:00Z"),  // joined
         ])
@@ -145,7 +145,7 @@ struct MetricsTimeToAdoptionTests {
     @Test("section renders the no-join sentinel when the index has no accepted matches")
     func sectionSentinelNoJoin() throws {
         let decisions = Decisions(records: [
-            try decision(identity: "AAA1111111111111", decision: .rejected, at: "2026-05-14T10:05:00Z")
+            try decision(identity: "AAA1111111111111", at: "2026-05-14T10:05:00Z", decision: .rejected)
         ])
         let entries = [entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z")]
         let lines = MetricsRenderer.timeToAdoptionSection(decisions: decisions, indexEntries: entries)

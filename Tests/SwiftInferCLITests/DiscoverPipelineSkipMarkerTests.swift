@@ -26,8 +26,8 @@ struct DiscoverPipelineSkipMarkerTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.body == "0 suggestions.")
     }
@@ -46,8 +46,8 @@ struct DiscoverPipelineSkipMarkerTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.text.contains("Template: idempotence"))
         // 30 type + 40 curated + 20 self-comp + 5 value-semantic = 95.
@@ -73,8 +73,8 @@ struct DiscoverPipelineSkipMarkerTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(!recording.text.contains("Template: round-trip"))
     }

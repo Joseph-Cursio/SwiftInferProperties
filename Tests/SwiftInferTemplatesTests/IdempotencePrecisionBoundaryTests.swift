@@ -43,7 +43,7 @@ struct IdempotencePrecisionBoundaryTests {
     /// `name : String -> String` function. The implementation is invisible here
     /// — that is the whole point.
     private static func tier(forName name: String) -> Tier? {
-        let summary = makeIdempotenceSummary(name: name, paramType: "String", returnType: "String")
+        let summary = makeIdempotenceSummary(name: name, returnType: "String", paramType: "String")
         return IdempotenceTemplate.suggest(for: summary)?.score.tier
     }
 

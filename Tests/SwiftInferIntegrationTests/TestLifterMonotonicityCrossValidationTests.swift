@@ -54,8 +54,8 @@ struct TestLifterMonotonicityCrossValTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMonotonicityDiagnostics()
+            diagnostics: SilentMonotonicityDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "monotonicity" })
         #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })

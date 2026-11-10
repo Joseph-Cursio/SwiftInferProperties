@@ -96,7 +96,7 @@ extension SwiftInferCommand.Discover {
         // run read as a catastrophic one.
         let focusing = seedManifest.analysableSeeds
         let inScopeCount = focusing.filter { inScope($0, scannedFiles: scannedFiles) }.count
-        let analysableManifest = SeedManifest(version: seedManifest.version, seeds: focusing)
+        let analysableManifest = SeedManifest(seeds: focusing, version: seedManifest.version)
 
         // No *analysable* seed is not a request to see nothing. There are two ways to arrive here
         // and the reader needs to be told which, because the remedy differs.
@@ -117,11 +117,11 @@ extension SwiftInferCommand.Discover {
 
         return focusOnAnalysableSeeds(
             focusing: focusing,
-            inScopeCount: inScopeCount,
             analysableManifest: analysableManifest,
-            pendingKernelCount: seedManifest.refactorPendingSeeds.count,
             pipeline: pipeline,
-            diagnostics: diagnostics
+            diagnostics: diagnostics,
+            inScopeCount: inScopeCount,
+            pendingKernelCount: seedManifest.refactorPendingSeeds.count
         )
     }
 

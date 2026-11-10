@@ -173,11 +173,11 @@ struct DiscoverInteractionUpdateBaselineTests {
         let output = UpdateBaselineRecordingOutput()
         try Command.run(
             target: "MyApp",
+            workingDirectory: directory,
+            output: output,
             includePossible: true,
             updateBaseline: true,
             dryRun: false,
-            workingDirectory: directory,
-            output: output,
             firstSeenAt: firstSeenAt
         )
         let combined = output.lines.joined(separator: "\n")

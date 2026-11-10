@@ -67,8 +67,8 @@ public enum InteractionInteractiveTriage {
     public static func run(
         suggestions: [InteractionInvariantSuggestion],
         packageRoot: URL,
-        explicitDecisionsPath: URL? = nil,
-        inputs: Inputs
+        inputs: Inputs,
+        explicitDecisionsPath: URL? = nil
     ) throws -> InteractionDecisions {
         let load = InteractionDecisionsLoader.load(
             startingFrom: packageRoot,

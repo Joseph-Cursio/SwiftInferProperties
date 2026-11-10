@@ -34,8 +34,8 @@ struct LiftedSkipMarkerHonoringTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: SilentSkipDiagnostics()
+            diagnostics: SilentSkipDiagnostics(),
+            includePossible: true
         )
         let lifted = result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
@@ -59,8 +59,8 @@ struct LiftedSkipMarkerHonoringTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: SilentSkipDiagnostics()
+            diagnostics: SilentSkipDiagnostics(),
+            includePossible: true
         )
         let lifted = result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
@@ -82,8 +82,8 @@ struct LiftedSkipMarkerHonoringTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: SilentSkipDiagnostics()
+            diagnostics: SilentSkipDiagnostics(),
+            includePossible: true
         )
         let lifted = result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
@@ -101,8 +101,8 @@ struct LiftedSkipMarkerHonoringTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: SilentSkipDiagnostics()
+            diagnostics: SilentSkipDiagnostics(),
+            includePossible: true
         )
         let lifted = result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
@@ -184,8 +184,8 @@ struct LiftedSkipMarkerHonoringTests {
         try writeTestsCountInvariantBody(in: directory)
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: SilentSkipDiagnostics()
+            diagnostics: SilentSkipDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"

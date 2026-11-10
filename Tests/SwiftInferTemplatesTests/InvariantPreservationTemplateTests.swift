@@ -11,8 +11,8 @@ struct InvariantPreservationTemplateTests {
     func annotationPresentScoresStrong() {
         let summary = makeSummary(
             name: "adjust",
-            paramType: "Widget",
             returnType: "Widget",
+            paramType: "Widget",
             invariantKeypath: "\\.isValid"
         )
         let suggestion = InvariantPreservationTemplate.suggest(for: summary)
@@ -28,8 +28,8 @@ struct InvariantPreservationTemplateTests {
         for verb in ["mutate", "apply", "updateInPlace", "transform", "adjust"] {
             let summary = makeSummary(
                 name: verb,
-                paramType: "Widget",
-                returnType: "Widget"
+                returnType: "Widget",
+                paramType: "Widget"
             )
             #expect(
                 InvariantPreservationTemplate.suggest(for: summary) == nil,
@@ -46,8 +46,8 @@ struct InvariantPreservationTemplateTests {
         // gate is non-nil-ness, not text content.
         let summary = makeSummary(
             name: "adjust",
-            paramType: "Widget",
             returnType: "Widget",
+            paramType: "Widget",
             invariantKeypath: ""
         )
         #expect(InvariantPreservationTemplate.suggest(for: summary)?.score.tier == .strong)
@@ -59,8 +59,8 @@ struct InvariantPreservationTemplateTests {
     func nonDeterministicBodyVetoes() {
         let summary = makeSummary(
             name: "adjust",
-            paramType: "Widget",
             returnType: "Widget",
+            paramType: "Widget",
             invariantKeypath: "\\.isValid",
             bodySignals: BodySignals(
                 hasNonDeterministicCall: true,
@@ -80,11 +80,11 @@ struct InvariantPreservationTemplateTests {
         // with multiple params still emits.
         let summary = makeSummary(
             name: "merge",
+            returnType: "Widget",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Widget", isInout: false),
                 Parameter(label: nil, internalName: "rhs", typeText: "Widget", isInout: false),
             ],
-            returnType: "Widget",
             invariantKeypath: "\\.isValid"
         )
         #expect(InvariantPreservationTemplate.suggest(for: summary)?.score.tier == .strong)
@@ -98,8 +98,8 @@ struct InvariantPreservationTemplateTests {
         // and return types.
         let summary = makeSummary(
             name: "summarize",
-            paramType: "Document",
             returnType: "Summary",
+            paramType: "Document",
             invariantKeypath: "\\.wordCount"
         )
         #expect(InvariantPreservationTemplate.suggest(for: summary)?.score.tier == .strong)
@@ -111,8 +111,8 @@ struct InvariantPreservationTemplateTests {
     func keypathPartOfIdentity() {
         let baseSummary = makeSummary(
             name: "adjust",
-            paramType: "Widget",
-            returnType: "Widget"
+            returnType: "Widget",
+            paramType: "Widget"
         )
         let summary1 = baseSummary.withInvariantKeypath("\\.isValid")
         let summary2 = baseSummary.withInvariantKeypath("\\.isNonNegative")
@@ -125,8 +125,8 @@ struct InvariantPreservationTemplateTests {
     func identityCarriesTemplatePrefix() {
         let summary = makeSummary(
             name: "adjust",
-            paramType: "Widget",
             returnType: "Widget",
+            paramType: "Widget",
             invariantKeypath: "\\.isValid"
         )
         let suggestion = InvariantPreservationTemplate.suggest(for: summary)
@@ -140,8 +140,8 @@ struct InvariantPreservationTemplateTests {
     func evidenceSignatureRendersKeypath() {
         let summary = makeSummary(
             name: "adjust",
-            paramType: "Widget",
             returnType: "Widget",
+            paramType: "Widget",
             invariantKeypath: "\\.isValid"
         )
         let suggestion = InvariantPreservationTemplate.suggest(for: summary)
@@ -153,8 +153,8 @@ struct InvariantPreservationTemplateTests {
     func templateNameMatches() {
         let summary = makeSummary(
             name: "adjust",
-            paramType: "Widget",
             returnType: "Widget",
+            paramType: "Widget",
             invariantKeypath: "\\.isValid"
         )
         let suggestion = InvariantPreservationTemplate.suggest(for: summary)
@@ -165,9 +165,9 @@ struct InvariantPreservationTemplateTests {
 
     private func makeSummary(
         name: String,
+        returnType: String?,
         paramType: String? = nil,
         parameters explicitParameters: [Parameter]? = nil,
-        returnType: String?,
         invariantKeypath: String? = nil,
         bodySignals: BodySignals = .empty
     ) -> FunctionSummary {

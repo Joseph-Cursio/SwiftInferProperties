@@ -57,8 +57,8 @@ struct CodableRoundTripFallbackAcceptanceTests {
             CodableFallbackTestHelper.makeTypeDecl(name: "Mixed", inheritedTypes: ["Encodable"]),
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "Mixed",
-                kind: .extension,
                 inheritedTypes: ["Decodable"],
+                kind: .extension,
                 line: 20
             ),
         ]
@@ -129,8 +129,8 @@ struct CodableRoundTripFallbackAcceptanceTests {
         let typeDecls = [
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "Suit",
-                kind: .enum,
-                inheritedTypes: ["Codable", "CaseIterable"]
+                inheritedTypes: ["Codable", "CaseIterable"],
+                kind: .enum
             ),
         ]
         for source in preservedSources {
@@ -305,8 +305,8 @@ enum CodableFallbackTestHelper {
 
     static func makeTypeDecl(
         name: String,
-        kind: TypeDecl.Kind = .struct,
         inheritedTypes: [String],
+        kind: TypeDecl.Kind = .struct,
         line: Int = 1
     ) -> TypeDecl {
         TypeDecl(

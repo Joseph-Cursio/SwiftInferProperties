@@ -86,15 +86,15 @@ extension TemplateRegistry {
                 // exactly the property `ApplicationShapeRegistryTests` exists to check, and it
                 // caught this fixture built without one.
                 bodySignals: BodySignals(
+                    hasNonDeterministicCall: false,
+                    hasSelfComposition: false,
+                    nonDeterministicAPIsDetected: [],
                     guardDomain: GuardDomain(
                         condition: #"source.hasPrefix("---")"#,
                         returnedExpression: "source",
                         parameterName: "source",
                         firesWhenConditionHolds: false
-                    ),
-                    hasNonDeterministicCall: false,
-                    hasSelfComposition: false,
-                    nonDeterministicAPIsDetected: []
+                    )
                 )
             )
         ),
@@ -110,13 +110,13 @@ extension TemplateRegistry {
                 on: "ComponentScript",
                 // Body-derived, like guard-domain: a signature alone cannot trigger it.
                 bodySignals: BodySignals(
+                    hasNonDeterministicCall: false,
+                    hasSelfComposition: false,
+                    nonDeterministicAPIsDetected: [],
                     rewritePostcondition: RewritePostcondition(
                         parameterName: "name",
                         guarantee: .outputLacks(["-", " "])
-                    ),
-                    hasNonDeterministicCall: false,
-                    hasSelfComposition: false,
-                    nonDeterministicAPIsDetected: []
+                    )
                 )
             )
         ),

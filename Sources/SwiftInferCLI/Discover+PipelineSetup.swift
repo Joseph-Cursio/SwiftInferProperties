@@ -10,9 +10,9 @@ extension SwiftInferCommand.Discover {
         directory: URL,
         includePossible: SettingOverride,
         docstringAdvice: SettingOverride,
-        requireCorroboration: Bool = false,
         overrides: ExplicitOverrides,
-        diagnostics: any DiagnosticOutput
+        diagnostics: any DiagnosticOutput,
+        requireCorroboration: Bool = false
     ) -> PipelineSetup {
         let configResult = ConfigLoader.load(
             startingFrom: directory,

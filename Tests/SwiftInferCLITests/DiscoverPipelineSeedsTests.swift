@@ -24,7 +24,7 @@ struct DiscoverPipelineSeedsTests {
         let directory = try writeDPFixture(name: "SeedsControl", contents: Self.twoCandidates)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(directory: directory, includePossible: false, output: recording)
+        try SwiftInferCommand.Discover.run(directory: directory, output: recording, includePossible: false)
         #expect(recording.text.contains("2 suggestions."))
         #expect(recording.text.contains("normalize(_:)"))
         #expect(recording.text.contains("sanitize(_:)"))
@@ -41,9 +41,9 @@ struct DiscoverPipelineSeedsTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
         #expect(recording.text.contains("1 suggestion."))
@@ -65,9 +65,9 @@ struct DiscoverPipelineSeedsTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            seedManifest: manifest,
-            output: recording
+            seedManifest: manifest
         )
         #expect(recording.body == "0 suggestions.")
     }
@@ -89,9 +89,9 @@ struct DiscoverPipelineSeedsTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: SeedManifest(seeds: []),
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -103,14 +103,14 @@ struct DiscoverPipelineSeedsTests {
     func offVersionWarnsButConsumes() throws {
         let directory = try writeDPFixture(name: "SeedsVersion", contents: Self.twoCandidates)
         defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(version: 99, seeds: [.init(file: "Source.swift", line: 2, symbol: "normalize")])
+        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 2, symbol: "normalize")], version: 99)
         let recording = DPRecordingOutput()
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
         #expect(recording.text.contains("1 suggestion."))
@@ -130,9 +130,9 @@ struct DiscoverPipelineSeedsTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
         #expect(recording.text.contains("Template: determinism"))
@@ -151,9 +151,9 @@ struct DiscoverPipelineSeedsTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            seedManifest: manifest,
-            output: recording
+            seedManifest: manifest
         )
         #expect(recording.text.contains("Template: idempotence"))
         #expect(recording.text.contains("Template: determinism") == false)
@@ -171,9 +171,9 @@ struct DiscoverPipelineSeedsTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            seedManifest: manifest,
-            output: recording
+            seedManifest: manifest
         )
         // A nullary function has nothing to vary — still excluded; these are shape
         // requirements for *writing* the law.
@@ -197,9 +197,9 @@ struct DiscoverPipelineSeedsTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            seedManifest: manifest,
-            output: recording
+            seedManifest: manifest
         )
         #expect(recording.text.contains("Template: determinism"))
     }
@@ -228,9 +228,9 @@ struct DiscoverPipelineSeedsTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            seedManifest: manifest,
-            output: recording
+            seedManifest: manifest
         )
 
         #expect(recording.text.contains("Template: determinism"))
@@ -244,7 +244,7 @@ struct DiscoverPipelineSeedsTests {
         """)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(directory: directory, includePossible: false, output: recording)
+        try SwiftInferCommand.Discover.run(directory: directory, output: recording, includePossible: false)
         #expect(recording.text.contains("Template: determinism") == false)
     }
 

@@ -336,8 +336,8 @@ extension TraceMiningReplayTests {
         )
         let seeded = try VerifyInteractionPipeline.resolveEmitAndSeed(
             target: "MyApp",
-            pinRaw: "Feature.body",
-            workingDirectory: directory
+            workingDirectory: directory,
+            pinRaw: "Feature.body"
         )
         #expect(seeded.candidate.carrierKind == .tca)
         #expect(seeded.seedTraceCount == 1)
@@ -368,8 +368,8 @@ extension TraceMiningReplayTests {
         )
         let seeded = try VerifyInteractionPipeline.resolveEmitAndSeed(
             target: "MyApp",
-            pinRaw: "Feature.body",
-            workingDirectory: directory
+            workingDirectory: directory,
+            pinRaw: "Feature.body"
         )
         #expect(seeded.seedTraceCount == 0)
         #expect(!seeded.stubSource.contains("minedTraces"))

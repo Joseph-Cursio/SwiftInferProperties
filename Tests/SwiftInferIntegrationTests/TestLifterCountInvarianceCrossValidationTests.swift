@@ -57,8 +57,8 @@ struct TestLifterCountInvarianceCrossValTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentCountInvarianceDiagnostics()
+            diagnostics: SilentCountInvarianceDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(
             result.suggestions.first { $0.templateName == "invariant-preservation" }

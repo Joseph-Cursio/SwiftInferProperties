@@ -47,9 +47,9 @@ public struct ReducerPin: Sendable, Equatable {
     public let functionName: String
 
     public init(
+        functionName: String,
         moduleName: String? = nil,
-        typeName: String? = nil,
-        functionName: String
+        typeName: String? = nil
     ) {
         self.moduleName = moduleName
         self.typeName = typeName
@@ -73,16 +73,16 @@ public struct ReducerPin: Sendable, Equatable {
             return Self(functionName: components[0])
 
         case 2:
-            return Self(typeName: components[0], functionName: components[1])
+            return Self(functionName: components[1], typeName: components[0])
 
         case 3:
             // Module prefix accepted as a redundant qualifier — the run is
             // already scoped to one `--target` module. Retained on the pin
             // but ignored in `matches` (candidates carry no module).
             return Self(
+                functionName: components[2],
                 moduleName: components[0],
-                typeName: components[1],
-                functionName: components[2]
+                typeName: components[1]
             )
 
         default:

@@ -62,13 +62,13 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             // A manifest naming a function that exists nowhere in this fixture: the focus matches
             // nothing, which is precisely the condition that used to bin the state-machine law.
             seedManifest: SeedManifest(seeds: [
                 SeedManifest.Seed(file: "Other.swift", line: 1, symbol: "unrelated")
             ]),
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -99,6 +99,7 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: SeedManifest(seeds: [
                 SeedManifest.Seed(
@@ -106,7 +107,6 @@ struct DiscoverEmptySeedManifestTests {
                     kind: .extractableKernel
                 ),
             ]),
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -134,6 +134,7 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: SeedManifest(seeds: [
                 SeedManifest.Seed(
@@ -142,7 +143,6 @@ struct DiscoverEmptySeedManifestTests {
                     kind: .unrecognised("pure-closure")
                 ),
             ]),
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -166,9 +166,9 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: SeedManifest(seeds: []),
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -187,9 +187,9 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: SeedManifest(seeds: []),
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -216,9 +216,9 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -252,9 +252,9 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -277,9 +277,9 @@ struct DiscoverEmptySeedManifestTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 

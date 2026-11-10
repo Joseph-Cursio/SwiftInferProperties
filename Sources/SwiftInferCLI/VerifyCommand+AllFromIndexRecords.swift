@@ -25,9 +25,9 @@ extension SwiftInferCommand.Verify {
             templateName: context.templateName,
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
-            tier: context.tier,
             outcome: outcome,
             outcomeDetail: detail,
+            tier: context.tier,
             subjectFingerprint: context.subjectFingerprint
         )
     }
@@ -75,9 +75,9 @@ extension SwiftInferCommand.Verify {
                 templateName: context.templateName,
                 primaryFunctionName: context.primaryFunctionName,
                 carrier: context.carrier,
-                tier: context.tier,
                 outcome: .architecturalCoveragePending,
                 outcomeDetail: detail,
+                tier: context.tier,
                 subjectFingerprint: context.subjectFingerprint
             )
         }
@@ -86,9 +86,9 @@ extension SwiftInferCommand.Verify {
             templateName: context.templateName,
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
-            tier: context.tier,
             outcome: .measuredError,
             outcomeDetail: BuildDiagnostics.surveyDetail(from: buildOutput),
+            tier: context.tier,
             subjectFingerprint: context.subjectFingerprint
         )
     }
@@ -140,9 +140,9 @@ extension SwiftInferCommand.Verify {
             templateName: context.templateName,
             primaryFunctionName: context.primaryFunctionName,
             carrier: context.carrier,
-            tier: context.tier,
             outcome: outcome,
             outcomeDetail: detail,
+            tier: context.tier,
             counterexample: counterexample,
             shrunkCounterexample: shrunkCounterexample,
             subjectFingerprint: context.subjectFingerprint

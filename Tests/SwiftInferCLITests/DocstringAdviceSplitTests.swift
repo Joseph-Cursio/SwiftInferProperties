@@ -74,11 +74,11 @@ struct DocstringAdviceSplitTests {
         let pipeline = SwiftInferCommand.Discover.PipelineResult(
             suggestions: [Self.suggestion(template: "monotonicity", function: "backoffDelay(_:)")],
             packageRoot: nil,
+            docstringAdvice: true,
             summaries: [
                 Self.summary(name: "backoffDelay", doc: Self.backoffDoc),
                 Self.summary(name: "clampedValue", doc: Self.clampDoc),
-            ],
-            docstringAdvice: true
+            ]
         )
 
         let advice = SwiftInferCommand.Discover.docstringAdviceIfEnabled(

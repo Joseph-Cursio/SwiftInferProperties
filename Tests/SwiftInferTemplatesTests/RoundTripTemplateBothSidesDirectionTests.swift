@@ -18,10 +18,10 @@ import Testing
 struct RoundTripTemplateBothSidesDirectionTests {
 
     private func directionPair(
-        forward: String = "index",
         forwardLabel: String?,
-        reverse: String = "index",
         reverseLabel: String?,
+        forward: String = "index",
+        reverse: String = "index",
         type: String = "Int"
     ) -> FunctionPair {
         let forwardSummary = FunctionSummary(
@@ -155,10 +155,10 @@ struct RoundTripTemplateBothSidesDirectionTests {
         // in production the resolver +5 lifts the score to +20 = Possible.
         let signal = RoundTripTemplate.directionLabelCounterSignal(
             for: directionPair(
-                forward: "index",
                 forwardLabel: "after",
-                reverse: "_minimumCapacity",
                 reverseLabel: "forScale",
+                forward: "index",
+                reverse: "_minimumCapacity",
                 type: "Int"
             )
         )

@@ -17,11 +17,11 @@ struct ViewModelActionEnumEmitterTests {
         ViewModelAction(
             name: name,
             parameterTypes: parameters.map(\.typeText),
-            firstParameterLabel: parameters.first?.label,
-            parameters: parameters,
             isAsync: isAsync,
             isThrows: isThrows,
-            mutatesStateDirectly: true
+            mutatesStateDirectly: true,
+            firstParameterLabel: parameters.first?.label,
+            parameters: parameters
         )
     }
 

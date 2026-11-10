@@ -63,10 +63,10 @@ public extension SwiftInferCommand {
             let explicitBaselinePath = baseline.map { URL(fileURLWithPath: $0) }
             try Self.run(
                 directory: directory,
+                output: PrintOutput(),
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
                 explicitBaselinePath: explicitBaselinePath,
-                output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
         }
@@ -110,10 +110,10 @@ public extension SwiftInferCommand {
 
         public static func run(
             directory: URL,
+            output: any DiscoverOutput,
             explicitVocabularyPath: URL? = nil,
             explicitConfigPath: URL? = nil,
             explicitBaselinePath: URL? = nil,
-            output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws {
             // V1.68 — load persisted `swift-infer verify` evidence so the
@@ -133,10 +133,10 @@ public extension SwiftInferCommand {
             ) { _, latest in latest }
             let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: directory,
+                diagnostics: diagnostics,
                 explicitVocabularyPath: explicitVocabularyPath,
                 explicitConfigPath: explicitConfigPath,
-                evidence: DiscoverEvidenceInputs(verifyByIdentity: evidenceByIdentity),
-                diagnostics: diagnostics
+                evidence: DiscoverEvidenceInputs(verifyByIdentity: evidenceByIdentity)
             )
             let packageRoot = pipeline.packageRoot ?? directory
             let baselineResult = BaselineLoader.load(

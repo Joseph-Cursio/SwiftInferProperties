@@ -41,8 +41,8 @@ struct DeterminismTupleWordingTests {
         try DeterminismAcceptPathTests.law(for: DeterminismAcceptPathTests.summary(
             name: "prefix",
             parameters: [DeterminismAcceptPathTests.parameter("utf8Bytes", "Int")],
-            returnType: returnType,
             isStatic: false,
+            returnType: returnType,
             containingType: "String",
             isThrows: isThrows
         ))

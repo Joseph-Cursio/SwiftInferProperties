@@ -156,8 +156,8 @@ struct VerifyEvidenceLogMergeTests {
 
     private func makeEvidence(
         identity: String,
-        outcome: VerifyEvidenceOutcome = .measuredBothPass,
-        capturedAt: Date
+        capturedAt: Date,
+        outcome: VerifyEvidenceOutcome = .measuredBothPass
     ) -> VerifyEvidence {
         VerifyEvidence(
             identityHash: identity,
@@ -186,13 +186,13 @@ struct VerifyEvidenceLogMergeTests {
     func overlapLaterWins() {
         let older = makeEvidence(
             identity: "AAA1111111111111",
-            outcome: .measuredDefaultFails,
-            capturedAt: Date(timeIntervalSince1970: 100)
+            capturedAt: Date(timeIntervalSince1970: 100),
+            outcome: .measuredDefaultFails
         )
         let newer = makeEvidence(
             identity: "AAA1111111111111",
-            outcome: .measuredBothPass,
-            capturedAt: Date(timeIntervalSince1970: 200)
+            capturedAt: Date(timeIntervalSince1970: 200),
+            outcome: .measuredBothPass
         )
         let merged = VerifyEvidenceLog(records: [older]).merge(VerifyEvidenceLog(records: [newer]))
         #expect(merged.records.count == 1)
@@ -203,13 +203,13 @@ struct VerifyEvidenceLogMergeTests {
     func overlapOrderIndependent() {
         let older = makeEvidence(
             identity: "AAA1111111111111",
-            outcome: .measuredDefaultFails,
-            capturedAt: Date(timeIntervalSince1970: 100)
+            capturedAt: Date(timeIntervalSince1970: 100),
+            outcome: .measuredDefaultFails
         )
         let newer = makeEvidence(
             identity: "AAA1111111111111",
-            outcome: .measuredBothPass,
-            capturedAt: Date(timeIntervalSince1970: 200)
+            capturedAt: Date(timeIntervalSince1970: 200),
+            outcome: .measuredBothPass
         )
         let merged = VerifyEvidenceLog(records: [newer]).merge(VerifyEvidenceLog(records: [older]))
         #expect(merged.records.count == 1)

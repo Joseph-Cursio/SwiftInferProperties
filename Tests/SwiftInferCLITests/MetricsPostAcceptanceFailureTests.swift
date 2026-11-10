@@ -33,8 +33,8 @@ struct MetricsPostAcceptanceFailureTests {
 
     private func outcome(
         identity: String,
-        template: String = "round-trip",
-        kind: PostAcceptanceOutcomeKind
+        kind: PostAcceptanceOutcomeKind,
+        template: String = "round-trip"
     ) throws -> PostAcceptanceOutcome {
         PostAcceptanceOutcome(
             identityHash: identity,
@@ -152,12 +152,12 @@ struct MetricsPostAcceptanceFailureTests {
             try decision(identity: "FFF6666666666666", template: "commutativity"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
-            try outcome(identity: "AAA1111111111111", template: "idempotence", kind: .stillPasses),
-            try outcome(identity: "BBB2222222222222", template: "round-trip", kind: .stillPasses),
-            try outcome(identity: "CCC3333333333333", template: "round-trip", kind: .nowFails),
-            try outcome(identity: "DDD4444444444444", template: "commutativity", kind: .stillPasses),
-            try outcome(identity: "EEE5555555555555", template: "commutativity", kind: .nowFails),
-            try outcome(identity: "FFF6666666666666", template: "commutativity", kind: .obsolete),
+            try outcome(identity: "AAA1111111111111", kind: .stillPasses, template: "idempotence"),
+            try outcome(identity: "BBB2222222222222", kind: .stillPasses, template: "round-trip"),
+            try outcome(identity: "CCC3333333333333", kind: .nowFails, template: "round-trip"),
+            try outcome(identity: "DDD4444444444444", kind: .stillPasses, template: "commutativity"),
+            try outcome(identity: "EEE5555555555555", kind: .nowFails, template: "commutativity"),
+            try outcome(identity: "FFF6666666666666", kind: .obsolete, template: "commutativity"),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.map(\.template) == ["commutativity", "round-trip", "idempotence"])

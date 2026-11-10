@@ -184,8 +184,8 @@ struct LiftedDecisionsPersistenceTests {
     private func discoverLifted(directory: URL) throws -> Suggestion {
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: HGSilentDiagnosticOutput()
+            diagnostics: HGSilentDiagnosticOutput(),
+            includePossible: true
         )
         return try #require(result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"

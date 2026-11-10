@@ -17,8 +17,8 @@ struct ConventionRuleTests {
         let rule = ConventionRule(
             paradigm: .viper,
             nameSuffixes: ["Interactor"],
-            conformanceSuffixes: ["InteractorInput"],
-            outputCollaboratorNames: ["output"]
+            outputCollaboratorNames: ["output"],
+            conformanceSuffixes: ["InteractorInput"]
         )
         // Name doesn't end in Interactor, but it conforms to *InteractorInput.
         #expect(rule.matches(typeName: "LoginService", inheritedTypeNames: ["LoginInteractorInput"]))

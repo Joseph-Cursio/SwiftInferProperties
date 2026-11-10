@@ -68,9 +68,9 @@ struct V149PreambleTests {
                 typeShape: nil,
                 template: "idempotence",
                 functionCalls: ["{ (x: Int) in x }"],
-                extraImports: [],
                 seedHex: Self.canonicalSeed,
                 trialBudget: .small,
+                extraImports: [],
                 preamble: Self.canonicalPreamble
             )
         )
@@ -249,13 +249,13 @@ struct V149SecondaryFunctionNameTests {
         SemanticIndexEntry(
             identityHash: "0xABCD1234EFFE5678",
             templateName: "round-trip",
-            typeName: carrier,
             score: 30,
             tier: "Possible",
             primaryFunctionName: primary,
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-12T00:00:00Z",
             lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: carrier,
             secondaryFunctionName: secondary
         )
     }

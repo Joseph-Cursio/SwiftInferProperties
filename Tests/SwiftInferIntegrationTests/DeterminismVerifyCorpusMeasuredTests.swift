@@ -41,8 +41,8 @@ struct DeterminismVerifyCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "DeterminismVerifyCorpus",
             familyFilter: "determinism",
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
         #expect(summary.contains("Identities: 2 (--family determinism)"))
         #expect(summary.contains("1 measured-bothPass"))
@@ -59,8 +59,8 @@ struct DeterminismVerifyCorpusMeasuredTests {
         // (defaultFails) and hidden from the stream even with the flag.
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "DeterminismVerifyCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         // Both determinism suggestions carry the same fixed predicate, so
         // distinguish by reducer name within each sentinel-delimited block.

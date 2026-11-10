@@ -77,13 +77,13 @@ extension SwiftInferCommand.Index {
             actionTypeName: suggestion.actionTypeName,
             predicate: suggestion.predicate,
             location: suggestion.reducerLocation,
-            moduleName: suggestion.moduleName,
             score: suggestion.score,
             tier: suggestion.tier.label,
-            decision: decisionRecord?.decision.rawValue,
-            decisionAt: decisionRecord.map { isoTimestamp(from: $0.timestamp) },
             firstSeenAt: now,
-            lastSeenAt: now
+            lastSeenAt: now,
+            moduleName: suggestion.moduleName,
+            decision: decisionRecord?.decision.rawValue,
+            decisionAt: decisionRecord.map { isoTimestamp(from: $0.timestamp) }
         )
     }
 
@@ -96,9 +96,9 @@ extension SwiftInferCommand.Index {
     static func buildEntry(
         from suggestion: Suggestion,
         decisionsByHash: [String: DecisionRecord],
+        now: String,
         typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
-        fingerprintsByLocation: [String: String] = [:],
-        now: String
+        fingerprintsByLocation: [String: String] = [:]
     ) -> SemanticIndexEntry {
         let evidence = suggestion.evidence.first
         let primaryName = evidence?.displayName ?? "(unknown)"
@@ -134,15 +134,15 @@ extension SwiftInferCommand.Index {
         return SemanticIndexEntry(
             identityHash: displayHash,
             templateName: suggestion.templateName,
-            typeName: carrierType(for: suggestion),
             score: suggestion.score.total,
             tier: suggestion.score.tierLabel,
             primaryFunctionName: primaryName,
             location: location,
-            decision: decisionString,
-            decisionAt: decisionAt,
             firstSeenAt: now,
             lastSeenAt: now,
+            typeName: carrierType(for: suggestion),
+            decision: decisionString,
+            decisionAt: decisionAt,
             typeShape: typeShape,
             secondaryFunctionName: secondaryFunctionName,
             carrierTypeName: suggestion.carrierTypeName,

@@ -71,9 +71,9 @@ struct IdempotenceWitnessGateTests {
     }
 
     private func skip(
-        family: InteractionInvariantFamily = .idempotence,
         predicate: String,
-        root: URL
+        root: URL,
+        family: InteractionInvariantFamily = .idempotence
     ) -> InteractionVerifyOutcomeParser.Result? {
         VerifyInteractionPipeline.idempotenceWitnessConstructibilitySkip(
             invariant: invariant(family: family, predicate: predicate),
@@ -118,6 +118,6 @@ struct IdempotenceWitnessGateTests {
     func nonIdempotenceDoesNotFire() throws {
         let root = try makeFixture()
         defer { try? FileManager.default.removeItem(at: root) }
-        #expect(skip(family: .conservation, predicate: ".select", root: root) == nil)
+        #expect(skip(predicate: ".select", root: root, family: .conservation) == nil)
     }
 }

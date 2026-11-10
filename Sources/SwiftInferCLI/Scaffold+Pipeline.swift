@@ -86,8 +86,8 @@ public extension SwiftInferCommand {
         ) throws -> ScaffoldOutcome {
             let pipeline = try Discover.collectVisibleSuggestions(
                 directory: directory,
-                explicitTestDirectory: testDirectory,
-                diagnostics: diagnostics
+                diagnostics: diagnostics,
+                explicitTestDirectory: testDirectory
             )
             let shapesByName = pipeline.typeShapesByName
             let resolver = GeneratorResolver(types: Array(shapesByName.values))

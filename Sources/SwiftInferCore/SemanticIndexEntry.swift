@@ -178,15 +178,15 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     public init(
         identityHash: String,
         templateName: String,
-        typeName: String? = nil,
         score: Int,
         tier: String,
         primaryFunctionName: String,
         location: String,
-        decision: String? = nil,
-        decisionAt: String? = nil,
         firstSeenAt: String,
         lastSeenAt: String,
+        typeName: String? = nil,
+        decision: String? = nil,
+        decisionAt: String? = nil,
         typeShape: IndexedTypeShape? = nil,
         secondaryFunctionName: String? = nil,
         carrierTypeName: String? = nil,
@@ -226,9 +226,9 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             returnsSelfType: returnsSelfType,
             isComputedProperty: isComputedProperty,
             parameterTypeNames: parameterTypeNames,
+            subjectFingerprint: subjectFingerprint,
             qualifiedTypeName: qualifiedTypeName,
-            structuralBlocker: structuralBlocker,
-            subjectFingerprint: subjectFingerprint
+            structuralBlocker: structuralBlocker
         )
     }
 
@@ -270,14 +270,14 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         returnsSelfType: Bool,
         isComputedProperty: Bool,
         parameterTypeNames: [String],
-        qualifiedTypeName: String? = nil,
-        structuralBlocker: String? = nil,
         // No default, deliberately — `EveryColumn`'s whole purpose is that a new column
         // added and then forgotten by a converter is a COMPILE ERROR rather than a silent
         // revert to `nil`. A silently-nil fingerprint here would read as "cannot validate"
         // and quietly switch the check off, which is the failure mode this field exists to
         // prevent. `qualifiedTypeName` / `structuralBlocker` predate that reading.
-        subjectFingerprint: String?
+        subjectFingerprint: String?,
+        qualifiedTypeName: String? = nil,
+        structuralBlocker: String? = nil
     ) {
         self.identityHash = identityHash
         self.templateName = templateName
@@ -329,14 +329,14 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             // From `other`: a re-scan is authoritative for the signature, exactly as it is for
             // every other shape column. A parameter list that changed is a law that changed.
             parameterTypeNames: other.parameterTypeNames,
-            qualifiedTypeName: other.qualifiedTypeName,
-            structuralBlocker: other.structuralBlocker,
             // From `other`, and this one is load-bearing: the fingerprint's entire job is to
             // record what the body looked like at the LAST scan. Keeping `self`'s would pin
             // the index to a body that no longer exists and re-validate evidence the edit
             // should have invalidated — the defect this field closes, reintroduced one layer
             // down.
-            subjectFingerprint: other.subjectFingerprint
+            subjectFingerprint: other.subjectFingerprint,
+            qualifiedTypeName: other.qualifiedTypeName,
+            structuralBlocker: other.structuralBlocker
         )
     }
 }

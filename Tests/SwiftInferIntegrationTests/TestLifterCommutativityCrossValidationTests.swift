@@ -51,8 +51,8 @@ struct TestLifterCommutativityCrossValTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentCommutativityDiagnostics()
+            diagnostics: SilentCommutativityDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
         #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })
@@ -86,8 +86,8 @@ struct TestLifterCommutativityCrossValTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentCommutativityDiagnostics()
+            diagnostics: SilentCommutativityDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
         #expect(!lifted.score.signals.contains { $0.kind == .crossValidation })

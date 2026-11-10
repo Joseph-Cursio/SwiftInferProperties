@@ -11,8 +11,8 @@ struct IdempotenceTemplateBehaviorTests {
     func nonDeterministicBodyVetoes() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             bodySignals: BodySignals(
                 hasNonDeterministicCall: true,
                 hasSelfComposition: false,
@@ -26,8 +26,8 @@ struct IdempotenceTemplateBehaviorTests {
     func vetoBeatsStrongScore() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             bodySignals: BodySignals(
                 hasNonDeterministicCall: true,
                 hasSelfComposition: true,
@@ -43,8 +43,8 @@ struct IdempotenceTemplateBehaviorTests {
     func evidenceCarriesFunctionMetadata() throws {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
         #expect(suggestion.templateName == "idempotence")
@@ -59,8 +59,8 @@ struct IdempotenceTemplateBehaviorTests {
     func m1PlaceholderGenerator() throws {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
         #expect(suggestion.generator.source == .notYetComputed)
@@ -72,8 +72,8 @@ struct IdempotenceTemplateBehaviorTests {
     func caveatsAlwaysPresent() throws {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         let suggestion = try #require(IdempotenceTemplate.suggest(for: summary))
         #expect(suggestion.explainability.whyMightBeWrong.count == 2)

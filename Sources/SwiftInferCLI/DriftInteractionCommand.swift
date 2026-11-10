@@ -71,9 +71,9 @@ public extension SwiftInferCommand {
                 target: target,
                 workingDirectory: workingDirectory,
                 directory: directory,
+                output: PrintOutput(),
                 pinRaw: reducer,
                 explicitBaselinePath: explicitBaselinePath,
-                output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
         }
@@ -89,16 +89,16 @@ public extension SwiftInferCommand {
             target: String,
             workingDirectory: URL,
             directory: URL,
+            output: any DiscoverOutput,
             pinRaw: String? = nil,
             explicitBaselinePath: URL? = nil,
-            output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
             firstSeenAt: Date = Date()
         ) throws {
             let suggestions = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
                 target: target,
-                pinRaw: pinRaw,
                 workingDirectory: workingDirectory,
+                pinRaw: pinRaw,
                 firstSeenAt: firstSeenAt
             )
             let baselineResult = InteractionBaselineLoader.load(

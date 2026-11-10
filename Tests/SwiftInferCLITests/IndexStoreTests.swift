@@ -12,29 +12,29 @@ struct IndexStoreTests {
     private static let entry1 = SemanticIndexEntry(
         identityHash: "0x0000000000000001",
         templateName: "round-trip",
-        typeName: "Foo",
         score: 35,
         tier: "Possible",
         primaryFunctionName: "encode(_:)",
         location: "/a.swift:10",
-        decision: "accept",
-        decisionAt: "2026-05-11T12:00:00Z",
         firstSeenAt: "2026-05-11T00:00:00Z",
-        lastSeenAt: "2026-05-11T12:00:00Z"
+        lastSeenAt: "2026-05-11T12:00:00Z",
+        typeName: "Foo",
+        decision: "accept",
+        decisionAt: "2026-05-11T12:00:00Z"
     )
 
     private static let entry2 = SemanticIndexEntry(
         identityHash: "0x0000000000000002",
         templateName: "idempotence",
-        typeName: "Bar",
         score: 30,
         tier: "Possible",
         primaryFunctionName: "normalize(_:)",
         location: "/b.swift:20",
-        decision: nil,
-        decisionAt: nil,
         firstSeenAt: "2026-05-11T00:00:00Z",
-        lastSeenAt: "2026-05-11T12:00:00Z"
+        lastSeenAt: "2026-05-11T12:00:00Z",
+        typeName: "Bar",
+        decision: nil,
+        decisionAt: nil
     )
 
     // MARK: - Round-trip
@@ -42,9 +42,9 @@ struct IndexStoreTests {
     @Test("V1.33.B — Index JSON encode + decode round-trips bit-for-bit")
     func indexRoundTrips() throws {
         let original = IndexStore.Index(
-            schemaVersion: 1,
             updatedAt: "2026-05-11T12:00:00Z",
-            entries: [Self.entry1, Self.entry2]
+            entries: [Self.entry1, Self.entry2],
+            schemaVersion: 1
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
@@ -58,13 +58,13 @@ struct IndexStoreTests {
         let entry = SemanticIndexEntry(
             identityHash: "0x0000000000000003",
             templateName: "idempotence",
-            typeName: "OrderedSet",
             score: 30,
             tier: "Possible",
             primaryFunctionName: "sort()",
             location: "/c.swift:5",
             firstSeenAt: "2026-05-11T00:00:00Z",
             lastSeenAt: "2026-05-11T12:00:00Z",
+            typeName: "OrderedSet",
             isInstanceMethod: true,
             isMutatingMethod: true,
             isNullary: true,
@@ -209,15 +209,19 @@ struct IndexStoreTests {
         let fresh = SemanticIndexEntry(
             identityHash: Self.entry1.identityHash,
             templateName: Self.entry1.templateName,
-            typeName: Self.entry1.typeName,
-            score: 70,                  // changed
-            tier: "Likely",             // changed
+            score: 70,
+            // changed
+            tier: "Likely",
+            // changed
             primaryFunctionName: Self.entry1.primaryFunctionName,
             location: Self.entry1.location,
-            decision: "reject",         // changed
-            decisionAt: "2026-05-12T01:00:00Z",
-            firstSeenAt: "2026-05-12T00:00:00Z",  // newer, but should be IGNORED
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            firstSeenAt: "2026-05-12T00:00:00Z",
+            // newer, but should be IGNORED
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: Self.entry1.typeName,
+            decision: "reject",
+            // changed
+            decisionAt: "2026-05-12T01:00:00Z"
         )
         let result = IndexStore.upsert([fresh], into: initial, at: "2026-05-12T00:00:00Z")
         #expect(result.entries.count == 1)

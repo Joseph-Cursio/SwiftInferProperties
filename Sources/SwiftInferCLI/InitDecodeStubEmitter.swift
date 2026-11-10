@@ -44,10 +44,10 @@ public enum InitDecodeStubEmitter {
         public init(
             typeName: String,
             encodeMethod: String,
-            encodeIsProperty: Bool = false,
             decodeLabel: String,
             isFailable: Bool,
             valuesExpression: String,
+            encodeIsProperty: Bool = false,
             extraImports: [String] = []
         ) {
             self.typeName = typeName

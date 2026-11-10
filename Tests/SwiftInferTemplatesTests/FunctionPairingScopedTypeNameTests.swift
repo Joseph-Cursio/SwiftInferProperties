@@ -11,7 +11,12 @@ import Testing
 struct FunctionPairingScopedTypeNameTests {
 
     private func summary(
-        _ name: String, param: String?, returns: String, in scope: String, isStatic: Bool = false, line: Int
+        _ name: String,
+        param: String?,
+        returns: String,
+        in scope: String,
+        line: Int,
+        isStatic: Bool = false
     ) throws -> FunctionSummary {
         FunctionSummary(
             name: name,
@@ -33,8 +38,12 @@ struct FunctionPairingScopedTypeNameTests {
             "stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 3
         )
         let operation = try summary(
-            "extendedKey", param: "String", returns: "CodingKeys", in: "OpenAPI.Operation.CodingKeys",
-            isStatic: true, line: 30
+            "extendedKey",
+            param: "String",
+            returns: "CodingKeys",
+            in: "OpenAPI.Operation.CodingKeys",
+            line: 30,
+            isStatic: true
         )
         #expect(FunctionPairing.candidates(in: [document, operation]).isEmpty)
     }
@@ -45,8 +54,12 @@ struct FunctionPairingScopedTypeNameTests {
             "stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 3
         )
         let inverse = try summary(
-            "extendedKey", param: "String", returns: "CodingKeys", in: "OpenAPI.Document.CodingKeys",
-            isStatic: true, line: 9
+            "extendedKey",
+            param: "String",
+            returns: "CodingKeys",
+            in: "OpenAPI.Document.CodingKeys",
+            line: 9,
+            isStatic: true
         )
         #expect(FunctionPairing.candidates(in: [forward, inverse]).count == 1)
     }
@@ -54,7 +67,12 @@ struct FunctionPairingScopedTypeNameTests {
     @Test("a function on the parent that returns its nested type pairs with that type's own function")
     func parentReturningItsNestedTypeStillPairs() throws {
         let parent = try summary(
-            "key", param: "String", returns: "CodingKeys", in: "OpenAPI.Document", isStatic: true, line: 3
+            "key",
+            param: "String",
+            returns: "CodingKeys",
+            in: "OpenAPI.Document",
+            line: 3,
+            isStatic: true
         )
         let child = try summary(
             "stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 9

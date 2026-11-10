@@ -52,8 +52,8 @@ struct TestLifterIdempotenceCrossValTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentIdempotenceDiagnostics()
+            diagnostics: SilentIdempotenceDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })
@@ -88,8 +88,8 @@ struct TestLifterIdempotenceCrossValTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentIdempotenceDiagnostics()
+            diagnostics: SilentIdempotenceDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         // The test's canonicalize key DOESN'T match the normalize source,

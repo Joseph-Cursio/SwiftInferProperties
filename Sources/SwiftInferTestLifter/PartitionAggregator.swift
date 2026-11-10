@@ -191,11 +191,11 @@ struct PartitionAggregator {
                 && !accumulator.negativeSites.isEmpty
             let candidate = PartitionCandidate(
                 predicateName: key.predicateName,
+                outlierSiteCount: accumulator.outlierSiteCount,
                 markerPair: accumulator.markerPair,
                 markerSet: nil,
                 positiveSites: accumulator.positiveSites,
                 negativeSites: accumulator.negativeSites,
-                outlierSiteCount: accumulator.outlierSiteCount,
                 coversDomainSyntactic: coversDomainSyntactic
             )
             let ranked = RankedCandidate(candidate: candidate, accumulator: accumulator)
@@ -214,12 +214,12 @@ struct PartitionAggregator {
         nClassBucketsByKey.map { key, accumulator in
             PartitionCandidate(
                 predicateName: key.predicateName,
+                outlierSiteCount: accumulator.outlierSiteCount,
                 markerPair: nil,
                 markerSet: accumulator.markerSet,
                 positiveSites: [],
                 negativeSites: [],
-                nClassBucketsByMarker: accumulator.bucketsByMarker,
-                outlierSiteCount: accumulator.outlierSiteCount
+                nClassBucketsByMarker: accumulator.bucketsByMarker
             )
         }
     }

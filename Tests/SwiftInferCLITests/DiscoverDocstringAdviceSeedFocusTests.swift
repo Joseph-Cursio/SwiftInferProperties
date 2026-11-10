@@ -53,8 +53,8 @@ struct DiscoverDocstringAdviceSeedFocusTests {
 
     private func run(
         _ name: String,
-        source: String = Self.source,
         manifest: SeedManifest?,
+        source: String = Self.source,
         docstringAdvice: SettingOverride = .notGiven,
         statsOnly: Bool = false
     ) throws -> String {
@@ -63,11 +63,11 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             statsOnly: statsOnly,
             docstringAdvice: docstringAdvice,
             seedManifest: manifest,
-            output: recording,
             diagnostics: SilentDiagnostics()
         )
         return recording.text
@@ -121,8 +121,8 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         """
         let text = try run(
             "DocAdviceUnseedableShapes",
-            source: fixture,
-            manifest: SeedManifest(seeds: [Self.seed("isValidName", line: 2)])
+            manifest: SeedManifest(seeds: [Self.seed("isValidName", line: 2)]),
+            source: fixture
         )
 
         let compact = Self.compactBlock(of: text)
@@ -178,11 +178,11 @@ struct DiscoverDocstringAdviceSeedFocusTests {
             func wholeUnits(_ balance: Double) -> Int { Int(balance.rounded()) }
         }
         """
-        let unseeded = try run("DocAdviceParityPlain", source: fixture, manifest: nil)
+        let unseeded = try run("DocAdviceParityPlain", manifest: nil, source: fixture)
         let seeded = try run(
             "DocAdviceParitySeeded",
-            source: fixture,
-            manifest: SeedManifest(seeds: [Self.seed("backoffDelay", line: 6)])
+            manifest: SeedManifest(seeds: [Self.seed("backoffDelay", line: 6)]),
+            source: fixture
         )
 
         let plainNames = Self.itemNames(in: Self.mainBlock(of: unseeded))

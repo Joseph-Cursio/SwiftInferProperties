@@ -19,11 +19,18 @@ struct FunctionPairingSelfResolutionTests {
     @Test("two `Self -> Self` methods on DIFFERENT types do not pair")
     func selfSpellingDoesNotPairAcrossTypes() {
         let decisions = makeSummary(
-            name: "merge", paramType: "Self", returnType: "Self", containingType: "Decisions", line: 3
+            name: "merge",
+            returnType: "Self",
+            paramType: "Self",
+            containingType: "Decisions",
+            line: 3
         )
         let interaction = makeSummary(
-            name: "merge", paramType: "Self", returnType: "Self",
-            containingType: "InteractionDecisions", line: 7
+            name: "merge",
+            returnType: "Self",
+            paramType: "Self",
+            containingType: "InteractionDecisions",
+            line: 7
         )
         #expect(FunctionPairing.candidates(in: [decisions, interaction]).isEmpty)
     }
@@ -38,8 +45,12 @@ struct FunctionPairingSelfResolutionTests {
         ]
         let summaries = owners.enumerated().map { index, owner in
             makeSummary(
-                name: "merge", paramType: "Self", returnType: "Self",
-                containingType: owner, file: "\(owner).swift", line: index + 1
+                name: "merge",
+                returnType: "Self",
+                paramType: "Self",
+                containingType: owner,
+                file: "\(owner).swift",
+                line: index + 1
             )
         }
         #expect(FunctionPairing.candidates(in: summaries).isEmpty)
@@ -52,10 +63,18 @@ struct FunctionPairingSelfResolutionTests {
     @Test("a genuine `Self`-spelled pair on ONE type still pairs")
     func selfSpellingStillPairsWithinOneType() throws {
         let boxed = makeSummary(
-            name: "boxed", paramType: "Self", returnType: "Wrapper", containingType: "Wrapper", line: 3
+            name: "boxed",
+            returnType: "Wrapper",
+            paramType: "Self",
+            containingType: "Wrapper",
+            line: 3
         )
         let unboxed = makeSummary(
-            name: "unboxed", paramType: "Wrapper", returnType: "Self", containingType: "Wrapper", line: 7
+            name: "unboxed",
+            returnType: "Self",
+            paramType: "Wrapper",
+            containingType: "Wrapper",
+            line: 7
         )
         let pairs = FunctionPairing.candidates(in: [boxed, unboxed])
         #expect(pairs.count == 1)
@@ -67,10 +86,18 @@ struct FunctionPairingSelfResolutionTests {
     @Test("nested `Self` spellings resolve too")
     func nestedSelfSpellingsResolve() {
         let lhs = makeSummary(
-            name: "explode", paramType: "Self", returnType: "[Self]", containingType: "Alpha", line: 3
+            name: "explode",
+            returnType: "[Self]",
+            paramType: "Self",
+            containingType: "Alpha",
+            line: 3
         )
         let rhs = makeSummary(
-            name: "collapse", paramType: "[Self]", returnType: "Self", containingType: "Beta", line: 7
+            name: "collapse",
+            returnType: "Self",
+            paramType: "[Self]",
+            containingType: "Beta",
+            line: 7
         )
         #expect(FunctionPairing.candidates(in: [lhs, rhs]).isEmpty)
     }
@@ -80,7 +107,10 @@ struct FunctionPairingSelfResolutionTests {
     @Test("resolution is whole-word — `SelfDescribing` is untouched")
     func resolutionIsWholeWord() {
         let summary = makeSummary(
-            name: "wrap", paramType: "SelfDescribing", returnType: "MySelf", containingType: "Owner"
+            name: "wrap",
+            returnType: "MySelf",
+            paramType: "SelfDescribing",
+            containingType: "Owner"
         )
         #expect(FunctionPairing.resolvingSelf("SelfDescribing", declaredIn: summary) == "SelfDescribing")
         #expect(FunctionPairing.resolvingSelf("MySelf", declaredIn: summary) == "MySelf")
@@ -95,14 +125,14 @@ struct FunctionPairingSelfResolutionTests {
     /// silently blank out.
     @Test("a free function's type text passes through unchanged")
     func freeFunctionPassesThrough() {
-        let free = makeSummary(name: "normalize", paramType: "Self", returnType: "Self")
+        let free = makeSummary(name: "normalize", returnType: "Self", paramType: "Self")
         #expect(FunctionPairing.resolvingSelf("Self", declaredIn: free) == "Self")
     }
 
     private func makeSummary(
         name: String,
-        paramType: String? = nil,
         returnType: String?,
+        paramType: String? = nil,
         containingType: String? = nil,
         file: String = "Test.swift",
         line: Int = 1

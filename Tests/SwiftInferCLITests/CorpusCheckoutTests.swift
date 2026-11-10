@@ -34,8 +34,8 @@ struct CorpusCheckoutTests {
         .deletingLastPathComponent()
 
     static func entry(
-        id: String = "probe",
         localPath: String,
+        id: String = "probe",
         measurements: [CorpusManifest.Measurement] = []
     ) -> CorpusManifest.Entry {
         CorpusManifest.Entry(
@@ -227,8 +227,8 @@ struct CorpusCheckoutTests {
     @Test("A report containing an uncheckable corpus says so, and shortens its denominator")
     func reportStatesWhatItCouldNotRead() {
         let pinned = String(repeating: "a", count: 40)
-        let good = Self.entry(id: "good", localPath: "/x", measurements: [Self.measurement(revision: pinned)])
-        let gone = Self.entry(id: "gone", localPath: "/y", measurements: [Self.measurement(revision: pinned)])
+        let good = Self.entry(localPath: "/x", id: "good", measurements: [Self.measurement(revision: pinned)])
+        let gone = Self.entry(localPath: "/y", id: "gone", measurements: [Self.measurement(revision: pinned)])
         let text = CorpusStatusRenderer.render([
             CorpusStatus(
                 entry: good,

@@ -143,9 +143,9 @@ extension SwiftInferCommand {
                 if purity?.covers(scanPath) != true { purity = PackagePurity.forJudging(directory: scanPath) }
                 let result = try Discover.collectVisibleSuggestions(
                     directory: scanPath,
+                    diagnostics: SilentDiagnostics(),
                     includePossible: SettingOverride(includePossible),
-                    purity: purity,
-                    diagnostics: SilentDiagnostics()
+                    purity: purity
                 )
                 for suggestion in result.suggestions {
                     rows[suggestion.templateName, default: 0] += 1

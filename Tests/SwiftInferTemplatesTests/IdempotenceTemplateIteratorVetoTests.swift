@@ -230,8 +230,8 @@ struct IdempotenceTemplateIteratorVetoTests {
         // + 10 lifted = 45 → Likely. With V1.21.A veto: Suppressed.
         let suggestion = IdempotenceTemplate.suggest(
             forLifted: lift,
-            inheritedTypesByName: inheritedIndex,
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            inheritedTypesByName: inheritedIndex
         )
         #expect(suggestion == nil, "V1.21.A veto should suppress Iterator-protocol-conforming carriers")
     }
@@ -250,8 +250,8 @@ struct IdempotenceTemplateIteratorVetoTests {
         ])
         let suggestion = IdempotenceTemplate.suggest(
             forLifted: lift,
-            inheritedTypesByName: [:],
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            inheritedTypesByName: [:]
         )
         #expect(
             suggestion == nil,

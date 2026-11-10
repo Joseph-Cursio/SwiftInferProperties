@@ -276,12 +276,12 @@ public extension SwiftInferCommand {
         ) throws -> (index: IndexStore.Index, summary: String) {
             let pipeline = try Discover.collectVisibleSuggestions(
                 directory: inputs.scanDirectory,
+                diagnostics: diagnostics,
                 includePossible: SettingOverride(inputs.includePossible),
                 explicitVocabularyPath: inputs.explicitVocabularyPath,
                 explicitConfigPath: inputs.explicitConfigPath,
                 explicitTestDirectory: inputs.explicitTestDirPath,
-                packsOverride: inputs.packsOverride,
-                diagnostics: diagnostics
+                packsOverride: inputs.packsOverride
             )
             let packageRoot = pipeline.packageRoot ?? inputs.scanDirectory
             // Seed focusing reuses `Discover.focus` rather than re-deriving the rule, so

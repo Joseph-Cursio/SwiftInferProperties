@@ -248,8 +248,8 @@ extension VerifyInteractionPipelineTests {
         // the one composed reducer.
         let (candidate, stubSource) = try VerifyInteractionPipeline.resolveAndEmit(
             target: "MyApp",
-            pinRaw: "Feature.body",
-            workingDirectory: directory
+            workingDirectory: directory,
+            pinRaw: "Feature.body"
         )
         #expect(candidate.qualifiedName == "Feature.body")
         #expect(candidate.carrierKind == .tca)

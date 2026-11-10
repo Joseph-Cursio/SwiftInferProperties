@@ -20,17 +20,17 @@ struct ViewModelVerifyInteractionPipelineTests {
         ViewModelAction(
             name: name,
             parameterTypes: parameters.map(\.typeText),
-            firstParameterLabel: parameters.first?.label,
-            parameters: parameters,
             isAsync: isAsync,
             isThrows: false,
-            mutatesStateDirectly: true
+            mutatesStateDirectly: true,
+            firstParameterLabel: parameters.first?.label,
+            parameters: parameters
         )
     }
 
     private static func candidate(
-        typeName: String = "SelectionModel",
         actions: [ViewModelAction],
+        typeName: String = "SelectionModel",
         constructibility: ViewModelConstructibility = .zeroArgument
     ) -> ViewModelCandidate {
         ViewModelCandidate(

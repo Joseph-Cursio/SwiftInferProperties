@@ -43,18 +43,18 @@ struct PartitionOrderContainmentTests {
     private static func twoClass(_ predicate: String) -> PartitionCandidate {
         PartitionCandidate(
             predicateName: predicate,
+            outlierSiteCount: 0,
             markerPair: MarkerPair(positive: "Valid", negative: "Invalid"),
             positiveSites: [PartitionSite(methodName: "test\(predicate)Valid")],
-            negativeSites: [PartitionSite(methodName: "test\(predicate)Invalid")],
-            outlierSiteCount: 0
+            negativeSites: [PartitionSite(methodName: "test\(predicate)Invalid")]
         )
     }
 
     private static func nClass(_ predicate: String, set: String) -> PartitionCandidate {
         PartitionCandidate(
             predicateName: predicate,
-            markerSet: MarkerSet(name: set, markers: ["A", "B", "C"]),
-            outlierSiteCount: 0
+            outlierSiteCount: 0,
+            markerSet: MarkerSet(name: set, markers: ["A", "B", "C"])
         )
     }
 

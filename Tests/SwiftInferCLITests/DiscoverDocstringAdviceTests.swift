@@ -52,9 +52,9 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         #expect(recording.text.contains("Reference definitions from docstrings"))
         #expect(recording.text.contains("isValidName"))
@@ -67,10 +67,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: false,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         #expect(recording.text.contains("Reference definitions from docstrings") == false)
     }
@@ -92,21 +92,21 @@ struct DiscoverDocstringAdviceTests {
         let viaConfig = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: viaConfig,
             includePossible: true,
             explicitConfigPath: configPath,
-            seedManifest: manifest(),
-            output: viaConfig
+            seedManifest: manifest()
         )
         #expect(viaConfig.text.contains("Reference definitions from docstrings") == false)
 
         let flagWins = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: flagWins,
             includePossible: true,
             explicitConfigPath: configPath,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: flagWins
+            seedManifest: manifest()
         )
         #expect(flagWins.text.contains("Reference definitions from docstrings"))
     }
@@ -118,10 +118,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         #expect(recording.text.contains("Reference definitions from docstrings"))
         #expect(recording.text.contains("isValidName"))
@@ -149,10 +149,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         // Post-B24 the bare `(Int, Int) -> Int` shape no longer over-fires
         // associativity/commutativity, so `backoffDelay` reaches only the
@@ -177,10 +177,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 3, symbol: "precedes")]),
-            output: recording
+            seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 3, symbol: "precedes")])
         )
         #expect(recording.text.contains("precedes"))
         // Comparator-specific framing: the SWO law checks validity, the docstring the key.
@@ -213,13 +213,13 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
             seedManifest: SeedManifest(seeds: [
                 .init(file: "Source.swift", line: 2, symbol: "clip"),
                 .init(file: "Source.swift", line: 7, symbol: "backoffDelay"),
-            ]),
-            output: recording
+            ])
         )
         #expect(recording.text.contains("Reference definitions from docstrings"))
         #expect(recording.text.contains(
@@ -240,10 +240,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         // `weighted`'s doc only narrates; it must not appear in the advice. `manifest()` seeds
         // every function, so only the full block is rendered here. The compact block is checked

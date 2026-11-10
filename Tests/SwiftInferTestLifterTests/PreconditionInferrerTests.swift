@@ -19,9 +19,9 @@ struct PreconditionInferrerTests {
     /// literal rows. Each row's length must match the shape's
     /// argument count.
     private static func entry(
-        typeName: String = "Doc",
         shape: ConstructionShape,
-        rows: [[String]]
+        rows: [[String]],
+        typeName: String = "Doc"
     ) -> ConstructionRecordEntry {
         ConstructionRecordEntry(
             typeName: typeName,

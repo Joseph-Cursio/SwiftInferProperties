@@ -32,7 +32,7 @@ struct ConstructionUniverseManifestReachTests {
         """
     }
 
-    static func rootManifest(tools: String = "5.9", dependencies: String = "", targets: String) -> String {
+    static func rootManifest(targets: String, tools: String = "5.9", dependencies: String = "") -> String {
         """
         // swift-tools-version:\(tools)
         import PackageDescription
@@ -63,10 +63,12 @@ struct ConstructionUniverseManifestReachTests {
         if fixture == "s6v" {
             files["Package.swift"] = Self.rootManifest(targets: #".target(name: "App")"#)
             files["Package@swift-6.0.swift"] = Self.rootManifest(
-                tools: "6.0", dependencies: dependency, targets: Self.appTarget
+                targets: Self.appTarget,
+                tools: "6.0",
+                dependencies: dependency
             )
         } else {
-            files["Package.swift"] = Self.rootManifest(tools: "6.0", dependencies: dependency, targets: Self.appTarget)
+            files["Package.swift"] = Self.rootManifest(targets: Self.appTarget, tools: "6.0", dependencies: dependency)
         }
         let root = try Wiring.makePackage(files)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -108,9 +110,11 @@ struct ConstructionUniverseManifestReachTests {
     @Test("a version-specific manifest is read where Package.swift is none")
     func versionSpecificManifestWithoutPackageSwiftIsRead() throws {
         let root = try Wiring.makePackage([
-            "Package.swift": Self.rootManifest(dependencies: #".package(path: "Bridge")"#, targets: Self.appTarget),
+            "Package.swift": Self.rootManifest(targets: Self.appTarget, dependencies: #".package(path: "Bridge")"#),
             "Bridge/Package@swift-6.0.swift": Self.rootManifest(
-                tools: "6.0", dependencies: #".package(path: "../Packages/A")"#, targets: ""
+                targets: "",
+                tools: "6.0",
+                dependencies: #".package(path: "../Packages/A")"#
             ),
             "Packages/A/Package.swift": Self.library("A"),
             "Packages/A/Sources/A/Tok.swift": Self.tok,
@@ -244,8 +248,8 @@ struct ConstructionUniverseManifestReachTests {
     func symlinkedPackageDirectoryReachesTheWalkedPackage() throws {
         let root = try Wiring.makePackage([
             "Package.swift": Self.rootManifest(
-                dependencies: #".package(path: "Packages/Core")"#,
-                targets: #".target(name: "App", dependencies: [.product(name: "Core", package: "Core")])"#
+                targets: #".target(name: "App", dependencies: [.product(name: "Core", package: "Core")])"#,
+                dependencies: #".package(path: "Packages/Core")"#
             ),
             "Vendor/Core/Package.swift": Self.library("Core"),
             "Vendor/Core/Sources/Core/Tok.swift": Self.tok,

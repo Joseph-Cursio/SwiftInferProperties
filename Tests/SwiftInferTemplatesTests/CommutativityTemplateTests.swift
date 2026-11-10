@@ -14,8 +14,8 @@ struct CommutativityTemplateTypePatternTests {
         // the net below the Possible floor.
         let summary = makeCommutativitySummary(
             name: "blend",
-            paramTypes: ("Color", "Color"),
-            returnType: "Color"
+            returnType: "Color",
+            paramTypes: ("Color", "Color")
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
         let signals = CommutativityTemplate.accumulatedSignals(
@@ -37,8 +37,8 @@ struct CommutativityTemplateTypePatternTests {
         for verb in ["intersection", "symmetricDifference"] {
             let summary = makeCommutativitySummary(
                 name: verb,
-                paramTypes: ("Set", "Set"),
-                returnType: "Set"
+                returnType: "Set",
+                paramTypes: ("Set", "Set")
             )
             let suggestion = CommutativityTemplate.suggest(for: summary)
             #expect(suggestion?.score.total == 70, "\(verb) should score 70 (Likely)")
@@ -56,8 +56,8 @@ struct CommutativityTemplateTypePatternTests {
         for verb in AssociativityTemplate.commutativeAssociativeVerbs.sorted() {
             let summary = makeCommutativitySummary(
                 name: verb,
-                paramTypes: ("Int", "Int"),
-                returnType: "Int"
+                returnType: "Int",
+                paramTypes: ("Int", "Int")
             )
             let suggestion = CommutativityTemplate.suggest(for: summary)
             #expect(suggestion?.score.total == 70, "\(verb) should score 70 (Likely)")
@@ -69,8 +69,8 @@ struct CommutativityTemplateTypePatternTests {
     func curatedVerbAdds40() {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = CommutativityTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 70)
@@ -85,8 +85,8 @@ struct CommutativityTemplateTypePatternTests {
         // `==` compares element order, so commutativity is FALSE — veto it.
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("OrderedSet", "OrderedSet"),
             returnType: "OrderedSet",
+            paramTypes: ("OrderedSet", "OrderedSet"),
             containingType: "OrderedSet"
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
@@ -104,8 +104,8 @@ struct CommutativityTemplateTypePatternTests {
     func orderSensitiveCarrierVetoStripsGenerics() {
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("OrderedSet<Int>", "OrderedSet<Int>"),
             returnType: "OrderedSet<Int>",
+            paramTypes: ("OrderedSet<Int>", "OrderedSet<Int>"),
             containingType: "OrderedSet<Int>"
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
@@ -115,8 +115,8 @@ struct CommutativityTemplateTypePatternTests {
     func stdlibSetUnionNotVetoed() {
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("Set", "Set"),
             returnType: "Set",
+            paramTypes: ("Set", "Set"),
             containingType: "Set"
         )
         let suggestion = CommutativityTemplate.suggest(for: summary)
@@ -128,8 +128,8 @@ struct CommutativityTemplateTypePatternTests {
     func nonDenylistCarrierUnionStillFires() {
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("Bag", "Bag"),
             returnType: "Bag",
+            paramTypes: ("Bag", "Bag"),
             containingType: "Bag"
         )
         #expect(CommutativityTemplate.suggest(for: summary)?.score.tier == .likely)
@@ -141,8 +141,8 @@ struct CommutativityTemplateTypePatternTests {
         // on an order-sensitive carrier; it keeps its normal curated-verb score.
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("OrderedSet", "OrderedSet"),
             returnType: "OrderedSet",
+            paramTypes: ("OrderedSet", "OrderedSet"),
             containingType: "OrderedSet"
         )
         let signals = CommutativityTemplate.accumulatedSignals(
@@ -181,8 +181,8 @@ struct CommutativityTemplateTypePatternTests {
     func mismatchedParamTypesDoNotMatch() {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Array"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Array")
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
     }
@@ -191,8 +191,8 @@ struct CommutativityTemplateTypePatternTests {
     func mismatchedReturnTypeDoesNotMatch() {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Bool"
+            returnType: "Bool",
+            paramTypes: ("Set", "Set")
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
     }
@@ -214,8 +214,8 @@ struct CommutativityTemplateTypePatternTests {
     func mutatingDisqualifies() {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
             returnType: "Set",
+            paramTypes: ("Set", "Set"),
             isMutating: true
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
@@ -225,8 +225,8 @@ struct CommutativityTemplateTypePatternTests {
     func voidReturnRejected() {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Void", "Void"),
-            returnType: "Void"
+            returnType: "Void",
+            paramTypes: ("Void", "Void")
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
     }
@@ -241,8 +241,8 @@ struct CommutativityTemplateBehaviorTests {
     func antiCommutativitySuppresses() {
         let summary = makeCommutativitySummary(
             name: "concatenate",
-            paramTypes: ("Array", "Array"),
-            returnType: "Array"
+            returnType: "Array",
+            paramTypes: ("Array", "Array")
         )
         // 30 type-symmetry + (-30) anti-commutativity = 0 → suppressed.
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
@@ -252,8 +252,8 @@ struct CommutativityTemplateBehaviorTests {
     func subtractAntiCommutativitySuppresses() {
         let summary = makeCommutativitySummary(
             name: "subtract",
-            paramTypes: ("Vector", "Vector"),
-            returnType: "Vector"
+            returnType: "Vector",
+            paramTypes: ("Vector", "Vector")
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
     }
@@ -262,8 +262,8 @@ struct CommutativityTemplateBehaviorTests {
     func projectVocabAntiCommutativitySuppresses() {
         let summary = makeCommutativitySummary(
             name: "concatenateOrdered",
-            paramTypes: ("Array", "Array"),
-            returnType: "Array"
+            returnType: "Array",
+            paramTypes: ("Array", "Array")
         )
         let vocabulary = Vocabulary(antiCommutativityVerbs: ["concatenateOrdered"])
         #expect(CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary) == nil)
@@ -277,8 +277,8 @@ struct CommutativityTemplateBehaviorTests {
         // be in the project's commutativity list. Net: 40, Possible.
         let summary = makeCommutativitySummary(
             name: "subtract",
-            paramTypes: ("T", "T"),
-            returnType: "T"
+            returnType: "T",
+            paramTypes: ("T", "T")
         )
         let vocabulary = Vocabulary(commutativityVerbs: ["subtract"])
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary))
@@ -296,8 +296,8 @@ struct CommutativityTemplateBehaviorTests {
     func projectVocabularyVerb() {
         let summary = makeCommutativitySummary(
             name: "unionGraphs",
-            paramTypes: ("Graph", "Graph"),
-            returnType: "Graph"
+            returnType: "Graph",
+            paramTypes: ("Graph", "Graph")
         )
         let vocabulary = Vocabulary(commutativityVerbs: ["unionGraphs"])
         let suggestion = CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary)
@@ -309,8 +309,8 @@ struct CommutativityTemplateBehaviorTests {
     func curatedTakesPrecedenceOverProjectVocabulary() throws {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let vocabulary = Vocabulary(commutativityVerbs: ["merge"])
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary, vocabulary: vocabulary))
@@ -325,8 +325,8 @@ struct CommutativityTemplateBehaviorTests {
     func emptyVocabularyLeavesCuratedAlone() {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = CommutativityTemplate.suggest(for: summary, vocabulary: .empty)
         #expect(suggestion?.score.total == 70)
@@ -338,8 +338,8 @@ struct CommutativityTemplateBehaviorTests {
     func nonDeterministicVetoSuppresses() {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
             returnType: "Set",
+            paramTypes: ("Set", "Set"),
             bodySignals: BodySignals(
                 hasNonDeterministicCall: true,
                 hasSelfComposition: false,

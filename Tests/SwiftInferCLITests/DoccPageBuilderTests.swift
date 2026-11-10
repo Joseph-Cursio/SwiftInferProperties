@@ -21,13 +21,13 @@ struct DoccPageBuilderTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: template,
-            typeName: type,
             score: 90,
             tier: "Strong",
             primaryFunctionName: function,
             location: "/x.swift:1",
             firstSeenAt: "2026-07-01T00:00:00Z",
             lastSeenAt: "2026-07-01T00:00:00Z",
+            typeName: type,
             secondaryFunctionName: secondary
         )
     }
@@ -46,11 +46,11 @@ struct DoccPageBuilderTests {
             actionTypeName: "Action",
             predicate: predicate,
             location: "/r.swift:1",
-            moduleName: nil,
             score: 80,
             tier: "Verified",
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            moduleName: nil
         )
     }
 

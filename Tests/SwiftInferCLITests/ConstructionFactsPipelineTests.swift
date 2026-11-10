@@ -50,8 +50,8 @@ struct ConstructionFactsPipelineTests {
 
         let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: root.appendingPathComponent("Sources/Logic"),
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let make = try #require(pipeline.summaries.first { $0.name == "make" })
         #expect(make.purityVerdict == .refuted)

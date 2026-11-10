@@ -175,13 +175,13 @@ struct SharedVerifierPackageCorpusIdentityTests {
             entry: SemanticIndexEntry(
                 identityHash: hash,
                 templateName: "idempotence",
-                typeName: "T",
                 score: 50,
                 tier: "Likely",
                 primaryFunctionName: "f()",
                 location: "Sources/T.swift:1",
                 firstSeenAt: "2026-08-08T00:00:00Z",
-                lastSeenAt: "2026-08-08T00:00:00Z"
+                lastSeenAt: "2026-08-08T00:00:00Z",
+                typeName: "T"
             ),
             stubSource: "print(\"PASS\")\n",
             userPackage: userPackage,
@@ -262,13 +262,13 @@ struct SharedPackageProductQuarantineTests {
             entry: SemanticIndexEntry(
                 identityHash: hash,
                 templateName: "idempotence",
-                typeName: "T",
                 score: 50,
                 tier: "Likely",
                 primaryFunctionName: "f()",
                 location: "Sources/T.swift:1",
                 firstSeenAt: "2026-08-08T00:00:00Z",
-                lastSeenAt: "2026-08-08T00:00:00Z"
+                lastSeenAt: "2026-08-08T00:00:00Z",
+                typeName: "T"
             ),
             stubSource: "print(\"PASS\")\n",
             userPackage: VerifierWorkdir.UserPackageReference(
@@ -321,13 +321,13 @@ struct SharedPackageProductQuarantineTests {
                 entry: SemanticIndexEntry(
                     identityHash: "0xDDDD000000000004",
                     templateName: "idempotence",
-                    typeName: "T",
                     score: 50,
                     tier: "Likely",
                     primaryFunctionName: "f()",
                     location: "Sources/T.swift:1",
                     firstSeenAt: "2026-08-08T00:00:00Z",
-                    lastSeenAt: "2026-08-08T00:00:00Z"
+                    lastSeenAt: "2026-08-08T00:00:00Z",
+                    typeName: "T"
                 ),
                 stubSource: "print(\"PASS\")\n",
                 userPackage: nil,

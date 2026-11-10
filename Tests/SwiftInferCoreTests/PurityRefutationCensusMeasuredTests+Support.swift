@@ -127,7 +127,7 @@ extension PurityRefutationCensusMeasuredTests {
         /// `constructionBlindReplicaIsDetected` demonstrates.
         let inferrer: PurityInferrer
 
-        init(markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers), inferrer: PurityInferrer) {
+        init(inferrer: PurityInferrer, markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers)) {
             self.markers = markers
             self.inferrer = inferrer
         }

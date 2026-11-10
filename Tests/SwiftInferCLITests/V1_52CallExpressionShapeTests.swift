@@ -127,13 +127,13 @@ struct V152PairResolverIntegrationTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: template,
-            typeName: carrier,
             score: 60,
             tier: "Strong",
             primaryFunctionName: primary,
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-13T00:00:00Z",
-            lastSeenAt: "2026-05-13T00:00:00Z"
+            lastSeenAt: "2026-05-13T00:00:00Z",
+            typeName: carrier
         )
     }
 

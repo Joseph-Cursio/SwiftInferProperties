@@ -42,13 +42,13 @@ struct HashPrefixLookupPropertyTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: "round-trip",
-            typeName: "Complex<Double>",
             score: 50,
             tier: "Strong",
             primaryFunctionName: "exp(_:)",
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-11T00:00:00Z",
-            lastSeenAt: "2026-05-11T00:00:00Z"
+            lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: "Complex<Double>"
         )
     }
 

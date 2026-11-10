@@ -104,14 +104,14 @@ extension RefactorBridgeAccumulator {
             protocolName: "Numeric",
             combineWitness: additive,
             identityWitness: additiveIdentity,
-            inverseWitness: nil,
             explainability: ringExplainability(
                 additiveOp: additive,
                 multiplicativeOp: multiplicative,
                 additiveIdentity: additiveIdentity,
                 multiplicativeIdentity: multiplicativeIdentity
             ),
-            relatedIdentities: identities
+            relatedIdentities: identities,
+            inverseWitness: nil
         )
     }
 
@@ -180,9 +180,9 @@ extension RefactorBridgeAccumulator {
             protocolName: "SetAlgebra",
             combineWitness: combineWitness,
             identityWitness: nil,
-            inverseWitness: nil,
             explainability: aggregatedExplainability(protocolName: "SetAlgebra"),
-            relatedIdentities: identities
+            relatedIdentities: identities,
+            inverseWitness: nil
         )
         return [primary, secondary]
     }
@@ -220,9 +220,9 @@ extension RefactorBridgeAccumulator {
             protocolName: protocolName,
             combineWitness: combineWitness,
             identityWitness: needsIdentityWitness(for: protocolName) ? identityWitness : nil,
-            inverseWitness: protocolName == "Group" ? inverseWitness : nil,
             explainability: aggregatedExplainability(protocolName: protocolName),
-            relatedIdentities: identities
+            relatedIdentities: identities,
+            inverseWitness: protocolName == "Group" ? inverseWitness : nil
         )
     }
 

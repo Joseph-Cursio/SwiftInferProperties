@@ -24,8 +24,8 @@ struct EquivalenceClassRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentECDiagnostics()
+            diagnostics: SilentECDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         #expect(advisory.score.tier == .advisory)
@@ -78,8 +78,8 @@ struct EquivalenceClassRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentECDiagnostics()
+            diagnostics: SilentECDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         let kind = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
@@ -119,8 +119,8 @@ struct EquivalenceClassRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentECDiagnostics()
+            diagnostics: SilentECDiagnostics(),
+            includePossible: true
         )
         let advisory = result.suggestions.first { $0.templateName == "equivalence-class" }
         #expect(advisory == nil, "testValidate_* methods must NOT trigger the Valid marker")

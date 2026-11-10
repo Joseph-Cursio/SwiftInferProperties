@@ -9,8 +9,8 @@ import Testing
 struct ValueSemanticStubEmitterTests {
 
     private func candidate(
-        typeName: String = "Buffer",
         surface: [MutationMethod],
+        typeName: String = "Buffer",
         equatability: EquatableEvidence = .equatable
     ) -> ValueSemanticCandidate {
         ValueSemanticCandidate(

@@ -27,13 +27,13 @@ struct FreeFunctionCarrierTests {
         SemanticIndexEntry(
             identityHash: "0xF000000000000001",
             templateName: template,
-            typeName: typeName,
             score: 70,
             tier: "Likely",
             primaryFunctionName: "combine(_:_:)",
             location: "Sources/T.swift:1",
             firstSeenAt: "2026-08-08T00:00:00Z",
             lastSeenAt: "2026-08-08T00:00:00Z",
+            typeName: typeName,
             carrierTypeName: carrierTypeName
         )
     }

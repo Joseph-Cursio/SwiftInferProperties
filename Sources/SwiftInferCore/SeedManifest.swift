@@ -57,8 +57,8 @@ public struct SeedManifest: Codable, Sendable, Equatable {
     public let skippedPackages: [String]
 
     public init(
-        version: Int = Self.supportedVersion,
         seeds: [Seed],
+        version: Int = Self.supportedVersion,
         skippedPackages: [String] = []
     ) {
         self.version = version

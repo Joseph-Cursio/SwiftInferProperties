@@ -36,8 +36,8 @@ struct TestLifterCountInvarianceLiftedOnlyTests {
         // stream because no production-side suggestion suppresses it.
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentLiftedOnlyDiagnostics()
+            diagnostics: SilentLiftedOnlyDiagnostics(),
+            includePossible: true
         )
         let liftedOnly = try #require(
             result.suggestions.first { $0.templateName == "invariant-preservation" }

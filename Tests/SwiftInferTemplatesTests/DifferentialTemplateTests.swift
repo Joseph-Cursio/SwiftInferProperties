@@ -21,8 +21,8 @@ struct DifferentialTemplateTests {
 
     private func fn(
         _ name: String,
-        params: [(String, String)] = [],
         returns: String?,
+        params: [(String, String)] = [],
         carrier: String = "Parser",
         isMutating: Bool = false
     ) -> FunctionSummary {
@@ -55,11 +55,11 @@ struct DifferentialTemplateTests {
 
     private var swiftSyntaxPair: [FunctionSummary] {
         [
-            fn("parse", params: [("source", "String")], returns: "SourceFileSyntax"),
+            fn("parse", returns: "SourceFileSyntax", params: [("source", "String")]),
             fn(
                 "parseIncrementally",
-                params: [("source", "String"), ("parseTransition", "IncrementalParseTransition?")],
-                returns: "IncrementalParseResult"
+                returns: "IncrementalParseResult",
+                params: [("source", "String"), ("parseTransition", "IncrementalParseTransition?")]
             ),
         ]
     }
@@ -166,8 +166,8 @@ struct DifferentialTemplateTests {
     @Test("a precondition-eliding variant is vetoed, not caveated")
     func preconditionElidingIsVetoed() throws {
         let pairs = VariantPairing.candidates(in: [
-            fn("append", params: [("x", "Element")], returns: "Buffer", carrier: "Buf"),
-            fn("uncheckedAppend", params: [("x", "Element")], returns: "Buffer", carrier: "Buf"),
+            fn("append", returns: "Buffer", params: [("x", "Element")], carrier: "Buf"),
+            fn("uncheckedAppend", returns: "Buffer", params: [("x", "Element")], carrier: "Buf"),
         ])
         let pair = try #require(pairs.first)
         // The pair still FORMS — the veto is a scoring verdict, not a pairing one,
@@ -190,11 +190,11 @@ struct DifferentialTemplateTests {
     @Test("the unsafe prefix is vetoed on a value-returning stdlib-shaped pair")
     func unsafePrefixIsVetoed() throws {
         let pairs = VariantPairing.candidates(in: [
-            fn("load", params: [("fromByteOffset", "Int")], returns: "T", carrier: "MutableRawSpan"),
+            fn("load", returns: "T", params: [("fromByteOffset", "Int")], carrier: "MutableRawSpan"),
             fn(
                 "unsafeLoad",
-                params: [("fromByteOffset", "Int")],
                 returns: "T",
+                params: [("fromByteOffset", "Int")],
                 carrier: "MutableRawSpan"
             ),
         ])
@@ -229,8 +229,8 @@ struct DifferentialTemplateTests {
         // Extra TRAILING parameters are the point; different leading ones mean
         // these are not two implementations of one call.
         let mismatched = [
-            fn("parse", params: [("source", "String")], returns: "Tree"),
-            fn("parseIncrementally", params: [("data", "Data"), ("t", "T?")], returns: "Tree"),
+            fn("parse", returns: "Tree", params: [("source", "String")]),
+            fn("parseIncrementally", returns: "Tree", params: [("data", "Data"), ("t", "T?")]),
         ]
         #expect(VariantPairing.candidates(in: mismatched).isEmpty)
     }
@@ -243,8 +243,8 @@ struct DifferentialTemplateTests {
         // (`_UnsafeDequeHandle`) that the carrier resolver correctly refuses —
         // so a lifted path would buy nothing on the measured corpora.
         let voidPair = [
-            fn("append", params: [("x", "Element")], returns: "Void", isMutating: true),
-            fn("uncheckedAppend", params: [("x", "Element")], returns: "Void", isMutating: true),
+            fn("append", returns: "Void", params: [("x", "Element")], isMutating: true),
+            fn("uncheckedAppend", returns: "Void", params: [("x", "Element")], isMutating: true),
         ]
         #expect(VariantPairing.candidates(in: voidPair).isEmpty)
     }
@@ -262,8 +262,8 @@ struct DifferentialTemplateTests {
             ]
         )
         let pair = [
-            fn("parse", params: [("source", "String")], returns: "Tree"),
-            fn("parseIncrementally", params: [("source", "String")], returns: "PairResult"),
+            fn("parse", returns: "Tree", params: [("source", "String")]),
+            fn("parseIncrementally", returns: "PairResult", params: [("source", "String")]),
         ]
         #expect(VariantPairing.candidates(in: pair, typeDecls: [ambiguous]).isEmpty)
     }
@@ -276,8 +276,8 @@ struct DifferentialTemplateTests {
     @Test("equal return types need no projection")
     func equalReturnsNeedNoProjection() throws {
         let pairs = VariantPairing.candidates(in: [
-            fn("sort", params: [("xs", "[Int]")], returns: "[Int]"),
-            fn("naiveSort", params: [("xs", "[Int]")], returns: "[Int]"),
+            fn("sort", returns: "[Int]", params: [("xs", "[Int]")]),
+            fn("naiveSort", returns: "[Int]", params: [("xs", "[Int]")]),
         ])
         let pair = try #require(pairs.first)
         #expect(pair.projection == nil)

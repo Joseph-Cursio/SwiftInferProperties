@@ -105,15 +105,15 @@ struct FieldCoverageReflectionTests {
             SemanticIndexEntry(
                 identityHash: "HASH",
                 templateName: "idempotence",
-                typeName: "Carrier",
                 score: 80,
                 tier: "Strong",
                 primaryFunctionName: "normalize",
                 location: "F.swift:1",
-                decision: "accepted",
-                decisionAt: "2026-07-26T00:00:00Z",
                 firstSeenAt: "2026-01-01T00:00:00Z",
                 lastSeenAt: "2026-07-26T00:00:00Z",
+                typeName: "Carrier",
+                decision: "accepted",
+                decisionAt: "2026-07-26T00:00:00Z",
                 typeShape: IndexedTypeShape(
                     name: "Carrier", kind: .struct, inheritedTypes: [], hasUserGen: false
                 ),
@@ -140,13 +140,13 @@ struct FieldCoverageReflectionTests {
                 actionTypeName: "Action",
                 predicate: "p",
                 location: "Feature.swift:1",
-                moduleName: "Module",
                 score: 40,
                 tier: "Likely",
-                decision: "accepted",
-                decisionAt: "2026-07-26T00:00:00Z",
                 firstSeenAt: "2026-01-01T00:00:00Z",
-                lastSeenAt: "2026-07-26T00:00:00Z"
+                lastSeenAt: "2026-07-26T00:00:00Z",
+                moduleName: "Module",
+                decision: "accepted",
+                decisionAt: "2026-07-26T00:00:00Z"
             ),
             "InteractionIndexEntry"
         )
@@ -181,9 +181,9 @@ struct FieldCoverageReflectionTests {
     func indexContainerCoversItsFields() throws {
         try Self.expectFullCoverage(
             IndexStore.Index(
-                schemaVersion: 5,
                 updatedAt: "2026-07-26T00:00:00Z",
                 entries: [],
+                schemaVersion: 5,
                 typeShapes: [:],
                 interactionEntries: []
             ),
@@ -280,10 +280,20 @@ struct ExhaustiveInitializerAgreementTests {
     @Test("InteractionIndexEntry: both initializers produce the same value")
     func interactionEntryInitializersAgree() {
         let ergonomic = InteractionIndexEntry(
-            identityHash: "H", family: "idempotence", reducerQualifiedName: "F.reduce",
-            stateTypeName: "S", actionTypeName: "A", predicate: "p", location: "F.swift:1",
-            moduleName: "M", score: 40, tier: "Likely", decision: "accepted",
-            decisionAt: "d", firstSeenAt: "f", lastSeenAt: "l"
+            identityHash: "H",
+            family: "idempotence",
+            reducerQualifiedName: "F.reduce",
+            stateTypeName: "S",
+            actionTypeName: "A",
+            predicate: "p",
+            location: "F.swift:1",
+            score: 40,
+            tier: "Likely",
+            firstSeenAt: "f",
+            lastSeenAt: "l",
+            moduleName: "M",
+            decision: "accepted",
+            decisionAt: "d"
         )
         let exhaustive = InteractionIndexEntry(
             everyColumn: .required,

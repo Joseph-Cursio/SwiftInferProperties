@@ -165,14 +165,14 @@ public extension SwiftInferCommand {
                 roots: TargetDirectory.resolveScanRoots(
                     targets: target, sources: sources, relativeTo: workingDirectory
                 ),
+                workingDirectory: workingDirectory,
+                output: PrintOutput(),
                 pinRaw: reducer,
                 includePossible: includePossible,
                 updateBaseline: updateBaseline,
                 interactive: interactive,
                 interactiveBridges: interactiveBridges,
                 dryRun: dryRun,
-                workingDirectory: workingDirectory,
-                output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
         }
@@ -194,29 +194,29 @@ public extension SwiftInferCommand {
         /// that don't need the baseline-write / triage leg.
         public static func run(
             target: String,
+            workingDirectory: URL,
+            output: any DiscoverOutput,
             pinRaw: String? = nil,
             includePossible: Bool = false,
             updateBaseline: Bool = false,
             interactive: Bool = false,
             interactiveBridges: Bool = false,
             dryRun: Bool = false,
-            workingDirectory: URL,
             promptInput: any PromptInput = StdinPromptInput(),
-            output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
             firstSeenAt: Date = Date()
         ) throws {
             try run(
                 targets: [target],
+                workingDirectory: workingDirectory,
+                output: output,
                 pinRaw: pinRaw,
                 includePossible: includePossible,
                 updateBaseline: updateBaseline,
                 interactive: interactive,
                 interactiveBridges: interactiveBridges,
                 dryRun: dryRun,
-                workingDirectory: workingDirectory,
                 promptInput: promptInput,
-                output: output,
                 diagnostics: diagnostics,
                 firstSeenAt: firstSeenAt
             )
@@ -243,16 +243,16 @@ public extension SwiftInferCommand {
         /// byte-for-byte. The CLI invocation uses the default.
         static func runPipeline(
             target: String,
+            workingDirectory: URL,
             pinRaw: String? = nil,
             includePossible: Bool = false,
-            workingDirectory: URL,
             firstSeenAt: Date = Date(),
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput()
         ) throws -> String {
             let suggestions = try collectSuggestions(
                 target: target,
-                pinRaw: pinRaw,
                 workingDirectory: workingDirectory,
+                pinRaw: pinRaw,
                 firstSeenAt: firstSeenAt
             )
             let graded = gradedByVerifyEvidence(

@@ -24,8 +24,8 @@ struct ConsumerProducerChainRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentChainDiagnostics()
+            diagnostics: SilentChainDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(
             result.suggestions.first { $0.templateName == "consumer-producer-chain" }
@@ -75,8 +75,8 @@ struct ConsumerProducerChainRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentChainDiagnostics()
+            diagnostics: SilentChainDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(
             result.suggestions.first { $0.templateName == "consumer-producer-chain" }
@@ -114,8 +114,8 @@ struct ConsumerProducerChainRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentChainDiagnostics()
+            diagnostics: SilentChainDiagnostics(),
+            includePossible: true
         )
         let chainAdvisory = result.suggestions.first { $0.templateName == "consumer-producer-chain" }
         #expect(chainAdvisory == nil, "M5 round-trip pair should suppress the M16 chain advisory")

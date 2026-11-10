@@ -24,10 +24,10 @@ struct CommutativityConstraintEquivalenceTests {
 
     private static func binarySummary(
         name: String,
+        containingType: String,
         lhsType: String = "Int",
         rhsType: String = "Int",
         returnType: String = "Int",
-        containingType: String,
         bodySignals: BodySignals = .empty
     ) -> FunctionSummary {
         FunctionSummary(
@@ -53,20 +53,29 @@ struct CommutativityConstraintEquivalenceTests {
         return [
             ("merge", binarySummary(name: "merge", containingType: "Bag")),
             ("subtract", binarySummary(name: "subtract", containingType: "Math")),
-            ("voidReturn", binarySummary(name: "combine", returnType: "Void", containingType: "Foo")),
+            ("voidReturn", binarySummary(name: "combine", containingType: "Foo", returnType: "Void")),
             ("paramMismatch", binarySummary(
-                name: "combine", rhsType: "String", returnType: "String", containingType: "Foo"
+                name: "combine",
+                containingType: "Foo",
+                rhsType: "String",
+                returnType: "String"
             )),
             ("nonDeterministic", binarySummary(
                 name: "combine", containingType: "Foo", bodySignals: nonDeterministic
             )),
             ("bareShape", binarySummary(
-                name: "someUserOp", lhsType: "BigInt", rhsType: "BigInt",
-                returnType: "BigInt", containingType: "BigInt"
+                name: "someUserOp",
+                containingType: "BigInt",
+                lhsType: "BigInt",
+                rhsType: "BigInt",
+                returnType: "BigInt"
             )),
             ("fpStorage", binarySummary(
-                name: "add", lhsType: "Double", rhsType: "Double",
-                returnType: "Double", containingType: "Math"
+                name: "add",
+                containingType: "Math",
+                lhsType: "Double",
+                rhsType: "Double",
+                returnType: "Double"
             )),
         ]
     }

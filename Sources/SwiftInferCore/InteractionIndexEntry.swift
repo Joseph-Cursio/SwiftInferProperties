@@ -116,13 +116,13 @@ public struct InteractionIndexEntry: Codable, Sendable, Equatable {
         actionTypeName: String,
         predicate: String,
         location: String,
-        moduleName: String? = nil,
         score: Int,
         tier: String,
-        decision: String? = nil,
-        decisionAt: String? = nil,
         firstSeenAt: String,
-        lastSeenAt: String
+        lastSeenAt: String,
+        moduleName: String? = nil,
+        decision: String? = nil,
+        decisionAt: String? = nil
     ) {
         // Delegates to the exhaustive initializer — see `EveryColumn`.
         self.init(

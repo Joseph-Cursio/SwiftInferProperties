@@ -20,15 +20,15 @@ extension SwiftInferCommand.DiscoverInteraction {
     /// command aimed at app code was the one that could not open it.
     static func run(
         roots: [TargetDirectory.ScanRoot],
+        workingDirectory: URL,
+        output: any DiscoverOutput,
         pinRaw: String? = nil,
         includePossible: Bool = false,
         updateBaseline: Bool = false,
         interactive: Bool = false,
         interactiveBridges: Bool = false,
         dryRun: Bool = false,
-        workingDirectory: URL,
         promptInput: any PromptInput = StdinPromptInput(),
-        output: any DiscoverOutput,
         diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
         firstSeenAt: Date = Date()
     ) throws {
@@ -72,15 +72,15 @@ extension SwiftInferCommand.DiscoverInteraction {
     /// because `drift-interaction`, `accept-interaction` and the suites name it.
     public static func run(
         targets: [String],
+        workingDirectory: URL,
+        output: any DiscoverOutput,
         pinRaw: String? = nil,
         includePossible: Bool = false,
         updateBaseline: Bool = false,
         interactive: Bool = false,
         interactiveBridges: Bool = false,
         dryRun: Bool = false,
-        workingDirectory: URL,
         promptInput: any PromptInput = StdinPromptInput(),
-        output: any DiscoverOutput,
         diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
         firstSeenAt: Date = Date()
     ) throws {
@@ -93,15 +93,15 @@ extension SwiftInferCommand.DiscoverInteraction {
                         .appendingPathComponent(name)
                 )
             },
+            workingDirectory: workingDirectory,
+            output: output,
             pinRaw: pinRaw,
             includePossible: includePossible,
             updateBaseline: updateBaseline,
             interactive: interactive,
             interactiveBridges: interactiveBridges,
             dryRun: dryRun,
-            workingDirectory: workingDirectory,
             promptInput: promptInput,
-            output: output,
             diagnostics: diagnostics,
             firstSeenAt: firstSeenAt
         )

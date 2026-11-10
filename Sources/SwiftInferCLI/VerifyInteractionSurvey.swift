@@ -66,18 +66,18 @@ enum VerifyInteractionSurvey {
     static func run(
         target: String,
         familyFilter: String?,
+        workingDirectory: URL,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
-        maxParallel: Int = 4,
-        workingDirectory: URL
+        maxParallel: Int = 4
     ) async throws -> String {
         try await run(
             targets: [target],
             familyFilter: familyFilter,
+            workingDirectory: workingDirectory,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
-            maxParallel: maxParallel,
-            workingDirectory: workingDirectory
+            maxParallel: maxParallel
         )
     }
 
@@ -89,20 +89,20 @@ enum VerifyInteractionSurvey {
     static func run(
         targets: [String],
         familyFilter: String?,
+        workingDirectory: URL,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
-        maxParallel: Int = 4,
-        workingDirectory: URL
+        maxParallel: Int = 4
     ) async throws -> String {
         let family = try parseFamily(familyFilter)
         let display = targets.joined(separator: ", ")
         let entries = try await collectEntries(
             targets: targets,
             familyFilter: familyFilter,
+            workingDirectory: workingDirectory,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
-            maxParallel: maxParallel,
-            workingDirectory: workingDirectory
+            maxParallel: maxParallel
         )
         return render(target: display, family: family, entries: entries)
     }
@@ -114,10 +114,10 @@ enum VerifyInteractionSurvey {
     static func collectEntries(
         targets: [String],
         familyFilter: String?,
+        workingDirectory: URL,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
-        maxParallel: Int = 4,
-        workingDirectory: URL
+        maxParallel: Int = 4
     ) async throws -> [Entry] {
         let all = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
             targets: targets,
@@ -223,10 +223,10 @@ enum VerifyInteractionSurvey {
             let result = try VerifyInteractionPipeline.runWithInvariant(
                 target: verifyTarget,
                 invariant: suggestion,
+                workingDirectory: context.workingDirectory,
                 sequenceCount: context.sequenceCount,
                 userModuleName: context.userModuleName,
-                persistEvidence: false,
-                workingDirectory: context.workingDirectory
+                persistEvidence: false
             )
             return Entry(suggestion: suggestion, result: result)
         } catch {

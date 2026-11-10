@@ -11,10 +11,10 @@ import Testing
 struct StrideStyleLabelTests {
 
     private func stridePair(
-        forward: String = "endOfChunk",
         forwardLabel: String?,
-        reverse: String = "startOfChunk",
-        reverseLabel: String?
+        reverseLabel: String?,
+        forward: String = "endOfChunk",
+        reverse: String = "startOfChunk"
     ) -> FunctionPair {
         let forwardSummary = FunctionSummary(
             name: forward,
@@ -133,10 +133,10 @@ struct StrideStyleLabelTests {
     func endToEndNonStridePreserves() {
         let suggestion = RoundTripTemplate.suggest(
             for: stridePair(
-                forward: "encode",
                 forwardLabel: nil,
-                reverse: "decode",
-                reverseLabel: nil
+                reverseLabel: nil,
+                forward: "encode",
+                reverse: "decode"
             )
         )
         // 30 typeSymmetry + ... = above Possible threshold.

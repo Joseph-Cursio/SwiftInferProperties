@@ -19,13 +19,13 @@ struct IdempotenceLiftedPairResolverTests {
         SemanticIndexEntry(
             identityHash: "0xABCD1234EFFE5678",
             templateName: template,
-            typeName: carrier,
             score: 30,
             tier: "Possible",
             primaryFunctionName: primary,
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-12T00:00:00Z",
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: carrier
         )
     }
 
@@ -72,13 +72,13 @@ struct DualStyleConsistencyPairResolverTests {
         SemanticIndexEntry(
             identityHash: "0xABCD1234EFFE5678",
             templateName: template,
-            typeName: carrier,
             score: 30,
             tier: "Possible",
             primaryFunctionName: primary,
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-12T00:00:00Z",
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: carrier
         )
     }
 
@@ -145,13 +145,13 @@ struct MonotonicityPairResolverTests {
         SemanticIndexEntry(
             identityHash: "0xABCD1234EFFE5678",
             templateName: template,
-            typeName: carrier,
             score: 30,
             tier: "Possible",
             primaryFunctionName: primary,
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-12T00:00:00Z",
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: carrier
         )
     }
 

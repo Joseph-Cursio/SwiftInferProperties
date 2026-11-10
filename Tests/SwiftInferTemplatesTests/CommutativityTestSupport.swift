@@ -7,9 +7,9 @@ import SwiftInferCore
 // cap. The `docComment` param feeds the docstring-corroboration tests.
 func makeCommutativitySummary(
     name: String,
+    returnType: String?,
     paramTypes: (String, String)? = nil,
     parameters explicitParameters: [Parameter]? = nil,
-    returnType: String?,
     isMutating: Bool = false,
     containingType: String? = nil,
     bodySignals: BodySignals = .empty,
@@ -48,9 +48,9 @@ func makeCommutativitySummary(
 ) -> FunctionSummary {
     makeCommutativitySummary(
         name: name,
+        returnType: returnType,
         paramTypes: nil,
         parameters: parameters,
-        returnType: returnType,
         isMutating: false,
         bodySignals: .empty
     )

@@ -82,8 +82,8 @@ struct IdempotenceTemplateLiftedScoringTests {
         let vocab = Vocabulary(idempotenceVerbs: ["sanitizeXML"])
         let suggestion = try #require(IdempotenceTemplate.suggest(
             forLifted: liftedNoParam("sanitizeXML"),
-            vocabulary: vocab,
-            carrierKindResolver: valueSemanticResolver()
+            carrierKindResolver: valueSemanticResolver(),
+            vocabulary: vocab
         ))
         #expect(suggestion.score.total == 85)
     }
@@ -179,8 +179,8 @@ struct IdempotenceTemplateLiftedScoringTests {
         // SetAlgebraShape.binaryOps + carrier conforms to SetAlgebra.
         #expect(IdempotenceTemplate.suggest(
             forLifted: lifted,
-            inheritedTypesByName: inheritedTypesByName,
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            inheritedTypesByName: inheritedTypesByName
         ) == nil)
     }
 

@@ -15,8 +15,8 @@ struct AlgebraicDocstringCorroborationTests {
     func documentedCommutativitySurfaces() throws {
         let summary = makeCommutativitySummary(
             name: "fuse",
-            paramTypes: ("Color", "Color"),
             returnType: "Color",
+            paramTypes: ("Color", "Color"),
             docComment: "Blends two colors. The operation is commutative."
         )
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
@@ -28,8 +28,8 @@ struct AlgebraicDocstringCorroborationTests {
     func undocumentedCommutativitySuppressed() {
         let summary = makeCommutativitySummary(
             name: "fuse",
-            paramTypes: ("Color", "Color"),
-            returnType: "Color"
+            returnType: "Color",
+            paramTypes: ("Color", "Color")
         )
         // shape 30 - 20 (unsupported-shape) = 10 -> suppressed -> nil.
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
@@ -41,8 +41,8 @@ struct AlgebraicDocstringCorroborationTests {
     func documentedAssociativitySurfaces() throws {
         let summary = makeCommutativitySummary(
             name: "fuse",
-            paramTypes: ("Layer", "Layer"),
             returnType: "Layer",
+            paramTypes: ("Layer", "Layer"),
             docComment: "Stacks two layers; this combine is associative."
         )
         let suggestion = try #require(AssociativityTemplate.suggest(for: summary))
@@ -54,8 +54,8 @@ struct AlgebraicDocstringCorroborationTests {
     func undocumentedAssociativitySuppressed() {
         let summary = makeCommutativitySummary(
             name: "fuse",
-            paramTypes: ("Layer", "Layer"),
-            returnType: "Layer"
+            returnType: "Layer",
+            paramTypes: ("Layer", "Layer")
         )
         #expect(AssociativityTemplate.suggest(for: summary) == nil)
     }

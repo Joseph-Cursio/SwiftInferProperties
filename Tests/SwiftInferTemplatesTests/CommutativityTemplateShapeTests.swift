@@ -11,8 +11,8 @@ struct CommutativityTemplateShapeTests {
     func evidenceCarriesFunctionMetadata() throws {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
         #expect(suggestion.templateName == "commutativity")
@@ -25,8 +25,8 @@ struct CommutativityTemplateShapeTests {
     func placeholderGeneratorAndSampling() throws {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
         #expect(suggestion.generator.source == .notYetComputed)
@@ -38,8 +38,8 @@ struct CommutativityTemplateShapeTests {
     func caveatsAlwaysPresent() throws {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
         #expect(suggestion.explainability.whyMightBeWrong.count == 2)
@@ -51,8 +51,8 @@ struct CommutativityTemplateShapeTests {
     func identityIncludesTemplateID() throws {
         let summary = makeCommutativitySummary(
             name: "merge",
-            paramTypes: ("Set", "Set"),
-            returnType: "Set"
+            returnType: "Set",
+            paramTypes: ("Set", "Set")
         )
         let suggestion = try #require(CommutativityTemplate.suggest(for: summary))
         // Idempotence on the same signature would produce a different

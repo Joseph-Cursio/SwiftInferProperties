@@ -43,8 +43,8 @@ struct BiconditionalVerifyCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "BiconditionalVerifyCorpus",
             familyFilter: "biconditional",
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
 
         // Cycle 142 — widened to 5 reducers: + FeedFeature (literal-inferred
@@ -71,8 +71,8 @@ struct BiconditionalVerifyCorpusMeasuredTests {
         // Payoff: discover folds the evidence through the cycle-135 overrule.
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "BiconditionalVerifyCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         // Full-coverage bothPasses overrule the pin → Verified: SessionFeature
         // (annotated Bool) + FeedFeature (literal-inferred Bool).

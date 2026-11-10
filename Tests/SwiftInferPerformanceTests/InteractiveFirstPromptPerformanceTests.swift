@@ -35,9 +35,9 @@ struct InteractiveFirstPromptPerformanceTests {
         let start = Date()
         try SwiftInferCommand.Discover.run(
             directory: target,
+            output: SilentOutput(),
             interactive: true,
             promptInput: prompt,
-            output: SilentOutput(),
             diagnostics: SilentDiagnosticOutput()
         )
         let firstPromptAt = try #require(

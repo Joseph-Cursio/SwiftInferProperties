@@ -231,13 +231,13 @@ public extension SwiftInferCommand {
                     )
                 }
                 try Self.runAllFromIndex(
-                    persistEvidence: persistEvidence,
-                    scanDependencies: scanDependencies,
                     indexPathOverride: indexPath,
                     budgetString: budget,
                     workingDirectory: workingDirectory,
                     maxParallel: maxParallel,
                     templateFilter: template,
+                    persistEvidence: persistEvidence,
+                    scanDependencies: scanDependencies,
                     corpusModuleName: corpusModule,
                     emitRegression: regression.resolved(otherwise: false)
                 )

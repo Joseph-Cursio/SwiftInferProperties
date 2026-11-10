@@ -33,9 +33,9 @@ struct HardGuaranteeAllowlistTests {
         let before = fileSet(of: directory)
         try SwiftInferCommand.Discover.run(
             directory: target,
+            output: HGSilentOutput(),
             interactive: true,
             promptInput: HGScriptedPromptInput(scriptedLines: ["A"]),
-            output: HGSilentOutput(),
             diagnostics: HGSilentDiagnosticOutput()
         )
         let after = fileSet(of: directory)
@@ -63,9 +63,9 @@ struct HardGuaranteeAllowlistTests {
         let before = fileSet(of: directory)
         try SwiftInferCommand.Discover.run(
             directory: target,
+            output: HGSilentOutput(),
             interactive: true,
             promptInput: HGScriptedPromptInput(scriptedLines: ["B", "s", "s", "s"]),
-            output: HGSilentOutput(),
             diagnostics: HGSilentDiagnosticOutput()
         )
         let after = fileSet(of: directory)
@@ -104,9 +104,9 @@ struct HardGuaranteeAllowlistTests {
         let script = Array(repeating: "B", count: 10) + Array(repeating: "s", count: 30)
         try SwiftInferCommand.Discover.run(
             directory: target,
+            output: HGSilentOutput(),
             interactive: true,
             promptInput: HGScriptedPromptInput(scriptedLines: script),
-            output: HGSilentOutput(),
             diagnostics: HGSilentDiagnosticOutput()
         )
         let after = fileSet(of: directory)
@@ -150,8 +150,8 @@ struct HardGuaranteeAllowlistTests {
         let before = fileSet(of: directory)
         try SwiftInferCommand.Discover.run(
             directory: target,
-            updateBaseline: true,
             output: HGSilentOutput(),
+            updateBaseline: true,
             diagnostics: HGSilentDiagnosticOutput()
         )
         let after = fileSet(of: directory)

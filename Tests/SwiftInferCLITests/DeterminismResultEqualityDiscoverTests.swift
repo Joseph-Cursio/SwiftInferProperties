@@ -27,6 +27,7 @@ struct DeterminismResultEqualityDiscoverTests {
         let diagnostics = TriageRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: output,
             includePossible: true,
             dryRun: true,
             interactive: true,
@@ -34,7 +35,6 @@ struct DeterminismResultEqualityDiscoverTests {
                 SeedManifest.Seed(file: "Source.swift", line: line, symbol: symbol, kind: .pureFunction)
             ]),
             promptInput: TriageRecordingPromptInput(scriptedLines: ["A"]),
-            output: output,
             diagnostics: diagnostics
         )
         return Run(output: output.text, diagnostics: diagnostics.lines)

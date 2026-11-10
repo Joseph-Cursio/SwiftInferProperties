@@ -12,43 +12,43 @@ struct QueryCommandTests {
     private static let strong = SemanticIndexEntry(
         identityHash: "0x0000000000000001",
         templateName: "round-trip",
-        typeName: "Codec",
         score: 85,
         tier: "Strong",
         primaryFunctionName: "encode(_:)",
         location: "/Codec.swift:10",
-        decision: "accepted",
-        decisionAt: "2026-05-11T10:00:00Z",
         firstSeenAt: "2026-05-10T00:00:00Z",
-        lastSeenAt: "2026-05-11T12:00:00Z"
+        lastSeenAt: "2026-05-11T12:00:00Z",
+        typeName: "Codec",
+        decision: "accepted",
+        decisionAt: "2026-05-11T10:00:00Z"
     )
 
     private static let possibleSorter = SemanticIndexEntry(
         identityHash: "0x0000000000000002",
         templateName: "idempotence",
-        typeName: "Sorter",
         score: 35,
         tier: "Possible",
         primaryFunctionName: "sort()",
         location: "/Sorter.swift:5",
-        decision: nil,
-        decisionAt: nil,
         firstSeenAt: "2026-05-11T12:00:00Z",
-        lastSeenAt: "2026-05-11T12:00:00Z"
+        lastSeenAt: "2026-05-11T12:00:00Z",
+        typeName: "Sorter",
+        decision: nil,
+        decisionAt: nil
     )
 
     private static let possibleFreeFunc = SemanticIndexEntry(
         identityHash: "0x0000000000000003",
         templateName: "round-trip",
-        typeName: nil,
         score: 30,
         tier: "Possible",
         primaryFunctionName: "log(_:)",
         location: "/Math.swift:1",
-        decision: "rejected",
-        decisionAt: "2026-05-11T11:00:00Z",
         firstSeenAt: "2026-05-11T00:00:00Z",
-        lastSeenAt: "2026-05-11T12:00:00Z"
+        lastSeenAt: "2026-05-11T12:00:00Z",
+        typeName: nil,
+        decision: "rejected",
+        decisionAt: "2026-05-11T11:00:00Z"
     )
 
     private static let allThree = [strong, possibleSorter, possibleFreeFunc]

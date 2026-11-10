@@ -38,8 +38,8 @@ struct IdentifiedActionCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "TCAIdentifiedActionCorpus",
             familyFilter: "determinism",
-            sequenceCount: 64,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 64
         )
         // RowList + Row (3b) and EditorList + Editor (3c) each surface one
         // determinism identity.
@@ -52,8 +52,8 @@ struct IdentifiedActionCorpusMeasuredTests {
 
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "TCAIdentifiedActionCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         // Both parents are Verified with their composition case fully explored
         // (RowList via 3b payload-free child; EditorList via 3c raw child action).

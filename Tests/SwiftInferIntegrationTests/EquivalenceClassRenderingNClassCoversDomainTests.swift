@@ -23,8 +23,8 @@ struct ECNClassPartialCoverageTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentECNCDiagnostics()
+            diagnostics: SilentECNCDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         let kind = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])

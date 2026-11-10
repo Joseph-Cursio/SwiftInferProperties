@@ -42,13 +42,13 @@ struct V151DualStyleExpansionTests {
         SemanticIndexEntry(
             identityHash: "0xABCD",
             templateName: "dual-style-consistency",
-            typeName: carrier,
             score: 30,
             tier: "Possible",
             primaryFunctionName: primary,
             location: "/x.swift:1",
             firstSeenAt: "2026-05-12T00:00:00Z",
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: carrier
         )
     }
 
@@ -133,13 +133,13 @@ struct V151RoutingFlipTests {
         SemanticIndexEntry(
             identityHash: "0xABCD",
             templateName: template,
-            typeName: carrier,
             score: 30,
             tier: "Possible",
             primaryFunctionName: primary,
             location: "/x.swift:1",
             firstSeenAt: "2026-05-12T00:00:00Z",
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: carrier
         )
     }
 

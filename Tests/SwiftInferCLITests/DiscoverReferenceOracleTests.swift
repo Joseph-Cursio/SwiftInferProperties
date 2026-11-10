@@ -132,10 +132,10 @@ struct DiscoverReferenceOracleTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
             seedManifest: SeedManifest(seeds: symbols.map { .init(file: "Source.swift", line: 1, symbol: $0) }),
-            output: recording,
             diagnostics: SilentDiagnostics()
         )
         return (DiscoverDocstringAdviceSeedFocusTests.mainBlock(of: recording.text), directory)

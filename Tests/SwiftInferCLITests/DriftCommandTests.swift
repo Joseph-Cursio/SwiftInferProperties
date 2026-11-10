@@ -25,8 +25,8 @@ struct DriftCommandTests {
 
         try SwiftInferCommand.Discover.run(
             directory: target,
-            updateBaseline: true,
             output: RecordingOutput(),
+            updateBaseline: true,
             diagnostics: RecordingDiagnosticOutput()
         )
         let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
@@ -34,8 +34,8 @@ struct DriftCommandTests {
 
         try SwiftInferCommand.Discover.run(
             directory: target,
-            updateBaseline: true,
             output: RecordingOutput(),
+            updateBaseline: true,
             diagnostics: RecordingDiagnosticOutput()
         )
         let secondSave = try Data(contentsOf: baselinePath)
@@ -64,9 +64,9 @@ struct DriftCommandTests {
         let recording = RecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: target,
+            output: recording,
             dryRun: true,
             updateBaseline: true,
-            output: recording,
             diagnostics: RecordingDiagnosticOutput()
         )
         #expect(recording.lines.contains { line in
@@ -93,10 +93,10 @@ struct DriftCommandTests {
         let diagnostics = RecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: target,
+            output: RecordingOutput(),
             interactive: true,
             updateBaseline: true,
             promptInput: ScriptedPromptInput(scriptedLines: ["s"]),
-            output: RecordingOutput(),
             diagnostics: diagnostics
         )
         #expect(diagnostics.lines.contains { line in
@@ -195,8 +195,8 @@ struct DriftDetectionTests {
         """)
         try SwiftInferCommand.Discover.run(
             directory: target,
-            updateBaseline: true,
             output: RecordingOutput(),
+            updateBaseline: true,
             diagnostics: RecordingDiagnosticOutput()
         )
         let recording = RecordingOutput()

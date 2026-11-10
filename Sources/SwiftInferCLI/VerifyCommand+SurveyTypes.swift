@@ -65,9 +65,9 @@ public extension SwiftInferCommand.Verify {
             templateName: String,
             primaryFunctionName: String,
             carrier: String?,
-            tier: String? = nil,
             outcome: SurveyOutcome,
             outcomeDetail: String?,
+            tier: String? = nil,
             counterexample: String? = nil,
             shrunkCounterexample: String? = nil,
             subjectFingerprint: String? = nil

@@ -293,14 +293,14 @@ extension FunctionScannerVisitor {
         let scanner = BodySignalVisitor(funcName: node.name.text)
         scanner.walk(body)
         return BodySignals(
+            hasNonDeterministicCall: !scanner.detectedAPIs.isEmpty,
+            hasSelfComposition: scanner.foundSelfComposition,
+            nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),
             guardDomain: GuardDomainReader.read(node),
             rewritePostcondition: RewritePostconditionReader.read(node),
             sortedOutput: SortedOutputReader.read(node),
             markerDispatch: MarkerDispatchReader.read(node),
             fallbackDelegation: MarkerDispatchReader.readDelegation(node),
-            hasNonDeterministicCall: !scanner.detectedAPIs.isEmpty,
-            hasSelfComposition: scanner.foundSelfComposition,
-            nonDeterministicAPIsDetected: scanner.detectedAPIs.sorted(),
             reducerOpsReferenced: scanner.reducerOps.sorted(),
             reducerOpsWithIdentitySeed: scanner.reducerOpsWithIdentitySeed.sorted(),
             // Only for `==`. Classifying every body would pay a walk per function

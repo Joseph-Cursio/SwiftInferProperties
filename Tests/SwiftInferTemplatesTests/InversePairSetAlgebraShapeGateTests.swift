@@ -217,11 +217,11 @@ struct InversePairSetAlgebraShapeGateTests {
         // should fire; the score should be even more suppressed.
         let pair = makePair(
             forwardName: "intersection",
-            forwardLabel: "after",
             reverseName: "subtracting",
-            reverseLabel: "before",
             forwardParam: "Self",
-            forwardReturn: "Self"
+            forwardReturn: "Self",
+            forwardLabel: "after",
+            reverseLabel: "before"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         // typeSymmetry +25, direction -10, setAlgebra -25 = -10
@@ -233,11 +233,11 @@ struct InversePairSetAlgebraShapeGateTests {
 
     private func makePair(
         forwardName: String,
-        forwardLabel: String? = nil,
         reverseName: String,
-        reverseLabel: String? = nil,
         forwardParam: String,
-        forwardReturn: String
+        forwardReturn: String,
+        forwardLabel: String? = nil,
+        reverseLabel: String? = nil
     ) -> FunctionPair {
         let forward = FunctionSummary(
             name: forwardName,

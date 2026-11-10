@@ -111,10 +111,12 @@ struct RangeLawTemplateTests {
         let evidence = try #require(suggestion.evidence.first)
         let callee = try #require(CalleeReference(evidence: evidence))
         let stub = LiftedTestEmitter.withinDocumentedRange(
-            callee: callee, range: DocumentedRange(lower: "0.0", upper: "1.0"),
+            callee: callee,
+            range: DocumentedRange(lower: "0.0", upper: "1.0"),
             seed: SamplingSeed.derive(from: suggestion.identity),
-            generators: ["Progress.gen()"], argumentTypes: ["Progress"],
-            failureLabel: "progress left its documented range"
+            generators: ["Progress.gen()"],
+            failureLabel: "progress left its documented range",
+            argumentTypes: ["Progress"]
         )
         #expect(stub.contains("(0.0...1.0 as ClosedRange<Double>).contains(Double(value.progress))"), "got:\n\(stub)")
     }

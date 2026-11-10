@@ -45,8 +45,8 @@ struct InteractionVerifyEvidenceStalenessTests {
 
     private func evidence(
         for suggestion: InteractionInvariantSuggestion,
-        outcome: VerifyEvidenceOutcome = .measuredBothPass,
-        fingerprint: String?
+        fingerprint: String?,
+        outcome: VerifyEvidenceOutcome = .measuredBothPass
     ) -> [String: VerifyEvidence] {
         [
             suggestion.identity.normalized: VerifyEvidence(
@@ -127,7 +127,7 @@ struct InteractionVerifyEvidenceStalenessTests {
         let subject = pick()
         let graded = InteractionVerifyEvidenceScoring.applied(
             to: [subject],
-            evidenceByIdentity: evidence(for: subject, outcome: .measuredDefaultFails, fingerprint: "before"),
+            evidenceByIdentity: evidence(for: subject, fingerprint: "before", outcome: .measuredDefaultFails),
             currentFingerprintByIdentity: [subject.identity.normalized: "after"]
         )
         #expect(graded[0].tier == .likely, "a stale refutation must not suppress")
@@ -139,7 +139,7 @@ struct InteractionVerifyEvidenceStalenessTests {
         let subject = pick()
         let graded = InteractionVerifyEvidenceScoring.applied(
             to: [subject],
-            evidenceByIdentity: evidence(for: subject, outcome: .measuredDefaultFails, fingerprint: "abc"),
+            evidenceByIdentity: evidence(for: subject, fingerprint: "abc", outcome: .measuredDefaultFails),
             currentFingerprintByIdentity: [subject.identity.normalized: "abc"]
         )
         #expect(graded[0].tier == .suppressed)

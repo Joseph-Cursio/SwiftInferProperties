@@ -48,11 +48,11 @@ struct CrossFileConformanceReachTests {
         let diagnostics = SilentDiagnostics()
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: url,
+            diagnostics: diagnostics,
             includePossible: true,
             evidence: SwiftInferCommand.Discover.loadEvidence(
                 directory: url, diagnostics: diagnostics
-            ),
-            diagnostics: diagnostics
+            )
         )
         return (result, dir)
     }

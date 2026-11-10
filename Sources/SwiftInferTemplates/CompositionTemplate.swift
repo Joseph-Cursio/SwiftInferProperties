@@ -139,8 +139,8 @@ public enum CompositionTemplate {
     /// between evidence and signal lines.
     public static func suggest(
         forLifted lifted: LiftedTransformation,
-        vocabulary: Vocabulary = .empty,
-        carrierKindResolver: CarrierKindResolver
+        carrierKindResolver: CarrierKindResolver,
+        vocabulary: Vocabulary = .empty
     ) -> Suggestion? {
         ConstraintRunner.suggest(
             constraint: makeConstraint(

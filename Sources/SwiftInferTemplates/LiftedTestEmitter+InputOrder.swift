@@ -16,8 +16,8 @@ public extension LiftedTestEmitter {
         ordering: SortedOutput,
         seed: SamplingSeed.Value,
         generators: [String],
-        argumentTypes: [String] = [],
-        failureLabel: String
+        failureLabel: String,
+        argumentTypes: [String] = []
     ) -> String? {
         guard let key = ordering.dictionaryKeyMember,
               let reversedIndex = argumentTypes.firstIndex(where: InputOrderIndependenceTemplate.isArrayType),

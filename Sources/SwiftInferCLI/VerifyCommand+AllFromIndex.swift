@@ -26,13 +26,13 @@ extension SwiftInferCommand.Verify {
     /// summary (`prove-then-show`).
     @discardableResult
     static func runAllFromIndex(
-        persistEvidence: Bool = true,
-        scanDependencies: Bool = false,
         indexPathOverride: String?,
         budgetString: String,
         workingDirectory: URL,
         maxParallel: Int,
         templateFilter: String?,
+        persistEvidence: Bool = true,
+        scanDependencies: Bool = false,
         corpusModuleName: String? = nil,
         emitRegression: Bool = false,
         quiet: Bool = false

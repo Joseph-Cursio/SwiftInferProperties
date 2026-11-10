@@ -178,9 +178,9 @@ public extension SwiftInferCommand {
                 let entries = try await VerifyInteractionSurvey.collectEntries(
                     targets: [survey.target],
                     familyFilter: family,
+                    workingDirectory: survey.directory,
                     userModuleName: corpusModule,
-                    maxParallel: maxParallel,
-                    workingDirectory: survey.directory
+                    maxParallel: maxParallel
                 )
                 print(ProveThenShowRenderer.render(interactionEntries: entries), terminator: "")
                 return

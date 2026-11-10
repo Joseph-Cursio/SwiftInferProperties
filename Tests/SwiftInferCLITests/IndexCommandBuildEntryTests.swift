@@ -179,8 +179,8 @@ struct IndexCommandBuildEntryTests {
         let entry = SwiftInferCommand.Index.buildEntry(
             from: suggestion,
             decisionsByHash: [:],
-            typeShapesByName: [:],
-            now: "2026-05-11T12:00:00Z"
+            now: "2026-05-11T12:00:00Z",
+            typeShapesByName: [:]
         )
         #expect(entry.typeShape == nil)
     }
@@ -199,8 +199,8 @@ struct IndexCommandBuildEntryTests {
         let entry = SwiftInferCommand.Index.buildEntry(
             from: suggestion,
             decisionsByHash: [:],
-            typeShapesByName: ["Foo": kitShape],
-            now: "2026-05-11T12:00:00Z"
+            now: "2026-05-11T12:00:00Z",
+            typeShapesByName: ["Foo": kitShape]
         )
         #expect(entry.typeShape?.name == "Foo")
         #expect(entry.typeShape?.kind == .struct)
@@ -217,8 +217,8 @@ struct IndexCommandBuildEntryTests {
         let entry = SwiftInferCommand.Index.buildEntry(
             from: suggestion,
             decisionsByHash: [:],
-            typeShapesByName: ["OrderedSet": kitShape],
-            now: "2026-05-11T12:00:00Z"
+            now: "2026-05-11T12:00:00Z",
+            typeShapesByName: ["OrderedSet": kitShape]
         )
         #expect(entry.typeShape?.name == "OrderedSet")
     }
@@ -229,12 +229,12 @@ struct IndexCommandBuildEntryTests {
         let entry = SwiftInferCommand.Index.buildEntry(
             from: suggestion,
             decisionsByHash: [:],
+            now: "2026-05-11T12:00:00Z",
             typeShapesByName: [
                 "Foo": TypeShape(
                     name: "Foo", kind: .struct, inheritedTypes: [], hasUserGen: false
                 ),
-            ],
-            now: "2026-05-11T12:00:00Z"
+            ]
         )
         #expect(entry.typeShape == nil)
     }

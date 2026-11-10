@@ -48,9 +48,9 @@ public enum ViewModelVerifyInteractionPipeline {
         candidate: ViewModelCandidate,
         predicate: String,
         sourceFiles: [CorpusPackager.SourceFile],
-        userModuleName: String? = nil,
         workdir: URL,
-        runner: VerifyRunner
+        runner: VerifyRunner,
+        userModuleName: String? = nil
     ) -> StepResult {
         // Gate 1 — the verifier must construct `Type()`.
         if case let .requiresArguments(fields) = candidate.constructibility {

@@ -337,12 +337,12 @@ public struct PartitionCandidate: Sendable, Equatable {
 
     public init(
         predicateName: String,
+        outlierSiteCount: Int,
         markerPair: MarkerPair? = nil,
         markerSet: MarkerSet? = nil,
         positiveSites: [PartitionSite] = [],
         negativeSites: [PartitionSite] = [],
         nClassBucketsByMarker: [String: [PartitionSite]]? = nil,
-        outlierSiteCount: Int,
         coversDomainSyntactic: Bool = false
     ) {
         self.predicateName = predicateName

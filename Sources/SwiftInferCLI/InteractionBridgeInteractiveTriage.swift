@@ -72,8 +72,8 @@ public enum InteractionBridgeInteractiveTriage {
     public static func run(
         bridges: [BridgeSuggestion],
         packageRoot: URL,
-        explicitDecisionsPath: URL? = nil,
-        inputs: Inputs
+        inputs: Inputs,
+        explicitDecisionsPath: URL? = nil
     ) throws -> InteractionDecisions {
         let load = InteractionDecisionsLoader.load(
             startingFrom: packageRoot,

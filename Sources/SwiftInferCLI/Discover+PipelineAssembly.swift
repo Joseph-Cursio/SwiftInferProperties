@@ -102,6 +102,7 @@ extension SwiftInferCommand.Discover {
                 summaries: artifacts.summaries
             ),
             packageRoot: setup.packageRoot,
+            docstringAdvice: setup.docstringAdvice,
             unmatchedSkipHashes: artifacts.unmatchedSkipHashes,
             tierHiddenRefutableLaws: cut.hiddenRefutable,
             refutedLaws: cut.refuted,
@@ -122,7 +123,6 @@ extension SwiftInferCommand.Discover {
             mockGeneratorsByType: synthesizeMockGenerators(from: liftedArtifacts.constructionRecord),
             summaries: artifacts.summaries,
             restrictedFunctions: artifacts.restrictedFunctions,
-            docstringAdvice: setup.docstringAdvice,
             coverage: cut.coverage
         )
         result.isolatedConstructionFacts = IsolatedConstructionGate.facts(from: artifacts.typeDecls)

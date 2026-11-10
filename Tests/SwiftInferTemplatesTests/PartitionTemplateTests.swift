@@ -213,8 +213,8 @@ struct PartitionTemplateTests {
                 parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
                 returns: "Data"
             ),
-            tilerForm: .slice,
-            progress: nil
+            progress: nil,
+            tilerForm: .slice
         )
         let caveats = PartitionTemplate.makeCaveats(for: shape).joined(separator: " ")
 
@@ -294,8 +294,8 @@ struct PartitionTemplateTests {
                 parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
                 returns: "Data"
             ),
-            tilerForm: .slice,
-            progress: nil
+            progress: nil,
+            tilerForm: .slice
         )
 
         let recipe = try #require(PartitionTemplate.makeGenerators(for: shape).first)
@@ -316,8 +316,8 @@ struct PartitionTemplateTests {
                 parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
                 returns: "Data"
             ),
-            tilerForm: .slice,
-            progress: nil
+            progress: nil,
+            tilerForm: .slice
         )
 
         let suggestion = try #require(PartitionTemplate.suggest(for: shape))

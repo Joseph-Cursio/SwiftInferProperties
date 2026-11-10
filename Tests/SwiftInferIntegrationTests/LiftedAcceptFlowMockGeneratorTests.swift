@@ -30,8 +30,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         #expect(lifted.generator.source == .inferredFromTests)
@@ -102,8 +102,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         #expect(lifted.generator.source == .inferredFromTests)
@@ -142,8 +142,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
         #expect(lifted.generator.source == .inferredFromTests)
@@ -158,8 +158,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         let siteCount = try #require(lifted.mockGenerator?.siteCount)

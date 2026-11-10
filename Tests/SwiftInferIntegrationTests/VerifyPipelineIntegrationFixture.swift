@@ -173,8 +173,8 @@ enum VerifyPipelineIntegrationFixture {
     static func runStrategistPipeline(
         functionCalls: [String],
         carrier: String,
-        typeShape: IndexedTypeShape? = nil,
         template: String,
+        typeShape: IndexedTypeShape? = nil,
         budget: StrategistDispatchEmitter.TrialBudget = .small,
         preamble: String = ""
     ) throws -> VerifyOutcome {
@@ -186,9 +186,9 @@ enum VerifyPipelineIntegrationFixture {
                 typeShape: typeShape,
                 template: template,
                 functionCalls: functionCalls,
-                extraImports: [],
                 seedHex: canonicalSeed,
                 trialBudget: budget,
+                extraImports: [],
                 preamble: preamble
             )
         )

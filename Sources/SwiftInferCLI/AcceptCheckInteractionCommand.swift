@@ -81,9 +81,9 @@ public extension SwiftInferCommand {
                 target: target,
                 workingDirectory: workingDirectory,
                 directory: directory,
+                output: PrintOutput(),
                 familyFilterRaw: family,
                 explicitDecisionsPath: decisions.map { URL(fileURLWithPath: $0) },
-                output: PrintOutput(),
                 diagnostics: PrintDiagnosticOutput()
             )
         }
@@ -97,9 +97,9 @@ public extension SwiftInferCommand {
             target: String,
             workingDirectory: URL,
             directory: URL,
+            output: any DiscoverOutput,
             familyFilterRaw: String? = nil,
             explicitDecisionsPath: URL? = nil,
-            output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
             now: Date = Date(),
             swiftInferVersion: String = "swift-infer-development"

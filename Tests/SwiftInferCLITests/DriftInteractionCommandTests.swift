@@ -114,8 +114,8 @@ struct DriftInteractionCommandTests {
             target: "MyApp",
             workingDirectory: root,
             directory: directory,
-            explicitBaselinePath: nowhere,
             output: output,
+            explicitBaselinePath: nowhere,
             diagnostics: diagnostics
         )
         #expect(diagnostics.lines.contains { $0.contains("interaction-baseline file not found") })

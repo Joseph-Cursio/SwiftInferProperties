@@ -44,10 +44,10 @@ struct PredicateEquivalenceClassDetectorTests {
     ) -> PartitionCandidate {
         PartitionCandidate(
             predicateName: predicateName,
+            outlierSiteCount: outlierCount,
             markerPair: Self.validInvalidPair,
             positiveSites: (0..<positiveCount).map { PartitionSite(methodName: "testValid_\($0)") },
             negativeSites: (0..<negativeCount).map { PartitionSite(methodName: "testInvalid_\($0)") },
-            outlierSiteCount: outlierCount,
             coversDomainSyntactic: coversDomainSyntactic
         )
     }

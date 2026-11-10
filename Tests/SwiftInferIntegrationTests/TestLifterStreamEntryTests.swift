@@ -30,8 +30,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         // Promoted lifted Suggestion carries +50 `.testBodyPattern` per PRD §4.1.
@@ -58,8 +58,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
@@ -76,8 +76,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
         #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
@@ -99,8 +99,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let roundTripEntries = result.suggestions.filter { $0.templateName == "round-trip" }
         #expect(roundTripEntries.count == 1)

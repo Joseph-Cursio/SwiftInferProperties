@@ -11,13 +11,13 @@ struct ReportRendererTests {
         SemanticIndexEntry(
             identityHash: "0x\(template)\(tier)",
             templateName: template,
-            typeName: "T",
             score: 50,
             tier: tier,
             primaryFunctionName: "f(_:_:)",
             location: "/x.swift:1",
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            typeName: "T"
         )
     }
 
@@ -30,11 +30,11 @@ struct ReportRendererTests {
             actionTypeName: "Action",
             predicate: "p",
             location: "/r.swift:1",
-            moduleName: nil,
             score: 40,
             tier: tier,
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            moduleName: nil
         )
     }
 

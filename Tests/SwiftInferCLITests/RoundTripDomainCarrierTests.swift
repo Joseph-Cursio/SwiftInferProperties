@@ -23,8 +23,8 @@ private typealias VerifyCmd = SwiftInferCommand.Verify
 struct RoundTripDomainCarrierTests {
 
     private func entry(
-        template: String = "round-trip",
         function: String,
+        template: String = "round-trip",
         isInstanceMethod: Bool = false,
         parameterTypeNames: [String] = [],
         typeName: String? = "SwiftFormatConfig"
@@ -32,13 +32,13 @@ struct RoundTripDomainCarrierTests {
         SemanticIndexEntry(
             identityHash: "0x1",
             templateName: template,
-            typeName: typeName,
             score: 50,
             tier: "Likely",
             primaryFunctionName: function,
             location: "/Module.swift:1",
             firstSeenAt: "2026-08-12T00:00:00Z",
             lastSeenAt: "2026-08-12T00:00:00Z",
+            typeName: typeName,
             secondaryFunctionName: "serialized()",
             isInstanceMethod: isInstanceMethod,
             parameterTypeNames: parameterTypeNames
@@ -81,7 +81,9 @@ struct RoundTripDomainCarrierTests {
     @Test("a non-round-trip template declines")
     func otherTemplatesDecline() {
         let subject = entry(
-            template: "idempotence", function: "normalize(_:)", parameterTypeNames: ["String"]
+            function: "normalize(_:)",
+            template: "idempotence",
+            parameterTypeNames: ["String"]
         )
         #expect(VerifyCmd.roundTripDomainCarrier(entry: subject) == nil)
     }

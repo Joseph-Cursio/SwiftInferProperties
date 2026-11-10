@@ -49,9 +49,9 @@ extension SwiftInferCommand.Index {
             buildEntry(
                 from: suggestion,
                 decisionsByHash: decisionsByHash,
+                now: now,
                 typeShapesByName: pipeline.typeShapesByName,
-                fingerprintsByLocation: fingerprintsByLocation,
-                now: now
+                fingerprintsByLocation: fingerprintsByLocation
             )
         }
             // WS-6 Slice 2 — the whole-module shape universe, not just per-entry carrier shapes,

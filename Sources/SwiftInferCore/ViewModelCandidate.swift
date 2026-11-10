@@ -69,8 +69,8 @@ public struct ViewModelCandidate: Sendable, Equatable {
         typeName: String,
         observability: ViewModelObservability,
         stateFields: [ViewModelStateField],
-        excludedFields: [ViewModelExcludedField] = [],
         actions: [ViewModelAction],
+        excludedFields: [ViewModelExcludedField] = [],
         constructibility: ViewModelConstructibility = .zeroArgument,
         initParameters: [ViewModelInitParameter] = []
     ) {
@@ -241,11 +241,11 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
     public init(
         name: String,
         parameterTypes: [String],
-        firstParameterLabel: String? = nil,
-        parameters: [ViewModelActionParameter] = [],
         isAsync: Bool,
         isThrows: Bool,
         mutatesStateDirectly: Bool,
+        firstParameterLabel: String? = nil,
+        parameters: [ViewModelActionParameter] = [],
         isClockDeterministic: Bool = false
     ) {
         self.name = name

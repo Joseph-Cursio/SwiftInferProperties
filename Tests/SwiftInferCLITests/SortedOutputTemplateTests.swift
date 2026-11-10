@@ -42,10 +42,10 @@ struct SortedOutputTemplateTests {
             location: SourceLocation(file: "ImpactReport.swift", line: 97, column: 5),
             containingTypeName: "ImpactReport",
             bodySignals: BodySignals(
-                sortedOutput: ordering,
                 hasNonDeterministicCall: false,
                 hasSelfComposition: false,
-                nonDeterministicAPIsDetected: []
+                nonDeterministicAPIsDetected: [],
+                sortedOutput: ordering
             ),
             docComment: docComment
         )

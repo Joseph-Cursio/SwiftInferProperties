@@ -127,8 +127,8 @@ struct DiscoverInteractionCommandTests {
         )
         let rendered = try Command.runPipeline(
             target: "MyApp",
-            includePossible: true,
             workingDirectory: directory,
+            includePossible: true,
             firstSeenAt: firstSeenAt
         )
         #expect(rendered.contains("Family:    conservation"))
@@ -156,8 +156,8 @@ struct DiscoverInteractionCommandTests {
         )
         let rendered = try Command.runPipeline(
             target: "MyApp",
-            includePossible: true,
             workingDirectory: directory,
+            includePossible: true,
             firstSeenAt: firstSeenAt
         )
         #expect(rendered.contains("Family:    idempotence"))
@@ -248,8 +248,8 @@ struct DiscoverInteractionCommandTests {
         )
         let rendered = try Command.runPipeline(
             target: "MyApp",
-            includePossible: true,
             workingDirectory: directory,
+            includePossible: true,
             firstSeenAt: firstSeenAt
         )
         #expect(rendered.contains("0 interaction-invariant suggestions"))

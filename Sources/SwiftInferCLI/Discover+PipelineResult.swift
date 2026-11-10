@@ -173,6 +173,7 @@ public extension SwiftInferCommand.Discover {
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,
+            docstringAdvice: Bool,
             unmatchedSkipHashes: Set<String> = [],
             tierHiddenRefutableLaws: [Suggestion] = [],
             refutedLaws: [Suggestion] = [],
@@ -191,7 +192,6 @@ public extension SwiftInferCommand.Discover {
             mockGeneratorsByType: [String: MockGenerator] = [:],
             summaries: [FunctionSummary] = [],
             restrictedFunctions: [RestrictedFunction] = [],
-            docstringAdvice: Bool,
             // Defaulted so the many test-side constructions of a PipelineResult stay
             // compiling. The discover path always passes a computed summary — the default
             // is "nothing was audited", which renders an honest zero rather than a silence.

@@ -40,8 +40,8 @@ struct MultiModuleDiscoveryTests {
     func modulePinDisambiguates() throws {
         let suggestions = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
             targets: ["Alpha", "Beta"],
-            pinRaw: "Beta.CounterReducer.reduce",
             workingDirectory: Self.corpusRoot,
+            pinRaw: "Beta.CounterReducer.reduce",
             firstSeenAt: Self.fixedDate
         )
         #expect(suggestions.isEmpty == false)
