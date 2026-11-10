@@ -256,7 +256,7 @@ struct ProtocolCoverageMapTests {
             "IteratorProtocol",
             "Sequence",
             // stdlib string conversion
-            "LosslessStringConvertible"
+            "LosslessStringConvertible",
         ]
         #expect(Set(ProtocolCoverageMap.protocolCoverage.keys) == expected)
         #expect(ProtocolCoverageMap.protocolCoverage.count == 17)

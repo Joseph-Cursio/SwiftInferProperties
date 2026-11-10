@@ -107,7 +107,7 @@ public enum CodableRoundTripTemplate {
                         detail: "`\(summary.containingTypeName ?? "")` declares a custom `Codable` "
                             + "conformance (hand-written `encode(to:)` + `init(from:)`) — an "
                             + "intended round-trip: `decode(encode(x)) == x`"
-                    )
+                    ),
                 ]
             },
             evidence: { [$0.inferenceEvidence] },
@@ -138,7 +138,7 @@ public enum CodableRoundTripTemplate {
                 + "not JSON-representable and will fail the round-trip spuriously.",
             "Verifying this needs the type to be `Equatable` (to compare `decode(encode(x))` against "
                 + "`x`) and generatable. A non-`Equatable` custom-`Codable` type still surfaces here "
-                + "but is not measured-verifiable without a hand-written equality."
+                + "but is not measured-verifiable without a hand-written equality.",
         ]
     }
 }

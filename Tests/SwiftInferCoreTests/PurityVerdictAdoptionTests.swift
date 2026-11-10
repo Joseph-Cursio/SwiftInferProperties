@@ -50,7 +50,7 @@ struct PurityVerdictAdoptionTests {
             // door. Both polarities, so an oracle wired to a constant fails one
             // of them whichever constant it is wired to.
             ("computed property — pure", "struct S { var doubled: Int { 2 * 2 } }"),
-            ("computed property — reads the clock", "struct S { var now: Date { Date() } }")
+            ("computed property — reads the clock", "struct S { var now: Date { Date() } }"),
         ]
     )
     func boolIsTheCollapse(label: String, source: String) throws {

@@ -47,7 +47,7 @@ struct SelectionSubsetTemplateTests {
             hasUserGen: false,
             storedMembers: [StoredMember(name: "configs", typeName: "[DiscoveredConfig]")],
             hasUserInit: false
-            )
+            ),
         ]
     }
 

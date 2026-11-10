@@ -47,7 +47,7 @@ struct IdempotenceTemplateBucketIteratorTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
     }
 

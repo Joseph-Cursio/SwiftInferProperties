@@ -40,7 +40,7 @@ struct DocstringAdvisoryRendererTests {
         "    the templates could offer only a determinism tautology here (f(x) == f(x), which no wrong code "
             + "fails). Your docstring is the one refutable contract on this function:",
         "      \"\(doc)\"",
-        "    encode THAT sentence; it is the law the templates could not name."
+        "    encode THAT sentence; it is the law the templates could not name.",
     ]
 
     @Test func aDeclinedItemRendersOneLineInPlaceOfTheScaffold() {

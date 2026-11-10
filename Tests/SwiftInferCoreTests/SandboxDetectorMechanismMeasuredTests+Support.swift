@@ -26,7 +26,7 @@ extension SandboxDetectorMechanismMeasuredTests {
     /// possible demonstration that the scan reaches the files it claims to.
     static let selfDescribingFiles: Set<String> = [
         "SandboxDetectorMechanismMeasuredTests.swift",
-        "SandboxDetectorMechanismMeasuredTests+Support.swift"
+        "SandboxDetectorMechanismMeasuredTests+Support.swift",
     ]
 
     /// Occurrence counts for every needle plus the control, over `Sources/` and

@@ -41,7 +41,7 @@ struct ECMarkerExtractorMultiMarkerTests {
             (name: "testSuccess_c", body: "XCTAssertTrue(isOK(\"c\"))"),
             (name: "testFailure_a", body: "XCTAssertFalse(isOK(\"x\"))"),
             (name: "testFailure_b", body: "XCTAssertFalse(isOK(\"y\"))"),
-            (name: "testFailure_c", body: "XCTAssertFalse(isOK(\"z\"))")
+            (name: "testFailure_c", body: "XCTAssertFalse(isOK(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerTable.curatedPairs
@@ -93,7 +93,7 @@ struct ECMarkerExtractorMultiMarkerTests {
             (name: "testAllowed_c", body: "XCTAssertTrue(checkE(\"c\"))"),
             (name: "testForbidden_a", body: "XCTAssertFalse(checkE(\"x\"))"),
             (name: "testForbidden_b", body: "XCTAssertFalse(checkE(\"y\"))"),
-            (name: "testForbidden_c", body: "XCTAssertFalse(checkE(\"z\"))")
+            (name: "testForbidden_c", body: "XCTAssertFalse(checkE(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerTable.curatedPairs
@@ -131,7 +131,7 @@ struct ECMarkerExtractorMultiMarkerTests {
             (name: "testFailure_a", body: "XCTAssertFalse(isOK(\"u\"))"),
             (name: "testFailure_b", body: "XCTAssertFalse(isOK(\"v\"))"),
             (name: "testFailure_c", body: "XCTAssertFalse(isOK(\"w\"))"),
-            (name: "testFailure_d", body: "XCTAssertFalse(isOK(\"t\"))")
+            (name: "testFailure_d", body: "XCTAssertFalse(isOK(\"t\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerTable.curatedPairs
@@ -161,7 +161,7 @@ struct ECMarkerExtractorMultiMarkerTests {
             (name: "testPass_c", body: "XCTAssertTrue(isOK(\"r\"))"),
             (name: "testFail_a", body: "XCTAssertFalse(isOK(\"u\"))"),
             (name: "testFail_b", body: "XCTAssertFalse(isOK(\"v\"))"),
-            (name: "testFail_c", body: "XCTAssertFalse(isOK(\"w\"))")
+            (name: "testFail_c", body: "XCTAssertFalse(isOK(\"w\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerTable.curatedPairs
@@ -187,7 +187,7 @@ struct ECMarkerExtractorMultiMarkerTests {
             (name: "testSuccess_b3", body: "XCTAssertTrue(checkB(\"c\"))"),
             (name: "testFailure_b1", body: "XCTAssertFalse(checkB(\"x\"))"),
             (name: "testFailure_b2", body: "XCTAssertFalse(checkB(\"y\"))"),
-            (name: "testFailure_b3", body: "XCTAssertFalse(checkB(\"z\"))")
+            (name: "testFailure_b3", body: "XCTAssertFalse(checkB(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerTable.curatedPairs
@@ -215,7 +215,7 @@ struct ECMarkerExtractorMultiMarkerTests {
             (name: "testOpen_c", body: "XCTAssertTrue(isReady(\"c\"))"),
             (name: "testClosed_a", body: "XCTAssertFalse(isReady(\"x\"))"),
             (name: "testClosed_b", body: "XCTAssertFalse(isReady(\"y\"))"),
-            (name: "testClosed_c", body: "XCTAssertFalse(isReady(\"z\"))")
+            (name: "testClosed_c", body: "XCTAssertFalse(isReady(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: table
@@ -235,7 +235,7 @@ struct ECMarkerExtractorMultiMarkerTests {
             (name: "testValid_c", body: "XCTAssertTrue(isOK(\"c\"))"),
             (name: "testInvalid_a", body: "XCTAssertFalse(isOK(\"x\"))"),
             (name: "testInvalid_b", body: "XCTAssertFalse(isOK(\"y\"))"),
-            (name: "testInvalid_c", body: "XCTAssertFalse(isOK(\"z\"))")
+            (name: "testInvalid_c", body: "XCTAssertFalse(isOK(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerTable.curatedPairs

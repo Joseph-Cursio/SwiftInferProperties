@@ -20,14 +20,14 @@ struct OrderedCarrierDiscriminatorTests {
     static let bugWitnessConformances: [(String, Set<String>)] = [
         ("OrderedSet", ["RandomAccessCollection", "ExpressibleByArrayLiteral", "Equatable"]),
         ("Deque", ["MutableCollection", "RandomAccessCollection", "ExpressibleByArrayLiteral"]),
-        ("BitArray", ["MutableCollection", "RandomAccessCollection", "ExpressibleByArrayLiteral"])
+        ("BitArray", ["MutableCollection", "RandomAccessCollection", "ExpressibleByArrayLiteral"]),
     ]
 
     /// Three unordered carriers, each of which would take a false law without the veto.
     static let setAlgebraConformances: [(String, Set<String>)] = [
         ("Set", ["Collection", "Sequence", "SetAlgebra", "ExpressibleByArrayLiteral"]),
         ("BitSet", ["BidirectionalCollection", "SetAlgebra", "ExpressibleByArrayLiteral"]),
-        ("TreeSet", ["BidirectionalCollection", "SetAlgebra", "ExpressibleByArrayLiteral"])
+        ("TreeSet", ["BidirectionalCollection", "SetAlgebra", "ExpressibleByArrayLiteral"]),
     ]
 
     // MARK: - The three bug witnesses must survive
@@ -72,7 +72,7 @@ struct OrderedCarrierDiscriminatorTests {
     func treeDictionaryAbstains() {
         let verdict = OrderedCarrierDiscriminator.verdict(forConformances: [
             "BidirectionalCollection", "Collection", "Sequence",
-            "ExpressibleByDictionaryLiteral", "Equatable", "Hashable"
+            "ExpressibleByDictionaryLiteral", "Equatable", "Hashable",
         ])
         #expect(verdict == .abstain(.orderNotEstablished))
     }
@@ -99,7 +99,7 @@ struct OrderedCarrierDiscriminatorTests {
     func rangeAbstains() {
         let verdict = OrderedCarrierDiscriminator.verdict(forConformances: [
             "RandomAccessCollection", "BidirectionalCollection", "Collection",
-            "Equatable", "Hashable", "Sendable"
+            "Equatable", "Hashable", "Sendable",
         ])
         #expect(verdict == .abstain(.notElementDetermined))
     }
@@ -112,7 +112,7 @@ struct OrderedCarrierDiscriminatorTests {
     func stringAbstains() {
         let verdict = OrderedCarrierDiscriminator.verdict(forConformances: [
             "BidirectionalCollection", "RangeReplaceableCollection", "Comparable",
-            "ExpressibleByStringLiteral", "Equatable", "Hashable"
+            "ExpressibleByStringLiteral", "Equatable", "Hashable",
         ])
         #expect(verdict == .abstain(.notElementDetermined))
     }
@@ -146,7 +146,7 @@ struct OrderedCarrierDiscriminatorTests {
     func vetoOutranksSignal() {
         let verdict = OrderedCarrierDiscriminator.verdict(forConformances: [
             "SetAlgebra", "RandomAccessCollection", "MutableCollection",
-            "ExpressibleByArrayLiteral"
+            "ExpressibleByArrayLiteral",
         ])
         #expect(verdict == .unordered(veto: "SetAlgebra"))
     }
@@ -157,7 +157,7 @@ struct OrderedCarrierDiscriminatorTests {
     func reportedSignalIsDeterministic() {
         let conformances: Set<String> = [
             "RandomAccessCollection", "MutableCollection", "RangeReplaceableCollection",
-            "ExpressibleByArrayLiteral"
+            "ExpressibleByArrayLiteral",
         ]
         let verdicts = (0..<8).map { _ in
             OrderedCarrierDiscriminator.verdict(forConformances: conformances)

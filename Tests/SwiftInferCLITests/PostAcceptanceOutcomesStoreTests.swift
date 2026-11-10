@@ -66,7 +66,7 @@ struct PostAcceptanceOutcomesStoreTests {
                 originalAcceptedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 checkedAt: Date(timeIntervalSince1970: 1_700_001_000),
                 swiftInferVersion: "1.72.0"
-            )
+            ),
         ])
         try PostAcceptanceOutcomesStore.write(canonical, to: outcomesPath)
 
@@ -140,7 +140,7 @@ struct PostAcceptanceOutcomesStoreTests {
                 originalAcceptedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 checkedAt: Date(timeIntervalSince1970: 1_700_001_000),
                 swiftInferVersion: "1.72.0"
-            )
+            ),
         ])
         try PostAcceptanceOutcomesStore.write(log, to: outcomesPath)
         let raw = try String(contentsOf: outcomesPath, encoding: .utf8)

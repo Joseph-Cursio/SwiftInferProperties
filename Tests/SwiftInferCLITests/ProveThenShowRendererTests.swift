@@ -51,7 +51,7 @@ struct ProveThenShowRendererTests {
             record("Level", "associativity", "join(_:_:)", .measuredBothPass),
             disproven,
             unverifiable,
-            record("Flaky", "idempotence", "wobble()", .measuredError, detail: "build-failed")
+            record("Flaky", "idempotence", "wobble()", .measuredError, detail: "build-failed"),
         ]
         let out = ProveThenShowRenderer.render(records)
         #expect(out.contains("Prove-then-show — 5 pick(s) tested"))

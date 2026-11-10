@@ -103,7 +103,7 @@ public enum DualStyleConsistencyTemplate {
             evidence: { pair in
                 [
                     pair.mutatingMember.inferenceEvidence,
-                    pair.nonMutatingMember.inferenceEvidence
+                    pair.nonMutatingMember.inferenceEvidence,
                 ]
             },
             identity: Self.makeIdentity(for:),
@@ -120,7 +120,7 @@ public enum DualStyleConsistencyTemplate {
     ) -> [Signal] {
         var signals: [Signal] = [
             typeShapeSignal(for: pair),
-            namingPairSignal(for: pair)
+            namingPairSignal(for: pair),
         ]
         if let covered = assumedKitCoverage(
             for: pair, inheritedTypesByName: inheritedTypesByName
@@ -148,7 +148,7 @@ public enum DualStyleConsistencyTemplate {
                 + "counterpart of the mutating member — i.e. both implementations "
                 + "describe the same logical operation. A sibling pair with the "
                 + "matching name shape but divergent semantics will fail at "
-                + "sampling time."
+                + "sampling time.",
         ]
     }
 
@@ -234,7 +234,7 @@ public enum DualStyleConsistencyTemplate {
                 + "counterpart of the mutating member — i.e. both implementations "
                 + "describe the same logical operation. A sibling pair with the "
                 + "matching name shape but divergent semantics will fail at "
-                + "sampling time."
+                + "sampling time.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

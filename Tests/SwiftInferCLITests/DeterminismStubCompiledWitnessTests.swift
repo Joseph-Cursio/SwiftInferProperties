@@ -71,12 +71,12 @@ struct DeterminismStubCompiledWitnessTests {
         ("DeterminismWitnessColumns", "sortKey"),
         ("DeterminismWitnessColumns", "rowID"),
         ("DeterminismWitnessBank", "credit"),
-        ("DeterminismWitnessBank", "read")
+        ("DeterminismWitnessBank", "read"),
     ]
 
     @Test("the witness holds the stub accept writes", arguments: [
         ("DeterminismWitnessGauge", "scale"),
-        ("DeterminismWitnessPoint", "merge")
+        ("DeterminismWitnessPoint", "merge"),
     ] + misreadResults)
     func theWitnessHoldsTheAcceptWrittenStub(owner: String, name: String) throws {
         let witness = try Self.witnessText()

@@ -16,7 +16,7 @@ struct IdentityElementTemplateLiftedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "value", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -121,7 +121,7 @@ struct IdentityElementTemplateLiftedTests {
             in: [lifted()],
             identities: [
                 zeroIdentity(name: "zero"),
-                zeroIdentity(name: "empty")
+                zeroIdentity(name: "empty"),
             ]
         )
         #expect(pairs.count == 2)

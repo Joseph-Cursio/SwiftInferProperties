@@ -69,7 +69,7 @@ struct DomainTransferSignalExperimentTests {
     /// Transcribed from `fixtures/whole-corpus-survey/2026-08-05-whole-corpus.jsonl`.
     private static let refutedFunctions: Set<String> = [
         "codableRoundTripGenerator", "markovSynthesized",
-        "regressionFileHash", "seedString", "seedTuple"
+        "regressionFileHash", "seedString", "seedTuple",
     ]
 
     /// Bare names of the 42 rows that HELD. A veto firing on any of these is a
@@ -79,7 +79,7 @@ struct DomainTransferSignalExperimentTests {
         "boundingNumerics", "canonicalLawName", "dedupedByStateAndAction",
         "dualStyleTrailingArgument", "functionBaseName", "lastComponent", "merge",
         "moduleIdentifier", "normalisedTypeName", "prioritised", "quoted", "sortSuggestions",
-        "strippingGenericParameters", "stripGenerics", "trimmed", "unwrappingRepetition"
+        "strippingGenericParameters", "stripGenerics", "trimmed", "unwrappingRepetition",
     ]
 
     // MARK: - The candidate rule

@@ -82,7 +82,7 @@ struct RoundTripDirectionLabelCounterTests {
         "V1.12.1 — all curated direction labels suppress (forward-side)",
         arguments: [
             "after", "before", "next", "prev", "previous",
-            "advance", "succ", "pred", "successor", "predecessor"
+            "advance", "succ", "pred", "successor", "predecessor",
         ]
     )
     func allCuratedDirectionLabelsSuppressForwardSide(label: String) {
@@ -102,7 +102,7 @@ struct RoundTripDirectionLabelCounterTests {
         "V1.12.1 — direction label on reverse side alone also suppresses",
         arguments: [
             "after", "before", "next", "prev", "previous",
-            "advance", "succ", "pred", "successor", "predecessor"
+            "advance", "succ", "pred", "successor", "predecessor",
         ]
     )
     func directionLabelOnReverseSuppresses(label: String) {
@@ -312,7 +312,7 @@ struct RoundTripDirectionLabelCounterTests {
         let expected: Set<String> = [
             "after", "before",
             "next", "prev", "previous",
-            "advance", "succ", "pred", "successor", "predecessor"
+            "advance", "succ", "pred", "successor", "predecessor",
         ]
         #expect(DirectionLabels.curated == expected)
     }

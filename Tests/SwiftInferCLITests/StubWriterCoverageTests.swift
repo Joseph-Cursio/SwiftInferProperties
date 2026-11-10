@@ -60,7 +60,7 @@ struct StubWriterCoverageTests {
         "override-precedence": "1 row · 1 funnel decline",
         "multiplicative-homomorphism": "VERIFY · 0 rows at 20 corpora · 2 funnel declines",
         "selection-subset": "ENTAILED · 0 rows at 20 corpora · 1 funnel decline",
-        "diff-disjointness": "ENTAILED · 0 rows at 20 corpora or in the funnel — unwitnessed"
+        "diff-disjointness": "ENTAILED · 0 rows at 20 corpora or in the funnel — unwitnessed",
     ]
 
     @Test("every emitted template has a stub arm or is listed as having none")

@@ -85,7 +85,7 @@ struct TestLifterCounterSignalSeamTests {
             name: name,
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "[Int]", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "[Int]", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "[Int]", isInout: false),
             ],
             returnTypeText: "[Int]",
             isThrows: false,

@@ -58,7 +58,7 @@ enum StdlibAnchor {
         let carriers = [
             suggestion.carrier,
             suggestion.carrierTypeName,
-            suggestion.evidence.first.flatMap { firstParameterType(from: $0.signature) }
+            suggestion.evidence.first.flatMap { firstParameterType(from: $0.signature) },
         ].compactMap(\.self)
         var why: [String] = []
         var wrong: [String] = []

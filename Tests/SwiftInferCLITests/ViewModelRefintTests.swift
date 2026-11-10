@@ -108,7 +108,7 @@ struct ViewModelRefintTests {
                 predicate: "probe.selected.isSubset(of: Set(probe.items))",
                 drivers: [
                     .init(name: "selectAll", label: nil, valuesExpression: nil),
-                    .init(name: "toggle", label: nil, valuesExpression: "[0, 1, -1]")
+                    .init(name: "toggle", label: nil, valuesExpression: "[0, 1, -1]"),
                 ],
                 excludedActions: ["configure"]
             )

@@ -23,7 +23,7 @@ public enum DiffDisjointnessTemplate {
     public static let complementaryMarkers: [(String, String)] = [
         ("added", "removed"), ("insert", "delete"), ("insert", "remove"),
         ("addition", "removal"), ("onlyinfirst", "onlyinsecond"),
-        ("gained", "lost"), ("new", "old")
+        ("gained", "lost"), ("new", "old"),
     ]
 
     /// `DiffDisjointnessMatch` lives in Core rather than here (#477) — see
@@ -114,7 +114,7 @@ public enum DiffDisjointnessTemplate {
                 kind: .exactNameMatch,
                 weight: 15,
                 detail: "Curated diff verb match — the added and removed lists of a diff are disjoint"
-            )
+            ),
         ]
     }
 
@@ -139,7 +139,7 @@ public enum DiffDisjointnessTemplate {
                 + "owes by virtue of being a diff; the round-trip `apply(diff(a,b), a) == b` would need an "
                 + "`apply` that does not exist (and richer diff values).",
             "The element type must be Hashable for `Set` / `isDisjoint`; this tool does not verify "
-                + "conformance — confirm before applying."
+                + "conformance — confirm before applying.",
         ]
     }
 }

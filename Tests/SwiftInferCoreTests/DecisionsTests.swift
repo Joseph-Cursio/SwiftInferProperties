@@ -72,7 +72,7 @@ struct DecisionsTests {
             timestamp: Date(timeIntervalSince1970: 1_700_000_000),
             signalWeights: [
                 SignalSnapshot(kind: "exactNameMatch", weight: 40),
-                SignalSnapshot(kind: "typeSymmetrySignature", weight: 30)
+                SignalSnapshot(kind: "typeSymmetrySignature", weight: 30),
             ]
         )
         let original = Decisions(records: [record])

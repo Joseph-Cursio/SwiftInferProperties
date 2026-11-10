@@ -22,7 +22,7 @@ struct DiscoverInteractionUpdateBaselineTests {
         let parsed = try Command.parse([
             "--target", "MyApp",
             "--update-baseline",
-            "--dry-run"
+            "--dry-run",
         ])
         #expect(parsed.updateBaseline == true)
         #expect(parsed.dryRun == true)
@@ -46,7 +46,7 @@ struct DiscoverInteractionUpdateBaselineTests {
             makeSuggestion(tier: .verified, predicate: "state.b == 2"),
             makeSuggestion(tier: .likely, predicate: "state.c == 3"),
             makeSuggestion(tier: .possible, predicate: "state.d == 4"),
-            makeSuggestion(tier: .suppressed, predicate: "state.e == 5")
+            makeSuggestion(tier: .suppressed, predicate: "state.e == 5"),
         ]
         let output = UpdateBaselineRecordingOutput()
         try Command.runUpdateBaseline(
@@ -134,7 +134,7 @@ struct DiscoverInteractionUpdateBaselineTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = [
             makeSuggestion(tier: .possible, predicate: "state.a == 1"),
-            makeSuggestion(tier: .likely, predicate: "state.b == 2")
+            makeSuggestion(tier: .likely, predicate: "state.b == 2"),
         ]
         let output = UpdateBaselineRecordingOutput()
         try Command.runUpdateBaseline(

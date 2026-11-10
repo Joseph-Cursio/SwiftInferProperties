@@ -170,7 +170,7 @@ struct CommutativityTemplateTypePatternTests {
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Set", isInout: false),
                 Parameter(label: nil, internalName: "b", typeText: "Set", isInout: false),
-                Parameter(label: nil, internalName: "c", typeText: "Set", isInout: false)
+                Parameter(label: nil, internalName: "c", typeText: "Set", isInout: false),
             ],
             returnType: "Set"
         )
@@ -203,7 +203,7 @@ struct CommutativityTemplateTypePatternTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Set", isInout: true),
-                Parameter(label: nil, internalName: "b", typeText: "Set", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "Set", isInout: false),
             ],
             returnType: "Set"
         )

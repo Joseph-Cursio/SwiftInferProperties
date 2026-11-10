@@ -204,7 +204,7 @@ struct SeededPrivateFunctionTests {
                 rule: "Pure Function Property-Test Candidate",
                 kind: .restrictedFunction,
                 restriction: .enclosingType
-            )
+            ),
         ])
         let recording = DPRecordingOutput()
         let diagnostics = DPRecordingDiagnosticOutput()
@@ -248,7 +248,7 @@ struct SeededPrivateFunctionTests {
                 rule: "Pure Function Property-Test Candidate",
                 kind: .restrictedFunction,
                 restriction: .declaration
-            )
+            ),
         ])
         let recording = DPRecordingOutput()
         let diagnostics = DPRecordingDiagnosticOutput()

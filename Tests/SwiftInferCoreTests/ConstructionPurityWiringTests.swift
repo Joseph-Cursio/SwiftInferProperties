@@ -68,7 +68,7 @@ struct ConstructionPurityWiringTests {
     func siblingTargetConstructionRefutes() throws {
         let root = try Self.makePackage([
             "Sources/Model/Item.swift": Self.item,
-            "Sources/Lib/Make.swift": Self.make
+            "Sources/Lib/Make.swift": Self.make,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -89,7 +89,7 @@ struct ConstructionPurityWiringTests {
             public struct Stamp { public let id = UUID() }
             public func stamp() -> Stamp { Stamp() }
             """,
-            "Tests/LibTests/Item.swift": "struct Item { let id = UUID(); let title: String }"
+            "Tests/LibTests/Item.swift": "struct Item { let id = UUID(); let title: String }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let corpus = try FunctionScanner.scanCorpus(directory: root.appendingPathComponent("Sources/Lib"))
@@ -110,7 +110,7 @@ struct ConstructionPurityWiringTests {
                 for title in titles { appendRec(&recs, title) }
                 return recs.count
             }
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -136,7 +136,7 @@ struct ConstructionPurityWiringTests {
         "Sources/Two/A.swift": """
         struct Stamp { let id = UUID() }
         struct A { var value: Stamp }
-        """
+        """,
     ]
 
     @Test("the scan judges the very trees the facts were built from")
@@ -209,7 +209,7 @@ extension ConstructionPurityWiringTests {
         ("test/Parse/x.swift", false),
         ("validation-test/stdlib/x.swift", false),
         ("Sources/swift-test/x.swift", true),
-        ("Sources/A/README.md", false)
+        ("Sources/A/README.md", false),
     ])
     func universeRule(path: String, expected: Bool) {
         #expect(ConstructionUniverse.isProductionSource(relativePath: path) == expected)
@@ -220,7 +220,7 @@ extension ConstructionPurityWiringTests {
         let root = try Self.makePackage([
             "Sources/Lib/Big.swift": "public struct Big { public let title: String }",
             "Tests/Fixtures/X/Item.swift": "struct Item { let id = UUID() }",
-            "Tests/Fixtures/X/Make.swift": "func make() -> Item { Item() }"
+            "Tests/Fixtures/X/Make.swift": "func make() -> Item { Item() }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let fixture = root.appendingPathComponent("Tests/Fixtures/X")
@@ -235,7 +235,7 @@ extension ConstructionPurityWiringTests {
     func symlinkedTargetIsInUniverse() throws {
         let outside = try Self.makePackage([
             "Foo/Item.swift": "struct Item { let id = UUID() }",
-            "Foo/Make.swift": "func make() -> Item { Item() }"
+            "Foo/Make.swift": "func make() -> Item { Item() }",
         ], manifest: false)
         defer { try? FileManager.default.removeItem(at: outside) }
         let root = try Self.makePackage(["Sources/Other/Other.swift": "struct Other {}"])
@@ -305,7 +305,7 @@ extension ConstructionPurityWiringTests {
             func g(_ x: Any) -> Any { x }
             let deep = \(deep)
             """,
-            "Sources/Lib/Make.swift": "func make() -> Item { Item() }"
+            "Sources/Lib/Make.swift": "func make() -> Item { Item() }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -340,7 +340,7 @@ extension ConstructionPurityWiringTests {
         let root = try Self.makePackage([
             "Sources/A/Stamp.swift": stampA,
             "Sources/B/Stamp.swift": stampB,
-            "Sources/C/C.swift": "struct C { let id = UUID() }\nfunc makeC() -> C { C() }"
+            "Sources/C/C.swift": "struct C { let id = UUID() }\nfunc makeC() -> C { C() }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let sources = root.appendingPathComponent("Sources")

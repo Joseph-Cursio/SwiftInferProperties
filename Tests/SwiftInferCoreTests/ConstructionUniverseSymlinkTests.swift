@@ -54,7 +54,7 @@ struct ConstructionUniverseSymlinkTests {
     func symlinkedFileIsKeptAtItsSmallestSpelling() throws {
         let root = try Wiring.makePackage([
             "Sources/Zed/Item.swift": "struct Item { let id = UUID() }",
-            "Tests/Shared/Stamp.swift": "struct Stamp { let at = Date() }"
+            "Tests/Shared/Stamp.swift": "struct Stamp { let at = Date() }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         try Self.link("Sources/Lib/Alias.swift", in: root, to: "../Zed/Item.swift")
@@ -76,7 +76,7 @@ struct ConstructionUniverseSymlinkTests {
         let root = try Wiring.makePackage([
             "Demo/Package.swift": ConstructionUniverseNestedPackageTests.demoManifest,
             "Demo/Sources/Demo/Item.swift": Wiring.item,
-            "Sources/Lib/Make.swift": Wiring.make
+            "Sources/Lib/Make.swift": Wiring.make,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         try Self.link("Sources/Lib/Item.swift", in: root, to: "../../Demo/Sources/Demo/Item.swift")
@@ -122,7 +122,7 @@ struct ConstructionUniverseSymlinkTests {
     func linkIntoAnotherPackageIsJudgedWhereTheLinkIs() throws {
         let foreign = try Wiring.makePackage([
             "Sources/Lib/Make.swift": Wiring.make,
-            "Sources/Model/Item.swift": "public struct Item: Equatable { public let title: String }"
+            "Sources/Model/Item.swift": "public struct Item: Equatable { public let title: String }",
         ])
         defer { try? FileManager.default.removeItem(at: foreign) }
         let root = try Wiring.makePackage(["Sources/Model/Item.swift": Wiring.item])
@@ -146,7 +146,7 @@ struct ConstructionUniverseSymlinkTests {
     func linkFromOutsideEveryPackageFindsItsPackage() throws {
         let root = try Wiring.makePackage([
             "Sources/Model/Item.swift": Wiring.item,
-            "Sources/Lib/Make.swift": Wiring.make
+            "Sources/Lib/Make.swift": Wiring.make,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let elsewhere = try Wiring.makePackage([:], manifest: false)
@@ -199,7 +199,7 @@ extension ConstructionUniverseSymlinkTests {
             "Sources/a/Stamp.swift": "struct Stamp { let id = UUID() }",
             "Sources/F10/Mark.swift": "struct Mark { let at = Date() }",
             "Sources/F2/Mark.swift": "struct Mark { let id = UUID() }",
-            "Sources/Lib/Make.swift": "func makeStamp() -> Stamp { Stamp() }\nfunc makeMark() -> Mark { Mark() }"
+            "Sources/Lib/Make.swift": "func makeStamp() -> Stamp { Stamp() }\nfunc makeMark() -> Mark { Mark() }",
         ]
         let root = try Wiring.makePackage(files)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -207,7 +207,7 @@ extension ConstructionUniverseSymlinkTests {
         let purity = PackagePurity.forScan(of: lib)
         let expected = [
             "Sources/B/Stamp.swift", "Sources/F10/Mark.swift", "Sources/F2/Mark.swift",
-            "Sources/Lib/Make.swift", "Sources/a/Stamp.swift"
+            "Sources/Lib/Make.swift", "Sources/a/Stamp.swift",
         ]
         #expect(purity.universe == expected)
 
@@ -272,7 +272,7 @@ extension ConstructionUniverseSymlinkTests {
             "Sources/Model/Item.swift": Wiring.item,
             "Sources/Model/Stamp.swift": "struct Stamp { let at = Date() }",
             "Sources/FlaggedDir/InFlagged.swift": "struct InFlagged { let id = UUID() }",
-            "Sources/Model/.Dotted.swift": "struct Dotted { let id = UUID() }"
+            "Sources/Model/.Dotted.swift": "struct Dotted { let id = UUID() }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         try Self.link("Sources/Lib", in: root, to: outside.appendingPathComponent("Lib").path)
@@ -283,7 +283,7 @@ extension ConstructionUniverseSymlinkTests {
         let lib = root.appendingPathComponent("Sources/Lib")
         #expect(ConstructionUniverse.files(forScanOf: lib).map(\.relativePath) == [
             "Sources/FlaggedDir/InFlagged.swift", "Sources/Lib/Flagged.swift", "Sources/Lib/Make.swift",
-            "Sources/Model/Item.swift", "Sources/Model/Stamp.swift"
+            "Sources/Model/Item.swift", "Sources/Model/Stamp.swift",
         ], "a dot-prefixed name stays out; a flagged one does not")
     }
 }

@@ -195,7 +195,7 @@ struct IndexStoreTests {
         #expect(result.entries.count == 2)
         #expect(result.entries.map(\.identityHash) == [
             "0x0000000000000001",
-            "0x0000000000000002"
+            "0x0000000000000002",
         ])
         #expect(result.updatedAt == "2026-05-11T12:00:00Z")
     }

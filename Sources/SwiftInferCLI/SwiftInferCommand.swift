@@ -50,7 +50,7 @@ public struct SwiftInferCommand: AsyncParsableCommand {
             AcceptInteraction.self,
             AcceptCheckInteraction.self,
             MetricsInteraction.self,
-            AcceptBridge.self
+            AcceptBridge.self,
         ],
         defaultSubcommand: Discover.self
     )

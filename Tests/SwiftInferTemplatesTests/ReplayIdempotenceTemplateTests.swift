@@ -94,7 +94,7 @@ struct ReplayIdempotenceTemplateTests {
             parameters: [
                 Parameter(label: "album", internalName: "album", typeText: "Album", isInout: false),
                 keyParam(),
-                Parameter(label: "in", internalName: "container", typeText: "ModelContainer", isInout: false)
+                Parameter(label: "in", internalName: "container", typeText: "ModelContainer", isInout: false),
             ],
             returnType: "OfflineAlbum",
             declaredEffect: .externallyIdempotent(keyParameter: "idempotencyKey")
@@ -113,7 +113,7 @@ struct ReplayIdempotenceTemplateTests {
             name: "chargeCard",
             parameters: [
                 Parameter(label: "amount", internalName: "amount", typeText: "Int", isInout: false),
-                keyParam()
+                keyParam(),
             ],
             returnType: nil
         )

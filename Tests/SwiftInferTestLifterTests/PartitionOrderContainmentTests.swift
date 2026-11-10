@@ -68,7 +68,7 @@ struct PartitionOrderContainmentTests {
             nClass("alpha", set: "sizes"),
             nClass("alpha", set: "colours"),
             nClass("beta", set: "sizes"),
-            nClass("gamma", set: "shapes")
+            nClass("gamma", set: "shapes"),
         ]
     }
 

@@ -91,7 +91,7 @@ struct ReferentialIntegrityWitnessDetectorTests {
         })
         #expect(pairs == [
             "selectedItemID→items",
-            "selectedUserID→users"
+            "selectedUserID→users",
         ])
     }
 

@@ -69,24 +69,24 @@ struct ReportRendererTests {
             entries: [
                 algebraic("commutativity", tier: "Verified"),
                 algebraic("commutativity", tier: "Likely"),
-                algebraic("round-trip", tier: "Strong")
+                algebraic("round-trip", tier: "Strong"),
             ],
             interactionEntries: [
                 interaction("idempotence", tier: "Likely"),
                 interaction("idempotence", tier: "Possible"),
-                interaction("cardinality", tier: "Possible")
+                interaction("cardinality", tier: "Possible"),
             ]
         )
         let log = VerifyEvidenceLog(records: [
             evidence(.measuredBothPass),
             evidence(.measuredDefaultFails),
-            evidence(.architecturalCoveragePending)
+            evidence(.architecturalCoveragePending),
         ])
         let groups = [
             InsightsGroup(structure: "commutative monoid", members: [
                 InsightsMember(typeName: "Config", operationName: "merge(_:_:)", tier: "Strong", conforms: false),
-                InsightsMember(typeName: "EventLog", operationName: "+(_:_:)", tier: "Strong", conforms: false)
-            ])
+                InsightsMember(typeName: "EventLog", operationName: "+(_:_:)", tier: "Strong", conforms: false),
+            ]),
         ]
         let out = ReportRenderer.render(index: index, evidence: log, insights: groups)
 

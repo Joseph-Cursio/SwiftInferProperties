@@ -53,7 +53,7 @@ struct EffectVocabularyContractTests {
             ("@Idempotent", Effect.idempotent),
             ("@NonIdempotent", Effect.nonIdempotent),
             ("@Observational", Effect.observational),
-            ("@Pure", Effect.pure)
+            ("@Pure", Effect.pure),
         ]
     )
     func attributeSpellingReachesTheEffect(spelling: String, expected: Effect) {
@@ -98,7 +98,7 @@ struct EffectVocabularyContractTests {
             ("idempotent", Effect.idempotent),
             ("non_idempotent", Effect.nonIdempotent),
             ("observational", Effect.observational),
-            ("pure", Effect.pure)
+            ("pure", Effect.pure),
         ]
     )
     func docCommentSpellingReachesTheEffect(token: String, expected: Effect) {

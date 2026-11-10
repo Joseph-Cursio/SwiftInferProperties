@@ -130,7 +130,7 @@ struct ViewModelDiscovererTests {
         // Labelled multi-arg: both labels + types preserved, in order.
         #expect(rename?.parameters == [
             ViewModelActionParameter(label: "id", typeText: "UUID"),
-            ViewModelActionParameter(label: "to", typeText: "String")
+            ViewModelActionParameter(label: "to", typeText: "String"),
         ])
 
         let addTag = viewModel.actions.first { $0.name == "addTag" }

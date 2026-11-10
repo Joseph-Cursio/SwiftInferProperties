@@ -139,7 +139,7 @@ public enum CallExpressionShape: Equatable, Sendable {
     private static let operatorCharacters: Set<Character> = [
         "+", "-", "*", "/", "%",
         "<", ">", "=", "!",
-        "&", "|", "^", "~", "?"
+        "&", "|", "^", "~", "?",
     ]
 
     /// Returns `true` if `name` is non-empty and every character is in

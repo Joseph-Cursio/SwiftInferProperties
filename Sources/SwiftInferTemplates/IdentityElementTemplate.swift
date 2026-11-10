@@ -120,7 +120,7 @@ public enum IdentityElementTemplate {
             evidence: { pair in
                 [
                     Self.makeEvidence(operation: pair.operation),
-                    Self.makeEvidence(identity: pair.identity)
+                    Self.makeEvidence(identity: pair.identity),
                 ]
             },
             identity: Self.makeIdentity(for:),
@@ -366,7 +366,7 @@ extension IdentityElementTemplate {
             "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
             "The identity property is two-sided: f(t, e) == t AND f(e, t) == t. "
                 + "A one-sided identity (e.g. left-identity only) will pass the type pattern but "
-                + "fail one of the emitted assertions under M4 sampling."
+                + "fail one of the emitted assertions under M4 sampling.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

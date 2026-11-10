@@ -30,7 +30,7 @@ final class BodySignalVisitor: SyntaxVisitor {
     /// (or a same-state update) on a repeat.
     static let idempotentWriteVerbs: Set<String> = [
         "upsert", "firstOrCreate", "getOrCreate", "findOrCreate",
-        "updateOrCreate", "insertOrUpdate", "createIfNotExists"
+        "updateOrCreate", "insertOrUpdate", "createIfNotExists",
     ]
 
     init(funcName: String) {
@@ -166,7 +166,7 @@ private enum NonDeterministicAPIs {
         "arc4random_uniform",
         "drand48",
         "rand",
-        "random"
+        "random",
     ]
 
     /// Callee texts ending in `.random` or `.random(in:)` cover the
@@ -174,7 +174,7 @@ private enum NonDeterministicAPIs {
     /// without enumerating every numeric type.
     private static let suffixMatches: [String] = [
         ".random",
-        ".random(in:)"
+        ".random(in:)",
     ]
 
     static func matches(_ calleeText: String) -> Bool {

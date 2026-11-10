@@ -168,7 +168,7 @@ struct DomainInferrerTests {
         let sites: [DomainCallSite] = [
             DomainCallSite(argument: .callOutput(producerName: "encode")),
             DomainCallSite(argument: .callOutput(producerName: "encode")),
-            DomainCallSite(argument: .identifier(name: "x"))
+            DomainCallSite(argument: .identifier(name: "x")),
         ]
         let hint = try #require(DomainInferrer.infer(
             pair: Self.pair,
@@ -188,7 +188,7 @@ struct DomainInferrerTests {
             sites: Self.identifierSites(3, name: "x"),
             setupBindings: [
                 "x": .identifier(name: "y"),
-                "y": .callOutput(producerName: "encode")
+                "y": .callOutput(producerName: "encode"),
             ],
             producerArgGeneratable: true
         ))
@@ -203,7 +203,7 @@ struct DomainInferrerTests {
             sites: Self.identifierSites(3, name: "x"),
             setupBindings: [
                 "x": .identifier(name: "y"),
-                "y": .identifier(name: "x")
+                "y": .identifier(name: "x"),
             ],
             producerArgGeneratable: true
         )

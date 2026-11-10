@@ -52,7 +52,7 @@ struct RefactorBridgeOrchestratorTests {
             makeRBSuggestion(template: "idempotence", typeName: "String"),
             makeRBSuggestion(template: "round-trip", typeName: "MyType"),
             makeRBSuggestion(template: "monotonicity", typeName: "Widget"),
-            makeRBSuggestion(template: "invariant-preservation", typeName: "Widget")
+            makeRBSuggestion(template: "invariant-preservation", typeName: "Widget"),
         ]
         let proposals = RefactorBridgeOrchestrator.proposals(from: suggestions)
         #expect(proposals.isEmpty)
@@ -214,7 +214,7 @@ func makeRBInversePair(
         name: opName,
         parameters: [
             Parameter(label: nil, internalName: "lhs", typeText: typeName, isInout: false),
-            Parameter(label: nil, internalName: "rhs", typeText: typeName, isInout: false)
+            Parameter(label: nil, internalName: "rhs", typeText: typeName, isInout: false),
         ],
         returnTypeText: typeName,
         isThrows: false,

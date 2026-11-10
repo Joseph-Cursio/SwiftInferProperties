@@ -52,7 +52,7 @@ struct IdempotenceSurveyCorpusTests {
             "reduce .refresh",
             // ReSwift-style free function `(Action, State?) -> State`
             // (the .reSwift carrier; reversed-arg verify emit)
-            "reSwiftCounterReducer .reset"
+            "reSwiftCounterReducer .reset",
         ]
         #expect(found == expected)
 

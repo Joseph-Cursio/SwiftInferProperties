@@ -282,7 +282,7 @@ public enum SuggestionRenderer {
                 + "one-shot suffix strip applied twice removes two suffixes); a `(T, T) -> T` need "
                 + "not commute (subtraction, division, concatenation). Confirm the claim is meant "
                 + "to hold before encoding it — and if it is not, that is a finding about the "
-                + "function, not a reason to skip the property."
+                + "function, not a reason to skip the property.",
         ]
     }
 

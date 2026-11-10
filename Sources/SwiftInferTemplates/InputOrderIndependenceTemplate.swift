@@ -113,7 +113,7 @@ public enum InputOrderIndependenceTemplate {
                 kind: .typeSymmetrySignature,
                 weight: 40,
                 detail: "the body sorts a dictionary's entries: \(subject) holds its key in `\(key)`; \(reach)"
-            )
+            ),
         ]
     }
 
@@ -127,7 +127,7 @@ public enum InputOrderIndependenceTemplate {
                 + "the key, and the order with it, as intended.",
             "A FAILURE NEEDS TWO ELEMENTS THE COMPARATOR CALLS TIED, so a generator that rarely "
                 + "draws equal sort keys rarely fails. Narrow the alphabet of whatever the sort keys "
-                + "are counted or summed from."
+                + "are counted or summed from.",
         ]
         if summary.bodySignals.sortedOutput?.comparatorReachesDictionaryKey == true {
             caveats.insert(

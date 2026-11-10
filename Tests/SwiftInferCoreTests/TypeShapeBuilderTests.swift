@@ -60,7 +60,7 @@ struct TypeShapeBuilderTests {
             decl("S", .struct),
             decl("C", .class),
             decl("E", .enum),
-            decl("A", .actor)
+            decl("A", .actor),
         ]
         let shapes = TypeShapeBuilder.shapes(from: decls)
         // shapes() sorts by name; ascending: A, C, E, S.

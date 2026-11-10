@@ -44,7 +44,7 @@ public enum UnknownActionIsNoOpInteractionTemplate: InteractionTemplateFamily {
                 + "'\(candidate.actionTypeName)' \(alphabetEvidence(candidate.actionTypeKind)) — "
                 + "an unrecognised action should hit the default branch and leave State unchanged.",
             "Reducer-shaped signature (\(candidate.signatureShape.rawValue)); "
-                + "static purity label: \(candidate.purity.rawValue)."
+                + "static purity label: \(candidate.purity.rawValue).",
         ]
     }
 
@@ -57,7 +57,7 @@ public enum UnknownActionIsNoOpInteractionTemplate: InteractionTemplateFamily {
             "Requires State: Equatable and a zero-argument State initialiser; an unsupported "
                 + "shape / non-constructible State reports architectural-coverage-pending rather "
                 + "than a pass/fail. Open alphabets have no generatable actions, so only the "
-                + "initial state is exercised (the action sequence is empty)."
+                + "initial state is exercised (the action sequence is empty).",
         ]
         switch witness.actionTypeKind {
         case .unresolved:

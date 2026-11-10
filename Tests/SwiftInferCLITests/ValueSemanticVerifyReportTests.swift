@@ -30,7 +30,7 @@ struct ValueSemanticVerifyReportTests {
                 result("SafeStore", .verifiedSafe),
                 result("LeakyStore", .confirmedLeak(repro: "LeakyStore leaks: copy, then addOne")),
                 result("Inventory", .notVerifiable(reason: "not Equatable")),
-                result("Broken", .buildFailed(detail: "error: no such module"))
+                result("Broken", .buildFailed(detail: "error: no such module")),
             ],
             moduleName: "MyKit"
         )
@@ -53,7 +53,7 @@ struct ValueSemanticVerifyReportTests {
         let out = ValueSemanticVerifyReport.render(
             results: [
                 result("A", .verifiedSafe),
-                result("B", .verifiedSafe)
+                result("B", .verifiedSafe),
             ],
             moduleName: "M"
         )
@@ -66,7 +66,7 @@ struct ValueSemanticVerifyReportTests {
         let out = ValueSemanticVerifyReport.render(
             results: [
                 result("Zebra", line: 9, .verifiedSafe),
-                result("Apple", line: 3, .verifiedSafe)
+                result("Apple", line: 3, .verifiedSafe),
             ],
             moduleName: "M"
         )
@@ -79,7 +79,7 @@ struct ValueSemanticVerifyReportTests {
         #expect(ValueSemanticVerifyReport.leaksFound(in: [result("A", .verifiedSafe)]) == false)
         #expect(ValueSemanticVerifyReport.leaksFound(in: [
             result("A", .verifiedSafe),
-            result("B", .confirmedLeak(repro: "x"))
+            result("B", .confirmedLeak(repro: "x")),
         ]))
     }
 }

@@ -19,7 +19,7 @@ extension UnequatableResultGate {
         "dynamicMemberLookup", "dynamicCallable", "propertyWrapper", "resultBuilder", "globalActor",
         "MainActor", "preconcurrency", "main", "requires_stored_property_inits", "unchecked",
         "_spi", "_fixed_layout", "_documentation", "_nonSendable", "_originallyDefinedIn", "_marker",
-        "_typeEraser", "IBDesignable", "NSApplicationMain", "UIApplicationMain", "Observable", "Suite"
+        "_typeEraser", "IBDesignable", "NSApplicationMain", "UIApplicationMain", "Observable", "Suite",
     ]
 
     /// Every name the scan saw get `==` without an inheritance clause, for `declineReason`'s

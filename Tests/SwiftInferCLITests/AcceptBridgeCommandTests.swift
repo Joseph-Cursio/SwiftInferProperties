@@ -128,7 +128,7 @@ struct AcceptBridgeCommandTests {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
             makePeer(family: .biconditional, predicate: "p2"),
-            makePeer(family: .conservation, predicate: "p3")
+            makePeer(family: .conservation, predicate: "p3"),
         ])
         let result = try Command.resolveScope(bridge: bridge, peerIndex: nil)
         #expect(result.count == 3)
@@ -137,7 +137,7 @@ struct AcceptBridgeCommandTests {
     @Test func resolveScopeValidPeerReturnsThatPeersInvariants() throws {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let result = try Command.resolveScope(bridge: bridge, peerIndex: 2)
         #expect(result.count == 1)
@@ -200,7 +200,7 @@ struct AcceptBridgeCommandTests {
             "--identity", "ABCD1234567890EF",
             "--decision", "accepted-as-conformance",
             "--peer", "2",
-            "--decisions", "/tmp/foo.json"
+            "--decisions", "/tmp/foo.json",
         ])
         #expect(parsed.target == "MyApp")
         #expect(parsed.identity == "ABCD1234567890EF")

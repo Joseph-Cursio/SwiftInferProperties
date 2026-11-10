@@ -33,7 +33,7 @@ struct MetricsRendererTests {
         let decisions = Decisions(records: [
             Self.record(identityHash: "AA", template: "round-trip", decision: .accepted),
             Self.record(identityHash: "BB", template: "round-trip", decision: .rejected),
-            Self.record(identityHash: "CC", template: "round-trip", decision: .skipped)
+            Self.record(identityHash: "CC", template: "round-trip", decision: .skipped),
         ])
         let rows = MetricsRenderer.templateRows(from: decisions)
         #expect(rows.count == 1)
@@ -48,7 +48,7 @@ struct MetricsRendererTests {
     func acceptedAsConformanceCountsAsAccepted() {
         let decisions = Decisions(records: [
             Self.record(identityHash: "AA", template: "round-trip", decision: .accepted),
-            Self.record(identityHash: "BB", template: "round-trip", decision: .acceptedAsConformance)
+            Self.record(identityHash: "BB", template: "round-trip", decision: .acceptedAsConformance),
         ])
         let rows = MetricsRenderer.templateRows(from: decisions)
         #expect(rows.count == 1)
@@ -133,7 +133,7 @@ struct MetricsRendererTests {
             Self.record(identityHash: "AA", template: "round-trip", decision: .accepted, tier: .strong),
             Self.record(identityHash: "BB", template: "round-trip", decision: .rejected, tier: .strong),
             Self.record(identityHash: "CC", template: "idempotence", decision: .accepted, tier: .likely),
-            Self.record(identityHash: "DD", template: "equivalence-class", decision: .skipped, tier: .advisory)
+            Self.record(identityHash: "DD", template: "equivalence-class", decision: .skipped, tier: .advisory),
         ])
         let rows = MetricsRenderer.tierRows(from: decisions)
         #expect(rows.count == 3)
@@ -153,7 +153,7 @@ struct MetricsRendererTests {
     func renderEndToEnd() {
         let decisions = Decisions(records: [
             Self.record(identityHash: "AA", template: "round-trip", decision: .accepted, tier: .strong),
-            Self.record(identityHash: "BB", template: "idempotence", decision: .rejected, tier: .likely)
+            Self.record(identityHash: "BB", template: "idempotence", decision: .rejected, tier: .likely),
         ])
         let output = MetricsRenderer.render(
             decisions: decisions,
@@ -280,7 +280,7 @@ struct MetricsExplicitDecisionsEvidenceTests {
                     tier: .strong,
                     decision: decision,
                     timestamp: Date(timeIntervalSince1970: 0)
-                )
+                ),
             ]),
             to: decisionsPath
         )
@@ -294,7 +294,7 @@ struct MetricsExplicitDecisionsEvidenceTests {
                         detail: nil,
                         capturedAt: Date(timeIntervalSince1970: 0),
                         swiftInferVersion: "test"
-                    )
+                    ),
                 ]),
                 to: directory.appendingPathComponent("verify-evidence.json")
             )

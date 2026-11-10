@@ -54,7 +54,7 @@ extension InversePairTemplate {
             evidence: { pair in
                 [
                     Self.makeLiftedEvidence(pair.forward, role: "forward"),
-                    Self.makeLiftedEvidence(pair.reverse, role: "reverse")
+                    Self.makeLiftedEvidence(pair.reverse, role: "reverse"),
                 ]
             },
             identity: Self.makeLiftedIdentity(for:),
@@ -71,7 +71,7 @@ extension InversePairTemplate {
     ) -> [Signal] {
         var signals: [Signal] = [
             liftedTypeShapeSignal(for: pair),
-            liftedNamingSignal(for: pair)
+            liftedNamingSignal(for: pair),
         ]
         if let carrier = carrierKindResolver.carrierKindSignal(
             forContainingTypeName: pair.forward.carrier
@@ -98,7 +98,7 @@ extension InversePairTemplate {
                 + "may fail at sampling time.",
             "Property holds iff `\(pair.forward.carrier)` has value semantics "
                 + "— the lift's `var copy = original; copy.<add>(...)` does "
-                + "not alias original's state."
+                + "not alias original's state.",
         ]
     }
 
@@ -198,7 +198,7 @@ extension InversePairTemplate {
                 + "may fail at sampling time.",
             "Property holds iff `\(pair.forward.carrier)` has value semantics "
                 + "— the lift's `var copy = original; copy.<add>(...)` does "
-                + "not alias original's state."
+                + "not alias original's state.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

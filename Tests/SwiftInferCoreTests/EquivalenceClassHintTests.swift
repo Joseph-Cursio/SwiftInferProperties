@@ -56,7 +56,7 @@ struct EquivalenceClassHintTests {
             Self.sampleHint(predicateVeto: .predicateThrows),
             Self.sampleHint(predicateVeto: .predicateAsync),
             Self.sampleHint(predicateVeto: .predicateMultiArg),
-            Self.sampleHint(predicateVeto: .predicateArgNotGeneratable)
+            Self.sampleHint(predicateVeto: .predicateArgNotGeneratable),
         ]
         let encoder = JSONEncoder()
         let decoder = JSONDecoder()

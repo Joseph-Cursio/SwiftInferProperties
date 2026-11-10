@@ -17,7 +17,7 @@ extension ReferenceOracleCalleeEmitterTests {
             "Dictionary<String, Int>": "Dictionary_String_Int_totalWeight_matchesReferenceDefinition",
             "[String: Int?]": "String_Int_totalWeight_matchesReferenceDefinition",
             "NS.Outer": "NS_Outer_totalWeight_matchesReferenceDefinition",
-            "Scip_Occurrence": "Scip_Occurrence_totalWeight_matchesReferenceDefinition"
+            "Scip_Occurrence": "Scip_Occurrence_totalWeight_matchesReferenceDefinition",
         ]
         for (owner, name) in expected {
             let scaffold = Self.emit(

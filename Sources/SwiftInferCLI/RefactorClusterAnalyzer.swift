@@ -175,7 +175,7 @@ public enum RefactorClusterAnalyzer {
                 count: perTemplateCounts["dual-style-consistency"] ?? 0,
                 tieBreakerIndex: 1
             ),
-            Candidate(shape: .roundTripCluster, count: perTemplateCounts["round-trip"] ?? 0, tieBreakerIndex: 2)
+            Candidate(shape: .roundTripCluster, count: perTemplateCounts["round-trip"] ?? 0, tieBreakerIndex: 2),
         ]
         let firing = candidates.filter { $0.count >= 3 }
         if let winner = firing.max(by: byCountThenTieBreakerIndexDescending) {

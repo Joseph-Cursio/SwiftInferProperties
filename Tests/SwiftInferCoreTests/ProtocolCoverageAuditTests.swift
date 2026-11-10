@@ -14,7 +14,7 @@ struct ProtocolCoverageAuditTests {
     private let userTypes: [String: Set<String>] = [
         "Money": ["Equatable", "AdditiveArithmetic"],
         "Tag": ["Equatable"],
-        "Plain": ["Sendable"]          // no coverage-bearing conformance
+        "Plain": ["Sendable"],          // no coverage-bearing conformance
     ]
 
     private func log(_ types: [String]) -> KitEvidenceLog {

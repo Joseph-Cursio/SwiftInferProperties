@@ -33,7 +33,7 @@ struct TemplateRegistryDiscoveryTests {
             name: "tickle",
             parameters: [
                 Parameter(label: "from", internalName: "src", typeText: "Int", isInout: false),
-                Parameter(label: "to", internalName: "dst", typeText: "String", isInout: false)
+                Parameter(label: "to", internalName: "dst", typeText: "String", isInout: false),
             ],
             returnTypeText: "Bool",
             isThrows: false,
@@ -124,7 +124,7 @@ struct TemplateRegistryDiscoveryTests {
             name: "combine",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false),
             ],
             returnTypeText: "Int",
             isThrows: false,
@@ -231,7 +231,7 @@ struct TemplateRegistryDiscoveryTests {
             "normal-form",
             "round-trip",
             "input-totality",
-            "idempotence"
+            "idempotence",
         ])
     }
 }

@@ -69,7 +69,7 @@ struct DependencyTypeShapeTests {
     func dependencyCollisionRecordsNeither() throws {
         let root = try Self.makeCheckouts([
             "DepA": "public struct Mutex { public let a: Int }\n",
-            "DepB": "public struct Mutex { public let b: String }\n"
+            "DepB": "public struct Mutex { public let b: String }\n",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -84,7 +84,7 @@ struct DependencyTypeShapeTests {
     func collisionIsScopedToTheName() throws {
         let root = try Self.makeCheckouts([
             "DepA": "public struct Mutex { public let a: Int }\npublic struct OnlyA { public let x: Int }\n",
-            "DepB": "public struct Mutex { public let b: String }\npublic struct OnlyB { public let y: Int }\n"
+            "DepB": "public struct Mutex { public let b: String }\npublic struct OnlyB { public let y: Int }\n",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 

@@ -55,7 +55,7 @@ struct CorroborationRuleTests {
     func negativeSignalsDoNotCorroborate() {
         let withPenalty = Score(signals: [
             Signal(kind: .exactNameMatch, weight: 50, detail: "name"),
-            Signal(kind: .crossTypeRoundTripPair, weight: -25, detail: "counter")
+            Signal(kind: .crossTypeRoundTripPair, weight: -25, detail: "counter"),
         ])
         #expect(CorroborationRule.positiveChannelCount(withPenalty) == 1)
         #expect(!CorroborationRule.isCorroborated(withPenalty))
@@ -65,7 +65,7 @@ struct CorroborationRuleTests {
     func zeroWeightIsNotAChannel() {
         let padded = Score(signals: [
             Signal(kind: .exactNameMatch, weight: 40, detail: "name"),
-            Signal(kind: .samplingPass, weight: 0, detail: "informational")
+            Signal(kind: .samplingPass, weight: 0, detail: "informational"),
         ])
         #expect(!CorroborationRule.isCorroborated(padded))
     }

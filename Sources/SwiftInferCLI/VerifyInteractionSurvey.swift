@@ -265,7 +265,7 @@ enum VerifyInteractionSurvey {
         var lines = [
             header,
             "  Identities: \(entries.count)\(familyNote(family))",
-            ""
+            "",
         ]
         for entry in entries {
             lines.append(line(for: entry))

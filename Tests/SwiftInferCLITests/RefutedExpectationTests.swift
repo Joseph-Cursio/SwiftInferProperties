@@ -112,7 +112,7 @@ struct RefutedExpectationTests {
                 Self.record(
                     hash: "0xB2", template: "commutativity", carrier: "PathSegment",
                     outcome: .measuredDefaultFails, counterexample: "(\"a\",\"b\")"
-                )
+                ),
             ],
             tiers: ["0xA1": .likely, "0xB2": .likely]
         )
@@ -140,7 +140,7 @@ struct RefutedExpectationTests {
                 Self.record(
                     hash: "0xA1", template: "commutativity", carrier: "PathSegment",
                     outcome: .measuredDefaultFails, counterexample: "(\"a\",\"b\")"
-                )
+                ),
             ],
             tiers: ["0xA1": .likely]
         )
@@ -167,7 +167,7 @@ struct RefutedExpectationTests {
                 Self.record(
                     hash: "0xC3", template: "idempotence", carrier: "SumSummary",
                     outcome: .measuredDefaultFails, counterexample: "x"
-                )
+                ),
             ],
             tiers: ["0xC3": .possible]
         )
@@ -183,7 +183,7 @@ struct RefutedExpectationTests {
             Self.record(
                 hash: "0xD4", template: "commutativity", carrier: "Decisions",
                 outcome: .measuredDefaultFails, counterexample: "x"
-            )
+            ),
         ])
         #expect(!rendered.contains("EXPECTED TO HOLD"))
         #expect(rendered.contains("DISPROVEN"))
@@ -198,7 +198,7 @@ struct RefutedExpectationTests {
                 hash: "0x2", template: "round-trip", carrier: "B",
                 outcome: .architecturalCoveragePending
             ),
-            Self.record(hash: "0x3", template: "predicate", carrier: "C", outcome: .measuredError)
+            Self.record(hash: "0x3", template: "predicate", carrier: "C", outcome: .measuredError),
         ])
         #expect(rendered.contains("PROVEN"))
         #expect(rendered.contains("UNVERIFIABLE"))

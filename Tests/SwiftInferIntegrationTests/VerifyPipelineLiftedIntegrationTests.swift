@@ -140,7 +140,7 @@ struct VerifyPipelineLiftedIntegrationTests {
             hasUserGen: false,
             storedMembers: [
                 IndexedTypeShape.StoredMember(name: "x", typeName: "Int"),
-                IndexedTypeShape.StoredMember(name: "y", typeName: "Int")
+                IndexedTypeShape.StoredMember(name: "y", typeName: "Int"),
             ],
             hasUserInit: false
         )
@@ -196,7 +196,7 @@ struct VerifyPipelineLiftedIntegrationTests {
                 template: "round-trip",
                 functionCalls: [
                     "{ (x: Int) in x + 100 }",
-                    "{ (x: Int) in x - 100 }"
+                    "{ (x: Int) in x - 100 }",
                 ],
                 extraImports: [],
                 seedHex: VerifyPipelineIntegrationFixture.canonicalSeed,

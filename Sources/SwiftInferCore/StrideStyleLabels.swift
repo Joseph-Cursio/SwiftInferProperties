@@ -40,6 +40,6 @@ public enum StrideStyleLabels {
         "toIndex",
         "startingFrom",
         "from",
-        "to"
+        "to",
     ]
 }

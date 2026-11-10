@@ -94,7 +94,7 @@ public enum RolePostconditionTemplate {
                 weight: 20,
                 detail: "Postcondition shape: the law is asserted of the RESULT, and the "
                     + "predicate is supplied by the catalogue rather than read from the subject"
-            )
+            ),
         ]
     }
 
@@ -108,7 +108,7 @@ public enum RolePostconditionTemplate {
                 + "supplies, or an `escaped` using a private escaping scheme, still owes its "
                 + "guarantee — but a function borrowing the verb for something else does not. "
                 + "This is the one failure mode measured on real corpora: `trimmed(matching:)` "
-                + "trims trivia a caller selects, and is excluded by parameter shape for that reason."
+                + "trims trivia a caller selects, and is excluded by parameter shape for that reason.",
         ]
         if !role.isStrong {
             caveats.append(

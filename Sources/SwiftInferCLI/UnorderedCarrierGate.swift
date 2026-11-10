@@ -37,7 +37,7 @@ enum UnorderedCarrierGate {
     static let comparableRefiners: Set<String> = [
         "Comparable", "Strideable",
         "BinaryInteger", "FixedWidthInteger", "SignedInteger", "UnsignedInteger",
-        "FloatingPoint", "BinaryFloatingPoint", "StringProtocol", "Real"
+        "FloatingPoint", "BinaryFloatingPoint", "StringProtocol", "Real",
     ]
 
     /// Why no `monotonicity` stub can be written, or `nil` when the carrier may be ordered.

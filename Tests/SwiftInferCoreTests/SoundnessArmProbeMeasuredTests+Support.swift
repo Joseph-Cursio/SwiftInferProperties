@@ -135,7 +135,7 @@ extension SoundnessArmProbeMeasuredTests {
         (file: "DrainedProcess.swift", name: "standardOutputViaEnv"),
         (file: "KitEvidenceStore.swift", name: "load"),
         (file: "MetricsInteractionCommand.swift", name: "loadDecisions"),
-        (file: "SpeculativeRefactorRunner+Machinery.swift", name: "scanRestricted")
+        (file: "SpeculativeRefactorRunner+Machinery.swift", name: "scanRestricted"),
     ]
 
     struct Carried {
@@ -215,7 +215,7 @@ extension SoundnessArmProbeMeasuredTests {
     /// them among the veto's eight witness-scoped removals.
     static let knownToCarryLaws: [(file: String, name: String)] = [
         (file: "TargetDirectory+Inference.swift", name: "directoryExists"),
-        (file: "VocabularyLoader.swift", name: "fileExists")
+        (file: "VocabularyLoader.swift", name: "fileExists"),
     ]
 
     /// **Non-vacuity, and it is the whole warrant for the zero above.** The same join

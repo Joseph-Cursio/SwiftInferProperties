@@ -47,7 +47,7 @@ extension ReferenceOracleCalleeEmitterTests {
             callee: CalleeReference(bareName: "+", argumentLabels: ["lhs", "rhs"]),
             owner: "Money", parameters: [parameter("lhs", "lhs", "Money"), parameter("rhs", "rhs", "Money")],
             returnTypeText: "Money", isAsync: false, isThrows: false
-        ), ["Money", "Money"])
+        ), ["Money", "Money"]),
     ]
 
     @Test(

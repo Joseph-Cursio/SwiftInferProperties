@@ -179,7 +179,7 @@ public enum CuratedStdlibCatalog {
             "Int", "signum is multiplicative", "(a * b).signum() == a.signum() * b.signum()",
             "let a = randInt(), b = randInt(); return (a * b).signum() == a.signum() * b.signum()",
             template: "multiplicative-homomorphism"
-        )
+        ),
     ]
 
     // Double — floating point holds commutativity/identity ONLY for finite
@@ -207,7 +207,7 @@ public enum CuratedStdlibCatalog {
             "Double", "multiplicative identity (finite inputs)", "a * 1.0 == a",
             "let a = randDouble(); return a * 1.0 == a",
             template: "identity-element"
-        )
+        ),
     ]
 
     // Bool — && / || are bounded semilattices (over boolean values)
@@ -226,7 +226,7 @@ public enum CuratedStdlibCatalog {
             "Bool", "idempotent under &&", "(a && a) == a",
             "let a = randBool(); return (a && a) == a",
             witnesses: "Semilattice", template: "binary-idempotence"
-        )
+        ),
     ]
 
     // String — free monoid under concatenation (NOT commutative), plus
@@ -252,7 +252,7 @@ public enum CuratedStdlibCatalog {
             "String(String(s.reversed()).reversed()) == s",
             "let s = randStr(); return String(String(s.reversed()).reversed()) == s",
             template: "involution"
-        )
+        ),
     ]
 
     // Array — free monoid + reverse involution + sort idempotence
@@ -277,7 +277,7 @@ public enum CuratedStdlibCatalog {
             "(a + b).count == a.count + b.count",
             "let a = randArr(), b = randArr(); return (a + b).count == a.count + b.count",
             template: "homomorphism"
-        )
+        ),
     ]
 
     // Set — bounded semilattice under union / intersection
@@ -343,7 +343,7 @@ public enum CuratedStdlibCatalog {
             "a.symmetricDifference(b).symmetricDifference(b) == a",
             "let a = randSet(), b = randSet(); "
                 + "return a.symmetricDifference(b).symmetricDifference(b) == a"
-        )
+        ),
     ]
 
     public static let all: [CuratedEntry] =

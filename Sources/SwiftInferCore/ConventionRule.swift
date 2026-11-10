@@ -68,6 +68,6 @@ public struct ConventionRule: Sendable, Equatable {
             nameSuffixes: ["Interactor"],
             conformanceSuffixes: ["InteractorInput", "InteractorProtocol"],
             outputCollaboratorNames: ["presenter", "output"]
-        )
+        ),
     ]
 }

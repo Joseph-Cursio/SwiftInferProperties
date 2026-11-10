@@ -136,7 +136,7 @@ struct StrategistDispatchEmitterRecipeTests {
             name: "Money", kind: .struct, inheritedTypes: [], hasUserGen: false,
             storedMembers: [
                 StoredMember(name: "amount", typeName: "Int"),
-                StoredMember(name: "currency", typeName: "String")
+                StoredMember(name: "currency", typeName: "String"),
             ],
             hasUserInit: false
         )
@@ -239,7 +239,7 @@ struct StrategistDispatchEmitterEmitTests {
                 template: "round-trip",
                 functionCalls: [
                     "{ (x: Int) in x + 1 }",
-                    "{ (x: Int) in x - 1 }"
+                    "{ (x: Int) in x - 1 }",
                 ]
             )
         )

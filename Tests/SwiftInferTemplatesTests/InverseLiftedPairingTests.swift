@@ -16,7 +16,7 @@ struct InverseLiftedPairingTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 
@@ -67,7 +67,7 @@ struct InverseLiftedPairingTests {
     func addRemovePair() {
         let pairs = InverseLiftedPairing.candidates(in: [
             lifted("add"),
-            lifted("remove")
+            lifted("remove"),
         ])
         #expect(pairs.count == 1)
         #expect(pairs.first?.forwardSummary.name == "add")
@@ -79,11 +79,11 @@ struct InverseLiftedPairingTests {
         // Input order shouldn't matter — orientation is always lex-smaller-first.
         let pairsA = InverseLiftedPairing.candidates(in: [
             lifted("add"),
-            lifted("remove")
+            lifted("remove"),
         ])
         let pairsB = InverseLiftedPairing.candidates(in: [
             lifted("remove"),
-            lifted("add")
+            lifted("add"),
         ])
         #expect(pairsA.first?.forwardSummary.name == "add")
         #expect(pairsB.first?.forwardSummary.name == "add")
@@ -94,7 +94,7 @@ struct InverseLiftedPairingTests {
         for namePair in InverseLiftedPairing.curatedPairs {
             let pairs = InverseLiftedPairing.candidates(in: [
                 lifted(namePair.lhs),
-                lifted(namePair.rhs)
+                lifted(namePair.rhs),
             ])
             #expect(pairs.count == 1, "expected pair for \(namePair.lhs)/\(namePair.rhs)")
         }
@@ -116,7 +116,7 @@ struct InverseLiftedPairingTests {
     func differentCarriersDoNotPair() {
         let pairs = InverseLiftedPairing.candidates(in: [
             lifted("insert", carrier: "Set"),
-            lifted("remove", carrier: "Array")
+            lifted("remove", carrier: "Array"),
         ])
         #expect(pairs.isEmpty)
     }
@@ -125,7 +125,7 @@ struct InverseLiftedPairingTests {
     func mismatchedParamTypes() {
         let pairs = InverseLiftedPairing.candidates(in: [
             lifted("add", paramType: "Int"),
-            lifted("remove", paramType: "String")
+            lifted("remove", paramType: "String"),
         ])
         #expect(pairs.isEmpty)
     }
@@ -134,7 +134,7 @@ struct InverseLiftedPairingTests {
     func nonInverseNamesDoNotPair() {
         let pairs = InverseLiftedPairing.candidates(in: [
             lifted("add"),
-            lifted("merge")
+            lifted("merge"),
         ])
         #expect(pairs.isEmpty)
     }
@@ -165,7 +165,7 @@ struct InverseLiftedPairingTests {
             lifted("add", carrier: "B", line: 50),
             lifted("remove", carrier: "B", line: 60),
             lifted("add", carrier: "A", line: 100),
-            lifted("remove", carrier: "A", line: 110)
+            lifted("remove", carrier: "A", line: 110),
         ])
         #expect(pairs.count == 2)
         // Sorted by forward.location.line — A's forward is at line 100,
@@ -181,7 +181,7 @@ struct InverseLiftedPairingTests {
             lifted("add", line: 10),
             lifted("add", line: 20),
             lifted("remove", line: 30),
-            lifted("remove", line: 40)
+            lifted("remove", line: 40),
         ])
         #expect(pairs.count == 4)
     }
@@ -198,7 +198,7 @@ struct InversePairTemplateLiftedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 

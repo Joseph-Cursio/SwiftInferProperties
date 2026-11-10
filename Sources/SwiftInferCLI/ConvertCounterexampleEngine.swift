@@ -59,7 +59,7 @@ public enum ConvertCounterexampleEngine {
         "identity-element",
         "inverse-pair",
         "count-invariance",
-        "reduce-equivalence"
+        "reduce-equivalence",
     ]
 
     // MARK: - Package-root walk-up

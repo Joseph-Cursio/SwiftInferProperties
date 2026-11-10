@@ -17,7 +17,7 @@ extension SwiftInferCommand.DiscoverReducers {
         var lines: [String] = [
             "swift-infer discover-reducers — detected \(candidates.count) "
                 + "defensive-copy carrier\(suffix) (classes with a copy()/clone()):",
-            ""
+            "",
         ]
         for candidate in candidates {
             lines.append(contentsOf: renderDefensiveCopy(candidate))
@@ -33,7 +33,7 @@ extension SwiftInferCommand.DiscoverReducers {
         return [
             "  \(origin)  \(candidate.typeName)\(note)",
             "    copy method: \(candidate.copyMethodName)()",
-            "    mutation surface (\(candidate.mutationSurface.count)): \(surface)"
+            "    mutation surface (\(candidate.mutationSurface.count)): \(surface)",
         ]
     }
 }

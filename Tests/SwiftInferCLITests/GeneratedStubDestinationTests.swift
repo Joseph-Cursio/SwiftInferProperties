@@ -66,7 +66,7 @@ struct GeneratedStubDestinationTests {
             sourcePath: "Sources/Demo",
             testTargets: [
                 ("DemoTests", "Tests/DemoTests"),
-                ("DemoIntegrationTests", "Tests/DemoIntegrationTests")
+                ("DemoIntegrationTests", "Tests/DemoIntegrationTests"),
             ]
         )
         defer { PackageFixture.remove(root) }

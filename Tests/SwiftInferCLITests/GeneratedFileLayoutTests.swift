@@ -42,7 +42,7 @@ struct GeneratedFileLayoutTests {
             "            seed: seed,",
             "            sample: { rng in (Gen<Int>.int()).run(using: &rng) },",
             "            property: { value in negate(negate(value)) == value }",
-            "        )"
+            "        )",
         ])
     }
 
@@ -66,7 +66,7 @@ struct GeneratedFileLayoutTests {
         #expect(try Self.lines(source) == [
             "        let values = zip(Gen<Int>.int(), Gen<Int>.int(), Gen<Int>.int(), Gen<Int>.int())",
             "            .map { Pair(first: $0.0, second: $0.1) }",
-            "            .array(of: 0...8)"
+            "            .array(of: 0...8)",
         ])
     }
 
@@ -145,7 +145,7 @@ struct GeneratedFileLayoutTests {
             + "0...120)), (1.0, Gen<Character>.latin1.string(of: 0...24)))",
         "if case let .failed(_, _, input, error) = result { Issue.record(\"failed at \\(input)\"); "
             + "recordFailure(input: input, "
-            + "error: error, file: #filePath, line: #line) }"
+            + "error: error, file: #filePath, line: #line) }",
     ]
 
     @Test("only whitespace moves", arguments: reflowed)
@@ -172,7 +172,7 @@ struct GeneratedFileLayoutTests {
             "            sample: { rng in (zip(Gen<Character>.letterOrNumber.string(of: 0...bound), Gen<Int>.int())",
             "                .map { Pair(first: $0.0, second: $0.1) }).run(using: &rng) },",
             "            property: { value in value.first.count <= value.second || value.first.isEmpty }",
-            "        )"
+            "        )",
         ])
         let output = GeneratedFileLayout.laidOut(input)
         let lines = output.components(separatedBy: "\n")
@@ -209,7 +209,7 @@ struct GeneratedFileLayoutTests {
             "            \"\"\"",
             "            \(content)",
             "            \"\"\"",
-            "        )"
+            "        )",
         ])
         let lines = GeneratedFileLayout.laidOut(input).components(separatedBy: "\n")
         let start = try #require(lines.firstIndex(of: "            \"\"\""))
@@ -250,7 +250,7 @@ struct GeneratedFileLayoutTests {
             "            sample: \(sample),",
             "            property: { value in value.isEmpty || !value.isEmpty }",
             "        )",
-            "    }"
+            "    }",
         ]
     }
 

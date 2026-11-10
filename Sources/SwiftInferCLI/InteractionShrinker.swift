@@ -161,7 +161,7 @@ public enum InteractionShrinker {
             let env = [
                 ActionSequenceStubEmitter.pinSequenceEnvVar: "\(sequenceIndex)",
                 ActionSequenceStubEmitter.pinSuffixStartEnvVar: "\(suffixStart)",
-                ActionSequenceStubEmitter.pinPrefixLengthEnvVar: "\(prefixLength)"
+                ActionSequenceStubEmitter.pinPrefixLengthEnvVar: "\(prefixLength)",
             ]
             do {
                 let output = try VerifierSubprocess.runVerifierBinary(

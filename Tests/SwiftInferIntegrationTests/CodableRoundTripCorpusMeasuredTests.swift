@@ -33,7 +33,7 @@ struct CodableRoundTripCorpusMeasuredTests {
             carrier: "ScaledRatio",
             valueExpression: "ScaledRatio(value: Double(Int(rng.next() % 100)))",
             expectBothPass: false
-        )
+        ),
     ]
 
     @Test("each corpus codec verifies to its expected round-trip outcome")

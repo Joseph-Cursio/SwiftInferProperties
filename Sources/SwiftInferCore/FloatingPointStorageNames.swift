@@ -53,7 +53,7 @@ public enum FloatingPointStorageNames {
         "Float32",
         "Float64",
         "Float80",
-        "CGFloat"
+        "CGFloat",
     ]
 
     /// Types with IEEE 754-derived storage that don't conform to
@@ -62,7 +62,7 @@ public enum FloatingPointStorageNames {
     /// suppresses; cycle 2 plans an approximate-equality template arm.
     public static let nonKitSupportedFloatingPoint: Set<String> = [
         "Complex",
-        "Decimal"
+        "Decimal",
     ]
 
     /// Returns `true` when `typeText` matches a curated FP-storage

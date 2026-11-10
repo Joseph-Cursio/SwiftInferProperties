@@ -34,7 +34,7 @@ struct CommutativityConstraintEquivalenceTests {
             name: name,
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: lhsType, isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: rhsType, isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: rhsType, isInout: false),
             ],
             returnTypeText: returnType,
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,
@@ -67,7 +67,7 @@ struct CommutativityConstraintEquivalenceTests {
             ("fpStorage", binarySummary(
                 name: "add", lhsType: "Double", rhsType: "Double",
                 returnType: "Double", containingType: "Math"
-            ))
+            )),
         ]
     }
 
@@ -102,7 +102,7 @@ struct CommutativityConstraintEquivalenceTests {
             name: "blarp",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false),
             ],
             returnTypeText: "Int",
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,
@@ -127,7 +127,7 @@ struct CommutativityConstraintEquivalenceTests {
             name: "+",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "MyInt", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "MyInt", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "MyInt", isInout: false),
             ],
             returnTypeText: "MyInt",
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,
@@ -150,7 +150,7 @@ struct CommutativityConstraintEquivalenceTests {
             name: "add",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Double", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Double", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Double", isInout: false),
             ],
             returnTypeText: "Double",
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,

@@ -63,7 +63,7 @@ struct ReducerDiscovererTCATests {
         #expect(result[0].actionCases == [
             ActionCaseInfo(name: "increment"),
             ActionCaseInfo(name: "decrement"),
-            ActionCaseInfo(name: "closeMenu")
+            ActionCaseInfo(name: "closeMenu"),
         ])
     }
 
@@ -93,7 +93,7 @@ struct ReducerDiscovererTCATests {
         #expect(result[0].actionCases == [
             ActionCaseInfo(name: "submit"),
             ActionCaseInfo(name: "setName", payloadTypes: ["String"]),
-            ActionCaseInfo(name: "child", payloadTypes: ["Child.Action"])
+            ActionCaseInfo(name: "child", payloadTypes: ["Child.Action"]),
         ])
     }
 

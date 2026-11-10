@@ -69,8 +69,8 @@ enum DocstringAdvisoryRenderer {
                 "  The seed manifest does not name these as functions to analyse — an",
                 "extractable-kernel seed names only the method its kernel sits in — so --seeds lists",
                 "them in brief instead of with the full advisory. Each docstring states a checkable",
-                "contract; run discover without --seeds for the full entry."
-            ].joined(separator: " ")
+                "contract; run discover without --seeds for the full entry.",
+            ].joined(separator: " "),
         ]
         for item in items {
             lines.append("  • \(item.displayName)  \(item.signature)  —  \(item.location)")
@@ -111,7 +111,7 @@ enum DocstringAdvisoryRenderer {
             return [
                 owed,
                 "  \"\(reference.docComment)\"",
-                "encode THAT sentence as the property; the law checks the code against it."
+                "encode THAT sentence as the property; the law checks the code against it.",
             ]
 
         case let .complementaryContract(contract):
@@ -122,7 +122,7 @@ enum DocstringAdvisoryRenderer {
                     + "whether the result is RIGHT. Your docstring states a contract that does:",
                 "  \"\(contract.docComment)\"",
                 "encode THAT sentence as a second property, beside the totality law rather than "
-                    + "instead of it."
+                    + "instead of it.",
             ]
 
         case let .fallbackContract(contract):
@@ -140,7 +140,7 @@ enum DocstringAdvisoryRenderer {
             return [
                 preamble,
                 "  \"\(contract.docComment)\"",
-                "encode THAT sentence; it is the law the templates could not name."
+                "encode THAT sentence; it is the law the templates could not name.",
             ]
         }
     }

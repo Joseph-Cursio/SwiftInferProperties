@@ -17,7 +17,7 @@ struct VerifyInteractionSurveyTests {
         let parsed = try SwiftInferCommand.VerifyInteraction.parse([
             "--target", "MyApp",
             "--all",
-            "--family", "idempotence"
+            "--family", "idempotence",
         ])
         #expect(parsed.target == ["MyApp"])
         #expect(parsed.all == true)
@@ -66,7 +66,7 @@ struct VerifyInteractionSurveyTests {
                 reducer: "SettingsReducer.reduce",
                 outcome: .measuredDefaultFails,
                 detail: "at sequence index 3"
-            )
+            ),
         ]
         let rendered = VerifyInteractionSurvey.render(target: "MyApp", family: .idempotence, entries: entries)
 

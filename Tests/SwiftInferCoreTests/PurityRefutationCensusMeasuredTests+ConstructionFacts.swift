@@ -117,13 +117,13 @@ extension PurityRefutationCensusMeasuredTests {
         let constructionRows = Self.refuted.filter { $0.causes.contains(.construction) }.count
         var lines = [
             "universe: \(package.universe.count) files under \(package.root?.lastPathComponent ?? "?")",
-            "refuted types (\(package.refutedTypes.count)):"
+            "refuted types (\(package.refutedTypes.count)):",
         ]
         lines += package.refutedTypes.map { "  \($0)" }
         lines += [
             "functions (\(Self.corpus.count)), unconfigured: \(byVerdict(arms.unconfiguredVerdicts))",
             "functions (\(Self.corpus.count)), configured:   \(byVerdict(Self.verdicts))",
-            "function verdict flips: \(arms.flipped.count)"
+            "function verdict flips: \(arms.flipped.count)",
         ]
         lines += arms.flipped.map { "  \($0)" }
         lines.append("re-witnessed (SEI first witness changed): \(arms.rewitnessed.count)")
@@ -136,7 +136,7 @@ extension PurityRefutationCensusMeasuredTests {
             "accessor blocks: \(other.accessors), flips \(other.accessorFlips.count) \(other.accessorFlips)",
             "closure literals passed at a call: \(other.closures), flips \(other.closureFlips.count) "
                 + "\(other.closureFlips)",
-            "summaries, join applied: \(joined.count) · .pure \(pure(joinedWithout)) → \(pure(joined))"
+            "summaries, join applied: \(joined.count) · .pure \(pure(joinedWithout)) → \(pure(joined))",
         ]
         print(lines.joined(separator: "\n"))
     }

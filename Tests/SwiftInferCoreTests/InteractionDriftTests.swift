@@ -128,7 +128,7 @@ struct InteractionDriftTests {
         let suggestions = [
             suggestion(family: .conservation, predicate: "p-cons"),
             suggestion(family: .cardinality, predicate: "p-card"),
-            suggestion(family: .biconditional, predicate: "p-bi")
+            suggestion(family: .biconditional, predicate: "p-bi"),
         ]
         let warnings = InteractionDriftDetector.warnings(
             currentSuggestions: suggestions,

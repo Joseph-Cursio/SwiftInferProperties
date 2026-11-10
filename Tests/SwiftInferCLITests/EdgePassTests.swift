@@ -160,7 +160,7 @@ struct EdgePassTests {
     func memberwiseLeavesAreSwappedToBoundaries() throws {
         let members = [
             MemberSpec(name: "identity", rawType: .string),
-            MemberSpec(name: "count", rawType: .int)
+            MemberSpec(name: "count", rawType: .int),
         ]
         let base = try StrategistDispatchEmitter.memberwiseRecipe(
             members: members, carrier: "Decisions"
@@ -212,7 +212,7 @@ struct EdgePassTests {
     func nonCuratedLeafKeepsItsGenerator() throws {
         let members = [
             MemberSpec(name: "flag", rawType: .bool),
-            MemberSpec(name: "count", rawType: .int)
+            MemberSpec(name: "count", rawType: .int),
         ]
         let base = try StrategistDispatchEmitter.memberwiseRecipe(
             members: members, carrier: "Pair"
@@ -229,7 +229,7 @@ struct EdgePassTests {
     func allLeavesUncuratedKeepsSentinel() throws {
         let members = [
             MemberSpec(name: "flag", rawType: .bool),
-            MemberSpec(name: "ratio", rawType: .double)
+            MemberSpec(name: "ratio", rawType: .double),
         ]
         let base = try StrategistDispatchEmitter.memberwiseRecipe(
             members: members, carrier: "Pair"
@@ -274,7 +274,7 @@ struct EdgePassTests {
     func sweptGeneratorAvoidsBannedCombinators() throws {
         let members = [
             MemberSpec(name: "identity", rawType: .string),
-            MemberSpec(name: "count", rawType: .int)
+            MemberSpec(name: "count", rawType: .int),
         ]
         let base = try StrategistDispatchEmitter.memberwiseRecipe(
             members: members, carrier: "Decisions"

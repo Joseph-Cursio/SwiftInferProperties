@@ -48,7 +48,7 @@ public enum OrderSensitiveCarrierNames {
         "Deque",
         "Array",
         "ContiguousArray",
-        "ArraySlice"
+        "ArraySlice",
     ]
 
     /// Whether `typeText` names an order-sensitive carrier. Generic parameters

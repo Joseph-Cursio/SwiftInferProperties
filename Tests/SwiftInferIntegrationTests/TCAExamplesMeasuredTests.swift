@@ -80,7 +80,7 @@ struct TCAExamplesMeasuredTests {
             "BindingBasics",
             "AlertAndConfirmationDialog",
             "Timers",
-            "Nested"
+            "Nested",
         ] {
             #expect(
                 determinismBlock(reducer: reducer)?.contains("(Verified)") == true,

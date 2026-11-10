@@ -91,7 +91,7 @@ public enum DocstringPropertyCorroborator {
         "no change if already",
         "leaves it unchanged if already",
         "if already present, this does nothing",
-        "if already a member"
+        "if already a member",
     ]
 
     static let involutionVocabulary: [String] = [
@@ -106,7 +106,7 @@ public enum DocstringPropertyCorroborator {
         "twice returns the original",
         "twice yields the original",
         "twice restores the original",
-        "returns to the original"
+        "returns to the original",
     ]
 
     static let commutativityVocabulary: [String] = [
@@ -123,7 +123,7 @@ public enum DocstringPropertyCorroborator {
         "either order gives the same",
         "same result in either order",
         "symmetric in its arguments",
-        "symmetric in both arguments"
+        "symmetric in both arguments",
     ]
 
     static let associativityVocabulary: [String] = [
@@ -135,7 +135,7 @@ public enum DocstringPropertyCorroborator {
         "regardless of how they are grouped",
         "regardless of how they're grouped",
         "how the operands are grouped doesn't matter",
-        "how the arguments are grouped doesn't matter"
+        "how the arguments are grouped doesn't matter",
     ]
 
     static let roundTripVocabulary: [String] = [
@@ -147,7 +147,7 @@ public enum DocstringPropertyCorroborator {
         "restores the original value",
         "losslessly",
         "lossless round",
-        "encodes and decodes"
+        "encodes and decodes",
     ]
 
     static let monotonicityVocabulary: [String] = [
@@ -161,14 +161,14 @@ public enum DocstringPropertyCorroborator {
         "preserves order",
         "preserves the order",
         "preserves ordering",
-        "preserves the ordering"
+        "preserves the ordering",
     ]
 
     /// Tokens that negate a following assertion. Checked in the window of source
     /// text immediately preceding a matched phrase.
     static let negators: [String] = [
         "not ", "n't ", "non-", "never ", "cannot ", "can not ", "no longer ",
-        "isn't", "aren't", "doesn't", "does not ", "won't", "without "
+        "isn't", "aren't", "doesn't", "does not ", "won't", "without ",
     ]
 
     /// The character window before a matched phrase scanned for a negator.
@@ -201,7 +201,7 @@ public enum DocstringPropertyCorroborator {
     static let subjectMatterMarkers: [String] = [
         "stub", "emit", "emits", "renders", "renderer", "generator", "generates",
         "harness", "scaffold", "test body", "property test", "test stub",
-        "law suite", "verifier", "template"
+        "law suite", "verifier", "template",
     ]
 
     /// `true` when the docstring reads as being about a property rather than claiming one.

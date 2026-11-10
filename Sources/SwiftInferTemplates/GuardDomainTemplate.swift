@@ -89,7 +89,7 @@ public enum GuardDomainTemplate {
                 weight: 40,
                 detail: "the body states it: \(arrow)(\(domain.condition)) ⟹ "
                     + "\(summary.name)(\(domain.parameterName)) == \(domain.returnedExpression)"
-            )
+            ),
         ]
     }
 
@@ -101,7 +101,7 @@ public enum GuardDomainTemplate {
                 + "the value it used to return untouched.",
             "Read the sentence and decide whether you meant it. It is your own line played back, "
                 + "so the question is not whether the code satisfies it — it does — but whether "
-                + "the sub-domain it names is behaviour you intend to keep."
+                + "the sub-domain it names is behaviour you intend to keep.",
         ]
     }
 }

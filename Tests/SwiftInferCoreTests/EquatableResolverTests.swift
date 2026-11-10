@@ -36,7 +36,7 @@ struct EquatableResolverTests {
         let resolver = makeResolver()
         for typeText in [
             "Int8", "Int16", "Int32", "Int64",
-            "UInt", "UInt8", "UInt16", "UInt32", "UInt64"
+            "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
         ] {
             #expect(resolver.classify(typeText: typeText) == .equatable, "expected \(typeText) → .equatable")
         }
@@ -132,7 +132,7 @@ struct EquatableResolverTests {
         // the type classifies as .equatable.
         let resolver = makeResolver([
             decl("Foo", .struct, inherits: []),
-            decl("Foo", .extension, inherits: ["Equatable"])
+            decl("Foo", .extension, inherits: ["Equatable"]),
         ])
         #expect(resolver.classify(typeText: "Foo") == .equatable)
     }
@@ -151,7 +151,7 @@ struct EquatableResolverTests {
         // confuse the merge — set semantics make this idempotent.
         let resolver = makeResolver([
             decl("Bar", .extension, inherits: ["Equatable"]),
-            decl("Bar", .extension, inherits: ["Equatable"])
+            decl("Bar", .extension, inherits: ["Equatable"]),
         ])
         #expect(resolver.classify(typeText: "Bar") == .equatable)
     }

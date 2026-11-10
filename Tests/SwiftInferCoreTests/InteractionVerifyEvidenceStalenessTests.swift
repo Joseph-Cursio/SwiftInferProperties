@@ -58,7 +58,7 @@ struct InteractionVerifyEvidenceStalenessTests {
                 swiftInferVersion: "1.149.0",
                 excludedActionCount: 0,
                 subjectFingerprint: fingerprint
-            )
+            ),
         ]
     }
 
@@ -182,7 +182,7 @@ struct InteractionVerifyEvidenceStalenessTests {
         arguments: [
             ("/a/b/Carrier.swift:12", "/a/b/Carrier.swift"),
             ("/a/b/Carrier.swift", "/a/b/Carrier.swift"),
-            ("/weird:dir/Carrier.swift:3", "/weird:dir/Carrier.swift")
+            ("/weird:dir/Carrier.swift:3", "/weird:dir/Carrier.swift"),
         ]
     )
     func locationParsing(location: String, expected: String) {

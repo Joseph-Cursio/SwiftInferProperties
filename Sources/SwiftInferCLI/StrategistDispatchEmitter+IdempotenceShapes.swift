@@ -82,7 +82,7 @@ extension StrategistDispatchEmitter {
         // Cycle 149 (Lever C-1) — the bare dictionary; `merge` (dual-style
         // mutating side) and `sort()` (idempotence) are mutating instance
         // methods, so they need the `var copy; copy.method()` shape.
-        "OrderedDictionary<Int, Int>"
+        "OrderedDictionary<Int, Int>",
     ]
 
     /// V1.60.A — emit the mutating-instance-method idempotence shape.

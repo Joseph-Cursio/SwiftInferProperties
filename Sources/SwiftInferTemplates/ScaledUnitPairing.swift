@@ -49,7 +49,7 @@ public enum ScaledUnitPairing {
         "milliseconds": 1_000_000,
         "seconds": 1_000_000_000,
         "minutes": 60_000_000_000,
-        "hours": 3_600_000_000_000
+        "hours": 3_600_000_000_000,
     ]
 
     /// One statable consistency law between two units of the same family.

@@ -42,7 +42,7 @@ struct HomomorphismMemberFormTests {
                 Parameter(
                     label: nil, internalName: "other",
                     typeText: parameterType ?? carrier, isInout: false
-                )
+                ),
             ],
             returnTypeText: returns ?? (isMutating ? nil : carrier),
             isThrows: false, isAsync: false, isMutating: isMutating, isStatic: false,
@@ -114,7 +114,7 @@ struct HomomorphismMemberFormTests {
         let shapes = HomomorphismMemberPairing.candidates(
             in: [
                 measure(on: "BigString.UnicodeScalarView"),
-                join("+", on: "BigString.UnicodeScalarView")
+                join("+", on: "BigString.UnicodeScalarView"),
             ],
             inheritedTypesByName: [:]
         )
@@ -157,9 +157,9 @@ struct HomomorphismMemberFormTests {
                     Parameter(
                         label: "where", internalName: "p",
                         typeText: "(Element) -> Bool", isInout: false
-                    )
+                    ),
                 ]),
-                join("+")
+                join("+"),
             ],
             inheritedTypesByName: ["Deque": ["Equatable"]]
         )

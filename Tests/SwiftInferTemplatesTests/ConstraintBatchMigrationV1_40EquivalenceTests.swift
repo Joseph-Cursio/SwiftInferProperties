@@ -47,7 +47,7 @@ struct InversePairConstraintEquivalenceTests {
             ("transform_untransform", FunctionPair(
                 forward: Self.summary(name: "transform", param: "Token", ret: "Token"),
                 reverse: Self.summary(name: "untransform", param: "Token", ret: "Token")
-            ))
+            )),
         ]
         for (label, pair) in corpus {
             let wrapper = InversePairTemplate.suggest(for: pair)
@@ -75,7 +75,7 @@ struct InversePairLiftedEquivTests {
             TypeDecl(
                 name: carrier, kind: .struct, inheritedTypes: [],
                 location: loc, storedMembers: [StoredMember(name: "x", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -155,7 +155,7 @@ struct CompositionConstraintEquivalenceTests {
             TypeDecl(
                 name: "Counter", kind: .struct, inheritedTypes: [],
                 location: Self.loc, storedMembers: [StoredMember(name: "value", typeName: "Int")]
-            )
+            ),
         ])
         let summary = FunctionSummary(
             name: "increment",

@@ -17,7 +17,7 @@ struct ScoreTests {
         let signals = [
             Signal(kind: .typeSymmetrySignature, weight: 30, detail: "type sym"),
             Signal(kind: .exactNameMatch, weight: 40, detail: "name"),
-            Signal(kind: .selfComposition, weight: 20, detail: "comp")
+            Signal(kind: .selfComposition, weight: 20, detail: "comp"),
         ]
         let score = Score(signals: signals)
         #expect(score.total == 90)
@@ -30,7 +30,7 @@ struct ScoreTests {
         let signals = [
             Signal(kind: .typeSymmetrySignature, weight: 30, detail: "type sym"),
             Signal(kind: .exactNameMatch, weight: 40, detail: "name"),
-            Signal(kind: .partialFunction, weight: -15, detail: "guard")
+            Signal(kind: .partialFunction, weight: -15, detail: "guard"),
         ]
         let score = Score(signals: signals)
         #expect(score.total == 55)
@@ -42,7 +42,7 @@ struct ScoreTests {
         let signals = [
             Signal(kind: .typeSymmetrySignature, weight: 30, detail: "type sym"),
             Signal(kind: .exactNameMatch, weight: 40, detail: "name"),
-            Signal(kind: .nonDeterministicBody, weight: Signal.vetoWeight, detail: "Date()")
+            Signal(kind: .nonDeterministicBody, weight: Signal.vetoWeight, detail: "Date()"),
         ]
         let score = Score(signals: signals)
         // total reflects the non-veto sum so diagnostic rendering can still

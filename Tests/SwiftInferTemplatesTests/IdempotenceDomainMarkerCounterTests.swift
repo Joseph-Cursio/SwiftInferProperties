@@ -188,7 +188,7 @@ struct IdempotenceDomainMarkerCounterTests {
                     internalName: "x",
                     typeText: paramType,
                     isInout: false
-                )
+                ),
             ],
             returnTypeText: returnType,
             isThrows: false,

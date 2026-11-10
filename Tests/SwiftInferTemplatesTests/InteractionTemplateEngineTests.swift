@@ -43,7 +43,7 @@ struct InteractionTemplateEngineTests {
         // candidate yields two suggestions.
         let result = try InteractionTemplateEngine.analyze(candidates: [
             candidate(functionName: "reduceA"),
-            candidate(functionName: "reduceB", signatureShape: .inoutStateActionReturnsVoid)
+            candidate(functionName: "reduceB", signatureShape: .inoutStateActionReturnsVoid),
         ])
         #expect(result.count == 4)
         #expect(result.allSatisfy {
@@ -135,7 +135,7 @@ struct InteractionTemplateEngineTests {
         try writeFile(in: directory, name: "TwoReducers.swift", contents: twoReducersFixture)
         let candidates = [
             sharedNameCandidate(enclosingTypeName: "AReducer", location: "TwoReducers.swift:10"),
-            sharedNameCandidate(enclosingTypeName: "BReducer", location: "TwoReducers.swift:20")
+            sharedNameCandidate(enclosingTypeName: "BReducer", location: "TwoReducers.swift:20"),
         ]
         let suggestions = try InteractionTemplateEngine.analyze(
             candidates: candidates,
@@ -151,7 +151,7 @@ struct InteractionTemplateEngineTests {
         let predicates = Set(conservation.map(\.predicate))
         #expect(predicates == [
             "state.itemCount == state.items.count",
-            "state.entryCount == state.entries.count"
+            "state.entryCount == state.entries.count",
         ])
         let perReducer = Dictionary(grouping: conservation, by: \.reducerQualifiedName)
         #expect(perReducer["AReducer.reduce"]?.count == 1)
@@ -170,7 +170,7 @@ struct InteractionTemplateEngineTests {
         try writeFile(in: directory, name: "TwoActions.swift", contents: twoActionsFixture)
         let candidates = [
             sharedNameCandidate(enclosingTypeName: "AReducer", location: "TwoActions.swift:10"),
-            sharedNameCandidate(enclosingTypeName: "BReducer", location: "TwoActions.swift:20")
+            sharedNameCandidate(enclosingTypeName: "BReducer", location: "TwoActions.swift:20"),
         ]
         let suggestions = try InteractionTemplateEngine.analyze(
             candidates: candidates,

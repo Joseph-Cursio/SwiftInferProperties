@@ -131,7 +131,7 @@ struct MockNonDeterminismSuppressionTests {
             "arc4random()",
             "rand()",
             "Int.random()",
-            "Bool.random(in: 0...1)"
+            "Bool.random(in: 0...1)",
         ]
         for pattern in patterns {
             let entry = makeEntry(
@@ -154,7 +154,7 @@ struct MockNonDeterminismSuppressionTests {
             "\"hello\"",
             "true",
             "3.14",
-            "\"Date is a noun\""
+            "\"Date is a noun\"",
         ]
         for literal in plainLiterals {
             let entry = makeEntry(

@@ -36,7 +36,7 @@ struct CodableRoundTripFallbackAcceptanceTests {
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "Document",
                 inheritedTypes: ["Encodable", "Decodable"]
-            )
+            ),
         ]
         let result = GeneratorSelection.applyCodableRoundTripFallback(
             to: [suggestion],
@@ -60,7 +60,7 @@ struct CodableRoundTripFallbackAcceptanceTests {
                 kind: .extension,
                 inheritedTypes: ["Decodable"],
                 line: 20
-            )
+            ),
         ]
         let result = GeneratorSelection.applyCodableRoundTripFallback(
             to: [suggestion],
@@ -79,7 +79,7 @@ struct CodableRoundTripFallbackAcceptanceTests {
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "Plain",
                 inheritedTypes: ["Equatable", "Hashable"]
-            )
+            ),
         ]
         let result = GeneratorSelection.applyCodableRoundTripFallback(
             to: [suggestion],
@@ -104,7 +104,7 @@ struct CodableRoundTripFallbackAcceptanceTests {
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "Money",
                 inheritedTypes: ["Codable", "Hashable"]
-            )
+            ),
         ]
         let result = GeneratorSelection.applyCodableRoundTripFallback(
             to: [memberwiseSuggestion],
@@ -124,14 +124,14 @@ struct CodableRoundTripFallbackAcceptanceTests {
         let preservedSources: [GeneratorMetadata.Source] = [
             .derivedCaseIterable,
             .derivedRawRepresentable,
-            .registered
+            .registered,
         ]
         let typeDecls = [
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "Suit",
                 kind: .enum,
                 inheritedTypes: ["Codable", "CaseIterable"]
-            )
+            ),
         ]
         for source in preservedSources {
             let suggestion = CodableFallbackTestHelper.rebuilding(
@@ -243,7 +243,7 @@ struct CodableRoundTripFallbackEdgeTests {
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "OnlyEncodable",
                 inheritedTypes: ["Encodable"]
-            )
+            ),
         ]
         let result = GeneratorSelection.applyCodableRoundTripFallback(
             to: [suggestion],
@@ -261,7 +261,7 @@ struct CodableRoundTripFallbackEdgeTests {
             CodableFallbackTestHelper.makeTypeDecl(
                 name: "OnlyDecodable",
                 inheritedTypes: ["Decodable"]
-            )
+            ),
         ]
         let result = GeneratorSelection.applyCodableRoundTripFallback(
             to: [suggestion],

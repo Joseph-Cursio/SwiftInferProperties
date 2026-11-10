@@ -129,7 +129,7 @@ public enum PartitionTemplate {
             totality,
             "The part count must be `ceil(whole / partSize)` — not `whole / partSize`, which silently "
                 + "drops a trailing partial part, and not `whole / partSize + 1`, which invents an "
-                + "empty one when the division is exact."
+                + "empty one when the division is exact.",
         ]
 
         if shape.progress != nil {

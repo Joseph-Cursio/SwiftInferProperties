@@ -112,7 +112,7 @@ struct VerifyHarnessTests {
         let entries = [
             Self.entry("0xBC43359C0574816B"),
             Self.entry("0xBC43DEADBEEFCAFE"),
-            Self.entry("0xAA11223344556677")
+            Self.entry("0xAA11223344556677"),
         ]
         do {
             _ = try VerifyHarness.lookupSuggestion(

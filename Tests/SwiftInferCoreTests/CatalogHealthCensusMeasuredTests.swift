@@ -78,7 +78,7 @@ struct CatalogHealthCensusMeasuredTests {
         // `differential-equivalence` as FIXED 2026-08-08 and this one as deferred, so
         // its zero is expected and belongs in the pinned set rather than reading as a
         // regression the first time this suite runs.
-        "invariant-preservation"
+        "invariant-preservation",
     ]
 
     /// **Carrier shape, for sizing a carrier build.**
@@ -106,7 +106,7 @@ struct CatalogHealthCensusMeasuredTests {
             let collectionHeads = [
                 "Set<", "Dictionary<", "Array<", "Deque<", "OrderedSet<",
                 "OrderedDictionary<", "Heap<", "SortedSet<", "SortedDictionary<",
-                "ArraySlice<", "Slice<", "BitArray", "BitSet", "TreeSet<", "TreeDictionary<"
+                "ArraySlice<", "Slice<", "BitArray", "BitSet", "TreeSet<", "TreeDictionary<",
             ]
             if collectionHeads.contains(where: carrier.hasPrefix) { return .collection }
             let scalars: Set<String> = [
@@ -114,7 +114,7 @@ struct CatalogHealthCensusMeasuredTests {
                 "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
                 "Double", "Float", "Float80", "CGFloat",
                 "String", "Substring", "Character", "Bool",
-                "Complex<Double>", "Complex<Float>", "Decimal"
+                "Complex<Double>", "Complex<Float>", "Decimal",
             ]
             return scalars.contains(carrier) ? .scalar : .userDefined
         }

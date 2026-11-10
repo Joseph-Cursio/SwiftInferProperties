@@ -45,7 +45,7 @@ struct EffectVocabularyCrossRepoTests {
             + "AttributeRecognition — see item 17. It is not an effect tier.",
         "EffectUnknown":
             "Item 20: nothing reads it yet. SEI must learn the marker first, since re-implementing "
-            + "the `@lint.effect` grammar here is what SEI exists to prevent."
+            + "the `@lint.effect` grammar here is what SEI exists to prevent.",
     ]
 
     private static func loadManifest() throws -> Manifest {

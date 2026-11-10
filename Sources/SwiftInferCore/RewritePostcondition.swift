@@ -142,7 +142,7 @@ public enum RewritePostconditionReader {
         let allowed: Set<String> = [
             "let", "var", "return", "nil", "true", "false", "if", "else", "guard",
             "trimmingCharacters", "in", "whitespaces", "whitespacesAndNewlines", "newlines",
-            "isEmpty", "String", "Substring", "count"
+            "isEmpty", "String", "Substring", "count",
         ]
         let text = closure.statements.trimmedDescription
         guard !text.contains("\"") else { return false }

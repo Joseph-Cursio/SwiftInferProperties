@@ -191,7 +191,7 @@ enum ProveThenShowRenderer {
         guard !rows.isEmpty else { return [] }
         var lines = [
             "EXPECTED TO HOLD, AND DOES NOT — read these first "
-                + "(a high-confidence pick that execution refuted)"
+                + "(a high-confidence pick that execution refuted)",
         ]
         for row in rows.sorted(by: { $0.sortKey < $1.sortKey }) {
             var line = "  ! \(row.label)"

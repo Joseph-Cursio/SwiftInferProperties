@@ -78,7 +78,7 @@ struct OwnershipPremiseCensusMeasuredTests {
             """),
         ("control: plain value param", "func f(_ value: Int) -> Int { value + 1 }"),
         ("control: marker in body", "func f(_ value: Int) -> Int { print(value); return value }"),
-        ("control: force unwrap", "func f(_ value: Int?) -> Int { value! }")
+        ("control: force unwrap", "func f(_ value: Int?) -> Int { value! }"),
     ]
 
     /// **The premise, asserted.** No ownership or `inout` shape may refute — if one

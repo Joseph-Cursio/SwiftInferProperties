@@ -58,7 +58,7 @@ struct ConstructionUniverseManifestReachTests {
         var files = [
             "Packages/A/Package.swift": Self.library("A"),
             "Packages/A/Sources/A/Tok.swift": Self.tok,
-            "Sources/App/App.swift": Self.app(importing: "A")
+            "Sources/App/App.swift": Self.app(importing: "A"),
         ]
         if fixture == "s6v" {
             files["Package.swift"] = Self.rootManifest(targets: #".target(name: "App")"#)
@@ -85,14 +85,14 @@ struct ConstructionUniverseManifestReachTests {
                 + "let package = Package(name: \"R\", dependencies: [.package(path: base)])",
             true
         ),
-        ("let package = Package(name: \"R\", dependencies: [.package(path: \"Demo\")])", false)
+        ("let package = Package(name: \"R\", dependencies: [.package(path: \"Demo\")])", false),
     ])
     func versionSpecificDoubtIsDoubt(variant: String, demoIsIn: Bool) throws {
         let root = try Wiring.makePackage([
             "Package@swift-6.0.swift": variant,
             "Sources/Lib/Row.swift": Nested.row,
             "Demo/Package.swift": Nested.demoManifest,
-            "Demo/Sources/Demo/main.swift": Nested.mintingRow
+            "Demo/Sources/Demo/main.swift": Nested.mintingRow,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -114,7 +114,7 @@ struct ConstructionUniverseManifestReachTests {
             ),
             "Packages/A/Package.swift": Self.library("A"),
             "Packages/A/Sources/A/Tok.swift": Self.tok,
-            "Sources/App/App.swift": Self.app(importing: "A")
+            "Sources/App/App.swift": Self.app(importing: "A"),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(try Self.tokenCount(in: root) == .refuted)
@@ -135,7 +135,7 @@ struct ConstructionUniverseManifestReachTests {
             ),
             "Core/Package.swift": Self.library("Core"),
             "Core/Sources/Core/Tok.swift": Self.tok,
-            "Sources/App/App.swift": Self.app(importing: "Core")
+            "Sources/App/App.swift": Self.app(importing: "Core"),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(try Self.tokenCount(in: root) == .refuted)
@@ -156,7 +156,7 @@ struct ConstructionUniverseManifestReachTests {
             "Tests/Fixture/Sources/F/F.swift": "public struct F {}",
             "Packages/A/Package.swift": Self.library("A"),
             "Packages/A/Sources/A/Tok.swift": Self.tok,
-            "Sources/App/App.swift": Self.app(importing: "A")
+            "Sources/App/App.swift": Self.app(importing: "A"),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let universe = ConstructionUniverse.universe(forScanOf: root.appendingPathComponent("Sources/App"))
@@ -178,7 +178,7 @@ struct ConstructionUniverseManifestReachTests {
             "Packages/A/Package.swift": Self.library("A"),
             "Packages/A/Sources/A/Tok.swift": Self.tok,
             "Packages/Loose/L.swift": "struct Loose { let n: Int }",
-            "Sources/App/App.swift": Self.app(importing: "All")
+            "Sources/App/App.swift": Self.app(importing: "All"),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("Sources/App")
@@ -197,7 +197,7 @@ struct ConstructionUniverseManifestReachTests {
             "Package.swift": Self.rootManifest(targets: #".target(name: "App", path: ".")"#),
             "Packages/A/Package.swift": Self.library("A"),
             "Packages/A/Sources/A/Tok.swift": Self.tok,
-            "Sources/App/App.swift": Self.app(importing: "A")
+            "Sources/App/App.swift": Self.app(importing: "A"),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("Sources/App")
@@ -218,7 +218,7 @@ struct ConstructionUniverseManifestReachTests {
         let reached = Nested.compiled([
             "": #".package(path: "Packages/A")"#,
             "Packages/A": #".target(name: "X", path: "../C/Sources/X")"#,
-            "Packages/C": ""
+            "Packages/C": "",
         ])
         #expect(reached == ["Packages/A", "Packages/C"])
         let doubt = Nested.compiled(["": #"let p = "Sources"; .target(name: "X", path: p)"#])
@@ -230,7 +230,7 @@ struct ConstructionUniverseManifestReachTests {
         // `Pack` holds nothing.
         #expect(Nested.compiled([
             "": #"[.target(name: "All", path: "Packages")]"#,
-            "Packages/A": "", "Packages/B": "", "Packages/C": #".package(path: "../../Demo")"#, "Demo": ""
+            "Packages/A": "", "Packages/B": "", "Packages/C": #".package(path: "../../Demo")"#, "Demo": "",
         ]) == ["Packages/A", "Packages/B", "Packages/C", "Demo"])
         #expect(Nested.compiled(["": #".target(name: "X", path: "Pack")"#]).isEmpty)
     }
@@ -249,7 +249,7 @@ struct ConstructionUniverseManifestReachTests {
             ),
             "Vendor/Core/Package.swift": Self.library("Core"),
             "Vendor/Core/Sources/Core/Tok.swift": Self.tok,
-            "Sources/App/App.swift": Self.app(importing: "Core")
+            "Sources/App/App.swift": Self.app(importing: "Core"),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         try ConstructionUniverseSymlinkTests.link("Packages/Core", in: root, to: "../Vendor/Core")

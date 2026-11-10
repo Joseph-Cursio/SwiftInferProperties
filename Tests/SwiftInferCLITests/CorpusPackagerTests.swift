@@ -17,7 +17,7 @@ struct CorpusPackagerTests {
             moduleName: "IdempotenceCorpus",
             sourceFiles: [
                 .init(name: "Counter.swift", contents: "public struct Counter {}"),
-                .init(name: "Toggle.swift", contents: "public struct Toggle {}")
+                .init(name: "Toggle.swift", contents: "public struct Toggle {}"),
             ],
             into: parent
         )

@@ -34,7 +34,7 @@ struct IdempotenceSequenceConformanceTests {
                 inheritedTypes: ["Sequence"],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "base", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 

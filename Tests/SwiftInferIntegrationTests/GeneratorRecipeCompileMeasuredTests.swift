@@ -43,7 +43,7 @@ struct GeneratorRecipeCompileMeasuredTests {
         ("collidingString", CollisionBias.collidingString(subject: "path")),
         ("carrierState", CollisionBias.carrierState(typeName: "ImmediateChildPredicate")),
         ("outOfRangeIndex", CollisionBias.outOfRangeIndex(subject: "index")),
-        ("tiedKeys", CollisionBias.tiedKeys(subject: "key", typeName: "String"))
+        ("tiedKeys", CollisionBias.tiedKeys(subject: "key", typeName: "String")),
     ]
 
     @Test("every shipped generator recipe compiles against the vendored kit")

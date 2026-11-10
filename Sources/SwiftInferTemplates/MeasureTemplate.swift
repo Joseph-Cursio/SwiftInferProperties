@@ -29,7 +29,7 @@ public enum MeasureTemplate {
     /// be negative), for which non-negativity would be a false law.
     public static let curatedVerbs: Set<String> = [
         "count", "size", "length", "cardinality", "magnitude",
-        "depth", "height", "width"
+        "depth", "height", "width",
     ]
 
     /// Curated suffixes, so `byteCount` / `treeDepth` / `viewWidth` fire.
@@ -109,7 +109,7 @@ public enum MeasureTemplate {
                 weight: 15,
                 detail: "Curated non-negative-measure verb match: '\(summary.name)' — a cardinality "
                     + "or magnitude, so it owes `measure >= 0`"
-            )
+            ),
         ]
     }
 
@@ -133,7 +133,7 @@ public enum MeasureTemplate {
                 + "(empty / zero / reversed) on purpose, because that is the only place this fails.",
             "CONFIRM the measure is genuinely non-negative. `count` / `size` / `magnitude` are; a "
                 + "signed quantity that happens to be named like one (a `balance`, a `delta`) is not — "
-                + "those verbs are deliberately excluded, but a project may reuse a curated name."
+                + "those verbs are deliberately excluded, but a project may reuse a curated name.",
         ]
     }
 }

@@ -31,7 +31,7 @@ struct MonotonicityDomainGateTests {
             initializers: [
                 IndexedTypeShape.InitializerSignature(
                     parameters: [IndexedTypeShape.InitializerParameter(label: "size", typeName: "Int")]
-                )
+                ),
             ]
         )
     }

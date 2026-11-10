@@ -90,7 +90,7 @@ public enum AssertReferenceEquivalenceDetector {
                 sharedInput: shared,
                 directionIsCertain: subject.takesInputAsArgument && reference.isMethodOnInput,
                 location: assertion.location
-            )
+            ),
         ]
     }
 

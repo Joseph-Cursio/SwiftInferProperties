@@ -141,7 +141,7 @@ struct ProtocolPrinterPairingTests {
         // `conforms` is for.
         let summaries = [
             parseFn(returns: "SyntaxProtocol", carrier: "SyntaxProtocol"),
-            printer(on: "SyntaxProtocol")
+            printer(on: "SyntaxProtocol"),
         ]
         let strict = FunctionPairing.candidates(in: summaries)
         let withIdentityConformance = FunctionPairing.candidates(

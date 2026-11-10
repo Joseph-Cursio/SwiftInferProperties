@@ -28,7 +28,7 @@ struct MultiModuleVerifyMeasuredTests {
             packageName: "MultiModuleVerifyCorpus",
             modules: [
                 ("Alpha", Self.moduleDirectory("Alpha")),
-                ("Beta", Self.moduleDirectory("Beta"))
+                ("Beta", Self.moduleDirectory("Beta")),
             ],
             into: parent
         )

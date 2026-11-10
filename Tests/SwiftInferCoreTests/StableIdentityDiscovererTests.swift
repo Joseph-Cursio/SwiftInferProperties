@@ -47,7 +47,7 @@ struct StableIdentityDiscovererTests {
         let candidates = StableIdentityDiscoverer.discover(
             typeDecls: [
                 classDecl("Ext", inherited: []),
-                TypeDecl(name: "Ext", kind: .extension, inheritedTypes: ["Hashable"], location: loc())
+                TypeDecl(name: "Ext", kind: .extension, inheritedTypes: ["Hashable"], location: loc()),
             ],
             functions: [method("touch", on: "Ext")]
         )

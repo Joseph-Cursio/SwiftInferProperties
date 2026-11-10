@@ -55,7 +55,7 @@ public enum BulkIncrementalTemplate {
                 detail: "Curated accumulator name: '\(shape.inserter.name)' — adding one "
                     + "element is definitional for it, so the fold is the incremental "
                     + "construction rather than a guess at one"
-            )
+            ),
         ]
     }
 
@@ -66,7 +66,7 @@ public enum BulkIncrementalTemplate {
             "Element match: the bulk parameter is `\(shape.bulkParameterTypeText)` and "
                 + "`\(shape.inserter.name)` takes `\(shape.elementTypeText)`, so the fold "
                 + "consumes exactly what the bulk call consumes. A carrier with several "
-                + "accumulators is paired on this, not on the name"
+                + "accumulators is paired on this, not on the name",
         ]
     }
 
@@ -96,7 +96,7 @@ public enum BulkIncrementalTemplate {
             "This is not covered by `checkRangeReplaceableCollectionPropertyLaws`, whose "
                 + "four laws are `emptyInitIsEmpty`, `removeAllMakesEmpty`, "
                 + "`removeAtInsertRoundTrip` and `replaceSubrangeAppliesEdit` — none relates "
-                + "a bulk construction to a fold."
+                + "a bulk construction to a fold.",
         ]
     }
 
@@ -114,7 +114,7 @@ public enum BulkIncrementalTemplate {
                     + "what the loop must do element by element — duplicates, adjacency, "
                     + "overlap. Draw from a narrow alphabet or the suite goes green having "
                     + "exercised only the easy half of the domain."
-            )
+            ),
         ]
     }
 

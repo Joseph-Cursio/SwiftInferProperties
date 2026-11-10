@@ -58,7 +58,7 @@ public enum PredicateTemplate {
                         weight: 20,
                         detail: "`\(summary.name)` classifies its inputs — it must be TOTAL over "
                             + "them, and it must agree with a reference definition only you can state"
-                    )
+                    ),
                 ]
             },
             evidence: { [$0.inferenceEvidence] },
@@ -156,7 +156,7 @@ public enum PredicateTemplate {
                 + "it. The counterexample lives in the collisions, and you have to generate them on "
                 + "purpose.",
             "If you cannot state the reference definition in one true English sentence, that is not a "
-                + "reason to skip the property — it is a finding about the function."
+                + "reason to skip the property — it is a finding about the function.",
         ]
     }
 }

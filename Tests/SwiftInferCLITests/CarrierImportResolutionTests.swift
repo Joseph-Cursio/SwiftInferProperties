@@ -26,7 +26,7 @@ struct CarrierImportResolutionTests {
             .appendingPathComponent("carrier-imports-" + UUID().uuidString)
         let layout = [
             "Models": ["Report.swift", "Issue.swift"],
-            "Engine": ["Checker.swift"]
+            "Engine": ["Checker.swift"],
         ]
         for (module, files) in layout {
             let directory = root.appendingPathComponent("Sources/\(module)")
@@ -57,14 +57,14 @@ struct CarrierImportResolutionTests {
                 inheritedTypes: [],
                 hasUserGen: false,
                 storedMembers: [StoredMember(name: "text", typeName: "String")]
-            )
+            ),
         ]
     }
 
     private static var sourceFiles: [String: String] {
         [
             "Report": packageRoot.appendingPathComponent("Sources/Models/Report.swift").path,
-            "Issue": packageRoot.appendingPathComponent("Sources/Models/Issue.swift").path
+            "Issue": packageRoot.appendingPathComponent("Sources/Models/Issue.swift").path,
         ]
     }
 
@@ -81,7 +81,7 @@ struct CarrierImportResolutionTests {
                         line: 3,
                         column: 1
                     )
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -135,7 +135,7 @@ struct CarrierImportResolutionTests {
                 inheritedTypes: [],
                 hasUserGen: false,
                 storedMembers: [StoredMember(name: "syntax", typeName: "ExprSyntax")]
-            )
+            ),
         ]) { first, _ in first }
         let line = InteractiveTriage.carrierImportLines(
             for: suggestion(carrier: "Node"),

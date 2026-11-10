@@ -60,7 +60,7 @@ struct IdempotenceTemplateLiftedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 
@@ -180,7 +180,7 @@ struct IdempotenceTemplateLiftedTests {
                 "merge",
                 params: [
                     ParamSpec(nil, "Bag"),
-                    ParamSpec("with", "Int")
+                    ParamSpec("with", "Int"),
                 ]
             ),
             carrierKindResolver: resolver

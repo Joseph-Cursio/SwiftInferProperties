@@ -42,7 +42,7 @@ func makeBinaryOp(name: String, typeText: String) -> FunctionSummary {
         name: name,
         parameters: [
             Parameter(label: nil, internalName: "a", typeText: typeText, isInout: false),
-            Parameter(label: nil, internalName: "b", typeText: typeText, isInout: false)
+            Parameter(label: nil, internalName: "b", typeText: typeText, isInout: false),
         ],
         returnTypeText: typeText,
         isThrows: false,

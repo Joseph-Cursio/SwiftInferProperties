@@ -77,7 +77,7 @@ struct MockGeneratorSynthesizerTests {
         let shape2 = Self.shape([(label: "title", kind: .string), (label: "author", kind: .string)])
         let record = ConstructionRecord(entries: [
             Self.entry(typeName: "Doc", shape: shape1, siteCount: 3),
-            Self.entry(typeName: "Doc", shape: shape2, siteCount: 3)
+            Self.entry(typeName: "Doc", shape: shape2, siteCount: 3),
         ])
         // Even though each individual shape clears the threshold, the
         // type has TWO shapes → ambiguous → nil per OD #3 default.
@@ -116,7 +116,7 @@ struct MockGeneratorSynthesizerTests {
             (label: "i", kind: .integer),
             (label: "s", kind: .string),
             (label: "b", kind: .boolean),
-            (label: "f", kind: .float)
+            (label: "f", kind: .float),
         ])
         let record = ConstructionRecord(entries: [
             Self.entry(typeName: "AllKinds", shape: allKindsShape, siteCount: 3)
@@ -140,7 +140,7 @@ struct MockGeneratorSynthesizerTests {
             observedLiterals: [
                 ["3", "\"x\""],
                 ["5", "\"y\""],
-                ["7", "\"z\""]
+                ["7", "\"z\""],
             ]
         )
         let record = ConstructionRecord(entries: [entry])

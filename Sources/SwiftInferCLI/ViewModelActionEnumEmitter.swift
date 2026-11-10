@@ -274,7 +274,7 @@ public enum ViewModelActionEnumEmitter {
         "default", "defer", "do", "else", "fallthrough", "for", "guard",
         "if", "in", "repeat", "return", "switch", "where", "while", "as",
         "catch", "false", "is", "nil", "rethrows", "self", "Self", "super",
-        "throw", "throws", "true", "try"
+        "throw", "throws", "true", "try",
     ]
 
     private static func escapeIfKeyword(_ identifier: String) -> String {

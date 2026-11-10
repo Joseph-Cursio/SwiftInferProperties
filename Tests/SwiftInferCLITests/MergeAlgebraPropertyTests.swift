@@ -67,7 +67,7 @@ struct MergeAlgebraPropertyTests {
     static let readings = [
         Date(timeIntervalSince1970: 1_000_000),
         Date(timeIntervalSince1970: 1_000_001),
-        Date(timeIntervalSince1970: 1_000_002)
+        Date(timeIntervalSince1970: 1_000_002),
     ]
 
     /// Three identities, so a merge has something to collide on.
@@ -83,7 +83,7 @@ struct MergeAlgebraPropertyTests {
                     displayName: "normalize",
                     signature: "(T) -> T",
                     location: SourceLocation(file: "Carrier.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 80, detail: "curated verb")]),
             generator: .m1Placeholder,
@@ -126,7 +126,7 @@ struct MergeAlgebraPropertyTests {
     private static let evidenceChoices: [(Date, VerifyOutcome)] = readings.flatMap { reading in
         [
             VerifyOutcome.bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0),
-            .defaultFails(DefaultFailDetail(trial: 1, input: "x", forwardResult: "a", inverseResult: "b"))
+            .defaultFails(DefaultFailDetail(trial: 1, input: "x", forwardResult: "a", inverseResult: "b")),
         ].map { (reading, $0) }
     }
 

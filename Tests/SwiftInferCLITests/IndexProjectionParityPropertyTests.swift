@@ -239,7 +239,7 @@ struct IndexProjectionParityPropertyTests {
                         inheritedTypes: ["String"],
                         hasUserGen: false,
                         enumCases: [IndexedTypeShape.EnumCase(name: "`struct`")]
-                    )
+                    ),
                 ],
                 interactionEntries: [Self.interactionEntry(tag, score: 40)]
             )
@@ -295,7 +295,7 @@ struct IndexProjectionParityPropertyTests {
             typeShapes: [
                 "Stale": IndexedTypeShape(
                     name: "Stale", kind: .struct, inheritedTypes: [], hasUserGen: false
-                )
+                ),
             ],
             interactionEntries: []
         )
@@ -306,7 +306,7 @@ struct IndexProjectionParityPropertyTests {
                 "Fresh": IndexedTypeShape(
                     name: "Fresh", kind: .enum, inheritedTypes: ["String"], hasUserGen: false,
                     enumCases: [IndexedTypeShape.EnumCase(name: "a")]
-                )
+                ),
             ]
         )
         // History kept.

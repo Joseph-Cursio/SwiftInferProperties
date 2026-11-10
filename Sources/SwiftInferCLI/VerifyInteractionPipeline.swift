@@ -313,7 +313,7 @@ public enum VerifyInteractionPipeline {
             "  State: \(candidate.stateTypeName)",
             "  Action: \(candidate.actionTypeName)",
             "",
-            "  Outcome: \(result.outcome.rawValue)"
+            "  Outcome: \(result.outcome.rawValue)",
         ]
         var lines = header
         if let totalRuns = result.totalRuns, let clean = result.cleanRuns {

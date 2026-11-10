@@ -54,7 +54,7 @@ struct MarkerDispatchReaderTests {
             MarkerRow(literal: "comment", test: .contains, result: ".comments"),
             MarkerRow(literal: "doc", test: .contains, result: ".comments"),
             MarkerRow(literal: "todo", test: .contains, result: ".comments"),
-            MarkerRow(literal: "wrap", test: .hasSuffix, result: ".wrapping")
+            MarkerRow(literal: "wrap", test: .hasSuffix, result: ".wrapping"),
         ])
     }
 
@@ -171,7 +171,7 @@ struct MarkerDispatchReaderTests {
             if s.contains("c") { return .y }
             return .z
         }
-        """
+        """,
     ])
     func declinesWhatItCannotRestate(source: String) {
         #expect(read(source) == nil)

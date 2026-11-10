@@ -75,7 +75,7 @@ public enum DocumentedRangeTemplate {
         number + #"\s*(?:\.\.\.|…)\s*"# + number,
         #"\[\s*"# + number + #"\s*,\s*"# + number + #"\s*\]"#,
         #"\bbetween\s+"# + number + #"\s+and\s+"# + number,
-        #"\bfrom\s+"# + number + #"\s+(?:to|through)\s+"# + number
+        #"\bfrom\s+"# + number + #"\s+(?:to|through)\s+"# + number,
     ]
 
     /// The one range `doc` states, or `nil` for none or several.
@@ -111,7 +111,7 @@ public enum DocumentedRangeTemplate {
                 kind: .orderedCodomainSignature,
                 weight: 20,
                 detail: "Numeric result: \(summary.name) -> \(returnType)"
-            )
+            ),
         ]
     }
 
@@ -123,7 +123,7 @@ public enum DocumentedRangeTemplate {
                 + "division whose guard can be bypassed, NaN or infinity from a zero denominator.",
             "A FAILURE IS A DISAGREEMENT, and either side may be wrong: clamp the code to the "
                 + "range, or correct the comment. Inputs the type admits but callers never pass — "
-                + "a count above its total — still count; if they are impossible, make the type say so."
+                + "a count above its total — still count; if they are impossible, make the type say so.",
         ]
     }
 }

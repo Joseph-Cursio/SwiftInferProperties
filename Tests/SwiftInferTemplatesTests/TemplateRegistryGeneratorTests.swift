@@ -118,7 +118,7 @@ struct TemplateRegistryCrossValidationTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Any", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false),
             ],
             returnTypeText: "Any",
             isThrows: false,

@@ -31,7 +31,7 @@ enum ViewModelVerifyInteractionSurvey {
             ("referential-integrity", ViewModelRefintResolver.resolve(candidate)?.predicate),
             ("cardinality", ViewModelCardinalityResolver.resolve(candidate)),
             ("biconditional", ViewModelBiconditionalResolver.resolve(candidate)),
-            ("conservation", ViewModelConservationResolver.resolve(candidate))
+            ("conservation", ViewModelConservationResolver.resolve(candidate)),
         ]
         return raw.compactMap { family, predicate in
             predicate.map { (family, $0) }

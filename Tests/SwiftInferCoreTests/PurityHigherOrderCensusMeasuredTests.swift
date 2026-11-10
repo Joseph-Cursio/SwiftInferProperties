@@ -76,7 +76,7 @@ struct PurityHigherOrderCensusMeasuredTests {
         ("closure through a local let",
          "func f(_ xs: [Int]) -> [Int] { let g: (Int) -> Int = { $0 }; return xs.map(g) }"),
         ("nested named function", "func f(_ xs: [Int]) -> [Int] { func g(_ i: Int) -> Int { i }; return xs.map(g) }"),
-        ("IMPURE closure literal", "func f(_ xs: [Int]) -> [Int] { xs.map { print($0); return $0 } }")
+        ("IMPURE closure literal", "func f(_ xs: [Int]) -> [Int] { xs.map { print($0); return $0 } }"),
     ]
 
     static func verdict(ofFirstFunctionIn source: String) -> PurityVerdict? {

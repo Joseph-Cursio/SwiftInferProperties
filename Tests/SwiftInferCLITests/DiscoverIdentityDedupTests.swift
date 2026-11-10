@@ -50,7 +50,7 @@ struct DiscoverIdentityDedupTests {
         let input = [
             suggestion(template: "idempotence", score: 80, identity: "a"),
             suggestion(template: "round-trip", score: 60, identity: "bee"),
-            suggestion(template: "predicate", score: 20, identity: "cee")
+            suggestion(template: "predicate", score: 20, identity: "cee"),
         ]
         let output = SwiftInferCommand.Discover.dedupedByIdentity(input)
         #expect(output.count == 3)
@@ -118,7 +118,7 @@ struct DiscoverIdentityDedupTests {
             suggestion(template: "differential-equivalence", score: 80, identity: "dup"),
             suggestion(template: "round-trip", score: 60, identity: "middle"),
             suggestion(template: "differential-equivalence", score: 80, identity: "dup"),
-            suggestion(template: "predicate", score: 20, identity: "last")
+            suggestion(template: "predicate", score: 20, identity: "last"),
         ]
         let output = SwiftInferCommand.Discover.dedupedByIdentity(input)
         #expect(output.count == 4)
@@ -152,7 +152,7 @@ struct DiscoverIdentityDedupTests {
             suggestion(
                 template: "state-machine", score: 35, identity: "state-machine|Database|add|remove",
                 evidence: [declaration("add(transactionObserver:) (some TransactionObserver) -> Void", line: 35)]
-            )
+            ),
         ]
         let output = SwiftInferCommand.Discover.dedupedByIdentity(copies)
         #expect(output.count == 1)

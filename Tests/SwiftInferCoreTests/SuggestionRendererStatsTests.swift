@@ -24,7 +24,7 @@ struct SuggestionRendererStatsTests {
     func multipleSuggestionsAcrossMultipleTemplatesUsesPluralHeader() {
         let suggestions = [
             makeSuggestion(template: "idempotence", score: 90),
-            makeSuggestion(template: "round-trip", score: 70)
+            makeSuggestion(template: "round-trip", score: 70),
         ]
         let rendered = SuggestionRenderer.renderStats(suggestions)
         #expect(rendered.hasPrefix("2 suggestions across 2 templates.\n"))
@@ -39,7 +39,7 @@ struct SuggestionRendererStatsTests {
         let suggestions = [
             makeSuggestion(template: "round-trip", score: 90),
             makeSuggestion(template: "round-trip", score: 90),
-            makeSuggestion(template: "round-trip", score: 60)
+            makeSuggestion(template: "round-trip", score: 60),
         ]
         let rendered = SuggestionRenderer.renderStats(suggestions)
         #expect(rendered.contains("(2 Strong, 1 Likely)"))
@@ -53,7 +53,7 @@ struct SuggestionRendererStatsTests {
             makeSuggestion(template: "round-trip", score: 90),
             makeSuggestion(template: "associativity", score: 90),
             makeSuggestion(template: "commutativity", score: 90),
-            makeSuggestion(template: "idempotence", score: 90)
+            makeSuggestion(template: "idempotence", score: 90),
         ]
         let rendered = SuggestionRenderer.renderStats(suggestions)
         let templateOrder = rendered.split(separator: "\n").dropFirst().map { line -> String in

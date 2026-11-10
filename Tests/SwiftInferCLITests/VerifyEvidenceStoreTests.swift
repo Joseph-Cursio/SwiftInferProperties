@@ -60,7 +60,7 @@ struct VerifyEvidenceStoreTests {
                 detail: "defaultTrials=100 edgeTrials=100 edgeSampled=6",
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.64.0"
-            )
+            ),
         ])
         try VerifyEvidenceStore.write(canonical, to: evidencePath)
 
@@ -100,7 +100,7 @@ struct VerifyEvidenceStoreTests {
                 detail: "trial=3",
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.64.0"
-            )
+            ),
         ])
         try VerifyEvidenceStore.write(
             implicit,
@@ -117,7 +117,7 @@ struct VerifyEvidenceStoreTests {
                 detail: nil,
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.64.0"
-            )
+            ),
         ])
         try VerifyEvidenceStore.write(override, to: overridePath)
 
@@ -160,7 +160,7 @@ struct VerifyEvidenceStoreTests {
                 detail: "defaultTrials=100 edgeTrials=0 edgeSampled=0",
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.64.0"
-            )
+            ),
         ])
         try VerifyEvidenceStore.write(log, to: path)
         #expect(FileManager.default.fileExists(atPath: path.path))
@@ -179,7 +179,7 @@ struct VerifyEvidenceStoreTests {
                 detail: "defaultTrials=100 edgeTrials=100 edgeSampled=6",
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.64.0"
-            )
+            ),
         ])
         try VerifyEvidenceStore.write(log, to: path)
         let firstBytes = try Data(contentsOf: path)
@@ -201,7 +201,7 @@ struct VerifyEvidenceStoreTests {
                 detail: "defaultTrials=100 edgeTrials=0 edgeSampled=0",
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.64.0"
-            )
+            ),
         ])
         try VerifyEvidenceStore.write(log, to: path)
         let text = try String(contentsOf: path, encoding: .utf8)

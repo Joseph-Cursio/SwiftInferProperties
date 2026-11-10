@@ -51,7 +51,7 @@ struct VerifyInteractionPipelineTests {
     func multipleCandidatesNoPinThrows() {
         let candidates = [
             candidate(functionName: "reduceA"),
-            candidate(functionName: "reduceB")
+            candidate(functionName: "reduceB"),
         ]
         #expect(throws: (any Error).self) {
             _ = try VerifyInteractionPipeline.resolveCandidate(candidates: candidates, pinRaw: nil)
@@ -79,7 +79,7 @@ struct VerifyInteractionPipelineTests {
     func pinFiltersToSingleMatch() throws {
         let candidates = [
             candidate(functionName: "reduceA"),
-            candidate(functionName: "reduceB", enclosingTypeName: "Inbox", carrierKind: .generic)
+            candidate(functionName: "reduceB", enclosingTypeName: "Inbox", carrierKind: .generic),
         ]
         let resolved = try VerifyInteractionPipeline.resolveCandidate(
             candidates: candidates,
@@ -100,7 +100,7 @@ struct VerifyInteractionPipelineTests {
         let candidates = [
             candidate(functionName: "reduce", enclosingTypeName: "Foo", carrierKind: .generic),
             candidate(functionName: "reduce"),  // free function → qualifiedName "reduce"
-            candidate(functionName: "reduce", enclosingTypeName: "Bar", carrierKind: .generic)
+            candidate(functionName: "reduce", enclosingTypeName: "Bar", carrierKind: .generic),
         ]
         let resolved = try VerifyInteractionPipeline.resolveCandidate(
             candidates: candidates,
@@ -114,7 +114,7 @@ struct VerifyInteractionPipelineTests {
     func qualifiedPinResolvesAlongsideFreeFunction() throws {
         let candidates = [
             candidate(functionName: "reduce"),  // free `reduce`
-            candidate(functionName: "reduce", enclosingTypeName: "Foo", carrierKind: .generic)
+            candidate(functionName: "reduce", enclosingTypeName: "Foo", carrierKind: .generic),
         ]
         let resolved = try VerifyInteractionPipeline.resolveCandidate(
             candidates: candidates,
@@ -150,7 +150,7 @@ struct VerifyInteractionPipelineTests {
     func pinAmbiguousThrows() {
         let candidates = [
             candidate(functionName: "reduce", enclosingTypeName: "InboxA", carrierKind: .generic),
-            candidate(functionName: "reduce", enclosingTypeName: "InboxB", carrierKind: .generic)
+            candidate(functionName: "reduce", enclosingTypeName: "InboxB", carrierKind: .generic),
         ]
         do {
             _ = try VerifyInteractionPipeline.resolveCandidate(

@@ -47,7 +47,7 @@ struct DiscoverReducersCommandTests {
         #expect(one.contains("detected 1 reducer-shaped function:"))
         let two = Command.renderSummary(candidates: [
             candidate(location: "Sources/A.swift:1"),
-            candidate(location: "Sources/B.swift:1")
+            candidate(location: "Sources/B.swift:1"),
         ])
         #expect(two.contains("detected 2 reducer-shaped functions:"))
     }
@@ -62,7 +62,7 @@ struct DiscoverReducersCommandTests {
                 signatureShape: .inoutStateActionReturnsVoid,
                 stateTypeName: "Inbox.State",
                 actionTypeName: "Inbox.Action"
-            )
+            ),
         ])
         #expect(rendered.contains("Sources/MyApp/Inbox.swift:42"))
         #expect(rendered.contains("Inbox.reduce"))
@@ -107,11 +107,11 @@ struct DiscoverReducersCommandTests {
     func renderSortsBy() {
         let lhsOrdering = Command.renderSummary(candidates: [
             candidate(location: "Sources/B.swift:1", functionName: "reduce"),
-            candidate(location: "Sources/A.swift:1", functionName: "reduce")
+            candidate(location: "Sources/A.swift:1", functionName: "reduce"),
         ])
         let rhsOrdering = Command.renderSummary(candidates: [
             candidate(location: "Sources/A.swift:1", functionName: "reduce"),
-            candidate(location: "Sources/B.swift:1", functionName: "reduce")
+            candidate(location: "Sources/B.swift:1", functionName: "reduce"),
         ])
         #expect(lhsOrdering == rhsOrdering)
         // The A-located one comes first.
@@ -279,11 +279,11 @@ extension DiscoverReducersCommandTests {
             location: SourceLocation(file: "Sources/\(typeName).swift", line: 10, column: 1),
             referenceBackedMembers: [
                 ReferenceBackedMember(name: "items", typeName: "NSMutableArray", kind: .referenceContainer),
-                ReferenceBackedMember(name: "onChange", typeName: "() -> Void", kind: .closure)
+                ReferenceBackedMember(name: "onChange", typeName: "() -> Void", kind: .closure),
             ],
             mutationSurface: [
                 MutationMethod(name: "add", isMutating: false, parameterCount: 1),
-                MutationMethod(name: "removeAll", isMutating: true, parameterCount: 0)
+                MutationMethod(name: "removeAll", isMutating: true, parameterCount: 0),
             ],
             equatability: equatability
         )
@@ -312,7 +312,7 @@ extension DiscoverReducersCommandTests {
     func renderValueSemanticPluralEquatable() {
         let rendered = Command.renderValueSemanticSummary([
             valueSemanticCandidate(typeName: "A", equatability: .equatable),
-            valueSemanticCandidate(typeName: "B")
+            valueSemanticCandidate(typeName: "B"),
         ])
         #expect(rendered.contains("detected 2 value-semantics carriers (reference-backed structs):"))
         // The Equatable candidate carries no not-verify-ready note on its line.

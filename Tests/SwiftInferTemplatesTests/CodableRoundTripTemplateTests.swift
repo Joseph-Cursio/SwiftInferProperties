@@ -37,7 +37,7 @@ struct CodableRoundTripTemplateTests {
                 InitializerSignature(
                     parameters: [InitializerParameter(label: "from", typeName: "Decoder")],
                     isThrowing: true
-                )
+                ),
             ]
         )
     }

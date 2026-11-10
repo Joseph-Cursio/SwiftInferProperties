@@ -138,7 +138,7 @@ public enum NormalFormTemplate {
             identity: { pair in
                 let names = [
                     "\(pair.forward.containingTypeName ?? "").\(pair.forward.name)",
-                    "\(pair.reverse.containingTypeName ?? "").\(pair.reverse.name)"
+                    "\(pair.reverse.containingTypeName ?? "").\(pair.reverse.name)",
                 ].sorted()
                 return SuggestionIdentity(
                     canonicalInput: "normal-form|" + names.joined(separator: "|")
@@ -166,7 +166,7 @@ public enum NormalFormTemplate {
                     + "structure and `\(printName)` writes it back, so "
                     + "`\(printName)(\(parseName)(s))` is a NORMAL FORM — normalising a second "
                     + "time must change nothing"
-            )
+            ),
         ]
         if halves.parse.containingTypeName == halves.print.containingTypeName {
             signals.append(
@@ -206,7 +206,7 @@ public enum NormalFormTemplate {
             "GENERATING PARSEABLE TEXT IS THE HARD PART. A `Gen<String>` of arbitrary characters "
                 + "is rejected by any real parser, so the property runs on nothing. Generate a "
                 + "corpus of valid fragments — or better, generate the STRUCTURE and print it to "
-                + "get text, which is parseable by construction."
+                + "get text, which is parseable by construction.",
         ]
     }
 }

@@ -32,7 +32,7 @@ enum KitAPIFloor {
         Floor(spelling: "Gen<UUID>.uuid(", version: [3, 10, 0]),
         Floor(spelling: "Gen<Data>.data(", version: [3, 10, 0]),
         Floor(spelling: "Gen<URL>.url(", version: [3, 10, 0]),
-        Floor(spelling: "Gen<Decimal>.decimal(", version: [3, 11, 0])
+        Floor(spelling: "Gen<Decimal>.decimal(", version: [3, 11, 0]),
     ]
 
     /// What to tell the reader when `stub` needs a newer kit than `resolved`, or `nil`.

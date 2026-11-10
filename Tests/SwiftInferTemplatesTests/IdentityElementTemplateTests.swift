@@ -146,7 +146,7 @@ struct IdentityElementTemplateShapeTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "IntSet", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "IntSet", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "IntSet", isInout: false),
             ],
             returnTypeText: "IntSet",
             isThrows: false,
@@ -200,7 +200,7 @@ struct IdentityElementPairingTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "IntSet", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "IntSet", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "IntSet", isInout: false),
             ],
             returnTypeText: "IntSet",
             isThrows: false,
@@ -264,7 +264,7 @@ struct IdentityElementPairingTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "IntSet", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "IntSet", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "IntSet", isInout: false),
             ],
             returnTypeText: "IntSet",
             isThrows: false,
@@ -310,7 +310,7 @@ func makeIdentityElementPair(
         name: opName,
         parameters: [
             Parameter(label: nil, internalName: "lhs", typeText: paramTypes.0, isInout: false),
-            Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false)
+            Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false),
         ],
         returnTypeText: returnType,
         isThrows: false,

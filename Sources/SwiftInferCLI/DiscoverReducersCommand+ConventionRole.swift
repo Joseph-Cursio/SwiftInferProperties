@@ -17,7 +17,7 @@ extension SwiftInferCommand.DiscoverReducers {
         var lines: [String] = [
             "swift-infer discover-reducers — detected \(roles.count) "
                 + "convention role\(suffix) (VIPER/MVP, by naming/conformance):",
-            ""
+            "",
         ]
         for role in roles {
             lines.append(contentsOf: renderConventionRole(role))

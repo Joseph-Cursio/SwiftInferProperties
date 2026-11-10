@@ -63,7 +63,7 @@ public enum IdempotenceReturnShapeClassifier {
     private static let extensionCalls: [(needle: String, label: String)] = [
         ("appendingPathComponent", "appendingPathComponent"),
         ("appendingPathExtension", "appendingPathExtension"),
-        ("insertingPrefix", "insertingPrefix")
+        ("insertingPrefix", "insertingPrefix"),
     ]
 
     /// Classify the body of a `T -> T` function.

@@ -17,7 +17,7 @@ struct CommutativityIndexTraversalTests {
             name: "distance",
             parameters: [
                 Parameter(label: "from", internalName: "a", typeText: "Int", isInout: false),
-                Parameter(label: "to", internalName: "b", typeText: "Int", isInout: false)
+                Parameter(label: "to", internalName: "b", typeText: "Int", isInout: false),
             ]
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
@@ -29,7 +29,7 @@ struct CommutativityIndexTraversalTests {
             name: "index",
             parameters: [
                 Parameter(label: nil, internalName: "i", typeText: "Int", isInout: false),
-                Parameter(label: "offsetBy", internalName: "n", typeText: "Int", isInout: false)
+                Parameter(label: "offsetBy", internalName: "n", typeText: "Int", isInout: false),
             ]
         )
         #expect(CommutativityTemplate.suggest(for: summary) == nil)
@@ -46,7 +46,7 @@ struct CommutativityIndexTraversalTests {
             name: "distance",
             parameters: [
                 Parameter(label: "x", internalName: "x", typeText: "Int", isInout: false),
-                Parameter(label: "y", internalName: "y", typeText: "Int", isInout: false)
+                Parameter(label: "y", internalName: "y", typeText: "Int", isInout: false),
             ]
         )
         #expect(summary.binaryOperatorTypeSymmetrySignal != nil)

@@ -98,7 +98,7 @@ struct MetricsInteractionCommandTests {
                     reducerQualifiedName: "Feature.reduce",
                     decision: .accepted,
                     timestamp: Date(timeIntervalSince1970: 0)
-                )
+                ),
             ]),
             to: path
         )

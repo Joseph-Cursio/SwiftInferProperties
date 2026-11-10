@@ -68,7 +68,7 @@ struct V158MethodologyGuardTests {
         "Self.Element",
         "Base.Element",
         "Iterator.Element",
-        "Base.Index"
+        "Base.Index",
     ]
 
     @Test("every curatedBindings key matches a cycle-27 carrier name or stored-member type-name")

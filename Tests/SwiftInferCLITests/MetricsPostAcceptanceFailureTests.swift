@@ -55,13 +55,13 @@ struct MetricsPostAcceptanceFailureTests {
             decision(identity: "AAA1111111111111"),
             decision(identity: "BBB2222222222222"),
             decision(identity: "CCC3333333333333"),
-            decision(identity: "DDD4444444444444")
+            decision(identity: "DDD4444444444444"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
             outcome(identity: "AAA1111111111111", kind: .stillPasses),
             outcome(identity: "BBB2222222222222", kind: .stillPasses),
             outcome(identity: "CCC3333333333333", kind: .nowFails),
-            outcome(identity: "DDD4444444444444", kind: .obsolete)
+            outcome(identity: "DDD4444444444444", kind: .obsolete),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.count == 1)
@@ -82,13 +82,13 @@ struct MetricsPostAcceptanceFailureTests {
             decision(identity: "AAA1111111111111"),
             decision(identity: "BBB2222222222222"),
             decision(identity: "CCC3333333333333"),
-            decision(identity: "DDD4444444444444")
+            decision(identity: "DDD4444444444444"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
             outcome(identity: "AAA1111111111111", kind: .stillPasses),
             outcome(identity: "BBB2222222222222", kind: .nowFails),
             outcome(identity: "CCC3333333333333", kind: .obsolete),
-            outcome(identity: "DDD4444444444444", kind: .error)
+            outcome(identity: "DDD4444444444444", kind: .error),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows[0].failureRate == 0.5) // 1 / (1 + 1)
@@ -98,11 +98,11 @@ struct MetricsPostAcceptanceFailureTests {
     func nilRateWhenNoMeasurableRecords() {
         let decisions = Decisions(records: [
             decision(identity: "AAA1111111111111"),
-            decision(identity: "BBB2222222222222")
+            decision(identity: "BBB2222222222222"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
             outcome(identity: "AAA1111111111111", kind: .obsolete),
-            outcome(identity: "BBB2222222222222", kind: .error)
+            outcome(identity: "BBB2222222222222", kind: .error),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.count == 1)
@@ -114,12 +114,12 @@ struct MetricsPostAcceptanceFailureTests {
         let decisions = Decisions(records: [
             decision(identity: "AAA1111111111111", choice: .rejected),
             decision(identity: "BBB2222222222222", choice: .skipped),
-            decision(identity: "CCC3333333333333", choice: .acceptedAsConformance)
+            decision(identity: "CCC3333333333333", choice: .acceptedAsConformance),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
             outcome(identity: "AAA1111111111111", kind: .stillPasses),
             outcome(identity: "BBB2222222222222", kind: .nowFails),
-            outcome(identity: "CCC3333333333333", kind: .stillPasses)
+            outcome(identity: "CCC3333333333333", kind: .stillPasses),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.count == 1)
@@ -134,7 +134,7 @@ struct MetricsPostAcceptanceFailureTests {
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
             outcome(identity: "AAA1111111111111", kind: .stillPasses),
-            outcome(identity: "ZZZ9999999999999", kind: .nowFails) // no decision
+            outcome(identity: "ZZZ9999999999999", kind: .nowFails), // no decision
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows[0].stillPasses == 1)
@@ -149,7 +149,7 @@ struct MetricsPostAcceptanceFailureTests {
             decision(identity: "CCC3333333333333", template: "round-trip"),
             decision(identity: "DDD4444444444444", template: "commutativity"),
             decision(identity: "EEE5555555555555", template: "commutativity"),
-            decision(identity: "FFF6666666666666", template: "commutativity")
+            decision(identity: "FFF6666666666666", template: "commutativity"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
             outcome(identity: "AAA1111111111111", template: "idempotence", kind: .stillPasses),
@@ -157,7 +157,7 @@ struct MetricsPostAcceptanceFailureTests {
             outcome(identity: "CCC3333333333333", template: "round-trip", kind: .nowFails),
             outcome(identity: "DDD4444444444444", template: "commutativity", kind: .stillPasses),
             outcome(identity: "EEE5555555555555", template: "commutativity", kind: .nowFails),
-            outcome(identity: "FFF6666666666666", template: "commutativity", kind: .obsolete)
+            outcome(identity: "FFF6666666666666", template: "commutativity", kind: .obsolete),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.map(\.template) == ["commutativity", "round-trip", "idempotence"])
@@ -205,11 +205,11 @@ struct MetricsPostAcceptanceFailureTests {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
             decisions: Decisions(records: [
                 decision(identity: "AAA1111111111111"),
-                decision(identity: "BBB2222222222222")
+                decision(identity: "BBB2222222222222"),
             ]),
             outcomes: PostAcceptanceOutcomeLog(records: [
                 outcome(identity: "AAA1111111111111", kind: .stillPasses),
-                outcome(identity: "BBB2222222222222", kind: .obsolete)
+                outcome(identity: "BBB2222222222222", kind: .obsolete),
             ])
         )
         let rendered = lines.joined(separator: "\n")
@@ -233,11 +233,11 @@ struct MetricsPostAcceptanceFailureTests {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
             decisions: Decisions(records: [
                 decision(identity: "AAA1111111111111"),
-                decision(identity: "BBB2222222222222")
+                decision(identity: "BBB2222222222222"),
             ]),
             outcomes: PostAcceptanceOutcomeLog(records: [
                 outcome(identity: "AAA1111111111111", kind: .stillPasses),
-                outcome(identity: "BBB2222222222222", kind: .nowFails)
+                outcome(identity: "BBB2222222222222", kind: .nowFails),
             ])
         )
         let rendered = lines.joined(separator: "\n")

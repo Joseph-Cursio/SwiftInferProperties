@@ -81,7 +81,7 @@ public enum InteractionPostAcceptanceOutcomesStore {
                 log: .empty,
                 warnings: [
                     "could not parse interaction-post-acceptance-outcomes "
-                        + "at \(path.path): \(error)"
+                        + "at \(path.path): \(error)",
                 ],
                 packageRoot: packageRoot
             )
@@ -90,7 +90,7 @@ public enum InteractionPostAcceptanceOutcomesStore {
                 log: .empty,
                 warnings: [
                     "could not read interaction-post-acceptance-outcomes "
-                        + "at \(path.path): \(error.localizedDescription)"
+                        + "at \(path.path): \(error.localizedDescription)",
                 ],
                 packageRoot: packageRoot
             )

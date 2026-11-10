@@ -92,7 +92,7 @@ struct MockInferredPreconditionRenderingTests {
             Self.mock(
                 argumentSpec: [
                     Self.intArg(label: "count"),
-                    Self.stringArg(label: "title")
+                    Self.stringArg(label: "title"),
                 ],
                 hints: [countHint, titleHint]
             )
@@ -122,7 +122,7 @@ struct MockInferredPreconditionRenderingTests {
             Self.mock(
                 argumentSpec: [
                     Self.intArg(label: "count"),
-                    Self.stringArg(label: "title")
+                    Self.stringArg(label: "title"),
                 ],
                 hints: [countHint]
             )
@@ -146,7 +146,7 @@ struct MockInferredPreconditionRenderingTests {
             (.nonEmptyString, "all observed strings are non-empty"),
             (.stringLength(low: 1, high: 8), "all observed strings have length in [1, 8]"),
             (.constantBool(value: true), "all observed values are true"),
-            (.constantBool(value: false), "all observed values are false")
+            (.constantBool(value: false), "all observed values are false"),
         ]
         for (pattern, description) in cases {
             let hint = PreconditionHint(

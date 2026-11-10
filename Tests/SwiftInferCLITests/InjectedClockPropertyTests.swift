@@ -40,13 +40,13 @@ struct InjectedClockPropertyTests {
             defaultTrials: 100,
             edge: EdgeCaseDetail(trial: 1, input: "x", forward: "a", inverse: "b", caseIndex: 0)
         ),
-        .error(reason: "boom")
+        .error(reason: "boom"),
     ]
 
     private static let instants = [
         Date(timeIntervalSince1970: 0),
         Date(timeIntervalSince1970: 1_000_000),
-        Date(timeIntervalSince1970: 1_774_000_000)
+        Date(timeIntervalSince1970: 1_774_000_000),
     ]
 
     private static func suggestion(

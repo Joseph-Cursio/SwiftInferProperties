@@ -72,7 +72,7 @@ public enum SortedOutputTemplate {
                 kind: .typeSymmetrySignature,
                 weight: 40,
                 detail: "the body sorts it: \(subject) is ordered by \(describe(ordering.keys))"
-            )
+            ),
         ]
         if let doc = summary.docComment, statesAnOrdering(doc) {
             signals.append(Signal(
@@ -112,7 +112,7 @@ public enum SortedOutputTemplate {
                 + "when elements share values — two findings in one rule, one rule in several files "
                 + "— and a wide alphabet almost never draws that. Narrow the alphabet of whatever "
                 + "the result is grouped or keyed by: on `ImpactReport.from`, a dropped key passed "
-                + "100 trials at the default generator and failed with three values per key."
+                + "100 trials at the default generator and failed with three values per key.",
         ]
     }
 }

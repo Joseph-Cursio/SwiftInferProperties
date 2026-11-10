@@ -82,7 +82,7 @@ struct UnequatableResultGateTests {
     @Test func aConformanceDeclaredInAnotherFileCounts() {
         let scan = Self.scan([
             "FixResult.swift": "struct FixResult { let text: String }",
-            "FixResult+Equatable.swift": "extension FixResult: Equatable {}"
+            "FixResult+Equatable.swift": "extension FixResult: Equatable {}",
         ])
         #expect(scan.shapes["FixResult"]?.inheritedTypes.isEmpty == true, "the shape alone cannot see it")
         #expect(Self.reason("FixResult", in: scan) == nil)
@@ -103,7 +103,7 @@ struct UnequatableResultGateTests {
     @Test func aConformanceRecordedUnderTheBareNestedNameCounts() {
         let scan = Self.scan([
             "Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}",
-            "Inner+Equatable.swift": "typealias Inner = Outer.Inner\nextension Inner: Equatable {}"
+            "Inner+Equatable.swift": "typealias Inner = Outer.Inner\nextension Inner: Equatable {}",
         ])
         #expect(scan.inherited["Inner"]?.contains("Equatable") == true)
         #expect(scan.inherited["Outer.Inner"] == nil)
@@ -114,7 +114,7 @@ struct UnequatableResultGateTests {
     @Test func aConformanceOnTheQualifiedExtensionCounts() {
         let scan = Self.scan([
             "Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}",
-            "Inner+Equatable.swift": "extension Outer.Inner: Equatable {}"
+            "Inner+Equatable.swift": "extension Outer.Inner: Equatable {}",
         ])
         #expect(scan.inherited["Outer.Inner"]?.contains("Equatable") == true)
         #expect(Self.reason("[Inner]", owner: "Outer", in: scan) == nil)
@@ -131,7 +131,7 @@ struct UnequatableResultGateTests {
         "struct Result: AdditiveArithmetic { var cents: Int }",
         "final class Result: NSObject {}",
         "protocol Amount: AdditiveArithmetic {}\nstruct Result: Amount { var cents: Int }",
-        "struct Result: Hashable & Codable { let raw: Int }"
+        "struct Result: Hashable & Codable { let raw: Int }",
     ])
     func aChainLeavingTheScanIsNotDeclined(source: String) {
         let scan = Self.scan(["Result.swift": source])
@@ -143,7 +143,7 @@ struct UnequatableResultGateTests {
     @Test("a chain of known non-Equatable names still declines", arguments: [
         "struct Result: Sendable, Codable { let raw: Int }",
         "class Base {}\nfinal class Result: Base {}",
-        "protocol Labelled: CustomStringConvertible {}\nstruct Result: Labelled { var description: String }"
+        "protocol Labelled: CustomStringConvertible {}\nstruct Result: Labelled { var description: String }",
     ])
     func aChainOfKnownNamesDeclines(source: String) {
         let scan = Self.scan(["Result.swift": source])

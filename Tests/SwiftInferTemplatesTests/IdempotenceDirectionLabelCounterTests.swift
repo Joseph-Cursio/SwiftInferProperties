@@ -42,7 +42,7 @@ struct IdempotenceDirectionLabelCounterTests {
     @Test("V1.10.1 — all curated direction labels suppress",
           arguments: [
               "after", "before", "next", "prev", "previous",
-              "advance", "succ", "pred", "successor", "predecessor"
+              "advance", "succ", "pred", "successor", "predecessor",
           ])
     func allCuratedDirectionLabelsSuppress(label: String) {
         let summary = makeIdempotenceSummary(
@@ -165,7 +165,7 @@ struct IdempotenceDirectionLabelCounterTests {
         let expected: Set<String> = [
             "after", "before",
             "next", "prev", "previous",
-            "advance", "succ", "pred", "successor", "predecessor"
+            "advance", "succ", "pred", "successor", "predecessor",
         ]
         #expect(DirectionLabels.curated == expected)
     }

@@ -10,11 +10,11 @@ struct LiftedConformanceEmitterM8Tests {
         let explainability = ExplainabilityBlock(
             whySuggested: [
                 "RefactorBridge claim: Tally → CommutativeMonoid",
-                "from associativity: merge(_:_:)"
+                "from associativity: merge(_:_:)",
             ],
             whyMightBeWrong: [
                 "Commutativity is a Strict law per kit v1.9.0 — "
-                    + "`combine(a, b) == combine(b, a)` must hold for every (a, b)."
+                    + "`combine(a, b) == combine(b, a)` must hold for every (a, b).",
             ]
         )
         let source = LiftedConformanceEmitter.commutativeMonoid(
@@ -50,7 +50,7 @@ struct LiftedConformanceEmitterM8Tests {
             whySuggested: [
                 "RefactorBridge claim: AdditiveInt → Group",
                 "from associativity: plus(_:_:)",
-                "from inverse-element pairing: negate(_:) -> AdditiveInt"
+                "from inverse-element pairing: negate(_:) -> AdditiveInt",
             ],
             whyMightBeWrong: [
                 "Inverse witness must satisfy both Strict laws."
@@ -200,11 +200,11 @@ struct LiftedConformanceEmitterStdlibTests {
             whySuggested: [
                 "RefactorBridge claim: Money → Ring (stdlib Numeric)",
                 "additive op: plus(_:_:) with identity zero",
-                "multiplicative op: times(_:_:) with identity one"
+                "multiplicative op: times(_:_:) with identity one",
             ],
             whyMightBeWrong: [
                 "Distributivity is NOT sample-verified.",
-                "FloatingPoint caveat: don't conform Double / Float."
+                "FloatingPoint caveat: don't conform Double / Float.",
             ]
         )
         let source = LiftedConformanceEmitter.numeric(

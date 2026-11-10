@@ -214,7 +214,7 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
             expected: [
                 "a RawType or a carrier with an indexed TypeShape",
                 "or provide `static func gen() -> Generator<\(carrier), some SendableSequenceType>` "
-                    + "(a same-file extension works for external types)"
+                    + "(a same-file extension works for external types)",
             ]
         )
     }

@@ -62,7 +62,7 @@ public enum MathForwardFunctions {
         // Roots
         "sqrt", "cbrt",
         // Misc
-        "hypot"
+        "hypot",
     ]
 
     /// Canonical forward-inverse pairs that the round-trip veto **does not**
@@ -96,7 +96,7 @@ public enum MathForwardFunctions {
         ("tan", "atan"),
         ("sinh", "asinh"),
         ("cosh", "acosh"),
-        ("tanh", "atanh")
+        ("tanh", "atanh"),
     ]
 
     /// Returns `true` when `(name1, name2)` matches a `canonicalInversePairs`

@@ -60,7 +60,7 @@ struct VerifierWorkdirCorpusIdentityTests {
             ("swift-collections", "swift-collections"),
             ("swift-numerics", "swift-numerics"),
             ("swift-property-based", "swift-property-based"),
-            ("SwiftPropertyLaws", "SwiftPropertyLaws")
+            ("SwiftPropertyLaws", "SwiftPropertyLaws"),
         ]
     )
     func collidingDependencyIsDropped(directory: String, identity: String) {
@@ -200,7 +200,7 @@ struct SharedVerifierPackageCorpusIdentityTests {
         _ = try SharedVerifierPackage.synthesize(
             members: [
                 Self.member(hash: "0xAAAA000000000001", userPackage: Self.corpus()),
-                Self.member(hash: "0xBBBB000000000002", userPackage: nil)
+                Self.member(hash: "0xBBBB000000000002", userPackage: nil),
             ],
             at: root
         )
@@ -287,7 +287,7 @@ struct SharedPackageProductQuarantineTests {
 
         let (usable, quarantined) = SharedVerifierPackage.quarantiningUnresolvableProducts([
             Self.member(hash: "0xAAAA000000000001", corpusRoot: root, productNames: ["DemoLib"]),
-            Self.member(hash: "0xBBBB000000000002", corpusRoot: root, productNames: ["RopeModule"])
+            Self.member(hash: "0xBBBB000000000002", corpusRoot: root, productNames: ["RopeModule"]),
         ])
         #expect(usable.count == 1)
         #expect(usable.first?.entry.identityHash == "0xAAAA000000000001")
@@ -332,7 +332,7 @@ struct SharedPackageProductQuarantineTests {
                 stubSource: "print(\"PASS\")\n",
                 userPackage: nil,
                 mode: .algebraic
-            )
+            ),
         ])
         #expect(usable.count == 1)
         #expect(quarantined.isEmpty)

@@ -110,7 +110,7 @@ struct HardGuaranteeTests {
             "downloadTask(",
             "uploadTask(",
             "import Network",
-            "Process("
+            "Process(",
         ]
         // **V1.42.C.3 documented exemption** — `VerifierSubprocess.swift`
         // legitimately invokes `Process` to spawn `swift build` and the
@@ -155,7 +155,7 @@ struct HardGuaranteeTests {
             "PackageProductResolver.swift",
             "DrainedProcess.swift",
             "KnownPropertiesCommand.swift",
-            "KnownPropertiesPackageVerify.swift"
+            "KnownPropertiesPackageVerify.swift",
         ]
         var violations: [String] = []
         let enumerator = FileManager.default.enumerator(

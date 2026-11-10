@@ -185,7 +185,7 @@ extension SwiftInferCommand {
             guard !invariants.isEmpty else { return [] }
             var lines = [
                 "    candidate interaction invariants "
-                    + "(\(invariants.count), unverified — Possible):"
+                    + "(\(invariants.count), unverified — Possible):",
             ]
             for invariant in invariants {
                 lines.append(
@@ -210,7 +210,7 @@ extension SwiftInferCommand {
             var lines: [String] = [
                 "swift-infer discover-reducers — detected \(candidates.count) "
                     + "view-model carrier\(suffix) (@Observable / ObservableObject):",
-                ""
+                "",
             ]
             for viewModel in candidates {
                 lines.append(contentsOf: renderViewModel(viewModel))
@@ -224,7 +224,7 @@ extension SwiftInferCommand {
             let fieldNames = viewModel.stateFields.map(\.name).joined(separator: ", ")
             var lines = [
                 "  \(viewModel.location)  \(viewModel.typeName)  [\(kind)]",
-                "    state (\(viewModel.stateFields.count)): \(fieldNames)"
+                "    state (\(viewModel.stateFields.count)): \(fieldNames)",
             ]
             if !viewModel.excludedFields.isEmpty {
                 let excluded = viewModel.excludedFields
@@ -265,7 +265,7 @@ extension SwiftInferCommand {
                 "swift-infer discover-reducers — detected \(candidates.count) "
                     + "lint-rule visitor carrier\(suffix) "
                     + "(SwiftSyntax issue-accumulators):",
-                ""
+                "",
             ]
             for visitor in candidates {
                 lines.append(contentsOf: renderRuleVisitor(visitor))
@@ -279,7 +279,7 @@ extension SwiftInferCommand {
             var lines = [
                 "  \(visitor.location)  \(visitor.typeName)\(base)",
                 "    visits (\(visitor.visitedNodeTypes.count)): "
-                    + visitor.visitedNodeTypes.joined(separator: ", ")
+                    + visitor.visitedNodeTypes.joined(separator: ", "),
             ]
             if !visitor.emittedRuleNames.isEmpty {
                 lines.append(
@@ -306,7 +306,7 @@ extension SwiftInferCommand {
             var lines: [String] = [
                 "swift-infer discover-reducers — detected \(candidates.count) "
                     + "value-semantics carrier\(suffix) (reference-backed structs):",
-                ""
+                "",
             ]
             for candidate in candidates {
                 lines.append(contentsOf: renderValueSemantic(candidate))
@@ -328,7 +328,7 @@ extension SwiftInferCommand {
                 "  \(origin)  \(candidate.typeName)\(note)",
                 "    reference-backed members "
                     + "(\(candidate.referenceBackedMembers.count)): \(members)",
-                "    mutation surface (\(candidate.mutationSurface.count)): \(surface)"
+                "    mutation surface (\(candidate.mutationSurface.count)): \(surface)",
             ]
         }
 
@@ -343,7 +343,7 @@ extension SwiftInferCommand {
             guard !invariants.isEmpty else { return [] }
             var lines = [
                 "    candidate interaction invariants "
-                    + "(\(invariants.count), unverified — Possible):"
+                    + "(\(invariants.count), unverified — Possible):",
             ]
             for invariant in invariants {
                 lines.append(

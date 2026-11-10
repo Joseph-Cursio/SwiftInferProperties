@@ -163,7 +163,7 @@ struct IdentityElementPairingFilterTests {
             name: "+",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Int", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "Int", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "Int", isInout: false),
             ],
             returnTypeText: "Bool",
             isThrows: false,
@@ -203,7 +203,7 @@ func makePairs(
         name: opName,
         parameters: [
             Parameter(label: nil, internalName: "lhs", typeText: typeText, isInout: false),
-            Parameter(label: nil, internalName: "rhs", typeText: typeText, isInout: false)
+            Parameter(label: nil, internalName: "rhs", typeText: typeText, isInout: false),
         ],
         returnTypeText: typeText,
         isThrows: false,

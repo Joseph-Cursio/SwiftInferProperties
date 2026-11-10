@@ -62,7 +62,7 @@ extension StrategistDispatchEmitter {
                 expected: [
                     ".memberwiseArbitrary with empty members "
                         + "(strategist's memberwiseStrategy should never return this; "
-                        + "v1.49.B defensive guard)"
+                        + "v1.49.B defensive guard)",
                 ]
             )
         }
@@ -73,7 +73,7 @@ extension StrategistDispatchEmitter {
                     ".memberwiseArbitrary arity \(members.count) > "
                         + "memberwiseArityLimit \(DerivationStrategist.memberwiseArityLimit) "
                         + "(strategist should have filtered to .todo; "
-                        + "v1.49.B defensive guard)"
+                        + "v1.49.B defensive guard)",
                 ]
             )
         }

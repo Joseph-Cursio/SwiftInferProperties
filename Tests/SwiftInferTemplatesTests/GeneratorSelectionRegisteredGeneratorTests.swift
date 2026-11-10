@@ -24,7 +24,7 @@ struct GeneratorSelectionRegisteredTests {
             hasUserGen: false,
             storedMembers: [
                 StoredMember(name: "rules", typeName: "[String: Int]"),
-                StoredMember(name: "root", typeName: "Node")
+                StoredMember(name: "root", typeName: "Node"),
             ],
             hasUserInit: false
         )
@@ -83,7 +83,7 @@ struct GeneratorSelectionRegisteredTests {
             "Widget": TypeShape(
             name: "Widget", kind: .struct, inheritedTypes: [],
             hasUserGen: false, storedMembers: [], hasUserInit: false
-            )
+            ),
         ]
     }
 

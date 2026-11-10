@@ -101,7 +101,7 @@ public enum SeedFieldParity {
     public static var knownNestedFields: [String: Set<String>] {
         [
             SeedField.effect.stringValue: Set(SeedEffectField.allCases.map(\.stringValue)),
-            SeedField.requires.stringValue: Set(SeedRequirementField.allCases.map(\.stringValue))
+            SeedField.requires.stringValue: Set(SeedRequirementField.allCases.map(\.stringValue)),
         ]
     }
 

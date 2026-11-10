@@ -28,7 +28,7 @@ struct SeedFocusCarrierTests {
                     displayName: evidenceName,
                     signature: "() -> Void",
                     location: SourceLocation(file: file, line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: []),
             generator: GeneratorMetadata(
@@ -98,7 +98,7 @@ struct SeedFocusCarrierTests {
             carrierSeed(symbol: "Percentage", file: "Report.swift"),
             SeedManifest.Seed(
                 file: "Math.swift", line: 3, symbol: "add", rule: "Pure Function", kind: .pureFunction
-            )
+            ),
         ])
         let seeded = makeSuggestion(
             templateName: "commutativity",

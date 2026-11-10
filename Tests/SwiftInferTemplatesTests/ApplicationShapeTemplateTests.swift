@@ -122,7 +122,7 @@ struct ApplicationShapeTemplateTests {
                 returns: nil,
                 type: "MacCloudViewModel"
             ),
-            member("navigateUp", [], returns: nil, type: "MacCloudViewModel")
+            member("navigateUp", [], returns: nil, type: "MacCloudViewModel"),
         ])
 
         let pair = try #require(pairs.first)
@@ -149,7 +149,7 @@ struct ApplicationShapeTemplateTests {
         // not a move at all.
         let pairs = InverseMutatorPairing.candidates(in: [
             member("selectAllFiles", [], returns: nil, type: "MacCloudViewModel"),
-            member("deselectAllFiles", [], returns: nil, type: "MacCloudViewModel")
+            member("deselectAllFiles", [], returns: nil, type: "MacCloudViewModel"),
         ])
 
         #expect(pairs.isEmpty)
@@ -159,7 +159,7 @@ struct ApplicationShapeTemplateTests {
     func nonVoidIsNotAMove() {
         let pairs = InverseMutatorPairing.candidates(in: [
             member("open", [parameter(nil, "URL")], returns: "Handle", type: "Store"),
-            member("close", [], returns: "Bool", type: "Store")
+            member("close", [], returns: "Bool", type: "Store"),
         ])
         #expect(pairs.isEmpty)
     }
@@ -297,7 +297,7 @@ struct OverloadIdentityTests {
             move("add", label: "function", type: "DatabaseFunction"),
             move("remove", label: "function", type: "DatabaseFunction"),
             move("add", label: "collation", type: "DatabaseCollation"),
-            move("remove", label: "collation", type: "DatabaseCollation")
+            move("remove", label: "collation", type: "DatabaseCollation"),
         ])
         #expect(pairs.count == 2)
 

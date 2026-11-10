@@ -179,7 +179,7 @@ struct V149MemberwiseTests {
             hasUserGen: false,
             storedMembers: [
                 IndexedTypeShape.StoredMember(name: "x", typeName: "Int"),
-                IndexedTypeShape.StoredMember(name: "y", typeName: "String")
+                IndexedTypeShape.StoredMember(name: "y", typeName: "String"),
             ],
             hasUserInit: false
         )
@@ -201,7 +201,7 @@ struct V149MemberwiseTests {
             storedMembers: [
                 IndexedTypeShape.StoredMember(name: "a", typeName: "Int"),
                 IndexedTypeShape.StoredMember(name: "b", typeName: "Int"),
-                IndexedTypeShape.StoredMember(name: "c", typeName: "Bool")
+                IndexedTypeShape.StoredMember(name: "c", typeName: "Bool"),
             ],
             hasUserInit: false
         )

@@ -75,13 +75,13 @@ public enum ViewModelInteractionAnalyzer {
             whySuggested: [
                 "SwiftUI MVVM view model (\(kind))",
                 invariant.rationale,
-                "subjects: \(invariant.subjects.joined(separator: ", "))"
+                "subjects: \(invariant.subjects.joined(separator: ", "))",
             ],
             whyMightBeWrong: [
                 "Surfaced from the view model's State + action alphabet by name/shape "
                     + "heuristics — unverified (default Possible per §3.5).",
                 "Measured verification requires constructing the view model — its injected "
-                    + "dependencies must be fakeable and its State fields Equatable."
+                    + "dependencies must be fakeable and its State fields Equatable.",
             ],
             firstSeenAt: firstSeenAt
         )
@@ -164,7 +164,7 @@ public enum ViewModelInteractionAnalyzer {
                 subjects: presentation,
                 rationale: "at most one presentation route should be active at a time "
                     + "(mutually-exclusive Optionals: \(presentation.joined(separator: ", ")))"
-            )
+            ),
         ]
     }
 

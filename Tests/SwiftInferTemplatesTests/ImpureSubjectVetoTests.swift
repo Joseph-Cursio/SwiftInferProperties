@@ -60,7 +60,7 @@ struct ImpureSubjectVetoTests {
                     displayName: subject.name,
                     signature: "() -> Bool",
                     location: subject.location
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .predicateSignature, weight: 30, detail: "predicate shape")]),
             generator: GeneratorMetadata(source: .derivedComposite, confidence: .high, sampling: .notRun),

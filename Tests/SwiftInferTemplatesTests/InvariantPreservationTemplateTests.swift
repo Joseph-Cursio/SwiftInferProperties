@@ -82,7 +82,7 @@ struct InvariantPreservationTemplateTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Widget", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Widget", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Widget", isInout: false),
             ],
             returnType: "Widget",
             invariantKeypath: "\\.isValid"

@@ -152,7 +152,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         let manifest = SeedManifest(seeds: [
             Self.seed("isValidName", line: 3),
             Self.seed("backoffDelay", line: 6),
-            Self.seed("weighted", line: 9)
+            Self.seed("weighted", line: 9),
         ])
         let text = try run("DocAdviceFullySeeded", manifest: manifest)
 
@@ -202,7 +202,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         "an empty or kernel-only manifest does not narrow docstring advice",
         arguments: [
             SeedManifest(seeds: []),
-            SeedManifest(seeds: [Self.seed("weighted", line: 9, kind: .extractableKernel)])
+            SeedManifest(seeds: [Self.seed("weighted", line: 9, kind: .extractableKernel)]),
         ]
     )
     func emptyManifestDoesNotNarrowDocstringAdvice(manifest: SeedManifest) throws {
@@ -223,7 +223,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
     func kernelSeedDoesNotVouchForItsEnclosingFunction() throws {
         let manifest = SeedManifest(seeds: [
             Self.seed("isValidName", line: 3),
-            Self.seed("backoffDelay", line: 6, kind: .extractableKernel)
+            Self.seed("backoffDelay", line: 6, kind: .extractableKernel),
         ])
         let text = try run("DocAdviceKernelSeed", manifest: manifest)
 

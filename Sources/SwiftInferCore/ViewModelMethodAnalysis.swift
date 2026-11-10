@@ -30,7 +30,7 @@ enum ViewModelMutatorNames {
         "popFirst", "popLast", "removeValue", "updateValue",
         "sort", "reverse", "shuffle", "swapAt",
         "toggle", "formUnion", "formIntersection", "formSymmetricDifference",
-        "subtract", "subtractInPlace", "merge", "negate"
+        "subtract", "subtractInPlace", "merge", "negate",
     ]
 }
 

@@ -95,7 +95,7 @@ public enum InverseLiftedPairing {
         LiftedInversePair.NamePair(lhs: "activate", rhs: "deactivate"),
         LiftedInversePair.NamePair(lhs: "subscribe", rhs: "unsubscribe"),
         LiftedInversePair.NamePair(lhs: "register", rhs: "deregister"),
-        LiftedInversePair.NamePair(lhs: "enable", rhs: "disable")
+        LiftedInversePair.NamePair(lhs: "enable", rhs: "disable"),
     ]
 
     /// Every candidate `(forward, reverse)` pair such that:

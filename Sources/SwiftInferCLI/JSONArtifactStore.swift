@@ -220,7 +220,7 @@ public enum JSONArtifactStore<Artifact: JSONArtifact> {
                 artifact: .empty,
                 warnings: [
                     "could not read \(Artifact.artifactNoun) at \(path.path): "
-                        + error.localizedDescription
+                        + error.localizedDescription,
                 ],
                 packageRoot: packageRoot
             )

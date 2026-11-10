@@ -52,7 +52,7 @@ struct SuggestionCopyTests {
                     displayName: "chunk(of:at:)",
                     signature: "(Data, Int) -> Data",
                     location: SourceLocation(file: "ChunkPlan.swift", line: 12, column: 5)
-                )
+                ),
             ],
             score: Score(signals: [
                 Signal(kind: .indexToRangeSignature, weight: 40, detail: "a partition")
@@ -78,7 +78,7 @@ struct SuggestionCopyTests {
                         label: "byteCount",
                         swiftTypeName: "Int",
                         observedLiterals: ["1024"]
-                    )
+                    ),
                 ],
                 siteCount: 3
             ),
@@ -203,7 +203,7 @@ struct SuggestionCopyTests {
             original.withAdditionalSignal(
                 Signal(kind: .verifyBothPass, weight: 15, detail: ""),
                 explainability: original.explainability
-            )
+            ),
         ]
 
         for suggestion in transformed {

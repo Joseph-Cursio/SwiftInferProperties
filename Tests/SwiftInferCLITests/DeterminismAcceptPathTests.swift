@@ -270,7 +270,7 @@ extension DeterminismAcceptPathTests {
         "Swift.Array<(Int, Int)>",
         "ArraySlice<(Int, Int)>",
         "ContiguousArray<(Int, Int)>",
-        "sending (Int, (Int, Int))"
+        "sending (Int, (Int, Int))",
     ])
     func aTupleShapeWithNoEqualityIsDeclined(returnType: String) throws {
         let law = try Self.law(for: Self.summary(
@@ -321,7 +321,7 @@ extension DeterminismAcceptPathTests {
     /// specifier and was never part of the comparison.
     @Test("a tuple result spelled implicitly unwrapped or `sending` is written", arguments: [
         "(Int, Int)!",
-        "sending (Int, Int)"
+        "sending (Int, Int)",
     ])
     func aTupleSpelledAnotherWayIsWritten(returnType: String) throws {
         let stub = try Self.stub(for: Self.summary(
@@ -339,7 +339,7 @@ extension DeterminismAcceptPathTests {
     /// that stub was written; `!` read it as wrapped, so the reason named the wrong cause.
     @Test("a throwing tuple result spelled implicitly unwrapped or `sending` is declined as throwing", arguments: [
         "(Int, Int)!",
-        "sending (Int, Int)"
+        "sending (Int, Int)",
     ])
     func aThrowingTupleSpelledAnotherWayIsDeclined(returnType: String) throws {
         let law = try Self.law(for: Self.summary(

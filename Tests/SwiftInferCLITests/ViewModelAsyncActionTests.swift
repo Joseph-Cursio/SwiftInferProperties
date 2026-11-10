@@ -32,7 +32,7 @@ struct ViewModelAsyncActionTests {
             typeName: "CartModel",
             actions: [
                 action("checkout"),
-                action("load", isAsync: true, isClockDeterministic: true)
+                action("load", isAsync: true, isClockDeterministic: true),
             ]
         )
         #expect(result.skipped.isEmpty)
@@ -72,7 +72,7 @@ struct ViewModelAsyncActionTests {
             predicate: "true",
             actions: [
                 action("checkout"),
-                action("load", isAsync: true, isClockDeterministic: true)
+                action("load", isAsync: true, isClockDeterministic: true),
             ]
         ))
         #expect(source.contains("static func main() async {"))

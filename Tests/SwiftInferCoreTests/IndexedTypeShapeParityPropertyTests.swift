@@ -236,7 +236,7 @@ struct IndexedTypeShapeParityPropertyTests {
                 PropertyLawCore.InitializerSignature(
                     parameters: [PropertyLawCore.InitializerParameter(label: nil, typeName: "Int")],
                     accessLevel: .public
-                )
+                ),
             ]
         )
         let restored = IndexedTypeShape(from: shape).toKitShape()
@@ -262,7 +262,7 @@ struct IndexedTypeShapeParityPropertyTests {
                 PropertyLawCore.EnumCase(name: "`struct`"),
                 PropertyLawCore.EnumCase(name: "`class`"),
                 PropertyLawCore.EnumCase(name: "`enum`"),
-                PropertyLawCore.EnumCase(name: "`actor`")
+                PropertyLawCore.EnumCase(name: "`actor`"),
             ]
         )
         let viaMirror = IndexedTypeShape(from: shape).toKitShape()
@@ -355,7 +355,7 @@ struct IndexedTypeShapeParityPropertyTests {
                 PropertyLawCore.InitializerSignature(
                     parameters: [
                         PropertyLawCore.InitializerParameter(label: "unchecked", typeName: "Vector"),
-                        PropertyLawCore.InitializerParameter(label: "pointOnPlane", typeName: "Vector")
+                        PropertyLawCore.InitializerParameter(label: "pointOnPlane", typeName: "Vector"),
                     ],
                     assertsPrecondition: false,
                     delegatesToSelf: true
@@ -364,11 +364,11 @@ struct IndexedTypeShapeParityPropertyTests {
                 PropertyLawCore.InitializerSignature(
                     parameters: [
                         PropertyLawCore.InitializerParameter(label: "unchecked", typeName: "Vector"),
-                        PropertyLawCore.InitializerParameter(label: "w", typeName: "Double")
+                        PropertyLawCore.InitializerParameter(label: "w", typeName: "Double"),
                     ],
                     assertsPrecondition: true,
                     delegatesToSelf: false
-                )
+                ),
             ]
         )
 

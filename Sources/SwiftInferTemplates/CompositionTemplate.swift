@@ -46,7 +46,7 @@ public enum CompositionTemplate {
         "Float", "Float16", "Float32", "Float64", "Float80",
         "Double", "CGFloat",
         "Decimal",
-        "Duration"
+        "Duration",
     ])
 
     /// Curated additive-action verb list per the v1.19 plan open decision
@@ -64,7 +64,7 @@ public enum CompositionTemplate {
         "extend", "expand",
         "shift", "offset",
         "bump", "grow", "augment",
-        "append", "deposit"
+        "append", "deposit",
     ]
 
     /// V1.21.B / **V1.29.C** — first-parameter labels that signal
@@ -94,7 +94,7 @@ public enum CompositionTemplate {
         "at",
         "upTo",
         "before",
-        "through"
+        "through",
     ]
 
     /// Dogfood finding (`attaswift/BigInt`) — first-parameter labels that
@@ -221,7 +221,7 @@ public enum CompositionTemplate {
                 + "semantically equivalent to `op(op(s, a), b)`. A method "
                 + "named `increment` that clamps at a maximum or "
                 + "non-linearly transforms its argument will fail at "
-                + "sampling time."
+                + "sampling time.",
         ]
     }
 
@@ -338,7 +338,7 @@ public enum CompositionTemplate {
                 + "semantically equivalent to `op(op(s, a), b)`. A method "
                 + "named `increment` that clamps at a maximum or "
                 + "non-linearly transforms its argument will fail at "
-                + "sampling time."
+                + "sampling time.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

@@ -155,7 +155,7 @@ struct LiftedTestEmitterTests {
             funcName: "combine",
             parameters: [
                 .init(label: nil, generator: "Gen<Int>.int()"),
-                .init(label: "with", generator: "Gen<Character>.letterOrNumber.string(of: 0...8)")
+                .init(label: "with", generator: "Gen<Character>.letterOrNumber.string(of: 0...8)"),
             ],
             seed: Self.determinismSeed
         )

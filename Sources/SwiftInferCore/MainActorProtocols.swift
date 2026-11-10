@@ -59,7 +59,7 @@ public enum MainActorProtocols {
         "NSViewRepresentable", "UIViewRepresentable",
         "NSViewControllerRepresentable", "UIViewControllerRepresentable",
         // WebKit
-        "WKURLSchemeHandler", "WKNavigationDelegate", "WKUIDelegate", "WKScriptMessageHandler"
+        "WKURLSchemeHandler", "WKNavigationDelegate", "WKUIDelegate", "WKScriptMessageHandler",
     ]
 
     /// Every protocol name that confers main-actor isolation, seed plus the project's own

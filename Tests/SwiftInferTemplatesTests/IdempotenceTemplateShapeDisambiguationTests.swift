@@ -184,7 +184,7 @@ struct IdempotenceShapeDisambiguationTests {
                     name: "OrderedSet", kind: .struct, inheritedTypes: [],
                     location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                     storedMembers: [StoredMember(name: "elements", typeName: "[Int]")]
-                )
+                ),
             ])
         )
         #expect(suggestion == nil, "V1.24.D should suppress capacity-from-scale idempotence")

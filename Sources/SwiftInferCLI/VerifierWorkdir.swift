@@ -259,7 +259,7 @@ public enum VerifierWorkdir {
                 // OC recipes in `StrategistDispatchEmitter.curatedOCRecipe`.
                 ".package(url: \"https://github.com/apple/swift-collections.git\", from: \"1.0.0\")",
                 swiftPropertyBasedDependencyLine,
-                swiftPropertyLawsDependencyLine
+                swiftPropertyLawsDependencyLine,
             ]
             // swift-syntax, **only when the corpus already depends on it**.
             //
@@ -298,7 +298,7 @@ public enum VerifierWorkdir {
             // the kit's own dep graph.
             entries = [
                 swiftPropertyBasedDependencyLine,
-                swiftPropertyLawsDependencyLine
+                swiftPropertyLawsDependencyLine,
             ]
 
         case .interactionTCA:
@@ -311,7 +311,7 @@ public enum VerifierWorkdir {
                 swiftPropertyLawsDependencyLine,
                 ".package(url: "
                     + "\"https://github.com/pointfreeco/swift-composable-architecture.git\", "
-                    + "from: \"1.15.0\")"
+                    + "from: \"1.15.0\")",
             ]
 
         case .interactionMobius:
@@ -321,7 +321,7 @@ public enum VerifierWorkdir {
                 swiftPropertyBasedDependencyLine,
                 swiftPropertyLawsDependencyLine,
                 ".package(url: \"https://github.com/spotify/Mobius.swift.git\", "
-                    + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")"
+                    + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")",
             ]
         }
         // #169 — a corpus that IS one of the packages above arrives with the

@@ -30,7 +30,7 @@ struct RefutationVisibilityTests {
                     displayName: subject,
                     signature: "(String) -> Self",
                     location: SourceLocation(file: "/tmp/Config.swift", line: 61, column: 5)
-                )
+                ),
             ],
             score: Score(signals: signals),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -69,7 +69,7 @@ struct RefutationVisibilityTests {
                     kind: .protocolCoveredProperty,
                     weight: Signal.vetoWeight,
                     detail: "kit covers this"
-                )
+                ),
             ]
         )
         #expect(coverageVetoed.score.tier == .suppressed)

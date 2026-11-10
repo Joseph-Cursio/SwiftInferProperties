@@ -18,7 +18,7 @@ struct NonMonotonicSubjectsTests {
         "_cos(_:)", "_sin(_:)",
         "_rawHashValue(seed:)", "_rawHashValue(_seed:)", "_hashValue(for:)",
         "_hashValue(at:)", "hashValue(at:)", "hashValue(for:)",
-        "Hashable_hashValue_indirect(_:)"
+        "Hashable_hashValue_indirect(_:)",
     ])
     func measuredPopulationIsCaught(name: String) {
         #expect(NonMonotonicSubjects.isDefinitionallyNonMonotonic(name), "\(name) is not order-preserving")
@@ -34,7 +34,7 @@ struct NonMonotonicSubjectsTests {
     @Test("genuinely monotonic functions survive", arguments: [
         "_exp(_:)", "_exp2(_:)", "_log(_:)", "_log2(_:)", "_log10(_:)", "_nearbyint(_:)",
         "sinh(_:)", "tanh(_:)", "asin(_:)", "atan(_:)", "asinh(_:)", "atanh(_:)", "acosh(_:)",
-        "sqrt(_:)", "cbrt(_:)"
+        "sqrt(_:)", "cbrt(_:)",
     ])
     func monotonicFunctionsSurvive(name: String) {
         #expect(
@@ -49,7 +49,7 @@ struct NonMonotonicSubjectsTests {
     @Test("substring coincidences are not caught", arguments: [
         "distance(to:)", "editDistance(to:)", "indentationDistance(of:)",
         "secondsInDay(from:)", "numWeeksInYearForWeekOfYear(_:)",
-        "clampedMinimumDaysInFirstWeek(_:)", "_class_getInstancePositiveExtentSize(_:)"
+        "clampedMinimumDaysInFirstWeek(_:)", "_class_getInstancePositiveExtentSize(_:)",
     ])
     func substringCoincidencesAreNotCaught(name: String) {
         #expect(

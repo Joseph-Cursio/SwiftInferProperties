@@ -29,7 +29,7 @@ struct VerifyAllFromIndexArgumentTests {
         let verify = try Self.parse([
             "--all-from-index",
             "--max-parallel", "8",
-            "--template", "round-trip"
+            "--template", "round-trip",
         ])
         #expect(verify.allFromIndex == true)
         #expect(verify.maxParallel == 8)

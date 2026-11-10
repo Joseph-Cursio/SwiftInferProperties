@@ -53,7 +53,7 @@ struct ProveThenShowInteractionRenderTests {
                 .referentialIntegrity, "LibFeature.reduce", .architecturalCoveragePending,
                 detail: "non-Identifiable element"
             ),
-            entry(.conservation, "CartFeature.reduce", .measuredError, detail: "build-failed")
+            entry(.conservation, "CartFeature.reduce", .measuredError, detail: "build-failed"),
         ]
         let out = ProveThenShowRenderer.render(interactionEntries: entries)
         #expect(out.contains("Prove-then-show — 4 pick(s) tested"))

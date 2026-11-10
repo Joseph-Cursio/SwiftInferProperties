@@ -47,7 +47,7 @@ struct CodecCarrierPairingTests {
             ("SwiftParser", "SwiftPrinter"),
             ("MessagePacker", "MessageUnpacker"),
             ("CSVImporter", "CSVExporter"),
-            ("Foo.Bar.ConfigReader", "Baz.ConfigWriter")             // nested, leaf wins
+            ("Foo.Bar.ConfigReader", "Baz.ConfigWriter"),             // nested, leaf wins
         ] {
             #expect(CodecCarrierPairing.areComplementary(lhs, rhs), "expected \(lhs)/\(rhs)")
             #expect(CodecCarrierPairing.areComplementary(rhs, lhs), "expected order-insensitive")
@@ -69,7 +69,7 @@ struct CodecCarrierPairingTests {
             ("Syntax", "SyntaxRewriter"),
             ("FileHandle", "SystemFileHandle"),
             ("RigidSet", "UniqueSet"),
-            ("AbsolutePosition", "SourceLineTable")
+            ("AbsolutePosition", "SourceLineTable"),
         ] {
             #expect(!CodecCarrierPairing.areComplementary(lhs, rhs), "expected \(lhs)/\(rhs) rejected")
         }

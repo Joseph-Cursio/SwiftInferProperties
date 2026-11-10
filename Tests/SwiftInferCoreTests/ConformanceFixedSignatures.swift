@@ -68,8 +68,8 @@ enum ConformanceFixedSignatures {
         "Decodable": [Requirement(name: "init", labels: ["from"], isInitializer: true)],
         "Codable": [
             Requirement(name: "encode", labels: ["to"], isInitializer: false),
-            Requirement(name: "init", labels: ["from"], isInitializer: true)
-        ]
+            Requirement(name: "init", labels: ["from"], isInitializer: true),
+        ],
     ]
 
     /// Throwing requirements declared by protocols in the corpus itself.

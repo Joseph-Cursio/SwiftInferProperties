@@ -325,7 +325,7 @@ enum AssertionAnchor {
         "expectGE": .xctAssertGreaterThanOrEqual,             //    56
         "expectGT": .xctAssertGreaterThan,                    //    21
         "expectLE": .xctAssertLessThanOrEqual,                //    14
-        "expectLT": .xctAssertLessThan                        //    14
+        "expectLT": .xctAssertLessThan,                        //    14
         //
         // `expectNil` was deliberately absent until `.xctAssertNil` existed:
         // mapping it onto `.xctAssertNotNil` would have INVERTED the

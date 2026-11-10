@@ -68,7 +68,7 @@ struct InactiveIfConfigCensusMeasuredTests {
     /// Directive-style conditions that are usually ACTIVE, plus `DEBUG`.
     static let notCounted: Set<String> = [
         "compiler", "swift", "os", "canImport", "arch", "targetEnvironment", "hasFeature",
-        "hasAttribute", "_runtime", "_endian", "_pointerBitWidth", "DEBUG"
+        "hasAttribute", "_runtime", "_endian", "_pointerBitWidth", "DEBUG",
     ]
 
     /// `true` when the condition is one this reading presumes OFF in a default build.
@@ -166,7 +166,7 @@ struct InactiveIfConfigCensusMeasuredTests {
         var lines: [String] = []
         for (title, grouped) in [
             ("affected rows by corpus:", Dictionary(grouping: affected) { $0.corpus }.mapValues(\.count)),
-            ("affected rows by template:", Dictionary(grouping: affected) { $0.template }.mapValues(\.count))
+            ("affected rows by template:", Dictionary(grouping: affected) { $0.template }.mapValues(\.count)),
         ] {
             lines.append("")
             lines.append(title)

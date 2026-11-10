@@ -88,7 +88,7 @@ struct RoleClosureTemplateTests {
     @Test("each role's closure is a stated judgement", arguments: [
         (RolePostcondition.sorted, true), (.clamped, true), (.rounded, true),
         (.lowercased, true), (.uppercased, true), (.deduplicated, true),
-        (.escaped, false), (.unescaped, false), (.reversed, false), (.shuffled, false)
+        (.escaped, false), (.unescaped, false), (.reversed, false), (.shuffled, false),
     ])
     func closureIsStatedPerRole(role: RolePostcondition, closed: Bool) {
         #expect(role.isClosedUnderReapplication == closed)

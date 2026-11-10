@@ -32,7 +32,7 @@ public enum IdempotenceTemplate {
         "sort", "sorted",
         "deduplicate", "deduplicated",
         "sanitize", "sanitized",
-        "format", "formatted"
+        "format", "formatted",
     ]
 
     /// Build a suggestion for `summary`, or return `nil` if the type
@@ -223,7 +223,7 @@ public enum IdempotenceTemplate {
         var caveats = [
             "T must conform to Equatable for the emitted property to compile. "
                 + "This tool does not verify protocol conformance — confirm before applying.",
-            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
         ]
         // The erased self-form owes a caveat the concrete forms do not: the
         // claim is checked on the erasure, so it cannot see a distinction the
@@ -392,7 +392,7 @@ extension IdempotenceTemplate {
         let caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
                 + "This tool does not verify protocol conformance — confirm before applying.",
-            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

@@ -43,7 +43,7 @@ struct QualifiedSpellingDerivationTests {
                     parameters: [.init(label: "value", typeName: memberType)],
                     isFailable: false,
                     isThrowing: false
-                )
+                ),
             ],
             enumCases: []
         )

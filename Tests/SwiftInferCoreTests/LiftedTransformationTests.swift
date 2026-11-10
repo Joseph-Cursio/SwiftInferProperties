@@ -254,7 +254,7 @@ struct LiftedTransformationDeriveTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "value", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -264,7 +264,7 @@ struct LiftedTransformationDeriveTests {
             summary("touch"),
             summary("increment", params: [(label: "by", type: "Int")]),
             summary("snapshot", returnType: "Int", isMutating: false),
-            summary("classMethod", containingType: "Service")
+            summary("classMethod", containingType: "Service"),
         ]
         // Mix value-semantic resolver with one class TypeDecl so the
         // class-containing mutating summary classifies as referenceType.
@@ -281,7 +281,7 @@ struct LiftedTransformationDeriveTests {
                 kind: TypeDecl.Kind.class,
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1)
-            )
+            ),
         ])
         let lifts = LiftedTransformation.derive(
             from: summaries,
@@ -299,7 +299,7 @@ struct LiftedTransformationDeriveTests {
         let resolver = valueSemanticResolver()
         let summaries = [
             summary("snapshot", returnType: "Int", isMutating: false),
-            summary("topLevel", containingType: nil)
+            summary("topLevel", containingType: nil),
         ]
         #expect(LiftedTransformation.derive(from: summaries, carrierKindResolver: resolver).isEmpty)
     }
@@ -310,7 +310,7 @@ struct LiftedTransformationDeriveTests {
         let summaries = [
             summary("late", line: 60),
             summary("early", line: 10),
-            summary("middle", line: 30)
+            summary("middle", line: 30),
         ]
         let lifts = LiftedTransformation.derive(
             from: summaries,
@@ -324,7 +324,7 @@ struct LiftedTransformationDeriveTests {
         let resolver = valueSemanticResolver()
         let summaries = [
             summary("zMethod", line: 10, file: "Z.swift"),
-            summary("aMethod", line: 100, file: "A.swift")
+            summary("aMethod", line: 100, file: "A.swift"),
         ]
         let lifts = LiftedTransformation.derive(
             from: summaries,

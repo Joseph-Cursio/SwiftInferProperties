@@ -64,7 +64,7 @@ extension CatalogHealthCensusMeasuredTests {
     /// argument labels stripped — `sin`, never `contains("sin")`.
     static let trigNames: Set<String> = [
         "sin", "cos", "tan", "asin", "acos", "atan", "atan2",
-        "sinh", "cosh", "tanh", "asinh", "acosh", "atanh"
+        "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
     ]
 
     /// Bare names that ARE a hash. `hashValue` and `hash(into:)` are the protocol

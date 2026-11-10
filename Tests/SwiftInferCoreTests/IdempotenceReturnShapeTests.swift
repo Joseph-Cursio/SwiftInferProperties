@@ -72,7 +72,7 @@ struct IdempotenceReturnShapeTests {
             """),
             ("lowercased", """
             enum H { static func fold(_ t: String) -> String { t.lowercased() } }
-            """)
+            """),
         ]
     )
     func projectionsAreNotFlagged(label: String, source: String) throws {
@@ -109,7 +109,7 @@ struct IdempotenceReturnShapeTests {
             enum H { static func splice(_ xs: [Int]) -> [Int] {
                 Array(xs.dropLast()) + Array(xs.suffix(1))
             } }
-            """)
+            """),
         ]
     )
     func inputDerivedConcatenationIsNotExtension(label: String, source: String) throws {

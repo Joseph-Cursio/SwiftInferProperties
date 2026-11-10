@@ -90,7 +90,7 @@ struct TCAVerifyCorpusMeasuredTests {
         #expect(summary.contains("explored 2 of 3 action types (excluded: child)"))
         let mixedExploration = [
             "EditorFeature.body", "SettingsFeature.body", "DownloadFeature.body",
-            "ParentFeature.body"
+            "ParentFeature.body",
         ]
         for mixed in mixedExploration {
             #expect(lines.filter { $0.contains(mixed) }.allSatisfy { $0.contains("partial") })
@@ -101,7 +101,7 @@ struct TCAVerifyCorpusMeasuredTests {
             "MultiReduceFeature.body", "ChildFeature.body",
             // cycle 144 — CombineReducers (payload-free) + Gauge (Double/Bool
             // raws are constructible) are both full-coverage.
-            "CombineFeature.body", "GaugeFeature.body"
+            "CombineFeature.body", "GaugeFeature.body",
         ]
         for full in fullExploration {
             #expect(lines.filter { $0.contains(full) }.allSatisfy { !$0.contains("partial") })

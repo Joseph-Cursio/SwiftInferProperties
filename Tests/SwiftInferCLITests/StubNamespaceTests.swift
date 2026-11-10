@@ -21,7 +21,7 @@ struct StubNamespaceTests {
                     displayName: displayName,
                     signature: "(String) -> Bool",
                     location: SourceLocation(file: "F.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -48,7 +48,7 @@ struct StubNamespaceTests {
         ("Editor_Tokenizer_tokenizeLine_determinism.swift", "EditorTokenizerTokenizeLineDeterminismTests"),
         ("3d_round-trip.swift", "Stub3dRoundTripTests"),
         ("BigInt_+_commutativity.swift", "BigIntPlusCommutativityTests"),
-        ("BigInt_*_commutativity.swift", "BigIntTimesCommutativityTests")
+        ("BigInt_*_commutativity.swift", "BigIntTimesCommutativityTests"),
     ])
     func theSuiteNameIsAnIdentifier(fileName: String, expected: String) {
         #expect(InteractiveTriage.suiteName(forStubFileName: fileName) == expected)

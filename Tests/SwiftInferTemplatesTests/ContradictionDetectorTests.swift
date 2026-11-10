@@ -204,7 +204,7 @@ struct ContradictionDetectorRoundTripTests {
             typesToCheck: [
                 commKeep.identity: commutativityTypes(of: commSummary),
                 rtDrop.identity: roundTripTypes(of: rtPair),
-                commDrop.identity: commutativityTypes(of: commSummary2)
+                commDrop.identity: commutativityTypes(of: commSummary2),
             ],
             resolver: EquatableResolver(typeDecls: [])
         )

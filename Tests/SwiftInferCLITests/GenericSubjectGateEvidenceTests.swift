@@ -41,7 +41,7 @@ struct GenericSubjectGateEvidenceTests {
         Row(display: "union(_:)", parameterTypes: ["Set<T>"], generics: ["T"], declines: true),
         Row(display: "make()", parameterTypes: [], generics: ["T"], declines: true),
         // No recorded declaring type: the suggestion form falls back to its carrier.
-        Row(display: "isEmpty", parameterTypes: [], carrier: "Deque", map: ["Deque": ["Element"]], declines: true)
+        Row(display: "isEmpty", parameterTypes: [], carrier: "Deque", map: ["Deque": ["Element"]], declines: true),
     ]
 
     @Test("the evidence overload equals the suggestion overload", arguments: rows.indices)
@@ -92,7 +92,7 @@ struct GenericSubjectGateEvidenceTests {
             carrier: "Sorter",
             map: ["Deque": ["Element"]],
             declines: true
-        )
+        ),
     ]
 
     @Test("the evidence overload equals the suggestion overload on a scanned row", arguments: scannedRows.indices)

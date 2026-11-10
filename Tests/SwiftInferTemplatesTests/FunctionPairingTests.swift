@@ -73,7 +73,7 @@ struct FunctionPairingTests {
             name: "encode",
             parameters: [
                 Parameter(label: nil, internalName: "v", typeText: "MyType", isInout: false),
-                Parameter(label: "with", internalName: "options", typeText: "Options", isInout: false)
+                Parameter(label: "with", internalName: "options", typeText: "Options", isInout: false),
             ],
             returnType: "Data"
         )

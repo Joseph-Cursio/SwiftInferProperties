@@ -108,7 +108,7 @@ public enum GenericBindingResolver {
         "OrderedSet.SubSequence": "OrderedSet<Int>.SubSequence",
         "OrderedDictionary.Values": "OrderedDictionary<Int, Int>.Values",
         "OrderedDictionary.Elements.SubSequence":
-            "OrderedDictionary<Int, Int>.Elements.SubSequence"
+            "OrderedDictionary<Int, Int>.Elements.SubSequence",
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,

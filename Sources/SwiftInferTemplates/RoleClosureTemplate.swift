@@ -144,7 +144,7 @@ public enum RoleClosureTemplate {
                 weight: 20,
                 detail: "Closure shape: \(summary.name)(\(summary.name)(x)) == \(summary.name)(x), "
                     + "backed by the catalogue's postcondition rather than by the signature alone"
-            )
+            ),
         ]
     }
 
@@ -159,7 +159,7 @@ public enum RoleClosureTemplate {
             "IT IS THE CHECKABLE HALF OF A WIDER LAW. The full statement is that the operation "
                 + "is the identity on any input already satisfying its postcondition; this "
                 + "checks it only where the input is itself a result, because those are the "
-                + "values a generator can reach without being taught the predicate."
+                + "values a generator can reach without being taught the predicate.",
         ]
         if summary.parameters.isEmpty == false {
             caveats.append(

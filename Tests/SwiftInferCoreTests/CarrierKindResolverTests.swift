@@ -34,7 +34,7 @@ struct CarrierKindResolverTests {
         let resolver = makeResolver()
         for typeName in [
             "Int", "Int8", "Int16", "Int32", "Int64",
-            "UInt", "UInt8", "UInt16", "UInt32", "UInt64"
+            "UInt", "UInt8", "UInt16", "UInt32", "UInt64",
         ] {
             #expect(
                 resolver.classify(typeName: typeName) == .valueSemantic,
@@ -74,7 +74,7 @@ struct CarrierKindResolverTests {
             "Array<Int>", "Dictionary<String, Int>", "Set<UUID>",
             "Optional<Int>", "Result<Int, Error>",
             "Range<Int>", "ClosedRange<Int>", "ContiguousArray<Double>",
-            "OrderedSet<Int>", "OrderedDictionary<String, Int>", "Deque<Int>"
+            "OrderedSet<Int>", "OrderedDictionary<String, Int>", "Deque<Int>",
         ] {
             #expect(
                 resolver.classify(typeName: typeName) == .valueSemantic,
@@ -143,7 +143,7 @@ struct CarrierKindResolverTests {
     func classWithExtensionRecordsStillReference() {
         let resolver = makeResolver([
             decl("Service", TypeDecl.Kind.class),
-            decl("Service", TypeDecl.Kind.extension)
+            decl("Service", TypeDecl.Kind.extension),
         ])
         #expect(resolver.classify(typeName: "Service") == .referenceType)
     }
@@ -168,8 +168,8 @@ struct CarrierKindResolverTests {
             decl("Counter", .struct, members: [
                 member("value", "Int"),
                 member("label", "String"),
-                member("isActive", "Bool")
-            ])
+                member("isActive", "Bool"),
+            ]),
         ])
         #expect(resolver.classify(typeName: "Counter") == .valueSemantic)
     }
@@ -179,7 +179,7 @@ struct CarrierKindResolverTests {
         let resolver = makeResolver([
             decl("Inventory", .struct, members: [
                 member("items", "NSMutableArray")
-            ])
+            ]),
         ])
         // NSMutableArray is unknown to the curated set; without a corpus
         // TypeDecl for it the recursion lands at .unknown — and a single
@@ -198,7 +198,7 @@ struct CarrierKindResolverTests {
             decl("Inventory", .struct, members: [
                 member("storage", "Storage")
             ]),
-            decl("Storage", TypeDecl.Kind.class)
+            decl("Storage", TypeDecl.Kind.class),
         ])
         #expect(resolver.classify(typeName: "Inventory") == .mixed)
     }
@@ -210,7 +210,7 @@ struct CarrierKindResolverTests {
         let resolver = makeResolver([
             decl("Counter", .struct, members: [
                 member("increment", "() -> Int")
-            ])
+            ]),
         ])
         #expect(resolver.classify(typeName: "Counter") == .mixed)
     }
@@ -220,7 +220,7 @@ struct CarrierKindResolverTests {
         let resolver = makeResolver([
             decl("Handler", .struct, members: [
                 member("callback", "@escaping () -> Void")
-            ])
+            ]),
         ])
         #expect(resolver.classify(typeName: "Handler") == .mixed)
     }
@@ -230,7 +230,7 @@ struct CarrierKindResolverTests {
         let resolver = makeResolver([
             decl("Handler", .struct, members: [
                 member("callback", "@Sendable (Int) -> Int")
-            ])
+            ]),
         ])
         #expect(resolver.classify(typeName: "Handler") == .mixed)
     }
@@ -242,11 +242,11 @@ struct CarrierKindResolverTests {
         let resolver = makeResolver([
             decl("Outer", .struct, members: [
                 member("inner", "Inner"),
-                member("count", "Int")
+                member("count", "Int"),
             ]),
             decl("Inner", .struct, members: [
                 member("name", "String")
-            ])
+            ]),
         ])
         #expect(resolver.classify(typeName: "Outer") == .valueSemantic)
     }
@@ -260,7 +260,7 @@ struct CarrierKindResolverTests {
             decl("Inner", .struct, members: [
                 member("service", "CacheService")
             ]),
-            decl("CacheService", TypeDecl.Kind.class)
+            decl("CacheService", TypeDecl.Kind.class),
         ])
         #expect(resolver.classify(typeName: "Outer") == .mixed)
     }
@@ -292,7 +292,7 @@ struct CarrierKindResolverTests {
             decl("Layer2", .struct, members: [member("inner", "Layer3")]),
             decl("Layer3", .struct, members: [member("inner", "Layer4")]),
             decl("Layer4", .struct, members: [member("inner", "Layer5")]),
-            decl("Layer5", .struct, members: [member("value", "Int")])
+            decl("Layer5", .struct, members: [member("value", "Int")]),
         ])
         // Layer4 is at depth 3 from Layer1; classifying Layer5 from there
         // exceeds the depth bound and yields .unknown for Layer4 — which

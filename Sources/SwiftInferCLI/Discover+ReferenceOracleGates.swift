@@ -35,7 +35,7 @@ extension SwiftInferCommand.Discover {
         "Slice", "KeyValuePairs", "CollectionOfOne", "EmptyCollection", "Repeated",
         "UnsafePointer", "UnsafeMutablePointer", "UnsafeBufferPointer", "UnsafeMutableBufferPointer",
         "KeyPath", "WritableKeyPath", "ReferenceWritableKeyPath", "AsyncStream", "AsyncThrowingStream",
-        "Measurement", "OrderedSet", "OrderedDictionary", "Deque"
+        "Measurement", "OrderedSet", "OrderedDictionary", "Deque",
     ]
 
     /// Foreign protocols a result may name bare, as an existential: the protocols

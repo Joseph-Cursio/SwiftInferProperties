@@ -72,7 +72,7 @@ struct RefIntElementTypeFilterTests {
         })
         #expect(pairs == [
             "selectedMessageID→messages",
-            "selectedDraftID→drafts"
+            "selectedDraftID→drafts",
         ])
     }
 

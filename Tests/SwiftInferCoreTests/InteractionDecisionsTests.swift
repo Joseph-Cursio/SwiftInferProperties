@@ -78,7 +78,7 @@ struct InteractionDecisionsTests {
         let decisions = InteractionDecisions(records: [
             record(identity: "AAAAAAAAAAAAAAAA"),
             record(identity: "BBBBBBBBBBBBBBBB", decision: .rejected),
-            record(identity: "CCCCCCCCCCCCCCCC", decision: .acceptedAsConformance)
+            record(identity: "CCCCCCCCCCCCCCCC", decision: .acceptedAsConformance),
         ])
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

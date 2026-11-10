@@ -47,7 +47,7 @@ extension PurityRefutationCensusMeasuredTests {
         "RolePostcondition.swift#law",
         "RolePostcondition.swift#isStrong",
         "RolePostcondition.swift#permittedLabels",
-        "RolePostcondition.swift#isClosedUnderReapplication"
+        "RolePostcondition.swift#isClosedUnderReapplication",
     ]
 
     @Test("every computed property carries a verdict its Bool agrees with")

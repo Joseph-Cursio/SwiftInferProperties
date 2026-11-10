@@ -23,7 +23,7 @@ struct UnequatableCarrierGateTests {
                     location: SourceLocation(file: "DagreLayoutEngine.swift", line: 120, column: 5),
                     parameterTypeNames: [carrier],
                     qualifiedTypeName: "DagreLayoutEngine"
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),

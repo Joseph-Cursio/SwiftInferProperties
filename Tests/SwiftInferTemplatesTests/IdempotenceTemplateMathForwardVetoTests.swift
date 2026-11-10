@@ -55,7 +55,7 @@ struct IdempotenceTemplateMathForwardVetoTests {
             "exp", "exp2", "expMinusOne", "log", "log2", "log10",
             "sin", "cos", "tan", "asin", "acos", "atan",
             "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
-            "sqrt", "cbrt"
+            "sqrt", "cbrt",
         ]
         for name in names {
             let signal = IdempotenceTemplate.mathForwardFunctionVeto(for: mathSummary(name))
@@ -83,7 +83,7 @@ struct IdempotenceTemplateMathForwardVetoTests {
             name: "atan2",
             parameters: [
                 Parameter(label: nil, internalName: "y", typeText: "Double", isInout: false),
-                Parameter(label: nil, internalName: "x", typeText: "Double", isInout: false)
+                Parameter(label: nil, internalName: "x", typeText: "Double", isInout: false),
             ],
             returnTypeText: "Double",
             isThrows: false, isAsync: false, isMutating: false, isStatic: true,

@@ -19,7 +19,7 @@ struct KitSyntaxNodeRecipeTests {
             "CodeBlockItemSyntax",
             "StringLiteralExprSyntax",
             "InheritanceClauseSyntax",
-            "DictionaryExprSyntax"
+            "DictionaryExprSyntax",
         ]
     )
     func blockedNodeKindsResolve(carrier: String) {
@@ -60,7 +60,7 @@ struct KitSyntaxNodeRecipeTests {
         arguments: [
             "[CodeBlockItemSyntax]",
             "ArraySlice<CodeBlockItemSyntax>",
-            "Ranked<DeclSyntax>"
+            "Ranked<DeclSyntax>",
         ]
     )
     func collectionsAreDeclined(carrier: String) {

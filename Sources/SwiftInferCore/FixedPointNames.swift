@@ -52,6 +52,6 @@ public enum FixedPointNames {
         "simplify",
         "clamp",
         "truncate",
-        "standardize"
+        "standardize",
     ]
 }

@@ -121,7 +121,7 @@ struct VerifyEmitterMatrixMeasuredTests {
             carrierTypeName: "(Int, Int)",
             typeShape: nil,
             isInstanceMethod: false
-        )
+        ),
     ]
 
     @Test("every emitter cell compiles and bothPasses on a correct implementation")

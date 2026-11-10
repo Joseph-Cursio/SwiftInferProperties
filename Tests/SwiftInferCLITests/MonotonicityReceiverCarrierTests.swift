@@ -82,7 +82,7 @@ struct MonotonicityReceiverCarrierTests {
         ("OrderedSet", "OrderedSet<Int>"),
         ("OrderedDictionary.Elements", "OrderedDictionary<Int, Int>.Elements"),
         ("OrderedDictionary.Values", "OrderedDictionary<Int, Int>.Values"),
-        ("Deque", "Deque<Int>")
+        ("Deque", "Deque<Int>"),
     ])
     func curatedRecipesResolveOnEitherSpelling(bare: String, specialised: String) {
         let viaBare = StrategistDispatchEmitter.curatedOCRecipe(carrier: bare)

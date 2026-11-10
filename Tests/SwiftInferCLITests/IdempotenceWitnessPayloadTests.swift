@@ -28,7 +28,7 @@ struct IdempotenceWitnessPayloadTests {
             // the generator uses these, the witness synthesis uses the alphabet.
             actionCases: [
                 ActionCaseInfo(name: "reset", payloadTypes: []),
-                ActionCaseInfo(name: "select", payloadTypes: ["Int"])
+                ActionCaseInfo(name: "select", payloadTypes: ["Int"]),
             ]
         )
     }

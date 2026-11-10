@@ -23,7 +23,7 @@ struct ComparatorStubTests {
             name: name,
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: operand, isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: operand, isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: operand, isInout: false),
             ],
             returnTypeText: "Bool",
             isThrows: false,

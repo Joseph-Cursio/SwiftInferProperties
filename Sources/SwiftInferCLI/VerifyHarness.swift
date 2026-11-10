@@ -127,7 +127,7 @@ public enum VerifyHarness {
             staleWarnings = [
                 "index at \(path.path) appears stale (some Sources/**.swift mtimes are newer). "
                     + "Consider `swift-infer index --target <X>` to refresh; "
-                    + "V1.42.C.1 proceeds with the existing index."
+                    + "V1.42.C.1 proceeds with the existing index.",
             ]
         } else {
             staleWarnings = []

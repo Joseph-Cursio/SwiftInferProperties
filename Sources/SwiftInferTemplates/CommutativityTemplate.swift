@@ -39,7 +39,7 @@ public enum CommutativityTemplate {
         // and this is what lets commutativity + verify catch that class of bug.
         "intersect",
         "intersection",
-        "symmetricDifference"
+        "symmetricDifference",
     ]
 
     /// Curated anti-commutativity-verb list per PRD §4.1's -30
@@ -65,7 +65,7 @@ public enum CommutativityTemplate {
         "subtracting",
         "dividing",
         "appending",
-        "prepending"
+        "prepending",
     ]
 
     // Overlaps `SetAlgebraShape.binaryOps` but is a different list on purpose: this one is
@@ -82,7 +82,7 @@ public enum CommutativityTemplate {
         "union",
         "intersection",
         "intersect",
-        "symmetricDifference"
+        "symmetricDifference",
     ]
 
     /// Build a suggestion for `summary`, or return `nil` if the type
@@ -228,7 +228,7 @@ public enum CommutativityTemplate {
         var caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
                 + "This tool does not verify protocol conformance — confirm before applying.",
-            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
         ]
         if let fpCaveat = floatingPointAdvisory(for: summary) {
             caveats.append(fpCaveat)
@@ -366,7 +366,7 @@ extension CommutativityTemplate {
         var caveats: [String] = [
             "T must conform to Equatable for the emitted property to compile. "
                 + "This tool does not verify protocol conformance — confirm before applying.",
-            "If T is a class with a custom ==, the property is over value equality as T.== defines it."
+            "If T is a class with a custom ==, the property is over value equality as T.== defines it.",
         ]
         if let fpCaveat = floatingPointAdvisory(for: summary) {
             caveats.append(fpCaveat)

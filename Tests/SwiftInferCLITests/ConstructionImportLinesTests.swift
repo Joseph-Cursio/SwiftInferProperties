@@ -13,7 +13,7 @@ struct ConstructionImportLinesTests {
             "import SwiftProjectLintVisitors",
             "import SwiftProjectLintRules",
             "import Testing",
-            "import XCTest"
+            "import XCTest",
         ]
     )
     private static let unused = ReceiverConstructionHarvester.Harvested(
@@ -54,7 +54,7 @@ struct ConstructionImportLinesTests {
                 "@testable import Core",
                 "import ViewInspector",
                 "import SwiftProjectLintVisitors",
-                "@testable import SwiftLintRuleStudioCoreTestSupport"
+                "@testable import SwiftLintRuleStudioCoreTestSupport",
             ]
         )
         let kept = ReceiverConstructionSource.keepingResolvable(
@@ -63,7 +63,7 @@ struct ConstructionImportLinesTests {
         )
         #expect(kept.imports == [
             "import SwiftProjectLintVisitors",
-            "@testable import SwiftLintRuleStudioCoreTestSupport"
+            "@testable import SwiftLintRuleStudioCoreTestSupport",
         ])
         #expect(ReceiverConstructionSource.keepingResolvable(harvested, in: []).imports.isEmpty)
     }

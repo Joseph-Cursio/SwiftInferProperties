@@ -31,7 +31,7 @@ struct TestLifterDiscoverSixDetectorFanOutTests {
             "idempotence",
             "invariant-preservation",
             "monotonicity",
-            "round-trip"
+            "round-trip",
         ])
 
         let monotonicity = try #require(

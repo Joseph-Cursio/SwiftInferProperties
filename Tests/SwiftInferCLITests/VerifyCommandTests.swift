@@ -44,7 +44,7 @@ struct VerifyCommandTests {
     func budgetStandardOverridesDefault() throws {
         let command = try SwiftInferCommand.Verify.parse([
             "--suggestion", "abc123",
-            "--budget", "standard"
+            "--budget", "standard",
         ])
         #expect(command.budget == "standard")
     }
@@ -53,7 +53,7 @@ struct VerifyCommandTests {
     func targetOverrideParses() throws {
         let command = try SwiftInferCommand.Verify.parse([
             "--suggestion", "abc123",
-            "--target", "MyLib"
+            "--target", "MyLib",
         ])
         #expect(command.target == "MyLib")
     }
@@ -62,7 +62,7 @@ struct VerifyCommandTests {
     func indexPathOverrideParses() throws {
         let command = try SwiftInferCommand.Verify.parse([
             "--suggestion", "abc123",
-            "--index-path", "/tmp/custom-index.json"
+            "--index-path", "/tmp/custom-index.json",
         ])
         #expect(command.indexPath == "/tmp/custom-index.json")
     }
@@ -124,7 +124,7 @@ struct VerifyCommandTests {
             .unsupportedPair(forward: "encode", supported: ["serialize"]),
             .missingPairedFunction(template: "differential-equivalence", primary: "render"),
             .monotonicityDomainNotComparable(domain: "Widget"),
-            .invalidArguments(reason: "pick one")
+            .invalidArguments(reason: "pick one"),
         ]
 
         for refusal in refusals {

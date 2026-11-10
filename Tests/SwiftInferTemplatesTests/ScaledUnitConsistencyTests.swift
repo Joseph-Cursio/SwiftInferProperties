@@ -26,7 +26,7 @@ struct ScaledUnitConsistencyTests {
                 Parameter(
                     label: nil, internalName: "amount",
                     typeText: parameterType, isInout: false
-                )
+                ),
             ],
             returnTypeText: returns ?? carrier,
             isThrows: false,
@@ -52,7 +52,7 @@ struct ScaledUnitConsistencyTests {
         #expect(pairs == [
             "microseconds/nanoseconds=1000",
             "milliseconds/microseconds=1000",
-            "seconds/milliseconds=1000"
+            "seconds/milliseconds=1000",
         ])
     }
 
@@ -63,7 +63,7 @@ struct ScaledUnitConsistencyTests {
         let shapes = ScaledUnitPairing.candidates(in: [
             unit("hours", on: "TimeAmount"),
             unit("minutes", on: "TimeAmount"),
-            unit("seconds", on: "TimeAmount")
+            unit("seconds", on: "TimeAmount"),
         ])
         let byPair = Dictionary(
             uniqueKeysWithValues: shapes.map { ("\($0.larger.name)/\($0.smaller.name)", $0.ratio) }
@@ -104,7 +104,7 @@ struct ScaledUnitConsistencyTests {
             unit("bytes", on: "ByteCount"),
             unit("kilobytes", on: "ByteCount"),
             unit("megabytes", on: "ByteCount"),
-            unit("gigabytes", on: "ByteCount")
+            unit("gigabytes", on: "ByteCount"),
         ])
         #expect(shapes.isEmpty)
         for name in ["bytes", "kilobytes", "megabytes", "gigabytes"] {
@@ -128,7 +128,7 @@ struct ScaledUnitConsistencyTests {
     func accessorNotConstructor() {
         let shapes = ScaledUnitPairing.candidates(in: [
             unit("seconds", returns: "Int64"),
-            unit("milliseconds", returns: "Int64")
+            unit("milliseconds", returns: "Int64"),
         ])
         #expect(shapes.isEmpty)
     }

@@ -76,7 +76,7 @@ private final class Visitor: SyntaxVisitor {
         "EffectOf",
         "EffectTask",
         "Task",
-        "AnyCancellable"
+        "AnyCancellable",
     ]
 
     /// Method-call name suffixes (`<expr>.<name>(...)`) that route a
@@ -86,7 +86,7 @@ private final class Visitor: SyntaxVisitor {
         "run",
         "send",
         "cancel",
-        "fireAndForget"
+        "fireAndForget",
     ]
 
     init() {

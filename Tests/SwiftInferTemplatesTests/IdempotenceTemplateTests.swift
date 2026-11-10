@@ -53,7 +53,7 @@ struct IdempotenceTemplateTypePatternTests {
             name: "normalize",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "String", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "String", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "String", isInout: false),
             ],
             returnType: "String"
         )

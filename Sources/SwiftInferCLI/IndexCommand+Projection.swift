@@ -190,7 +190,7 @@ extension SwiftInferCommand.Index {
     /// exist.
     private static let twoFunctionTemplates: Set<String> = [
         "round-trip",
-        "differential-equivalence"
+        "differential-equivalence",
     ]
 
     private static func secondaryFunctionName(for suggestion: Suggestion) -> String? {

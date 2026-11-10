@@ -44,7 +44,7 @@ struct InteractionDecisionsAggregatorTests {
             record(identity: "AAAA3", family: .cardinality, decision: .rejected),
             record(identity: "AAAA4", family: .cardinality, decision: .skipped),
             record(identity: "BBBB1", family: .idempotence, decision: .accepted),
-            record(identity: "BBBB2", family: .idempotence, decision: .accepted)
+            record(identity: "BBBB2", family: .idempotence, decision: .accepted),
         ])
 
         let report = InteractionDecisionsAggregator.aggregate(decisions)
@@ -69,7 +69,7 @@ struct InteractionDecisionsAggregatorTests {
             record(identity: "X2", family: .biconditional, decision: .accepted),
             record(identity: "X3", family: .biconditional, decision: .rejected),
             record(identity: "X4", family: .biconditional, decision: .skipped),
-            record(identity: "X5", family: .biconditional, decision: .skipped)
+            record(identity: "X5", family: .biconditional, decision: .skipped),
         ])
         let report = InteractionDecisionsAggregator.aggregate(decisions)
         let bucket = report.bucket(for: .biconditional)
@@ -87,7 +87,7 @@ struct InteractionDecisionsAggregatorTests {
         // 1 accepted + 1 acceptedAsConformance / (2 + 0 rejected) = 100%
         let decisions = InteractionDecisions(records: [
             record(identity: "Y1", family: .conservation, decision: .accepted),
-            record(identity: "Y2", family: .conservation, decision: .acceptedAsConformance)
+            record(identity: "Y2", family: .conservation, decision: .acceptedAsConformance),
         ])
         let report = InteractionDecisionsAggregator.aggregate(decisions)
         let bucket = report.bucket(for: .conservation)
@@ -110,7 +110,7 @@ struct InteractionDecisionsAggregatorTests {
         // No decisions hit the denominator — rate should be nil, not 0%.
         let decisions = InteractionDecisions(records: [
             record(identity: "W1", family: .cardinality, decision: .skipped),
-            record(identity: "W2", family: .cardinality, decision: .skipped)
+            record(identity: "W2", family: .cardinality, decision: .skipped),
         ])
         let report = InteractionDecisionsAggregator.aggregate(decisions)
         let card = report.bucket(for: .cardinality)
@@ -123,7 +123,7 @@ struct InteractionDecisionsAggregatorTests {
             record(identity: "A", family: .cardinality, decision: .accepted),
             record(identity: "B", family: .idempotence, decision: .accepted),
             record(identity: "C", family: .biconditional, decision: .rejected),
-            record(identity: "D", family: .conservation, decision: .skipped)
+            record(identity: "D", family: .conservation, decision: .skipped),
         ])
         let report = InteractionDecisionsAggregator.aggregate(decisions)
         #expect(report.overall.accepted == 2)

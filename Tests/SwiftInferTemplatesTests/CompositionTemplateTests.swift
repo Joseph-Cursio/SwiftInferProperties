@@ -16,7 +16,7 @@ struct CompositionTemplateTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "value", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -35,7 +35,7 @@ struct CompositionTemplateTests {
                     internalName: "amount",
                     typeText: paramType,
                     isInout: false
-                )
+                ),
             ],
             returnTypeText: "Void",
             isThrows: false,

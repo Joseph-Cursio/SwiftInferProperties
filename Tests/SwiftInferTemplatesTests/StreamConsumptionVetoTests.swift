@@ -37,7 +37,7 @@ struct StreamConsumptionVetoTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "offset", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -80,7 +80,7 @@ struct StreamConsumptionVetoTests {
         for name in [
             "advance", "advanceToEndOfLine", "advanceIfOpeningRawStringDelimiter",
             "lexNumber", "lexUnknown", "tryLexEditorPlaceholder",
-            "skipSingle", "skipUntilEndOfLine", "eatWhitespace", "munchDigits"
+            "skipSingle", "skipUntilEndOfLine", "eatWhitespace", "munchDigits",
         ] {
             #expect(StreamConsumption.isConsumingVerb(name), "expected \(name) consuming")
             let signal = IdempotenceTemplate.streamConsumptionVeto(
@@ -104,7 +104,7 @@ struct StreamConsumptionVetoTests {
             // lifted shadow IS idempotent. Same for two nio siblings and
             // swift-collections' `consumeAll()` — four true laws tier 1 cost
             // before the demotion. Tier 2 still catches consume-on-a-cursor.
-            "consumeAllowLocalEndpointReuse", "consumeAll", "consumeDisableAutoRead"
+            "consumeAllowLocalEndpointReuse", "consumeAll", "consumeDisableAutoRead",
         ] {
             #expect(!StreamConsumption.isConsumingVerb(name), "expected \(name) NOT consuming")
             #expect(IdempotenceTemplate.streamConsumptionVeto(
@@ -128,7 +128,7 @@ struct StreamConsumptionVetoTests {
             ("atStartOfGetSetAccessor", "Parser.Lookahead"),
             ("atStartOfExpression", "TokenConsumer"),
             ("atBinaryOperatorArgument", "TokenConsumer"),
-            ("isAtModuleSelector", "TokenConsumer")
+            ("isAtModuleSelector", "TokenConsumer"),
         ]
         for (method, carrier) in cases {
             let signal = IdempotenceTemplate.streamConsumptionVeto(
@@ -145,7 +145,7 @@ struct StreamConsumptionVetoTests {
         for carrier in [
             "Lexer.Cursor", "Lexer.Cursor.Position", "Parser.Lookahead",
             "TokenConsumer", "SourceReader", "ByteStream", "JSONTokenizer",
-            "SimpleScanner", "BucketIterator"
+            "SimpleScanner", "BucketIterator",
         ] {
             #expect(StreamConsumption.isStreamCarrier(carrier), "expected \(carrier) stream-shaped")
         }
@@ -158,7 +158,7 @@ struct StreamConsumptionVetoTests {
         // silently claim. `Parse` is not `Parser`.
         for carrier in [
             "RingBuffer", "FrameBuffer", "RequestBuilder", "OrderedDictionary",
-            "ParseResult", "LexemeStore", "PlainStruct"
+            "ParseResult", "LexemeStore", "PlainStruct",
         ] {
             #expect(!StreamConsumption.isStreamCarrier(carrier), "expected \(carrier) NOT stream-shaped")
             #expect(IdempotenceTemplate.streamConsumptionVeto(
@@ -237,7 +237,7 @@ struct StreamConsumptionVetoTests {
         ("canParseAsGenericArgumentList", "Parser.Lookahead"),
         ("canParseIntegerLiteral", "Parser.Lookahead"),
         ("canParseGenericArgument", "Parser.Lookahead"),
-        ("consumeGenericArguments", "Parser.Lookahead")
+        ("consumeGenericArguments", "Parser.Lookahead"),
     ]
 
     @Test("all 52 consuming SwiftParser subjects are suppressed end to end")

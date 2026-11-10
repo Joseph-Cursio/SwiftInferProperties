@@ -147,7 +147,7 @@ public extension TemplateName {
         // emitter cannot justify is what `criterion-a-unmet-subject.md` measured at 89%
         // of output failing to compile, so `composeRolePostconditionPass` returns nil
         // rather than guessing.
-        .rolePostcondition
+        .rolePostcondition,
     ]
 
     // swiftprojectlint:disable:next parallel-list-drift

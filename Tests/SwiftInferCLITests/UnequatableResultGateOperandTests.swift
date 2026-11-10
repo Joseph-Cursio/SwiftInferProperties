@@ -40,7 +40,7 @@ struct UnequatableResultGateOperandTests {
         "UnsafePointer<FixResult>",
         "ProbeTagged<ProbeUser, Int>",
         "Handle<FixResult>",
-        "[Handle<FixResult>]"
+        "[Handle<FixResult>]",
     ])
     func aNonWrappingGenericArgumentIsNotJudged(result: String) {
         #expect(UnequatableResultGateTests.reason(result, in: Self.scan) == nil)
@@ -55,7 +55,7 @@ struct UnequatableResultGateOperandTests {
         "Result<FixResult, Never>",
         "[[FixResult]]?",
         "(label: FixResult, count: Int)",
-        "ContiguousArray<FixResult>"
+        "ContiguousArray<FixResult>",
     ])
     func aWrappedArgumentIsStillJudged(result: String) throws {
         let reason = try #require(UnequatableResultGateTests.reason(result, in: Self.scan))

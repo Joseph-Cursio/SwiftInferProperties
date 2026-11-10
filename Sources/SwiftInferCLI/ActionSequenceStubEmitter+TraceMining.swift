@@ -101,7 +101,7 @@ extension ActionSequenceStubEmitter {
             "        // TestStore Trace Mining (Slice 3): developer-authored "
                 + "orderings, checked before random generation.",
             "        if pinSequence == nil {",
-            "            let minedTraces: [(state: \(stateType), actions: [\(actionType)])] = ["
+            "            let minedTraces: [(state: \(stateType), actions: [\(actionType)])] = [",
         ]
         lines.append(contentsOf: entries)
         lines.append("            ]")
@@ -126,7 +126,7 @@ extension ActionSequenceStubEmitter {
         var lines = [
             "            for minedTrace in minedTraces {",
             "                var state = minedTrace.state",
-            "                for action in minedTrace.actions {"
+            "                for action in minedTrace.actions {",
         ]
         lines.append(contentsOf: applyStep.map { "                    \($0)" })
         lines.append(contentsOf: perStepCheck.map { "                    \($0)" })
@@ -149,7 +149,7 @@ extension ActionSequenceStubEmitter {
             "            for minedTrace in minedTraces {",
             "                var state = minedTrace.state",
             "                let tail = generator.run(using: &rng)",
-            "                for action in minedTrace.actions + tail {"
+            "                for action in minedTrace.actions + tail {",
         ]
         lines.append(contentsOf: applyStep.map { "                    \($0)" })
         lines.append(contentsOf: perStepCheck.map { "                    \($0)" })

@@ -44,7 +44,7 @@ struct RoundTripConstraintEquivalenceTests {
             ("cross_type", FunctionPair(
                 forward: Self.summary(name: "to", param: "A", ret: "B", container: "ContainerA"),
                 reverse: Self.summary(name: "from", param: "B", ret: "A", container: "ContainerB")
-            ))
+            )),
         ]
         for (label, pair) in corpus {
             let wrapper = RoundTripTemplate.suggest(for: pair)
@@ -96,7 +96,7 @@ struct IdempotenceConstraintEquivalenceTests {
         let corpus: [(label: String, summary: FunctionSummary)] = [
             ("curated_normalize", Self.summary(name: "normalize")),
             ("bare_someOp", Self.summary(name: "someOp")),
-            ("math_log", Self.summary(name: "log", type: "Double"))
+            ("math_log", Self.summary(name: "log", type: "Double")),
         ]
         for (label, summary) in corpus {
             let wrapper = IdempotenceTemplate.suggest(for: summary)
@@ -138,7 +138,7 @@ struct IdempotenceLiftedConstraintEquivTests {
                 inheritedTypes: [],
                 location: loc,
                 storedMembers: [StoredMember(name: "x", typeName: "Int")]
-            )
+            ),
         ])
         return LiftedTransformation.lift(summary, carrierKindResolver: resolver)!
     }
@@ -152,12 +152,12 @@ struct IdempotenceLiftedConstraintEquivTests {
                 inheritedTypes: [],
                 location: Self.loc,
                 storedMembers: [StoredMember(name: "x", typeName: "Int")]
-            )
+            ),
         ])
         let corpus: [(label: String, lifted: LiftedTransformation)] = [
             ("removeAll", Self.liftedTransformation(mutatingFuncName: "removeAll")),
             ("sort", Self.liftedTransformation(mutatingFuncName: "sort")),
-            ("normalize", Self.liftedTransformation(mutatingFuncName: "normalize"))
+            ("normalize", Self.liftedTransformation(mutatingFuncName: "normalize")),
         ]
         for (label, lifted) in corpus {
             let wrapper = IdempotenceTemplate.suggest(
@@ -184,7 +184,7 @@ struct IdempotenceLiftedConstraintEquivTests {
                 inheritedTypes: [],
                 location: Self.loc,
                 storedMembers: [StoredMember(name: "x", typeName: "Int")]
-            )
+            ),
         ])
         let lifted = Self.liftedTransformation(mutatingFuncName: "normalize")
         let suggestion = try #require(IdempotenceTemplate.suggest(

@@ -228,7 +228,7 @@ struct CorpusProvenanceEvidenceTests {
                     carrier: "T",
                     outcome: .architecturalCoveragePending,
                     outcomeDetail: "unsupported-carrier: T"
-                )
+                ),
             ],
             packageRoot: root,
             now: Date(timeIntervalSince1970: 1_000_000),

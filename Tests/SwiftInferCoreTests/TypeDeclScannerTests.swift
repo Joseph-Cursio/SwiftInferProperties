@@ -284,7 +284,7 @@ struct TypeDeclScannerStoredMembersTests {
         let decl = try #require(corpus.typeDecls.first)
         #expect(decl.storedMembers == [
             StoredMember(name: "lhs", typeName: "Int"),
-            StoredMember(name: "rhs", typeName: "String")
+            StoredMember(name: "rhs", typeName: "String"),
         ])
     }
 

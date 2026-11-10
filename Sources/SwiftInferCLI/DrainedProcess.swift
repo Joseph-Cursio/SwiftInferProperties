@@ -52,7 +52,7 @@ enum DrainedProcess {
         let drained = DispatchGroup()
         for (handle, box) in [
             (stdoutPipe.fileHandleForReading, stdoutBox),
-            (stderrPipe.fileHandleForReading, stderrBox)
+            (stderrPipe.fileHandleForReading, stderrBox),
         ] {
             DispatchQueue.global(qos: .userInitiated).async(group: drained) {
                 box.append(handle.readDataToEndOfFile())

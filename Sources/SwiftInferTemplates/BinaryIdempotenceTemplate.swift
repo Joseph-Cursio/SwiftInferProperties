@@ -34,7 +34,7 @@ public enum BinaryIdempotenceTemplate {
         "min", "max", "minimum", "maximum",
         "union", "intersection", "intersect",
         "gcd", "lcm",
-        "meet"
+        "meet",
     ]
 
     public static func suggest(
@@ -85,7 +85,7 @@ public enum BinaryIdempotenceTemplate {
                 weight: 40,
                 detail: "Curated semilattice verb match: '\(summary.name)' — combining a value with "
                     + "itself is a no-op, so it owes `op(x, x) == x`"
-            )
+            ),
         ]
         if let assumedCoverage = assumedKitCoverage(
             for: summary,
@@ -117,7 +117,7 @@ public enum BinaryIdempotenceTemplate {
             candidateProperties: [
                 .setUnionIdempotent,
                 .setIntersectionIdempotent,
-                .semilatticeIdempotence
+                .semilatticeIdempotence,
             ]
         )
     }
@@ -140,7 +140,7 @@ public enum BinaryIdempotenceTemplate {
             "CONFIRM the operation is a genuine join or meet. `min` / `max` / `union` / `intersection` "
                 + "/ `gcd` / `lcm` are idempotent; a `merge` or `combine` that ADDS is not "
                 + "(`merge(x, x)` doubles), which is why those verbs are excluded from this template.",
-            "T must conform to Equatable for the emitted property to compile."
+            "T must conform to Equatable for the emitted property to compile.",
         ]
     }
 }

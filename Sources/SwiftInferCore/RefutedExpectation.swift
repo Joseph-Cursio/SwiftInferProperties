@@ -98,7 +98,7 @@ public enum RefutedExpectation {
         "the law does not apply to this function — the guess was wrong, and that is a "
             + "finding about the guess",
         "the law does apply and the function is wrong — the guess was right, and this is "
-            + "a bug"
+            + "a bug",
     ]
 
     /// One line naming what the tool cannot settle, so the fork does not read as

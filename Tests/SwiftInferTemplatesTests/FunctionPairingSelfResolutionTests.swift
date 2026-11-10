@@ -34,7 +34,7 @@ struct FunctionPairingSelfResolutionTests {
     func selfSpellingCliqueDoesNotForm() {
         let owners = [
             "Decisions", "InteractionDecisions", "PostAcceptanceOutcomeLog",
-            "InteractionIndexEntry", "SemanticIndexEntry", "VerifyEvidenceLog"
+            "InteractionIndexEntry", "SemanticIndexEntry", "VerifyEvidenceLog",
         ]
         let summaries = owners.enumerated().map { index, owner in
             makeSummary(

@@ -196,7 +196,7 @@ extension SwiftInferCommand.Discover {
             "by the code's ROLE (a correct implementation cannot fail it), so the focus does not get",
             "to hide it. The manifest SHOULD have named it: this is a LINTER gap, and the usual cause",
             "is a shape the linter cannot see — methods on a value type it just told you to extract,",
-            "a computed-property read, a call to `min`. Seed it, and this warning goes away."
+            "a computed-property read, a call to `min`. Seed it, and this warning goes away.",
         ].joined(separator: " ")
     }
 
@@ -267,7 +267,7 @@ extension SwiftInferCommand.Discover {
             "note: `\(suggestion.templateName)` on `\(subject)` scored \(score) — below the default",
             "visibility cut — but the linter seeded that function, so it is shown rather than",
             "replaced by a determinism tautology about the same function. A weak law that can fail",
-            "beats a strong one that cannot."
+            "beats a strong one that cannot.",
         ].joined(separator: " ")
     }
 
@@ -334,7 +334,7 @@ extension SwiftInferCommand.Discover {
             "suggestion in this run is a tautology — so it is shown anyway rather than handing you",
             "a confident answer that cannot fail. Treat this as a SCORING bug: a law that can be",
             "refuted is worth more than any number of laws that cannot, and the score does not yet",
-            "say so."
+            "say so.",
         ].joined(separator: " ")
     }
 
@@ -359,7 +359,7 @@ extension SwiftInferCommand.Discover {
             "it is an erasure. Treat this as a LINTER bug, not a swift-infer one: the subject is an",
             "ordinary pure function the seed manifest should have named and did not. The usual cause",
             "is a shape the linter cannot see — methods on a value type it just told you to extract,",
-            "for one. Seed it, and this warning goes away."
+            "for one. Seed it, and this warning goes away.",
         ].joined(separator: " ")
     }
 

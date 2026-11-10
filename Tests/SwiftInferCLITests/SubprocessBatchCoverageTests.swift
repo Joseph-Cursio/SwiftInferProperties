@@ -94,7 +94,7 @@ struct SubprocessBatchCoverageTests {
             "shells out to `git ls-files` / `git rev-parse` on paths already in this "
             + "checkout — milliseconds, no network, no `.build`. The point of the suite "
             + "is that the tracked-file warning fires on a REAL tracked file, so a fake "
-            + "would test the fake."
+            + "would test the fake.",
     ]
 
     @Test("every .subprocess suite is matched by SUBPROCESS_RE")

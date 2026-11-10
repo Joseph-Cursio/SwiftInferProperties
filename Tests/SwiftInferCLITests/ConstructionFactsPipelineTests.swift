@@ -44,7 +44,7 @@ struct ConstructionFactsPipelineTests {
     func siblingConstructionWithdrawsTheAdvice() throws {
         let root = try Self.makePackage([
             "Sources/Model/Item.swift": Self.item,
-            "Sources/Logic/Logic.swift": Self.logic
+            "Sources/Logic/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -92,7 +92,7 @@ struct ConstructionFactsPipelineTests {
             """,
             "Packages/Model/Package.swift": Self.modelManifest,
             "Packages/Model/Sources/Model/Item.swift": Self.item,
-            "Sources/Logic/Logic.swift": Self.logic
+            "Sources/Logic/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -118,7 +118,7 @@ struct ConstructionFactsPipelineTests {
         let root = try Self.makePackage([
             "Demo/Package.swift": Self.modelManifest,
             "Demo/Sources/Demo/Item.swift": Self.item,
-            "Sources/Logic/Logic.swift": Self.logic
+            "Sources/Logic/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 

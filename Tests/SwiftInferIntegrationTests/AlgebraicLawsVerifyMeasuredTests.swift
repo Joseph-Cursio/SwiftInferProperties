@@ -50,7 +50,7 @@ struct AlgebraicLawsVerifyMeasuredTests {
             "involution", "binary-idempotence", "homomorphism", "multiplicative-homomorphism",
             // `magnitude` also fires measure non-negativity (a 1-parameter measure
             // over `Int`): `magnitude(value) >= 0` holds, so it bothPasses too.
-            "measure-non-negativity"
+            "measure-non-negativity",
         ] {
             #expect(
                 records.contains { $0.template == template && $0.outcome == .measuredBothPass },

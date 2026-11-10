@@ -80,7 +80,7 @@ struct BridgeTriageTests {
             ("3", .acceptPeer(index: 3)),
             ("4", nil),                // out of range
             ("0", nil),                // out of range
-            ("x", nil)                 // unrecognized
+            ("x", nil),                 // unrecognized
         ]
         for (input, expected) in table {
             let result = InteractionBridgeInteractiveTriage.parseChoice(
@@ -133,7 +133,7 @@ struct BridgeTriageTests {
     @Test func acceptAllRecordsConformanceForAllPeerInvariants() {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let output = TriageRecordingOutput()
         let result = InteractionBridgeInteractiveTriage.applyChoice(
@@ -152,7 +152,7 @@ struct BridgeTriageTests {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
             makePeer(family: .biconditional, predicate: "p2"),
-            makePeer(family: .conservation, predicate: "p3")
+            makePeer(family: .conservation, predicate: "p3"),
         ])
         let output = TriageRecordingOutput()
         let result = InteractionBridgeInteractiveTriage.applyChoice(
@@ -189,7 +189,7 @@ struct BridgeTriageTests {
     @Test func skipLeavesDecisionsUnchanged() {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let initialDecisions = InteractionDecisions.empty
         let output = TriageRecordingOutput()
@@ -228,7 +228,7 @@ struct BridgeTriageTests {
             kitProtocolName: "CardinalityInvariant",
             invariants: [
                 makeInvariant(family: .cardinality, reducer: "Inbox.body", predicate: "p1"),
-                makeInvariant(family: .cardinality, reducer: "Inbox.body", predicate: "p2")
+                makeInvariant(family: .cardinality, reducer: "Inbox.body", predicate: "p2"),
             ]
         )
         let bridge = makeBridge(peers: [multiInvariantPeer])

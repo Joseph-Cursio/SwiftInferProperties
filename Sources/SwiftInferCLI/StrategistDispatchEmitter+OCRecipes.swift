@@ -209,6 +209,6 @@ extension StrategistDispatchEmitter {
                 + "Deque($0) }",
             carrierTypeName: "Deque<Int>",
             imports: ["Foundation", "DequeModule", "PropertyBased"]
-        )
+        ),
     ]
 }

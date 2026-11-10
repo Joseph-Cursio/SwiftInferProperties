@@ -57,7 +57,7 @@ public enum ResultBuilderMethods {
         "buildExpression",
         "buildFinalResult",
         "buildLimitedAvailability",
-        "buildPartialBlock"
+        "buildPartialBlock",
     ]
 
     /// Whether `methodName` is one of the compiler-called builder methods.

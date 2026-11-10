@@ -60,7 +60,7 @@ struct AssociativityTemplateTypePatternTests {
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Set", isInout: false),
                 Parameter(label: nil, internalName: "b", typeText: "Set", isInout: false),
-                Parameter(label: nil, internalName: "c", typeText: "Set", isInout: false)
+                Parameter(label: nil, internalName: "c", typeText: "Set", isInout: false),
             ],
             returnType: "Set"
         )
@@ -93,7 +93,7 @@ struct AssociativityTemplateTypePatternTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Set", isInout: true),
-                Parameter(label: nil, internalName: "b", typeText: "Set", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "Set", isInout: false),
             ],
             returnType: "Set"
         )
@@ -269,7 +269,7 @@ func makeAssociativitySummary(
     } else if let paramTypes {
         parameters = [
             Parameter(label: nil, internalName: "lhs", typeText: paramTypes.0, isInout: false),
-            Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false)
+            Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false),
         ]
     } else {
         parameters = []

@@ -239,7 +239,7 @@ struct DriftDetectionTests {
                 tier: .strong,
                 decision: .skipped,
                 timestamp: Date(timeIntervalSince1970: 0)
-            )
+            ),
         ])
         let decisionsPath = directory.appendingPathComponent(".swiftinfer/decisions.json")
         try DecisionsLoader.write(decisions, to: decisionsPath)
@@ -292,7 +292,7 @@ struct DriftDetectionTests {
                 // fixture record has to carry the real fingerprint or the veto is withheld
                 // and drift correctly reports the pick it was meant to suppress.
                 subjectFingerprint: try #require(try subjectFingerprint(of: strong, in: target))
-            )
+            ),
         ])
         try VerifyEvidenceStore.write(
             log,

@@ -213,7 +213,7 @@ public struct CarrierKindResolver: Sendable {
         "Duration", "Measurement", "Unit",
         // Misc
         "AnyHashable", "ObjectIdentifier", "PartialKeyPath", "KeyPath",
-        "WritableKeyPath", "ReferenceWritableKeyPath"
+        "WritableKeyPath", "ReferenceWritableKeyPath",
     ])
 
     /// Strip a single generic-parameter list from a textual type name.
@@ -255,7 +255,7 @@ public struct CarrierKindResolver: Sendable {
     /// referenced as a stored-property type."
     private static let curatedGenericParameterNames: Set<String> = [
         "Element", "Wrapped", "Key", "Value", "Failure", "Success",
-        "Bound", "Index", "Iterator", "SubSequence", "Indices"
+        "Bound", "Index", "Iterator", "SubSequence", "Indices",
     ]
 
     /// Textual closure-type detection: `(...) -> ...`, optionally prefixed

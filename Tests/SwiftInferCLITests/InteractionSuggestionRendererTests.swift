@@ -150,7 +150,7 @@ struct InteractionSuggestionRendererTests {
         let rendered = InteractionSuggestionRenderer.render(
             [
                 suggestion(family: .conservation, predicate: "state.count == state.items.count"),
-                suggestion(family: .idempotence, predicate: ".refresh")
+                suggestion(family: .idempotence, predicate: ".refresh"),
             ],
             includePossible: true
         )

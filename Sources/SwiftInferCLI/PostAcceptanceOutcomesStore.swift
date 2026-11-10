@@ -134,7 +134,7 @@ public enum PostAcceptanceOutcomesStore {
                 log: .empty,
                 warnings: [
                     "could not read post-acceptance-outcomes at \(path.path): "
-                        + error.localizedDescription
+                        + error.localizedDescription,
                 ],
                 packageRoot: packageRoot
             )

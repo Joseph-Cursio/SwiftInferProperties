@@ -57,12 +57,12 @@ struct MetricsTimeToAdoptionTests {
         let decisions = Decisions(records: [
             decision(identity: "AAA1111111111111", at: "2026-05-14T10:05:00Z"), // 300s
             decision(identity: "BBB2222222222222", at: "2026-05-14T10:15:00Z"), // 900s
-            decision(identity: "CCC3333333333333", at: "2026-05-14T10:10:00Z")  // 600s
+            decision(identity: "CCC3333333333333", at: "2026-05-14T10:10:00Z"),  // 600s
         ])
         let entries = [
             entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z"),
             entry(displayHash: "0xBBB2222222222222", firstSeenAt: "2026-05-14T10:00:00Z"),
-            entry(displayHash: "0xCCC3333333333333", firstSeenAt: "2026-05-14T10:00:00Z")
+            entry(displayHash: "0xCCC3333333333333", firstSeenAt: "2026-05-14T10:00:00Z"),
         ]
         let rows = MetricsRenderer.timeToAdoptionRows(decisions: decisions, indexEntries: entries)
         #expect(rows.count == 1)
@@ -78,11 +78,11 @@ struct MetricsTimeToAdoptionTests {
     func medianEvenCount() {
         let decisions = Decisions(records: [
             decision(identity: "AAA1111111111111", at: "2026-05-14T10:01:00Z"), // 60s
-            decision(identity: "BBB2222222222222", at: "2026-05-14T10:05:00Z")  // 300s
+            decision(identity: "BBB2222222222222", at: "2026-05-14T10:05:00Z"),  // 300s
         ])
         let entries = [
             entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z"),
-            entry(displayHash: "0xBBB2222222222222", firstSeenAt: "2026-05-14T10:00:00Z")
+            entry(displayHash: "0xBBB2222222222222", firstSeenAt: "2026-05-14T10:00:00Z"),
         ]
         let rows = MetricsRenderer.timeToAdoptionRows(decisions: decisions, indexEntries: entries)
         #expect(rows[0].medianSeconds == 180) // (60 + 300) / 2
@@ -94,12 +94,12 @@ struct MetricsTimeToAdoptionTests {
             decision(identity: "AAA1111111111111", decision: .rejected, at: "2026-05-14T10:05:00Z"),
             decision(identity: "BBB2222222222222", decision: .skipped, at: "2026-05-14T10:05:00Z"),
             decision(identity: "CCC3333333333333", at: "2026-05-14T10:05:00Z"), // no index entry
-            decision(identity: "DDD4444444444444", at: "2026-05-14T10:05:00Z")  // joined
+            decision(identity: "DDD4444444444444", at: "2026-05-14T10:05:00Z"),  // joined
         ])
         let entries = [
             entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z"),
             entry(displayHash: "0xBBB2222222222222", firstSeenAt: "2026-05-14T10:00:00Z"),
-            entry(displayHash: "0xDDD4444444444444", firstSeenAt: "2026-05-14T10:00:00Z")
+            entry(displayHash: "0xDDD4444444444444", firstSeenAt: "2026-05-14T10:00:00Z"),
         ]
         let rows = MetricsRenderer.timeToAdoptionRows(decisions: decisions, indexEntries: entries)
         #expect(rows.count == 1)
@@ -190,7 +190,7 @@ struct MetricsTimeToAdoptionLoadTests {
                     tier: .strong,
                     decision: .accepted,
                     timestamp: ISO8601DateFormatter().date(from: "2026-05-14T10:05:00Z")!
-                )
+                ),
             ]),
             to: directory.appendingPathComponent("decisions.json")
         )
@@ -208,7 +208,7 @@ struct MetricsTimeToAdoptionLoadTests {
                             location: "F.swift:1",
                             firstSeenAt: "2026-05-14T10:00:00Z",
                             lastSeenAt: "2026-05-14T10:00:00Z"
-                        )
+                        ),
                     ]
                 ),
                 to: directory.appendingPathComponent("index.json")

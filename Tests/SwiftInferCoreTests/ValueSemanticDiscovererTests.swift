@@ -30,7 +30,7 @@ struct ValueSemanticDiscovererTests {
         let candidates = ValueSemanticDiscoverer.discover(
             typeDecls: [
                 structDecl("Badge", members: [("box", "Box")]),
-                classDecl("Box")
+                classDecl("Box"),
             ],
             functions: [method("increment", on: "Badge", mutating: true)]
         )
@@ -52,7 +52,7 @@ struct ValueSemanticDiscovererTests {
         let candidates = ValueSemanticDiscoverer.discover(
             typeDecls: [
                 structDecl("Both", members: [("box", "Box?"), ("onChange", "@escaping () -> Void")]),
-                classDecl("Box")
+                classDecl("Box"),
             ],
             functions: [method("mutate", on: "Both", mutating: true)]
         )
@@ -103,7 +103,7 @@ struct ValueSemanticDiscovererTests {
             typeDecls: [structDecl("Cache", members: [("store", "NSCache")])],
             functions: [
                 method("count", on: "Cache", returns: "Int"),      // query → excluded
-                method("make", on: "Cache", isStatic: true)        // static → excluded
+                method("make", on: "Cache", isStatic: true),        // static → excluded
             ]
         )
         #expect(candidates.isEmpty)
@@ -119,7 +119,7 @@ struct ValueSemanticDiscovererTests {
                 method("flush", on: "Buffer"),                                // Void, non-mutating → include
                 method("bytes", on: "Buffer", returns: "[UInt8]"),            // query → exclude
                 method("empty", on: "Buffer", isStatic: true),               // static → exclude
-                method("append", on: "Other", mutating: true)                // wrong type → exclude
+                method("append", on: "Other", mutating: true),                // wrong type → exclude
             ]
         )
         #expect(surface.map(\.name) == ["append", "flush"])
@@ -131,7 +131,7 @@ struct ValueSemanticDiscovererTests {
             of: "Doc",
             functions: [
                 method("edit", on: "Doc", mutating: true, params: 1, file: "Doc.swift"),
-                method("clear", on: "Doc", mutating: true, file: "Doc+Editing.swift")
+                method("clear", on: "Doc", mutating: true, file: "Doc+Editing.swift"),
             ]
         )
         #expect(surface.map(\.name) == ["clear", "edit"])

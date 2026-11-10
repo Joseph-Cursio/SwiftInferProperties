@@ -67,13 +67,13 @@ struct SurveyedCodableRoundTripPropertyTests {
 
     private static let roleGen = Gen.element(of: [
         SeedRole.comparator, .predicate, .transform, .reducer, .partition, .normalizer,
-        .unrecognised("totally-unknown"), .unrecognised("")
+        .unrecognised("totally-unknown"), .unrecognised(""),
     ])
     .map { $0! }
 
     private static let restrictionGen = Gen.element(of: [
         SeedRestriction.declaration, .enclosingType,
-        .unrecognised("nonsense"), .unrecognised("")
+        .unrecognised("nonsense"), .unrecognised(""),
     ])
     .map { $0! }
 

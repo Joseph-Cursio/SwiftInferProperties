@@ -183,7 +183,7 @@ struct VerifyResultRendererTests {
                 "VERIFY_DEFAULT_TRIALS: 100",
                 "VERIFY_EDGE_RESULT: PASS",
                 "VERIFY_EDGE_TRIALS: 100",
-                "VERIFY_EDGE_SAMPLED: 12"
+                "VERIFY_EDGE_SAMPLED: 12",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)

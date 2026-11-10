@@ -61,7 +61,7 @@ struct TraceMiningReplayTests {
             candidate(),
             seedTraces: [
                 SeedTrace(initialState: nil, actions: ["dismiss", "refresh"]),
-                SeedTrace(initialState: nil, actions: ["select"])
+                SeedTrace(initialState: nil, actions: ["select"]),
             ]
         ))
         #expect(source.contains("let minedTraces: [(state: AppState, actions: [AppAction])] = ["))
@@ -252,7 +252,7 @@ extension TraceMiningReplayTests {
         for dropped in [
             "Feature.State(items: Self.fixtureItems)", "Feature.State(items: FeatureTests.fixtureItems)",
             "Feature.State.initial", "Self.Fixture()", "Feature.State(items: $store.items)",
-            "Feature.State(items: rows.first!.items)"
+            "Feature.State(items: rows.first!.items)",
         ] {
             #expect(MinedTraceSelector.selfContainedInitialState(dropped) == nil, "\(dropped)")
         }
@@ -275,7 +275,7 @@ extension TraceMiningReplayTests {
     func markovRecombines() {
         let input = [
             SeedTrace(initialState: nil, actions: ["a", "b"]),
-            SeedTrace(initialState: nil, actions: ["b", "c"])
+            SeedTrace(initialState: nil, actions: ["b", "c"]),
         ]
         let synthesized = MinedTraceSelector.markovSynthesized(from: input)
         // Starting from 'a', follow a→b then b→c → [a, b, c] (novel, not an input).
@@ -287,7 +287,7 @@ extension TraceMiningReplayTests {
         let selected = MinedTraceSelector.select(
             from: [
                 trace(reducer: "Inbox", sent: [("a", []), ("b", [])]),
-                trace(reducer: "Inbox", sent: [("b", []), ("c", [])])
+                trace(reducer: "Inbox", sent: [("b", []), ("c", [])]),
             ],
             candidate: candidate(),
             alphabet: [spec("a"), spec("b"), spec("c")],

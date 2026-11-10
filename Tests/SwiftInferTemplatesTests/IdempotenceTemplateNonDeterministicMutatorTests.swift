@@ -34,7 +34,7 @@ struct IdempotenceNonDeterministicMutatorTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "elements", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 

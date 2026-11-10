@@ -129,7 +129,7 @@ extension TemplateRegistry {
                 "filterViolations",
                 params: [
                     .init(label: nil, internalName: "violations", typeText: "[Violation]", isInout: false),
-                    .init(label: "batch", internalName: "batch", typeText: "[URL]", isInout: false)
+                    .init(label: "batch", internalName: "batch", typeText: "[URL]", isInout: false),
                 ],
                 returns: "[Violation]",
                 on: "Analyzer"
@@ -155,7 +155,7 @@ extension TemplateRegistry {
                         internalName: "literal",
                         typeText: "StringLiteralExprSyntax",
                         isInout: false
-                    )
+                    ),
                 ],
                 returns: "String?",
                 on: "SecurityVisitor"
@@ -170,7 +170,7 @@ extension TemplateRegistry {
                 "equals",
                 params: [
                     .init(label: nil, internalName: "lhs", typeText: "Widget", isInout: false),
-                    .init(label: nil, internalName: "rhs", typeText: "Widget", isInout: false)
+                    .init(label: nil, internalName: "rhs", typeText: "Widget", isInout: false),
                 ],
                 returns: "Bool"
             )
@@ -200,7 +200,7 @@ extension TemplateRegistry {
                 "precedes",
                 params: [
                     .init(label: nil, internalName: "lhs", typeText: "Widget", isInout: false),
-                    .init(label: nil, internalName: "rhs", typeText: "Widget", isInout: false)
+                    .init(label: nil, internalName: "rhs", typeText: "Widget", isInout: false),
                 ],
                 returns: "Bool"
             )
@@ -215,7 +215,7 @@ extension TemplateRegistry {
                 params: [.init(label: nil, internalName: "value", typeText: "Widget", isInout: false)],
                 returns: "Bool"
             )
-        )
+        ),
     ]
 
     /// Build a reference-fixture `FunctionSummary` with the fields the app-shape

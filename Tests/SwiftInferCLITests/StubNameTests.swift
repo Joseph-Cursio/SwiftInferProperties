@@ -47,7 +47,7 @@ struct StubNameTests {
         (suggestion("encode(_:)", template: "round-trip", owner: "Codec", pairedWith: "decode(_:)"),
          "CodecEncodeDecodeRoundTripTests.swift"),
         (suggestion("apply(_:)", template: "invariant-preservation", signature: preservingIsValid),
-         "ApplyIsValidInvariantPreservationTests.swift")
+         "ApplyIsValidInvariantPreservationTests.swift"),
     ]
 
     @Test("the words are the type, the function and the template, in UpperCamelCase", arguments: names)
@@ -81,7 +81,7 @@ struct StubNameTests {
         (suggestion("encode(_:)", template: "round-trip", owner: "Codec", pairedWith: "decode(_:)"),
          "Codec_encode_decode_round-trip.swift"),
         (suggestion("apply(_:)", template: "invariant-preservation", signature: preservingIsValid),
-         "apply_isValid_invariant-preservation.swift")
+         "apply_isValid_invariant-preservation.swift"),
     ]
 
     @Test("the legacy name is the one stubs had before", arguments: legacyNames)

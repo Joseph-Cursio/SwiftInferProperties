@@ -54,7 +54,7 @@ public enum DualStyleConsistencyPairResolver {
         Pair(nonMutating: "subtracting(_:)", mutating: "subtract"),
         // OrderedDictionary.merge family — non-mutating `merging`
         // returns a new dictionary; mutating `merge` updates in place.
-        Pair(nonMutating: "merging(_:uniquingKeysWith:)", mutating: "merge")
+        Pair(nonMutating: "merging(_:uniquingKeysWith:)", mutating: "merge"),
     ]
 
     /// Resolution result. Carries the pair of expressions the V1.48.A

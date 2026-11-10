@@ -146,7 +146,7 @@ struct MonotonicityOCEmitterTests {
     @Test("nested-OC carriers emit the instance shape", arguments: [
         "OrderedSet<Int>.SubSequence",
         "OrderedDictionary<Int, Int>.Values",
-        "OrderedDictionary<Int, Int>.Elements.SubSequence"
+        "OrderedDictionary<Int, Int>.Elements.SubSequence",
     ])
     func nestedOCCarrierEmitsInstanceShape(carrier: String) throws {
         let source = try StrategistDispatchEmitter.emit(
@@ -162,7 +162,7 @@ struct MonotonicityOCEmitterTests {
     /// — `instance-method-shape-census.md` §8. Its `Index` is `Int`, as the shape needs.
     @Test("Deque<Int> emits the instance shape, on either spelling", arguments: [
         "Deque<Int>",
-        "Deque"
+        "Deque",
     ])
     func dequeEmitsInstanceShape(carrier: String) throws {
         #expect(StrategistDispatchEmitter.isMonotonicityInstanceCarrier(carrier))

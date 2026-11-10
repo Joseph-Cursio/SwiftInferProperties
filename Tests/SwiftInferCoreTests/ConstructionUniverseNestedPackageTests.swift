@@ -42,7 +42,7 @@ struct ConstructionUniverseNestedPackageTests {
     @Test("an interpolated or computed path is doubt", arguments: [
         #".package(path: "\(root)/Core")"#,
         ".package(path: localPath)",
-        #".package(name: "Core", path: ("Core"))"#
+        #".package(name: "Core", path: ("Core"))"#,
     ])
     func computedPathIsDoubt(manifest: String) {
         #expect(ConstructionUniverse.localPackageDependencies(manifest: manifest) == nil)
@@ -71,7 +71,7 @@ struct ConstructionUniverseNestedPackageTests {
             "Packages/Dep/Package.swift": Self.deepManifest(arms: 3_000),
             "Packages/Leaf/Package.swift": Self.demoManifest,
             "Packages/Leaf/Sources/Leaf/Row.swift": Self.mintingRow,
-            "Sources/Lib/Row.swift": Self.row
+            "Sources/Lib/Row.swift": Self.row,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -111,7 +111,7 @@ struct ConstructionUniverseNestedPackageTests {
             "": #".package(path: "Packages/A")"#,
             "Packages/A": #".package(path: "../B")"#,
             "Packages/B": #".package(url: "https://x/y.git", from: "1.0.0")"#,
-            "Packages/C": #".package(path: "../../Demo")"#
+            "Packages/C": #".package(path: "../../Demo")"#,
         ])
         // C depends on Demo, but nothing the root compiles depends on C.
         #expect(reached == ["Packages/A", "Packages/B"])
@@ -129,7 +129,7 @@ struct ConstructionUniverseNestedPackageTests {
                 .package(path: "./Packages/A/../C/")
             ]
             """,
-            "Vendor/Lib": "", "Demo": "", "Packages/C": ""
+            "Vendor/Lib": "", "Demo": "", "Packages/C": "",
         ])
         // `../App/Demo` climbs out and back in: it names `/work/App/Demo`, which is under the root.
         #expect(reached == ["Vendor/Lib", "Demo", "Packages/C"])
@@ -139,7 +139,7 @@ struct ConstructionUniverseNestedPackageTests {
     func doubtIncludesAll() {
         let computed = Self.compiled([
             "": #".package(path: "Packages/A")"#,
-            "Packages/A": ".package(path: siblingPath)"
+            "Packages/A": ".package(path: siblingPath)",
         ])
         #expect(computed == Self.packages)
         // A manifest the closure reaches but cannot read is doubt too.
@@ -217,7 +217,7 @@ extension ConstructionUniverseNestedPackageTests {
                 + "let package = Package(name: \"Root\", targets: [.target(name: \"Lib\")])\n",
             "Sources/Lib/Row.swift": Self.row,
             "Demo/Package.swift": Self.demoManifest,
-            "Demo/Sources/Demo/main.swift": Self.mintingRow
+            "Demo/Sources/Demo/main.swift": Self.mintingRow,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -240,14 +240,14 @@ extension ConstructionUniverseNestedPackageTests {
             "Packages/Core/Package.swift": Self.demoManifest,
             "Packages/Core/Sources/Core/Row.swift": Self.mintingRow,
             "Demo/Package.swift": Self.demoManifest,
-            "Demo/Sources/Demo/Demo.swift": "struct Demo {}"
+            "Demo/Sources/Demo/Demo.swift": "struct Demo {}",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
         #expect(ConstructionUniverse.files(forScanOf: lib).map(\.relativePath) == [
             "Packages/Core/Sources/Core/Row.swift",
             "Packages/Feature/Sources/Feature/Feature.swift",
-            "Sources/Lib/Row.swift"
+            "Sources/Lib/Row.swift",
         ])
         #expect(try Self.verdict("make", scanning: lib) == .refuted, "the closure's `Row` is compiled, so it refutes")
     }
@@ -262,7 +262,7 @@ extension ConstructionUniverseNestedPackageTests {
             """,
             "Sources/Lib/Row.swift": Self.row,
             "Demo/Package.swift": Self.demoManifest,
-            "Demo/Sources/Demo/main.swift": Self.mintingRow
+            "Demo/Sources/Demo/main.swift": Self.mintingRow,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -275,7 +275,7 @@ extension ConstructionUniverseNestedPackageTests {
         let root = try ConstructionPurityWiringTests.makePackage([
             "App/Row.swift": Self.row,
             "Demo/Package.swift": Self.demoManifest,
-            "Demo/Sources/Demo/main.swift": Self.mintingRow
+            "Demo/Sources/Demo/main.swift": Self.mintingRow,
         ], manifest: false)
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(ConstructionUniverse.files(forScanOf: root).map(\.relativePath) == [
@@ -292,7 +292,7 @@ extension ConstructionUniverseNestedPackageTests {
             "A/Package.swift": Self.demoManifest,
             "A/Sources/A/A.swift": "public struct A {}",
             "A/B/Package.swift": Self.demoManifest,
-            "A/B/Sources/B/main.swift": Self.mintingRow
+            "A/B/Sources/B/main.swift": Self.mintingRow,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")

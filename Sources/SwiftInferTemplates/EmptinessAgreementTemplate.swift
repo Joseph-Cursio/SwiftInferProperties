@@ -71,7 +71,7 @@ public enum EmptinessAgreementTemplate {
                 weight: 15,
                 detail: "Named for the same thing: '\(pair.predicate.name)' / '\(pair.measure.name)' — "
                     + "so `\(lawText(for: pair))`"
-            )
+            ),
         ]
     }
 
@@ -88,14 +88,14 @@ public enum EmptinessAgreementTemplate {
                 + "the comparison.",
             "A CONJECTURE read from the names. A predicate that means something narrower than its "
                 + "count — `hasUnreadIssues` beside a count of all issues — is correct code that "
-                + "fails this; confirm the two are meant to agree before encoding it."
+                + "fails this; confirm the two are meant to agree before encoding it.",
         ]
     }
 
     private static func makeIdentity(for pair: EmptinessAgreementPair) -> SuggestionIdentity {
         let halves = [
             IdempotenceTemplate.canonicalSignature(of: pair.predicate),
-            IdempotenceTemplate.canonicalSignature(of: pair.measure)
+            IdempotenceTemplate.canonicalSignature(of: pair.measure),
         ]
         return SuggestionIdentity(canonicalInput: "\(templateName)|" + halves.joined(separator: "|"))
     }

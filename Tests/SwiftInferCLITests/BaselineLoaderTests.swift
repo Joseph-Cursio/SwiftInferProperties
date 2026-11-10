@@ -56,7 +56,7 @@ struct BaselineLoaderTests {
                 template: "round-trip",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         try BaselineLoader.write(canonical, to: baselinePath)
 
@@ -92,7 +92,7 @@ struct BaselineLoaderTests {
                 template: "idempotence",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         try BaselineLoader.write(
             implicit,
@@ -107,7 +107,7 @@ struct BaselineLoaderTests {
                 template: "round-trip",
                 scoreAtSnapshot: 70,
                 tier: .likely
-            )
+            ),
         ])
         try BaselineLoader.write(override, to: overridePath)
 
@@ -147,7 +147,7 @@ struct BaselineLoaderTests {
                 template: "idempotence",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         try BaselineLoader.write(baseline, to: path)
         #expect(FileManager.default.fileExists(atPath: path.path))
@@ -173,7 +173,7 @@ struct BaselineLoaderTests {
                 template: "round-trip",
                 scoreAtSnapshot: 70,
                 tier: .likely
-            )
+            ),
         ])
         try BaselineLoader.write(baseline, to: path)
         let firstBytes = try Data(contentsOf: path)

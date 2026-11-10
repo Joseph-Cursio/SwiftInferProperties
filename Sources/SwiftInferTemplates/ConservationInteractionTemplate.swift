@@ -54,7 +54,7 @@ public enum ConservationInteractionTemplate: InteractionTemplateFamily {
                 + "`\(witness.collectionPropertyName): "
                 + "[\(witness.elementTypeName)]` — a count-shaped "
                 + "conservation candidate (PRD §5.2).",
-            "Reducer-shaped signature (\(candidate.signatureShape.rawValue))."
+            "Reducer-shaped signature (\(candidate.signatureShape.rawValue)).",
         ]
     }
 
@@ -69,7 +69,7 @@ public enum ConservationInteractionTemplate: InteractionTemplateFamily {
                 + "refinement).",
             "Initial-state invariant might not hold if `State.init()` sets "
                 + "`\(witness.aggregatePropertyName)` to a non-zero default "
-                + "with `\(witness.collectionPropertyName)` empty."
+                + "with `\(witness.collectionPropertyName)` empty.",
         ]
     }
 }

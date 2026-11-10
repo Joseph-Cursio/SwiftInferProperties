@@ -54,7 +54,7 @@ public enum EquivalenceRelationTemplate {
         // `areEqual(_:_:)` rather than `isEqual(to:)`.
         "areequal",
         "areequivalent",
-        "aresame"
+        "aresame",
     ]
 
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
@@ -72,7 +72,7 @@ public enum EquivalenceRelationTemplate {
                         weight: 40,
                         detail: "`\(summary.name)` is a named equality over two operands of the "
                             + "same type — it owes reflexivity, symmetry, and transitivity"
-                    )
+                    ),
                 ]
             },
             evidence: { [$0.inferenceEvidence] },
@@ -178,7 +178,7 @@ public enum EquivalenceRelationTemplate {
             "If the type is also `Equatable` / `Hashable`, this relation must AGREE with `==` and be "
                 + "CONSISTENT with `hashValue`: two values this method calls equal must have the same "
                 + "hash, or a `Set` / `Dictionary` built on them will silently lose elements. A "
-                + "hand-rolled equality that disagrees with the synthesized `==` is a latent bug."
+                + "hand-rolled equality that disagrees with the synthesized `==` is a latent bug.",
         ]
     }
 }

@@ -32,7 +32,7 @@ public enum ValueSemanticVerifyReport {
         var lines: [String] = [
             "swift-infer verify-value-semantics — \(results.count) candidate"
                 + "\(results.count == 1 ? "" : "s") in \(moduleName):",
-            ""
+            "",
         ]
         appendLeaks(leaks, into: &lines)
         appendSection("\u{2713}  Verified value-semantic", safe, into: &lines) { _ in nil }

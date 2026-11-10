@@ -70,7 +70,7 @@ struct StructuralRoundTripTemplateTests {
 
     @Test("a result with no layout of its own is declined", arguments: [
         "[FormatOption]", "ParsedRuleInfo?", "(json: String, prompt: String)", "Set<String>",
-        "Bool", "Int", "String", "URL"
+        "Bool", "Int", "String", "URL",
     ])
     func declinesResultsWithNoLayout(result: String) {
         #expect(StructuralRoundTripSubject.candidates(in: [Self.function("parse", returns: result)]).isEmpty)

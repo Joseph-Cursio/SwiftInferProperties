@@ -75,7 +75,7 @@ public enum ModelLawTemplate {
                 weight: 30,
                 detail: "Set-operation shape: (\(shape.typeName)) -> \(shape.typeName), with "
                     + "`contains` supplying the characteristic function to state it against"
-            )
+            ),
         ]
         // Three or more curated operations on one carrier is not a coincidence. A lone
         // `union` might be a merge or an append; `union` + `intersection` +
@@ -95,7 +95,7 @@ public enum ModelLawTemplate {
         [
             "Abstraction function: \(shape.typeName).contains(_:) -> Bool at "
                 + "\(shape.membership.location) — a set IS "
-                + "its characteristic function, so no conversion to `Set` is needed to state the law"
+                + "its characteristic function, so no conversion to `Set` is needed to state the law",
         ]
     }
 
@@ -118,7 +118,7 @@ public enum ModelLawTemplate {
             "The kit's `checkSetAlgebraPropertyLaws` does NOT subsume this. Its 15 laws relate the "
                 + "operations to each other and never mention `contains`, so an implementation "
                 + "wrong at a seam — `[1,3) ∪ [3,5)` not merging to `[1,5)` — passes all 15 and "
-                + "fails this one at `x == 3`."
+                + "fails this one at `x == 3`.",
         ]
     }
 
@@ -139,7 +139,7 @@ public enum ModelLawTemplate {
                     + "disagree, so `x` must land INSIDE them often. Draw the operands and `x` "
                     + "from one small shared alphabet — widen it and every trial passes "
                     + "vacuously with `contains` false on both sides."
-            )
+            ),
         ]
     }
 

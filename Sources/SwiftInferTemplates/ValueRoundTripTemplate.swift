@@ -66,7 +66,7 @@ public enum ValueRoundTripTemplate {
     /// that it is *recovered from a representation*, and only recovery owes a round-trip.
     public static let curatedReaderVerbs: [String] = [
         "value", "represented", "decode", "decoded", "parse", "parsed",
-        "read", "extract", "extracted", "literal", "unquote"
+        "read", "extract", "extracted", "literal", "unquote",
     ]
 
     /// Representation types — the "written form" side of the round-trip.
@@ -168,7 +168,7 @@ public enum ValueRoundTripTemplate {
                 weight: 15,
                 detail: "'\(summary.name)' says it RECOVERS a value rather than computing one, so "
                     + "writing a value down and reading it back owes you the value"
-            )
+            ),
         ]
     }
 
@@ -198,7 +198,7 @@ public enum ValueRoundTripTemplate {
             "THE ROUND-TRIP IS NAME-CONJECTURED. `(\(parameterType)) -> …?` owes nothing on its "
                 + "own — a lookup or a search has that shape and no round-trip. It is owed here "
                 + "because the NAME says the function recovers a value. Confirm that before "
-                + "encoding it."
+                + "encoding it.",
         ]
     }
 }

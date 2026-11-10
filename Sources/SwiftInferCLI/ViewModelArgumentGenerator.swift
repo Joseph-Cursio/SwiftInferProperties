@@ -51,7 +51,7 @@ public enum ViewModelArgumentGenerator {
             // Fixed UUIDs (deterministic — `UUID()` would be random).
             return [
                 "UUID(uuidString: \"00000000-0000-0000-0000-000000000000\")!",
-                "UUID(uuidString: \"11111111-1111-1111-1111-111111111111\")!"
+                "UUID(uuidString: \"11111111-1111-1111-1111-111111111111\")!",
             ]
 
         default:

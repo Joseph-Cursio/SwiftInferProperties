@@ -311,12 +311,12 @@ enum ReferentialIntegrityExtractor {
 
     private static let identifiedArrayOfPrefixes = [
         "IdentifiedArrayOf<",
-        "IdentifiedCollections.IdentifiedArrayOf<"
+        "IdentifiedCollections.IdentifiedArrayOf<",
     ]
 
     private static let identifiedArrayPrefixes = [
         "IdentifiedArray<",
-        "IdentifiedCollections.IdentifiedArray<"
+        "IdentifiedCollections.IdentifiedArray<",
     ]
 
     /// Depth-counting split on the top-level comma. `inner` is the

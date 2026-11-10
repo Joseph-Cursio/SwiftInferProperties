@@ -48,7 +48,7 @@ struct DifferentialTemplateTests {
             location: SourceLocation(file: "T.swift", line: 1, column: 1),
             storedMembers: [
                 StoredMember(name: "tree", typeName: "SourceFileSyntax"),
-                StoredMember(name: "lookaheadRanges", typeName: "LookaheadRanges")
+                StoredMember(name: "lookaheadRanges", typeName: "LookaheadRanges"),
             ]
         )
     }
@@ -60,7 +60,7 @@ struct DifferentialTemplateTests {
                 "parseIncrementally",
                 params: [("source", "String"), ("parseTransition", "IncrementalParseTransition?")],
                 returns: "IncrementalParseResult"
-            )
+            ),
         ]
     }
 
@@ -108,7 +108,7 @@ struct DifferentialTemplateTests {
             (("parse", "parseIncrementally"), "Incrementally"),                  // swift-syntax
             (("_ensureFreeCapacity", "_ensureFreeCapacitySlow"), "Slow"),        // swift-collections
             (("_addHTTPClientHandlers", "_addHTTPClientHandlersFallback"), "Fallback"),  // swift-nio
-            (("append", "uncheckedAppend"), "unchecked")                         // swift-collections
+            (("append", "uncheckedAppend"), "unchecked"),                         // swift-collections
         ]
         for (names, marker) in cases {
             let (reference, variant) = names
@@ -134,7 +134,7 @@ struct DifferentialTemplateTests {
     func unrelatedNames() {
         for (lhs, rhs) in [
             ("parse", "format"), ("append", "insert"), ("parse", "parse"),
-            ("fastPath", "slowPath"), ("sort", "sorted")
+            ("fastPath", "slowPath"), ("sort", "sorted"),
         ] {
             #expect(VariantMarkers.relateEitherOrder(lhs, rhs) == nil, "\(lhs)/\(rhs)")
         }
@@ -167,7 +167,7 @@ struct DifferentialTemplateTests {
     func preconditionElidingIsVetoed() throws {
         let pairs = VariantPairing.candidates(in: [
             fn("append", params: [("x", "Element")], returns: "Buffer", carrier: "Buf"),
-            fn("uncheckedAppend", params: [("x", "Element")], returns: "Buffer", carrier: "Buf")
+            fn("uncheckedAppend", params: [("x", "Element")], returns: "Buffer", carrier: "Buf"),
         ])
         let pair = try #require(pairs.first)
         // The pair still FORMS — the veto is a scoring verdict, not a pairing one,
@@ -196,7 +196,7 @@ struct DifferentialTemplateTests {
                 params: [("fromByteOffset", "Int")],
                 returns: "T",
                 carrier: "MutableRawSpan"
-            )
+            ),
         ])
         let pair = try #require(pairs.first)
         #expect(pair.naming.marker == "unsafe")
@@ -230,7 +230,7 @@ struct DifferentialTemplateTests {
         // these are not two implementations of one call.
         let mismatched = [
             fn("parse", params: [("source", "String")], returns: "Tree"),
-            fn("parseIncrementally", params: [("data", "Data"), ("t", "T?")], returns: "Tree")
+            fn("parseIncrementally", params: [("data", "Data"), ("t", "T?")], returns: "Tree"),
         ]
         #expect(VariantPairing.candidates(in: mismatched).isEmpty)
     }
@@ -244,7 +244,7 @@ struct DifferentialTemplateTests {
         // so a lifted path would buy nothing on the measured corpora.
         let voidPair = [
             fn("append", params: [("x", "Element")], returns: "Void", isMutating: true),
-            fn("uncheckedAppend", params: [("x", "Element")], returns: "Void", isMutating: true)
+            fn("uncheckedAppend", params: [("x", "Element")], returns: "Void", isMutating: true),
         ]
         #expect(VariantPairing.candidates(in: voidPair).isEmpty)
     }
@@ -258,12 +258,12 @@ struct DifferentialTemplateTests {
             location: SourceLocation(file: "T.swift", line: 1, column: 1),
             storedMembers: [
                 StoredMember(name: "before", typeName: "Tree"),
-                StoredMember(name: "after", typeName: "Tree")
+                StoredMember(name: "after", typeName: "Tree"),
             ]
         )
         let pair = [
             fn("parse", params: [("source", "String")], returns: "Tree"),
-            fn("parseIncrementally", params: [("source", "String")], returns: "PairResult")
+            fn("parseIncrementally", params: [("source", "String")], returns: "PairResult"),
         ]
         #expect(VariantPairing.candidates(in: pair, typeDecls: [ambiguous]).isEmpty)
     }
@@ -277,7 +277,7 @@ struct DifferentialTemplateTests {
     func equalReturnsNeedNoProjection() throws {
         let pairs = VariantPairing.candidates(in: [
             fn("sort", params: [("xs", "[Int]")], returns: "[Int]"),
-            fn("naiveSort", params: [("xs", "[Int]")], returns: "[Int]")
+            fn("naiveSort", params: [("xs", "[Int]")], returns: "[Int]"),
         ])
         let pair = try #require(pairs.first)
         #expect(pair.projection == nil)

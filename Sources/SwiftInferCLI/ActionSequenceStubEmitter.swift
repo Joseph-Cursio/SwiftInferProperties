@@ -156,7 +156,7 @@ public enum ActionSequenceStubEmitter {
             stubHeaderMarker,
             "// Reducer: \(inputs.candidate.qualifiedName)",
             "// Carrier: \(inputs.candidate.carrierKind.rawValue)",
-            "// Signature: \(inputs.candidate.signatureShape.rawValue)"
+            "// Signature: \(inputs.candidate.signatureShape.rawValue)",
         ]
         if let invariant = inputs.invariant {
             lines.append("// Invariant family: \(invariant.family.rawValue)")
@@ -238,7 +238,7 @@ public enum ActionSequenceStubEmitter {
                 + "?? rawActions",
             "            let actions = pinPrefix.map { Array(dropped.prefix($0)) } ?? dropped",
             "            var state = \(stateInit)",
-            "            for action in actions {"
+            "            for action in actions {",
         ]
         lines.append(contentsOf: applyStep.map { "                \($0)" })
         lines.append(contentsOf: perStepCheck.map { "                \($0)" })
@@ -320,7 +320,7 @@ public enum ActionSequenceStubEmitter {
                 "        let generator = ActionSequenceFactory.actionSequence(",
                 "            forCaseIterable: \(inputs.candidate.actionTypeName).self,",
                 "            length: \(length)",
-                "        )"
+                "        )",
             ]
         }
         // Cycle 125 (Phase B) — relaxed generator over the constructible

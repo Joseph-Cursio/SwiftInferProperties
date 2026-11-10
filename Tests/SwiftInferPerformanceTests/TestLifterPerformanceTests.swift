@@ -151,7 +151,7 @@ struct TestLifterPerformanceTests {
             nonDetectableMethod(),
             "}",
             "",
-            swiftTestingRoundTripDecl(index: index)
+            swiftTestingRoundTripDecl(index: index),
         ].filter { !$0.isEmpty }.joined(separator: "\n\n")
         return """
         import XCTest

@@ -58,6 +58,6 @@ public enum DirectionLabels {
     public static let curated: Set<String> = [
         "after", "before",
         "next", "prev", "previous",
-        "advance", "succ", "pred", "successor", "predecessor"
+        "advance", "succ", "pred", "successor", "predecessor",
     ]
 }

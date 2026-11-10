@@ -24,7 +24,7 @@ struct VerifyInteractionCommandTests {
             "--target", "MyApp",
             "--reducer", "Inbox.reduce",
             "--user-module", "MyAppLib",
-            "--sequence-count", "100"
+            "--sequence-count", "100",
         ])
         #expect(parsed.target == ["MyApp"])
         #expect(parsed.reducer == "Inbox.reduce")

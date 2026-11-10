@@ -35,7 +35,7 @@ struct CommutativityCrossValidationKeyTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "MyData", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "MyData", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "MyData", isInout: false),
             ],
             returnTypeText: "MyData",
             isThrows: false,
@@ -69,7 +69,7 @@ struct CommutativityCrossValidationKeyTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "MyData", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "MyData", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "MyData", isInout: false),
             ],
             returnTypeText: "MyData",
             isThrows: false,

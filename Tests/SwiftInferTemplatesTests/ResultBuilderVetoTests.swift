@@ -46,7 +46,7 @@ struct ResultBuilderVetoTests {
         for name in [
             "buildBlock", "buildOptional", "buildEither", "buildArray",
             "buildExpression", "buildFinalResult", "buildLimitedAvailability",
-            "buildPartialBlock"
+            "buildPartialBlock",
         ] {
             #expect(ResultBuilderMethods.isBuilderMethod(name), "expected \(name) curated")
         }
@@ -58,7 +58,7 @@ struct ResultBuilderVetoTests {
         // a prefix test would silently suppress all of them.
         for name in [
             "buildRequest", "buildURL", "buildIndex", "buildTree",
-            "build", "rebuildBlock", "buildBlockingQueue"
+            "build", "rebuildBlock", "buildBlockingQueue",
         ] {
             #expect(!ResultBuilderMethods.isBuilderMethod(name), "expected \(name) NOT curated")
         }
@@ -72,7 +72,7 @@ struct ResultBuilderVetoTests {
         // `buildEither(second:)` proposed as a round-trip AND an inverse-pair.
         let pairs = FunctionPairing.candidates(in: [
             builderMethod("buildEither", label: "first"),
-            builderMethod("buildEither", label: "second")
+            builderMethod("buildEither", label: "second"),
         ])
         #expect(pairs.isEmpty)
     }
@@ -85,7 +85,7 @@ struct ResultBuilderVetoTests {
             builderMethod("buildEither", label: "second"),
             builderMethod("buildLimitedAvailability"),
             builderMethod("buildExpression"),
-            builderMethod("buildFinalResult", returns: "FinalResult")
+            builderMethod("buildFinalResult", returns: "FinalResult"),
         ]
         #expect(FunctionPairing.candidates(in: clique).isEmpty)
         // And a builder must not pair with an ordinary function either.

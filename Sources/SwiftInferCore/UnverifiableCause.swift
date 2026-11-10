@@ -112,7 +112,7 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
         ("not-a-candidate", .subjectNotVisible),
         ("instance-method-shape-not-supported", .instanceMethodShape),
         ("monotonicity-domain-not-comparable", .monotonicityDomainNotComparable),
-        ("carrier-not-equatable", .carrierNotEquatable)
+        ("carrier-not-equatable", .carrierNotEquatable),
     ]
 
     /// Short label for a count breakdown.

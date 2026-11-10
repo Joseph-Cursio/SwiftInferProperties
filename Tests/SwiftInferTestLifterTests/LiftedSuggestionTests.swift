@@ -190,7 +190,7 @@ struct SuggestionCrossValidationKeyTests {
                     displayName: "decode(_:)",
                     signature: "(Data) -> MyData",
                     location: SourceLocation(file: "X.swift", line: 5, column: 1)
-                )
+                ),
             ],
             score: Score(signals: []),
             generator: .m1Placeholder,
@@ -209,7 +209,7 @@ struct SuggestionCrossValidationKeyTests {
                     displayName: "normalize",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "X.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: []),
             generator: .m1Placeholder,

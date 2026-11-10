@@ -123,7 +123,7 @@ enum DocCitationScanner {
     static let selfDescribingFiles: Set<String> = [
         "DocCitationScanner.swift",
         "DocCitationTests.swift",
-        "DocProseCitationTests.swift"
+        "DocProseCitationTests.swift",
     ]
 
     /// Every `docs/…` citation under `Sources/` and `Tests/`.

@@ -30,7 +30,7 @@ struct ReorderPartitionCorpusMeasuredTests {
         VerifyCase(method: "buggyDropWhole", hasSubrange: false, isStable: true, expectBothPass: false),
         VerifyCase(method: "unstablePartitionWhole", hasSubrange: false, isStable: false, expectBothPass: true),
         VerifyCase(method: "stablePartitionSubrange", hasSubrange: true, isStable: true, expectBothPass: true),
-        VerifyCase(method: "buggyFenceSubrange", hasSubrange: true, isStable: true, expectBothPass: false)
+        VerifyCase(method: "buggyFenceSubrange", hasSubrange: true, isStable: true, expectBothPass: false),
     ]
 
     @Test("each corpus partition verifies to its expected split/permutation/fence outcome")

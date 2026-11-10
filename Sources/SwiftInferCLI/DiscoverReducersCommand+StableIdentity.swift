@@ -17,7 +17,7 @@ extension SwiftInferCommand.DiscoverReducers {
         var lines: [String] = [
             "swift-infer discover-reducers — detected \(candidates.count) "
                 + "identity-stability carrier\(suffix) (mutable Hashable classes):",
-            ""
+            "",
         ]
         for candidate in candidates {
             lines.append(contentsOf: renderStableIdentity(candidate))
@@ -30,7 +30,7 @@ extension SwiftInferCommand.DiscoverReducers {
         let surface = candidate.mutationSurface.map(\.name).joined(separator: ", ")
         return [
             "  \(origin)  \(candidate.typeName)",
-            "    mutation surface (\(candidate.mutationSurface.count)): \(surface)"
+            "    mutation surface (\(candidate.mutationSurface.count)): \(surface)",
         ]
     }
 }

@@ -46,7 +46,7 @@ public enum FloatingPointEquatableTypes {
         "CGFloat",
         // Complex types (AlgebraicField conforming via swift-numerics)
         "Complex",
-        "ComplexModule.Complex"
+        "ComplexModule.Complex",
     ]
 
     /// Returns `true` when `typeText` names a floating-point type that

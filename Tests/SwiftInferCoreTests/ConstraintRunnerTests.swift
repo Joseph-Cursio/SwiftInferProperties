@@ -58,7 +58,7 @@ struct ConstraintRunnerTests {
             signals: { _ in
                 [
                     Signal(kind: .typeSymmetrySignature, weight: 100, detail: "shape"),
-                    Signal(kind: .nonDeterministicBody, weight: Signal.vetoWeight, detail: "veto")
+                    Signal(kind: .nonDeterministicBody, weight: Signal.vetoWeight, detail: "veto"),
                 ]
             },
             evidence: { _ in [Self.makeEvidence()] },

@@ -52,7 +52,7 @@ public enum SetAlgebraShape {
         "union",
         "intersection",
         "symmetricDifference",
-        "subtracting"
+        "subtracting",
     ]
 
     /// Returns `true` when `summary`'s first parameter type and return

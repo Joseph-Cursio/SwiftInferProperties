@@ -76,7 +76,7 @@ public enum KitEvidenceScoring {
                         "PropertyLawKit executed `\(carrier)`'s equality laws and they held, so "
                             + "the `==` this law is stated with is a verified oracle rather than "
                             + "an assumed one. Score is unchanged — a sound `==` does not make "
-                            + "this law truer, it makes testing it meaningful."
+                            + "this law truer, it makes testing it meaningful.",
                     ],
                     whyMightBeWrong: suggestion.explainability.whyMightBeWrong
                 )

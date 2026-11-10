@@ -26,7 +26,7 @@ struct CheckPropertyMacroDiagnosticsTests {
                     message: "@CheckProperty can only attach to a function declaration.",
                     line: 1,
                     column: 1
-                )
+                ),
             ],
             macros: testMacros
         )
@@ -48,7 +48,7 @@ struct CheckPropertyMacroDiagnosticsTests {
                         + " — exactly one parameter and a non-nil return type.",
                     line: 1,
                     column: 1
-                )
+                ),
             ],
             macros: testMacros
         )
@@ -70,7 +70,7 @@ struct CheckPropertyMacroDiagnosticsTests {
                         + " return type to be identical (the `T -> T` shape).",
                     line: 1,
                     column: 1
-                )
+                ),
             ],
             macros: testMacros
         )
@@ -93,7 +93,7 @@ struct CheckPropertyMacroDiagnosticsTests {
                         + " a non-nil return type.",
                     line: 1,
                     column: 1
-                )
+                ),
             ],
             macros: testMacros
         )
@@ -119,7 +119,7 @@ struct CheckPropertyMacroDiagnosticsTests {
                         + " with `@IdempotencyTests`.",
                     line: 1,
                     column: 1
-                )
+                ),
             ],
             macros: testMacros
         )
@@ -143,7 +143,7 @@ struct CheckPropertyMacroDiagnosticsTests {
                         + " U if it's a bool predicate on the output too).",
                     line: 1,
                     column: 1
-                )
+                ),
             ],
             macros: testMacros
         )
@@ -387,7 +387,7 @@ func formattedStringGenerator() -> String {
         indented(32, "$0!"),
         indented(28, "}, Gen<Character>.letterOrNumber.string(of: 0 ... 4)).map {"),
         indented(28, "$0 + $1"),
-        indented(24, "}))")
+        indented(24, "}))"),
     ].joined(separator: "\n")
 }
 

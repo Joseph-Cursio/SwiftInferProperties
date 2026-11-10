@@ -41,7 +41,7 @@ extension VerifierWorkdir {
                 // `PropertyBased`'s. `.interaction`/`.valueSemantics` already
                 // declared it; `.algebraic` was the outlier. See open-threads
                 // → *The `Gen<URL>` defect*.
-                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"
+                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
             ]
             // Products for the SwiftSyntax carrier recipes
             // (`StrategistDispatchEmitter+SyntaxRecipes`), gated on the same
@@ -74,7 +74,7 @@ extension VerifierWorkdir {
         case .interaction:
             entries = [
                 ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
-                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")"
+                ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
             ]
 
         case .interactionTCA:
@@ -82,14 +82,14 @@ extension VerifierWorkdir {
                 ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
                 ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
                 ".product(name: \"ComposableArchitecture\", "
-                    + "package: \"swift-composable-architecture\")"
+                    + "package: \"swift-composable-architecture\")",
             ]
 
         case .interactionMobius:
             entries = [
                 ".product(name: \"PropertyBased\", package: \"swift-property-based\")",
                 ".product(name: \"PropertyLawKit\", package: \"SwiftPropertyLaws\")",
-                ".product(name: \"MobiusCore\", package: \"Mobius.swift\")"
+                ".product(name: \"MobiusCore\", package: \"Mobius.swift\")",
             ]
         }
         if let userPackage {

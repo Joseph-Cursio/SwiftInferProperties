@@ -116,7 +116,7 @@ struct KitCoverageDriftTests {
         "SignedInteger": .uncoveredNoSymptom("as BinaryInteger"),
         "UnsignedInteger": .uncoveredNoSymptom("as BinaryInteger"),
         "FloatingPoint": .uncoveredNoSymptom("as BinaryInteger"),
-        "BinaryFloatingPoint": .uncoveredNoSymptom("as BinaryInteger")
+        "BinaryFloatingPoint": .uncoveredNoSymptom("as BinaryInteger"),
     ]
 
     /// The kit's suites, read from the resolved checkout rather than hard-coded — a

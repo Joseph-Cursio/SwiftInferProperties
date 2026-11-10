@@ -117,7 +117,7 @@ public enum MockGeneratorSynthesizer {
         "rand()",
         "random()",
         ".random()",
-        ".random(in:"
+        ".random(in:",
     ]
 
     /// `true` if any observed literal in any argument position of

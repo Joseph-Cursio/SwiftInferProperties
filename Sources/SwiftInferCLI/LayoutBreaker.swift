@@ -177,7 +177,7 @@ struct BraceBody {
         let keywords: Set<Substring> = [
             "if", "guard", "else", "for", "while", "switch", "do", "catch", "repeat", "defer", "func",
             "init", "deinit", "get", "set", "willSet", "didSet", "struct", "class", "enum", "extension",
-            "protocol", "actor"
+            "protocol", "actor",
         ]
         let words = prefix.compactMap { node -> String? in
             guard case .text(let text) = node else { return nil }

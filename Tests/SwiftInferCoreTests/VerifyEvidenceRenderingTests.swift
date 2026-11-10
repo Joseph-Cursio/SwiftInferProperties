@@ -29,7 +29,7 @@ struct RenderStatsTierTests {
                     displayName: "normalize(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "S.swift", line: 1, column: 1)
-                )
+                ),
             ],
             // 90 lands squarely in Strong, so any move to Verified is the evidence talking.
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 90, detail: "n")]),
@@ -49,7 +49,7 @@ struct RenderStatsTierTests {
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.149.0",
                 subjectFingerprint: "SAMEBODY00000000"
-            )
+            ),
         ]
     }
 
@@ -115,7 +115,7 @@ struct AuthorContradictionTests {
                     displayName: "booleanStem(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "ViewModelNameHeuristics.swift", line: 53, column: 1)
-                )
+                ),
             ],
             score: Score(signals: signals),
             generator: .m1Placeholder,
@@ -134,7 +134,7 @@ struct AuthorContradictionTests {
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.149.0",
                 subjectFingerprint: "SAMEBODY00000000"
-            )
+            ),
         ]
     }
 

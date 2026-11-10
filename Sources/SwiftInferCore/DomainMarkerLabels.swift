@@ -63,6 +63,6 @@ public enum DomainMarkerLabels {
     public static let curated: Set<String> = [
         "forScale",
         "forCapacity",
-        "forBucketContents"
+        "forBucketContents",
     ]
 }

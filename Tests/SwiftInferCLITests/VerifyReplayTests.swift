@@ -37,7 +37,7 @@ struct VerifyReplayTests {
         let report = ReplayReport(lines: [
             line("AAAA", .nowHolds),
             line("BBBB", .stillFailing),
-            line("CCCC", .skipped)
+            line("CCCC", .skipped),
         ])
         let rendered = report.render()
         #expect(rendered.contains("3 recorded counterexample(s)"))

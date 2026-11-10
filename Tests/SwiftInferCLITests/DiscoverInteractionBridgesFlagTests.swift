@@ -24,7 +24,7 @@ struct DiscoverInteractionBridgesFlagTests {
     @Test func interactiveBridgesFlagSetsTrue() throws {
         let parsed = try Command.parse([
             "--target", "MyApp",
-            "--interactive-bridges"
+            "--interactive-bridges",
         ])
         #expect(parsed.interactiveBridges == true)
     }
@@ -35,7 +35,7 @@ struct DiscoverInteractionBridgesFlagTests {
             "--reducer", "Inbox.body",
             "--include-possible",
             "--interactive-bridges",
-            "--dry-run"
+            "--dry-run",
         ])
         #expect(parsed.interactiveBridges == true)
         #expect(parsed.dryRun == true)

@@ -18,7 +18,7 @@ func makeVerifyEvidenceMap(
             detail: nil,
             capturedAt: Date(timeIntervalSince1970: 0),
             swiftInferVersion: "test"
-        )
+        ),
     ]
 }
 
@@ -80,7 +80,7 @@ struct InteractiveTriageEffectiveTierTests {
         VerifyEvidenceOutcome.measuredEdgeCaseAdvisory,
         .measuredDefaultFails,
         .measuredError,
-        .architecturalCoveragePending
+        .architecturalCoveragePending,
     ])
     func strongPickWithNonBothPassEvidenceRecordsBaseTier(
         outcome: VerifyEvidenceOutcome

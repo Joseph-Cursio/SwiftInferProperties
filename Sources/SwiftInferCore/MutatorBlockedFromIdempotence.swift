@@ -63,7 +63,7 @@ public enum MutatorBlockedFromIdempotence {
         "toggle",
         "invert",
         "complement",
-        "twosComplement"
+        "twosComplement",
     ]
 
     /// Name *prefixes* for the consuming-iterator family — a `mutating`
@@ -81,7 +81,7 @@ public enum MutatorBlockedFromIdempotence {
     /// libraries, so the family is generalizable, not a one-off name.)
     public static let consumePrefixes: Set<String> = [
         "popNext",
-        "getNext"
+        "getNext",
     ]
 
     /// Involution verb *prefixes* — a `mutating` method that **toggles /
@@ -100,7 +100,7 @@ public enum MutatorBlockedFromIdempotence {
         "toggle",
         "negate",
         "invert",
-        "complement"
+        "complement",
     ]
 
     /// `true` when `name` is a non-idempotent mutator — an exact `curated`

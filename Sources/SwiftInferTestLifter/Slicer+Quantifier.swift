@@ -29,7 +29,7 @@ extension Slicer {
         "forAll",          // SwiftCheck, and the QuickCheck lineage generally
         "property",        // SwiftCheck's labelled form
         "checkProperty",   // common hand-rolled harness name
-        "quickCheck"       // direct QuickCheck port naming
+        "quickCheck",       // direct QuickCheck port naming
     ]
 
     /// The closure body of a quantifier call, or `nil` when this item is not one.

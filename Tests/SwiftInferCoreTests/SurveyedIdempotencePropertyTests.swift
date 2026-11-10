@@ -23,7 +23,7 @@ struct SurveyedIdempotencePropertyTests {
 
     private static let identifiers = [
         "Complex<Double>", "Array<Int>", "Foo", "", "T",
-        "exp(_:)", "merge(_:)", "isLoading", "hasShownAlert", "Optional<Int>?", "String?"
+        "exp(_:)", "merge(_:)", "isLoading", "hasShownAlert", "Optional<Int>?", "String?",
     ]
 
     private static let nameGen = Gen.element(of: identifiers).map { $0! }

@@ -76,7 +76,7 @@ struct ConservationInteractionTemplateTests {
             candidate: candidate(),
             witnesses: [
                 witness(aggregate: "itemCount", collection: "items"),
-                witness(aggregate: "tagCount", collection: "tags", element: "Tag")
+                witness(aggregate: "tagCount", collection: "tags", element: "Tag"),
             ],
             firstSeenAt: firstSeenAt
         )

@@ -140,7 +140,7 @@ struct TemplateMatchPayloadTests {
                 hasUserGen: false,
                 storedMembers: [StoredMember(name: "configs", typeName: "[DiscoveredConfig]")],
                 hasUserInit: false
-            )
+            ),
         ]
         let suggestion = try #require(
             SelectionSubsetTemplate.suggest(
@@ -176,10 +176,10 @@ struct TemplateMatchPayloadTests {
                 hasUserGen: false,
                 storedMembers: [
                     StoredMember(name: "added", typeName: "[Line]"),
-                    StoredMember(name: "removed", typeName: "[Line]")
+                    StoredMember(name: "removed", typeName: "[Line]"),
                 ],
                 hasUserInit: false
-            )
+            ),
         ]
         let suggestion = try #require(
             DiffDisjointnessTemplate.suggest(

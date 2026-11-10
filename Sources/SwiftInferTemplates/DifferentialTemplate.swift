@@ -77,7 +77,7 @@ public enum DifferentialTemplate {
                     + "reference and `\(pair.naming.variant)` is the same computation marked "
                     + "`\(pair.naming.marker)` — two implementations of one specification owe "
                     + "agreement on every input"
-            )
+            ),
         ]
         signals.append(
             Signal(
@@ -157,7 +157,7 @@ public enum DifferentialTemplate {
                 + "`_ensureFreeCapacity` returns early when capacity already suffices and "
                 + "otherwise calls `_ensureFreeCapacitySlow`, which reallocates unconditionally — "
                 + "so they differ on every input the guard catches, and the law would be false "
-                + "for correct code."
+                + "for correct code.",
         ]
         caveats.append(contentsOf: conditionalCaveats(for: pair))
         return caveats

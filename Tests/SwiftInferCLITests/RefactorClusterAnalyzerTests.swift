@@ -181,7 +181,7 @@ struct RefactorClusterAnalyzerTests {
                 "monotonicity": 5,
                 "round-trip": 3,
                 "commutativity": 2,
-                "associativity": 2
+                "associativity": 2,
             ],
             total: 29
         )
@@ -195,7 +195,7 @@ struct RefactorClusterAnalyzerTests {
         let shape = RefactorClusterAnalyzer.classify(
             perTemplateCounts: [
                 "idempotence": 4,
-                "dual-style-consistency": 4
+                "dual-style-consistency": 4,
             ],
             total: 8
         )
@@ -214,7 +214,7 @@ struct RefactorClusterAnalyzerTests {
             perTemplateCounts: [
                 "round-trip": 8,
                 "commutativity": 6,
-                "associativity": 6
+                "associativity": 6,
             ],
             total: 20
         )
@@ -229,7 +229,7 @@ struct RefactorClusterAnalyzerTests {
             perTemplateCounts: [
                 "commutativity": 3,
                 "associativity": 2,
-                "idempotence": 5
+                "idempotence": 5,
             ],
             total: 10
         )
@@ -243,7 +243,7 @@ struct RefactorClusterAnalyzerTests {
             perTemplateCounts: [
                 "commutativity": 25,
                 "associativity": 24,
-                "idempotence": 51
+                "idempotence": 51,
             ],
             total: 100
         )
@@ -258,7 +258,7 @@ struct RefactorClusterAnalyzerTests {
             entry(identityHex: "0xA", templateName: "monotonicity", typeName: nil),
             entry(identityHex: "0xB", templateName: "monotonicity", typeName: nil),
             entry(identityHex: "0xC", templateName: "monotonicity", typeName: nil),
-            entry(identityHex: "0xD", templateName: "monotonicity", typeName: nil)
+            entry(identityHex: "0xD", templateName: "monotonicity", typeName: nil),
         ]
         let clusters = RefactorClusterAnalyzer.analyze(entries)
         #expect(clusters.isEmpty, "nil typeName entries should not cluster")
@@ -281,7 +281,7 @@ struct RefactorClusterAnalyzerTests {
             entry(identityHex: "0x14", templateName: "associativity", typeName: "Complex"),
             entry(identityHex: "0x15", templateName: "associativity", typeName: "Complex"),
             // Below-threshold (no cluster): Foo with 1 monotonicity
-            entry(identityHex: "0x20", templateName: "monotonicity", typeName: "Foo")
+            entry(identityHex: "0x20", templateName: "monotonicity", typeName: "Foo"),
         ]
         let clusters = RefactorClusterAnalyzer.analyze(entries)
         #expect(clusters.count == 2, "Foo (1 entry) should not surface")
@@ -309,7 +309,10 @@ struct RefactorClusterAnalyzerTests {
                 score: 25, funcName: "low2Score()"
             ),
             entry(identityHex: "0x06", templateName: "idempotence", typeName: "Foo", score: 60, funcName: "above5()"),
-            entry(identityHex: "0x07", templateName: "idempotence", typeName: "Foo", score: 20, funcName: "alsoBelow()")
+            entry(
+                identityHex: "0x07", templateName: "idempotence", typeName: "Foo",
+                score: 20, funcName: "alsoBelow()"
+            ),
         ]
         let clusters = RefactorClusterAnalyzer.analyze(entries)
         #expect(clusters.count == 1)

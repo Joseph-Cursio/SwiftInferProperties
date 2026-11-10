@@ -122,7 +122,7 @@ struct DiscoverReferenceOracleTests {
 
     static let symbols = [
         "isValidQuantity", "scaled", "total", "count", "parse", "label", "smallest", "advance", "twice",
-        "report", "doubledArea", "record", "doubled", "tally", "normalized"
+        "report", "doubledArea", "record", "doubled", "tally", "normalized",
     ]
 
     /// The full advisory block for the fixture, every function seeded.

@@ -36,7 +36,7 @@ public enum HomomorphismTemplate {
     /// concatenation; none is idempotent or max-like.
     public static let curatedVerbs: Set<String> = [
         "count", "length", "size", "cardinality",
-        "sum", "total", "tally"
+        "sum", "total", "tally",
     ]
 
     /// Curated suffixes, so `byteCount` / `wordCount` / `lineTotal` fire without
@@ -108,7 +108,7 @@ public enum HomomorphismTemplate {
                 weight: 40,
                 detail: "Curated measure verb match: '\(summary.name)' — an additive quantity over "
                     + "the elements, so it owes `h(a + b) == h(a) + h(b)`"
-            )
+            ),
         ]
     }
 
@@ -148,7 +148,7 @@ public enum HomomorphismTemplate {
                 + "combining-character boundary. This template accepts only `[T]` for that reason.",
             "T's element type needs no conformance, but the array itself must compose with `+` "
                 + "(all `[T]` do). The measure must be TOTAL — a partial measure that traps on some "
-                + "input fails on the harness rather than on the code."
+                + "input fails on the harness rather than on the code.",
         ]
     }
 }
@@ -227,7 +227,7 @@ extension HomomorphismTemplate {
                 weight: 40,
                 detail: "Curated multiplicative-measure verb match: '\(summary.name)' — "
                     + "`|xy| = |x||y|`, so it owes `h(a * b) == h(a) * h(b)`"
-            )
+            ),
         ]
     }
 
@@ -241,7 +241,7 @@ extension HomomorphismTemplate {
                 + "`abs(Int.min)` has no positive representation — so the property must be checked "
                 + "over a BOUNDED domain (the verifier draws from ±10_000). A counterexample, if one "
                 + "exists, lives in the sign/measure logic, not at the numeric extremes.",
-            "T must conform to Equatable for the emitted property to compile (Int does)."
+            "T must conform to Equatable for the emitted property to compile (Int does).",
         ]
     }
 }

@@ -77,7 +77,7 @@ struct RoundTripTemplateMathForwardVetoTests {
             ("tanh", "atanh"),
             ("cos", "acos"),
             ("sin", "asin"),
-            ("tan", "atan")
+            ("tan", "atan"),
         ]
         for (forward, reverse) in anchors {
             #expect(

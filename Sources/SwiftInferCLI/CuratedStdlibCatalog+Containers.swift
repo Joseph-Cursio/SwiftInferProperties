@@ -33,7 +33,7 @@ extension CuratedStdlibCatalog {
         law(
             "Optional", "monad right identity", "o.flatMap { Optional($0) } == o",
             "let o = randOpt(); return o.flatMap { Optional($0) } == o"
-        )
+        ),
     ]
 
     // Dictionary — the mapValues functor laws, filter idempotence, and the
@@ -63,7 +63,7 @@ extension CuratedStdlibCatalog {
             "d.merging(d) { a, _ in a } == d",
             "let d = randDict(); return d.merging(d, uniquingKeysWith: { a, _ in a }) == d",
             template: "binary-idempotence"
-        )
+        ),
     ]
 
     // Stack — the LIFO contract, realized on `Array` (`append` / `removeLast`).
@@ -88,7 +88,7 @@ extension CuratedStdlibCatalog {
             "var s = randArr(); let x = randInt(), y = randInt(); s.append(x); s.append(y); "
                 + "return s.removeLast() == y && s.removeLast() == x",
             template: "ended-access-round-trip"
-        )
+        ),
     ]
 
     // Queue — the FIFO contract, realized on `Array` (`append` / `removeFirst`).
@@ -106,7 +106,7 @@ extension CuratedStdlibCatalog {
             "var q = [Int](); let x = randInt(), y = randInt(); q.append(x); q.append(y); "
                 + "return q.removeFirst() == x && q.removeFirst() == y",
             template: "ended-access-round-trip"
-        )
+        ),
     ]
 
     // MARK: - Builders

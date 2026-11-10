@@ -102,7 +102,7 @@ extension ProtocolCoverageMap {
         ],
         "Dictionary": [
             "Sequence", "Collection", "ExpressibleByDictionaryLiteral"
-        ]
+        ],
     ]
 
     /// The **unconditional** conformances of `Array` / `ContiguousArray` / `ArraySlice`.
@@ -137,7 +137,7 @@ extension ProtocolCoverageMap {
         "RandomAccessCollection",
         "MutableCollection",
         "RangeReplaceableCollection",
-        "ExpressibleByArrayLiteral"
+        "ExpressibleByArrayLiteral",
     ]
 
     /// `String` / `Substring`'s unconditional collection refinements. Both are
@@ -150,7 +150,7 @@ extension ProtocolCoverageMap {
         "Collection",
         "BidirectionalCollection",
         "RangeReplaceableCollection",
-        "StringProtocol"
+        "StringProtocol",
     ]
 
     // Deliberately differs from `unsignedIntegerBase` — see that constant's note: signedness
@@ -166,7 +166,7 @@ extension ProtocolCoverageMap {
     private static let signedIntegerBase: Set<String> = [
         "Equatable", "Comparable", "Hashable", "Codable",
         "AdditiveArithmetic", "Numeric", "SignedNumeric",
-        "BinaryInteger", "FixedWidthInteger", "SignedInteger"
+        "BinaryInteger", "FixedWidthInteger", "SignedInteger",
     ]
 
     // The documented difference above (`UnsignedInteger` vs `SignedInteger`, no
@@ -178,7 +178,7 @@ extension ProtocolCoverageMap {
     private static let unsignedIntegerBase: Set<String> = [
         "Equatable", "Comparable", "Hashable", "Codable",
         "AdditiveArithmetic", "Numeric",
-        "BinaryInteger", "FixedWidthInteger", "UnsignedInteger"
+        "BinaryInteger", "FixedWidthInteger", "UnsignedInteger",
     ]
 
     /// V1.7.1 — shared conformance set for floating-point types.
@@ -189,6 +189,6 @@ extension ProtocolCoverageMap {
     private static let floatingPointBase: Set<String> = [
         "Equatable", "Comparable", "Hashable", "Codable",
         "AdditiveArithmetic", "Numeric", "SignedNumeric",
-        "FloatingPoint", "BinaryFloatingPoint"
+        "FloatingPoint", "BinaryFloatingPoint",
     ]
 }

@@ -235,7 +235,7 @@ struct CorpusCheckoutTests {
                 checkout: .resolved(path: "/x", head: pinned, dirty: false),
                 pin: .atPin(dirty: false)
             ),
-            CorpusStatus(entry: gone, checkout: .missing(path: "/y"), pin: .uncheckable)
+            CorpusStatus(entry: gone, checkout: .missing(path: "/y"), pin: .uncheckable),
         ])
         #expect(text.contains("2 corpora"))
         #expect(text.contains("1 checked"), "the denominator must shrink, not the claim")

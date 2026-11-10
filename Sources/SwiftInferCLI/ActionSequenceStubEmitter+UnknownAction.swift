@@ -18,7 +18,7 @@ extension ActionSequenceStubEmitter {
         guard inputs.invariant?.family == .unknownActionIsNoOp else { return [] }
         return [
             "struct \(unknownActionProbeTypeName): \(inputs.candidate.actionTypeName) {}",
-            ""
+            "",
         ]
     }
 

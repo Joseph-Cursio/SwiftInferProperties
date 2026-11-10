@@ -246,7 +246,7 @@ struct PurityBlockingCalleeCensusMeasuredTests {
         lines.append("what a within-package join would free:")
         for (label, blockers) in [
             ("conservative (every callee under try)", \BlockedRow.allUnderTry),
-            ("optimistic (outermost callee only)", \BlockedRow.outermostUnderTry)
+            ("optimistic (outermost callee only)", \BlockedRow.outermostUnderTry),
         ] {
             for (hopLabel, hops) in [("one hop", 1), ("fixpoint", 20)] {
                 let result = Self.simulateJoin(

@@ -107,7 +107,7 @@ struct SharedVerifierPackageTests {
         _ = try SharedVerifierPackage.synthesize(
             members: [
                 member(hash: "alg001", mode: .algebraic),
-                member(hash: "int002", mode: .interaction)
+                member(hash: "int002", mode: .interaction),
             ],
             at: root
         )

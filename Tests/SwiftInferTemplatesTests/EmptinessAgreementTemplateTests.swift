@@ -38,13 +38,13 @@ struct EmptinessAgreementTemplateTests {
         #expect(Set(found) == Set([
             "hasIssues|totalIssueCount|true",
             "hasRetries|retryCount|true",
-            "isEmpty|count|false"
+            "isEmpty|count|false",
         ]), "found \(found.sorted())")
     }
 
     @Test("names that do not pair", arguments: [
         ("hasPendingWork", "totalIssueCount"), ("hasIssues", "retryCount"), ("has", "count"),
-        ("hashValue", "count"), ("isEmpty", "totalIssueCount"), ("isValid", "count")
+        ("hashValue", "count"), ("isEmpty", "totalIssueCount"), ("isValid", "count"),
     ])
     func unpaired(predicate: String, measure: String) {
         #expect(EmptinessAgreementPairing.polarity(predicate: predicate, measure: measure) == nil)

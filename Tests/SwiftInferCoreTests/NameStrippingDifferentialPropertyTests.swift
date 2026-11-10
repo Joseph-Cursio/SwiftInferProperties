@@ -52,7 +52,7 @@ struct NameStrippingDifferentialPropertyTests {
         ("CarrierKindResolver", CarrierKindResolver.strippingGenericParameters),
         ("OrderSensitiveCarrierNames", OrderSensitiveCarrierNames.strippingGenericParameters),
         ("FloatingPointStorageNames", FloatingPointStorageNames.strippingGenericParameters),
-        ("ProtocolCoverageMap", ProtocolCoverageMap.strippingGenericParameters)
+        ("ProtocolCoverageMap", ProtocolCoverageMap.strippingGenericParameters),
     ]
 
     /// The reference side of the differential law. Arbitrary among four claimed
@@ -83,7 +83,7 @@ struct NameStrippingDifferentialPropertyTests {
         "<%@>",
         "%@<",
         "%@<>",
-        "%@ <Double>"
+        "%@ <Double>",
     ]
 
     private static let nameGen = zip(

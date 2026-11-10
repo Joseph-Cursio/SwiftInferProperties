@@ -26,7 +26,7 @@ struct GenericSubjectGateTests {
                     location: Self.loc,
                     parameterTypeNames: parameterTypes,
                     qualifiedTypeName: owner
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),

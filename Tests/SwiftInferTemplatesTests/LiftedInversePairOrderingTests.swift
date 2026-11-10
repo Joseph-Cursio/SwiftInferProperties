@@ -26,7 +26,7 @@ struct LiftedInversePairOrderingTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 
@@ -71,7 +71,7 @@ struct LiftedInversePairOrderingTests {
             pair(forwardLine: 1, forwardColumn: 17, reverseLine: 9),
             pair(forwardLine: 1, forwardColumn: 5, reverseLine: 4),
             pair(forwardLine: 2, reverseLine: 9),
-            pair(forwardLine: 10, reverseLine: 1)
+            pair(forwardLine: 10, reverseLine: 1),
         ]
     }
 

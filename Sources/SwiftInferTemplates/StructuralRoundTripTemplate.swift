@@ -38,7 +38,7 @@ public enum StructuralRoundTripTemplate {
                         detail: "\(subject.parser.name) reads text into `\(subject.structure)` and nothing in "
                             + "the code prints a `\(subject.structure)` back — so the round trip "
                             + "`parse(render(value)) == value` needs a printer you write"
-                    )
+                    ),
                 ]
             },
             evidence: { [$0.parser.inferenceEvidence] },
@@ -67,7 +67,7 @@ public enum StructuralRoundTripTemplate {
                 + "SwiftFormatRuleStudio's RuleInfoParser, three mutants survived fixtures that "
                 + "always had the blank line, and the randomised round trip killed all three.",
             "THE TYPE MUST BE EQUATABLE for the comparison, and if it carries a field the text "
-                + "does not (a parse timestamp, a source location), compare a projection instead."
+                + "does not (a parse timestamp, a source location), compare a projection instead.",
         ]
     }
 }
@@ -137,7 +137,7 @@ public struct StructuralRoundTripSubject: Sendable, Equatable {
     private static let scalars: Set<String> = [
         "String", "Substring", "Character", "Bool", "Int", "Int8", "Int16", "Int32", "Int64",
         "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "Double", "Float", "Decimal", "Date",
-        "URL", "UUID", "Data"
+        "URL", "UUID", "Data",
     ]
 }
 

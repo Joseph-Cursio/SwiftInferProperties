@@ -297,7 +297,7 @@ public enum ReplayIdempotenceTemplate {
                 + "derived from `UUID()` / `Date()` breaks it.",
             "Gate detection (Branch C) confirms a leading dedup/fetch branch that "
                 + "returns early, not that it dominates every effect path — a second "
-                + "effect outside the guarded branch is not yet checked."
+                + "effect outside the guarded branch is not yet checked.",
         ]
         if hasExternallyIdempotentAnnotation(summary), keyParameter(of: summary) == nil {
             caveats.append(

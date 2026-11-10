@@ -13,6 +13,6 @@ public enum IdentityNames {
         "empty",
         "identity",
         "none",
-        "default"
+        "default",
     ]
 }

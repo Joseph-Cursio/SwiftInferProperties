@@ -181,7 +181,7 @@ extension SwiftInferCommand.Discover {
                     + "falsify the @ClockDeterministic claim, which is exactly what the test catches."
                 : "Holds only if the function is genuinely pure — a hidden global read or "
                     + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
-            resultCaveat
+            resultCaveat,
         ]
         let throwsCaveat = summary.isThrows && resultShape.involvesTuple == false ? [Self.tryOnBothSidesCaveat] : []
         // Same opening as `withAccessRestrictionCaveats`, verbatim and deliberately: a reader

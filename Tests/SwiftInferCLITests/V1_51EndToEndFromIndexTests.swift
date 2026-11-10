@@ -106,7 +106,7 @@ struct V151EndToEndFromIndexTests {
                 userInfo: [
                     NSLocalizedDescriptionKey:
                         "fixture index doesn't contain entry with identityHash \(identityHash); "
-                        + "regenerate via fixtures/cycle27-surface/build-index.sh"
+                        + "regenerate via fixtures/cycle27-surface/build-index.sh",
                 ]
             )
         }

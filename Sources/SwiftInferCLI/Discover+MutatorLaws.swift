@@ -102,7 +102,7 @@ extension SwiftInferCommand.Discover {
         )
         let why = [
             "Holds only if the mutator is genuinely pure — a hidden global read or nondeterministic "
-                + "dependency would falsify it, which is exactly what the test catches."
+                + "dependency would falsify it, which is exactly what the test catches.",
         ]
         return Suggestion(
             templateName: "mutator-determinism",
@@ -131,7 +131,7 @@ extension SwiftInferCommand.Discover {
         let why = [
             "A conjecture: purity says a second application is deterministic, not that it is a no-op. "
                 + "An increment or an append is a correct mutator that fails this — accept it only if "
-                + "applying it twice is meant to leave what applying it once left."
+                + "applying it twice is meant to leave what applying it once left.",
         ]
         return Suggestion(
             templateName: "mutator-idempotence",

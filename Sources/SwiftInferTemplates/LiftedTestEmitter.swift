@@ -117,7 +117,7 @@ public enum LiftedTestEmitter {
             "                    let lhs = (\(generator)).run(using: &rng)",
             "                    let rhs = (\(generator)).run(using: &rng)",
             "                    return lhs < rhs ? (lhs, rhs) : (rhs, lhs)",
-            "                }"
+            "                }",
         ].joined(separator: "\n")
         let property = "{ pair in \(callee.isolated("\(callee.call("pair.0")) <= \(callee.call("pair.1"))")) }"
         let failureLabel = "\(callee.bareName)(_:) failed monotonicity"
@@ -151,7 +151,7 @@ public enum LiftedTestEmitter {
             "                    let lhs = (\(generator)).run(using: &rng)",
             "                    let rhs = (\(generator)).run(using: &rng)",
             "                    return (lhs, rhs)",
-            "                }"
+            "                }",
         ].joined(separator: "\n")
         let sides = "\(callee.call("pair.0", "pair.1")) == \(callee.call("pair.1", "pair.0"))"
         let binding = operandBinding("pair", arity: 2, callee: callee, typeName: typeName)
@@ -187,7 +187,7 @@ public enum LiftedTestEmitter {
             "                    let two = (\(generator)).run(using: &rng)",
             "                    let three = (\(generator)).run(using: &rng)",
             "                    return (one, two, three)",
-            "                }"
+            "                }",
         ].joined(separator: "\n")
         // Multi-line property — the nested call shape would push a
         // one-liner past 120 chars. Indents match the test-stub
@@ -196,7 +196,7 @@ public enum LiftedTestEmitter {
             "{ \(operandBinding("triple", arity: 3, callee: callee, typeName: typeName)) in",
             "            " + callee.call(callee.call("triple.0", "triple.1"), "triple.2"),
             "                == " + callee.call("triple.0", callee.call("triple.1", "triple.2")),
-            "        }"
+            "        }",
         ].joined(separator: "\n")
         let failureLabel = "\(callee.bareName)(_:_:) failed associativity"
         return makeTestStubExpression(

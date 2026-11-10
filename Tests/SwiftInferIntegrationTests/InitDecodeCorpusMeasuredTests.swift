@@ -29,7 +29,7 @@ struct InitDecodeCorpusMeasuredTests {
         VerifyCase(
             typeName: "StrictCode", encodeMethod: "serialized",
             decodeLabel: "serialized", expectBothPass: false
-        )
+        ),
     ]
 
     @Test("each corpus codec verifies its init-decode round-trip to the expected outcome")

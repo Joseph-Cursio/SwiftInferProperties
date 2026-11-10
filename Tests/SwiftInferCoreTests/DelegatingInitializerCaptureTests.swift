@@ -132,7 +132,7 @@ struct DelegatingInitializerCaptureTests {
             hasUserGen: false,
             storedMembers: [
                 StoredMember(name: "normal", typeName: "Vector"),
-                StoredMember(name: "w", typeName: "Double")
+                StoredMember(name: "w", typeName: "Double"),
             ],
             hasUserInit: true,
             initializers: captured

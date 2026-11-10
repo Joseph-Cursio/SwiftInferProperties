@@ -137,7 +137,7 @@ struct ECMarkerExtractorNClassTests {
             (name: "testMedium_c", body: "XCTAssertEqual(size(box), .medium)"),
             (name: "testLarge_a", body: "XCTAssertEqual(size(box), .large)"),
             (name: "testLarge_b", body: "XCTAssertEqual(size(box), .large)"),
-            (name: "testLarge_c", body: "XCTAssertEqual(size(box), .large)")
+            (name: "testLarge_c", body: "XCTAssertEqual(size(box), .large)"),
         ])
         let table = MarkerTable(pairs: [], sets: [Self.sizesMarkerSet])
         let candidates = EquivalenceClassMarkerExtractor.extract(
@@ -166,7 +166,7 @@ struct ECMarkerExtractorNClassTests {
             (name: "testMedium_outlier", body: "XCTAssertEqual(size(box), .small)"),
             (name: "testLarge_a", body: "XCTAssertEqual(size(box), .large)"),
             (name: "testLarge_b", body: "XCTAssertEqual(size(box), .large)"),
-            (name: "testLarge_c", body: "XCTAssertEqual(size(box), .large)")
+            (name: "testLarge_c", body: "XCTAssertEqual(size(box), .large)"),
         ])
         let table = MarkerTable(pairs: [], sets: [Self.sizesMarkerSet])
         let candidates = EquivalenceClassMarkerExtractor.extract(
@@ -195,7 +195,7 @@ struct ECMarkerExtractorNClassTests {
             (name: "testMedium_c", body: "XCTAssertEqual(size(box), .medium)"),
             (name: "testLarge_a", body: "XCTAssertEqual(size(box), .large)"),
             (name: "testLarge_b", body: "XCTAssertEqual(size(box), .large)"),
-            (name: "testLarge_c", body: "XCTAssertEqual(size(box), .large)")
+            (name: "testLarge_c", body: "XCTAssertEqual(size(box), .large)"),
         ])
         let table = MarkerTable(
             pairs: [MarkerPair(positive: "Valid", negative: "Invalid")],
@@ -225,7 +225,7 @@ struct ECMarkerExtractorNClassTests {
             (name: "testMedium_c", body: "XCTAssertEqual(sizeB(box), .medium)"),
             (name: "testLarge_a", body: "XCTAssertEqual(sizeA(box), .large)"),
             (name: "testLarge_b", body: "XCTAssertEqual(sizeA(box), .large)"),
-            (name: "testLarge_c", body: "XCTAssertEqual(sizeA(box), .large)")
+            (name: "testLarge_c", body: "XCTAssertEqual(sizeA(box), .large)"),
         ])
         let table = MarkerTable(pairs: [], sets: [Self.sizesMarkerSet])
         let candidates = EquivalenceClassMarkerExtractor.extract(

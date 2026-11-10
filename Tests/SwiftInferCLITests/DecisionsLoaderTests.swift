@@ -62,7 +62,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .accepted,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(canonical, to: decisionsPath)
 
@@ -105,7 +105,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .skipped,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(
             implicit,
@@ -123,7 +123,7 @@ struct DecisionsLoaderTests {
                 tier: .likely,
                 decision: .rejected,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(override, to: overridePath)
 
@@ -166,7 +166,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .accepted,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(decisions, to: path)
         #expect(FileManager.default.fileExists(atPath: path.path))
@@ -194,7 +194,7 @@ struct DecisionsLoaderTests {
                 signalWeights: [
                     SignalSnapshot(kind: "exactNameMatch", weight: 40)
                 ]
-            )
+            ),
         ])
         try DecisionsLoader.write(decisions, to: path)
         let firstBytes = try Data(contentsOf: path)
@@ -219,7 +219,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .accepted,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(decisions, to: path)
         let text = try String(contentsOf: path, encoding: .utf8)

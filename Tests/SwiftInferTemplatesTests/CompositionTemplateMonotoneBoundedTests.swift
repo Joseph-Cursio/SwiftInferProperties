@@ -25,7 +25,7 @@ struct CompositionTemplateMonotoneBoundedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -41,7 +41,7 @@ struct CompositionTemplateMonotoneBoundedTests {
                     internalName: "target",
                     typeText: "Int",
                     isInout: false
-                )
+                ),
             ],
             returnTypeText: "Void",
             isThrows: false,
@@ -134,7 +134,7 @@ struct CompositionTemplateMonotoneBoundedTests {
                     internalName: "temperature",
                     typeText: type,
                     isInout: false
-                )
+                ),
             ],
             returnTypeText: "Void",
             isThrows: false,

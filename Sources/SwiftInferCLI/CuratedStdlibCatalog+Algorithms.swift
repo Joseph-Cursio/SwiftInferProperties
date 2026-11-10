@@ -25,6 +25,6 @@ extension CuratedStdlibCatalog {
             "let a = randArr(); let k = Swift.min(3, a.count); "
                 + "return Array(a.min(count: k)) == Array(a.sorted().prefix(k))",
             imports: ["Algorithms"]
-        )
+        ),
     ]
 }

@@ -51,7 +51,7 @@ struct RolePostconditionCensusMeasuredTests {
         ("escaped", "result contains no unescaped occurrence"),
         ("unescaped", "result contains no escape sequence"),
         ("reversed", "result.count == input.count"),
-        ("shuffled", "result is a permutation of the input")
+        ("shuffled", "result is a permutation of the input"),
     ]
 
     struct Hit {

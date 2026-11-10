@@ -21,7 +21,7 @@ struct StubCollisionGuardTests {
                     signature: "(String) -> Bool",
                     location: SourceLocation(file: "F.swift", line: 1, column: 1),
                     qualifiedTypeName: "Rules"
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -105,7 +105,7 @@ struct StubCollisionGuardTests {
         let result = try InteractiveTriage.run(
             suggestions: [
                 makeIdempotentSuggestion(funcName: "normalize", typeName: "String"),
-                makeIdempotentSuggestion(funcName: "normalize", typeName: "Int")
+                makeIdempotentSuggestion(funcName: "normalize", typeName: "Int"),
             ],
             existingDecisions: .empty,
             context: makeTriageContext(

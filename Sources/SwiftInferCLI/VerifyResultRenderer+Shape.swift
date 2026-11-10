@@ -75,14 +75,14 @@ struct RenderShape {
             return [
                 "    input  = \(shown)",
                 "    \(context.forwardName)(input) did not return — it trapped",
-                "    runtime: \(VerifyResultRenderer.displayValue(inverseValue))"
+                "    runtime: \(VerifyResultRenderer.displayValue(inverseValue))",
             ]
 
         case .bound:
             return [
                 "    input  = \(shown)",
                 "    \(forward(context)) = \(VerifyResultRenderer.displayValue(forwardValue))",
-                "    expected  \(expected(context))"
+                "    expected  \(expected(context))",
             ]
 
         case .equation:
@@ -91,7 +91,7 @@ struct RenderShape {
                 "    \(forward(context)) = \(VerifyResultRenderer.displayValue(forwardValue))",
                 "    \(inverse(context)) = \(VerifyResultRenderer.displayValue(inverseValue))",
                 "    expected ≈ \(expected(context)) "
-                    + "(within \(context.carrierType).isApproximatelyEqual)"
+                    + "(within \(context.carrierType).isApproximatelyEqual)",
             ]
         }
     }
@@ -278,6 +278,6 @@ extension RenderShape {
         "multiplicative-homomorphism": .multiplicativeHomomorphism,
         "measure-non-negativity": .measureNonNegativity,
         "differential-equivalence": .differentialEquivalence,
-        "role-postcondition": .rolePostcondition
+        "role-postcondition": .rolePostcondition,
     ]
 }

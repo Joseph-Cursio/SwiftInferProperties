@@ -140,7 +140,7 @@ struct ErasedSelfFormTests {
             ("compacted", "AsyncCompactedSequence<Self, Unwrapped>"),
             ("joined", "AsyncJoinedSequence<Self>"),
             ("removeDuplicates", "AsyncRemoveDuplicatesSequence<Self>"),
-            ("splitLines", "NIODecodedAsyncSequence<Self, D>")
+            ("splitLines", "NIODecodedAsyncSequence<Self, D>"),
         ]
         let carrier = "AsyncSequence"
         for (name, returns) in decorators {

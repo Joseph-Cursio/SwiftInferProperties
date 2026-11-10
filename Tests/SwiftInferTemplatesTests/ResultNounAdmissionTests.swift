@@ -29,7 +29,7 @@ struct ResultNounAdmissionTests {
                 Parameter(
                     label: label, internalName: label ?? "value",
                     typeText: type, isInout: false
-                )
+                ),
             ],
             returnTypeText: returns,
             isThrows: false, isAsync: false, isMutating: false, isStatic: true,

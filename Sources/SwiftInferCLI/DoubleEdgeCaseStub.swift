@@ -69,7 +69,7 @@ enum DoubleEdgeCaseStub {
             literal: "Double.leastNormalMagnitude",
             label: "leastNormalMagnitude",
             match: "value == .leastNormalMagnitude"
-        )
+        ),
     ]
 
     /// Human labels in index order — consumed by `VerifyResultRenderer`.
@@ -103,7 +103,7 @@ enum DoubleEdgeCaseStub {
         var lines = [
             "let edgeGenerator: Generator<Double, some SendableSequenceType> =",
             "    Gen<Int>.int(in: 0 ..< \(edgeBound)).map { tag -> Double in",
-            "        switch tag {"
+            "        switch tag {",
         ]
         for (index, entry) in entries.enumerated() {
             lines.append("        case \(index): return \(entry.literal)")

@@ -74,7 +74,7 @@ struct MonotonicityTemplateTypePatternTests {
             name: "score",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Widget", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "Widget", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "Widget", isInout: false),
             ],
             returnType: "Int"
         )

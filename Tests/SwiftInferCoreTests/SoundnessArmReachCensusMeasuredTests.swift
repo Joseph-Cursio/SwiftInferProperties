@@ -65,7 +65,7 @@ struct SoundnessArmReachCensusMeasuredTests {
         Row(file: "ViewModelArgumentGenerator.swift", function: "candidateValuesExpression"),
         Row(file: "EffectResolver.swift", function: "resolve"),
         Row(file: "KitEvidenceStore.swift", function: "load"),
-        Row(file: "DrainedProcess.swift", function: "standardOutputViaEnv")
+        Row(file: "DrainedProcess.swift", function: "standardOutputViaEnv"),
     ]
 
     struct Reach {

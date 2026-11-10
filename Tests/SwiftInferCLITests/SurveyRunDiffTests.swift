@@ -67,7 +67,7 @@ struct SurveyRunDiffTests {
         let subject = run([
             record(identity: "A1", outcome: .measuredBothPass),
             record(identity: "B2", outcome: .architecturalCoveragePending, detail: "carrier: X"),
-            record(identity: "C3", outcome: .measuredDefaultFails)
+            record(identity: "C3", outcome: .measuredDefaultFails),
         ])
         let result = SurveyRunDiff.compare(before: subject, after: subject)
         #expect(result.isEmpty)
@@ -87,14 +87,14 @@ struct SurveyRunDiffTests {
                 identity: "A1", subject: "isEmptyDictionaryLiteral(_:)",
                 outcome: .architecturalCoveragePending,
                 detail: "unsupported-carrier: BodySignalVisitor"
-            )
+            ),
         ])
         let after = run([
             record(
                 identity: "A1", subject: "isEmptyDictionaryLiteral(_:)",
                 outcome: .architecturalCoveragePending,
                 detail: "not-a-candidate: subject not visible to tests"
-            )
+            ),
         ])
 
         let result = SurveyRunDiff.compare(before: before, after: after)
@@ -145,11 +145,11 @@ struct SurveyRunDiffTests {
     func addedAndRemovedAreSeparate() {
         let before = run([
             record(identity: "A1", subject: "stays(_:)", outcome: .measuredBothPass),
-            record(identity: "GONE", subject: "deleted(_:)", outcome: .measuredBothPass)
+            record(identity: "GONE", subject: "deleted(_:)", outcome: .measuredBothPass),
         ])
         let after = run([
             record(identity: "A1", subject: "stays(_:)", outcome: .measuredBothPass),
-            record(identity: "NEW", subject: "arrived(_:)", outcome: .measuredBothPass)
+            record(identity: "NEW", subject: "arrived(_:)", outcome: .measuredBothPass),
         ])
 
         let result = SurveyRunDiff.compare(before: before, after: after)
@@ -215,7 +215,7 @@ struct SurveyRunDiffTests {
         // join without this failing to compile — the pattern `everyFamilyMarksItsCheck` uses.
         let outcomes: [Outcome] = [
             .measuredBothPass, .measuredEdgeCaseAdvisory, .measuredDefaultFails,
-            .measuredError, .architecturalCoveragePending
+            .measuredError, .architecturalCoveragePending,
         ]
         for outcome in outcomes {
             #expect(!SurveyRunDiff.Bucket.of(outcome).rawValue.isEmpty)
@@ -233,7 +233,7 @@ struct SurveyRunDiffTests {
             record(
                 identity: "B2", outcome: .architecturalCoveragePending,
                 detail: "unsupported-carrier: Effect", fingerprint: nil
-            )
+            ),
         ], label: "SwiftInferCore @ fdae49f")
 
         let destination = FileManager.default.temporaryDirectory
@@ -279,13 +279,13 @@ struct SurveyRunDiffTests {
             record(
                 identity: "A1", outcome: .architecturalCoveragePending,
                 detail: "unsupported-carrier: BodySignalVisitor"
-            )
+            ),
         ])
         let after = run([
             record(
                 identity: "A1", outcome: .architecturalCoveragePending,
                 detail: "not-a-candidate: subject not visible to tests"
-            )
+            ),
         ])
         let rendered = SurveyRunDiffRenderer.render(
             SurveyRunDiff.compare(before: before, after: after), before: before, after: after

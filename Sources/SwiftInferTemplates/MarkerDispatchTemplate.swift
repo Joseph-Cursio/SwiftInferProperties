@@ -79,7 +79,7 @@ public enum MarkerDispatchTemplate {
                 + "EDIT — a `||` turned `&&`, a marker dropped or misspelled, two rows reordered — and "
                 + "it holds of the code it was read from.",
             "IT SAYS NOTHING ABOUT A NAME WITH NO MARKER: those fall through to the last return, "
-                + "which this law does not check."
+                + "which this law does not check.",
         ]
         let shadowed = subject.dispatch.probes().shadowed
         if !shadowed.isEmpty {

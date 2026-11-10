@@ -19,7 +19,7 @@ struct AssociativityConstraintEquivalenceTests {
             name: name,
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false),
             ],
             returnTypeText: "Int",
             isThrows: false, isAsync: false, isMutating: isMutating, isStatic: false,
@@ -35,7 +35,7 @@ struct AssociativityConstraintEquivalenceTests {
             ("curated_combine", Self.summary(name: "combine")),
             ("curated_merge", Self.summary(name: "merge")),
             ("bare_userOp", Self.summary(name: "someOp")),
-            ("mutating_combine", Self.summary(name: "combine", isMutating: true))
+            ("mutating_combine", Self.summary(name: "combine", isMutating: true)),
         ]
         for (label, summary) in corpus {
             let wrapper = AssociativityTemplate.suggest(for: summary)
@@ -106,7 +106,7 @@ struct InvariantPreservationEquivTests {
                     hasSelfComposition: false,
                     nonDeterministicAPIsDetected: ["Date()"]
                 )
-            ))
+            )),
         ]
         for (label, summary) in corpus {
             let wrapper = InvariantPreservationTemplate.suggest(for: summary)
@@ -175,7 +175,7 @@ struct DualStyleConsistencyEquivTests {
             (
                 "formIntersection_intersection",
                 Self.makePair(mutatingName: "formIntersection", nonMutatingName: "intersection")
-            )
+            ),
         ]
         for (label, pair) in corpus {
             let wrapper = DualStyleConsistencyTemplate.suggest(for: pair, carrierKindResolver: nil)

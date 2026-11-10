@@ -55,7 +55,7 @@ struct TrapAttributionCensusMeasuredTests {
         Corpus(fixture: "biconditional-verify-corpus", module: "BiconditionalVerifyCorpus", family: "biconditional"),
         Corpus(fixture: "refint-verify-corpus", module: "RefintVerifyCorpus", family: "referential-integrity"),
         Corpus(fixture: "determinism-verify-corpus", module: "DeterminismVerifyCorpus", family: "determinism"),
-        Corpus(fixture: "idempotence-survey-corpus", module: "IdempotenceSurveyCorpus", family: "idempotence")
+        Corpus(fixture: "idempotence-survey-corpus", module: "IdempotenceSurveyCorpus", family: "idempotence"),
     ]
 
     @Test("census: attribute every measured refutation across the interaction corpora")

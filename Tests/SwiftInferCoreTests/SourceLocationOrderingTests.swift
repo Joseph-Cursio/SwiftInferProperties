@@ -27,7 +27,7 @@ struct SourceLocationOrderingTests {
         Location(file: "B.swift", line: 1, column: 1),
         Location(file: "B.swift", line: 1, column: 2),
         Location(file: "", line: 0, column: 0),
-        Location.testBodyPlaceholder
+        Location.testBodyPlaceholder,
     ]
 
     // MARK: - The three laws sorted(by:) requires

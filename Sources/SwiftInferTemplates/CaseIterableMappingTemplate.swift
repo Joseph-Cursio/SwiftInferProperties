@@ -186,7 +186,7 @@ public enum CaseIterableMappingTemplate {
                 weight: 15,
                 detail: "Curated key noun in '\(summary.name)' — it IDENTIFIES a case rather than "
                     + "describing it, so distinct cases owe distinct values"
-            )
+            ),
         ]
     }
 
@@ -216,7 +216,7 @@ public enum CaseIterableMappingTemplate {
                 + "the NAME says the value identifies the case. Confirm that before applying.",
             "The law lives on the TYPE, not on this member: it is a claim about the whole case "
                 + "list, so it belongs in a suite over the enum and should be re-run whenever a "
-                + "case is added. That is the commit where it earns its keep."
+                + "case is added. That is the commit where it earns its keep.",
         ]
     }
 }

@@ -159,7 +159,7 @@ extension IdentityElementTemplate {
             evidence: { pair in
                 [
                     Self.makeLiftedOperationEvidence(pair),
-                    Self.makeLiftedIdentityEvidence(pair)
+                    Self.makeLiftedIdentityEvidence(pair),
                 ]
             },
             identity: Self.makeLiftedIdentity(for:),
@@ -313,7 +313,7 @@ extension IdentityElementTemplate {
             "Property holds iff `\(pair.operation.carrier)` has value "
                 + "semantics — the lift's `var copy = original; copy."
                 + "\(pair.operationSummary.name)(...)` does not "
-                + "alias original's state."
+                + "alias original's state.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

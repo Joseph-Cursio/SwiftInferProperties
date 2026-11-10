@@ -45,7 +45,7 @@ struct DiscoverPipelineVerifyEvidenceTests {
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.67.0",
                 subjectFingerprint: fingerprint
-            )
+            ),
         ]
     }
 

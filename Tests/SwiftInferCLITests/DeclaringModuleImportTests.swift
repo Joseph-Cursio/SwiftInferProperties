@@ -16,7 +16,7 @@ struct DeclaringModuleImportTests {
         "SyntaxPattern": ["SwiftProjectLintVisitors"],
         "PatternCategory": ["SwiftProjectLintModels"],
         "UIVisitor": ["SwiftProjectLintRules"],
-        "Ambiguous": ["A", "B"]
+        "Ambiguous": ["A", "B"],
     ]
 
     @Test("each named type's resolvable declaring module is imported, and the rest survive the filter")

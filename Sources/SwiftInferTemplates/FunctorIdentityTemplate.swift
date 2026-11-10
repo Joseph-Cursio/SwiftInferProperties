@@ -50,7 +50,7 @@ public enum FunctorIdentityTemplate {
                     + "`\(shape.returnTypeText)`, which is \(shape.typeName) again. "
                     + "A map returning `[T]` — `Set.map`, `Dictionary.map` — changes the "
                     + "container and cannot carry this law"
-            )
+            ),
         ]
     }
 
@@ -60,7 +60,7 @@ public enum FunctorIdentityTemplate {
         [
             "From the `known-properties` [reference] rows — laws the catalog already "
                 + "verifies on `Optional` and `Dictionary` but that no template could "
-                + "transfer to a carrier of your own"
+                + "transfer to a carrier of your own",
         ]
     }
 
@@ -87,7 +87,7 @@ public enum FunctorIdentityTemplate {
             "The kit's `checkTransformationPropertyLaws` runs `Transformation.mapFusion` "
                 + "over ANY `Sequence`, so a bare `map` on a sequence carrier is its job, "
                 + "not this template's — that case is declined at pairing. `mapValues` is "
-                + "not `Sequence.map`, which is why a dictionary carrier is still reached."
+                + "not `Sequence.map`, which is why a dictionary carrier is still reached.",
         ]
     }
 
@@ -105,7 +105,7 @@ public enum FunctorIdentityTemplate {
                     + "identity law is trivially true on a typical populated value; where "
                     + "it breaks is a short-circuit path that forgets to carry the payload "
                     + "through, and those paths are exactly the degenerate states."
-            )
+            ),
         ]
     }
 

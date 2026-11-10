@@ -64,7 +64,7 @@ struct LiftedDecisionsPersistenceTests {
                 signalWeights: lifted.score.signals.map {
                     SignalSnapshot(kind: $0.kind.rawValue, weight: $0.weight)
                 }
-            )
+            ),
         ])
         let outcome = try runInteractive(
             suggestion: lifted,

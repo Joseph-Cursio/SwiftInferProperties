@@ -35,7 +35,7 @@ struct SeedFocusLiftedExemptionTests {
                     location: SourceLocation(
                         file: lifted ? "<test-body>" : "Config.swift", line: lifted ? 0 : 12, column: 1
                     )
-                )
+                ),
             ],
             score: Score(signals: []),
             generator: GeneratorMetadata(source: .notYetComputed, confidence: nil, sampling: .notRun),
@@ -56,7 +56,7 @@ struct SeedFocusLiftedExemptionTests {
             SeedManifest.Seed(
                 file: "Config.swift", line: 12, symbol: "parse",
                 rule: "Pure Function Property-Test Candidate", kind: .pureFunction
-            )
+            ),
         ])
     }
 
@@ -121,7 +121,7 @@ struct SeedFocusLiftedExemptionTests {
     func rescuedRowsAreEnumerable() {
         let rows = [
             suggestion(subject: "normalized(_:)", lifted: true),
-            suggestion(subject: "mySort(_:)", lifted: true)
+            suggestion(subject: "mySort(_:)", lifted: true),
         ]
         let rescued = SeedFocus.unseedableLifted(in: rows, declaredSubjects: ["mySort"])
         #expect(rescued.count == 1)

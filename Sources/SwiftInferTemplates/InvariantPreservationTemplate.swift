@@ -95,7 +95,7 @@ public enum InvariantPreservationTemplate {
             "Doesn't fire without explicit @CheckProperty(.preservesInvariant(_:)) "
                 + "annotation per the §5.2 caveat — the M5.2 macro is the opt-in path.",
             "if invariant(x) then invariant(f(x)) is a *one-way* implication; the test "
-                + "does not verify that f rejects invalid inputs."
+                + "does not verify that f rejects invalid inputs.",
         ]
     }
 
@@ -154,7 +154,7 @@ public enum InvariantPreservationTemplate {
             "Doesn't fire without explicit @CheckProperty(.preservesInvariant(_:)) "
                 + "annotation per the §5.2 caveat — the M5.2 macro is the opt-in path.",
             "if invariant(x) then invariant(f(x)) is a *one-way* implication; the test "
-                + "does not verify that f rejects invalid inputs."
+                + "does not verify that f rejects invalid inputs.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

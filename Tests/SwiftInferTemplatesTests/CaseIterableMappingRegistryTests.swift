@@ -59,7 +59,7 @@ struct CaseIterableMappingRegistryTests {
     private var decls: [TypeDecl] {
         [
             enumDecl("RuleIdentifier", cases: ["forceTry", "magicNumber", "fatView"]),
-            enumDecl("PatternCategory", cases: ["codeQuality", "performance", "other"], inherits: ["CaseIterable"])
+            enumDecl("PatternCategory", cases: ["codeQuality", "performance", "other"], inherits: ["CaseIterable"]),
         ]
     }
 

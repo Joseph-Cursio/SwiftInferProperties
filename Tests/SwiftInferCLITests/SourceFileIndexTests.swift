@@ -52,7 +52,7 @@ struct SourceFileIndexTests {
     @Test func anExtensionDoesNotShadowTheRealDeclaration() {
         let index = SwiftInferCommand.Discover.sourceFileIndex(from: [
             decl("Widget", kind: .extension, file: "/p/Sources/Other/Widget+Sugar.swift"),
-            decl("Widget", kind: .struct, file: "/p/Sources/Core/Widget.swift")
+            decl("Widget", kind: .struct, file: "/p/Sources/Core/Widget.swift"),
         ])
         #expect(index["Widget"] == "/p/Sources/Core/Widget.swift")
     }
@@ -76,7 +76,7 @@ struct SourceFileIndexTests {
     @Test func aCollisionKeepsTheFirstDeclaration() {
         let index = SwiftInferCommand.Discover.sourceFileIndex(from: [
             decl("Parameter", kind: .struct, file: "/p/Sources/A/Parameter.swift"),
-            decl("Parameter", kind: .struct, file: "/p/Sources/B/Parameter.swift")
+            decl("Parameter", kind: .struct, file: "/p/Sources/B/Parameter.swift"),
         ])
         #expect(index["Parameter"] == "/p/Sources/A/Parameter.swift")
     }

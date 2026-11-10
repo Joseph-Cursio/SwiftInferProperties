@@ -88,7 +88,7 @@ struct ReducerAsyncSliceTests {
             .stateActionReturnsState: "state = await Counter.reduce(state, action)",
             .inoutStateActionReturnsVoid: "await Counter.reduce(&state, action)",
             .stateActionReturnsStateAndEffect: "let (newState, _) = await Counter.reduce(state, action)",
-            .inoutStateActionReturnsEffect: "_ = await Counter.reduce(&state, action)"
+            .inoutStateActionReturnsEffect: "_ = await Counter.reduce(&state, action)",
         ]
         for (shape, expected) in byShape {
             let step = ActionSequenceStubEmitter.makeApplyStep(

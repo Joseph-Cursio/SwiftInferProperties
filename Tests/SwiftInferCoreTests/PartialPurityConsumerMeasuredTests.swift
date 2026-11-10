@@ -98,7 +98,7 @@ struct PartialPurityConsumerMeasuredTests {
             root: packageRoot
                 .deletingLastPathComponent()
                 .appendingPathComponent("SwiftPropertyLaws/Sources")
-        )
+        ),
     ]
 
     /// The same summary with `isThrows` forced to `false`. Every other field is

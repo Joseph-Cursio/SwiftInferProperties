@@ -95,7 +95,7 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
     public static let operatorCharacterWords: [Character: String] = [
         "+": "plus", "-": "minus", "*": "times", "/": "divide", "%": "modulo",
         "<": "less", ">": "greater", "=": "equal", "!": "not",
-        "&": "ampersand", "|": "bar", "^": "caret", "~": "tilde", "?": "question"
+        "&": "ampersand", "|": "bar", "^": "caret", "~": "tilde", "?": "question",
     ]
 
     public static func capitalized(_ word: String) -> String { word.prefix(1).uppercased() + word.dropFirst() }
@@ -104,7 +104,7 @@ public struct CalleeReference: Sendable, Equatable, ExpressibleByStringLiteral {
         let operatorCharacters: Set<Character> = [
             "+", "-", "*", "/", "%",
             "<", ">", "=", "!",
-            "&", "|", "^", "~", "?"
+            "&", "|", "^", "~", "?",
         ]
         guard !name.isEmpty else { return false }
         return name.allSatisfy(operatorCharacters.contains)

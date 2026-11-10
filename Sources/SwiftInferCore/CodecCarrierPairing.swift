@@ -80,7 +80,7 @@ public enum CodecCarrierPairing {
         ("encryptor", "decryptor"),
         ("encrypter", "decrypter"),
         ("packer", "unpacker"),
-        ("importer", "exporter")
+        ("importer", "exporter"),
     ]
 
     /// The trailing role noun of a carrier — the last camelCase token of its

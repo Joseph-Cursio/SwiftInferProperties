@@ -111,7 +111,7 @@ struct ReplayReport {
         var out = [
             "verify --replay-only: \(lines.count) recorded counterexample(s)",
             "  ✓ now holds: \(count(.nowHolds))   ✗ still failing: \(count(.stillFailing))"
-                + "   ? inconclusive: \(count(.inconclusive))   – skipped: \(count(.skipped))"
+                + "   ? inconclusive: \(count(.inconclusive))   – skipped: \(count(.skipped))",
         ]
         for line in lines.sorted(by: { $0.identityHash < $1.identityHash }) {
             let suffix = line.detail.map { " — \($0)" } ?? ""

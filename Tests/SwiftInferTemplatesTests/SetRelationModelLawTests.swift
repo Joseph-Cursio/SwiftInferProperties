@@ -45,7 +45,7 @@ struct SetRelationModelLawTests {
             member("contains", param: "Bound", returns: "Bool"),
             member("isDisjoint", param: "RangeSet<Bound>", returns: "Bool", label: "with"),
             member("isSubset", param: "RangeSet<Bound>", returns: "Bool", label: "of"),
-            member("isSuperset", param: "RangeSet<Bound>", returns: "Bool", label: "of")
+            member("isSuperset", param: "RangeSet<Bound>", returns: "Bool", label: "of"),
         ]
     }
 
@@ -68,7 +68,7 @@ struct SetRelationModelLawTests {
     func loneRelationIsLikely() {
         let shapes = SetRelationModelPairing.candidates(in: [
             member("contains", param: "Bound", returns: "Bool"),
-            member("isSubset", param: "RangeSet<Bound>", returns: "Bool", label: "of")
+            member("isSubset", param: "RangeSet<Bound>", returns: "Bool", label: "of"),
         ])
         let suggestion = shapes.first.flatMap(SetRelationModelLawTemplate.suggest(for:))
         #expect(suggestion?.score.total == 70)
@@ -86,7 +86,7 @@ struct SetRelationModelLawTests {
         let shapes = SetRelationModelPairing.candidates(in: [
             member("contains", param: "Bound", returns: "Bool"),
             member("isStrictSubset", param: "RangeSet<Bound>", returns: "Bool", label: "of"),
-            member("isStrictSuperset", param: "RangeSet<Bound>", returns: "Bool", label: "of")
+            member("isStrictSuperset", param: "RangeSet<Bound>", returns: "Bool", label: "of"),
         ])
         #expect(shapes.isEmpty)
     }
@@ -113,7 +113,7 @@ struct SetRelationModelLawTests {
             member(
                 "isDisjoint", param: "OptionSetLike", returns: "Bool",
                 label: "with", on: "OptionSetLike"
-            )
+            ),
         ])
         #expect(shapes.isEmpty)
     }
@@ -125,13 +125,13 @@ struct SetRelationModelLawTests {
             member(
                 "isDisjoint", param: "RangeSet<Bound>", returns: "Bool",
                 label: "with", isMutating: true
-            )
+            ),
         ])
         #expect(mutating.isEmpty)
 
         let nonBool = SetRelationModelPairing.candidates(in: [
             member("contains", param: "Bound", returns: "Bool"),
-            member("isSubset", param: "RangeSet<Bound>", returns: "RangeSet<Bound>", label: "of")
+            member("isSubset", param: "RangeSet<Bound>", returns: "RangeSet<Bound>", label: "of"),
         ])
         #expect(nonBool.isEmpty)
     }

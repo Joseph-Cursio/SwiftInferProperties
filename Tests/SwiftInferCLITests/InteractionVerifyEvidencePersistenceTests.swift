@@ -120,7 +120,7 @@ struct InteractionVerifyEvidenceTests {
             )),
             (invariant: reset, result: InteractionVerifyOutcomeParser.Result(
                 outcome: .measuredDefaultFails, detail: "at sequence index 2", failingSequenceIndex: 2
-            ))
+            )),
         ]
 
         VerifyInteractionPipeline.recordEvidenceBatch(outcomes, workingDirectory: directory)

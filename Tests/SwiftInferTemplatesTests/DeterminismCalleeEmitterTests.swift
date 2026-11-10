@@ -104,7 +104,7 @@ struct DeterminismCalleeEmitterTests {
             funcName: "combine",
             parameters: [
                 .init(label: nil, generator: "Gen<Int>.int()"),
-                .init(label: "with", generator: "Gen<Int>.int()")
+                .init(label: "with", generator: "Gen<Int>.int()"),
             ],
             seed: Self.seed
         )
@@ -119,7 +119,7 @@ struct DeterminismCalleeEmitterTests {
             funcName: "combine",
             parameters: [
                 .init(label: nil, generator: generators[0]),
-                .init(label: "with", generator: generators[1])
+                .init(label: "with", generator: generators[1]),
             ],
             seed: Self.seed
         )
@@ -199,7 +199,7 @@ struct DeterminismCalleeEmitterTests {
         Shape(
             callee: CalleeReference(bareName: "+", qualifier: "Money", argumentLabels: [nil, nil]),
             generators: ["M.gen()", "M.gen()"]
-        )
+        ),
     ]
 
     /// **The delegation pin.** The determinism property is the agreement property with the subject

@@ -36,7 +36,7 @@ struct InteractiveTriageAcceptTests {
                 tier: .strong,
                 decision: .accepted,
                 timestamp: Date(timeIntervalSince1970: 0)
-            )
+            ),
         ])
         let result = try InteractiveTriage.run(
             suggestions: [suggestion],

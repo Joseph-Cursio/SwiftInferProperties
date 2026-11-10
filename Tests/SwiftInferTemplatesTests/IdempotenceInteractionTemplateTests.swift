@@ -67,7 +67,7 @@ struct IdempotenceInteractionTemplateTests {
             witnesses: [
                 witness(name: "refresh"),
                 witness(name: "dismiss"),
-                witness(name: "setColor", kind: .namePrefix)
+                witness(name: "setColor", kind: .namePrefix),
             ],
             firstSeenAt: firstSeenAt
         )

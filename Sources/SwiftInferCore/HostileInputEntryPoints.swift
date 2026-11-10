@@ -55,7 +55,7 @@ public enum HostileInputEntryPoints {
         "UnsafeRawBufferPointer",
         "UnsafeBufferPointer<UInt8>",
         "ByteBufferView",
-        "ArraySlice<UInt8>"
+        "ArraySlice<UInt8>",
     ]
 
     /// Parameter types that *may* be content but are just as often a name.
@@ -71,7 +71,7 @@ public enum HostileInputEntryPoints {
     /// too generic to carry a claim on its own.
     public static let interpretationVerbs: [String] = [
         "parse", "decode", "deserialize", "lex", "tokenize",
-        "unmarshal", "unpack", "demangle", "disassemble"
+        "unmarshal", "unpack", "demangle", "disassemble",
     ]
 
     /// Nouns naming the **result** of an admitted verb, for a function that states its output
@@ -138,7 +138,7 @@ public enum HostileInputEntryPoints {
     /// distinguishes them.
     public static let egressVerbs: Set<String> = [
         "write", "send", "sendmsg", "sendto", "emit", "output",
-        "flush", "transmit", "post", "put", "upload", "publish"
+        "flush", "transmit", "post", "put", "upload", "publish",
     ]
 
     /// Whether `methodName` leads with a verb that sends bytes out.
@@ -154,7 +154,7 @@ public enum HostileInputEntryPoints {
     /// and totality over arbitrary paths is not the interesting claim.
     public static let locationLabels: Set<String> = [
         "path", "pathname", "filePath", "file", "url", "directory",
-        "projectRoot", "root", "at", "name", "named", "key", "identifier"
+        "projectRoot", "root", "at", "name", "named", "key", "identifier",
     ]
 
     /// Argument labels that positively name a payload. Not required, but they
@@ -164,7 +164,7 @@ public enum HostileInputEntryPoints {
     public static let contentLabels: Set<String> = [
         "source", "text", "content", "fileContent", "contents",
         "data", "bytes", "input", "buffer", "payload", "body", "raw",
-        "line", "lines"
+        "line", "lines",
     ]
 
     /// Whether `label` names somewhere to look rather than something to read.

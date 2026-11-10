@@ -84,7 +84,7 @@ public enum EmptyRangeTemplate {
                 weight: 15,
                 detail: "Labelled `from:` / `to:` — Swift's exclusive end, so `\(summary.name)(from: v, "
                     + "to: v)` selects nothing"
-            )
+            ),
         ]
     }
 
@@ -95,7 +95,7 @@ public enum EmptyRangeTemplate {
                 + "nearly everything, an inclusive comparison on both ends selects `v` itself.",
             "`to:` IS EXCLUSIVE BY SWIFT'S CONVENTION (`stride(from:to:by:)`; the inclusive form is "
                 + "`through:`). If this function means an inclusive end, the law fails correctly — "
-                + "rename the label to `through:` rather than suppressing the law."
+                + "rename the label to `through:` rather than suppressing the law.",
         ]
     }
 }

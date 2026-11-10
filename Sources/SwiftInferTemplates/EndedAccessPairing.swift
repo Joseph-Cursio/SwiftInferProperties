@@ -58,7 +58,7 @@ public enum EndedAccessPairing {
         "appendLast": .back,
         "prepend": .front,
         "pushFirst": .front,
-        "insertFirst": .front
+        "insertFirst": .front,
     ]
 
     /// Positionally-named removals. Note the absence of bare `pop` and `dequeue` — see
@@ -67,7 +67,7 @@ public enum EndedAccessPairing {
         "removeLast": .back,
         "popLast": .back,
         "removeFirst": .front,
-        "popFirst": .front
+        "popFirst": .front,
     ]
 
     /// One statable same-end round-trip.

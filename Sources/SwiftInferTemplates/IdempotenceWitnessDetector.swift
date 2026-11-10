@@ -57,7 +57,7 @@ public enum IdempotenceWitnessDetector {
     static let exactNames: Set<String> = [
         "refresh", "reset", "clear", "dismiss", "cancel", "close", "hide",
         "select",
-        "task", "delegate", "binding"
+        "task", "delegate", "binding",
     ]
 
     /// Prefix-match names. The case identifier must start with one

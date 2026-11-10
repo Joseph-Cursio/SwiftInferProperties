@@ -104,7 +104,7 @@ struct DiscoverEmptySeedManifestTests {
                 SeedManifest.Seed(
                     file: "Source.swift", line: 73, symbol: "uploadRemainingChunks",
                     kind: .extractableKernel
-                )
+                ),
             ]),
             output: recording,
             diagnostics: diagnostics
@@ -140,7 +140,7 @@ struct DiscoverEmptySeedManifestTests {
                     file: "View.swift", line: 57, symbol: "fetchLocalFiles",
                     rule: "Pure Closure Property-Test Candidate",
                     kind: .unrecognised("pure-closure")
-                )
+                ),
             ]),
             output: recording,
             diagnostics: diagnostics
@@ -245,7 +245,7 @@ struct DiscoverEmptySeedManifestTests {
             .init(
                 file: "Source.swift", line: 9, symbol: "uploadRemainingChunks",
                 kind: .extractableKernel
-            )
+            ),
         ])
 
         let recording = DPRecordingOutput()

@@ -177,7 +177,7 @@ extension LiftedTestEmitter {
             "// Fill in the reference definition below — your docstring already states it:",
             "//   \"\(docComment)\"",
             "// Then run the test: the generator finds the input where the code disagrees",
-            "// with its own documentation."
+            "// with its own documentation.",
         ]
         if subject.isThrows {
             lines.append(

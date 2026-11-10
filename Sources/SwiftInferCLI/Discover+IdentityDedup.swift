@@ -141,7 +141,7 @@ extension SwiftInferCommand.Discover {
                         for: suggestion,
                         copies: copies,
                         distinctDeclarations: distinctDeclarations
-                    )
+                    ),
                 ],
                 whyMightBeWrong: suggestion.explainability.whyMightBeWrong
             )

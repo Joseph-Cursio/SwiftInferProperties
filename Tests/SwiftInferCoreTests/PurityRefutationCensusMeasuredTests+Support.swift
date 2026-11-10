@@ -107,14 +107,14 @@ extension PurityRefutationCensusMeasuredTests {
             "FileHandle", "Process", "Pipe",
             "resourceValues", "checkResourceIsReachable", "checkPromisedItemIsReachable",
             "startAccessingSecurityScopedResource", "stopAccessingSecurityScopedResource",
-            "contentsOfFile", "contentsOfDirectory"
+            "contentsOfFile", "contentsOfDirectory",
         ]
 
         /// `PurityInferrer.nondeterministicMarkers`.
         static let nondeterministicMarkers: Set<String> = [
             "arc4random", "arc4random_uniform", "drand48", "CFAbsoluteTimeGetCurrent",
             "random", "randomElement", "shuffled",
-            "Date", "UUID"
+            "Date", "UUID",
         ]
 
         /// Injected so the control can truncate it.
@@ -287,7 +287,7 @@ final class CensusTotalityChecker: SyntaxVisitor {
 
     private static let trapFunctions: Set<String> = [
         "fatalError", "preconditionFailure", "precondition",
-        "assert", "assertionFailure"
+        "assert", "assertionFailure",
     ]
 
     override func visit(_: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {

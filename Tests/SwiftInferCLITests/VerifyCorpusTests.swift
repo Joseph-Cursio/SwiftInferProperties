@@ -102,7 +102,7 @@ struct VerifyCorpusTests {
             [
                 Self.entry(counterexample: "1"),
                 Self.entry(counterexample: "2"),
-                Self.entry(counterexample: "1") // dup of the first
+                Self.entry(counterexample: "1"), // dup of the first
             ],
             packageRoot: root
         )

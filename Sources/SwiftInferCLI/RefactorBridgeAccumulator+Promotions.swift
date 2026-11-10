@@ -57,7 +57,7 @@ extension RefactorBridgeAccumulator {
         if hasAssociativity, hasIdentityElement, hasCommutativity, hasInverseElement {
             return [
                 makeProposal(protocolName: "CommutativeMonoid", combineWitness: combineWitness),
-                makeProposal(protocolName: "Group", combineWitness: combineWitness)
+                makeProposal(protocolName: "Group", combineWitness: combineWitness),
             ]
         }
         // Single-arm cases — exactly one promotion fires.
@@ -153,7 +153,7 @@ extension RefactorBridgeAccumulator {
             + "(`combineAssociativity`, distributivity) hold for `Int` but NOT "
             + "for IEEE-754 floats — rounding noise causes spurious violations. "
             + "Don't conform `Double` / `Float` / `BinaryFloatingPoint` types via "
-            + "this writeout; use kit v1.4's `FloatingPoint` law check instead."
+            + "this writeout; use kit v1.4's `FloatingPoint` law check instead.",
         ]
         return ExplainabilityBlock(whySuggested: why, whyMightBeWrong: caveats)
     }
@@ -204,7 +204,7 @@ extension RefactorBridgeAccumulator {
             "formUnion",
             "formIntersection",
             "formSymmetricDifference",
-            "symmetricDifference"
+            "symmetricDifference",
         ]
         return curated.contains(name)
     }
@@ -249,7 +249,7 @@ extension RefactorBridgeAccumulator {
         var caveats: [String] = [
             "User-supplied combine witness must satisfy associativity.",
             "SwiftInfer does not run the law — applying the conformance lets "
-                + "`swift package protolawcheck` verify it on every CI run."
+                + "`swift package protolawcheck` verify it on every CI run.",
         ]
         switch protocolName {
         case "CommutativeMonoid":

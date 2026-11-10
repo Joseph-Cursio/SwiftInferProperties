@@ -36,7 +36,7 @@ struct AssociativityCrossValidationKeyTests {
             name: "combine",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Money", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Money", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Money", isInout: false),
             ],
             returnTypeText: "Money",
             isThrows: false,
@@ -70,7 +70,7 @@ struct AssociativityCrossValidationKeyTests {
             name: "combine",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Money", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Money", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Money", isInout: false),
             ],
             returnTypeText: "Money",
             isThrows: false,

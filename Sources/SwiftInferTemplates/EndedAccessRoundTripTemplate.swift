@@ -52,7 +52,7 @@ public enum EndedAccessRoundTripTemplate {
                 detail: "Mutating add/remove pair on \(shape.typeName): "
                     + "`\(shape.addition.name)(\(shape.elementTypeText))` against "
                     + "`\(shape.removal.name)() -> \(shape.removal.returnTypeText ?? "?")`"
-            )
+            ),
         ]
     }
 
@@ -62,7 +62,7 @@ public enum EndedAccessRoundTripTemplate {
         [
             "From the `known-properties` [reference] rows — the stack/queue/deque laws the "
                 + "catalog already verifies on stdlib types but that no template could "
-                + "transfer to a carrier of your own until now"
+                + "transfer to a carrier of your own until now",
         ]
     }
 
@@ -82,7 +82,7 @@ public enum EndedAccessRoundTripTemplate {
                 + "`\(shape.removal.name)` says which end. A carrier that reinterprets it — "
                 + "returning a minimum, a most-recently-used entry, or a random element — "
                 + "does not owe this law, and the failure would be a finding about the name "
-                + "rather than about the code."
+                + "rather than about the code.",
         ]
         if shape.removalIsOptional {
             caveats.append(
@@ -116,7 +116,7 @@ public enum EndedAccessRoundTripTemplate {
                     + "whatever capacity boundary forces a reallocation or a wrap-around. "
                     + "Draw those deliberately — a uniform size distribution will miss all "
                     + "three and report green."
-            )
+            ),
         ]
     }
 

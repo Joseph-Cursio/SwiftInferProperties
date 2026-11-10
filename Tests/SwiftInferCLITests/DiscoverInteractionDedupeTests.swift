@@ -133,7 +133,7 @@ struct DiscoverInteractionDedupeTests {
         #expect(result.map(\.location) == [
             "/tmp/x.swift:1",
             "/tmp/x.swift:2",
-            "/tmp/x.swift:4"
+            "/tmp/x.swift:4",
         ])
     }
 }

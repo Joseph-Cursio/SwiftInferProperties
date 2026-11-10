@@ -76,7 +76,7 @@ struct ReferenceOracleScaffoldWitnessTests {
         ("W8", "{ (args: (String, String)) in oracleWitnessHasPrefix(args.0, matching: args.1) =="),
         ("W9", "extension String {\n    func oracleWitnessClipped_reference(toLength limit: Int)"),
         ("W10", "approximatelyEqual(OracleWitnessGeometry.scaled(args.0, by: args.1), "),
-        ("W11", "extension OracleWitnessTally: @unchecked Sendable {}\nextension OracleWitnessTally {")
+        ("W11", "extension OracleWitnessTally: @unchecked Sendable {}\nextension OracleWitnessTally {"),
     ])
     func eachWitnessedCaseIsTheShapeItsNameClaims(name: String, shape: String) throws {
         let witness = try #require(ReferenceOracleWitnessCases.all.first { $0.name == name })
@@ -173,7 +173,7 @@ enum ReferenceOracleWitnessCases {
             ),
             docComment: "Returns the step doubled, and never reads the counter.",
             body: "step &+ step"
-        )
+        ),
     ]
 
     /// W4, W5a, W5b: a `@MainActor` static (one hop), an async static and an async throwing one.
@@ -216,7 +216,7 @@ enum ReferenceOracleWitnessCases {
             draws: .init(generators: ["Gen<Character>.letterOrNumber.string(of: 0...8)"], argumentTypes: ["String"]),
             docComment: "Returns the decimal number the text spells, and throws when it spells none.",
             body: "guard let value = Int(text) else { throw OracleWitnessError.notANumber }; return value"
-        )
+        ),
     ]
 
     /// W6 to W11: an operator, a `-> Self?` factory with optional parameters, a free function over
@@ -248,14 +248,14 @@ enum ReferenceOracleWitnessCases {
                 owner: "OracleWitnessWindow",
                 parameters: [
                     parameter("lineCount", "lineCount", "Int"), parameter("startLine", "startLine", "Int?"),
-                    parameter("maxLines", "maxLines", "Int?"), parameter("cap", "cap", "Int")
+                    parameter("maxLines", "maxLines", "Int?"), parameter("cap", "cap", "Int"),
                 ],
                 returnTypeText: "Self?", isAsync: false, isThrows: false
             ),
             draws: .init(
                 generators: [
                     "Gen<Int>.int()", LiftedTestEmitter.defaultGenerator(for: "Int?"),
-                    LiftedTestEmitter.defaultGenerator(for: "Int?"), "Gen<Int>.int()"
+                    LiftedTestEmitter.defaultGenerator(for: "Int?"), "Gen<Int>.int()",
                 ],
                 argumentTypes: ["Int", "Int?", "Int?", "Int"]
             ),
@@ -329,6 +329,6 @@ enum ReferenceOracleWitnessCases {
             ),
             docComment: "Returns the total plus the amount, and leaves the tally unchanged.",
             body: "amount &+ total"
-        )
+        ),
     ]
 }

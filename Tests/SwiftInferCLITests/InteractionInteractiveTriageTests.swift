@@ -28,7 +28,7 @@ struct InteractionInteractiveTriageTests {
             ("s", .skip),
             ("", .skip),
             ("n", .reject),
-            ("N", .reject)
+            ("N", .reject),
         ] {
             let prompt = TriageRecordingPromptInput(scriptedLines: [input])
             let output = TriageRecordingOutput()
@@ -95,7 +95,7 @@ struct InteractionInteractiveTriageTests {
         let suggestions = [
             makeFixtureSuggestion(predicate: "state.a == 1"),
             makeFixtureSuggestion(predicate: "state.b == 2"),
-            makeFixtureSuggestion(predicate: "state.c == 3")
+            makeFixtureSuggestion(predicate: "state.c == 3"),
         ]
         let prompt = TriageRecordingPromptInput(scriptedLines: ["a", "s", "n"])
         let output = TriageRecordingOutput()
@@ -188,7 +188,7 @@ struct InteractionInteractiveTriageTests {
                 reducerQualifiedName: suggestion.reducerQualifiedName,
                 decision: .skipped,
                 timestamp: now
-            )
+            ),
         ])
         let path = directory.appendingPathComponent(".swiftinfer/interaction-decisions.json")
         try FileManager.default.createDirectory(

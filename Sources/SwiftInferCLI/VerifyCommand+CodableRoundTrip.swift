@@ -85,7 +85,7 @@ extension SwiftInferCommand.Verify {
                 carrier: carrier,
                 expected: [
                     "codable-round-trip needs \(carrier) to be Equatable "
-                        + "to compare decode(encode(x)) == x"
+                        + "to compare decode(encode(x)) == x",
                 ]
             )
         }

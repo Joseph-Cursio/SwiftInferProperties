@@ -46,7 +46,7 @@ struct OrderableCarrierTests {
     /// something Swift does not do.
     @Test("collections and tuples are not orderable", arguments: [
         "[Int]", "[Double]", "[String: Int]", "(Int, Int)",
-        "Array<Int>", "Set<Int>", "Dictionary<String, Int>", "ArraySlice<Int>"
+        "Array<Int>", "Set<Int>", "Dictionary<String, Int>", "ArraySlice<Int>",
     ])
     func collectionsAreNotOrderable(typeText: String) {
         #expect(FloatingPointEquatableTypes.isOrderableCarrier(typeText: typeText) == false)

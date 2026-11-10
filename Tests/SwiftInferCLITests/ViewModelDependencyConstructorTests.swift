@@ -80,7 +80,7 @@ struct ViewModelDependencyConstructorTests {
                 initParameters: [
                     .init(label: "store", typeText: "any Store"),
                     .init(label: "fallback", typeText: "Workspace?"),
-                    .init(label: "limit", typeText: "Int")
+                    .init(label: "limit", typeText: "Int"),
                 ],
                 constructibility: .requiresArguments(["store", "limit"])
             ),

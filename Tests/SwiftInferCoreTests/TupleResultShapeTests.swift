@@ -25,7 +25,7 @@ struct TupleResultShapeTests {
         ("((Int, Int))", 2),
         ("(Int, Int)!", 2),
         ("((Int, Int))!", 2),
-        ("sending (Int, Int)", 2)
+        ("sending (Int, Int)", 2),
     ])
     func comparableTuples(typeText: String, arity: Int) {
         #expect(TupleResultShape(typeText: typeText) == .tuple(arity: arity))
@@ -33,7 +33,7 @@ struct TupleResultShapeTests {
 
     @Test("seven elements is beyond the overloads", arguments: [
         "(Int, Int, Int, Int, Int, Int, Int)",
-        "(Int, Int, Int, Int, Int, Int, Int)!"
+        "(Int, Int, Int, Int, Int, Int, Int)!",
     ])
     func sevenElementsIsBeyondTheOverloads(typeText: String) {
         let shape = TupleResultShape(typeText: typeText)
@@ -48,7 +48,7 @@ struct TupleResultShapeTests {
         "(Int, (Int, Int)?)",
         "(Int, (Int, Int))!",
         "sending (Int, (Int, Int))",
-        "(Int, Swift.Optional<(Int, Int)>)"
+        "(Int, Swift.Optional<(Int, Int)>)",
     ])
     func nestedTuples(typeText: String) {
         let shape = TupleResultShape(typeText: typeText)
@@ -74,7 +74,7 @@ struct TupleResultShapeTests {
         "ContiguousArray<(Int, Int)>",
         "Swift.ContiguousArray<(Int, Int)>",
         "Set<(Int, Int)>",
-        "sending [(Int, Int)]"
+        "sending [(Int, Int)]",
     ])
     func wrappedTuples(typeText: String) {
         let shape = TupleResultShape(typeText: typeText)
@@ -99,7 +99,7 @@ struct TupleResultShapeTests {
         "(Int) -> (Int, Int)",
         "Result<Int, Error>",
         "Geometry.Array<(Int, Int)>",
-        "not a type ((("
+        "not a type (((",
     ])
     func notTuples(typeText: String) {
         let shape = TupleResultShape(typeText: typeText)

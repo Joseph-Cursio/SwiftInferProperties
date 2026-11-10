@@ -52,7 +52,7 @@ struct BareTypeNameDifferentialPropertyTests {
 
     private static let implementations: [(name: String, strip: @Sendable (String) -> String)] = [
         ("SwiftInferCommand.Index", { SwiftInferCommand.Index.bareTypeName(from: $0) }),
-        ("RoundTripPairResolver", { RoundTripPairResolver.bareTypeName(from: $0) })
+        ("RoundTripPairResolver", { RoundTripPairResolver.bareTypeName(from: $0) }),
     ]
 
     private static let reference = CarrierKindResolver.strippingGenericParameters
@@ -76,7 +76,7 @@ struct BareTypeNameDifferentialPropertyTests {
         "<%@>",
         "%@<",
         "%@<>",
-        "%@ <Double>"
+        "%@ <Double>",
     ]
 
     private static let nameGen = zip(

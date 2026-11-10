@@ -39,6 +39,6 @@ extension CuratedStdlibCatalog {
             "let z = Complex(randDouble(), randDouble()); return z.conjugate.conjugate == z",
             template: "involution",
             imports: ["ComplexModule"]
-        )
+        ),
     ]
 }

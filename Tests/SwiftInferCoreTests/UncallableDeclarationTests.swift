@@ -100,7 +100,7 @@ struct UncallableDeclarationTests {
         for attribute in [
             "@available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)",
             "@available(SwiftStdlib 6.0, *)",
-            "@available(macOS, introduced: 10.10)"
+            "@available(macOS, introduced: 10.10)",
         ] {
             #expect(!isWithdrawn("\(attribute)\npublic func present() {}"), "\(attribute) blocked")
         }

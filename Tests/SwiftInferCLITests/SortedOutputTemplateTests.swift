@@ -18,7 +18,7 @@ struct SortedOutputTemplateTests {
         keys: [
             SortKey(path: "fileCount", ascending: false),
             SortKey(path: "findingCount", ascending: false),
-            SortKey(path: "ruleID", ascending: true)
+            SortKey(path: "ruleID", ascending: true),
         ]
     )
 
@@ -67,7 +67,7 @@ struct SortedOutputTemplateTests {
     @Test("a doc comment that calls the result ordered adds corroboration", arguments: [
         "Aggregates raw findings into a ranked per-rule report.",
         "Zero-churn candidates, sorted by name.",
-        "Returns the groups in order of size."
+        "Returns the groups in order of size.",
     ])
     func orderingDocCorroborates(doc: String) throws {
         let suggestion = try #require(SortedOutputTemplate.suggest(for: Self.summary(docComment: doc)))

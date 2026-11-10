@@ -53,7 +53,7 @@ struct StubImportsKitGeneratorsTests {
         let recipe = StrategistDispatchEmitter.memberwiseRecipeMulti(
             members: [
                 member("identifier", "Gen<UUID>.uuid()"),
-                member("payload", "Gen<Data>.data()")
+                member("payload", "Gen<Data>.data()"),
             ],
             carrier: "Envelope"
         )

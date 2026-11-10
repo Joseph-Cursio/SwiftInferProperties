@@ -36,13 +36,13 @@ enum CorpusStatusRenderer {
             return [
                 "  (the manifest lists no corpora)",
                 "",
-                "0 corpora. An empty corpus is not a clean sweep — nothing was measured."
+                "0 corpora. An empty corpus is not a clean sweep — nothing was measured.",
             ]
         }
         return [
             "  (no corpus records a measurement by '\(apparatus)')",
             "",
-            "0 corpora matched. That is a gap in coverage, not a clean sweep."
+            "0 corpora matched. That is a gap in coverage, not a clean sweep.",
         ]
     }
 
@@ -54,7 +54,7 @@ enum CorpusStatusRenderer {
             "  \(entry.id)  —  \(entry.subject), \(reach)  [\(entry.kind) · \(entry.role)]",
             "    pin      \(describe(status.pin))",
             "    remote   \(entry.remote)",
-            "    path     \(status.checkout.path)"
+            "    path     \(status.checkout.path)",
         ]
         lines.append(contentsOf: measurementLines(entry))
         lines.append("    why      \(entry.why)")

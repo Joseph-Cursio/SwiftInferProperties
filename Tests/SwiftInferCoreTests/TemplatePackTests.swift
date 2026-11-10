@@ -29,7 +29,7 @@ struct TemplatePackTests {
             "monotonicity",
             "dual-style-consistency",
             "composition",
-            "invariant-preservation"
+            "invariant-preservation",
         ])
     }
 
@@ -41,7 +41,7 @@ struct TemplatePackTests {
             "associativity",
             "identity-element",
             "idempotence",
-            "composition"
+            "composition",
         ])
     }
 
@@ -114,7 +114,7 @@ struct TemplatePackTests {
             "identity-element",
             "dual-style-consistency",
             "composition",
-            "invariant-preservation"
+            "invariant-preservation",
         ]
         #expect(resolved == shippedTemplates)
     }

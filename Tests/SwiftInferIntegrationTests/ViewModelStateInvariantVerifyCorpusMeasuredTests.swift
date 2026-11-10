@@ -30,7 +30,7 @@ struct VMStateInvariantVerifyMeasuredTests {
             .init(typeName: "SessionModel", resolve: ViewModelBiconditionalResolver.resolve, expectBothPass: true),
             .init(typeName: "DriftModel", resolve: ViewModelBiconditionalResolver.resolve, expectBothPass: false),
             .init(typeName: "CartModel", resolve: ViewModelConservationResolver.resolve, expectBothPass: true),
-            .init(typeName: "BadgeModel", resolve: ViewModelConservationResolver.resolve, expectBothPass: false)
+            .init(typeName: "BadgeModel", resolve: ViewModelConservationResolver.resolve, expectBothPass: false),
         ]
         let candidates = try ViewModelDiscoverer.discover(directory: Self.corpusDirectory)
         let byName = Dictionary(uniqueKeysWithValues: candidates.map { ($0.typeName, $0) })

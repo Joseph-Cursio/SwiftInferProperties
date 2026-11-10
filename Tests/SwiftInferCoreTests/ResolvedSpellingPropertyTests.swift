@@ -36,7 +36,7 @@ struct ResolvedSpellingPropertyTests {
         "CardinalityFieldKind",
         "KindResolver",
         "String",
-        "Wrapper"
+        "Wrapper",
     ]
 
     private static let bareNames = ["Kind", "StoredMember", "Inner", "Wrapper", "Unknown", "String"]
@@ -45,7 +45,7 @@ struct ResolvedSpellingPropertyTests {
     /// dictionary, nested collection, generic.
     private static let shapes = [
         "%@", "%@?", "[%@]", "[%@]?", "[String: %@]", "[[%@]]",
-        "Array<%@>", "Set<%@>", "%@??", "[%@: %@]"
+        "Array<%@>", "Set<%@>", "%@??", "[%@: %@]",
     ]
 
     private static let spellingGen = zip(
@@ -190,7 +190,7 @@ struct ResolvedSpellingPropertyTests {
             ("[CardinalityFieldKind: Kind]", "[CardinalityFieldKind: Outer.Kind]"),
             ("[Kind: KindResolver]", "[Outer.Kind: KindResolver]"),
             ("Array<KindResolver>?", "Array<KindResolver>?"),
-            ("[Kind]", "[Outer.Kind]")
+            ("[Kind]", "[Outer.Kind]"),
         ]
         for (input, expected) in mixed {
             #expect(
@@ -213,7 +213,7 @@ struct ResolvedSpellingPropertyTests {
         let cases = [
             ("[Outer.Kind: Kind]", "[Outer.Kind: Outer.Kind]"),
             ("[Outer.Inner.Kind]", "[Outer.Inner.Kind]"),
-            ("[String: Outer.StoredMember]", "[String: Outer.StoredMember]")
+            ("[String: Outer.StoredMember]", "[String: Outer.StoredMember]"),
         ]
         for (input, expected) in cases {
             #expect(
@@ -236,7 +236,7 @@ struct ResolvedSpellingPropertyTests {
             ("[StoredMember]?", "[Outer.StoredMember]?"),
             ("[String: Kind]", "[String: Outer.Kind]"),
             ("[[StoredMember]]", "[[Outer.StoredMember]]"),
-            ("Array<Kind>", "Array<Outer.Kind>")
+            ("Array<Kind>", "Array<Outer.Kind>"),
         ]
         for (input, expected) in cases {
             #expect(

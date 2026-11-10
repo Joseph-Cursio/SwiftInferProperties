@@ -194,12 +194,12 @@ struct PreconditionInferrerTests {
         let entry = Self.entry(
             shape: Self.shape([
                 (label: "count", kind: .integer),
-                (label: "title", kind: .string)
+                (label: "title", kind: .string),
             ]),
             rows: [
                 ["1", "\"a\""],
                 ["2", "\"bb\""],
-                ["3", "\"ccc\""]
+                ["3", "\"ccc\""],
             ]
         )
         let hints = PreconditionInferrer.infer(from: entry)
@@ -217,12 +217,12 @@ struct PreconditionInferrerTests {
         let entry = Self.entry(
             shape: Self.shape([
                 (label: "count", kind: .integer),
-                (label: "flag", kind: .boolean)
+                (label: "flag", kind: .boolean),
             ]),
             rows: [
                 ["1", "true"],
                 ["2", "false"],  // mixed bool — outlier
-                ["3", "true"]
+                ["3", "true"],
             ]
         )
         let hints = PreconditionInferrer.infer(from: entry)

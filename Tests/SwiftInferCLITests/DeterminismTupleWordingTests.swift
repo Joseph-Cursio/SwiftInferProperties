@@ -64,7 +64,7 @@ struct DeterminismTupleWordingTests {
     @Test("a 2…6 tuple result asks for Equatable elements", arguments: [
         "(text: String, didTruncate: Bool)",
         "(Int, Int)!",
-        "sending (Int, Int)"
+        "sending (Int, Int)",
     ])
     func aTupleResultsCaveatAsksForEquatableElements(returnType: String) throws {
         let caveats = try Self.law(returnType: returnType).explainability.whyMightBeWrong

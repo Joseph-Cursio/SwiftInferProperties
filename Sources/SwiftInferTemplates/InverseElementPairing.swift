@@ -55,7 +55,7 @@ public enum InverseElementPairing {
         "inverted",
         "reciprocal",
         "complement",
-        "invert"
+        "invert",
     ]
 
     /// Every pair `(operation, inverse)` such that

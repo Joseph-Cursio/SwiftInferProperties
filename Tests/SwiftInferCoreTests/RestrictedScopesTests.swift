@@ -25,7 +25,7 @@ struct RestrictedScopesTests {
         let scopes = RestrictedScopes.blocking(declarationAt: 3, in: source)
         #expect(scopes == [
             .init(modifier: "private", line: 2, enclosing: "class SensitiveReferenceFinder"),
-            .init(modifier: "private", line: 3, enclosing: nil)
+            .init(modifier: "private", line: 3, enclosing: nil),
         ])
     }
 

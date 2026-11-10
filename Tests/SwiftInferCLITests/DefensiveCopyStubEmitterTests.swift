@@ -73,7 +73,7 @@ struct DefensiveCopyStubEmitterTests {
                 for: candidate(
                     surface: [
                         MutationMethod(name: "appendOne", isMutating: false, parameterCount: 0),
-                        MutationMethod(name: "set", isMutating: false, parameterCount: 2)
+                        MutationMethod(name: "set", isMutating: false, parameterCount: 2),
                     ],
                     copyMethod: "clone"
                 ),

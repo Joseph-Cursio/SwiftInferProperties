@@ -61,7 +61,7 @@ public enum VariantMarkers {
         "Incrementally", "Incremental",
         "Fast", "FastPath", "Slow", "SlowPath",
         "Naive", "Optimized", "Optimised",
-        "Reference", "BruteForce", "Fallback", "Unoptimized"
+        "Reference", "BruteForce", "Fallback", "Unoptimized",
     ]
 
     /// Markers written as a **prefix** — `append` → `uncheckedAppend`.
@@ -70,7 +70,7 @@ public enum VariantMarkers {
     /// a Swift method name.
     public static let prefixMarkers: [String] = [
         "unchecked", "unsafe", "fast", "slow", "naive",
-        "optimized", "optimised", "bruteForce", "reference"
+        "optimized", "optimised", "bruteForce", "reference",
     ]
 
     /// Markers whose variant **elides a precondition** rather than optimising

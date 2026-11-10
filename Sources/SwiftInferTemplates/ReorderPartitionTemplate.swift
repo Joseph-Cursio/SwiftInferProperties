@@ -53,7 +53,7 @@ public enum ReorderPartitionTemplate {
                             + "predicate and returns the pivot — the two sides of the pivot must "
                             + "split cleanly by that predicate, and the result must stay a "
                             + "permutation of the input"
-                    )
+                    ),
                 ]
             },
             evidence: { [$0.inferenceEvidence] },
@@ -123,7 +123,7 @@ public enum ReorderPartitionTemplate {
                 + "unchanged; only their order moves. A partition that drops, adds, or duplicates an "
                 + "element sails through a naive \"both sides look right\" check and fails this one. "
                 + "Generate arrays WITH DUPLICATES and a small alphabet, then assert the sorted "
-                + "result equals the sorted input."
+                + "result equals the sorted input.",
         ]
         if Self.isStable(summary) {
             caveats.append(

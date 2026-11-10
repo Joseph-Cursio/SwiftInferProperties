@@ -82,7 +82,7 @@ extension StrategistDispatchEmitter {
         // recipe, which draws 1…6 elements — so the receiver is never empty. Until it was
         // listed here its rows reached the value composer and declined
         // `monotonicity-domain-not-comparable` (instance-method-shape-census.md §8).
-        "Deque<Int>"
+        "Deque<Int>",
     ]
 
     /// Value-monotonicity domains the strategist can generate AND order with

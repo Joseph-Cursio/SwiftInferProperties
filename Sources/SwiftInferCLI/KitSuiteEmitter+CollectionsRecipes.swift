@@ -90,6 +90,6 @@ extension KitSuiteEmitter {
         "TreeSet<Int>": "Gen<TreeSet<Int>>.smallIntTreeSet()",
         "TreeDictionary<Int, Int>": "Gen<TreeDictionary<Int, Int>>.smallIntTreeDictionary()",
         "BitSet": "Gen<BitSet>.smallBitSet()",
-        "Heap<Int>": "Gen<Heap<Int>>.smallIntHeap()"
+        "Heap<Int>": "Gen<Heap<Int>>.smallIntHeap()",
     ]
 }

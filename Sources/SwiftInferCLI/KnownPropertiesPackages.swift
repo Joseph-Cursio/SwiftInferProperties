@@ -63,7 +63,7 @@ enum KnownPropertiesPackages {
             "HeapModule": dep("swift-collections", collections, "from: \"1.1.0\"", "HeapModule"),
             "Collections": dep("swift-collections", collections, "from: \"1.1.0\"", "Collections"),
             // swift-algorithms.
-            "Algorithms": dep("swift-algorithms", algorithms, "from: \"1.2.0\"", "Algorithms")
+            "Algorithms": dep("swift-algorithms", algorithms, "from: \"1.2.0\"", "Algorithms"),
         ]
     }()
 

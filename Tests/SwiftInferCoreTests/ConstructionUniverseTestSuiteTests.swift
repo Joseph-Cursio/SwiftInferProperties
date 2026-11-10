@@ -20,7 +20,7 @@ struct ConstructionUniverseTestSuiteTests {
             "Sources/Lib/Item.swift": "struct Item { let n: Int }",
             "Sources/Lib/Make.swift": "func make() -> Item { Item(n: 1) }",
             "test/Parse/Item.swift": "struct Item { let n: Int; let id = UUID() }",
-            "test/Parse/Build.swift": "func build() -> Item { Item(n: 1) }"
+            "test/Parse/Build.swift": "func build() -> Item { Item(n: 1) }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(PackagePurity.forScan(of: root).universe == ["Sources/Lib/Item.swift", "Sources/Lib/Make.swift"])

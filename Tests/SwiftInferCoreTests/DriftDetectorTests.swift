@@ -26,7 +26,7 @@ struct DriftDetectorTests {
                 template: "idempotence",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         let warnings = DriftDetector.warnings(
             currentSuggestions: [suggestion],
@@ -108,7 +108,7 @@ struct DriftDetectorTests {
                 template: "idempotence",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         let decisions = Decisions(records: [
             DecisionRecord(
@@ -118,7 +118,7 @@ struct DriftDetectorTests {
                 tier: .strong,
                 decision: .skipped,
                 timestamp: Date(timeIntervalSince1970: 0)
-            )
+            ),
         ])
         let warnings = DriftDetector.warnings(
             currentSuggestions: [strongNew, strongInBaseline, strongDecided, likelyNew],
@@ -143,7 +143,7 @@ struct DriftDetectorTests {
         #expect(warnings.map(\.identityHash) == [
             first.identity.normalized,
             second.identity.normalized,
-            third.identity.normalized
+            third.identity.normalized,
         ])
     }
 
@@ -191,7 +191,7 @@ struct DriftDetectorTests {
                 tier: .strong,
                 decision: decision,
                 timestamp: Date(timeIntervalSince1970: 0)
-            )
+            ),
         ])
         let warnings = DriftDetector.warnings(
             currentSuggestions: [suggestion],

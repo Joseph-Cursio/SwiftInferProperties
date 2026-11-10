@@ -190,7 +190,7 @@ struct VerifyEvidenceStalenessTests {
                     displayName: "strippingGenericParameters(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "CarrierKindResolver.swift", line: 224, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [
                 Signal(kind: .exactNameMatch, weight: weight, detail: "stripping")
@@ -277,7 +277,7 @@ struct ApplicableEvidenceTests {
                     displayName: "normalize(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "S.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 40, detail: "n")]),
             generator: .m1Placeholder,

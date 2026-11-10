@@ -93,7 +93,7 @@ struct DiscoverReferenceOracleSpellingTests {
 
     static let symbols = [
         "thickened", "isOwned", "totalWeight", "zeros", "total", "square", "evens", "plain", "failure", "squared",
-        "width"
+        "width",
     ]
 
     /// One function's entry in the advisory block, every fixture function seeded.

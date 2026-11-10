@@ -34,7 +34,7 @@ struct ArityFreeTotalityTests {
                     isInstanceMethod: isInstanceMethod,
                     isMutatingMethod: isMutatingMethod,
                     qualifiedTypeName: carrier
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -187,7 +187,7 @@ struct ArityFreeTotalityTests {
         let subjects = [
             Self.suggestion(displayName: "a(_:)", signature: "(Int) -> Bool", carrier: "T", isInstanceMethod: true),
             Self.suggestion(displayName: "b(_:_:_:)", signature: "(Int, Int, Int) -> Bool", carrier: "T"),
-            Self.suggestion(template: "input-totality", displayName: "c(_:)", signature: "(Data) -> X", carrier: "T")
+            Self.suggestion(template: "input-totality", displayName: "c(_:)", signature: "(Data) -> X", carrier: "T"),
         ]
         for subject in subjects {
             let reason = StubApplicationArity.declineReason(for: subject) ?? ""

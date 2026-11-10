@@ -20,13 +20,13 @@ struct ViewModelVerifyInteractionSurveyTests {
             observability: .observableMacro,
             stateFields: [
                 .init(name: "items", typeText: "[Int]", isMutable: true),
-                .init(name: "selected", typeText: "Set<Int>", isMutable: true)
+                .init(name: "selected", typeText: "Set<Int>", isMutable: true),
             ],
             actions: [
                 ViewModelAction(
                     name: "selectAll", parameterTypes: [], parameters: [],
                     isAsync: false, isThrows: false, mutatesStateDirectly: true
-                )
+                ),
             ]
         )
     }

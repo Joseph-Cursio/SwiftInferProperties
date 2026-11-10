@@ -30,7 +30,7 @@ public enum StateMachineTemplate {
                         detail: "`\(pair.forward.name)` and `\(pair.backward.name)` move the same "
                             + "state in opposite directions (\(pair.convention.rawValue)) — they owe "
                             + "`\(pair.backward.name) ∘ \(pair.forward.name) == id`"
-                    )
+                    ),
                 ]
             },
             evidence: { pair in [pair.forward.inferenceEvidence, pair.backward.inferenceEvidence] },
@@ -66,7 +66,7 @@ public enum StateMachineTemplate {
                 + "than on the code.",
             "This law does not need the moves to be pure — they may reload from the network. It "
                 + "quantifies over the STATE they leave behind, so fake the I/O and assert on the "
-                + "state; that is what makes an impure view model property-testable at all."
+                + "state; that is what makes an impure view model property-testable at all.",
         ]
     }
 }

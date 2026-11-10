@@ -68,7 +68,7 @@ extension KitCoverageDriftTests {
         .codableRoundTrip: ["Codable.roundTripFidelity"],
         .monoidIdentity: ["Monoid.combineLeftIdentity", "Monoid.combineRightIdentity"],
         .groupInverse: ["Group.combineLeftInverse", "Group.combineRightInverse"],
-        .semilatticeIdempotence: ["Semilattice.combineIdempotence"]
+        .semilatticeIdempotence: ["Semilattice.combineIdempotence"],
     ]
 
     /// Law identifiers the kit declares, keyed by suite, read from the resolved checkout.

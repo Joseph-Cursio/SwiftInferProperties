@@ -53,7 +53,7 @@ public struct EquatableResolver: Sendable {
         "Float", "Double",
         "String",
         "UUID", "Date", "URL",
-        "Data"
+        "Data",
     ])
 
     /// Protocols whose presence in an inheritance clause implies

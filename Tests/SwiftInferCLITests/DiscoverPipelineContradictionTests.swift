@@ -24,7 +24,7 @@ struct DiscoverPipelineContradictionTests {
         let normalized = normalizeDPDiagnostics(diagnostics.lines, fixture: directory)
         let expected = [
             "contradiction: dropped commutativity suggestion for merge(_:_:)"
-                + " at <FIXTURE>/Source.swift:2 — type 'Any' is not Equatable (PRD §5.6 #2)"
+                + " at <FIXTURE>/Source.swift:2 — type 'Any' is not Equatable (PRD §5.6 #2)",
         ]
         #expect(normalized == expected)
     }
@@ -50,7 +50,7 @@ struct DiscoverPipelineContradictionTests {
         let normalized = normalizeDPDiagnostics(diagnostics.lines, fixture: directory)
         let expected = [
             "contradiction: dropped round-trip suggestion for wrap(_:)"
-                + " at <FIXTURE>/Source.swift:2 — type '(Int) -> Int' is not Equatable (PRD §5.6 #3)"
+                + " at <FIXTURE>/Source.swift:2 — type '(Int) -> Int' is not Equatable (PRD §5.6 #3)",
         ]
         #expect(normalized == expected)
     }

@@ -43,7 +43,7 @@ public enum BiconditionalInteractionTemplate: InteractionTemplateFamily {
                 + "(PRD §5.6).",
             "Reducer-shaped signature (\(candidate.signatureShape.rawValue)) — "
                 + "verifier asserts the two projected Bools agree at each "
-                + "action step (whole-State Equatable not required)."
+                + "action step (whole-State Equatable not required).",
         ]
     }
 
@@ -69,7 +69,7 @@ public enum BiconditionalInteractionTemplate: InteractionTemplateFamily {
             "Initial-state invariant may not hold if `State.init()` sets "
                 + "`\(witness.boolPropertyName)` to `true` with "
                 + "`\(witness.optionalPropertyName) == nil` (or vice versa).",
-            crossReferenceCaveat
+            crossReferenceCaveat,
         ]
     }
 

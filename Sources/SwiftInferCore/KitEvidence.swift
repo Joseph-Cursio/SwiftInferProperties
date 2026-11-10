@@ -102,7 +102,7 @@ public struct KitEvidenceLog: Sendable, Equatable, Codable {
         "Equatable.symmetry",
         "Equatable.transitivity",
         "Equatable.negationConsistency",
-        "Hashable.equalityConsistency"
+        "Hashable.equalityConsistency",
     ]
 
     /// The kit's measured verdict that this type's `==` cannot be trusted as an oracle.

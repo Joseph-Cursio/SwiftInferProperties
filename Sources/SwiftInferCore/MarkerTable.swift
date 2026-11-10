@@ -135,7 +135,7 @@ public struct MarkerTable: Sendable, Equatable, Codable {
         MarkerPair(positive: "Success", negative: "Failure"),
         MarkerPair(positive: "Accept", negative: "Reject"),
         MarkerPair(positive: "Pass", negative: "Fail"),
-        MarkerPair(positive: "Allowed", negative: "Forbidden")
+        MarkerPair(positive: "Allowed", negative: "Forbidden"),
     ]
 
     /// Curated N-class marker sets — empty per M13 plan OD #2. N-class

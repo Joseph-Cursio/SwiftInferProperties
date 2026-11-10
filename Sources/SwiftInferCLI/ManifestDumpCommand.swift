@@ -35,7 +35,7 @@ enum ManifestDumpCommand {
         [
             "swift", "package", "dump-package",
             "--package-path", packageRoot.path,
-            "--scratch-path", scratchDirectory.path
+            "--scratch-path", scratchDirectory.path,
         ]
     }
 }

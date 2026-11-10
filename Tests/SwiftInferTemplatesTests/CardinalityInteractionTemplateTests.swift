@@ -43,7 +43,7 @@ struct CardinalityInteractionTemplateTests {
     ) -> CardinalityWitness {
         CardinalityWitness(fields: fields ?? [
             field(name: "activeSheet"),
-            field(name: "activeAlert")
+            field(name: "activeAlert"),
         ])
     }
 
@@ -93,7 +93,7 @@ struct CardinalityInteractionTemplateTests {
             candidate: candidate(),
             witness: witness(fields: [
                 field(name: "isShowingSheet", kind: .boolFlag),
-                field(name: "isPresentingDetail", kind: .boolFlag)
+                field(name: "isPresentingDetail", kind: .boolFlag),
             ]),
             firstSeenAt: firstSeenAt
         )
@@ -108,7 +108,7 @@ struct CardinalityInteractionTemplateTests {
             candidate: candidate(),
             witness: witness(fields: [
                 field(name: "activeSheet"),
-                field(name: "isFullScreenPresenting", kind: .boolFlag)
+                field(name: "isFullScreenPresenting", kind: .boolFlag),
             ]),
             firstSeenAt: firstSeenAt
         )

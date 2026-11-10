@@ -41,7 +41,7 @@ struct DiscoverDocstringAdviceTests {
         SeedManifest(seeds: [
             .init(file: "Source.swift", line: 3, symbol: "isValidName"),
             .init(file: "Source.swift", line: 6, symbol: "backoffDelay"),
-            .init(file: "Source.swift", line: 9, symbol: "weighted")
+            .init(file: "Source.swift", line: 9, symbol: "weighted"),
         ])
     }
 
@@ -217,7 +217,7 @@ struct DiscoverDocstringAdviceTests {
             docstringAdvice: true,
             seedManifest: SeedManifest(seeds: [
                 .init(file: "Source.swift", line: 2, symbol: "clip"),
-                .init(file: "Source.swift", line: 7, symbol: "backoffDelay")
+                .init(file: "Source.swift", line: 7, symbol: "backoffDelay"),
             ]),
             output: recording
         )

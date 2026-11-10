@@ -41,7 +41,7 @@ struct SortedOutputReaderTests {
         #expect(ordering.keys == [
             SortKey(path: "fileCount", ascending: false),
             SortKey(path: "findingCount", ascending: false),
-            SortKey(path: "ruleID", ascending: true)
+            SortKey(path: "ruleID", ascending: true),
         ])
     }
 
@@ -113,7 +113,7 @@ struct SortedOutputReaderTests {
             let ordered = xs.sorted { $0.size < $1.size }
             return ordered.count
         }
-        """
+        """,
     ])
     func declinesWhatItCannotRestate(source: String) {
         #expect(read(source) == nil)

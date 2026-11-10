@@ -111,7 +111,7 @@ struct IdempotencePrecisionBoundaryTests {
             transform: { $0.lowercased() },
             expectedConfident: false,
             expectedLawHolds: true
-        )
+        ),
     ]
 
     @Test

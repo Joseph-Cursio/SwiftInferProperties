@@ -41,7 +41,7 @@ public enum SelectionSubsetTemplate {
     public static let curatedVerbPrefixes: [String] = [
         "select", "filter", "keep", "retain", "matching", "applicable",
         "restrict", "only", "pick", "choose",
-        "layer", "chain", "ancestor", "lineage", "descendant"
+        "layer", "chain", "ancestor", "lineage", "descendant",
     ]
 
     /// The resolved container/member/element for a matching selection.
@@ -137,7 +137,7 @@ public enum SelectionSubsetTemplate {
                 weight: 15,
                 detail: "Curated selection verb match — it selects, so it owes "
                     + "`result ⊆ \(match.containerType).\(match.collectionMember)`"
-            )
+            ),
         ]
     }
 
@@ -164,7 +164,7 @@ public enum SelectionSubsetTemplate {
                 + "obligation — subset is owed here because the name asserts SELECTION. If this "
                 + "function nevertheless derives what it returns, that is a finding about the NAME.",
             "The element type must be Equatable (or Hashable) for the membership check to compile; "
-                + "this tool does not verify conformance — confirm before applying."
+                + "this tool does not verify conformance — confirm before applying.",
         ]
     }
 }

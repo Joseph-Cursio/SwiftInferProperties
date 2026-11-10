@@ -48,7 +48,7 @@ struct ConservationSurveyCorpusTests {
             // cycle 140 — widened: a recompute-style true positive and a
             // clear-without-reset false positive.
             "CartReducer.reduce state.itemCount == state.lineItems.count",
-            "RosterReducer.reduce state.memberCount == state.members.count"
+            "RosterReducer.reduce state.memberCount == state.members.count",
         ]
         #expect(found == expected)
 

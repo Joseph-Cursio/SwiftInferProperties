@@ -51,7 +51,7 @@ public enum ScaledUnitConsistencyTemplate {
                 weight: 30,
                 detail: "Both are static constructors returning \(shape.typeName), so they "
                     + "are two spellings of one value and must agree"
-            )
+            ),
         ]
         if shape.familySize >= 3 {
             signals.append(Signal(
@@ -68,7 +68,7 @@ public enum ScaledUnitConsistencyTemplate {
         [
             "Stated between constructors rather than against a decomposition: the ratio is "
                 + "all this needs, so it says nothing about how \(shape.typeName) stores the "
-                + "value and reaches the same defect — a wrong conversion constant"
+                + "value and reaches the same defect — a wrong conversion constant",
         ]
     }
 
@@ -93,7 +93,7 @@ public enum ScaledUnitConsistencyTemplate {
                 + "and 1024 in others, and both are defensible. Time prefixes are "
                 + "definitional; byte prefixes are a convention the type chooses. If you are "
                 + "reading this on a byte-sized carrier, the template has misfired — please "
-                + "report it."
+                + "report it.",
         ]
     }
 
@@ -112,7 +112,7 @@ public enum ScaledUnitConsistencyTemplate {
                     + "will be a false one. Do keep the boundary of the *bounded* range — "
                     + "the largest `n` whose product still fits is exactly where an "
                     + "off-by-one in the conversion shows up."
-            )
+            ),
         ]
     }
 

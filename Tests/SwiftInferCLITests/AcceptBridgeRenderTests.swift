@@ -69,7 +69,7 @@ struct AcceptBridgeRenderTests {
     @Test func renderSummaryAllPeers() {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let summary = Command.renderSummary(
             decision: .acceptedAsConformance,
@@ -86,7 +86,7 @@ struct AcceptBridgeRenderTests {
     @Test func renderSummaryScopedToPeer() {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let summary = Command.renderSummary(
             decision: .rejected,

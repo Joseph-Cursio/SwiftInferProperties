@@ -212,7 +212,7 @@ public enum InputTotalityTemplate {
             "This law is ROLE-ENTAILED, not a naming conjecture: nothing about \"interpret "
                 + "these bytes\" admits \"unless the bytes are strange\". If it does not hold, "
                 + "that is a finding about the function rather than a reason to skip the "
-                + "property."
+                + "property.",
         ]
     }
 }

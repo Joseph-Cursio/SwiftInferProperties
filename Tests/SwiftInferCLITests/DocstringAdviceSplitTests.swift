@@ -76,7 +76,7 @@ struct DocstringAdviceSplitTests {
             packageRoot: nil,
             summaries: [
                 Self.summary(name: "backoffDelay", doc: Self.backoffDoc),
-                Self.summary(name: "clampedValue", doc: Self.clampDoc)
+                Self.summary(name: "clampedValue", doc: Self.clampDoc),
             ],
             docstringAdvice: true
         )
@@ -157,7 +157,7 @@ struct DocstringAdviceSplitTests {
                     displayName: function,
                     signature: "(Int) -> Int",
                     location: SourceLocation(file: file, line: 3, column: 5)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .typeSymmetrySignature, weight: 30, detail: "")]),
             generator: .m1Placeholder,

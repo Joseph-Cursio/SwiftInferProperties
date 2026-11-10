@@ -37,7 +37,7 @@ struct VerifyResultParserTests {
             exitCode: 5,
             stdout: [
                 "VERIFY_DEFAULT_RESULT: PASS",
-                "VERIFY_DEFAULT_TRIALS: 100"
+                "VERIFY_DEFAULT_TRIALS: 100",
             ].joined(separator: "\n")
         )
         #expect(VerifyResultParser.parse(raw) == .bothPass(defaultTrials: 100, edgeTrials: 0, edgeSampled: 0))
@@ -135,7 +135,7 @@ struct VerifyResultParserTests {
                 "VERIFY_DEFAULT_TRIALS: 100",
                 "VERIFY_EDGE_RESULT: PASS",
                 "VERIFY_EDGE_TRIALS: 100",
-                "VERIFY_EDGE_SAMPLED: 12"
+                "VERIFY_EDGE_SAMPLED: 12",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)
@@ -155,7 +155,7 @@ struct VerifyResultParserTests {
                 "VERIFY_EDGE_RESULT: PASS",
                 "VERIFY_EDGE_TRIALS: 100",
                 "VERIFY_EDGE_SAMPLED: 11",
-                "bye"
+                "bye",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)
@@ -176,7 +176,7 @@ struct VerifyResultParserTests {
                 "VERIFY_EDGE_INPUT: Complex(nan, 0.0)",
                 "VERIFY_EDGE_FORWARD: Complex(nan, nan)",
                 "VERIFY_EDGE_INVERSE: Complex(nan, nan)",
-                "VERIFY_EDGE_INDEX: 1"
+                "VERIFY_EDGE_INDEX: 1",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)
@@ -204,7 +204,7 @@ struct VerifyResultParserTests {
                 "VERIFY_EDGE_INPUT: Complex(1.5, -2.5)",
                 "VERIFY_EDGE_FORWARD: Complex(3.0, -5.0)",
                 "VERIFY_EDGE_INVERSE: Complex(0.0, 0.0)",
-                "VERIFY_EDGE_INDEX: -1"
+                "VERIFY_EDGE_INDEX: -1",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)
@@ -226,7 +226,7 @@ struct VerifyResultParserTests {
                 "VERIFY_DEFAULT_TRIAL: 47",
                 "VERIFY_DEFAULT_INPUT: Complex(0.0042, -1.7e6)",
                 "VERIFY_DEFAULT_FORWARD: Complex(3.1, 2.2)",
-                "VERIFY_DEFAULT_INVERSE: Complex(99.0, 0.0)"
+                "VERIFY_DEFAULT_INVERSE: Complex(99.0, 0.0)",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)
@@ -251,7 +251,7 @@ struct VerifyResultParserTests {
                 "VERIFY_DEFAULT_FORWARD: Complex(1.0, 1.0)",
                 "VERIFY_DEFAULT_INVERSE: Complex(2.0, 2.0)",
                 "VERIFY_DEFAULT_SHRUNK: Complex(0.0, 0.0)",
-                "VERIFY_SHRINK_STEPS: 14"
+                "VERIFY_SHRINK_STEPS: 14",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)
@@ -306,7 +306,7 @@ struct VerifyResultParserTests {
                 "VERIFY_DEFAULT_TRIALS: 100",
                 "VERIFY_EDGE_RESULT: PASS",
                 "VERIFY_EDGE_TRIALS: 100",
-                "VERIFY_EDGE_SAMPLED: 12"
+                "VERIFY_EDGE_SAMPLED: 12",
             ].joined(separator: "\n")
         )
         let outcome = VerifyResultParser.parse(raw)

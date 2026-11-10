@@ -99,7 +99,7 @@ struct VerifyEvidenceTests {
                 detail: nil,
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.64.0"
-            )
+            ),
         ])
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
@@ -222,7 +222,7 @@ struct VerifyEvidenceLogMergeTests {
             makeEvidence(identity: "CCC3333333333333", capturedAt: Date(timeIntervalSince1970: 300))
         ]).merge(VerifyEvidenceLog(records: [
             makeEvidence(identity: "AAA1111111111111", capturedAt: Date(timeIntervalSince1970: 100)),
-            makeEvidence(identity: "BBB2222222222222", capturedAt: Date(timeIntervalSince1970: 200))
+            makeEvidence(identity: "BBB2222222222222", capturedAt: Date(timeIntervalSince1970: 200)),
         ]))
         #expect(merged.records.map(\.identityHash) == [
             "AAA1111111111111", "BBB2222222222222", "CCC3333333333333"

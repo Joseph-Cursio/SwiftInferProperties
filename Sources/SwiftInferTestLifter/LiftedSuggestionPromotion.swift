@@ -181,7 +181,7 @@ public extension LiftedSuggestion {
                     displayName: "\(hint.predicateName)(_:)",
                     signature: "(\(hint.argTypeName)) -> Bool",
                     location: SourceLocation(file: "<corpus>", line: 0, column: 0)
-                )
+                ),
             ]
 
         case .nClassEquivalenceClass(let hint):
@@ -192,7 +192,7 @@ public extension LiftedSuggestion {
                     displayName: "\(hint.predicateName)(_:)",
                     signature: "(\(hint.argTypeName)) -> \(hint.returnTypeName)",
                     location: SourceLocation(file: "<corpus>", line: 0, column: 0)
-                )
+                ),
             ]
 
         case .consumerProducerChain(let hint):
@@ -206,7 +206,7 @@ public extension LiftedSuggestion {
                     displayName: "\(hint.reverseName)(_:)",
                     signature: "(\(hint.domainTypeName)) -> ?",
                     location: SourceLocation(file: "<corpus>", line: 0, column: 0)
-                )
+                ),
             ]
 
         default:
@@ -233,7 +233,7 @@ public extension LiftedSuggestion {
                     callee: detection.subjectCallee,
                     typeT: typeT,
                     location: site(detection.location, fallback)
-                )
+                ),
             ]
 
         case .idempotence(let detection):
@@ -242,7 +242,7 @@ public extension LiftedSuggestion {
                     callee: detection.calleeName,
                     typeT: typeT,
                     location: site(detection.assertionLocation, fallback)
-                )
+                ),
             ]
 
         case .commutativity(let detection):
@@ -251,7 +251,7 @@ public extension LiftedSuggestion {
                     callee: detection.calleeName,
                     typeT: typeT,
                     location: site(detection.assertionLocation, fallback)
-                )
+                ),
             ]
 
         case .monotonicity(let detection):
@@ -263,7 +263,7 @@ public extension LiftedSuggestion {
                     callee: detection.calleeName,
                     typeT: typeT,
                     location: site(detection.assertionLocation, fallback)
-                )
+                ),
             ]
 
         case .reduceEquivalence(let detection):
@@ -309,7 +309,7 @@ public extension LiftedSuggestion {
                 displayName: "\(detection.backwardCallee)(_:)",
                 signature: "(\(typeU)) -> \(typeT)",
                 location: site(detection.assertionLocation, fallback)
-            )
+            ),
         ]
     }
 

@@ -51,7 +51,7 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: ["IteratorProtocol"],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -224,7 +224,7 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: ["IteratorProtocol"],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
         // Without veto (cycle-17 baseline): 30 type-symmetry + 5 carrier
         // + 10 lifted = 45 → Likely. With V1.21.A veto: Suppressed.
@@ -246,7 +246,7 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
         let suggestion = IdempotenceTemplate.suggest(
             forLifted: lift,
@@ -270,7 +270,7 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
         let lift = LiftedTransformation.lift(
             summary("removeAll", carrier: "Bag"),

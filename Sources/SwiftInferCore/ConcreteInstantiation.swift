@@ -38,7 +38,7 @@ public enum ConcreteInstantiation {
         "Equatable", "Hashable", "Comparable", "Codable", "Encodable", "Decodable",
         "Sendable", "AdditiveArithmetic", "Numeric", "SignedNumeric", "BinaryInteger",
         "FixedWidthInteger", "SignedInteger", "Strideable", "CustomStringConvertible",
-        "LosslessStringConvertible", "ExpressibleByIntegerLiteral", "Any", "AnyObject"
+        "LosslessStringConvertible", "ExpressibleByIntegerLiteral", "Any", "AnyObject",
     ]
 
     /// The name to write in emitted source, or `nil` when no concrete instantiation can be

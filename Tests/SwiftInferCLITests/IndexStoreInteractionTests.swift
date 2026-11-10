@@ -102,7 +102,7 @@ struct IndexStoreInteractionTests {
         )
         #expect(result.interactionEntries.map(\.identityHash) == [
             "0x00000000000000A1",
-            "0x00000000000000A2"
+            "0x00000000000000A2",
         ])
         #expect(result.updatedAt == "2026-06-14T12:00:00Z")
     }

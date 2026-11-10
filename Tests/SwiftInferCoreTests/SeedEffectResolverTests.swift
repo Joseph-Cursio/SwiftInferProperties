@@ -48,7 +48,7 @@ struct SeedEffectResolverTests {
             SeedManifest.Seed(
                 file: "Orders.swift", line: 11, symbol: symbol,
                 rule: "Idempotency Violation", kind: .idempotency, effect: effect
-            )
+            ),
         ])
     }
 

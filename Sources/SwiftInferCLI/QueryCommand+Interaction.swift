@@ -70,7 +70,7 @@ extension SwiftInferCommand.Query {
             "  decision: \(decisionDisplay)"
                 + (entry.decisionAt.map { " (\($0))" } ?? "")
                 + ", first seen: \(entry.firstSeenAt), last seen: \(entry.lastSeenAt)"
-                + ", identity: \(entry.identityHash)"
+                + ", identity: \(entry.identityHash)",
         ]
     }
 }

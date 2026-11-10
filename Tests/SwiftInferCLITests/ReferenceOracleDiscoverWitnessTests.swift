@@ -39,7 +39,7 @@ struct ReferenceOracleDiscoverWitnessTests {
         WitnessCase(owner: "OracleDiscoverTally", name: "adding", body: "amount &+ total"),
         WitnessCase(owner: "Shelf", name: "thickened", body: "OracleDiscoverLibrary.Book(pages: book.pages &* 2)"),
         WitnessCase(owner: "OracleDiscoverAccount", name: "isOwned", body: "id == owner"),
-        WitnessCase(owner: "[OracleDiscoverBead]", name: "totalWeight", body: "map(\\.weight).reduce(bonus, &+)")
+        WitnessCase(owner: "[OracleDiscoverBead]", name: "totalWeight", body: "map(\\.weight).reduce(bonus, &+)"),
     ]
 
     /// The scanned functions, and the context discover builds from the same scan.

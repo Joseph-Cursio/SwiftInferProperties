@@ -164,7 +164,7 @@ struct InteractiveTriageModuleImportTests {
                 kind: .subjectNotVisibleToTests,
                 weight: 0,
                 detail: "no test can name the subject: it is `private` or `fileprivate`"
-            )
+            ),
         ])
         let wrapped = InteractiveTriage.wrappedFileContents(stub: "\n@Test func x() async {}", suggestion: suggestion)
         #expect(wrapped.contains("// Access: no test can name the subject"))
@@ -239,7 +239,7 @@ struct InteractiveTriageModuleImportTests {
                 displayName: "sanitize(_:)",
                 signature: "(String) -> String",
                 location: SourceLocation(file: file, line: line, column: 1)
-            )
+            ),
         ]
         suggestion.score = Score(advisorySignals: suggestion.score.signals + [
             Signal(kind: .subjectNotVisibleToTests, weight: 0, detail: "no test can name the subject")

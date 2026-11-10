@@ -159,7 +159,7 @@ struct CalleeReferenceTests {
         ("f(from:)", ["from"]),
         ("f(_:_:)", [nil, nil]),
         ("f(of:with:)", ["of", "with"]),
-        ("f(_:to:)", [nil, "to"])
+        ("f(_:to:)", [nil, "to"]),
     ])
     func labelParsing(displayName: String, expected: [String?]) {
         #expect(CalleeReference(evidence: evidence(displayName))?.argumentLabels == expected)

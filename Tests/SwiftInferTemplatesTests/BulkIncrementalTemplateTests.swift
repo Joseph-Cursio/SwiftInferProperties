@@ -69,7 +69,7 @@ struct BulkIncrementalTemplateTests {
         let shapes = BulkIncrementalPairing.candidates(
             in: [
                 inserter("insert", param: "Bound"),
-                inserter("insert", param: "Range<Bound>", label: "contentsOf")
+                inserter("insert", param: "Range<Bound>", label: "contentsOf"),
             ],
             typeDecls: [decl(inits: [[], ["[Range<Bound>]"]])]
         )

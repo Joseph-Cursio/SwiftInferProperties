@@ -20,7 +20,7 @@ struct NClassEquivalenceClassHintTests {
             suggestedGeneratorsByMarker: [
                 "Small": "Gen<Box>.gen().filter { size($0) == .small }",
                 "Medium": "Gen<Box>.gen().filter { size($0) == .medium }",
-                "Large": "Gen<Box>.gen().filter { size($0) == .large }"
+                "Large": "Gen<Box>.gen().filter { size($0) == .large }",
             ]
         )
         #expect(hint.predicateName == "size")

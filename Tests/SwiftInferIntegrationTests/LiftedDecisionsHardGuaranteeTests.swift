@@ -93,7 +93,7 @@ struct LiftedDecisionsHardGuaranteeTests {
         let sourceFiles = [
             packageRoot.appendingPathComponent("Sources/Foo/Filter.swift"),
             packageRoot.appendingPathComponent("Tests/FooTests/FilterTests.swift"),
-            packageRoot.appendingPathComponent("Package.swift")
+            packageRoot.appendingPathComponent("Package.swift"),
         ]
         for sourceFile in sourceFiles {
             #expect(

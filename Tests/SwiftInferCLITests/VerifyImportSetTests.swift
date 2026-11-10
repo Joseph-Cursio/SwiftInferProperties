@@ -68,7 +68,7 @@ struct VerifyImportSetTests {
     @Test func initializerParametersAndEnumPayloadsAreReached() {
         let shapes = [
             "ByInit": shape("ByInit", initParams: ["FromInit"]),
-            "ByCase": shape("ByCase", enumCase: ("one", ["FromCase"]))
+            "ByCase": shape("ByCase", enumCase: ("one", ["FromCase"])),
         ]
         #expect(VerifyImportSet.referencedTypeNames(carrier: "ByInit", shapes: shapes)
             .contains("FromInit"))
@@ -80,7 +80,7 @@ struct VerifyImportSetTests {
     @Test func theWalkIsTransitive() {
         let shapes = [
             "A": shape("A", members: [("b", "B")]),
-            "B": shape("B", members: [("c", "C")])
+            "B": shape("B", members: [("c", "C")]),
         ]
         let names = VerifyImportSet.referencedTypeNames(carrier: "A", shapes: shapes)
         #expect(names.isSuperset(of: ["A", "B", "C"]))
@@ -92,7 +92,7 @@ struct VerifyImportSetTests {
     @Test func aCycleTerminates() {
         let shapes = [
             "Ping": shape("Ping", members: [("pong", "Pong")]),
-            "Pong": shape("Pong", members: [("ping", "Ping")])
+            "Pong": shape("Pong", members: [("ping", "Ping")]),
         ]
         let names = VerifyImportSet.referencedTypeNames(carrier: "Ping", shapes: shapes)
         #expect(names.isSuperset(of: ["Ping", "Pong"]))
@@ -165,7 +165,7 @@ struct VerifyImportSetTests {
             entryModule: "Templates",
             sourceFileByTypeName: [
                 "Summary": root.appendingPathComponent("Sources/Core/Summary.swift").path,
-                "Rule": root.appendingPathComponent("Sources/Templates/Rule.swift").path
+                "Rule": root.appendingPathComponent("Sources/Templates/Rule.swift").path,
             ],
             packageRoot: root
         )

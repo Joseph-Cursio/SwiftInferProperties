@@ -52,7 +52,7 @@ struct SubsetNameContractTests {
             hasUserGen: false,
             storedMembers: [StoredMember(name: "configs", typeName: "[DiscoveredConfig]")],
             hasUserInit: false
-        )
+        ),
     ]
 
     private func fn(_ name: String, _ params: [String], returns: String) -> FunctionSummary {
@@ -90,7 +90,7 @@ struct SubsetNameContractTests {
             "filterAndMap",         // the connective, without `then`
             "selectAndTransform",
             "keepNormalizedPaths",  // a transform verb with no connective at all
-            "filterMappedRules"
+            "filterMappedRules",
         ] {
             #expect(
                 FilterSubsetTemplate.nameAnnouncesASecondOperation(name),
@@ -112,7 +112,7 @@ struct SubsetNameContractTests {
             "filterRenderedLines",      // nor `render`
             "filterAndroidTargets",     // `android` must not tokenise to the connective `and`
             "selectRules",
-            "keepRules"
+            "keepRules",
         ] {
             #expect(
                 FilterSubsetTemplate.nameAnnouncesASecondOperation(name) == false,

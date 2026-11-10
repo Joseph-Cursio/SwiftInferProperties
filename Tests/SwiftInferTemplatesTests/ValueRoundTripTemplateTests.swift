@@ -78,7 +78,7 @@ struct ValueRoundTripTemplateTests {
         ("extractStringValue", "StringLiteralExprSyntax", "String?"),
         ("decodedValue", "Data", "Widget?"),
         ("parsedScheme", "URL", "Scheme?"),
-        ("literalContent", "TokenSyntax", "String?")
+        ("literalContent", "TokenSyntax", "String?"),
     ])
     func readerVerbFamiliesFire(name: String, representation: String, value: String) {
         let summary = readerFn(name, params: [param("from", representation)], returns: value)

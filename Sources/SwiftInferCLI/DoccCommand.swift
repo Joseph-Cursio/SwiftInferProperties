@@ -112,7 +112,7 @@ extension SwiftInferCommand {
             var lines = [
                 "\(verb) \(pages.count) DocC page(s) "
                     + "(\(properties.count) verified propert\(properties.count == 1 ? "y" : "ies")) "
-                    + "→ \(outputDir.path)"
+                    + "→ \(outputDir.path)",
             ]
             for page in pages { lines.append("  \(page.fileName)") }
             return lines.joined(separator: "\n")

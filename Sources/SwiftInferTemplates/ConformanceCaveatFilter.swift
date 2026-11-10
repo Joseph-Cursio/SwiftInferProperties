@@ -42,7 +42,7 @@ public enum ConformanceCaveatFilter {
         "T must conform to Equatable",
         "X must conform to Equatable",
         "The element type must be Equatable",
-        "The element type must be Hashable"
+        "The element type must be Hashable",
     ]
 
     /// Whether `caveat` is one of the conformance caveats this filter governs.

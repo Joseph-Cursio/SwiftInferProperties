@@ -45,7 +45,7 @@ public enum MonotonicityTemplate {
         "score",
         "depth",
         "height",
-        "weight"
+        "weight",
     ]
 
     /// Curated suffix patterns. Functions named `userCount`, `pageSize`,
@@ -55,7 +55,7 @@ public enum MonotonicityTemplate {
     /// vocabulary.
     public static let curatedSuffixes: [String] = [
         "Count",
-        "Size"
+        "Size",
     ]
 
     /// Curated `Comparable` codomain types per the M7.1 plan. The plan
@@ -84,7 +84,7 @@ public enum MonotonicityTemplate {
         "Double",
         "Float",
         "Date",
-        "Duration"
+        "Duration",
     ]
 
     /// Build a suggestion for `summary`, or return `nil` if the type
@@ -181,7 +181,7 @@ public enum MonotonicityTemplate {
                 + "M7.1 recognises.",
             "Possible-tier by default per the §5.2 caveat — explicit "
                 + "@CheckProperty(.monotonic(over:)) annotation escalates to Likely "
-                + "(M5 macro extension is the opt-in path)."
+                + "(M5 macro extension is the opt-in path).",
         ]
     }
 
@@ -289,7 +289,7 @@ public enum MonotonicityTemplate {
                 + "M7.1 recognises.",
             "Possible-tier by default per the §5.2 caveat — explicit "
                 + "@CheckProperty(.monotonic(over:)) annotation escalates to Likely "
-                + "(M5 macro extension is the opt-in path)."
+                + "(M5 macro extension is the opt-in path).",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

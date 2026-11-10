@@ -19,7 +19,7 @@ struct UnorderedCarrierGateTests {
                     displayName: "area(_:)",
                     signature: signature,
                     location: SourceLocation(file: "F.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),

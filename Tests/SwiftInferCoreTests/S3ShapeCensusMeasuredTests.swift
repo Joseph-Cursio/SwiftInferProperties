@@ -34,7 +34,7 @@ struct S3ShapeCensusMeasuredTests {
     static let removalVerbs = [
         "strip", "stripping", "stripped", "trim", "trimmed", "trimming",
         "drop", "dropping", "remove", "removing", "removed", "deleting",
-        "sanitize", "sanitized", "filtered", "filtering", "excluding", "without"
+        "sanitize", "sanitized", "filtered", "filtering", "excluding", "without",
     ]
 
     /// Names that denote a measure — a count, an offset, an extent. A measure is non-negative,
@@ -80,7 +80,7 @@ struct S3ShapeCensusMeasuredTests {
         var all: [Shape] {
             [
                 parameterised, gatedA, removal, measure, closedRole, closedRoleGap,
-                closedRoleOverlap, fieldMeasure, fieldMeasureForeign, anyRole, unary
+                closedRoleOverlap, fieldMeasure, fieldMeasureForeign, anyRole, unary,
             ]
         }
     }

@@ -74,7 +74,7 @@ struct RangeLawTemplateTests {
         ("Clamped to [0, 255].", "0", "255"),
         ("A percentage, between 0 and 100.", "0", "100"),
         ("Ranges from -1 to 1.", "-1", "1"),
-        ("Opacity, 0.0…1.0", "0.0", "1.0")
+        ("Opacity, 0.0…1.0", "0.0", "1.0"),
     ])
     func rangeShapes(doc: String, lower: String, upper: String) {
         #expect(DocumentedRangeTemplate.statedRange(in: doc) == DocumentedRange(lower: lower, upper: upper))
@@ -82,7 +82,7 @@ struct RangeLawTemplateTests {
 
     @Test("no range, several ranges, a reversed range, or a half-open one", arguments: [
         "Index into the table.", "Either 0...1 or 0...100, depending.", "From 10 to 1, counting down.",
-        "Unit interval, half-open: 0..<1", "Version 1.2 to 1.3 of the format"
+        "Unit interval, half-open: 0..<1", "Version 1.2 to 1.3 of the format",
     ])
     func noRange(doc: String) {
         // The last is not one of the shapes: a bare `a to b` is read only inside parentheses or

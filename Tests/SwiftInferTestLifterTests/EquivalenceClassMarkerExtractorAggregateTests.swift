@@ -37,7 +37,7 @@ struct ECMarkerExtractorAggregateTests {
             (name: "testValid_c", body: "XCTAssertTrue(isValid(\"p@q\"))"),
             (name: "testInvalid_a", body: "XCTAssertFalse(isValid(\"abc\"))"),
             (name: "testInvalid_b", body: "XCTAssertFalse(isValid(\"\"))"),
-            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"@\"))")
+            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"@\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
@@ -64,7 +64,7 @@ struct ECMarkerExtractorAggregateTests {
             (name: "testValid_phoneC", body: "XCTAssertTrue(isValidPhone(\"789\"))"),
             (name: "testInvalid_phoneA", body: "XCTAssertFalse(isValidPhone(\"abc\"))"),
             (name: "testInvalid_phoneB", body: "XCTAssertFalse(isValidPhone(\"\"))"),
-            (name: "testInvalid_phoneC", body: "XCTAssertFalse(isValidPhone(\"!\"))")
+            (name: "testInvalid_phoneC", body: "XCTAssertFalse(isValidPhone(\"!\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
@@ -83,7 +83,7 @@ struct ECMarkerExtractorAggregateTests {
             (name: "testValid_outlier", body: "XCTAssertFalse(isValid(\"a@b\"))"),
             (name: "testInvalid_a", body: "XCTAssertFalse(isValid(\"abc\"))"),
             (name: "testInvalid_b", body: "XCTAssertFalse(isValid(\"\"))"),
-            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"@\"))")
+            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"@\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
@@ -121,7 +121,7 @@ struct ECMarkerExtractorAggregateTests {
             (name: "testValid_c", body: "XCTAssertTrue(isValid(\"c\"))"),
             (name: "testInvalid_a", body: "XCTAssertFalse(isValid(\"x\"))"),
             (name: "testInvalid_b", body: "XCTAssertFalse(isValid(\"y\"))"),
-            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"z\"))")
+            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
@@ -141,7 +141,7 @@ struct ECMarkerExtractorAggregateTests {
             // requires literal `XCTAssertFalse(predicate(x))` instead.
             (name: "testInvalid_a", body: "XCTAssertTrue(!isValid(\"x\"))"),
             (name: "testInvalid_b", body: "XCTAssertTrue(!isValid(\"y\"))"),
-            (name: "testInvalid_c", body: "XCTAssertTrue(!isValid(\"z\"))")
+            (name: "testInvalid_c", body: "XCTAssertTrue(!isValid(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerPair.defaultTable
@@ -162,7 +162,7 @@ struct ECMarkerExtractorAggregateTests {
             (name: "testValid_c", body: "XCTAssert(isValid(\"c\"))"),
             (name: "testInvalid_a", body: "XCTAssertFalse(isValid(\"x\"))"),
             (name: "testInvalid_b", body: "XCTAssertFalse(isValid(\"y\"))"),
-            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"z\"))")
+            (name: "testInvalid_c", body: "XCTAssertFalse(isValid(\"z\"))"),
         ])
         let candidates = EquivalenceClassMarkerExtractor.extract(
             methods: methods, slices: slices, markerTable: MarkerPair.defaultTable

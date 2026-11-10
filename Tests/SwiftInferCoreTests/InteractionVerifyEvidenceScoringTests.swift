@@ -59,7 +59,7 @@ struct InteractionVerifyEvidenceScoringTests {
                 swiftInferVersion: "1.118.0",
                 excludedActionCount: excludedActionCount,
                 subjectFingerprint: "fixture-\(suggestion.identity.normalized)"
-            )
+            ),
         ]
     }
 

@@ -142,7 +142,7 @@ public enum InversePairTemplate {
                 + "or annotation API extension.",
             "If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case "
                 + "with stronger evidence — inverse-pair only fires when "
-                + "EquatableResolver returns .notEquatable or .unknown for T."
+                + "EquatableResolver returns .notEquatable or .unknown for T.",
         ]
         if let fpCaveat = floatingPointAdvisory(for: pair) {
             caveats.append(fpCaveat)
@@ -330,7 +330,7 @@ extension InversePairTemplate {
                 + "or annotation API extension.",
             "If T conforms to Equatable, RoundTripTemplate (M1.4) handles this case "
                 + "with stronger evidence — inverse-pair only fires when "
-                + "EquatableResolver returns .notEquatable or .unknown for T."
+                + "EquatableResolver returns .notEquatable or .unknown for T.",
         ]
         if let fpCaveat = floatingPointAdvisory(for: pair) {
             caveats.append(fpCaveat)

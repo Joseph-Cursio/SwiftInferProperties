@@ -23,7 +23,7 @@ public enum ValueSemanticDiscoverer {
         "NSMutableArray", "NSMutableDictionary", "NSMutableSet",
         "NSMutableString", "NSMutableData", "NSMutableOrderedSet",
         "NSMutableAttributedString", "NSCache", "NSHashTable",
-        "NSMapTable", "NSPointerArray"
+        "NSMapTable", "NSPointerArray",
     ]
 
     /// Discover value-semantics candidates. Deterministic order (file, line,

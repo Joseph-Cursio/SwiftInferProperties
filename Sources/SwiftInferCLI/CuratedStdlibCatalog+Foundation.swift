@@ -30,6 +30,6 @@ extension CuratedStdlibCatalog {
             "IndexSet", "idempotent under union", "a.union(a) == a",
             "let a = IndexSet(randArr().map { abs($0) }); return a.union(a) == a",
             witnesses: "Semilattice", template: "binary-idempotence"
-        )
+        ),
     ]
 }

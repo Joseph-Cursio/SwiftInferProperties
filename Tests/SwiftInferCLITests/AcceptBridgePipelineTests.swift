@@ -91,7 +91,7 @@ struct AcceptBridgePipelineTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let output = ABRecordingOutput()
 
@@ -120,7 +120,7 @@ struct AcceptBridgePipelineTests {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
             makePeer(family: .biconditional, predicate: "p2"),
-            makePeer(family: .conservation, predicate: "p3")
+            makePeer(family: .conservation, predicate: "p3"),
         ])
         let output = ABRecordingOutput()
 
@@ -149,7 +149,7 @@ struct AcceptBridgePipelineTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         do {
             try Command.runWithBridges(
@@ -181,7 +181,7 @@ struct AcceptBridgePipelineTests {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
             makePeer(family: .biconditional, predicate: "p2"),
-            makePeer(family: .conservation, predicate: "p3")
+            makePeer(family: .conservation, predicate: "p3"),
         ])
 
         try Command.runWithBridges(
@@ -207,7 +207,7 @@ struct AcceptBridgePipelineTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         // runWithBridges uppercases the identity before matching,
         // mirroring accept-interaction's behavior. Pass lowercase to

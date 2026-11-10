@@ -50,7 +50,7 @@ struct ValueSemanticStubEmitterTests {
             ValueSemanticStubEmitter.inputs(
                 for: candidate(surface: [
                     MutationMethod(name: "addOne", isMutating: true, parameterCount: 0),
-                    MutationMethod(name: "set", isMutating: true, parameterCount: 2)      // payload → skipped
+                    MutationMethod(name: "set", isMutating: true, parameterCount: 2),      // payload → skipped
                 ]),
                 moduleName: "Corpus"
             )

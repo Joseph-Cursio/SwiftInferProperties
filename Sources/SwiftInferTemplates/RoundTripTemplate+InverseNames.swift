@@ -62,7 +62,7 @@ extension RoundTripTemplate {
         ("push", "pop"),
         ("insert", "remove"),
         ("open", "close"),
-        ("lock", "unlock")
+        ("lock", "unlock"),
     ]
 
     /// The verbs whose round trip runs through a **store** — a file, a

@@ -58,7 +58,7 @@ public enum DedupGateClassifier {
     /// broad verbs (`contains`, `exists`) fire on ordinary guard-and-return code that is not a gate.
     static let dedupVerbs: Set<String> = [
         "hasHandled", "isHandled", "alreadyHandled", "wasHandled",
-        "isProcessed", "wasProcessed", "isDuplicate", "isKnown", "hasSeen"
+        "isProcessed", "wasProcessed", "isDuplicate", "isKnown", "hasSeen",
     ]
 
     /// Callee base names that read as "fetch the existing row under this key". `query` is the ORM
@@ -76,7 +76,7 @@ public enum DedupGateClassifier {
     /// that genuinely reads "this key was already handled".
     static let stateFlags: Set<String> = [
         "isDeleted", "isHandled", "isProcessed", "isDismissed", "isArchived",
-        "isRevoked", "isAcknowledged", "alreadyHandled", "handled", "processed"
+        "isRevoked", "isAcknowledged", "alreadyHandled", "handled", "processed",
     ]
 
     /// Callee base-name **prefixes** that perform an observable **effect** — the
@@ -90,7 +90,7 @@ public enum DedupGateClassifier {
     static let effectPrefixes: [String] = [
         "insert", "save", "create", "delete", "remove", "update", "upsert",
         "post", "send", "publish", "write", "store", "persist", "commit",
-        "enqueue", "dispatch", "emit", "put", "patch", "mark", "destroy"
+        "enqueue", "dispatch", "emit", "put", "patch", "mark", "destroy",
     ]
 
     /// Callee base-name prefixes that read as a "claim-once" capability in a
@@ -103,7 +103,7 @@ public enum DedupGateClassifier {
     static let capabilityPrefixes: [String] = [
         "canGive", "canAward", "canGrant", "canClaim", "canConsume", "canReserve",
         "canRespond", "canProcess", "canHandle",
-        "shouldProcess", "shouldHandle", "shouldSend", "shouldNotify", "shouldReply"
+        "shouldProcess", "shouldHandle", "shouldSend", "shouldNotify", "shouldReply",
     ]
 
     /// The first dedup gate among the body's top-level statements, or `nil`.

@@ -102,7 +102,7 @@ extension SwiftInferCommand.Discover {
                         kind: .subjectNotVisibleToTests,
                         weight: 0,
                         detail: "no test can name the subject: \(restriction.remedy)"
-                    )
+                    ),
                 ])
             }
             // The lift line follows the remedy and precedes everything else: it is the
@@ -115,7 +115,7 @@ extension SwiftInferCommand.Discover {
                 whyMightBeWrong: [
                     "NO TEST CAN RUN THIS LAW AS WRITTEN: \(restriction.remedy) The law itself is "
                         + "right and the property is worth stating — but the refactor comes "
-                        + "first\(Self.effortClause(for: restriction))."
+                        + "first\(Self.effortClause(for: restriction)).",
                 ] + liftLine + suggestion.explainability.whyMightBeWrong
             )
             return updated

@@ -101,7 +101,7 @@ extension IdempotenceTemplate {
             "Property holds iff `\(lifted.carrier)` has value semantics — a "
                 + "broken copy-on-write implementation or a class-typed stored "
                 + "property would invalidate the lift even though the type "
-                + "passed the structural admission gate."
+                + "passed the structural admission gate.",
         ]
     }
 
@@ -325,7 +325,7 @@ extension IdempotenceTemplate {
             "Property holds iff `\(lifted.carrier)` has value semantics — a "
                 + "broken copy-on-write implementation or a class-typed stored "
                 + "property would invalidate the lift even though the type "
-                + "passed the structural admission gate."
+                + "passed the structural admission gate.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

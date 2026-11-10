@@ -74,7 +74,7 @@ struct FindingGGatePropertyTests {
                 swiftInferVersion: "test",
                 excludedActionCount: excludedActionCount,
                 subjectFingerprint: "fixture-\(suggestion.identity.normalized)"
-            )
+            ),
         ]
     }
 

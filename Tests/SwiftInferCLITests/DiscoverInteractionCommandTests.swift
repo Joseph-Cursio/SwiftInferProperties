@@ -60,7 +60,7 @@ struct DiscoverInteractionCommandTests {
         let parsed = try Command.parse([
             "--target", "MyApp",
             "--reducer", "Inbox.body",
-            "--include-possible"
+            "--include-possible",
         ])
         #expect(parsed.target == ["MyApp"])
         #expect(parsed.reducer == "Inbox.body")
@@ -79,7 +79,7 @@ struct DiscoverInteractionCommandTests {
     func filterPassesThroughWithoutPin() throws {
         let candidates = [
             candidate(functionName: "reduceA"),
-            candidate(functionName: "reduceB")
+            candidate(functionName: "reduceB"),
         ]
         let filtered = try Command.filterCandidates(candidates, pinRaw: nil)
         #expect(filtered.count == 2)
@@ -89,7 +89,7 @@ struct DiscoverInteractionCommandTests {
     func filterByPin() throws {
         let candidates = [
             candidate(functionName: "reduceA"),
-            candidate(functionName: "reduceB", enclosingTypeName: "Inbox")
+            candidate(functionName: "reduceB", enclosingTypeName: "Inbox"),
         ]
         let filtered = try Command.filterCandidates(candidates, pinRaw: "Inbox.reduceB")
         #expect(filtered.count == 1)

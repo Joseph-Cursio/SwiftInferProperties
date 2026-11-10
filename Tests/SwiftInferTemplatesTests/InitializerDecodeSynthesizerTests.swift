@@ -54,7 +54,7 @@ struct InitializerDecodeSynthesizerTests {
         let memberwise = InitializerSignature(
             parameters: [
                 InitializerParameter(label: "x", typeName: "Int"),
-                InitializerParameter(label: "y", typeName: "Int")
+                InitializerParameter(label: "y", typeName: "Int"),
             ]
         )
         let decl = structDecl("Point", initializers: [memberwise])
