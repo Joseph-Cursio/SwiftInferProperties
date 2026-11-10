@@ -328,4 +328,4 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
 // `ActionCaseInfo.swift` (extracted for the `file_length` cap).
 
 // `ReducerSignatureShape` + `ReducerCarrierKind` are declared in
-// `ReducerShapeAndCarrier.swift` (extracted for the `file_length` cap).
+// their own files (extracted for the `file_length` cap).

@@ -106,6 +106,6 @@ First dogfood, on a real independent package (BigUInt + BigInt).
 ## Files / tests
 
 - `InsightsBuilder.swift` (pure: structure composition, grouping, render),
-  `InsightsCommand.swift` (the subcommand).
+  `SwiftInferCommand.Insights.swift` (the subcommand).
 - `InsightsBuilderTests` (9 — composition, grouping, tier gate, weakest-tier,
   adoption gap, render, sort order).

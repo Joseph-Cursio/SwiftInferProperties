@@ -128,7 +128,7 @@ struct HardGuaranteeTests {
         // the library product that exposes the target module (verify-workdir
         // synthesis, product ≠ module). Same user-initiated verify-mode gesture,
         // not a discover/index/drift path.
-        // `KnownPropertiesCommand.swift` (V1.145) is exempt on the same basis:
+        // `SwiftInferCommand.KnownProperties.swift` (V1.145) is exempt on the same basis:
         // `known-properties --verify` spawns `Process` to run the `swift`
         // interpreter over a generated stdlib-only property-test script. Opt-in
         // (only under `--verify`), user-initiated, local-only (no network) —
@@ -154,7 +154,7 @@ struct HardGuaranteeTests {
             "VerifierSubprocess.swift",
             "PackageProductResolver.swift",
             "DrainedProcess.swift",
-            "KnownPropertiesCommand.swift",
+            "SwiftInferCommand.KnownProperties.swift",
             "KnownPropertiesPackageVerify.swift",
         ]
         var violations: [String] = []

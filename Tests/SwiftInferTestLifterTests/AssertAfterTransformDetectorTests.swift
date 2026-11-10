@@ -4,7 +4,7 @@ import Testing
 @Suite("AssertAfterTransformDetector — explicit + collapsed round-trip (M1.3)")
 struct AssertAfterTransformDetectorTests {
 
-    private static func detect(in source: String) -> [DetectedRoundTrip] {
+    static func detect(in source: String) -> [DetectedRoundTrip] {
         let slice = SlicerTestHelper.sliceFirstBody(in: source)
         return AssertAfterTransformDetector.detect(in: slice)
     }

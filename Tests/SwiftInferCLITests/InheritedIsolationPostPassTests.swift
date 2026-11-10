@@ -137,7 +137,7 @@ struct InheritedIsolationPostPassTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("Sources/SwiftInferCLI/Discover+PipelineAssembly.swift")
+            .appendingPathComponent("Sources/SwiftInferCLI/SwiftInferCommand.Discover+PipelineAssembly.swift")
         let source = try String(contentsOf: assembly, encoding: .utf8)
         #expect(source.contains("withInheritedIsolation("))
     }

@@ -20,7 +20,7 @@ import SwiftSyntax
 ///   contains `.test(<string literal>)` — `Suite.test("name") { … }` and the
 ///   chained `…test("name").xfail(…).code { … }`. This one is call-shaped
 ///   rather than declaration-shaped; see
-///   `TestSuiteParser+StdlibUnittest.swift` for why neither rule above can
+///   `TestSuiteParserVisitor+StdlibUnittest.swift` for why neither rule above can
 ///   reach it.
 ///
 /// **Skipped:**
@@ -191,7 +191,7 @@ final class TestSuiteParserVisitor: SyntaxVisitor {
     }
 
     /// `StdlibUnittest`'s test *closures* — see
-    /// `TestSuiteParser+StdlibUnittest.swift` for why they need a call-shaped
+    /// `TestSuiteParserVisitor+StdlibUnittest.swift` for why they need a call-shaped
     /// rule rather than a declaration-shaped one.
     ///
     /// Children are still visited: the corpus nests `.test("…") { }` inside

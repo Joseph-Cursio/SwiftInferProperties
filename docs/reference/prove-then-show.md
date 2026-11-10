@@ -130,12 +130,12 @@ step over a directory permission.
 ## Files / tests
 
 - `RetainedSurveyRun.swift` (the artifact), `SurveyRunDiff.swift` (the comparison),
-  `SurveyRunDiffRenderer.swift`, `SurveyDiffCommand.swift`. Tests:
+  `SurveyRunDiffRenderer.swift`, `SwiftInferCommand.SurveyDiff.swift`. Tests:
   `SurveyRunDiffTests` (13) — the load-bearing arm is the cause-only one.
 - `ProveThenShowRenderer.swift` (pure classifier/renderer),
-  `ProveThenShowCommand.swift` (the subcommand). The survey entry
+  `SwiftInferCommand.ProveThenShow.swift` (the subcommand). The survey entry
   (`Verify.runAllFromIndex`) gained a `quiet` flag + a `[SurveyRecord]` return
   so the command can render its own summary; `persistSurveyBatch` split to
-  `VerifyCommand+AllFromIndex+Persist.swift` for the file-length cap.
+  `SwiftInferCommand.Verify+AllFromIndex+Persist.swift` for the file-length cap.
 - Tests: `ProveThenShowRendererTests` (5). Verified end-to-end on the `Level`
   corpus (Proven + Disproven live) and on BigInt (all Unverifiable).

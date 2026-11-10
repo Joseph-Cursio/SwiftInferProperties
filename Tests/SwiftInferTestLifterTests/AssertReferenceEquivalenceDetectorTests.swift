@@ -16,7 +16,7 @@ import Testing
 @Suite("AssertReferenceEquivalenceDetector — subject vs reference computation")
 struct AssertReferenceEquivalenceDetectorTests {
 
-    private static func detect(in source: String) -> [DetectedReferenceEquivalence] {
+    static func detect(in source: String) -> [DetectedReferenceEquivalence] {
         AssertReferenceEquivalenceDetector.detect(in: SlicerTestHelper.sliceFirstBody(in: source))
     }
 

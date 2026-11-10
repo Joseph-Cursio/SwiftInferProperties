@@ -130,8 +130,8 @@ struct UnverifiableCauseTests {
             .deletingLastPathComponent()  // Tests
             .deletingLastPathComponent()  // repo root
         let producers = [
-            "Sources/SwiftInferCLI/VerifyCommand+AllFromIndexRecords.swift",
-            "Sources/SwiftInferCLI/VerifyCommand+ArchitecturalPendingDetail.swift",
+            "Sources/SwiftInferCLI/SwiftInferCommand.Verify+AllFromIndexRecords.swift",
+            "Sources/SwiftInferCLI/SwiftInferCommand.Verify+ArchitecturalPendingDetail.swift",
         ]
         let corpus = try producers
             .map { try String(contentsOf: root.appendingPathComponent($0), encoding: .utf8) }

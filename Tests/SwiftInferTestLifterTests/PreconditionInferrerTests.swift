@@ -148,7 +148,7 @@ struct PreconditionInferrerTests {
         #expect(PreconditionInferrer.infer(from: entry).isEmpty)
     }
 
-    // String-pattern tests live in PreconditionInferrerTests+Strings.swift.
+    // String-pattern tests live in PreconditionInferrerStringTests.swift.
 
     // MARK: - Boolean patterns
 

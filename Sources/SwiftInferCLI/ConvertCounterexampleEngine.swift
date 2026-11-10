@@ -5,7 +5,7 @@ import SwiftInferTemplates
 
 /// TestLifter M8.1 — pure-function engine behind
 /// `swift-infer convert-counterexample`. Lifted out of
-/// `ConvertCounterexampleCommand.swift` so the AsyncParsableCommand
+/// `SwiftInferCommand.ConvertCounterexample.swift` so the AsyncParsableCommand
 /// shell stays small + the engine is unit-testable without going
 /// through ArgumentParser's `parse(_:)`.
 public enum ConvertCounterexampleEngine {

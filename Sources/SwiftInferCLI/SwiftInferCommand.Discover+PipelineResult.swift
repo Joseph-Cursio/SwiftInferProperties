@@ -1,0 +1,241 @@
+import Foundation
+import PropertyLawCore
+import SwiftInferCore
+import SwiftInferTemplates
+import SwiftInferTestLifter
+
+/// `PipelineResult` — everything one `discover` pass produced, in one record.
+///
+/// Split out of `SwiftInferCommand.Discover+Pipeline.swift` when that file crossed SwiftLint's 400-line cap
+/// on 2026-08-01. The struct is the natural seam: it is a pure data record with no
+/// behaviour, so moving it leaves the pipeline file a list of stages and nothing else.
+public extension SwiftInferCommand.Discover {
+
+    /// Tier-filtered + config-aware suggestion collection. Shared
+    /// by `Discover.run` (renderer / interactive / update-baseline)
+    /// and `DriftCommand.run` (M6.5) so the two subcommands stay
+    /// in lockstep — anything `discover` would surface is what
+    /// `drift` diffs against the baseline.
+    struct PipelineResult {
+        /// `var` so `replacingSuggestions(_:)` can narrow the set without rebuilding all
+        /// fifteen stored properties — value semantics are unchanged.
+        public var suggestions: [Suggestion]
+        /// The package root found above the scanned directory, or `nil` when there is none.
+        public let packageRoot: URL?
+
+        /// Skip markers in the scanned sources that matched nothing this run (#490).
+        /// Surfaced by `drift`; `discover` leaves them alone, because a marker that suppresses
+        /// nothing is not a reason to interrupt a discovery run.
+        public let unmatchedSkipHashes: Set<String>
+
+        /// Refutable laws the tier cut hid — see `VisibilityCut`. Consumed by the final-answer
+        /// guard in `focus(_:with:diagnostics:)`, which is the only stage that can see whether
+        /// hiding them left the reader with an honest empty or a confident pile of tautologies.
+        public let tierHiddenRefutableLaws: [Suggestion]
+
+        /// Laws an executed counterexample refuted. Distinct from `tierHiddenRefutableLaws`,
+        /// which is about laws the CUT hid: these were run and failed, so they are the run's
+        /// strongest evidence and the one thing that must not be silently dropped. Rendered
+        /// by `RefutationRenderer`.
+        public let refutedLaws: [Suggestion]
+
+        /// Inverse-element witness pairs (M8.3) — feeds M8.4.a's
+        /// `RefactorBridgeOrchestrator.proposals(from:inverseElementPairs:)`
+        /// to surface `Group` conformance proposals when the corpus
+        /// has a unary inverse function alongside a binary op +
+        /// identity element on the same type. Empty for the non-
+        /// interactive code paths (drift, render-only); the
+        /// orchestrator only consumes them in `--interactive` mode.
+        public let inverseElementPairs: [InverseElementPair]
+
+        /// M11.2 — equivalence-class hints keyed by the promoted
+        /// suggestion's identity. Threaded through to
+        /// `InteractiveTriage.Context.equivalenceClassHintsByIdentity`
+        /// so the accept-flow renderer (M11.2d) can reach the hint
+        /// without paying a per-suggestion storage cost on every
+        /// `Suggestion` instance (the §13 row 4 memory ceiling rule).
+        public let equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind]
+
+        /// M16.3 — consumer-producer chain hints keyed by the promoted
+        /// suggestion's identity. Same §13-row-4 out-of-band carrier
+        /// posture as `equivalenceClassHintsByIdentity`; the M16.3
+        /// accept-flow renderer reads this map by identity to reach
+        /// the `DomainHint` for the writeout.
+        public let consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint]
+
+        /// V1.47.C — type declarations the discover pass saw, keyed by the
+        /// shape's own `name` (no generic argument list), which
+        /// `TypeShapeBuilder.shapes` emits **qualified**: a nested type is
+        /// `Outer.Inner`, not `Inner`. `IndexCommand` reads this to populate
+        /// `SemanticIndexEntry.typeShape` so the verify pipeline can call
+        /// `DerivationStrategist.strategy(for:)` without re-parsing the user's
+        /// source. Empty for code paths that don't need it (the renderer /
+        /// interactive flows).
+        ///
+        /// ⚠ **Not keyed like `inheritedTypesByName`**, which uses `TypeDecl.name` —
+        /// bare for a nested declaration. A caller joining the two for a nested type
+        /// must try both spellings (`UnequatableResultGate`).
+        public let typeShapesByName: [String: PropertyLawCore.TypeShape]
+
+        /// Conformances keyed by type name, with **cross-file extension records merged**
+        /// (`ProtocolCoverageMap.inheritedTypesIndex`). Distinct from
+        /// `typeShapesByName[...].inheritedTypes`, which `TypeShapeBuilder` merges from the
+        /// primary decl and SAME-FILE extensions only. The difference is the whole ballgame
+        /// on idiomatic third-party code: swift-collections writes `public struct BitSet {}`
+        /// with a bare inheritance clause and declares all eleven conformances in separate
+        /// `BitSet+X.swift` files, so the shape-derived map sees none of them.
+        public let inheritedTypesByName: [String: Set<String>]
+
+        /// Names the scan saw get `==` without an inheritance clause saying so — a hand-written
+        /// `static func ==`, or an attribute that may be a macro adding `Equatable`. Read by
+        /// `UnequatableResultGate`, which must not count those types as having no `==`; see
+        /// `UnequatableResultGate.equalityOutsideInheritance(typeDecls:summaries:)`.
+        public let equalityOutsideInheritance: Set<String>
+
+        /// Generic parameters per type name, for callers that must NAME a carrier in emitted
+        /// source. `TypeShape` does not carry them and `TypeDecl.name` is the bare
+        /// identifier, so before 2026-08-02 a generic carrier was indistinguishable from a
+        /// concrete one at emission — which is why `scaffold-kit-suites` wrote `Deque.self`.
+        public let genericParametersByName: [String: [TypeDecl.GenericParameter]]
+
+        /// Types `@testable import` cannot name, keyed by bare name. **Only `false` entries are
+        /// present** — an absent key means not known to be file-scoped, which is what every
+        /// consumer predating this map assumed for everything.
+        public let visibleToTestableImportByName: [String: Bool]
+
+        /// Qualified names of the types a test file can name — visible to `@testable import`
+        /// inside enclosing types that all are. The only types a generated `Sendable` shim may
+        /// mention, since naming any other breaks the whole test target (`SendableShim`).
+        public let testVisibleTypeNames: Set<String>
+
+        /// What `IsolatedConstructionGate` needs per scanned type: where it is declared and whether
+        /// it, or one of its initializers, opts out of isolation. Set after construction by the
+        /// discover path; empty for every other caller, which disables the gate.
+        var isolatedConstructionFacts: [String: IsolatedConstructionGate.Fact] = [:]
+
+        /// The corpus's type aliases, for the generator resolver. See `ScannedCorpus.typeAliases`.
+        public let typeAliases: [String: String]
+
+        /// Qualified names of the scanned protocols. `typeShapesByName` holds none — a protocol is
+        /// not a generator target — so this is the only way to tell `-> Shape` (an existential no
+        /// `==` compares) and a static member of `extension Shape` (which no call can name on the
+        /// protocol itself) from a concrete type the scan merely did not shape.
+        public let protocolNames: Set<String>
+
+        /// The file each type is **declared** in, keyed by bare type name.
+        ///
+        /// Third sidecar map, and here for the same reason as the two above: `TypeShape` belongs
+        /// to SwiftPropertyLaws and has no use for a source path, so putting one on it would be a
+        /// cross-repo change plus a pin bump.
+        ///
+        /// What it is for: verify's stub `@testable`-imports the module the *function* lives in,
+        /// which is not enough. A law over `f(_ s: FunctionSummary)` names a type from another
+        /// module, and `@testable import` does not re-export — so the stub cannot see it and the
+        /// build fails. Measured 2026-08-03: **37 of 126** `predicate` entries failed exactly
+        /// this way, 31 of them on `FunctionSummary` alone. A path resolves to a module through
+        /// `VerifyTargetInference.module(forLocation:)`, so this map is the missing half of a
+        /// mechanism that already exists.
+        ///
+        /// Populated from **declarations only** — see `sourceFileIndex` for why an extension
+        /// must not vote.
+        public let sourceFileByTypeName: [String: String]
+
+        /// Generators synthesized from how the tests construct each type
+        /// (mock-synthesis over the full construction record), keyed by type
+        /// name — for *any* test-constructed type, not only suggestion-bearing
+        /// ones. The scaffold pass uses these to fill holes structure can't.
+        public let mockGeneratorsByType: [String: MockGenerator]
+
+        /// Every function the discover pass scanned. Surfaced so the
+        /// `--seeds` path can synthesize generic laws (e.g. determinism) for a
+        /// seeded function that no signature-pattern template matched — the
+        /// seed (lint evidence of purity) is what justifies the law, so it
+        /// lives outside the template engine.
+        public let summaries: [FunctionSummary]
+
+        /// Functions the scan set aside as uncallable from an external test. Consulted only when
+        /// a seed names one.
+        public let restrictedFunctions: [RestrictedFunction]
+
+        /// Effective `--docstring-advice` setting, resolved CLI > config > default (on).
+        /// Surfaced here because the advisory is rendered by `Discover.run`, after the
+        /// pipeline has already loaded the config — this saves a second `ConfigLoader.load`.
+        public let docstringAdvice: Bool
+
+        /// **What PropertyLawKit covers on this corpus** — rendered beside the suggestion
+        /// count, never on its own.
+        ///
+        /// A `discover` count read alone is close to meaningless: if the kit were perfect
+        /// there would be nothing left to discover, and the tool would report total success
+        /// as `0 suggestions.` It rides on the result rather than being recomputed by the
+        /// renderer so that no path can render suggestions without it. See `CoverageHeadline`.
+        public let coverage: CoverageSummary
+
+        /// Builds a result from the visible suggestions, package root and side channels, most defaulting empty.
+        public init(
+            suggestions: [Suggestion],
+            packageRoot: URL?,
+            docstringAdvice: Bool,
+            unmatchedSkipHashes: Set<String> = [],
+            tierHiddenRefutableLaws: [Suggestion] = [],
+            refutedLaws: [Suggestion] = [],
+            inverseElementPairs: [InverseElementPair] = [],
+            equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
+            consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],
+            typeShapesByName: [String: PropertyLawCore.TypeShape] = [:],
+            inheritedTypesByName: [String: Set<String>] = [:],
+            equalityOutsideInheritance: Set<String> = [],
+            genericParametersByName: [String: [TypeDecl.GenericParameter]] = [:],
+            visibleToTestableImportByName: [String: Bool] = [:],
+            testVisibleTypeNames: Set<String> = [],
+            typeAliases: [String: String] = [:],
+            protocolNames: Set<String> = [],
+            sourceFileByTypeName: [String: String] = [:],
+            mockGeneratorsByType: [String: MockGenerator] = [:],
+            summaries: [FunctionSummary] = [],
+            restrictedFunctions: [RestrictedFunction] = [],
+            // Defaulted so the many test-side constructions of a PipelineResult stay
+            // compiling. The discover path always passes a computed summary — the default
+            // is "nothing was audited", which renders an honest zero rather than a silence.
+            coverage: CoverageSummary = CoverageSummary(
+                lawCount: 0, carrierCount: 0, evidenceState: .noEvidence
+            )
+        ) {
+            self.suggestions = suggestions
+            self.packageRoot = packageRoot
+            self.unmatchedSkipHashes = unmatchedSkipHashes
+            self.tierHiddenRefutableLaws = tierHiddenRefutableLaws
+            self.refutedLaws = refutedLaws
+            self.inverseElementPairs = inverseElementPairs
+            self.equivalenceClassHintsByIdentity = equivalenceClassHintsByIdentity
+            self.consumerProducerChainHintsByIdentity = consumerProducerChainHintsByIdentity
+            self.typeShapesByName = typeShapesByName
+            self.inheritedTypesByName = inheritedTypesByName
+            self.equalityOutsideInheritance = equalityOutsideInheritance
+            self.genericParametersByName = genericParametersByName
+            self.visibleToTestableImportByName = visibleToTestableImportByName
+            self.testVisibleTypeNames = testVisibleTypeNames
+            self.typeAliases = typeAliases
+            self.protocolNames = protocolNames
+            self.sourceFileByTypeName = sourceFileByTypeName
+            self.mockGeneratorsByType = mockGeneratorsByType
+            self.summaries = summaries
+            self.restrictedFunctions = restrictedFunctions
+            self.docstringAdvice = docstringAdvice
+            self.coverage = coverage
+        }
+
+        /// The same result with a narrowed suggestion set.
+        ///
+        /// **The shape maps are deliberately NOT narrowed.** `verify` resolves generators over
+        /// the whole scanned type universe, so filtering `typeShapesByName` alongside the
+        /// suggestions would manufacture carrier declines for types that are present — the
+        /// failure `allShapes` threading was added to prevent, and which a census once
+        /// misattributed two-thirds of a carrier problem to.
+        public func replacingSuggestions(_ suggestions: [Suggestion]) -> Self {
+            var copy = self
+            copy.suggestions = suggestions
+            return copy
+        }
+    }
+}

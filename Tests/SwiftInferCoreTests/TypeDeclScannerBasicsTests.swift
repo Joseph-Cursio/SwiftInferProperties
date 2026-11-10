@@ -1,0 +1,255 @@
+import Foundation
+import PropertyLawCore
+@testable import SwiftInferCore
+import Testing
+
+@Suite("FunctionScanner.scanCorpus — type-decl emission (M3.2)")
+struct TypeDeclScannerBasicsTests {
+
+    // MARK: Primary type kinds
+
+    @Test
+    func capturesStructWithName() throws {
+        let source = """
+        struct IntSet {
+            let count: Int
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.name == "IntSet")
+        #expect(decl.kind == .struct)
+        #expect(decl.inheritedTypes.isEmpty)
+    }
+
+    @Test
+    func capturesEachPrimaryKind() {
+        let source = """
+        struct S {}
+        class C {}
+        enum E {}
+        actor A {}
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let pairs = corpus.typeDecls.map { ($0.name, $0.kind) }
+        #expect(pairs.count == 4)
+        #expect(pairs[0].0 == "S" && pairs[0].1 == .struct)
+        #expect(pairs[1].0 == "C" && pairs[1].1 == .class)
+        #expect(pairs[2].0 == "E" && pairs[2].1 == .enum)
+        #expect(pairs[3].0 == "A" && pairs[3].1 == .actor)
+    }
+
+    // MARK: Inheritance clause — full text per source
+
+    @Test
+    func capturesInheritedConformancesInSourceOrder() throws {
+        let source = """
+        struct Token: Hashable, Equatable, CustomStringConvertible {
+            let raw: String
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.inheritedTypes == ["Hashable", "Equatable", "CustomStringConvertible"])
+    }
+
+    @Test
+    func capturesGenericConformanceTextVerbatim() throws {
+        let source = """
+        struct Bag<Element>: Collection where Element: Hashable {
+            var underestimatedCount: Int { 0 }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.name == "Bag")
+        #expect(decl.inheritedTypes == ["Collection"])
+    }
+
+    // MARK: Extension emission — open decision #2
+
+    @Test
+    func extensionEmitsTypeDeclForExtendedType() throws {
+        // Open decision #2 default (a): extensions emit a TypeDecl whose
+        // inheritedTypes carry just the conformances the extension adds.
+        // Resolver merges multiple TypeDecls per name in M3.3.
+        let source = """
+        extension Foo: Equatable {}
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.name == "Foo")
+        #expect(decl.kind == .extension)
+        #expect(decl.inheritedTypes == ["Equatable"])
+    }
+
+    @Test
+    func extensionWithoutInheritanceEmitsEmptyInheritedTypes() throws {
+        let source = """
+        extension Foo {
+            func bar() -> Int { 0 }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.name == "Foo")
+        #expect(decl.kind == .extension)
+        #expect(decl.inheritedTypes.isEmpty)
+    }
+
+    @Test
+    func primaryDeclAndExtensionForSameTypeEmitSeparateRecords() {
+        // Mergeable multimap shape — two records share a name.
+        let source = """
+        struct Foo {
+            let n: Int
+        }
+        extension Foo: Equatable {}
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let kindsByName = corpus.typeDecls.reduce(into: [String: [TypeDecl.Kind]]()) {
+            $0[$1.name, default: []].append($1.kind)
+        }
+        #expect(kindsByName["Foo"] == [.struct, .extension])
+    }
+
+    // MARK: Nested types
+
+    @Test
+    func nestedTypesEachEmitTheirOwnTypeDecl() {
+        let source = """
+        struct Outer {
+            struct Inner {
+                let x: Int
+            }
+            enum Tag { case a, b }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let names = corpus.typeDecls.map(\.name)
+        #expect(names == ["Outer", "Inner", "Tag"])
+    }
+
+    // MARK: Protocol decls — recorded, but body still skipped
+
+    /// Inverted 2026-07-30. This test used to assert `corpus.typeDecls.isEmpty`, on the
+    /// reasoning that protocols *"contribute no `Equatable` evidence about concrete types."*
+    /// Measurement falsified that: recording protocol decls withdrew **43** `⚠ T must conform
+    /// to Equatable … this tool does not verify protocol conformance` caveats on
+    /// `stdlib/public/core`, across the carriers `SIMD`, `FloatingPoint`, `StringProtocol`
+    /// and `SetAlgebra` — every one of which really does refine `Equatable` (the first three
+    /// via `Hashable`, `SetAlgebra` directly). The evidence was there; nothing was reading it.
+    @Test
+    func protocolDeclsAreRecordedForTheirInheritanceClause() throws {
+        let source = """
+        protocol Named: Hashable, CustomStringConvertible {
+            var name: String { get }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first { $0.name == "Named" })
+        #expect(decl.kind == .protocol)
+        #expect(decl.inheritedTypes == ["Hashable", "CustomStringConvertible"])
+    }
+
+    /// The body skip is unchanged, and this is the half that keeps the change inert: a
+    /// protocol record must stay a *name and an inheritance clause*. Requirements have no
+    /// implementations, so nothing here may become a `FunctionSummary` to propose laws about,
+    /// and a `{ get }` requirement must not be mistaken for a stored member.
+    @Test
+    func protocolBodiesAreStillSkipped() throws {
+        let source = """
+        protocol Codec: Equatable {
+            init()
+            var name: String { get set }
+            func encode(_ value: Int) -> String
+            func decode(_ text: String) -> Int
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        #expect(corpus.summaries.isEmpty, "protocol requirements have no bodies to summarise")
+        #expect(corpus.restricted.isEmpty, "nor are they set-aside restricted functions")
+        let decl = try #require(corpus.typeDecls.first { $0.name == "Codec" })
+        #expect(decl.storedMembers.isEmpty, "`var name: String { get set }` is a requirement")
+        #expect(decl.enumCaseNames.isEmpty)
+        #expect(decl.initializers.isEmpty, "`init()` is a requirement, not a derivable init")
+    }
+
+    /// A protocol nested-name guard: recording the decl must not push it onto the type stack,
+    /// or a subsequent sibling would be qualified as though it were nested inside the protocol.
+    @Test
+    func aProtocolDoesNotBecomeAQualifyingScope() throws {
+        let source = """
+        protocol Marker {}
+        struct Widget { let size: Int }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let widget = try #require(corpus.typeDecls.first { $0.name == "Widget" })
+        #expect(widget.qualifiedName == "Widget")
+    }
+
+    // MARK: Location
+
+    @Test
+    func locationPointsAtIntroducerKeyword() throws {
+        let source = """
+        // header comment
+        struct Widget {
+            let id: Int
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        let decl = try #require(corpus.typeDecls.first)
+        #expect(decl.location.file == "Test.swift")
+        #expect(decl.location.line == 2)
+    }
+
+    // MARK: Single-pass coexistence with summaries + identities
+
+    @Test
+    func singlePassEmitsSummariesIdentitiesAndTypeDecls() {
+        let source = """
+        struct IntSet: Equatable {
+            static let empty: IntSet = IntSet()
+            func merge(_ a: IntSet, _ b: IntSet) -> IntSet { return a }
+        }
+        """
+        let corpus = FunctionScanner.scanCorpus(source: source, file: "Test.swift")
+        #expect(corpus.summaries.map(\.name) == ["merge"])
+        #expect(corpus.identities.map(\.name) == ["empty"])
+        #expect(corpus.typeDecls.map(\.name) == ["IntSet"])
+        #expect(corpus.typeDecls.first?.inheritedTypes == ["Equatable"])
+    }
+
+    // MARK: scanCorpus — directory pass
+
+    @Test
+    func directoryScanCorpusAccumulatesTypeDeclsAcrossFiles() throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("TypeDeclScanTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        try """
+        struct A: Equatable {}
+        """.write(
+            to: temp.appendingPathComponent("A.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try """
+        struct B {}
+        extension B: Hashable {}
+        """.write(
+            to: temp.appendingPathComponent("B.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+
+        let corpus = try FunctionScanner.scanCorpus(directory: temp)
+        let names = corpus.typeDecls.map(\.name)
+        #expect(names == ["A", "B", "B"])
+        let kinds = corpus.typeDecls.map(\.kind)
+        #expect(kinds == [.struct, .struct, .extension])
+    }
+}

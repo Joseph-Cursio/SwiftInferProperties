@@ -53,7 +53,7 @@ of four** laws green and breaks exactly one. That is the law carrying the docstr
 **73% of this repo's Strong-tier output is cross-target leakage.**
 
 `discover --target X` resolves production code to `Sources/X/`, but
-`effectiveTestDirectory` (`Discover+RunHelpers.swift:101`) walks up to the package root and
+`effectiveTestDirectory` (`SwiftInferCommand.Discover+RunHelpers.swift:101`) walks up to the package root and
 returns `Tests/` **wholesale**. There is no `Tests/<Target>Tests/` counterpart to the
 `Sources/<target>/` convention the tool otherwise honours.
 
@@ -1031,7 +1031,7 @@ The 5 our-own-value-type rows (`SamplingSeed`, `FunctionSummary`, `Effect`, `Ran
 ### §9.4 The `Coverage` residual is fixed (2026-08-09)
 
 `qualifyingNestedCarrier` had **exactly one production call site** — the generator carrier
-in `VerifyCommand+TemplateDispatch.swift:163`. The n-ary parameter loop in
+in `SwiftInferCommand.Verify+TemplateDispatch.swift:163`. The n-ary parameter loop in
 `StrategistDispatchEmitter+Totality` resolved each parameter from raw `typeText` and never
 went through it.
 

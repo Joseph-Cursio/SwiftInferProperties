@@ -60,7 +60,7 @@ public enum SetAlgebraShape {
     /// non-mutating binary ops carry in protocol-extension declaration
     /// sites.
     ///
-    /// **Hoisted in V1.16.1** from `InversePairSetAlgebraShapeGate.swift`
+    /// **Hoisted in V1.16.1** from `InversePairTemplate+SetAlgebraShapeGate.swift`
     /// (where it landed in V1.14.1 as a private helper). When round-trip
     /// + idempotence became consumers in cycle 13, the helper crossed
     /// the second-consumer threshold that the v1.13 `DirectionLabels`

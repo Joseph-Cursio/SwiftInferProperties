@@ -3,7 +3,7 @@ import SwiftInferCore
 import Testing
 
 // Non-public / SPI scan-time CLASSIFICATION (cycles 54 / 148 / 151; inverted 2026-08-07).
-// Split out of FunctionScannerTests.swift (cycle 151) to keep that struct under SwiftLint's
+// Split out of FunctionScannerHeaderTests.swift (cycle 151) to keep that struct under SwiftLint's
 // type_body_length cap.
 //
 // These cycles once *removed* each non-public shape from `summaries` — an external verifier

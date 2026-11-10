@@ -59,10 +59,10 @@ would be its own epic.
 
 - Core: `InteractionIndexEntry.swift`.
 - Store: `IndexStore.swift` (`interactionEntries`, `upsertInteraction`, schema v5).
-- CLI: `IndexCommand+Projection.swift` (`buildInteractionEntry`,
-  `interactionEntries`), `IndexCommand.swift` (wiring),
-  `QueryCommand+Interaction.swift` (`QuerySurface`, `applyInteractionFilters`,
-  interaction render), `QueryCommand.swift` (`renderCombined`, surface gating).
+- CLI: `SwiftInferCommand.Index+Projection.swift` (`buildInteractionEntry`,
+  `interactionEntries`), `SwiftInferCommand.Index.swift` (wiring),
+  `SwiftInferCommand.Query+Interaction.swift` (`QuerySurface`, `applyInteractionFilters`,
+  interaction render), `SwiftInferCommand.Query.swift` (`renderCombined`, surface gating).
 - Tests: `InteractionIndexEntryTests`, `IndexStoreInteractionTests`,
   `IndexCommandInteractionEntryTests`, `QueryCommandInteractionTests`,
   `IndexQueryInteractionIntegrationTests` (end-to-end: index → query on a real

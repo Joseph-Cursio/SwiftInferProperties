@@ -70,5 +70,5 @@ overview.
 ## Files / tests
 
 - `ReportRenderer.swift` (pure: composes the sections from an `IndexStore.Index`
-  + `VerifyEvidenceLog` + `[InsightsGroup]`), `ReportCommand.swift` (loads the
+  + `VerifyEvidenceLog` + `[InsightsGroup]`), `SwiftInferCommand.Report.swift` (loads the
   stores + computes insights). Tests: `ReportRendererTests` (2).

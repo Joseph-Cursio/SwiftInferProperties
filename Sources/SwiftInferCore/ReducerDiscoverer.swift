@@ -94,7 +94,7 @@ public enum ReducerDiscoverer {
 /// `extension` blocks — same convention as `FunctionScannerVisitor`.
 ///
 /// `internal` (not `private`) so the TCA-conformance walk can live in
-/// `ReducerDiscoverer+TCAWalk.swift` — file-split to keep this file under
+/// `ReducerDiscoveryVisitor+TCAWalk.swift` — file-split to keep this file under
 /// SwiftLint's `file_length` cap (cycle 109). Only referenced from
 /// `ReducerDiscoverer.discover`.
 final class ReducerDiscoveryVisitor: SyntaxVisitor {

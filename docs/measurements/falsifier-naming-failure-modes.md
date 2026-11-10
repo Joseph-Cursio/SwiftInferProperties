@@ -29,7 +29,7 @@ one.
 
 **`nestedCarrierImportResolution`** — written beside *"the per-entry `@testable import` does
 not reach a nested carrier — the cheapest open item left"*. The fix shipped as
-`VerifyCommand+NestedCarrier.swift` + `NestedCarrierQualificationTests` (`e5731a9`, PR #206).
+`SwiftInferCommand.Verify+NestedCarrier.swift` + `NestedCarrierQualificationTests` (`e5731a9`, PR #206).
 Nothing was ever named `nestedCarrierImportResolution`, so the falsifier resolved to nothing
 and the guard stayed green while the deferral read as open. It survived in CLAUDE.md — the
 index everyone reads — until 2026-08-10, by which point **all three parts of the gap were

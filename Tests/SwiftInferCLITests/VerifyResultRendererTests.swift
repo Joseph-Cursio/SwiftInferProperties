@@ -4,7 +4,7 @@ import Testing
 @testable import SwiftInferCLI
 
 // V1.43.D / V1.44.D — VerifyResultRenderer tests. Split out of
-// VerifyResultTests.swift to keep both files within the file_length cap.
+// VerifyResultParserTests.swift to keep both files within the file_length cap.
 
 @Suite("VerifyResult — V1.43.D renderer (4-outcome two-pass shape)")
 struct VerifyResultRendererTests {

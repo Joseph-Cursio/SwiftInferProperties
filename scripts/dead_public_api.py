@@ -92,7 +92,7 @@ def main() -> int:
                 extends.add(match.group(1))
         # An extension file is reached iff the type it extends is reached — so
         # the extended names count as this file's own. Conservative on purpose:
-        # `VerifyCommand+Pipeline.swift` declares a private helper AND extends a
+        # `SwiftInferCommand.Verify+Pipeline.swift` declares a private helper AND extends a
         # live command, and judging it on the helper alone called it dead. The
         # cost is that a dead *member* of a live type is invisible here; that
         # needs call-graph analysis, not a regex.

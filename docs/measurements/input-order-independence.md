@@ -42,7 +42,7 @@ the elements are a dictionary's entries and one member holds its key (`rule: $0.
 - **if it does not**, every tie leaks hash order, and the law fails as soon as the trials draw
   one. That is the defect the issue said *the tie-break exists to prevent*.
 
-`DictionaryKeyReader` (`Sources/SwiftInferCore/SortedOutput+DictionaryKey.swift`) reads it.
+`DictionaryKeyReader` (`Sources/SwiftInferCore/DictionaryKeyReader.swift`) reads it.
 `.sorted`'s receiver is `.map`/`.compactMap` over an inline `Dictionary(…)` or over a body-level
 local typed `[K: V]` / `Dictionary<K, V>`, or initialised `[:]`, `[K: V]()` or `Dictionary(…)`.
 The closure names the key (`{ k, v in }`, `{ (k, v) in }`, `{ e in … e.key }`, `$0.key`), and

@@ -31,7 +31,7 @@ measured verify (M3, 2026-07-05).** All four registered follow-ups are complete.
 - **Shipped (discovery + pin disambiguation):** `discover-interaction` now
   accepts `--target` more than once. `ReducerCandidate` carries a `moduleName`
   (`ReducerCandidate.swift`); `collectSuggestions(targets:)`
-  (`DiscoverInteractionCommand+MultiModule.swift`) scans each target's
+  (`SwiftInferCommand.DiscoverInteraction+MultiModule.swift`) scans each target's
   `Sources/<target>/`, tags candidates by module (only in multi-target runs, so
   a single-target run stays backward-compatible), applies the `--reducer` pin
   across the aggregate, dedupes module-aware, and runs the engine per module.

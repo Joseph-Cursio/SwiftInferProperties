@@ -11,7 +11,7 @@ import Testing
 // four spelled `strippingGenericParameters` in `SwiftInferCore` (pinned in the
 // Core suite) and three spelled `bareTypeName`:
 //
-//   * `SwiftInferCommand.Index.bareTypeName(from:)`  (IndexCommand+Projection.swift:185)
+//   * `SwiftInferCommand.Index.bareTypeName(from:)`  (SwiftInferCommand.Index+Projection.swift:185)
 //   * `RoundTripPairResolver.bareTypeName(from:)`    (RoundTripPairResolver.swift:136)
 //   * `DoccPageBuilder.bareTypeName(_:)`             (DoccPageBuilder.swift:244)
 //

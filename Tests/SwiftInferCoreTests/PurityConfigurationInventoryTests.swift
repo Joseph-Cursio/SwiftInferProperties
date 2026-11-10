@@ -85,7 +85,7 @@ struct PurityConfigurationInventoryTests {
         )
         #expect(Self.files(containing: "forJudging(directory:").isSuperset(of: [
             "FunctionScanner+Package.swift", "TypeShapeCarriers.swift",
-            "ValueSemanticVerifier.swift", "CensusCommand.swift",
+            "ValueSemanticVerifier.swift", "SwiftInferCommand.Census.swift",
         ]))
     }
 

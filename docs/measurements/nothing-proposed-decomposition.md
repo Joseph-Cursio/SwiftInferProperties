@@ -24,7 +24,7 @@ non-determinism template, where the census credited stubs of the tautology only.
 
 | | seeds | mechanism |
 |---|---:|---|
-| **computed property, rejected by the no-parameters gate** | **428** | `makeSummary(fromComputedProperty:)` models a read-only getter as a **nullary** `self -> T` method, `parameters: []`. It reaches the fallback and fails `summary.parameters.isEmpty == false` (`Discover+GenericLaws.swift:129`) — a gate that exists because `f() == f()` states nothing for a free function. For a property **the receiver is the input**, and the gate cannot see it. |
+| **computed property, rejected by the no-parameters gate** | **428** | `makeSummary(fromComputedProperty:)` models a read-only getter as a **nullary** `self -> T` method, `parameters: []`. It reaches the fallback and fails `summary.parameters.isEmpty == false` (`SwiftInferCommand.Discover+GenericLaws.swift:129`) — a gate that exists because `f() == f()` states nothing for a free function. For a property **the receiver is the input**, and the gate cannot see it. |
 | **same-named overload in the same file** | **90** | The fallback keys on `(file, symbol)` — the name without its parameters — and skips a key already `seen` or `covered` (`:53`). One overload claims the key; its siblings get nothing (`parseEffect` ×3, `execute` ×2, `refutation` ×2). **Inferred** from that code path plus co-occurrence — 90 of the 104 seeds that pass every gate share their name with another function in the file — and not yet A/B'd. |
 | nullary method, same gate | 9 | The gate doing what it was written for. |
 | passes every gate, no overload | 14 | Not traced one by one; they include `@MainActor`, generic, `@escaping`-closure and `@available(deprecated)` signatures. |

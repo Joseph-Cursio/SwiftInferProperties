@@ -19,7 +19,7 @@ import Testing
 @Suite("Round-trip detector — the spellings a human writes")
 struct RoundTripSpellingTests {
 
-    private static func detect(in source: String) -> [DetectedRoundTrip] {
+    static func detect(in source: String) -> [DetectedRoundTrip] {
         AssertAfterTransformDetector.detect(in: SlicerTestHelper.sliceFirstBody(in: source))
     }
 

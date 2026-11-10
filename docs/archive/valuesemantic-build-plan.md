@@ -302,7 +302,7 @@ laws are Strict; failures shrink to a minimal script (Ch. 9 §9.2.3).
 
 | Slice | Files | Tests |
 |---|---|---|
-| 2 recognition | `SwiftInferCore/ValueSemanticCandidate.swift`, `ValueSemanticDiscoverer.swift`; `SwiftInferCLI/DiscoverReducersCommand.swift` (section) | `ValueSemanticDiscovererTests` (10), `DiscoverReducersCommandTests` (+3 render) |
+| 2 recognition | `SwiftInferCore/ValueSemanticCandidate.swift`, `ValueSemanticDiscoverer.swift`; `SwiftInferCLI/SwiftInferCommand.DiscoverReducers.swift` (section) | `ValueSemanticDiscovererTests` (10), `DiscoverReducersCommandTests` (+3 render) |
 | 3 verify emission | `SwiftInferCLI/ValueSemanticStubEmitter.swift`; `Tests/Fixtures/valuesemantic-verify-corpus/{SafeStore,LeakyStore}.swift` | `ValueSemanticStubEmitterTests` (4), `ValueSemanticVerifyMeasuredTests` (`.subprocess`) |
 | 4 multi-step | `Tests/Fixtures/valuesemantic-verify-corpus/ClosureCounter.swift`; kit pin → 3.5.0 | measured test asserts `ClosureCounter` → defaultFails |
 

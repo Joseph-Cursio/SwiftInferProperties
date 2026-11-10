@@ -55,7 +55,7 @@ Usage:
 
 What it does. `discover`'s docstring advisory prints, per documented function, either a runnable
 reference-oracle scaffold (`DocstringAdvisoryRenderer`, built by `referenceOracleOutcome` in
-`Sources/SwiftInferCLI/Discover+ReferenceOracle.swift`) or `── no runnable reference oracle:
+`Sources/SwiftInferCLI/SwiftInferCommand.Discover+ReferenceOracle.swift`) or `── no runnable reference oracle:
 <reason>`. This script:
 
   1. runs `swift-infer discover --target <T> --include-possible` in the pristine worktree, with

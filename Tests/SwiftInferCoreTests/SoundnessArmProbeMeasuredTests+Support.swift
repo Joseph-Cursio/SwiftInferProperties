@@ -134,7 +134,7 @@ extension SoundnessArmProbeMeasuredTests {
     static let confirmedImpure: [(file: String, name: String)] = [
         (file: "DrainedProcess.swift", name: "standardOutputViaEnv"),
         (file: "KitEvidenceStore.swift", name: "load"),
-        (file: "MetricsInteractionCommand.swift", name: "loadDecisions"),
+        (file: "SwiftInferCommand.MetricsInteraction.swift", name: "loadDecisions"),
         (file: "SpeculativeRefactorRunner+Machinery.swift", name: "scanRestricted"),
     ]
 
