@@ -60,4 +60,10 @@ public enum DirectionLabels {
         "next", "prev", "previous",
         "advance", "succ", "pred", "successor", "predecessor",
     ]
+
+    /// `summary`'s first argument label when it is in `curated`, otherwise `nil`.
+    public static func curatedFirstLabel(of summary: FunctionSummary) -> String? {
+        guard let label = summary.parameters.first?.label, curated.contains(label) else { return nil }
+        return label
+    }
 }

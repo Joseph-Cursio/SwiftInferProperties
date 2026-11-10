@@ -12,22 +12,22 @@ import Testing
 @Suite("MetricsRenderer — V1.72.C post-acceptance failure rate (§17.2 5/5)")
 struct MetricsPostAcceptanceFailureTests {
 
-    private func date(_ iso: String) -> Date {
-        ISO8601DateFormatter().date(from: iso)!
+    private func date(_ iso: String) throws -> Date {
+        try #require(ISO8601DateFormatter().date(from: iso))
     }
 
     private func decision(
         identity: String,
         template: String = "round-trip",
         choice: Decision = .accepted
-    ) -> DecisionRecord {
+    ) throws -> DecisionRecord {
         DecisionRecord(
             identityHash: identity,
             template: template,
             scoreAtDecision: 80,
             tier: .strong,
             decision: choice,
-            timestamp: date("2026-05-14T10:00:00Z")
+            timestamp: try date("2026-05-14T10:00:00Z")
         )
     }
 
@@ -35,14 +35,14 @@ struct MetricsPostAcceptanceFailureTests {
         identity: String,
         template: String = "round-trip",
         kind: PostAcceptanceOutcomeKind
-    ) -> PostAcceptanceOutcome {
+    ) throws -> PostAcceptanceOutcome {
         PostAcceptanceOutcome(
             identityHash: identity,
             template: template,
             outcome: kind,
             detail: nil,
-            originalAcceptedAt: date("2026-05-14T10:00:00Z"),
-            checkedAt: date("2026-05-15T10:00:00Z"),
+            originalAcceptedAt: try date("2026-05-14T10:00:00Z"),
+            checkedAt: try date("2026-05-15T10:00:00Z"),
             swiftInferVersion: "1.72.0"
         )
     }
@@ -50,18 +50,18 @@ struct MetricsPostAcceptanceFailureTests {
     // MARK: - postAcceptanceFailureRows
 
     @Test("joins accepted decisions to outcomes and aggregates per-template counts")
-    func joinAndAggregate() {
+    func joinAndAggregate() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111"),
-            decision(identity: "BBB2222222222222"),
-            decision(identity: "CCC3333333333333"),
-            decision(identity: "DDD4444444444444"),
+            try decision(identity: "AAA1111111111111"),
+            try decision(identity: "BBB2222222222222"),
+            try decision(identity: "CCC3333333333333"),
+            try decision(identity: "DDD4444444444444"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
-            outcome(identity: "AAA1111111111111", kind: .stillPasses),
-            outcome(identity: "BBB2222222222222", kind: .stillPasses),
-            outcome(identity: "CCC3333333333333", kind: .nowFails),
-            outcome(identity: "DDD4444444444444", kind: .obsolete),
+            try outcome(identity: "AAA1111111111111", kind: .stillPasses),
+            try outcome(identity: "BBB2222222222222", kind: .stillPasses),
+            try outcome(identity: "CCC3333333333333", kind: .nowFails),
+            try outcome(identity: "DDD4444444444444", kind: .obsolete),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.count == 1)
@@ -77,32 +77,32 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("obsolete and error outcomes do not contribute to the rate denominator")
-    func obsoleteAndErrorExcludedFromRate() {
+    func obsoleteAndErrorExcludedFromRate() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111"),
-            decision(identity: "BBB2222222222222"),
-            decision(identity: "CCC3333333333333"),
-            decision(identity: "DDD4444444444444"),
+            try decision(identity: "AAA1111111111111"),
+            try decision(identity: "BBB2222222222222"),
+            try decision(identity: "CCC3333333333333"),
+            try decision(identity: "DDD4444444444444"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
-            outcome(identity: "AAA1111111111111", kind: .stillPasses),
-            outcome(identity: "BBB2222222222222", kind: .nowFails),
-            outcome(identity: "CCC3333333333333", kind: .obsolete),
-            outcome(identity: "DDD4444444444444", kind: .error),
+            try outcome(identity: "AAA1111111111111", kind: .stillPasses),
+            try outcome(identity: "BBB2222222222222", kind: .nowFails),
+            try outcome(identity: "CCC3333333333333", kind: .obsolete),
+            try outcome(identity: "DDD4444444444444", kind: .error),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows[0].failureRate == 0.5) // 1 / (1 + 1)
     }
 
     @Test("only-obsolete-and-error template yields a nil rate (n/a)")
-    func nilRateWhenNoMeasurableRecords() {
+    func nilRateWhenNoMeasurableRecords() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111"),
-            decision(identity: "BBB2222222222222"),
+            try decision(identity: "AAA1111111111111"),
+            try decision(identity: "BBB2222222222222"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
-            outcome(identity: "AAA1111111111111", kind: .obsolete),
-            outcome(identity: "BBB2222222222222", kind: .error),
+            try outcome(identity: "AAA1111111111111", kind: .obsolete),
+            try outcome(identity: "BBB2222222222222", kind: .error),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.count == 1)
@@ -110,16 +110,16 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("rejected and skipped decisions do not contribute even when they have a matching outcome")
-    func onlyAccepted() {
+    func onlyAccepted() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", choice: .rejected),
-            decision(identity: "BBB2222222222222", choice: .skipped),
-            decision(identity: "CCC3333333333333", choice: .acceptedAsConformance),
+            try decision(identity: "AAA1111111111111", choice: .rejected),
+            try decision(identity: "BBB2222222222222", choice: .skipped),
+            try decision(identity: "CCC3333333333333", choice: .acceptedAsConformance),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
-            outcome(identity: "AAA1111111111111", kind: .stillPasses),
-            outcome(identity: "BBB2222222222222", kind: .nowFails),
-            outcome(identity: "CCC3333333333333", kind: .stillPasses),
+            try outcome(identity: "AAA1111111111111", kind: .stillPasses),
+            try outcome(identity: "BBB2222222222222", kind: .nowFails),
+            try outcome(identity: "CCC3333333333333", kind: .stillPasses),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.count == 1)
@@ -128,13 +128,13 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("unmatched outcome (no matching decision) is dropped from the join")
-    func unmatchedOutcomeIsDropped() {
+    func unmatchedOutcomeIsDropped() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111")
+            try decision(identity: "AAA1111111111111")
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
-            outcome(identity: "AAA1111111111111", kind: .stillPasses),
-            outcome(identity: "ZZZ9999999999999", kind: .nowFails), // no decision
+            try outcome(identity: "AAA1111111111111", kind: .stillPasses),
+            try outcome(identity: "ZZZ9999999999999", kind: .nowFails), // no decision
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows[0].stillPasses == 1)
@@ -142,22 +142,22 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("rows sort by total descending then template ascending")
-    func rowsSort() {
+    func rowsSort() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", template: "idempotence"),
-            decision(identity: "BBB2222222222222", template: "round-trip"),
-            decision(identity: "CCC3333333333333", template: "round-trip"),
-            decision(identity: "DDD4444444444444", template: "commutativity"),
-            decision(identity: "EEE5555555555555", template: "commutativity"),
-            decision(identity: "FFF6666666666666", template: "commutativity"),
+            try decision(identity: "AAA1111111111111", template: "idempotence"),
+            try decision(identity: "BBB2222222222222", template: "round-trip"),
+            try decision(identity: "CCC3333333333333", template: "round-trip"),
+            try decision(identity: "DDD4444444444444", template: "commutativity"),
+            try decision(identity: "EEE5555555555555", template: "commutativity"),
+            try decision(identity: "FFF6666666666666", template: "commutativity"),
         ])
         let outcomes = PostAcceptanceOutcomeLog(records: [
-            outcome(identity: "AAA1111111111111", template: "idempotence", kind: .stillPasses),
-            outcome(identity: "BBB2222222222222", template: "round-trip", kind: .stillPasses),
-            outcome(identity: "CCC3333333333333", template: "round-trip", kind: .nowFails),
-            outcome(identity: "DDD4444444444444", template: "commutativity", kind: .stillPasses),
-            outcome(identity: "EEE5555555555555", template: "commutativity", kind: .nowFails),
-            outcome(identity: "FFF6666666666666", template: "commutativity", kind: .obsolete),
+            try outcome(identity: "AAA1111111111111", template: "idempotence", kind: .stillPasses),
+            try outcome(identity: "BBB2222222222222", template: "round-trip", kind: .stillPasses),
+            try outcome(identity: "CCC3333333333333", template: "round-trip", kind: .nowFails),
+            try outcome(identity: "DDD4444444444444", template: "commutativity", kind: .stillPasses),
+            try outcome(identity: "EEE5555555555555", template: "commutativity", kind: .nowFails),
+            try outcome(identity: "FFF6666666666666", template: "commutativity", kind: .obsolete),
         ])
         let rows = MetricsRenderer.postAcceptanceFailureRows(decisions: decisions, outcomes: outcomes)
         #expect(rows.map(\.template) == ["commutativity", "round-trip", "idempotence"])
@@ -166,9 +166,9 @@ struct MetricsPostAcceptanceFailureTests {
     // MARK: - section render
 
     @Test("section renders sentinel when no outcomes are loaded")
-    func sectionSentinelOnEmptyOutcomes() {
+    func sectionSentinelOnEmptyOutcomes() throws {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
-            decisions: Decisions(records: [decision(identity: "AAA1111111111111")]),
+            decisions: Decisions(records: [try decision(identity: "AAA1111111111111")]),
             outcomes: .empty
         )
         let rendered = lines.joined(separator: "\n")
@@ -177,11 +177,11 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("section renders alternate sentinel when outcomes exist but none join")
-    func sectionSentinelOnUnjoinedOutcomes() {
+    func sectionSentinelOnUnjoinedOutcomes() throws {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
-            decisions: Decisions(records: [decision(identity: "AAA1111111111111")]),
+            decisions: Decisions(records: [try decision(identity: "AAA1111111111111")]),
             outcomes: PostAcceptanceOutcomeLog(records: [
-                outcome(identity: "ZZZ9999999999999", kind: .stillPasses)
+                try outcome(identity: "ZZZ9999999999999", kind: .stillPasses)
             ])
         )
         let rendered = lines.joined(separator: "\n")
@@ -189,11 +189,11 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("section surfaces selection-bias caveat in the header")
-    func sectionHasSelectionBiasCaveat() {
+    func sectionHasSelectionBiasCaveat() throws {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
-            decisions: Decisions(records: [decision(identity: "AAA1111111111111")]),
+            decisions: Decisions(records: [try decision(identity: "AAA1111111111111")]),
             outcomes: PostAcceptanceOutcomeLog(records: [
-                outcome(identity: "AAA1111111111111", kind: .stillPasses)
+                try outcome(identity: "AAA1111111111111", kind: .stillPasses)
             ])
         )
         let rendered = lines.joined(separator: "\n")
@@ -201,15 +201,15 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("section names the obsolete-excluded count when obsolete records exist")
-    func sectionNamesObsoleteCount() {
+    func sectionNamesObsoleteCount() throws {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
             decisions: Decisions(records: [
-                decision(identity: "AAA1111111111111"),
-                decision(identity: "BBB2222222222222"),
+                try decision(identity: "AAA1111111111111"),
+                try decision(identity: "BBB2222222222222"),
             ]),
             outcomes: PostAcceptanceOutcomeLog(records: [
-                outcome(identity: "AAA1111111111111", kind: .stillPasses),
-                outcome(identity: "BBB2222222222222", kind: .obsolete),
+                try outcome(identity: "AAA1111111111111", kind: .stillPasses),
+                try outcome(identity: "BBB2222222222222", kind: .obsolete),
             ])
         )
         let rendered = lines.joined(separator: "\n")
@@ -217,11 +217,11 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("section omits the obsolete caveat when there are zero obsolete records")
-    func sectionOmitsObsoleteCaveatWhenZero() {
+    func sectionOmitsObsoleteCaveatWhenZero() throws {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
-            decisions: Decisions(records: [decision(identity: "AAA1111111111111")]),
+            decisions: Decisions(records: [try decision(identity: "AAA1111111111111")]),
             outcomes: PostAcceptanceOutcomeLog(records: [
-                outcome(identity: "AAA1111111111111", kind: .stillPasses)
+                try outcome(identity: "AAA1111111111111", kind: .stillPasses)
             ])
         )
         let rendered = lines.joined(separator: "\n")
@@ -229,15 +229,15 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("populated section renders a table with one row per template")
-    func sectionRendersTable() {
+    func sectionRendersTable() throws {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
             decisions: Decisions(records: [
-                decision(identity: "AAA1111111111111"),
-                decision(identity: "BBB2222222222222"),
+                try decision(identity: "AAA1111111111111"),
+                try decision(identity: "BBB2222222222222"),
             ]),
             outcomes: PostAcceptanceOutcomeLog(records: [
-                outcome(identity: "AAA1111111111111", kind: .stillPasses),
-                outcome(identity: "BBB2222222222222", kind: .nowFails),
+                try outcome(identity: "AAA1111111111111", kind: .stillPasses),
+                try outcome(identity: "BBB2222222222222", kind: .nowFails),
             ])
         )
         let rendered = lines.joined(separator: "\n")
@@ -247,11 +247,11 @@ struct MetricsPostAcceptanceFailureTests {
     }
 
     @Test("section renders 'n/a' for templates with no measurable records")
-    func sectionRendersNaRate() {
+    func sectionRendersNaRate() throws {
         let lines = MetricsRenderer.postAcceptanceFailureSection(
-            decisions: Decisions(records: [decision(identity: "AAA1111111111111")]),
+            decisions: Decisions(records: [try decision(identity: "AAA1111111111111")]),
             outcomes: PostAcceptanceOutcomeLog(records: [
-                outcome(identity: "AAA1111111111111", kind: .error)
+                try outcome(identity: "AAA1111111111111", kind: .error)
             ])
         )
         let rendered = lines.joined(separator: "\n")

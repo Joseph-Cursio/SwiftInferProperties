@@ -10,7 +10,7 @@ import Testing
 @Suite("InteractionDrift — V2.0 M10 drift detection")
 struct InteractionDriftTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-15T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_778_846_400) // 2026-05-15T12:00:00Z
 
     private func suggestion(
         family: InteractionInvariantFamily = .cardinality,

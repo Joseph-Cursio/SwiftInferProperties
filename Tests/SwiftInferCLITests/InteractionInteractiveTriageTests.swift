@@ -11,7 +11,7 @@ import Testing
 @Suite("InteractionInteractiveTriage — V1.98 per-suggestion triage")
 struct InteractionInteractiveTriageTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-17T10:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_779_012_000) // 2026-05-17T10:00:00Z
 
     // MARK: - readChoice — prompt-arm classification
 

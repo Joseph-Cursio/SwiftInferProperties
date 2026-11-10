@@ -46,7 +46,7 @@ struct TCAExamplesCorpusDiscoveryTests {
         let suggestions = try InteractionTemplateEngine.analyze(
             candidates: candidates,
             sourcesDirectory: Self.fixtureDirectory,
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-07-03T00:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_783_036_800) // 2026-07-03T00:00:00Z
         )
         var byFamily: [InteractionInvariantFamily: Int] = [:]
         for suggestion in suggestions { byFamily[suggestion.family, default: 0] += 1 }

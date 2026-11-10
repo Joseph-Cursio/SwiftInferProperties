@@ -145,9 +145,9 @@ struct PostAcceptanceOutcomesStoreTests {
         try PostAcceptanceOutcomesStore.write(log, to: outcomesPath)
         let raw = try String(contentsOf: outcomesPath, encoding: .utf8)
         // sortedKeys → "checkedAt" comes before "detail" comes before "identityHash" alphabetically.
-        let checkedAtIdx = raw.range(of: "checkedAt")!.lowerBound
-        let detailIdx = raw.range(of: "detail")!.lowerBound
-        let identityIdx = raw.range(of: "identityHash")!.lowerBound
+        let checkedAtIdx = try #require(raw.range(of: "checkedAt")).lowerBound
+        let detailIdx = try #require(raw.range(of: "detail")).lowerBound
+        let identityIdx = try #require(raw.range(of: "identityHash")).lowerBound
         #expect(checkedAtIdx < detailIdx)
         #expect(detailIdx < identityIdx)
     }

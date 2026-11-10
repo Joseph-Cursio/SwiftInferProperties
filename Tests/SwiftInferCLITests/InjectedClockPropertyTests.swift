@@ -73,8 +73,8 @@ struct InjectedClockPropertyTests {
     @Test("ViewModelVerifyEvidence stamps the injected instant, every outcome")
     func viewModelEvidenceUsesInjectedClock() async {
         await propertyCheck(
-            input: Gen.element(of: Self.instants).map { $0! },
-            Gen.element(of: Self.outcomes).map { $0! }
+            input: Gen.element(of: Self.instants).compactMap(\.self),
+            Gen.element(of: Self.outcomes).compactMap(\.self)
         ) { instant, outcome in
             let evidence = ViewModelVerifyEvidence.evidence(
                 for: Self.suggestion(),
@@ -88,8 +88,8 @@ struct InjectedClockPropertyTests {
     @Test("OutputDeterminismVerifyEvidence stamps the injected instant, every outcome")
     func outputDeterminismEvidenceUsesInjectedClock() async {
         await propertyCheck(
-            input: Gen.element(of: Self.instants).map { $0! },
-            Gen.element(of: Self.outcomes).map { $0! }
+            input: Gen.element(of: Self.instants).compactMap(\.self),
+            Gen.element(of: Self.outcomes).compactMap(\.self)
         ) { instant, outcome in
             let evidence = OutputDeterminismVerifyEvidence.evidence(
                 for: Self.suggestion(),
@@ -104,9 +104,9 @@ struct InjectedClockPropertyTests {
     @Test("VerifyInteractionPipeline.makeEvidence stamps the injected instant")
     func interactionEvidenceUsesInjectedClock() async {
         await propertyCheck(
-            input: Gen.element(of: Self.instants).map { $0! },
-            Gen.element(of: VerifyEvidenceOutcome.allCases).map { $0! },
-            Gen.element(of: InteractionInvariantFamily.allCases).map { $0! }
+            input: Gen.element(of: Self.instants).compactMap(\.self),
+            Gen.element(of: VerifyEvidenceOutcome.allCases).compactMap(\.self),
+            Gen.element(of: InteractionInvariantFamily.allCases).compactMap(\.self)
         ) { instant, outcome, family in
             let evidence = VerifyInteractionPipeline.makeEvidence(
                 invariant: Self.suggestion(family),
@@ -126,8 +126,8 @@ struct InjectedClockPropertyTests {
     @Test("an injected clock makes ties reachable and ordering exact")
     func injectedClockControlsTiesAndOrdering() async {
         await propertyCheck(
-            input: Gen.element(of: Self.instants).map { $0! },
-            Gen.element(of: Self.instants).map { $0! }
+            input: Gen.element(of: Self.instants).compactMap(\.self),
+            Gen.element(of: Self.instants).compactMap(\.self)
         ) { first, second in
             let lhs = ViewModelVerifyEvidence.evidence(
                 for: Self.suggestion(),

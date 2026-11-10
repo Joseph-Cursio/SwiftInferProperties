@@ -121,7 +121,7 @@ struct IdempotenceLiftedConstraintEquivTests {
     private static func liftedTransformation(
         mutatingFuncName: String,
         carrier: String = "MySet"
-    ) -> LiftedTransformation {
+    ) throws -> LiftedTransformation {
         let summary = FunctionSummary(
             name: mutatingFuncName,
             parameters: [],
@@ -140,11 +140,11 @@ struct IdempotenceLiftedConstraintEquivTests {
                 storedMembers: [StoredMember(name: "x", typeName: "Int")]
             ),
         ])
-        return LiftedTransformation.lift(summary, carrierKindResolver: resolver)!
+        return try #require(LiftedTransformation.lift(summary, carrierKindResolver: resolver))
     }
 
     @Test("V1.39.D — Idempotence lifted: wrapper matches Constraint output across corpus")
-    func equivalence() {
+    func equivalence() throws {
         let resolver = CarrierKindResolver(typeDecls: [
             TypeDecl(
                 name: "MySet",
@@ -155,9 +155,9 @@ struct IdempotenceLiftedConstraintEquivTests {
             ),
         ])
         let corpus: [(label: String, lifted: LiftedTransformation)] = [
-            ("removeAll", Self.liftedTransformation(mutatingFuncName: "removeAll")),
-            ("sort", Self.liftedTransformation(mutatingFuncName: "sort")),
-            ("normalize", Self.liftedTransformation(mutatingFuncName: "normalize")),
+            ("removeAll", try Self.liftedTransformation(mutatingFuncName: "removeAll")),
+            ("sort", try Self.liftedTransformation(mutatingFuncName: "sort")),
+            ("normalize", try Self.liftedTransformation(mutatingFuncName: "normalize")),
         ]
         for (label, lifted) in corpus {
             let wrapper = IdempotenceTemplate.suggest(
@@ -186,7 +186,7 @@ struct IdempotenceLiftedConstraintEquivTests {
                 storedMembers: [StoredMember(name: "x", typeName: "Int")]
             ),
         ])
-        let lifted = Self.liftedTransformation(mutatingFuncName: "normalize")
+        let lifted = try Self.liftedTransformation(mutatingFuncName: "normalize")
         let suggestion = try #require(IdempotenceTemplate.suggest(
             forLifted: lifted, carrierKindResolver: resolver
         ))

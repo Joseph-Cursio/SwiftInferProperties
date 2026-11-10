@@ -51,9 +51,9 @@ struct V149PreambleTests {
         #expect(source.contains("extension Int {"))
         #expect(source.contains("mutating func bumpInPlace()"))
         // Preamble is positioned after imports + before var rng.
-        let importsEnd = source.range(of: "import")!.lowerBound
-        let preambleStart = source.range(of: "extension Int")!.lowerBound
-        let rngStart = source.range(of: "var rng")!.lowerBound
+        let importsEnd = try #require(source.range(of: "import")).lowerBound
+        let preambleStart = try #require(source.range(of: "extension Int")).lowerBound
+        let rngStart = try #require(source.range(of: "var rng")).lowerBound
         #expect(importsEnd < preambleStart)
         #expect(preambleStart < rngStart)
     }
@@ -76,8 +76,8 @@ struct V149PreambleTests {
         )
         #expect(source.contains("mutating func bumpInPlace()"))
         // Preamble is positioned before var rng.
-        let preambleStart = source.range(of: "extension Int")!.lowerBound
-        let rngStart = source.range(of: "var rng")!.lowerBound
+        let preambleStart = try #require(source.range(of: "extension Int")).lowerBound
+        let rngStart = try #require(source.range(of: "var rng")).lowerBound
         #expect(preambleStart < rngStart)
     }
 

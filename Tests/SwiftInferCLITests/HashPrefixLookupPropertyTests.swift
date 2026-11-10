@@ -78,7 +78,7 @@ struct HashPrefixLookupPropertyTests {
         }
     }
 
-    private static let bodyGen = Gen.element(of: hashBodies).map { $0! }
+    private static let bodyGen = Gen.element(of: hashBodies).compactMap(\.self)
     private static let styleGen = Gen.int(in: 0...3)
 
     // MARK: - Laws

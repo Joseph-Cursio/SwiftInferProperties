@@ -12,7 +12,7 @@ struct FunctionPairingScopedTypeNameTests {
 
     private func summary(
         _ name: String, param: String?, returns: String, in scope: String, isStatic: Bool = false, line: Int
-    ) -> FunctionSummary {
+    ) throws -> FunctionSummary {
         FunctionSummary(
             name: name,
             parameters: param.map {
@@ -21,16 +21,18 @@ struct FunctionPairingScopedTypeNameTests {
             returnTypeText: returns,
             isThrows: false, isAsync: false, isMutating: false, isStatic: isStatic,
             location: SourceLocation(file: "Keys.swift", line: line, column: 1),
-            containingTypeName: String(scope.split(separator: ".").last!),
+            containingTypeName: String(try #require(scope.split(separator: ".").last)),
             bodySignals: .empty,
             qualifiedContainingTypeName: scope
         )
     }
 
     @Test("two nested CodingKeys on DIFFERENT types do not pair")
-    func nestedNamesDoNotPairAcrossTypes() {
-        let document = summary("stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 3)
-        let operation = summary(
+    func nestedNamesDoNotPairAcrossTypes() throws {
+        let document = try summary(
+            "stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 3
+        )
+        let operation = try summary(
             "extendedKey", param: "String", returns: "CodingKeys", in: "OpenAPI.Operation.CodingKeys",
             isStatic: true, line: 30
         )
@@ -38,9 +40,11 @@ struct FunctionPairingScopedTypeNameTests {
     }
 
     @Test("the same pair on ONE nested type still pairs")
-    func nestedNamesStillPairWithinOneType() {
-        let forward = summary("stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 3)
-        let inverse = summary(
+    func nestedNamesStillPairWithinOneType() throws {
+        let forward = try summary(
+            "stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 3
+        )
+        let inverse = try summary(
             "extendedKey", param: "String", returns: "CodingKeys", in: "OpenAPI.Document.CodingKeys",
             isStatic: true, line: 9
         )
@@ -48,19 +52,21 @@ struct FunctionPairingScopedTypeNameTests {
     }
 
     @Test("a function on the parent that returns its nested type pairs with that type's own function")
-    func parentReturningItsNestedTypeStillPairs() {
-        let parent = summary(
+    func parentReturningItsNestedTypeStillPairs() throws {
+        let parent = try summary(
             "key", param: "String", returns: "CodingKeys", in: "OpenAPI.Document", isStatic: true, line: 3
         )
-        let child = summary("stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 9)
+        let child = try summary(
+            "stringValue", param: nil, returns: "String", in: "OpenAPI.Document.CodingKeys", line: 9
+        )
         #expect(FunctionPairing.candidates(in: [parent, child]).count == 1)
     }
 
     @Test("resolution is Swift's lookup: innermost declared scope first, unresolved names left alone")
-    func resolutionFollowsLookup() {
+    func resolutionFollowsLookup() throws {
         let declared: Set<String> = ["A", "A.B", "A.B.Key", "A.Key"]
-        let inner = summary("f", param: nil, returns: "Key", in: "A.B", line: 1)
-        let outer = summary("g", param: nil, returns: "Key", in: "A", line: 2)
+        let inner = try summary("f", param: nil, returns: "Key", in: "A.B", line: 1)
+        let outer = try summary("g", param: nil, returns: "Key", in: "A", line: 2)
         #expect(FunctionPairing.resolvingScopedNames("Key", declaredIn: inner, declared: declared) == "A.B.Key")
         #expect(FunctionPairing.resolvingScopedNames("[Key]?", declaredIn: outer, declared: declared) == "[A.Key]?")
         #expect(FunctionPairing.resolvingScopedNames("String", declaredIn: inner, declared: declared) == "String")

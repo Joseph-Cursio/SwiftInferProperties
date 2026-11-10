@@ -49,7 +49,7 @@ struct ActionSequenceStubEmitterInvariantTests {
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
     }
 
@@ -74,7 +74,7 @@ struct ActionSequenceStubEmitterInvariantTests {
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
     }
 
@@ -111,8 +111,8 @@ struct ActionSequenceStubEmitterInvariantTests {
         // The precondition lives inside the inner action loop — should
         // appear AFTER the `state = reduce(state, action)` line and
         // BEFORE the loop's closing brace.
-        let applyIndex = source.range(of: "state = reduce(state, action)")!.upperBound
-        let precondIndex = source.range(of: "precondition(state.count")!.lowerBound
+        let applyIndex = try #require(source.range(of: "state = reduce(state, action)")).upperBound
+        let precondIndex = try #require(source.range(of: "precondition(state.count")).lowerBound
         #expect(applyIndex <= precondIndex)
     }
 

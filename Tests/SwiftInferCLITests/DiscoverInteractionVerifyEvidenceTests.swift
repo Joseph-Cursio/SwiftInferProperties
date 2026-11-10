@@ -14,7 +14,7 @@ struct DiscoverInteractionVerifyEvidenceTests {
 
     private typealias Command = SwiftInferCommand.DiscoverInteraction
 
-    private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+    private let firstSeenAt = Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
 
     /// The cycle-107 `.likely` idempotence fixture (single `.refresh`
     /// identity reducer) — surfaces one idempotence suggestion at

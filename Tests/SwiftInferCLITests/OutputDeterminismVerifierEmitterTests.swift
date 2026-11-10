@@ -27,10 +27,10 @@ struct OutputDeterminismVerifierEmitterTests {
     }
     """
 
-    private func emitFixtureVerifier() -> String? {
-        let role = ConventionRoleDiscoverer.discover(source: Self.fixture, file: "F.swift").first!
+    private func emitFixtureVerifier() throws -> String? {
+        let role = try #require(ConventionRoleDiscoverer.discover(source: Self.fixture, file: "F.swift").first)
         let protocols = ViewModelProtocolScanner.scan(source: Self.fixture)
-        let output = protocols.first { $0.name == "ProfileViewProtocol" }!
+        let output = try #require(protocols.first { $0.name == "ProfileViewProtocol" })
         return OutputDeterminismVerifierEmitter.emit(
             role: role,
             outputProtocol: output,
@@ -41,7 +41,7 @@ struct OutputDeterminismVerifierEmitterTests {
 
     @Test("emits the recording fake, dependency-faked construction, drive, and compare")
     func emitsVerifier() throws {
-        let source = try #require(emitFixtureVerifier())
+        let source = try #require(try emitFixtureVerifier())
         #expect(source.contains("import Corpus"))
         // Recording fake for the output; no-op fake for the other dependency.
         #expect(source.contains("final class Recording_ProfileViewProtocol: ProfileViewProtocol"))
@@ -59,7 +59,7 @@ struct OutputDeterminismVerifierEmitterTests {
     }
 
     @Test("gated: an output protocol with a non-recordable requirement returns nil")
-    func gatesNonRecordableOutput() {
+    func gatesNonRecordableOutput() throws {
         let source = """
         protocol BadViewProtocol {
             func load() async
@@ -70,9 +70,9 @@ struct OutputDeterminismVerifierEmitterTests {
             func go() {}
         }
         """
-        let role = ConventionRoleDiscoverer.discover(source: source, file: "F.swift").first!
+        let role = try #require(ConventionRoleDiscoverer.discover(source: source, file: "F.swift").first)
         let protocols = ViewModelProtocolScanner.scan(source: source)
-        let output = protocols.first { $0.name == "BadViewProtocol" }!
+        let output = try #require(protocols.first { $0.name == "BadViewProtocol" })
         #expect(
             OutputDeterminismVerifierEmitter.emit(
                 role: role,

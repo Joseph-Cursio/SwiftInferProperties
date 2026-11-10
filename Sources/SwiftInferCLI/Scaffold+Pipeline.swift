@@ -110,8 +110,7 @@ public extension SwiftInferCommand {
 
             var stubs: [String] = []
             var names: [String] = []
-            for name in shapesByName.keys.sorted() {
-                let shape = shapesByName[name]!
+            for (name, shape) in shapesByName.sorted(by: { $0.key < $1.key }) {
                 // Only scaffold types that don't fully derive structurally.
                 guard case .todo = DerivationStrategist.strategy(
                     for: shape, resolve: resolver.customTypeGenerator

@@ -26,7 +26,7 @@ struct AcceptCheckCommandTests {
             scoreAtDecision: 80,
             tier: .strong,
             decision: choice,
-            timestamp: ISO8601DateFormatter().date(from: "2026-05-14T10:00:00Z")!
+            timestamp: Date(timeIntervalSince1970: 1_778_752_800) // 2026-05-14T10:00:00Z
         )
     }
 
@@ -168,7 +168,7 @@ struct AcceptCheckCommandTests {
             record: record,
             outcome: (.stillPasses, "bothPass"),
             packageRoot: directory,
-            now: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            now: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         #expect(warnings.isEmpty)
 

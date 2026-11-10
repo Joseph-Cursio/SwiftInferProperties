@@ -87,8 +87,8 @@ struct NameStrippingDifferentialPropertyTests {
     ]
 
     private static let nameGen = zip(
-        Gen.element(of: shapes).map { $0! },
-        Gen.element(of: baseNames).map { $0! }
+        Gen.element(of: shapes).compactMap(\.self),
+        Gen.element(of: baseNames).compactMap(\.self)
     ).map { shape, name in shape.replacingOccurrences(of: "%@", with: name) }
 
     // MARK: - Laws
@@ -176,7 +176,7 @@ struct NameStrippingDifferentialPropertyTests {
     /// untouched — the tool must not mangle `Int`, `Foo`, or `""`.
     @Test("a name with no angle bracket is returned unchanged")
     func namesWithoutGenericsAreUntouched() async {
-        await propertyCheck(input: Gen.element(of: Self.baseNames).map { $0! }) { name in
+        await propertyCheck(input: Gen.element(of: Self.baseNames).compactMap(\.self)) { name in
             guard !name.contains("<") else { return }
             for implementation in Self.implementations {
                 #expect(

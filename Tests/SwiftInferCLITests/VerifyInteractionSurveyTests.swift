@@ -111,7 +111,7 @@ struct VerifyInteractionSurveyTests {
             tier: .likely,
             whySuggested: [],
             whyMightBeWrong: [],
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         return VerifyInteractionSurvey.Entry(
             suggestion: suggestion,

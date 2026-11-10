@@ -8,7 +8,7 @@ import Testing
 @Suite("InteractionMetricsRenderer — V1.102 markdown + plain rendering")
 struct InteractionMetricsRendererTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-17T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_779_019_200) // 2026-05-17T12:00:00Z
 
     private func record(
         identity: String,

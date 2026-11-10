@@ -11,8 +11,8 @@ import Testing
 @Suite("MetricsRenderer — V1.71 time-to-adoption")
 struct MetricsTimeToAdoptionTests {
 
-    private func date(_ iso: String) -> Date {
-        ISO8601DateFormatter().date(from: iso)!
+    private func date(_ iso: String) throws -> Date {
+        try #require(ISO8601DateFormatter().date(from: iso))
     }
 
     private func decision(
@@ -20,14 +20,14 @@ struct MetricsTimeToAdoptionTests {
         template: String = "round-trip",
         decision: Decision = .accepted,
         at iso: String
-    ) -> DecisionRecord {
+    ) throws -> DecisionRecord {
         DecisionRecord(
             identityHash: identity,
             template: template,
             scoreAtDecision: 80,
             tier: .strong,
             decision: decision,
-            timestamp: date(iso)
+            timestamp: try date(iso)
         )
     }
 
@@ -53,11 +53,11 @@ struct MetricsTimeToAdoptionTests {
     // MARK: - timeToAdoptionRows
 
     @Test("joins accepted decisions to index entries and aggregates min/median/max")
-    func joinAndAggregate() {
+    func joinAndAggregate() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", at: "2026-05-14T10:05:00Z"), // 300s
-            decision(identity: "BBB2222222222222", at: "2026-05-14T10:15:00Z"), // 900s
-            decision(identity: "CCC3333333333333", at: "2026-05-14T10:10:00Z"),  // 600s
+            try decision(identity: "AAA1111111111111", at: "2026-05-14T10:05:00Z"), // 300s
+            try decision(identity: "BBB2222222222222", at: "2026-05-14T10:15:00Z"), // 900s
+            try decision(identity: "CCC3333333333333", at: "2026-05-14T10:10:00Z"),  // 600s
         ])
         let entries = [
             entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z"),
@@ -75,10 +75,10 @@ struct MetricsTimeToAdoptionTests {
     }
 
     @Test("even count takes the mean of the two central durations")
-    func medianEvenCount() {
+    func medianEvenCount() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", at: "2026-05-14T10:01:00Z"), // 60s
-            decision(identity: "BBB2222222222222", at: "2026-05-14T10:05:00Z"),  // 300s
+            try decision(identity: "AAA1111111111111", at: "2026-05-14T10:01:00Z"), // 60s
+            try decision(identity: "BBB2222222222222", at: "2026-05-14T10:05:00Z"),  // 300s
         ])
         let entries = [
             entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z"),
@@ -89,12 +89,12 @@ struct MetricsTimeToAdoptionTests {
     }
 
     @Test("rejected/skipped decisions and unmatched hashes do not contribute")
-    func onlyAcceptedAndJoined() {
+    func onlyAcceptedAndJoined() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", decision: .rejected, at: "2026-05-14T10:05:00Z"),
-            decision(identity: "BBB2222222222222", decision: .skipped, at: "2026-05-14T10:05:00Z"),
-            decision(identity: "CCC3333333333333", at: "2026-05-14T10:05:00Z"), // no index entry
-            decision(identity: "DDD4444444444444", at: "2026-05-14T10:05:00Z"),  // joined
+            try decision(identity: "AAA1111111111111", decision: .rejected, at: "2026-05-14T10:05:00Z"),
+            try decision(identity: "BBB2222222222222", decision: .skipped, at: "2026-05-14T10:05:00Z"),
+            try decision(identity: "CCC3333333333333", at: "2026-05-14T10:05:00Z"), // no index entry
+            try decision(identity: "DDD4444444444444", at: "2026-05-14T10:05:00Z"),  // joined
         ])
         let entries = [
             entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z"),
@@ -107,9 +107,9 @@ struct MetricsTimeToAdoptionTests {
     }
 
     @Test("a decision recorded before its first index run clamps to 0")
-    func negativeGapClampsToZero() {
+    func negativeGapClampsToZero() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", at: "2026-05-14T09:00:00Z")
+            try decision(identity: "AAA1111111111111", at: "2026-05-14T09:00:00Z")
         ])
         let entries = [
             entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z")
@@ -143,9 +143,9 @@ struct MetricsTimeToAdoptionTests {
     }
 
     @Test("section renders the no-join sentinel when the index has no accepted matches")
-    func sectionSentinelNoJoin() {
+    func sectionSentinelNoJoin() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", decision: .rejected, at: "2026-05-14T10:05:00Z")
+            try decision(identity: "AAA1111111111111", decision: .rejected, at: "2026-05-14T10:05:00Z")
         ])
         let entries = [entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z")]
         let lines = MetricsRenderer.timeToAdoptionSection(decisions: decisions, indexEntries: entries)
@@ -153,9 +153,9 @@ struct MetricsTimeToAdoptionTests {
     }
 
     @Test("section renders a per-template table when decisions join")
-    func sectionRendersTable() {
+    func sectionRendersTable() throws {
         let decisions = Decisions(records: [
-            decision(identity: "AAA1111111111111", at: "2026-05-14T10:05:00Z")
+            try decision(identity: "AAA1111111111111", at: "2026-05-14T10:05:00Z")
         ])
         let entries = [entry(displayHash: "0xAAA1111111111111", firstSeenAt: "2026-05-14T10:00:00Z")]
         let lines = MetricsRenderer.timeToAdoptionSection(decisions: decisions, indexEntries: entries)
@@ -189,7 +189,7 @@ struct MetricsTimeToAdoptionLoadTests {
                     scoreAtDecision: 80,
                     tier: .strong,
                     decision: .accepted,
-                    timestamp: ISO8601DateFormatter().date(from: "2026-05-14T10:05:00Z")!
+                    timestamp: Date(timeIntervalSince1970: 1_778_753_100) // 2026-05-14T10:05:00Z
                 ),
             ]),
             to: directory.appendingPathComponent("decisions.json")

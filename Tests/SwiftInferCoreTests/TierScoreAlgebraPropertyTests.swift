@@ -48,13 +48,13 @@ struct TierScoreAlgebraPropertyTests {
     /// domain is 141 values. Sampling it is strictly worse than walking it.
     private static let boundarySweep = Array(-10...130)
 
-    private static let tierGen = Gen.element(of: Tier.allCases).map { $0! }
+    private static let tierGen = Gen.element(of: Tier.allCases).compactMap(\.self)
 
     private static let signalGen = zip(
-        Gen.element(of: Signal.Kind.allCases),
+        Gen.element(of: Signal.Kind.allCases).compactMap(\.self),
         Gen<Int>.int(in: -50...50)
     ).map { kind, weight in
-        Signal(kind: kind!, weight: weight, detail: "test")
+        Signal(kind: kind, weight: weight, detail: "test")
     }
 
     private static let signalsGen = signalGen.array(of: 0...6)

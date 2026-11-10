@@ -58,7 +58,7 @@ struct InteractionTemplateEngineTests {
         let result = try InteractionTemplateEngine.analyzeOne(
             candidate(),
             sourcesDirectory: nil,
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         #expect(result.count == 2)
         #expect(Set(result.map(\.family)) == [.determinism, .unknownActionIsNoOp])
@@ -71,7 +71,7 @@ struct InteractionTemplateEngineTests {
         let result = try InteractionTemplateEngine.analyzeOne(
             closed,
             sourcesDirectory: nil,
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         #expect(result.map(\.family) == [.determinism])
     }
@@ -81,7 +81,7 @@ struct InteractionTemplateEngineTests {
         let result = try InteractionTemplateEngine.analyzeOne(
             candidate(),
             sourcesDirectory: nil,
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         let noOp = try #require(result.first { $0.family == .unknownActionIsNoOp })
         #expect(noOp.whyMightBeWrong.contains { $0.contains("not declared in the scanned sources") })
@@ -94,7 +94,7 @@ struct InteractionTemplateEngineTests {
         let result = try InteractionTemplateEngine.analyzeOne(
             dispatch,
             sourcesDirectory: nil,
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         let noOp = try #require(result.first { $0.family == .unknownActionIsNoOp })
         #expect(noOp.whyMightBeWrong.contains { $0.contains("build failure") })
@@ -114,7 +114,7 @@ struct InteractionTemplateEngineTests {
         let result = try InteractionTemplateEngine.analyzeOne(
             tcaCandidate,
             sourcesDirectory: nil,
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         #expect(result.contains { $0.family == .determinism })
     }

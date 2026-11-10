@@ -53,11 +53,11 @@ struct CompositionTemplateTests {
         paramType: String = "Int",
         carrier: String = "Counter",
         bodySignals: BodySignals = .empty
-    ) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    ) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             mutator(name, paramType: paramType, carrier: carrier, bodySignals: bodySignals),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     // MARK: - Admission
@@ -85,9 +85,9 @@ struct CompositionTemplateTests {
     }
 
     @Test("Param type not in curated additive-monoid set is rejected")
-    func nonAdditiveParamRejected() {
+    func nonAdditiveParamRejected() throws {
         // String isn't AdditiveArithmetic in the curated set.
-        let lift = lifted(paramType: "String")
+        let lift = try lifted(paramType: "String")
         #expect(CompositionTemplate.suggest(
             forLifted: lift,
             carrierKindResolver: valueSemanticResolver()
@@ -95,9 +95,9 @@ struct CompositionTemplateTests {
     }
 
     @Test("Param type matching carrier is rejected (Idempotence x-curried path)")
-    func paramMatchesCarrierRejected() {
+    func paramMatchesCarrierRejected() throws {
         // mutating func formUnion(_:Counter) — flows through IdempotenceTemplate.
-        let lift = lifted(paramType: "Counter")
+        let lift = try lifted(paramType: "Counter")
         #expect(CompositionTemplate.suggest(
             forLifted: lift,
             carrierKindResolver: valueSemanticResolver()
@@ -105,7 +105,7 @@ struct CompositionTemplateTests {
     }
 
     @Test("No-param mutator is rejected (Idempotence no-param path)")
-    func noParamRejected() {
+    func noParamRejected() throws {
         let resolver = valueSemanticResolver()
         let summaryNoParam = FunctionSummary(
             name: "increment",
@@ -119,7 +119,7 @@ struct CompositionTemplateTests {
             containingTypeName: "Counter",
             bodySignals: .empty
         )
-        let lift = LiftedTransformation.lift(summaryNoParam, carrierKindResolver: resolver)!
+        let lift = try #require(LiftedTransformation.lift(summaryNoParam, carrierKindResolver: resolver))
         #expect(CompositionTemplate.suggest(
             forLifted: lift,
             carrierKindResolver: resolver
@@ -127,17 +127,17 @@ struct CompositionTemplateTests {
     }
 
     @Test("Non-curated method name is rejected (no naming signal → no suggestion)")
-    func nonCuratedNameRejected() {
+    func nonCuratedNameRejected() throws {
         // Type-shape matches but the name 'munge' isn't in the curated
         // verb list and the project vocabulary is empty — no suggestion.
-        #expect(CompositionTemplate.suggest(
+        #expect(try CompositionTemplate.suggest(
             forLifted: lifted("munge"),
             carrierKindResolver: valueSemanticResolver()
         ) == nil)
     }
 
     @Test("Inout parameter disqualifies (aliasing breaks the lift)")
-    func inoutParamRejected() {
+    func inoutParamRejected() throws {
         let resolver = valueSemanticResolver()
         let summaryInout = FunctionSummary(
             name: "increment",
@@ -153,7 +153,7 @@ struct CompositionTemplateTests {
             containingTypeName: "Counter",
             bodySignals: .empty
         )
-        let lift = LiftedTransformation.lift(summaryInout, carrierKindResolver: resolver)!
+        let lift = try #require(LiftedTransformation.lift(summaryInout, carrierKindResolver: resolver))
         #expect(CompositionTemplate.suggest(
             forLifted: lift,
             carrierKindResolver: resolver
@@ -186,8 +186,8 @@ struct CompositionTemplateTests {
     // MARK: - Vetoes
 
     @Test("Non-deterministic body in original mutating method vetoes")
-    func nonDeterministicVetoes() {
-        let lift = lifted(bodySignals: BodySignals(
+    func nonDeterministicVetoes() throws {
+        let lift = try lifted(bodySignals: BodySignals(
             hasNonDeterministicCall: true,
             hasSelfComposition: false,
             nonDeterministicAPIsDetected: ["Date.init"]

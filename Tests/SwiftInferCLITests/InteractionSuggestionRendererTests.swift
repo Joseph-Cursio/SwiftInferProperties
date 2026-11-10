@@ -9,7 +9,7 @@ import Testing
 @Suite("InteractionSuggestionRenderer — V2.0 M4.E tiered output rendering")
 struct InteractionSuggestionRendererTests {
 
-    private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+    private let firstSeenAt = Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
 
     private func suggestion(
         family: InteractionInvariantFamily = .conservation,
@@ -146,7 +146,7 @@ struct InteractionSuggestionRendererTests {
     // MARK: - Multi-suggestion ordering
 
     @Test("multi-suggestion render preserves input order (engine sort honored)")
-    func renderPreservesInputOrder() {
+    func renderPreservesInputOrder() throws {
         let rendered = InteractionSuggestionRenderer.render(
             [
                 suggestion(family: .conservation, predicate: "state.count == state.items.count"),
@@ -154,8 +154,8 @@ struct InteractionSuggestionRendererTests {
             ],
             includePossible: true
         )
-        let conservationIdx = rendered.range(of: "conservation")!.lowerBound
-        let idempotenceIdx = rendered.range(of: "idempotence")!.lowerBound
+        let conservationIdx = try #require(rendered.range(of: "conservation")).lowerBound
+        let idempotenceIdx = try #require(rendered.range(of: "idempotence")).lowerBound
         #expect(conservationIdx < idempotenceIdx)
     }
 }

@@ -18,7 +18,7 @@ struct IndexedTypeShapeMemberParityTests {
 
     private static let memberGen = zip(
         Gen<Int>.int(in: 0...5),
-        Gen.element(of: PropertyLawCore.AccessLevel.allCases).map { $0! }
+        Gen.element(of: PropertyLawCore.AccessLevel.allCases).compactMap(\.self)
     ).map { index, access in
         PropertyLawCore.StoredMember(
             name: "member\(index)",

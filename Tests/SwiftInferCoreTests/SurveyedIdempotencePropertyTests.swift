@@ -26,7 +26,7 @@ struct SurveyedIdempotencePropertyTests {
         "exp(_:)", "merge(_:)", "isLoading", "hasShownAlert", "Optional<Int>?", "String?",
     ]
 
-    private static let nameGen = Gen.element(of: identifiers).map { $0! }
+    private static let nameGen = Gen.element(of: identifiers).compactMap(\.self)
 
     // MARK: - The laws that genuinely hold
 
@@ -71,7 +71,7 @@ struct SurveyedIdempotencePropertyTests {
     @Test("ViewModelNameHeuristics.stripOptional is idempotent")
     func stripOptionalIsIdempotent() async {
         let optionals = Self.identifiers + ["Int??", "String!", "Foo?!", "Bar!!"]
-        await propertyCheck(input: Gen.element(of: optionals).map { $0! }) { type in
+        await propertyCheck(input: Gen.element(of: optionals).compactMap(\.self)) { type in
             let once = ViewModelNameHeuristics.stripOptional(type)
             #expect(ViewModelNameHeuristics.stripOptional(once) == once)
             #expect(!once.hasSuffix("?") && !once.hasSuffix("!"))
@@ -100,7 +100,7 @@ struct SurveyedIdempotencePropertyTests {
         )
     }
 
-    private static let scoreGen = Gen.element(of: [20, 35, 50, 70, 90]).map { $0! }
+    private static let scoreGen = Gen.element(of: [20, 35, 50, 70, 90]).compactMap(\.self)
 
     @Test("SemanticIndexEntry.updated(from:) is idempotent")
     func semanticEntryUpdateIsIdempotent() async {

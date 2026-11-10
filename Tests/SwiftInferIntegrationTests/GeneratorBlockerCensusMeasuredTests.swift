@@ -48,7 +48,7 @@ struct GeneratorBlockerCensusMeasuredTests {
     @Test("every type the scan knows, attributed by the resolver")
     func attributeEveryDeclinedType() throws {
         let root = URL(
-            fileURLWithPath: ProcessInfo.processInfo.environment["SWIFT_INFER_GENERATOR_CENSUS"]!
+            fileURLWithPath: try #require(ProcessInfo.processInfo.environment["SWIFT_INFER_GENERATOR_CENSUS"])
         )
         let artifacts = try TemplateRegistry.discoverArtifacts(in: root)
         let shapes = TypeShapeBuilder.shapes(from: artifacts.typeDecls)

@@ -38,11 +38,11 @@ struct IdempotenceNonDeterministicMutatorTests {
         ])
     }
 
-    private func lifted(method: String, carrier: String = "OrderedDictionary") -> LiftedTransformation {
-        LiftedTransformation.lift(
+    private func lifted(method: String, carrier: String = "OrderedDictionary") throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             summary(method, carrier: carrier),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     // MARK: - Curated set membership
@@ -56,7 +56,7 @@ struct IdempotenceNonDeterministicMutatorTests {
 
     @Test("'shuffle' on OrderedDictionary fires veto (cycle-20 #40 case)")
     func shuffleOnOrderedDictionaryVetoes() throws {
-        let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(forLifted: lifted(method: "shuffle"))
+        let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(forLifted: try lifted(method: "shuffle"))
         let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.kind == .nonDeterministicBody)
@@ -65,10 +65,10 @@ struct IdempotenceNonDeterministicMutatorTests {
     }
 
     @Test("'shuffle' fires veto on any value-semantic carrier (OrderedSet, Array, etc.)")
-    func shuffleVetoesAnyCarrier() {
+    func shuffleVetoesAnyCarrier() throws {
         for carrier in ["OrderedSet", "Array", "OrderedDictionary.Elements"] {
             let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(
-                forLifted: lifted(method: "shuffle", carrier: carrier)
+                forLifted: try lifted(method: "shuffle", carrier: carrier)
             )
             #expect(signal?.isVeto == true, "shuffle should veto on '\(carrier)'")
         }
@@ -77,15 +77,15 @@ struct IdempotenceNonDeterministicMutatorTests {
     // MARK: - Veto does NOT fire on non-curated names
 
     @Test("'sort' does NOT fire non-deterministic veto (sort is deterministic + idempotent)")
-    func sortDoesNotVeto() {
-        let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(forLifted: lifted(method: "sort"))
+    func sortDoesNotVeto() throws {
+        let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(forLifted: try lifted(method: "sort"))
         #expect(signal == nil)
     }
 
     @Test("Non-curated names ('reverse', 'normalize', etc.) do not fire this veto")
-    func nonCuratedDoesNotVeto() {
+    func nonCuratedDoesNotVeto() throws {
         for name in ["reverse", "normalize", "randomElement", "permute"] {
-            let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(forLifted: lifted(method: name))
+            let signal = IdempotenceTemplate.nonDeterministicMutatorVeto(forLifted: try lifted(method: name))
             #expect(signal == nil, "'\(name)' should not fire non-deterministic mutator veto at v1.24")
         }
     }
@@ -93,9 +93,9 @@ struct IdempotenceNonDeterministicMutatorTests {
     // MARK: - End-to-end suggest()
 
     @Test("End-to-end: OrderedDictionary.shuffle() lifted-idempotence is suppressed at v1.24.C")
-    func endToEndShuffleSuppressed() {
+    func endToEndShuffleSuppressed() throws {
         let suggestion = IdempotenceTemplate.suggest(
-            forLifted: lifted(method: "shuffle"),
+            forLifted: try lifted(method: "shuffle"),
             carrierKindResolver: valueSemanticResolver()
         )
         #expect(suggestion == nil, "V1.24.C should suppress shuffle lifted-idempotence")

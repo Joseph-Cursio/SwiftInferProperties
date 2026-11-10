@@ -49,11 +49,10 @@ extension InversePairTemplate {
     static func directionLabelCounterSignal(
         for pair: FunctionPair
     ) -> Signal? {
-        let forwardLabel = pair.forward.parameters.first?.label
-        let reverseLabel = pair.reverse.parameters.first?.label
-        let forwardIsDirection = forwardLabel.map { DirectionLabels.curated.contains($0) } ?? false
-        let reverseIsDirection = reverseLabel.map { DirectionLabels.curated.contains($0) } ?? false
-        guard forwardIsDirection || reverseIsDirection else {
+        // Each side's first label when it is in the curated direction set, else nil.
+        let forwardDirection = DirectionLabels.curatedFirstLabel(of: pair.forward)
+        let reverseDirection = DirectionLabels.curatedFirstLabel(of: pair.reverse)
+        guard let label = forwardDirection ?? reverseDirection else {
             return nil
         }
         let cursorPrefixes = ["index", "bucket", "word"]
@@ -67,14 +66,14 @@ extension InversePairTemplate {
         // sides are direction-labeled AND both function names start with
         // `index`/`bucket`/`word`, fire full veto. Mirrors V1.25.A on
         // idempotence + V1.22.B on round-trip.
-        if forwardIsDirection, reverseIsDirection,
+        if let forwardDirection, let reverseDirection,
            forwardNameMatch, reverseNameMatch {
             return Signal(
                 kind: .directionLabel,
                 weight: Signal.vetoWeight,
                 detail: "Both pair sides direction-labeled + name-prefix "
-                    + "match ('\(forwardName)(\(forwardLabel!):)' × "
-                    + "'\(reverseName)(\(reverseLabel!):)') — positional "
+                    + "match ('\(forwardName)(\(forwardDirection):)' × "
+                    + "'\(reverseName)(\(reverseDirection):)') — positional "
                     + "cursor-advance pair, not a functional-inverse pair"
             )
         }
@@ -86,10 +85,10 @@ extension InversePairTemplate {
         // the pair is structurally asymmetric (cursor-advance × search-shape)
         // rather than functional-inverse. Fire full veto. Mirrors V1.27.B's
         // symmetric-veto pattern.
-        if forwardIsDirection != reverseIsDirection {
-            let cursorSideIsForward = forwardIsDirection
+        if (forwardDirection == nil) != (reverseDirection == nil) {
+            let cursorSideIsForward = forwardDirection != nil
             let cursorSideName = cursorSideIsForward ? forwardName : reverseName
-            let cursorSideLabel = cursorSideIsForward ? forwardLabel! : reverseLabel!
+            let cursorSideLabel = label
             let otherSideName = cursorSideIsForward ? reverseName : forwardName
             let cursorSideNameMatch = cursorSideIsForward ? forwardNameMatch : reverseNameMatch
             if cursorSideNameMatch {
@@ -105,7 +104,6 @@ extension InversePairTemplate {
         }
         // V1.11.1 either-side path preserved verbatim: single-side or
         // non-prefix-match direction labels fire at -10.
-        let label = forwardIsDirection ? forwardLabel! : reverseLabel!
         return Signal(
             kind: .directionLabel,
             weight: -10,

@@ -11,7 +11,7 @@ import Testing
 @Suite("InteractionInvariantBridge — V2.0 M9 aggregator")
 struct InteractionInvariantBridgeTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-15T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_778_846_400) // 2026-05-15T12:00:00Z
 
     private func suggestion(
         family: InteractionInvariantFamily,

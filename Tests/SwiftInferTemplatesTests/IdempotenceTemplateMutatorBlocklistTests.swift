@@ -41,11 +41,11 @@ struct IdempotenceTemplateMutatorBlocklistTests {
         ])
     }
 
-    private func lifted(method: String, carrier: String = "OrderedDictionary") -> LiftedTransformation {
-        LiftedTransformation.lift(
+    private func lifted(method: String, carrier: String = "OrderedDictionary") throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             summary(method, carrier: carrier),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     // MARK: - Curated set membership
@@ -65,17 +65,17 @@ struct IdempotenceTemplateMutatorBlocklistTests {
     }
 
     @Test("MutatorBlockedFromIdempotence.curated includes bare 'pop' (swift-nio dogfood)")
-    func curatedIncludesBarePop() {
+    func curatedIncludesBarePop() throws {
         // `apple/swift-nio` surfaced a real `PriorityQueue.pop()` lifted-
         // idempotence false positive at Likely — the canonical stack/queue
         // consume slipped through the `popFirst`/`popLast` exact-name match.
         #expect(MutatorBlockedFromIdempotence.curated.contains("pop"))
-        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "pop"))
+        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: try lifted(method: "pop"))
         #expect(signal?.isVeto == true)
     }
 
     @Test("consume-prefix family (popNext*/getNext*) vetoes — swift-argument-parser dogfood")
-    func consumePrefixFamilyVetoes() {
+    func consumePrefixFamilyVetoes() throws {
         // `apple/swift-argument-parser` surfaced a cluster of consuming-
         // iterator false positives at Likely: SplitArguments.popNext() /
         // popNextValue() / popNextElementIfValue() (bodies call removeFirst())
@@ -83,7 +83,7 @@ struct IdempotenceTemplateMutatorBlocklistTests {
         // popNextHexByte(). All "pop/get the next X" → non-idempotent.
         for name in ["popNext", "popNextValue", "popNextElementIfValue", "popNextHexByte", "getNext"] {
             #expect(MutatorBlockedFromIdempotence.isBlocked(name), "expected \(name) blocked")
-            #expect(IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: name))?.isVeto == true)
+            #expect(try IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: name))?.isVeto == true)
         }
     }
 
@@ -126,28 +126,28 @@ struct IdempotenceTemplateMutatorBlocklistTests {
 
     @Test("'reverse' on OrderedDictionary fires veto (cycle-20 #41 case)")
     func reverseOnOrderedDictionaryVetoes() throws {
-        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "reverse"))
+        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: try lifted(method: "reverse"))
         let veto = try #require(signal)
         #expect(veto.isVeto)
         #expect(veto.detail.contains("'reverse'"))
     }
 
     @Test("'removeFirst' on OrderedDictionary fires veto (cycle-20 #42 case)")
-    func removeFirstVetoes() {
-        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "removeFirst"))
+    func removeFirstVetoes() throws {
+        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: try lifted(method: "removeFirst"))
         #expect(signal?.isVeto == true)
     }
 
     @Test("'removeLast' on OrderedDictionary fires veto (cycle-20 #43 case)")
-    func removeLastVetoes() {
-        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "removeLast"))
+    func removeLastVetoes() throws {
+        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: try lifted(method: "removeLast"))
         #expect(signal?.isVeto == true)
     }
 
     @Test("All curated names fire veto on a value-semantic carrier")
-    func allCuratedFireVeto() {
+    func allCuratedFireVeto() throws {
         for name in MutatorBlockedFromIdempotence.curated {
-            let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: name))
+            let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: try lifted(method: name))
             #expect(signal?.isVeto == true, "'\(name)' should veto")
         }
     }
@@ -155,25 +155,25 @@ struct IdempotenceTemplateMutatorBlocklistTests {
     // MARK: - Veto does NOT fire on non-curated names
 
     @Test("'sort' on OrderedDictionary does NOT fire veto (sort IS idempotent)")
-    func sortDoesNotVeto() {
-        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "sort"))
+    func sortDoesNotVeto() throws {
+        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: try lifted(method: "sort"))
         #expect(signal == nil, "sort is idempotent (fixed-point); must not veto")
     }
 
     @Test("'normalize' does not veto")
-    func normalizeDoesNotVeto() {
-        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: lifted(method: "normalize"))
+    func normalizeDoesNotVeto() throws {
+        let signal = IdempotenceTemplate.mutatorBlocklistVeto(forLifted: try lifted(method: "normalize"))
         #expect(signal == nil)
     }
 
     @Test("Carrier-protocol-agnostic: fires on OrderedDictionary (NOT IteratorProtocol)")
-    func firesOnNonIteratorCarrier() {
+    func firesOnNonIteratorCarrier() throws {
         // V1.21.A wouldn't fire here (OrderedDictionary doesn't conform to
         // IteratorProtocol and doesn't have an Iterator-suffix name).
         // V1.24.B DOES fire because the structural argument is about the
         // method name semantics, not the carrier's protocol stack.
         let signal = IdempotenceTemplate.mutatorBlocklistVeto(
-            forLifted: lifted(method: "reverse", carrier: "OrderedDictionary")
+            forLifted: try lifted(method: "reverse", carrier: "OrderedDictionary")
         )
         #expect(signal?.isVeto == true)
     }
@@ -181,18 +181,18 @@ struct IdempotenceTemplateMutatorBlocklistTests {
     // MARK: - End-to-end suggest()
 
     @Test("End-to-end: OrderedDictionary.reverse() lifted-idempotence is suppressed at v1.24.B")
-    func endToEndReverseSuppressed() {
+    func endToEndReverseSuppressed() throws {
         let suggestion = IdempotenceTemplate.suggest(
-            forLifted: lifted(method: "reverse"),
+            forLifted: try lifted(method: "reverse"),
             carrierKindResolver: valueSemanticResolver()
         )
         #expect(suggestion == nil, "V1.24.B should suppress reverse-class lifted-idempotence")
     }
 
     @Test("End-to-end: OrderedDictionary.sort() lifted-idempotence still surfaces (sort IS idempotent)")
-    func endToEndSortStillSurfaces() {
+    func endToEndSortStillSurfaces() throws {
         let suggestion = IdempotenceTemplate.suggest(
-            forLifted: lifted(method: "sort"),
+            forLifted: try lifted(method: "sort"),
             carrierKindResolver: valueSemanticResolver()
         )
         #expect(suggestion != nil, "V1.24.B must NOT suppress idempotent sort")

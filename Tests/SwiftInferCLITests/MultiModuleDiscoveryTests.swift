@@ -20,7 +20,7 @@ struct MultiModuleDiscoveryTests {
             .appendingPathComponent("multi-module-discovery-corpus")
     }()
 
-    static let fixedDate = ISO8601DateFormatter().date(from: "2026-07-04T10:00:00Z")!
+    static let fixedDate = Date(timeIntervalSince1970: 1_783_159_200) // 2026-07-04T10:00:00Z
 
     @Test("two modules with a same-named reducer both surface (module tagging beats dedupe)")
     func twoModulesBothSurface() throws {

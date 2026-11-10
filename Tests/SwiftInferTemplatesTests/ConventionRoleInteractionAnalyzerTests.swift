@@ -34,7 +34,7 @@ struct ConventionRoleInteractionAnalyzerTests {
     }
 
     @Test("a role with no assertable output collaborator surfaces nothing")
-    func noOutputCollaboratorNoSuggestion() {
+    func noOutputCollaboratorNoSuggestion() throws {
         let source = """
         final class AuditInteractor {
             private var hits: Int = 0
@@ -45,7 +45,7 @@ struct ConventionRoleInteractionAnalyzerTests {
         """
         // `service` is a plain dependency (not the VIPER output name), so the
         // role has no output sink → no outputDeterminism candidate.
-        let role = ConventionRoleDiscoverer.discover(source: source, file: "F.swift").first!
+        let role = try #require(ConventionRoleDiscoverer.discover(source: source, file: "F.swift").first)
         #expect(ConventionRoleInteractionAnalyzer.suggestions(for: role, firstSeenAt: Self.epoch).isEmpty)
     }
 }

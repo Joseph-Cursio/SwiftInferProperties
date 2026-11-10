@@ -79,7 +79,7 @@ struct InversePairLiftedEquivTests {
         ])
     }
 
-    private static func makeLiftedInversePair() -> LiftedInversePair? {
+    private static func makeLiftedInversePair() throws -> LiftedInversePair? {
         let resolver = resolver()
         let insertSummary = FunctionSummary(
             name: "insert",
@@ -95,8 +95,8 @@ struct InversePairLiftedEquivTests {
             isThrows: false, isAsync: false, isMutating: true, isStatic: false,
             location: loc, containingTypeName: "MyBag", bodySignals: .empty
         )
-        let forward = LiftedTransformation.lift(insertSummary, carrierKindResolver: resolver)!
-        let reverse = LiftedTransformation.lift(removeSummary, carrierKindResolver: resolver)!
+        let forward = try #require(LiftedTransformation.lift(insertSummary, carrierKindResolver: resolver))
+        let reverse = try #require(LiftedTransformation.lift(removeSummary, carrierKindResolver: resolver))
         return LiftedInversePair(
             forward: forward,
             reverse: reverse,
@@ -106,7 +106,7 @@ struct InversePairLiftedEquivTests {
 
     @Test("V1.40.F — InversePair lifted: wrapper matches Constraint output")
     func equivalence() throws {
-        let pair = try #require(Self.makeLiftedInversePair())
+        let pair = try #require(try Self.makeLiftedInversePair())
         let resolver = Self.resolver()
         let wrapper = InversePairTemplate.suggest(
             forLifted: pair, carrierKindResolver: resolver

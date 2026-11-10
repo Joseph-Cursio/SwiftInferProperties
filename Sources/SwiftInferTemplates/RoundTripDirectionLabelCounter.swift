@@ -62,11 +62,10 @@ extension RoundTripTemplate {
     static func directionLabelCounterSignal(
         for pair: FunctionPair
     ) -> Signal? {
-        let forwardLabel = pair.forward.parameters.first?.label
-        let reverseLabel = pair.reverse.parameters.first?.label
-        let forwardIsDirectional = forwardLabel.map { DirectionLabels.curated.contains($0) } ?? false
-        let reverseIsDirectional = reverseLabel.map { DirectionLabels.curated.contains($0) } ?? false
-        guard forwardIsDirectional || reverseIsDirectional else {
+        // Each side's first label when it is in the curated direction set, else nil.
+        let forwardDirection = DirectionLabels.curatedFirstLabel(of: pair.forward)
+        let reverseDirection = DirectionLabels.curatedFirstLabel(of: pair.reverse)
+        guard let label = forwardDirection ?? reverseDirection else {
             return nil
         }
         // V1.22.B — both-sides direction-labeled bumps to -25 (full veto
@@ -77,21 +76,18 @@ extension RoundTripTemplate {
         // above visibility by V1.18.A carrier-kind +5). The -25 magnitude
         // sends both-sides-directional pairs to +15 → Suppressed with a
         // clean 5-point margin.
-        if forwardIsDirectional, reverseIsDirectional {
+        if let forwardDirection, let reverseDirection {
             // Both labels in the curated set — render both for clarity.
-            // Force-unwrapped because the boolean guards above already
-            // confirmed both labels exist + match the curated set.
             return Signal(
                 kind: .directionLabel,
                 weight: -25,
                 detail: "Both pair sides direction-labeled "
-                    + "('\(forwardLabel!)' / '\(reverseLabel!)') — paired "
+                    + "('\(forwardDirection)' / '\(reverseDirection)') — paired "
                     + "index advance, not a round-trip codec"
             )
         }
         // V1.12.1 single-side path preserved verbatim — score arithmetic
         // unchanged when only one side is direction-labeled.
-        let label = forwardIsDirectional ? forwardLabel! : reverseLabel!
         return Signal(
             kind: .directionLabel,
             weight: -15,

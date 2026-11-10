@@ -38,16 +38,16 @@ struct IdempotenceSequenceConformanceTests {
         ])
     }
 
-    private func lifted(method: String, carrier: String) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    private func lifted(method: String, carrier: String) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             summary(method, carrier: carrier),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     @Test("Sequence-conforming carrier + 'next' fires veto (cycle-23 case)")
     func sequenceCarrierNextFires() throws {
-        let lift = lifted(method: "next", carrier: "ChainSequence")
+        let lift = try lifted(method: "next", carrier: "ChainSequence")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: ["ChainSequence": ["Sequence"]]
@@ -58,31 +58,31 @@ struct IdempotenceSequenceConformanceTests {
     }
 
     @Test("Sequence + 'advance' fires veto")
-    func sequenceCarrierAdvanceFires() {
+    func sequenceCarrierAdvanceFires() throws {
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
-            for: lifted(method: "advance", carrier: "ChainSequence"),
+            for: try lifted(method: "advance", carrier: "ChainSequence"),
             inheritedTypesByName: ["ChainSequence": ["Sequence"]]
         )
         #expect(signal?.isVeto == true)
     }
 
     @Test("Sequence + non-curated method ('removeAll') does NOT fire")
-    func sequenceNonCuratedMethodDoesNotFire() {
+    func sequenceNonCuratedMethodDoesNotFire() throws {
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
-            for: lifted(method: "removeAll", carrier: "ChainSequence"),
+            for: try lifted(method: "removeAll", carrier: "ChainSequence"),
             inheritedTypesByName: ["ChainSequence": ["Sequence"]]
         )
         #expect(signal == nil, "Joint match required: Sequence + curated method")
     }
 
     @Test("Non-Sequence carrier + 'next' falls through to name-fallback path")
-    func nonSequenceFallsThroughToNamePath() {
+    func nonSequenceFallsThroughToNamePath() throws {
         // Carrier 'OrderedDictionary' isn't IteratorProtocol or Sequence;
         // but method 'next' is curated. Falls through to V1.21.A name-
         // fallback which requires `*Iterator` carrier-suffix — also doesn't
         // match here. So no veto fires.
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
-            for: lifted(method: "next", carrier: "OrderedDictionary"),
+            for: try lifted(method: "next", carrier: "OrderedDictionary"),
             inheritedTypesByName: [:]
         )
         #expect(signal == nil)
@@ -91,7 +91,7 @@ struct IdempotenceSequenceConformanceTests {
     @Test("V1.21.A IteratorProtocol path still fires (Sequence path doesn't interfere)")
     func iteratorProtocolPathStillFires() throws {
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
-            for: lifted(method: "next", carrier: "Iterator"),
+            for: try lifted(method: "next", carrier: "Iterator"),
             inheritedTypesByName: ["Iterator": ["IteratorProtocol"]]
         )
         let veto = try #require(signal)
@@ -102,7 +102,7 @@ struct IdempotenceSequenceConformanceTests {
     @Test("Both Sequence + IteratorProtocol → fires (IteratorProtocol path wins; detail prefers IteratorProtocol)")
     func bothProtocolsCarrierFires() throws {
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
-            for: lifted(method: "next", carrier: "MyIter"),
+            for: try lifted(method: "next", carrier: "MyIter"),
             inheritedTypesByName: ["MyIter": ["IteratorProtocol", "Sequence"]]
         )
         let veto = try #require(signal)

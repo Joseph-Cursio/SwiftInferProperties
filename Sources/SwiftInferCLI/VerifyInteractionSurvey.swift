@@ -204,7 +204,7 @@ enum VerifyInteractionSurvey {
             if byReducer[key] == nil { order.append(key) }
             byReducer[key, default: []].append((index, suggestion))
         }
-        return order.map { byReducer[$0]! }
+        return order.compactMap { byReducer[$0] }
     }
 
     /// Per-identity worker. Runs the full measured verify; maps any thrown

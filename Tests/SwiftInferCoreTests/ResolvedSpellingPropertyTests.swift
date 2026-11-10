@@ -49,12 +49,12 @@ struct ResolvedSpellingPropertyTests {
     ]
 
     private static let spellingGen = zip(
-        Gen.element(of: shapes).map { $0! },
-        Gen.element(of: bareNames).map { $0! }
+        Gen.element(of: shapes).compactMap(\.self),
+        Gen.element(of: bareNames).compactMap(\.self)
     ).map { shape, name in shape.replacingOccurrences(of: "%@", with: name) }
 
     private static let enclosingGen = Gen.element(of: ["Outer", "Outer.Inner", "Wrapper", "Elsewhere"])
-        .map { $0! }
+        .compactMap(\.self)
 
     // MARK: - Laws
 
@@ -128,7 +128,8 @@ struct ResolvedSpellingPropertyTests {
     /// the rewriter from both sides: it qualifies what it knows and nothing else.
     @Test("unknown identifiers are left alone")
     func unknownIdentifiersAreUntouched() async {
-        await propertyCheck(input: Gen.element(of: Self.shapes).map { $0! }, Self.enclosingGen) { shape, enclosing in
+        let shapeGen = Gen.element(of: Self.shapes).compactMap(\.self)
+        await propertyCheck(input: shapeGen, Self.enclosingGen) { shape, enclosing in
             let spelling = shape.replacingOccurrences(of: "%@", with: "TotallyExternal")
             #expect(
                 TypeShapeBuilder.resolvedSpelling(

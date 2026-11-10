@@ -93,9 +93,8 @@ public enum RefactorClusterAnalyzer {
     /// Entries with `typeName == nil` are filtered out (free
     /// functions don't cluster by carrier).
     public static func analyze(_ entries: [SemanticIndexEntry]) -> [RefactorCluster] {
-        let grouped = Dictionary(grouping: entries.filter { $0.typeName != nil }) { entry in
-            entry.typeName!
-        }
+        let typed = entries.compactMap { entry in entry.typeName.map { (typeName: $0, entry: entry) } }
+        let grouped = Dictionary(grouping: typed, by: \.typeName).mapValues { $0.map(\.entry) }
         var clusters: [RefactorCluster] = []
         for (typeName, typeEntries) in grouped {
             let perTemplateCounts = countByTemplate(typeEntries)

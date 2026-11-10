@@ -179,12 +179,13 @@ struct CalleeReferenceTests {
     /// *synchronous* `@MainActor` closure, so `await` cannot appear inside one — wrapping each
     /// call individually would emit `await MainActor.run { f(await MainActor.run { f(x) }) }`,
     /// which does not compile.
-    @Test func anIsolatedCalleeWrapsTheWholeExpression() {
+    @Test func anIsolatedCalleeWrapsTheWholeExpression() throws {
         let callee = CalleeReference(evidence: evidence(
             "strippingHeadingMarkers(from:)", qualifiedTypeName: "EditorFormatter", globalActor: "MainActor"
         ))
-        let inner = callee!.call(callee!.call("value"))
-        #expect(callee?.isolated("\(inner) == x") == "await MainActor.run { \(inner) == x }")
+        let reference = try #require(callee)
+        let inner = reference.call(reference.call("value"))
+        #expect(reference.isolated("\(inner) == x") == "await MainActor.run { \(inner) == x }")
         // The calls themselves are untouched — one hop, not three.
         #expect(inner.contains("MainActor") == false)
     }

@@ -94,8 +94,8 @@ struct IndexProjectionParityPropertyTests {
     }
 
     private static let tags = ["01", "02", "03"]
-    private static let tagGen = Gen.element(of: tags).map { $0! }
-    private static let boolGen = Gen.element(of: [true, false]).map { $0! }
+    private static let tagGen = Gen.element(of: tags).compactMap(\.self)
+    private static let boolGen = Gen.element(of: [true, false]).compactMap(\.self)
 
     // MARK: - `updated(from:)` — identity from self, everything else from other
 

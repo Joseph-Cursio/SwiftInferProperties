@@ -80,8 +80,8 @@ struct BareTypeNameDifferentialPropertyTests {
     ]
 
     private static let nameGen = zip(
-        Gen.element(of: shapes).map { $0! },
-        Gen.element(of: baseNames).map { $0! }
+        Gen.element(of: shapes).compactMap(\.self),
+        Gen.element(of: baseNames).compactMap(\.self)
     ).map { shape, name in shape.replacingOccurrences(of: "%@", with: name) }
 
     // MARK: - Laws

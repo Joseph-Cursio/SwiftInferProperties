@@ -50,7 +50,7 @@ struct IndexedTypeShapeParityPropertyTests {
     private static let typeSpellings = ["String", "Int", "[String]", "Outer.Kind?"]
 
     private static let caseGen = zip(
-        Gen.element(of: ["ok", "notFound", "`struct`", "`class`"]).map { $0! },
+        Gen.element(of: ["ok", "notFound", "`struct`", "`class`"]).compactMap(\.self),
         Gen<Int>.int(in: 0...2)
     ).map { name, valueCount in
         PropertyLawCore.EnumCase(
@@ -65,9 +65,9 @@ struct IndexedTypeShapeParityPropertyTests {
     }
 
     private static let shapeGen = zip(
-        Gen.element(of: names).map { $0! },
+        Gen.element(of: names).compactMap(\.self),
         caseGen.array(of: 0...4),
-        Gen.element(of: [true, false]).map { $0! }
+        Gen.element(of: [true, false]).compactMap(\.self)
     ).map { name, cases, hasUserGen in
         TypeShape(
             name: name,
@@ -90,9 +90,9 @@ struct IndexedTypeShapeParityPropertyTests {
     /// `initializerAccessLevelIsKnowinglyNotCarried`, which states that drop out loud
     /// rather than letting this generator hide it.
     private static let initializerGen = zip(
-        Gen.element(of: [true, false]).map { $0! },
-        Gen.element(of: [true, false]).map { $0! },
-        Gen.element(of: [true, false]).map { $0! },
+        Gen.element(of: [true, false]).compactMap(\.self),
+        Gen.element(of: [true, false]).compactMap(\.self),
+        Gen.element(of: [true, false]).compactMap(\.self),
         Gen<Int>.int(in: 1...3)
     ).map { asserts, delegates, isFailable, arity in
         PropertyLawCore.InitializerSignature(
@@ -114,7 +114,7 @@ struct IndexedTypeShapeParityPropertyTests {
     /// a lost initializer field in either currency: not by equality, and not by
     /// derivation tier, since Tier 6 declines a non-struct outright.
     private static let structShapeGen = zip(
-        Gen.element(of: names).map { $0! },
+        Gen.element(of: names).compactMap(\.self),
         initializerGen.array(of: 1...3)
     ).map { name, initializers in
         TypeShape(

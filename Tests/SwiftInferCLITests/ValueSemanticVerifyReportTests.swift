@@ -24,7 +24,7 @@ struct ValueSemanticVerifyReportTests {
         #expect(out == "swift-infer verify-value-semantics: no value-semantics candidates found in MyKit.\n")
     }
 
-    @Test func groupsByStatusWithLeaksLeadingAndRepro() {
+    @Test func groupsByStatusWithLeaksLeadingAndRepro() throws {
         let out = ValueSemanticVerifyReport.render(
             results: [
                 result("SafeStore", .verifiedSafe),
@@ -44,9 +44,9 @@ struct ValueSemanticVerifyReportTests {
         let summary = "Summary: 4 candidates \u{00B7} 1 leak \u{00B7} 1 safe \u{00B7} 1 skipped \u{00B7} 1 error"
         #expect(out.contains(summary))
         // Polarity: leaks lead the report.
-        let leakIndex = try? #require(out.range(of: "CONFIRMED LEAKS")).lowerBound
-        let safeIndex = try? #require(out.range(of: "Verified value-semantic")).lowerBound
-        #expect(leakIndex != nil && safeIndex != nil && leakIndex! < safeIndex!)
+        let leakIndex = try #require(out.range(of: "CONFIRMED LEAKS")).lowerBound
+        let safeIndex = try #require(out.range(of: "Verified value-semantic")).lowerBound
+        #expect(leakIndex < safeIndex)
     }
 
     @Test func pluralizationAndErrorsOmittedWhenZero() {
@@ -62,7 +62,7 @@ struct ValueSemanticVerifyReportTests {
         #expect(!out.contains("CONFIRMED LEAKS"))
     }
 
-    @Test func sortsDeterministicallyWithinGroup() {
+    @Test func sortsDeterministicallyWithinGroup() throws {
         let out = ValueSemanticVerifyReport.render(
             results: [
                 result("Zebra", line: 9, .verifiedSafe),
@@ -70,8 +70,8 @@ struct ValueSemanticVerifyReportTests {
             ],
             moduleName: "M"
         )
-        let appleIndex = out.range(of: "Apple")!.lowerBound
-        let zebraIndex = out.range(of: "Zebra")!.lowerBound
+        let appleIndex = try #require(out.range(of: "Apple")).lowerBound
+        let zebraIndex = try #require(out.range(of: "Zebra")).lowerBound
         #expect(appleIndex < zebraIndex)
     }
 

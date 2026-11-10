@@ -66,7 +66,7 @@ extension CatalogHealthCensusMeasuredTests {
     /// admits only `.notVisibleToTests`; a member of a private *type* cannot be freed by
     /// widening the member, which is that design's named trap.
     @Test("census — visibility blocking and widenability across the manifest")
-    func visibilityCensus() {
+    func visibilityCensus() throws {
         let blocked = Self.rows.filter { $0.restriction != nil }
         let widenable = blocked.filter(\.isWidenable)
         var lines: [String] = ["", "VISIBILITY — ALL MANIFEST CORPORA", ""]
@@ -77,7 +77,7 @@ extension CatalogHealthCensusMeasuredTests {
         lines.append("")
         lines.append("restriction reasons:")
         var byReason: [String: Int] = [:]
-        for row in blocked { byReason[String(describing: row.restriction!), default: 0] += 1 }
+        for row in blocked { byReason[String(describing: try #require(row.restriction)), default: 0] += 1 }
         for (reason, count) in byReason.sorted(by: { $0.value > $1.value }) {
             lines.append("  \(count)  \(reason)")
         }

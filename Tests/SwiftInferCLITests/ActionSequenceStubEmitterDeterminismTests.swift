@@ -62,7 +62,7 @@ struct StubEmitterDeterminismTests {
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
     }
 
@@ -79,8 +79,8 @@ struct StubEmitterDeterminismTests {
         // after the apply line but before the inner loop closes — NOT a
         // post-loop single-witness check like idempotence.
         #expect(source.contains("let once =") == false)
-        let applyIndex = source.range(of: "state = reduce(state, action)")!.upperBound
-        let detIndex = source.range(of: "let detFirst = reduce(state, action)")!.lowerBound
+        let applyIndex = try #require(source.range(of: "state = reduce(state, action)")).upperBound
+        let detIndex = try #require(source.range(of: "let detFirst = reduce(state, action)")).lowerBound
         #expect(applyIndex <= detIndex)
     }
 
