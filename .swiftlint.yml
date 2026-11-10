@@ -10,4 +10,11 @@ excluded:
   - .build
   - docs
   - Package.swift
+  # Corpora the verify and survey suites read as input; not built here.
   - Tests/Fixtures
+  # Compiled fixtures: subject types a test scans the way `discover` scans a target, followed by
+  # the emitter's output held byte for byte (each file's own test regenerates and compares it).
+  - Tests/SwiftInferCLITests/DeterminismStubCompiledWitness.swift
+  - Tests/SwiftInferCLITests/ReferenceOracleDiscoverWitness.swift
+  - Tests/SwiftInferTemplatesTests/ReferenceOracleScaffoldWitness.swift
+  - Tests/SwiftInferTemplatesTests/ReferenceOracleScaffoldWitness+Shapes.swift
