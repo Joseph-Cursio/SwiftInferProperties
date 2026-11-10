@@ -76,6 +76,30 @@ struct NClassPartitionKey: Hashable {
     let markerSetName: String
 }
 
+/// Per-predicate ranking helper used by `PartitionAggregator.finalize()`.
+/// Carries the candidate plus the two scalar fields the rank comparison
+/// needs — extracted into a struct so the dedup map's value isn't a
+/// 3-tuple (SwiftLint `large_tuple` cap).
+private struct RankedCandidate {
+
+    let candidate: PartitionCandidate
+    let totalSites: Int
+    let positiveMarker: String
+
+    init(candidate: PartitionCandidate, accumulator: PartitionAccumulator) {
+        self.candidate = candidate
+        self.totalSites = accumulator.positiveSites.count + accumulator.negativeSites.count
+        self.positiveMarker = accumulator.markerPair.positive
+    }
+
+    func beats(_ other: Self) -> Bool {
+        if totalSites != other.totalSites {
+            return totalSites > other.totalSites
+        }
+        return positiveMarker < other.positiveMarker
+    }
+}
+
 /// Streaming aggregator the M11.2 `TestLifter.discover(in:)` loop drives
 /// per-method so it doesn't have to retain `[SlicedTestBody]` for the
 /// full discover run. Each call to `observe(method:slice:markerTable:)`
@@ -243,29 +267,5 @@ struct PartitionAggregator {
             return lhsIsTwoClass
         }
         return (lhs.markerSet?.name ?? "") < (rhs.markerSet?.name ?? "")
-    }
-}
-
-/// Per-predicate ranking helper used by `PartitionAggregator.finalize()`.
-/// Carries the candidate plus the two scalar fields the rank comparison
-/// needs — extracted into a struct so the dedup map's value isn't a
-/// 3-tuple (SwiftLint `large_tuple` cap).
-private struct RankedCandidate {
-
-    let candidate: PartitionCandidate
-    let totalSites: Int
-    let positiveMarker: String
-
-    init(candidate: PartitionCandidate, accumulator: PartitionAccumulator) {
-        self.candidate = candidate
-        self.totalSites = accumulator.positiveSites.count + accumulator.negativeSites.count
-        self.positiveMarker = accumulator.markerPair.positive
-    }
-
-    func beats(_ other: Self) -> Bool {
-        if totalSites != other.totalSites {
-            return totalSites > other.totalSites
-        }
-        return positiveMarker < other.positiveMarker
     }
 }

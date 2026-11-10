@@ -6,6 +6,16 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// First `extension` member block in a parsed file.
+final class ExtensionMemberBlockFinder: SyntaxVisitor {
+    private(set) var found: MemberBlockSyntax?
+
+    override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
+        if found == nil { found = node.memberBlock }
+        return .skipChildren
+    }
+}
+
 /// **A precondition one hop away is still a precondition — and this side computed the
 /// flag that says so nowhere.**
 ///
@@ -152,15 +162,5 @@ struct DelegatingInitializerCaptureTests {
                 + " this is the derivation that traps at `assert(normal.isNormalized)`"
             Issue.record(Comment(rawValue: message))
         }
-    }
-}
-
-/// First `extension` member block in a parsed file.
-final class ExtensionMemberBlockFinder: SyntaxVisitor {
-    private(set) var found: MemberBlockSyntax?
-
-    override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-        if found == nil { found = node.memberBlock }
-        return .skipChildren
     }
 }

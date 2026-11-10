@@ -1,5 +1,68 @@
 import SwiftSyntax
 
+private final class ScannerVisitor: SyntaxVisitor {
+
+    var callSitesByConsumer: [String: [DomainCallSite]] = [:]
+    var setupBindings: [String: ArgumentClassification] = [:]
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        guard let consumer = node.calledExpression.trailingIdentifierName else {
+            return .visitChildren
+        }
+        let argument: ArgumentClassification = {
+            guard let firstArg = node.arguments.first else {
+                return .other
+            }
+            return classify(firstArg.expression)
+        }()
+        callSitesByConsumer[consumer, default: []].append(DomainCallSite(argument: argument))
+        return .visitChildren
+    }
+
+    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+        // Single-binding `let <name> = <expr>` only — multi-binding
+        // shapes (`let x = 1, y = 2`) and shadowed re-declarations are
+        // out of scope for M10's narrowed identifier resolution.
+        guard node.bindings.count == 1, let binding = node.bindings.first else {
+            return .visitChildren
+        }
+        guard let pattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
+            return .visitChildren
+        }
+        guard let initializer = binding.initializer?.value else {
+            return .visitChildren
+        }
+        setupBindings[pattern.identifier.text] = classify(initializer)
+        return .visitChildren
+    }
+
+    private func classify(_ expr: ExprSyntax) -> ArgumentClassification {
+        // M16.3 follow-up — peel `try`/`try!`/`try?`/`await` wrappers
+        // so producer-throws / producer-async chains still surface
+        // (with the matching veto). Without this, `validate(try
+        // format(doc))` would classify as `.other` and homogeneity
+        // would kill the chain before veto computation. M10's
+        // round-trip-pair surface benefits identically — vetoed
+        // throws-producer round-trips now render their advisory
+        // comment instead of being silently skipped.
+        var inner = expr
+        while let tryExpr = inner.as(TryExprSyntax.self) {
+            inner = tryExpr.expression
+        }
+        while let awaitExpr = inner.as(AwaitExprSyntax.self) {
+            inner = awaitExpr.expression
+        }
+        if let call = inner.as(FunctionCallExprSyntax.self),
+           let producer = call.calledExpression.trailingIdentifierName {
+            return .callOutput(producerName: producer)
+        }
+        if let ident = inner.as(DeclReferenceExprSyntax.self) {
+            return .identifier(name: ident.baseName.text)
+        }
+        return .other
+    }
+}
+
 /// TestLifter M10.3 — corpus-wide aggregation pass that walks each
 /// `SlicedTestBody` once and produces (a) `[String: [DomainCallSite]]`
 /// keyed by the consumer function's trailing-identifier name, and
@@ -89,68 +152,5 @@ public enum DomainCorpusScanner {
             }
         }
         return merged
-    }
-}
-
-private final class ScannerVisitor: SyntaxVisitor {
-
-    var callSitesByConsumer: [String: [DomainCallSite]] = [:]
-    var setupBindings: [String: ArgumentClassification] = [:]
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        guard let consumer = node.calledExpression.trailingIdentifierName else {
-            return .visitChildren
-        }
-        let argument: ArgumentClassification = {
-            guard let firstArg = node.arguments.first else {
-                return .other
-            }
-            return classify(firstArg.expression)
-        }()
-        callSitesByConsumer[consumer, default: []].append(DomainCallSite(argument: argument))
-        return .visitChildren
-    }
-
-    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-        // Single-binding `let <name> = <expr>` only — multi-binding
-        // shapes (`let x = 1, y = 2`) and shadowed re-declarations are
-        // out of scope for M10's narrowed identifier resolution.
-        guard node.bindings.count == 1, let binding = node.bindings.first else {
-            return .visitChildren
-        }
-        guard let pattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
-            return .visitChildren
-        }
-        guard let initializer = binding.initializer?.value else {
-            return .visitChildren
-        }
-        setupBindings[pattern.identifier.text] = classify(initializer)
-        return .visitChildren
-    }
-
-    private func classify(_ expr: ExprSyntax) -> ArgumentClassification {
-        // M16.3 follow-up — peel `try`/`try!`/`try?`/`await` wrappers
-        // so producer-throws / producer-async chains still surface
-        // (with the matching veto). Without this, `validate(try
-        // format(doc))` would classify as `.other` and homogeneity
-        // would kill the chain before veto computation. M10's
-        // round-trip-pair surface benefits identically — vetoed
-        // throws-producer round-trips now render their advisory
-        // comment instead of being silently skipped.
-        var inner = expr
-        while let tryExpr = inner.as(TryExprSyntax.self) {
-            inner = tryExpr.expression
-        }
-        while let awaitExpr = inner.as(AwaitExprSyntax.self) {
-            inner = awaitExpr.expression
-        }
-        if let call = inner.as(FunctionCallExprSyntax.self),
-           let producer = call.calledExpression.trailingIdentifierName {
-            return .callOutput(producerName: producer)
-        }
-        if let ident = inner.as(DeclReferenceExprSyntax.self) {
-            return .identifier(name: ident.baseName.text)
-        }
-        return .other
     }
 }

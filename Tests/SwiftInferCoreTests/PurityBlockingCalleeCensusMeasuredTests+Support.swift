@@ -4,6 +4,54 @@ import SwiftSyntax
 
 @testable import SwiftInferCore
 
+// MARK: - Extraction
+
+/// Every callee reached under a `try`, at both readings.
+///
+/// This is the fact item 31 says never leaves the inferrer: at the point
+/// `throwsOnlyItsOwnErrors` gives up, it knows **which** callee it gave up on,
+/// and `PurityVerdict.refuted` carries no room to say so. Re-deriving it here
+/// is what lets the population be sized before anything is built to carry it.
+final class CensusBlockingCalleeCollector: SyntaxVisitor {
+
+    private(set) var all: Set<PurityAllowlistCensusMeasuredTests.Callee> = []
+    private(set) var outermost: Set<PurityAllowlistCensusMeasuredTests.Callee> = []
+
+    override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
+        let inner = CensusCalleeCollector(viewMode: .sourceAccurate)
+        inner.walk(node.expression)
+        all.formUnion(inner.callees)
+
+        if let call = Self.outermostCall(in: node.expression),
+           let callee = CensusCalleeCollector.callee(of: call.calledExpression) {
+            outermost.insert(callee)
+        }
+        return .visitChildren
+    }
+
+    /// The call the `try` is actually about — the outermost one, unwrapping the
+    /// spellings that wrap an expression without being a call themselves.
+    private static func outermostCall(in expression: ExprSyntax) -> FunctionCallExprSyntax? {
+        if let call = expression.as(FunctionCallExprSyntax.self) { return call }
+        if let awaited = expression.as(AwaitExprSyntax.self) {
+            return outermostCall(in: awaited.expression)
+        }
+        if let optional = expression.as(OptionalChainingExprSyntax.self) {
+            return outermostCall(in: optional.expression)
+        }
+        if let forced = expression.as(ForceUnwrapExprSyntax.self) {
+            return outermostCall(in: forced.expression)
+        }
+        if let tuple = expression.as(TupleExprSyntax.self), tuple.elements.count == 1,
+           let only = tuple.elements.first {
+            return outermostCall(in: only.expression)
+        }
+        // `try x.map { … }` with the call further in, `try await foo`, a bare
+        // `try someThrowingProperty` — no single outermost call to name.
+        return nil
+    }
+}
+
 /// The blocking-callee extraction and the join simulation for
 /// `PurityBlockingCalleeCensusMeasuredTests`. Split out for the 400-line file
 /// cap only; the reasoning that governs both lives in that suite's header.
@@ -83,53 +131,5 @@ extension PurityBlockingCalleeCensusMeasuredTests {
             }
         }
         return (freed, hops)
-    }
-}
-
-// MARK: - Extraction
-
-/// Every callee reached under a `try`, at both readings.
-///
-/// This is the fact item 31 says never leaves the inferrer: at the point
-/// `throwsOnlyItsOwnErrors` gives up, it knows **which** callee it gave up on,
-/// and `PurityVerdict.refuted` carries no room to say so. Re-deriving it here
-/// is what lets the population be sized before anything is built to carry it.
-final class CensusBlockingCalleeCollector: SyntaxVisitor {
-
-    private(set) var all: Set<PurityAllowlistCensusMeasuredTests.Callee> = []
-    private(set) var outermost: Set<PurityAllowlistCensusMeasuredTests.Callee> = []
-
-    override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
-        let inner = CensusCalleeCollector(viewMode: .sourceAccurate)
-        inner.walk(node.expression)
-        all.formUnion(inner.callees)
-
-        if let call = Self.outermostCall(in: node.expression),
-           let callee = CensusCalleeCollector.callee(of: call.calledExpression) {
-            outermost.insert(callee)
-        }
-        return .visitChildren
-    }
-
-    /// The call the `try` is actually about — the outermost one, unwrapping the
-    /// spellings that wrap an expression without being a call themselves.
-    private static func outermostCall(in expression: ExprSyntax) -> FunctionCallExprSyntax? {
-        if let call = expression.as(FunctionCallExprSyntax.self) { return call }
-        if let awaited = expression.as(AwaitExprSyntax.self) {
-            return outermostCall(in: awaited.expression)
-        }
-        if let optional = expression.as(OptionalChainingExprSyntax.self) {
-            return outermostCall(in: optional.expression)
-        }
-        if let forced = expression.as(ForceUnwrapExprSyntax.self) {
-            return outermostCall(in: forced.expression)
-        }
-        if let tuple = expression.as(TupleExprSyntax.self), tuple.elements.count == 1,
-           let only = tuple.elements.first {
-            return outermostCall(in: only.expression)
-        }
-        // `try x.map { … }` with the call further in, `try await foo`, a bare
-        // `try someThrowingProperty` — no single outermost call to name.
-        return nil
     }
 }

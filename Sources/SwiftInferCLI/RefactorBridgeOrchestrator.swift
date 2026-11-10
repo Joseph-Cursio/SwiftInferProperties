@@ -1,6 +1,42 @@
 import SwiftInferCore
 import SwiftInferTemplates
 
+/// Pure helpers for pulling witness names out of `Suggestion.evidence`
+/// rows. Used by `RefactorBridgeAccumulator.record(signal:from:)`.
+enum WitnessExtractor {
+
+    /// Strip the parameter-list suffix from a function-evidence
+    /// displayName. `"merge(_:_:)"` → `"merge"`. Returns the original
+    /// string if no `(` is present (defensive — every shipped template
+    /// renders displayName as `<name>(<labels>)`).
+    static func combineWitnessName(from suggestion: Suggestion) -> String? {
+        guard let displayName = suggestion.evidence.first?.displayName else { return nil }
+        return bareName(from: displayName)
+    }
+
+    /// Pull the identity-element name from an `identity-element`
+    /// suggestion. `IdentityElementTemplate.makeEvidence(identity:)`
+    /// produces displayName `"Tally.empty"` (qualified) or `"empty"`
+    /// (top-level); strip the optional type prefix and return the
+    /// member name, which the emitter aliases via `Self.<name>`.
+    static func identityWitnessName(from suggestion: Suggestion) -> String? {
+        guard suggestion.evidence.count >= 2,
+              let displayName = suggestion.evidence.dropFirst().first?.displayName else {
+            return nil
+        }
+        if let dotIndex = displayName.lastIndex(of: ".") {
+            return String(displayName[displayName.index(after: dotIndex)...])
+        }
+        return displayName
+    }
+
+    /// Strip parens-and-after from a function display name.
+    private static func bareName(from displayName: String) -> String {
+        guard let parenIndex = displayName.firstIndex(of: "(") else { return displayName }
+        return String(displayName[..<parenIndex])
+    }
+}
+
 /// Scans a list of `Suggestion`s + `InverseElementPair`s and emits
 /// per-type RefactorBridge proposals. The promotion table widens at
 /// each milestone — M7.5 shipped Semigroup + Monoid; M8.4.a added
@@ -108,41 +144,5 @@ public enum RefactorBridgeOrchestrator {
     static func candidateType(of suggestion: Suggestion) -> String? {
         guard let signature = suggestion.evidence.first?.signature else { return nil }
         return InteractiveTriage.paramType(from: signature)
-    }
-}
-
-/// Pure helpers for pulling witness names out of `Suggestion.evidence`
-/// rows. Used by `RefactorBridgeAccumulator.record(signal:from:)`.
-enum WitnessExtractor {
-
-    /// Strip the parameter-list suffix from a function-evidence
-    /// displayName. `"merge(_:_:)"` → `"merge"`. Returns the original
-    /// string if no `(` is present (defensive — every shipped template
-    /// renders displayName as `<name>(<labels>)`).
-    static func combineWitnessName(from suggestion: Suggestion) -> String? {
-        guard let displayName = suggestion.evidence.first?.displayName else { return nil }
-        return bareName(from: displayName)
-    }
-
-    /// Pull the identity-element name from an `identity-element`
-    /// suggestion. `IdentityElementTemplate.makeEvidence(identity:)`
-    /// produces displayName `"Tally.empty"` (qualified) or `"empty"`
-    /// (top-level); strip the optional type prefix and return the
-    /// member name, which the emitter aliases via `Self.<name>`.
-    static func identityWitnessName(from suggestion: Suggestion) -> String? {
-        guard suggestion.evidence.count >= 2,
-              let displayName = suggestion.evidence.dropFirst().first?.displayName else {
-            return nil
-        }
-        if let dotIndex = displayName.lastIndex(of: ".") {
-            return String(displayName[displayName.index(after: dotIndex)...])
-        }
-        return displayName
-    }
-
-    /// Strip parens-and-after from a function display name.
-    private static func bareName(from displayName: String) -> String {
-        guard let parenIndex = displayName.firstIndex(of: "(") else { return displayName }
-        return String(displayName[..<parenIndex])
     }
 }

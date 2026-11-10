@@ -3,6 +3,14 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Test-only `FileSystemReader` reporting every path as missing.
+private struct NoFilesFileSystem: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
+        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
+    }
+}
+
 @Suite("BaselineLoader — explicit path + walk-up implicit lookup + atomic write (M6.2)")
 struct BaselineLoaderTests {
 
@@ -195,13 +203,5 @@ struct BaselineLoaderTests {
     private func writePackageManifest(in directory: URL) throws {
         try Data("// swift-tools-version: 6.1\n".utf8)
             .write(to: directory.appendingPathComponent("Package.swift"))
-    }
-}
-
-/// Test-only `FileSystemReader` reporting every path as missing.
-private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) throws -> Data {
-        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

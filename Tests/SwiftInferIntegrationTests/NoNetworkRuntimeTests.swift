@@ -5,6 +5,60 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+// MARK: - URLProtocol interceptor
+
+/// Global URLProtocol that captures every request URLSession routes
+/// through it. Returning `true` from `canInit(with:)` opts the request
+/// in; `startLoading` immediately fails it so URLSession returns an
+/// error to the caller — no real network I/O happens. The captured
+/// request list is what the assertion gates on.
+private final class NetworkInterceptor: URLProtocol {
+
+    private static let lock = NSLock()
+    nonisolated(unsafe) private static var capturedRequests: [URLRequest] = []
+
+    static func reset() {
+        lock.lock()
+        capturedRequests.removeAll()
+        lock.unlock()
+    }
+
+    static func captured() -> [URL] {
+        lock.lock()
+        defer { lock.unlock() }
+        return capturedRequests.compactMap(\.url)
+    }
+
+    // URLProtocol declares these as `class func`; `static` overrides them and
+    // seals the override, which a final class's members are anyway.
+    override static func canInit(with request: URLRequest) -> Bool {
+        lock.lock()
+        capturedRequests.append(request)
+        lock.unlock()
+        return true
+    }
+
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        client?.urlProtocol(self, didFailWithError: URLError(.cancelled))
+    }
+
+    override func stopLoading() { /* no-op */ }
+}
+
+// MARK: - Silent stubs
+
+private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
+    func write(_: String) { /* no-op */ }
+}
+
+private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// PRD §14 + §19 success criterion — "All §14 privacy guarantees
 /// are testable: integration test verifies no network sockets opened
 /// during any subcommand." The contract was implicitly covered by the
@@ -129,58 +183,4 @@ struct NoNetworkRuntimeTests {
             encoding: .utf8
         )
     }
-}
-
-// MARK: - URLProtocol interceptor
-
-/// Global URLProtocol that captures every request URLSession routes
-/// through it. Returning `true` from `canInit(with:)` opts the request
-/// in; `startLoading` immediately fails it so URLSession returns an
-/// error to the caller — no real network I/O happens. The captured
-/// request list is what the assertion gates on.
-private final class NetworkInterceptor: URLProtocol {
-
-    private static let lock = NSLock()
-    nonisolated(unsafe) private static var capturedRequests: [URLRequest] = []
-
-    static func reset() {
-        lock.lock()
-        capturedRequests.removeAll()
-        lock.unlock()
-    }
-
-    static func captured() -> [URL] {
-        lock.lock()
-        defer { lock.unlock() }
-        return capturedRequests.compactMap(\.url)
-    }
-
-    // URLProtocol declares these as `class func`; `static` overrides them and
-    // seals the override, which a final class's members are anyway.
-    override static func canInit(with request: URLRequest) -> Bool {
-        lock.lock()
-        capturedRequests.append(request)
-        lock.unlock()
-        return true
-    }
-
-    override static func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        client?.urlProtocol(self, didFailWithError: URLError(.cancelled))
-    }
-
-    override func stopLoading() { /* no-op */ }
-}
-
-// MARK: - Silent stubs
-
-private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_: String) { /* no-op */ }
-}
-
-private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

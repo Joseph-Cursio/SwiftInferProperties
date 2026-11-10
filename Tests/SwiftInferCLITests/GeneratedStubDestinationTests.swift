@@ -2,6 +2,64 @@ import Foundation
 @testable import SwiftInferCLI
 import Testing
 
+/// A real package on disk — manifest, one source target, zero or more test targets, each at
+/// whatever path the caller names.
+enum PackageFixture {
+
+    static func make(
+        name: String,
+        sourcePath: String,
+        testTargets: [(name: String, path: String)]
+    ) throws -> URL {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("GSD-\(name)-\(UUID().uuidString)")
+        let sources = root.appendingPathComponent(sourcePath)
+        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
+        try "public func demo() {}\n"
+            .write(to: sources.appendingPathComponent("Demo.swift"), atomically: true, encoding: .utf8)
+        for target in testTargets {
+            let directory = root.appendingPathComponent(target.path)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try "import Testing\n"
+                .write(to: directory.appendingPathComponent("T.swift"), atomically: true, encoding: .utf8)
+        }
+        try manifest(name: name, sourcePath: sourcePath, testTargets: testTargets)
+            .write(to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
+        return root
+    }
+
+    static func remove(_ root: URL) {
+        try? FileManager.default.removeItem(at: root)
+    }
+
+    private static func manifest(
+        name: String,
+        sourcePath: String,
+        testTargets: [(name: String, path: String)]
+    ) -> String {
+        let tests = testTargets
+            .map { target in
+                "        .testTarget(name: \"\(target.name)\", dependencies: [\"\(name)\"],"
+                    + " path: \"\(target.path)\")"
+            }
+            .joined(separator: ",\n")
+        let targets = tests.isEmpty
+            ? "        .target(name: \"\(name)\", path: \"\(sourcePath)\")"
+            : "        .target(name: \"\(name)\", path: \"\(sourcePath)\"),\n\(tests)"
+        return """
+            // swift-tools-version: 6.0
+            import PackageDescription
+            let package = Package(
+                name: "\(name)",
+                targets: [
+            \(targets)
+                ]
+            )
+
+            """
+    }
+}
+
 /// `discover --interactive` wrote every accepted file to `<packageRoot>/Tests/Generated/`,
 /// which is inside **no SwiftPM target on any package** — so the file was compiled by
 /// nothing and nothing said so (#414).
@@ -178,63 +236,5 @@ struct GeneratedStubDestinationTests {
         try FileManager.default.createDirectory(at: stray, withIntermediateDirectories: true)
 
         #expect(GeneratedStubDestination.module(forScanDirectory: stray, packageRoot: root) == nil)
-    }
-}
-
-/// A real package on disk — manifest, one source target, zero or more test targets, each at
-/// whatever path the caller names.
-enum PackageFixture {
-
-    static func make(
-        name: String,
-        sourcePath: String,
-        testTargets: [(name: String, path: String)]
-    ) throws -> URL {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("GSD-\(name)-\(UUID().uuidString)")
-        let sources = root.appendingPathComponent(sourcePath)
-        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
-        try "public func demo() {}\n"
-            .write(to: sources.appendingPathComponent("Demo.swift"), atomically: true, encoding: .utf8)
-        for target in testTargets {
-            let directory = root.appendingPathComponent(target.path)
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            try "import Testing\n"
-                .write(to: directory.appendingPathComponent("T.swift"), atomically: true, encoding: .utf8)
-        }
-        try manifest(name: name, sourcePath: sourcePath, testTargets: testTargets)
-            .write(to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
-        return root
-    }
-
-    static func remove(_ root: URL) {
-        try? FileManager.default.removeItem(at: root)
-    }
-
-    private static func manifest(
-        name: String,
-        sourcePath: String,
-        testTargets: [(name: String, path: String)]
-    ) -> String {
-        let tests = testTargets
-            .map { target in
-                "        .testTarget(name: \"\(target.name)\", dependencies: [\"\(name)\"],"
-                    + " path: \"\(target.path)\")"
-            }
-            .joined(separator: ",\n")
-        let targets = tests.isEmpty
-            ? "        .target(name: \"\(name)\", path: \"\(sourcePath)\")"
-            : "        .target(name: \"\(name)\", path: \"\(sourcePath)\"),\n\(tests)"
-        return """
-            // swift-tools-version: 6.0
-            import PackageDescription
-            let package = Package(
-                name: "\(name)",
-                targets: [
-            \(targets)
-                ]
-            )
-
-            """
     }
 }

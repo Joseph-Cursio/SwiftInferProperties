@@ -5,6 +5,77 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// Functions `(T) -> T` whose body opens with a call-bearing `if` / `guard` mentioning the
+/// parameter, with an immediately-returning branch.
+final class GuardedNormaliserCollector: SyntaxVisitor {
+
+    struct Found {
+        let name: String
+        let guardText: String
+    }
+
+    private(set) var found: [Found] = []
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        guard let body = node.body,
+              node.signature.parameterClause.parameters.count == 1,
+              let parameter = node.signature.parameterClause.parameters.first,
+              let returnType = node.signature.returnClause?.type.trimmedDescription
+        else { return .visitChildren }
+
+        // `(T) -> T`. `Self` counts: a normaliser on the containing type returns it.
+        let parameterType = parameter.type.trimmedDescription
+        guard returnType == parameterType || returnType == "Self" else { return .visitChildren }
+        // A `Bool` return is a predicate, not a normaliser, even when `T` is `Bool`.
+        guard returnType != "Bool" else { return .visitChildren }
+
+        let binding = parameter.secondName?.text ?? parameter.firstName.text
+        guard let first = body.statements.first else { return .visitChildren }
+
+        // **Three hops, not one.** Swift's `if` is an EXPRESSION, and used as a statement
+        // it arrives as `StmtSyntax` → `ExpressionStmtSyntax` → `IfExprSyntax`. `guard` is
+        // a statement outright. Reaching for `IfExprSyntax` directly matches nothing, and
+        // so does stopping at `ExprSyntax`. **`detectorFires` caught both attempts before
+        // this census produced a number** — which is the entire reason a synthetic witness
+        // is asserted before the corpora are scanned.
+        let statement = first.item.as(StmtSyntax.self)
+        let ifExpression = statement?.as(ExpressionStmtSyntax.self)?.expression.as(IfExprSyntax.self)
+            ?? first.item.as(ExprSyntax.self)?.as(IfExprSyntax.self)
+        let guardStatement = statement?.as(GuardStmtSyntax.self)
+
+        let condition: String?
+        let returnsEarly: Bool
+        if let ifExpr = ifExpression {
+            condition = ifExpr.conditions.trimmedDescription
+            returnsEarly = ifExpr.body.statements.contains { $0.item.is(ReturnStmtSyntax.self) }
+        } else if let guardStmt = guardStatement {
+            condition = guardStmt.conditions.trimmedDescription
+            returnsEarly = guardStmt.body.statements.contains { $0.item.is(ReturnStmtSyntax.self) }
+        } else {
+            condition = nil
+            returnsEarly = false
+        }
+
+        guard let condition, returnsEarly,
+              condition.contains("("),          // a call, not a bare comparison
+              condition.contains(binding),      // ... mentioning the parameter
+              // **An optional binding is not a postcondition.** `guard let initializer =
+              // node.initializer` satisfies "contains a call" and is not a predicate at
+              // all — it was the dominant false class in this census's first run, where
+              // 44 hits included `let type = isRewritable(...)`, `let interval =
+              // dateInterval(...)` and `let openAngle = name.firstIndex(of: "<")`.
+              //
+              // The test that matters is **re-applicability**: a postcondition must be
+              // assertable of the OUTPUT, `P(f(x))`. A binding that names a local cannot
+              // be, so it cannot serve as the oracle the law needs.
+              !condition.contains("let "), !condition.contains("case ")
+        else { return .visitChildren }
+
+        found.append(Found(name: node.name.text, guardText: condition))
+        return .visitChildren
+    }
+}
+
 /// **How many normalisers carry their own postcondition as a guard in the body?**
 ///
 /// `fixtures/branch-reaching-generator/` measured that on a legalise-shaped subject the
@@ -114,76 +185,5 @@ struct GuardPostconditionCensusMeasuredTests {
             lines.append("  [\(hit.corpus)] \(hit.file):\(hit.function)  ⟵  \(hit.guardText.prefix(70))")
         }
         print(lines.joined(separator: "\n"))
-    }
-}
-
-/// Functions `(T) -> T` whose body opens with a call-bearing `if` / `guard` mentioning the
-/// parameter, with an immediately-returning branch.
-final class GuardedNormaliserCollector: SyntaxVisitor {
-
-    struct Found {
-        let name: String
-        let guardText: String
-    }
-
-    private(set) var found: [Found] = []
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        guard let body = node.body,
-              node.signature.parameterClause.parameters.count == 1,
-              let parameter = node.signature.parameterClause.parameters.first,
-              let returnType = node.signature.returnClause?.type.trimmedDescription
-        else { return .visitChildren }
-
-        // `(T) -> T`. `Self` counts: a normaliser on the containing type returns it.
-        let parameterType = parameter.type.trimmedDescription
-        guard returnType == parameterType || returnType == "Self" else { return .visitChildren }
-        // A `Bool` return is a predicate, not a normaliser, even when `T` is `Bool`.
-        guard returnType != "Bool" else { return .visitChildren }
-
-        let binding = parameter.secondName?.text ?? parameter.firstName.text
-        guard let first = body.statements.first else { return .visitChildren }
-
-        // **Three hops, not one.** Swift's `if` is an EXPRESSION, and used as a statement
-        // it arrives as `StmtSyntax` → `ExpressionStmtSyntax` → `IfExprSyntax`. `guard` is
-        // a statement outright. Reaching for `IfExprSyntax` directly matches nothing, and
-        // so does stopping at `ExprSyntax`. **`detectorFires` caught both attempts before
-        // this census produced a number** — which is the entire reason a synthetic witness
-        // is asserted before the corpora are scanned.
-        let statement = first.item.as(StmtSyntax.self)
-        let ifExpression = statement?.as(ExpressionStmtSyntax.self)?.expression.as(IfExprSyntax.self)
-            ?? first.item.as(ExprSyntax.self)?.as(IfExprSyntax.self)
-        let guardStatement = statement?.as(GuardStmtSyntax.self)
-
-        let condition: String?
-        let returnsEarly: Bool
-        if let ifExpr = ifExpression {
-            condition = ifExpr.conditions.trimmedDescription
-            returnsEarly = ifExpr.body.statements.contains { $0.item.is(ReturnStmtSyntax.self) }
-        } else if let guardStmt = guardStatement {
-            condition = guardStmt.conditions.trimmedDescription
-            returnsEarly = guardStmt.body.statements.contains { $0.item.is(ReturnStmtSyntax.self) }
-        } else {
-            condition = nil
-            returnsEarly = false
-        }
-
-        guard let condition, returnsEarly,
-              condition.contains("("),          // a call, not a bare comparison
-              condition.contains(binding),      // ... mentioning the parameter
-              // **An optional binding is not a postcondition.** `guard let initializer =
-              // node.initializer` satisfies "contains a call" and is not a predicate at
-              // all — it was the dominant false class in this census's first run, where
-              // 44 hits included `let type = isRewritable(...)`, `let interval =
-              // dateInterval(...)` and `let openAngle = name.firstIndex(of: "<")`.
-              //
-              // The test that matters is **re-applicability**: a postcondition must be
-              // assertable of the OUTPUT, `P(f(x))`. A binding that names a local cannot
-              // be, so it cannot serve as the oracle the law needs.
-              !condition.contains("let "), !condition.contains("case ")
-        else { return .visitChildren }
-
-        found.append(Found(name: node.name.text, guardText: condition))
-        return .visitChildren
     }
 }

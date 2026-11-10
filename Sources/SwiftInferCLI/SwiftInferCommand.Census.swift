@@ -2,6 +2,30 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// Refusing an empty run rather than reporting one.
+///
+/// Top-level rather than nested: `Census` is already one level inside `SwiftInferCommand`, and a
+/// third trips `nesting` — the same reason `ResolvedSurvey` sits beside `CorpusRunPlan`.
+struct NoCorporaNamed: Error, CustomStringConvertible {
+    let known: [String]
+    var description: String {
+        "swift-infer census: name at least one corpus with --corpus. A census over zero corpora "
+            + "prints a table of zeros, which is indistinguishable from a catalog in which "
+            + "nothing fires. Known ids: " + known.joined(separator: ", ")
+    }
+}
+
+/// Refusing a corpus whose code cannot be located, rather than reporting it as empty.
+struct UnscannableCorpus: Error, CustomStringConvertible {
+    let id: String
+    let reason: String
+    var description: String {
+        "swift-infer census: cannot scan corpus '\(id)' — \(reason). Refused rather than "
+            + "surveyed: a census over a path that is not there returns zero rows for every "
+            + "template, which is indistinguishable from a catalog in which nothing fires."
+    }
+}
+
 extension SwiftInferCommand {
 
     /// Count rows per template across several registered corpora, recording **which corpora**
@@ -251,29 +275,5 @@ extension SwiftInferCommand {
             }
             return warnings
         }
-    }
-}
-
-/// Refusing an empty run rather than reporting one.
-///
-/// Top-level rather than nested: `Census` is already one level inside `SwiftInferCommand`, and a
-/// third trips `nesting` — the same reason `ResolvedSurvey` sits beside `CorpusRunPlan`.
-struct NoCorporaNamed: Error, CustomStringConvertible {
-    let known: [String]
-    var description: String {
-        "swift-infer census: name at least one corpus with --corpus. A census over zero corpora "
-            + "prints a table of zeros, which is indistinguishable from a catalog in which "
-            + "nothing fires. Known ids: " + known.joined(separator: ", ")
-    }
-}
-
-/// Refusing a corpus whose code cannot be located, rather than reporting it as empty.
-struct UnscannableCorpus: Error, CustomStringConvertible {
-    let id: String
-    let reason: String
-    var description: String {
-        "swift-infer census: cannot scan corpus '\(id)' — \(reason). Refused rather than "
-            + "surveyed: a census over a path that is not there returns zero rows for every "
-            + "template, which is indistinguishable from a catalog in which nothing fires."
     }
 }

@@ -3,6 +3,165 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
+@Suite("InversePairTemplate — V1.19.D lift admission scoring")
+struct InversePairTemplateLiftedTests {
+
+    private func valueSemanticResolver(carrier: String = "Bag") -> CarrierKindResolver {
+        CarrierKindResolver(typeDecls: [
+            TypeDecl(
+                name: carrier,
+                kind: .struct,
+                inheritedTypes: [],
+                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+                storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
+            ),
+        ])
+    }
+
+    private func makePair(
+        forwardName: String = "add",
+        reverseName: String = "remove",
+        bodySignalsForward: BodySignals = .empty,
+        bodySignalsReverse: BodySignals = .empty
+    ) throws -> LiftedInversePair {
+        let resolver = valueSemanticResolver()
+        let forward = try #require(LiftedTransformation.lift(
+            FunctionSummary(
+                name: forwardName,
+                parameters: [
+                    Parameter(label: nil, internalName: "x", typeText: "Int", isInout: false)
+                ],
+                returnTypeText: "Void",
+                isThrows: false, isAsync: false, isMutating: true, isStatic: false,
+                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+                containingTypeName: "Bag",
+                bodySignals: bodySignalsForward
+            ),
+            carrierKindResolver: resolver
+        ))
+        let reverse = try #require(LiftedTransformation.lift(
+            FunctionSummary(
+                name: reverseName,
+                parameters: [
+                    Parameter(label: nil, internalName: "x", typeText: "Int", isInout: false)
+                ],
+                returnTypeText: "Void",
+                isThrows: false, isAsync: false, isMutating: true, isStatic: false,
+                location: SourceLocation(file: "Test.swift", line: 2, column: 1),
+                containingTypeName: "Bag",
+                bodySignals: bodySignalsReverse
+            ),
+            carrierKindResolver: resolver
+        ))
+        return LiftedInversePair(
+            forward: forward,
+            reverse: reverse,
+            pairName: LiftedInversePair.NamePair(lhs: forwardName, rhs: reverseName)
+        )
+    }
+
+    // MARK: - Score baseline
+
+    @Test("Canonical add/remove pair scores 25+10+5+10=50 → Likely")
+    func canonicalScoresLikely() throws {
+        let suggestion = try #require(InversePairTemplate.suggest(
+            forLifted: makePair(),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        #expect(suggestion.score.total == 50)
+        #expect(suggestion.score.tier == .likely)
+        #expect(suggestion.templateName == "inverse-pair")
+    }
+
+    @Test("liftedFromMutation +10 signal fires with both halves named")
+    func liftedSignalNamesBothHalves() throws {
+        let suggestion = try #require(InversePairTemplate.suggest(
+            forLifted: makePair(),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        let signal = try #require(suggestion.score.signals.first {
+            $0.kind == .liftedFromMutation
+        })
+        #expect(signal.weight == 10)
+        #expect(signal.detail.contains("Bag.add"))
+        #expect(signal.detail.contains("Bag.remove"))
+    }
+
+    @Test("Type-shape signal fires at +25 (parallel to non-lifted InversePair baseline)")
+    func typeShapeFiresAt25() throws {
+        let suggestion = try #require(InversePairTemplate.suggest(
+            forLifted: makePair(),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        let signal = try #require(suggestion.score.signals.first {
+            $0.kind == .typeSymmetrySignature
+        })
+        #expect(signal.weight == 25)
+    }
+
+    @Test("Naming signal renders the matched curated pair name")
+    func namingSignalDetail() throws {
+        let suggestion = try #require(InversePairTemplate.suggest(
+            forLifted: makePair(),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        let signal = try #require(suggestion.score.signals.first {
+            $0.kind == .exactNameMatch
+        })
+        #expect(signal.detail.contains("add/remove"))
+    }
+
+    // MARK: - Vetoes
+
+    @Test("Non-deterministic body in EITHER half vetoes")
+    func nonDeterministicVetoesEitherHalf() throws {
+        let pair = try makePair(bodySignalsForward: BodySignals(
+            hasNonDeterministicCall: true,
+            hasSelfComposition: false,
+            nonDeterministicAPIsDetected: ["Date.init"]
+        ))
+        #expect(InversePairTemplate.suggest(
+            forLifted: pair,
+            carrierKindResolver: valueSemanticResolver()
+        ) == nil)
+    }
+
+    @Test("Non-deterministic body in REVERSE half vetoes too")
+    func nonDeterministicVetoesReverseHalf() throws {
+        let pair = try makePair(bodySignalsReverse: BodySignals(
+            hasNonDeterministicCall: true,
+            hasSelfComposition: false,
+            nonDeterministicAPIsDetected: ["Date.init"]
+        ))
+        #expect(InversePairTemplate.suggest(
+            forLifted: pair,
+            carrierKindResolver: valueSemanticResolver()
+        ) == nil)
+    }
+
+    // MARK: - Identity + evidence
+
+    @Test("Identity uses `inverse-pair-lifted|` prefix and is orientation-insensitive")
+    func identityPrefix() throws {
+        let suggestion = try #require(InversePairTemplate.suggest(
+            forLifted: makePair(),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        #expect(suggestion.identity.canonicalInput.hasPrefix("inverse-pair-lifted|"))
+    }
+
+    @Test("Two evidence rows: forward (add) + reverse (remove)")
+    func twoEvidenceRows() throws {
+        let suggestion = try #require(InversePairTemplate.suggest(
+            forLifted: makePair(),
+            carrierKindResolver: valueSemanticResolver()
+        ))
+        #expect(suggestion.evidence.count == 2)
+        #expect(suggestion.evidence[0].displayName == "Bag.add(_:)")
+        #expect(suggestion.evidence[1].displayName == "Bag.remove(_:)")
+    }
+}
+
 @Suite("InverseLiftedPairing — V1.19.D mutating add/remove pairing")
 struct InverseLiftedPairingTests {
 
@@ -184,164 +343,5 @@ struct InverseLiftedPairingTests {
             try lifted("remove", line: 40),
         ])
         #expect(pairs.count == 4)
-    }
-}
-
-@Suite("InversePairTemplate — V1.19.D lift admission scoring")
-struct InversePairTemplateLiftedTests {
-
-    private func valueSemanticResolver(carrier: String = "Bag") -> CarrierKindResolver {
-        CarrierKindResolver(typeDecls: [
-            TypeDecl(
-                name: carrier,
-                kind: .struct,
-                inheritedTypes: [],
-                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-                storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            ),
-        ])
-    }
-
-    private func makePair(
-        forwardName: String = "add",
-        reverseName: String = "remove",
-        bodySignalsForward: BodySignals = .empty,
-        bodySignalsReverse: BodySignals = .empty
-    ) throws -> LiftedInversePair {
-        let resolver = valueSemanticResolver()
-        let forward = try #require(LiftedTransformation.lift(
-            FunctionSummary(
-                name: forwardName,
-                parameters: [
-                    Parameter(label: nil, internalName: "x", typeText: "Int", isInout: false)
-                ],
-                returnTypeText: "Void",
-                isThrows: false, isAsync: false, isMutating: true, isStatic: false,
-                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-                containingTypeName: "Bag",
-                bodySignals: bodySignalsForward
-            ),
-            carrierKindResolver: resolver
-        ))
-        let reverse = try #require(LiftedTransformation.lift(
-            FunctionSummary(
-                name: reverseName,
-                parameters: [
-                    Parameter(label: nil, internalName: "x", typeText: "Int", isInout: false)
-                ],
-                returnTypeText: "Void",
-                isThrows: false, isAsync: false, isMutating: true, isStatic: false,
-                location: SourceLocation(file: "Test.swift", line: 2, column: 1),
-                containingTypeName: "Bag",
-                bodySignals: bodySignalsReverse
-            ),
-            carrierKindResolver: resolver
-        ))
-        return LiftedInversePair(
-            forward: forward,
-            reverse: reverse,
-            pairName: LiftedInversePair.NamePair(lhs: forwardName, rhs: reverseName)
-        )
-    }
-
-    // MARK: - Score baseline
-
-    @Test("Canonical add/remove pair scores 25+10+5+10=50 → Likely")
-    func canonicalScoresLikely() throws {
-        let suggestion = try #require(InversePairTemplate.suggest(
-            forLifted: makePair(),
-            carrierKindResolver: valueSemanticResolver()
-        ))
-        #expect(suggestion.score.total == 50)
-        #expect(suggestion.score.tier == .likely)
-        #expect(suggestion.templateName == "inverse-pair")
-    }
-
-    @Test("liftedFromMutation +10 signal fires with both halves named")
-    func liftedSignalNamesBothHalves() throws {
-        let suggestion = try #require(InversePairTemplate.suggest(
-            forLifted: makePair(),
-            carrierKindResolver: valueSemanticResolver()
-        ))
-        let signal = try #require(suggestion.score.signals.first {
-            $0.kind == .liftedFromMutation
-        })
-        #expect(signal.weight == 10)
-        #expect(signal.detail.contains("Bag.add"))
-        #expect(signal.detail.contains("Bag.remove"))
-    }
-
-    @Test("Type-shape signal fires at +25 (parallel to non-lifted InversePair baseline)")
-    func typeShapeFiresAt25() throws {
-        let suggestion = try #require(InversePairTemplate.suggest(
-            forLifted: makePair(),
-            carrierKindResolver: valueSemanticResolver()
-        ))
-        let signal = try #require(suggestion.score.signals.first {
-            $0.kind == .typeSymmetrySignature
-        })
-        #expect(signal.weight == 25)
-    }
-
-    @Test("Naming signal renders the matched curated pair name")
-    func namingSignalDetail() throws {
-        let suggestion = try #require(InversePairTemplate.suggest(
-            forLifted: makePair(),
-            carrierKindResolver: valueSemanticResolver()
-        ))
-        let signal = try #require(suggestion.score.signals.first {
-            $0.kind == .exactNameMatch
-        })
-        #expect(signal.detail.contains("add/remove"))
-    }
-
-    // MARK: - Vetoes
-
-    @Test("Non-deterministic body in EITHER half vetoes")
-    func nonDeterministicVetoesEitherHalf() throws {
-        let pair = try makePair(bodySignalsForward: BodySignals(
-            hasNonDeterministicCall: true,
-            hasSelfComposition: false,
-            nonDeterministicAPIsDetected: ["Date.init"]
-        ))
-        #expect(InversePairTemplate.suggest(
-            forLifted: pair,
-            carrierKindResolver: valueSemanticResolver()
-        ) == nil)
-    }
-
-    @Test("Non-deterministic body in REVERSE half vetoes too")
-    func nonDeterministicVetoesReverseHalf() throws {
-        let pair = try makePair(bodySignalsReverse: BodySignals(
-            hasNonDeterministicCall: true,
-            hasSelfComposition: false,
-            nonDeterministicAPIsDetected: ["Date.init"]
-        ))
-        #expect(InversePairTemplate.suggest(
-            forLifted: pair,
-            carrierKindResolver: valueSemanticResolver()
-        ) == nil)
-    }
-
-    // MARK: - Identity + evidence
-
-    @Test("Identity uses `inverse-pair-lifted|` prefix and is orientation-insensitive")
-    func identityPrefix() throws {
-        let suggestion = try #require(InversePairTemplate.suggest(
-            forLifted: makePair(),
-            carrierKindResolver: valueSemanticResolver()
-        ))
-        #expect(suggestion.identity.canonicalInput.hasPrefix("inverse-pair-lifted|"))
-    }
-
-    @Test("Two evidence rows: forward (add) + reverse (remove)")
-    func twoEvidenceRows() throws {
-        let suggestion = try #require(InversePairTemplate.suggest(
-            forLifted: makePair(),
-            carrierKindResolver: valueSemanticResolver()
-        ))
-        #expect(suggestion.evidence.count == 2)
-        #expect(suggestion.evidence[0].displayName == "Bag.add(_:)")
-        #expect(suggestion.evidence[1].displayName == "Bag.remove(_:)")
     }
 }

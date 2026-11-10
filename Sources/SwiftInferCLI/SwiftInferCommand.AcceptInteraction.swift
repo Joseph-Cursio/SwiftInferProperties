@@ -2,6 +2,47 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// V2.0 — request bundle for `accept-interaction`. Wraps the
+/// "what to record" inputs so the static-pipeline entry stays
+/// under SwiftLint's `function_parameter_count` cap. File-scope for
+/// the `nesting` rule (the owning subcommand is already nested
+/// inside `SwiftInferCommand` via extension).
+public struct AcceptInteractionRequest: Sendable {
+    public let identity: String
+    public let decisionRaw: String
+    public let explicitDecisionsPath: URL?
+
+    public init(
+        identity: String,
+        decisionRaw: String,
+        explicitDecisionsPath: URL? = nil
+    ) {
+        self.identity = identity
+        self.decisionRaw = decisionRaw
+        self.explicitDecisionsPath = explicitDecisionsPath
+    }
+}
+
+/// V2.0 — errors thrown by `accept-interaction`. File-scope for
+/// SwiftLint nesting; public so tests pattern-match on cases.
+public enum AcceptInteractionError: Error, CustomStringConvertible, Equatable {
+    case unknownDecision(raw: String)
+    case unknownIdentity(hash: String)
+
+    public var description: String {
+        switch self {
+        case let .unknownDecision(raw):
+            return "swift-infer accept-interaction: unknown decision '\(raw)'. "
+                + "Valid: accepted, accepted-as-conformance, rejected, skipped."
+
+        case let .unknownIdentity(hash):
+            return "swift-infer accept-interaction: no current suggestion "
+                + "matches identity 0x\(hash). Re-run discover-interaction "
+                + "to see the current set."
+        }
+    }
+}
+
 /// V2.0 — `swift-infer accept-interaction` subcommand. Records a
 /// decision against a specific interaction-invariant identity hash
 /// in `.swiftinfer/interaction-decisions.json`. Minimal recorder —
@@ -139,47 +180,6 @@ public extension SwiftInferCommand {
                 "Recorded \(parsedDecision.rawValue) for \(matched.family.rawValue) invariant "
                     + "0x\(matched.identity.normalized) on \(matched.reducerQualifiedName)."
             )
-        }
-    }
-}
-
-/// V2.0 — request bundle for `accept-interaction`. Wraps the
-/// "what to record" inputs so the static-pipeline entry stays
-/// under SwiftLint's `function_parameter_count` cap. File-scope for
-/// the `nesting` rule (the owning subcommand is already nested
-/// inside `SwiftInferCommand` via extension).
-public struct AcceptInteractionRequest: Sendable {
-    public let identity: String
-    public let decisionRaw: String
-    public let explicitDecisionsPath: URL?
-
-    public init(
-        identity: String,
-        decisionRaw: String,
-        explicitDecisionsPath: URL? = nil
-    ) {
-        self.identity = identity
-        self.decisionRaw = decisionRaw
-        self.explicitDecisionsPath = explicitDecisionsPath
-    }
-}
-
-/// V2.0 — errors thrown by `accept-interaction`. File-scope for
-/// SwiftLint nesting; public so tests pattern-match on cases.
-public enum AcceptInteractionError: Error, CustomStringConvertible, Equatable {
-    case unknownDecision(raw: String)
-    case unknownIdentity(hash: String)
-
-    public var description: String {
-        switch self {
-        case let .unknownDecision(raw):
-            return "swift-infer accept-interaction: unknown decision '\(raw)'. "
-                + "Valid: accepted, accepted-as-conformance, rejected, skipped."
-
-        case let .unknownIdentity(hash):
-            return "swift-infer accept-interaction: no current suggestion "
-                + "matches identity 0x\(hash). Re-run discover-interaction "
-                + "to see the current set."
         }
     }
 }

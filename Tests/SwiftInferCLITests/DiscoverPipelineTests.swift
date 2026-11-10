@@ -2,6 +2,118 @@ import Foundation
 @testable import SwiftInferCLI
 import Testing
 
+@Suite("Discover pipeline — vocabulary integration (M2.1)")
+struct DiscoverPipelineVocabularyTests {
+
+    @Test("Project-vocabulary idempotence verb flows through to rendered output")
+    func projectVocabularyIdempotenceFlowsThrough() throws {
+        let directory = try writeDPFixture(name: "VocabIdempotence", contents: """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
+        try Data(#"{ "idempotenceVerbs": ["sanitizeXML"] }"#.utf8).write(to: vocabularyPath)
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            explicitVocabularyPath: vocabularyPath,
+            diagnostics: diagnostics
+        )
+        // 30 type + 40 project-vocab + 5 value-semantic = 75 → Strong
+        // (Tier.strong threshold is ≥75).
+        #expect(recording.text.contains("Score:    75 (Strong)"))
+        #expect(recording.text.contains("✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Project-vocabulary inverse pair flows through to round-trip output")
+    func projectVocabularyRoundTripFlowsThrough() throws {
+        let directory = try writeDPFixture(name: "VocabRoundTrip", contents: """
+        struct Job {}
+        struct Queue {
+            func enqueue(_ value: Job) -> Job? {
+                return value
+            }
+            func dequeue(_ value: Job?) -> Job {
+                return value ?? Job()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
+        try Data(#"{ "inversePairs": [["enqueue", "dequeue"]] }"#.utf8).write(to: vocabularyPath)
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            explicitVocabularyPath: vocabularyPath,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Template: round-trip"))
+        #expect(recording.text.contains("✓ Project-vocabulary inverse name pair: enqueue/dequeue (+40)"))
+        #expect(diagnostics.lines.isEmpty)
+    }
+
+    @Test("Malformed explicit vocabulary path emits a stderr warning and falls back to .empty")
+    func malformedVocabularyWarns() throws {
+        let directory = try writeDPFixture(name: "VocabMalformed", contents: """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
+        try Data("{ malformed:".utf8).write(to: vocabularyPath)
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            explicitVocabularyPath: vocabularyPath,
+            diagnostics: diagnostics
+        )
+        // Vocabulary fell back to .empty.
+        #expect(recording.body == "0 suggestions.")
+        #expect(diagnostics.lines.count == 1)
+        #expect(diagnostics.lines.first?.hasPrefix("warning: ") == true)
+        #expect(diagnostics.lines.first?.contains("could not parse") == true)
+    }
+
+    @Test("Absent vocabulary file with no explicit path is silent — no warning, no name signal")
+    func absentVocabularyIsSilent() throws {
+        let directory = try writeDPFixture(name: "VocabAbsent", contents: """
+        struct Helpers {
+            func sanitizeXML(_ value: String) -> String {
+                return value
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            diagnostics: diagnostics
+        )
+        #expect(recording.body == "0 suggestions.")
+        #expect(diagnostics.lines.isEmpty)
+    }
+}
+
 @Suite("Discover pipeline — basic discovery")
 struct DiscoverPipelineTests {
 
@@ -232,117 +344,5 @@ struct DiscoverPipelineTests {
             includePossible: true
         )
         #expect(!recording.text.contains("Template: round-trip"))
-    }
-}
-
-@Suite("Discover pipeline — vocabulary integration (M2.1)")
-struct DiscoverPipelineVocabularyTests {
-
-    @Test("Project-vocabulary idempotence verb flows through to rendered output")
-    func projectVocabularyIdempotenceFlowsThrough() throws {
-        let directory = try writeDPFixture(name: "VocabIdempotence", contents: """
-        struct Helpers {
-            func sanitizeXML(_ value: String) -> String {
-                return value
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
-        try Data(#"{ "idempotenceVerbs": ["sanitizeXML"] }"#.utf8).write(to: vocabularyPath)
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            output: recording,
-            includePossible: false,
-            explicitVocabularyPath: vocabularyPath,
-            diagnostics: diagnostics
-        )
-        // 30 type + 40 project-vocab + 5 value-semantic = 75 → Strong
-        // (Tier.strong threshold is ≥75).
-        #expect(recording.text.contains("Score:    75 (Strong)"))
-        #expect(recording.text.contains("✓ Project-vocabulary idempotence verb match: 'sanitizeXML' (+40)"))
-        #expect(diagnostics.lines.isEmpty)
-    }
-
-    @Test("Project-vocabulary inverse pair flows through to round-trip output")
-    func projectVocabularyRoundTripFlowsThrough() throws {
-        let directory = try writeDPFixture(name: "VocabRoundTrip", contents: """
-        struct Job {}
-        struct Queue {
-            func enqueue(_ value: Job) -> Job? {
-                return value
-            }
-            func dequeue(_ value: Job?) -> Job {
-                return value ?? Job()
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
-        try Data(#"{ "inversePairs": [["enqueue", "dequeue"]] }"#.utf8).write(to: vocabularyPath)
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            output: recording,
-            includePossible: false,
-            explicitVocabularyPath: vocabularyPath,
-            diagnostics: diagnostics
-        )
-        #expect(recording.text.contains("Template: round-trip"))
-        #expect(recording.text.contains("✓ Project-vocabulary inverse name pair: enqueue/dequeue (+40)"))
-        #expect(diagnostics.lines.isEmpty)
-    }
-
-    @Test("Malformed explicit vocabulary path emits a stderr warning and falls back to .empty")
-    func malformedVocabularyWarns() throws {
-        let directory = try writeDPFixture(name: "VocabMalformed", contents: """
-        struct Helpers {
-            func sanitizeXML(_ value: String) -> String {
-                return value
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let vocabularyPath = directory.appendingPathComponent("vocabulary.json")
-        try Data("{ malformed:".utf8).write(to: vocabularyPath)
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            output: recording,
-            includePossible: false,
-            explicitVocabularyPath: vocabularyPath,
-            diagnostics: diagnostics
-        )
-        // Vocabulary fell back to .empty.
-        #expect(recording.body == "0 suggestions.")
-        #expect(diagnostics.lines.count == 1)
-        #expect(diagnostics.lines.first?.hasPrefix("warning: ") == true)
-        #expect(diagnostics.lines.first?.contains("could not parse") == true)
-    }
-
-    @Test("Absent vocabulary file with no explicit path is silent — no warning, no name signal")
-    func absentVocabularyIsSilent() throws {
-        let directory = try writeDPFixture(name: "VocabAbsent", contents: """
-        struct Helpers {
-            func sanitizeXML(_ value: String) -> String {
-                return value
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            output: recording,
-            includePossible: false,
-            diagnostics: diagnostics
-        )
-        #expect(recording.body == "0 suggestions.")
-        #expect(diagnostics.lines.isEmpty)
     }
 }

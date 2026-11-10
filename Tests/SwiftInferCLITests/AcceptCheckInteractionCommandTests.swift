@@ -9,6 +9,14 @@ import Testing
 // SwiftPM workdir (covered separately by integration tests once the
 // v2.3.0 kit pin lands in synthesized workdirs).
 
+private final class ACRecordingOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
 @Suite("AcceptCheckInteraction — V2.0 accept-flow rerun")
 struct AcceptCheckInteractionCommandTests {
 
@@ -148,13 +156,5 @@ struct AcceptCheckInteractionCommandTests {
             case .unknownFamily: break
             }
         }
-    }
-}
-
-private final class ACRecordingOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-
-    func write(_ text: String) {
-        lines.append(text)
     }
 }

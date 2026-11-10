@@ -11,6 +11,80 @@ import Testing
 // interaction with other RoundTripTemplate signals (cross-type counter,
 // discoverable annotation) plus the end-to-end discover() integration.
 
+@Suite("RoundTripTemplate — V1.12.1 end-to-end discover() integration")
+struct RoundTripDirectionLabelDiscoverTests {
+
+    @Test("V1.12.1 — `index(after:) ↔ index(before:)` no longer surfaces in discover() round-trip output")
+    func indexAfterIndexBeforeSuppressedEndToEnd() {
+        let indexAfter = makeSummary(
+            name: "index",
+            label: "after",
+            paramType: "Index",
+            returnType: "Index",
+            line: 10
+        )
+        let indexBefore = makeSummary(
+            name: "index",
+            label: "before",
+            paramType: "Index",
+            returnType: "Index",
+            line: 20
+        )
+        let suggestions = TemplateRegistry.discover(
+            in: [indexAfter, indexBefore],
+            typeDecls: []
+        )
+        let roundTripCount = suggestions.filter { $0.templateName == "round-trip" }.count
+        #expect(roundTripCount == 0, "Direction-labeled round-trip should not surface")
+    }
+
+    @Test("V1.12.1 — `encode/decode` pair still surfaces Likely")
+    func encodeDecodeStillSurfacesEndToEnd() {
+        let encode = makeSummary(
+            name: "encode",
+            label: nil,
+            paramType: "Document",
+            returnType: "Data",
+            line: 30
+        )
+        let decode = makeSummary(
+            name: "decode",
+            label: nil,
+            paramType: "Data",
+            returnType: "Document",
+            line: 40
+        )
+        let suggestions = TemplateRegistry.discover(
+            in: [encode, decode],
+            typeDecls: []
+        )
+        let roundTrip = suggestions.first { $0.templateName == "round-trip" }
+        #expect(roundTrip != nil, "Curated round-trip pair should still surface")
+        #expect(roundTrip?.score.tier == .likely)
+    }
+
+    private func makeSummary(
+        name: String,
+        label: String?,
+        paramType: String,
+        returnType: String,
+        line: Int
+    ) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [Parameter(label: label, internalName: "x", typeText: paramType, isInout: false)],
+            returnTypeText: returnType,
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: line, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+    }
+}
+
 @Suite("RoundTripTemplate — V1.12.1 direction counter signal composition")
 struct RoundTripDirectionLabelCompositionTests {
 
@@ -94,80 +168,6 @@ struct RoundTripDirectionLabelCompositionTests {
             containingTypeName: containingTypeName,
             bodySignals: .empty,
             discoverableGroup: discoverableGroup
-        )
-    }
-}
-
-@Suite("RoundTripTemplate — V1.12.1 end-to-end discover() integration")
-struct RoundTripDirectionLabelDiscoverTests {
-
-    @Test("V1.12.1 — `index(after:) ↔ index(before:)` no longer surfaces in discover() round-trip output")
-    func indexAfterIndexBeforeSuppressedEndToEnd() {
-        let indexAfter = makeSummary(
-            name: "index",
-            label: "after",
-            paramType: "Index",
-            returnType: "Index",
-            line: 10
-        )
-        let indexBefore = makeSummary(
-            name: "index",
-            label: "before",
-            paramType: "Index",
-            returnType: "Index",
-            line: 20
-        )
-        let suggestions = TemplateRegistry.discover(
-            in: [indexAfter, indexBefore],
-            typeDecls: []
-        )
-        let roundTripCount = suggestions.filter { $0.templateName == "round-trip" }.count
-        #expect(roundTripCount == 0, "Direction-labeled round-trip should not surface")
-    }
-
-    @Test("V1.12.1 — `encode/decode` pair still surfaces Likely")
-    func encodeDecodeStillSurfacesEndToEnd() {
-        let encode = makeSummary(
-            name: "encode",
-            label: nil,
-            paramType: "Document",
-            returnType: "Data",
-            line: 30
-        )
-        let decode = makeSummary(
-            name: "decode",
-            label: nil,
-            paramType: "Data",
-            returnType: "Document",
-            line: 40
-        )
-        let suggestions = TemplateRegistry.discover(
-            in: [encode, decode],
-            typeDecls: []
-        )
-        let roundTrip = suggestions.first { $0.templateName == "round-trip" }
-        #expect(roundTrip != nil, "Curated round-trip pair should still surface")
-        #expect(roundTrip?.score.tier == .likely)
-    }
-
-    private func makeSummary(
-        name: String,
-        label: String?,
-        paramType: String,
-        returnType: String,
-        line: Int
-    ) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: [Parameter(label: label, internalName: "x", typeText: paramType, isInout: false)],
-            returnTypeText: returnType,
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: line, column: 1),
-            containingTypeName: nil,
-            bodySignals: .empty
         )
     }
 }

@@ -1,5 +1,11 @@
 import Foundation
 
+/// The keys inside a seed's `requires` object — enumerated for `SeedFieldParity`, as
+/// `SeedEffectField` is for `effect`.
+public enum SeedRequirementField: String, CodingKey, CaseIterable {
+    case equatable
+}
+
 /// What a seeded symbol still needs before a law over it compiles — the `requires` field the
 /// producer writes.
 ///
@@ -44,10 +50,4 @@ public struct SeedRequirement: Codable, Sendable, Equatable {
             + "\(equatable.count == 1 ? "that type" : "those types"), and the linter found the "
             + "conformance would be synthesized (every member is already `Equatable`)."
     }
-}
-
-/// The keys inside a seed's `requires` object — enumerated for `SeedFieldParity`, as
-/// `SeedEffectField` is for `effect`.
-public enum SeedRequirementField: String, CodingKey, CaseIterable {
-    case equatable
 }

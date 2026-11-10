@@ -5,6 +5,132 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+/// TestLifter M7.0 acceptance bar item (c) — lifted-side suggestions
+/// matching a counter-signal are filtered entirely from the visible
+/// discover stream. The user's explicit negative assertion is
+/// dispositive on the lifted side.
+@Suite("TestLifter — counter-signal filters lifted side end-to-end (M7.0)")
+struct TestLifterCounterSignalLiftedFilterTests {
+
+    @Test("Counter-signal in tests filters the matching lifted-only count-invariance suggestion")
+    func liftedSideFilteredByCounterSignal() throws {
+        let directory = try makeFixture(name: "LiftedFiltered")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writePackageManifest(in: directory)
+        try writeSourcesUnannotatedFilter(in: directory)
+        // Test body asserts NEGATIVE form: filter(xs).count != xs.count.
+        // Without M7, this would surface a freestanding lifted-only
+        // count-invariance suggestion (annotation-only on TE side per
+        // PRD §5.2). With M7, the counter-signal filters the lifted.
+        try writeTestsCountInvariantNegative(in: directory)
+
+        let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: directory.appendingPathComponent("Sources/Foo"),
+            diagnostics: SilentCounterSignalDiagnostics(),
+            includePossible: true
+        )
+        let lifted = result.suggestions.first { suggestion in
+            suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
+        }
+        #expect(lifted == nil, "Lifted count-invariance should be filtered by counter-signal")
+    }
+
+    @Test("Positive test body still surfaces the lifted suggestion (no false positive)")
+    func liftedSurvivesWithoutCounterSignal() throws {
+        let directory = try makeFixture(name: "LiftedSurvives")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try writePackageManifest(in: directory)
+        try writeSourcesUnannotatedFilter(in: directory)
+        // Positive form — no counter-signal fires; lifted should
+        // surface as before.
+        try writeTestsCountInvariantPositive(in: directory)
+
+        let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
+            directory: directory.appendingPathComponent("Sources/Foo"),
+            diagnostics: SilentCounterSignalDiagnostics(),
+            includePossible: true
+        )
+        let lifted = result.suggestions.first { suggestion in
+            suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
+        }
+        #expect(lifted != nil, "Without counter-signal the lifted should surface")
+    }
+
+    // MARK: - Fixture helpers
+
+    private func makeFixture(name: String) throws -> URL {
+        let base = FileManager.default.temporaryDirectory
+            .appendingPathComponent("CounterSignalLifted-\(name)-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        return base
+    }
+
+    private func writePackageManifest(in directory: URL) throws {
+        try "// swift-tools-version: 5.9\nimport PackageDescription\n"
+            .write(
+                to: directory.appendingPathComponent("Package.swift"),
+                atomically: true,
+                encoding: .utf8
+            )
+    }
+
+    private func writeSourcesUnannotatedFilter(in directory: URL) throws {
+        let sources = directory.appendingPathComponent("Sources/Foo")
+        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
+        try """
+        public func filter(_ xs: [Int]) -> [Int] {
+            return xs
+        }
+        """.write(
+            to: sources.appendingPathComponent("Filter.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+
+    private func writeTestsCountInvariantNegative(in directory: URL) throws {
+        let tests = directory.appendingPathComponent("Tests/FooTests")
+        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
+        try """
+        import XCTest
+
+        final class FilterTests: XCTestCase {
+            func testFilterChangesCount() {
+                let xs = [1, 2, 3, 4]
+                XCTAssertNotEqual(filter(xs).count, xs.count)
+            }
+        }
+        """.write(
+            to: tests.appendingPathComponent("FilterTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+
+    private func writeTestsCountInvariantPositive(in directory: URL) throws {
+        let tests = directory.appendingPathComponent("Tests/FooTests")
+        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
+        try """
+        import XCTest
+
+        final class FilterTests: XCTestCase {
+            func testFilterPreservesCount() {
+                let xs = [1, 2, 3, 4]
+                XCTAssertEqual(filter(xs).count, xs.count)
+            }
+        }
+        """.write(
+            to: tests.appendingPathComponent("FilterTests.swift"),
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+}
+
+private struct SilentCounterSignalDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M7.0 acceptance — `counterSignalsFromTestLifter` seam.
 /// Asymmetric-assertion counter-signals from the test corpus (a)
 /// apply `-25 .asymmetricAssertion` to TE-side suggestions whose
@@ -136,130 +262,4 @@ struct TestLifterCounterSignalSeamTests {
         )
         #expect(baseline == withEmptyCS)
     }
-}
-
-/// TestLifter M7.0 acceptance bar item (c) — lifted-side suggestions
-/// matching a counter-signal are filtered entirely from the visible
-/// discover stream. The user's explicit negative assertion is
-/// dispositive on the lifted side.
-@Suite("TestLifter — counter-signal filters lifted side end-to-end (M7.0)")
-struct TestLifterCounterSignalLiftedFilterTests {
-
-    @Test("Counter-signal in tests filters the matching lifted-only count-invariance suggestion")
-    func liftedSideFilteredByCounterSignal() throws {
-        let directory = try makeFixture(name: "LiftedFiltered")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try writePackageManifest(in: directory)
-        try writeSourcesUnannotatedFilter(in: directory)
-        // Test body asserts NEGATIVE form: filter(xs).count != xs.count.
-        // Without M7, this would surface a freestanding lifted-only
-        // count-invariance suggestion (annotation-only on TE side per
-        // PRD §5.2). With M7, the counter-signal filters the lifted.
-        try writeTestsCountInvariantNegative(in: directory)
-
-        let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
-            directory: directory.appendingPathComponent("Sources/Foo"),
-            diagnostics: SilentCounterSignalDiagnostics(),
-            includePossible: true
-        )
-        let lifted = result.suggestions.first { suggestion in
-            suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
-        }
-        #expect(lifted == nil, "Lifted count-invariance should be filtered by counter-signal")
-    }
-
-    @Test("Positive test body still surfaces the lifted suggestion (no false positive)")
-    func liftedSurvivesWithoutCounterSignal() throws {
-        let directory = try makeFixture(name: "LiftedSurvives")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try writePackageManifest(in: directory)
-        try writeSourcesUnannotatedFilter(in: directory)
-        // Positive form — no counter-signal fires; lifted should
-        // surface as before.
-        try writeTestsCountInvariantPositive(in: directory)
-
-        let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
-            directory: directory.appendingPathComponent("Sources/Foo"),
-            diagnostics: SilentCounterSignalDiagnostics(),
-            includePossible: true
-        )
-        let lifted = result.suggestions.first { suggestion in
-            suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"
-        }
-        #expect(lifted != nil, "Without counter-signal the lifted should surface")
-    }
-
-    // MARK: - Fixture helpers
-
-    private func makeFixture(name: String) throws -> URL {
-        let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("CounterSignalLifted-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-        return base
-    }
-
-    private func writePackageManifest(in directory: URL) throws {
-        try "// swift-tools-version: 5.9\nimport PackageDescription\n"
-            .write(
-                to: directory.appendingPathComponent("Package.swift"),
-                atomically: true,
-                encoding: .utf8
-            )
-    }
-
-    private func writeSourcesUnannotatedFilter(in directory: URL) throws {
-        let sources = directory.appendingPathComponent("Sources/Foo")
-        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
-        try """
-        public func filter(_ xs: [Int]) -> [Int] {
-            return xs
-        }
-        """.write(
-            to: sources.appendingPathComponent("Filter.swift"),
-            atomically: true,
-            encoding: .utf8
-        )
-    }
-
-    private func writeTestsCountInvariantNegative(in directory: URL) throws {
-        let tests = directory.appendingPathComponent("Tests/FooTests")
-        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
-        try """
-        import XCTest
-
-        final class FilterTests: XCTestCase {
-            func testFilterChangesCount() {
-                let xs = [1, 2, 3, 4]
-                XCTAssertNotEqual(filter(xs).count, xs.count)
-            }
-        }
-        """.write(
-            to: tests.appendingPathComponent("FilterTests.swift"),
-            atomically: true,
-            encoding: .utf8
-        )
-    }
-
-    private func writeTestsCountInvariantPositive(in directory: URL) throws {
-        let tests = directory.appendingPathComponent("Tests/FooTests")
-        try FileManager.default.createDirectory(at: tests, withIntermediateDirectories: true)
-        try """
-        import XCTest
-
-        final class FilterTests: XCTestCase {
-            func testFilterPreservesCount() {
-                let xs = [1, 2, 3, 4]
-                XCTAssertEqual(filter(xs).count, xs.count)
-            }
-        }
-        """.write(
-            to: tests.appendingPathComponent("FilterTests.swift"),
-            atomically: true,
-            encoding: .utf8
-        )
-    }
-}
-
-private struct SilentCounterSignalDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

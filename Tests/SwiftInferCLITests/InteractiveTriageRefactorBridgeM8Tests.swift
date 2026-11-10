@@ -3,6 +3,90 @@ import Foundation
 import SwiftInferCore
 import Testing
 
+// MARK: - M8.6 fixture types + shared driver
+
+/// Bundle of (arm, typeName, witnesses) for M8.6's per-arm
+/// integration tests. Keeps the assertion driver under SwiftLint's
+/// 5-parameter cap and clusters related fields.
+struct M8ArmFixture {
+    let arm: String
+    let typeName: String
+    let combineWitness: String
+    let identityWitness: String?
+    let inverseWitness: String?
+}
+
+/// Shared driver for the M8.6 per-arm tests. Constructs a single
+/// `associativity` suggestion + a hand-crafted RefactorBridgeProposal
+/// targeting `fixture.arm`, runs `--interactive` with scripted "B",
+/// and verifies the writeout lands at the expected per-protocol path
+/// with the expected content. Each arm's unique assertions go in the
+/// closure.
+private func assertBAcceptWritesArm(
+    fixture: M8ArmFixture,
+    assertions: (String) -> Void
+) throws {
+    let directory = try makeRBFixtureDirectory(name: "BAccept\(fixture.arm)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let assoc = makeM8Suggestion(
+        template: "associativity",
+        funcName: fixture.combineWitness,
+        typeName: fixture.typeName
+    )
+    let proposal = RefactorBridgeProposal(
+        typeName: fixture.typeName,
+        protocolName: fixture.arm,
+        combineWitness: fixture.combineWitness,
+        identityWitness: fixture.identityWitness,
+        explainability: ExplainabilityBlock(
+            whySuggested: ["RefactorBridge claim: \(fixture.typeName) → \(fixture.arm)"],
+            whyMightBeWrong: ["M8 acceptance test"]
+        ),
+        relatedIdentities: [assoc.identity],
+        inverseWitness: fixture.inverseWitness
+    )
+    let result = try InteractiveTriage.run(
+        suggestions: [assoc],
+        existingDecisions: .empty,
+        context: makeRBContext(
+            prompt: TriageRecordingPromptInput(scriptedLines: ["B"]),
+            outputDirectory: directory,
+            proposalsByType: [fixture.typeName: [proposal]]
+        )
+    )
+    let stored = try #require(result.updatedDecisions.record(for: assoc.identity.normalized))
+    #expect(stored.decision == .acceptedAsConformance)
+    let path = try #require(result.writtenFiles.first)
+    let expected = "Tests/Generated/SwiftInferRefactors/\(fixture.typeName)/\(fixture.arm).swift"
+    #expect(path.path.contains(expected))
+    let contents = try String(contentsOf: path, encoding: .utf8)
+    assertions(contents)
+}
+
+/// Variant of `makeBinarySuggestion` that lets the caller specify the
+/// type name in the signature. The default helper hardcodes `IntSet`;
+/// M8.6's arms test against per-arm canonical types (Tally /
+/// AdditiveInt / MaxInt / Money / Bag).
+private func makeM8Suggestion(
+    template: String,
+    funcName: String,
+    typeName: String
+) -> Suggestion {
+    let evidence = Evidence(
+        displayName: "\(funcName)(_:_:)",
+        signature: "(\(typeName), \(typeName)) -> \(typeName)",
+        location: SourceLocation(file: "Test.swift", line: 1, column: 1)
+    )
+    return Suggestion(
+        templateName: template,
+        evidence: [evidence],
+        score: Score(signals: [Signal(kind: .typeSymmetrySignature, weight: 90, detail: "")]),
+        generator: .m1Placeholder,
+        explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
+        identity: SuggestionIdentity(canonicalInput: "\(template)|\(funcName)|\(typeName)")
+    )
+}
+
 @Suite("InteractiveTriage — M8.6 per-arm B accept end-to-end")
 struct InteractiveTriageRefactorBridgeM8Tests {
 
@@ -100,88 +184,4 @@ struct InteractiveTriageRefactorBridgeM8Tests {
                 #expect(contents.contains("public static func combine") == false)
         }
     }
-}
-
-// MARK: - M8.6 fixture types + shared driver
-
-/// Bundle of (arm, typeName, witnesses) for M8.6's per-arm
-/// integration tests. Keeps the assertion driver under SwiftLint's
-/// 5-parameter cap and clusters related fields.
-struct M8ArmFixture {
-    let arm: String
-    let typeName: String
-    let combineWitness: String
-    let identityWitness: String?
-    let inverseWitness: String?
-}
-
-/// Shared driver for the M8.6 per-arm tests. Constructs a single
-/// `associativity` suggestion + a hand-crafted RefactorBridgeProposal
-/// targeting `fixture.arm`, runs `--interactive` with scripted "B",
-/// and verifies the writeout lands at the expected per-protocol path
-/// with the expected content. Each arm's unique assertions go in the
-/// closure.
-private func assertBAcceptWritesArm(
-    fixture: M8ArmFixture,
-    assertions: (String) -> Void
-) throws {
-    let directory = try makeRBFixtureDirectory(name: "BAccept\(fixture.arm)")
-    defer { try? FileManager.default.removeItem(at: directory) }
-    let assoc = makeM8Suggestion(
-        template: "associativity",
-        funcName: fixture.combineWitness,
-        typeName: fixture.typeName
-    )
-    let proposal = RefactorBridgeProposal(
-        typeName: fixture.typeName,
-        protocolName: fixture.arm,
-        combineWitness: fixture.combineWitness,
-        identityWitness: fixture.identityWitness,
-        explainability: ExplainabilityBlock(
-            whySuggested: ["RefactorBridge claim: \(fixture.typeName) → \(fixture.arm)"],
-            whyMightBeWrong: ["M8 acceptance test"]
-        ),
-        relatedIdentities: [assoc.identity],
-        inverseWitness: fixture.inverseWitness
-    )
-    let result = try InteractiveTriage.run(
-        suggestions: [assoc],
-        existingDecisions: .empty,
-        context: makeRBContext(
-            prompt: TriageRecordingPromptInput(scriptedLines: ["B"]),
-            outputDirectory: directory,
-            proposalsByType: [fixture.typeName: [proposal]]
-        )
-    )
-    let stored = try #require(result.updatedDecisions.record(for: assoc.identity.normalized))
-    #expect(stored.decision == .acceptedAsConformance)
-    let path = try #require(result.writtenFiles.first)
-    let expected = "Tests/Generated/SwiftInferRefactors/\(fixture.typeName)/\(fixture.arm).swift"
-    #expect(path.path.contains(expected))
-    let contents = try String(contentsOf: path, encoding: .utf8)
-    assertions(contents)
-}
-
-/// Variant of `makeBinarySuggestion` that lets the caller specify the
-/// type name in the signature. The default helper hardcodes `IntSet`;
-/// M8.6's arms test against per-arm canonical types (Tally /
-/// AdditiveInt / MaxInt / Money / Bag).
-private func makeM8Suggestion(
-    template: String,
-    funcName: String,
-    typeName: String
-) -> Suggestion {
-    let evidence = Evidence(
-        displayName: "\(funcName)(_:_:)",
-        signature: "(\(typeName), \(typeName)) -> \(typeName)",
-        location: SourceLocation(file: "Test.swift", line: 1, column: 1)
-    )
-    return Suggestion(
-        templateName: template,
-        evidence: [evidence],
-        score: Score(signals: [Signal(kind: .typeSymmetrySignature, weight: 90, detail: "")]),
-        generator: .m1Placeholder,
-        explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
-        identity: SuggestionIdentity(canonicalInput: "\(template)|\(funcName)|\(typeName)")
-    )
 }

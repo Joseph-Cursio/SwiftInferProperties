@@ -3,6 +3,14 @@ import Foundation
 import SwiftInferCore
 import Testing
 
+/// Stub that pretends every fileExists query returns false. Used to keep
+/// the "no Package.swift in walk-up" test independent of whatever's
+/// above the temp dir on the host filesystem.
+private struct NoPackageStub: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) -> Data { Data() }
+}
+
 @Suite("VocabularyLoader — explicit path + walk-up implicit lookup per PRD §4.5")
 struct VocabularyLoaderTests {
 
@@ -153,12 +161,4 @@ struct VocabularyLoaderTests {
         let path = dir.appendingPathComponent("vocabulary.json")
         try Data(json.utf8).write(to: path)
     }
-}
-
-/// Stub that pretends every fileExists query returns false. Used to keep
-/// the "no Package.swift in walk-up" test independent of whatever's
-/// above the temp dir on the host filesystem.
-private struct NoPackageStub: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) -> Data { Data() }
 }

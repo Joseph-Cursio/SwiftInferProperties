@@ -2,6 +2,35 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
+/// The innermost function, initializer, subscript or property whose extent covers the line.
+///
+/// Shared by `RestrictedScopes` and `SubjectLiterals`: both ask *which declaration is this line
+/// in*, and two answers to that question would drift.
+final class DeclarationFinder: SyntaxVisitor {
+    let line: Int
+    let converter: SourceLocationConverter
+    private(set) var innermost: DeclSyntax?
+
+    init(line: Int, converter: SourceLocationConverter) {
+        self.line = line
+        self.converter = converter
+        super.init(viewMode: .sourceAccurate)
+    }
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
+    override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
+    override func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
+    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
+
+    private func consider(_ node: DeclSyntax) -> SyntaxVisitorContinueKind {
+        let start = node.startLocation(converter: converter).line
+        let end = node.endLocation(converter: converter).line
+        guard start <= line, line <= end else { return .skipChildren }
+        innermost = node
+        return .visitChildren
+    }
+}
+
 /// **Every `private` / `fileprivate` keyword standing between a test and a declaration** — the
 /// declaration's own, and every enclosing type or extension's — each with the line it sits on.
 ///
@@ -121,34 +150,5 @@ public enum RestrictedScopes {
             return ("actor \(decl.name.text)", decl.modifiers)
         }
         return nil
-    }
-}
-
-/// The innermost function, initializer, subscript or property whose extent covers the line.
-///
-/// Shared by `RestrictedScopes` and `SubjectLiterals`: both ask *which declaration is this line
-/// in*, and two answers to that question would drift.
-final class DeclarationFinder: SyntaxVisitor {
-    let line: Int
-    let converter: SourceLocationConverter
-    private(set) var innermost: DeclSyntax?
-
-    init(line: Int, converter: SourceLocationConverter) {
-        self.line = line
-        self.converter = converter
-        super.init(viewMode: .sourceAccurate)
-    }
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
-    override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
-    override func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
-    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind { consider(DeclSyntax(node)) }
-
-    private func consider(_ node: DeclSyntax) -> SyntaxVisitorContinueKind {
-        let start = node.startLocation(converter: converter).line
-        let end = node.endLocation(converter: converter).line
-        guard start <= line, line <= end else { return .skipChildren }
-        innermost = node
-        return .visitChildren
     }
 }

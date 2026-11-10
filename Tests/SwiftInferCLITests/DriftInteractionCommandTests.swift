@@ -8,6 +8,25 @@ import Testing
 // template engine fire; baseline persisted via the loader; warnings
 // rendered to a recording diagnostic output.
 
+// MARK: - Recording helpers (file-private — same posture as DriftCommandTests
+// to avoid colliding with same-named helpers in other suites).
+
+private final class DIRecordingOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
+private final class DIRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+
+    func writeDiagnostic(_ text: String) {
+        lines.append(text)
+    }
+}
+
 @Suite("DriftInteraction — V2.0 M10 CLI orchestration")
 struct DriftInteractionCommandTests {
 
@@ -119,24 +138,5 @@ struct DriftInteractionCommandTests {
             diagnostics: diagnostics
         )
         #expect(diagnostics.lines.contains { $0.contains("interaction-baseline file not found") })
-    }
-}
-
-// MARK: - Recording helpers (file-private — same posture as DriftCommandTests
-// to avoid colliding with same-named helpers in other suites).
-
-private final class DIRecordingOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-
-    func write(_ text: String) {
-        lines.append(text)
-    }
-}
-
-private final class DIRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-
-    func writeDiagnostic(_ text: String) {
-        lines.append(text)
     }
 }

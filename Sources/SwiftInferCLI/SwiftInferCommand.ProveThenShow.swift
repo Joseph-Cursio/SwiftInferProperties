@@ -2,6 +2,14 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// Routes indexer diagnostics to stderr so they don't pollute the
+/// prove-then-show report on stdout.
+private struct StderrDiagnosticOutput: DiagnosticOutput {
+    func writeDiagnostic(_ text: String) {
+        FileHandle.standardError.write(Data("\(text)\n".utf8))
+    }
+}
+
 /// V1.144 — `swift-infer prove-then-show`. The one-shot inversion of the
 /// conservative default: instead of *hiding* low-confidence `Possible` picks
 /// to avoid false positives, it **tests** them and shows what survives.
@@ -330,13 +338,5 @@ public extension SwiftInferCommand {
                 ))
             }
         }
-    }
-}
-
-/// Routes indexer diagnostics to stderr so they don't pollute the
-/// prove-then-show report on stdout.
-private struct StderrDiagnosticOutput: DiagnosticOutput {
-    func writeDiagnostic(_ text: String) {
-        FileHandle.standardError.write(Data("\(text)\n".utf8))
     }
 }

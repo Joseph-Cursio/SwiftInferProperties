@@ -1,50 +1,5 @@
 import SwiftSyntax
 
-/// What a `T -> T` function's **returned expression** does to its input.
-///
-/// An idempotent function projects onto a normal form, so its result is a
-/// sub-part of its input: strip, trim, cut, dedup, sort. A function whose result
-/// is *built around* its input — wrapped, appended to, path-extended — cannot be
-/// idempotent, because applying it twice wraps twice. That is falsity, not low
-/// confidence, which is why the consuming signal is a veto rather than a penalty
-/// (the same reasoning `orderSensitiveCarrier` gives).
-///
-/// ## Measured before it was built
-///
-/// A survey on 2026-08-04 ran every `idempotence` candidate on this repo:
-/// **55 executed, 13 refuted — a 24% false-law rate**, all at the score-35
-/// shape-only floor. A prototype of this classifier, frozen to disk *before* the
-/// verdicts existed, scored **5/5 precision** on the rows that ran when keyed on
-/// the return expression alone.
-///
-/// ## Why the return expression ALONE
-///
-/// The prototype also had a body-wide fallback, and that fallback produced its
-/// only false alarm: `dedupedByStateAndAction` was flagged because `.append`
-/// appears in its body — but it is a *dedup*, and dedup is idempotent. Meanwhile
-/// `quoted(_:)` calls `replacingOccurrences` (a normalizer marker) and *then*
-/// wraps in delimiters, so a body-wide scan reads it as a normalizer and misses
-/// it. **Where you look decides the answer; what you look for does not.** The
-/// last thing the function does is the only thing that settles it.
-public enum IdempotenceReturnShape: Sendable, Equatable {
-
-    /// The result is built AROUND the input — wrapped in delimiters, appended
-    /// to, extended by a path component. `f(f(x))` wraps twice.
-    ///
-    /// Carries the spelling found, for the explainability line.
-    case extendsInput(via: String)
-
-    /// The result is a replacement chain whose output re-enters its own patterns, so a second
-    /// application rewrites again — an escaper escaping its own escapes. Carries a witness `s` with
-    /// `f(f(s)) != f(s)`, found by evaluating the chain. See `ReplacementChainClassifier`.
-    case reappliesItsRewrite(witness: String)
-
-    /// The return expression was read and matched no extension shape. **Not** a
-    /// claim that the function is idempotent — only that this classifier saw no
-    /// reason to say it is not. The veto fires on positive detection only.
-    case notExtending
-}
-
 /// Reads `IdempotenceReturnShape` off a function body.
 ///
 /// Deliberately narrow. It answers one question — *does the returned expression
@@ -168,4 +123,49 @@ public enum IdempotenceReturnShapeClassifier {
             return nil
         }
     }
+}
+
+/// What a `T -> T` function's **returned expression** does to its input.
+///
+/// An idempotent function projects onto a normal form, so its result is a
+/// sub-part of its input: strip, trim, cut, dedup, sort. A function whose result
+/// is *built around* its input — wrapped, appended to, path-extended — cannot be
+/// idempotent, because applying it twice wraps twice. That is falsity, not low
+/// confidence, which is why the consuming signal is a veto rather than a penalty
+/// (the same reasoning `orderSensitiveCarrier` gives).
+///
+/// ## Measured before it was built
+///
+/// A survey on 2026-08-04 ran every `idempotence` candidate on this repo:
+/// **55 executed, 13 refuted — a 24% false-law rate**, all at the score-35
+/// shape-only floor. A prototype of this classifier, frozen to disk *before* the
+/// verdicts existed, scored **5/5 precision** on the rows that ran when keyed on
+/// the return expression alone.
+///
+/// ## Why the return expression ALONE
+///
+/// The prototype also had a body-wide fallback, and that fallback produced its
+/// only false alarm: `dedupedByStateAndAction` was flagged because `.append`
+/// appears in its body — but it is a *dedup*, and dedup is idempotent. Meanwhile
+/// `quoted(_:)` calls `replacingOccurrences` (a normalizer marker) and *then*
+/// wraps in delimiters, so a body-wide scan reads it as a normalizer and misses
+/// it. **Where you look decides the answer; what you look for does not.** The
+/// last thing the function does is the only thing that settles it.
+public enum IdempotenceReturnShape: Sendable, Equatable {
+
+    /// The result is built AROUND the input — wrapped in delimiters, appended
+    /// to, extended by a path component. `f(f(x))` wraps twice.
+    ///
+    /// Carries the spelling found, for the explainability line.
+    case extendsInput(via: String)
+
+    /// The result is a replacement chain whose output re-enters its own patterns, so a second
+    /// application rewrites again — an escaper escaping its own escapes. Carries a witness `s` with
+    /// `f(f(s)) != f(s)`, found by evaluating the chain. See `ReplacementChainClassifier`.
+    case reappliesItsRewrite(witness: String)
+
+    /// The return expression was read and matched no extension shape. **Not** a
+    /// claim that the function is idempotent — only that this classifier saw no
+    /// reason to say it is not. The veto fires on positive detection only.
+    case notExtending
 }

@@ -4,6 +4,52 @@ import SwiftSyntax
 
 @testable import SwiftInferCore
 
+/// Throwing function and initializer requirements, per protocol declaration.
+///
+/// Only **requirements** — a body means it is a default implementation in a protocol
+/// extension, not a signature anyone is bound to. `ProtocolDeclSyntax` bodies hold
+/// requirements exclusively, so the visitor is scoped to those rather than filtering.
+final class ProtocolRequirementCollector: SyntaxVisitor {
+
+    private(set) var found: [String: Set<ConformanceFixedSignatures.Requirement>] = [:]
+
+    /// `_` is a *suppressed* label and `FunctionSummary.Parameter.label` reports it
+    /// as `nil` (`FunctionScannerVisitor+Summary.swift:232`). Reading it as the
+    /// literal string `"_"` here would make every unlabelled requirement fail to
+    /// match the summaries it exists to match — a classifier that silently never
+    /// fires, which is the same zero as a classifier with nothing to find.
+    static func labels(of clause: FunctionParameterClauseSyntax) -> [String?] {
+        clause.parameters.map { $0.firstName.text == "_" ? nil : $0.firstName.text }
+    }
+
+    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+        let name = node.name.text
+        for member in node.memberBlock.members {
+            if let function = member.decl.as(FunctionDeclSyntax.self),
+               function.signature.effectSpecifiers?.throwsClause != nil {
+                found[name, default: []].insert(
+                    .init(
+                        name: function.name.text,
+                        labels: Self.labels(of: function.signature.parameterClause),
+                        isInitializer: false
+                    )
+                )
+            }
+            if let initializer = member.decl.as(InitializerDeclSyntax.self),
+               initializer.signature.effectSpecifiers?.throwsClause != nil {
+                found[name, default: []].insert(
+                    .init(
+                        name: "init",
+                        labels: Self.labels(of: initializer.signature.parameterClause),
+                        isInitializer: true
+                    )
+                )
+            }
+        }
+        return .skipChildren
+    }
+}
+
 /// **Which throwing functions have a signature they are not free to change?**
 ///
 /// `result-carrier-reach.md` §4 measured the `Result` refactor at −218 and then
@@ -116,51 +162,5 @@ enum ConformanceFixedSignatures {
             isInitializer: summary.isInitializer
         )
         return declared.contains { requirements[$0]?.contains(candidate) == true }
-    }
-}
-
-/// Throwing function and initializer requirements, per protocol declaration.
-///
-/// Only **requirements** — a body means it is a default implementation in a protocol
-/// extension, not a signature anyone is bound to. `ProtocolDeclSyntax` bodies hold
-/// requirements exclusively, so the visitor is scoped to those rather than filtering.
-final class ProtocolRequirementCollector: SyntaxVisitor {
-
-    private(set) var found: [String: Set<ConformanceFixedSignatures.Requirement>] = [:]
-
-    /// `_` is a *suppressed* label and `FunctionSummary.Parameter.label` reports it
-    /// as `nil` (`FunctionScannerVisitor+Summary.swift:232`). Reading it as the
-    /// literal string `"_"` here would make every unlabelled requirement fail to
-    /// match the summaries it exists to match — a classifier that silently never
-    /// fires, which is the same zero as a classifier with nothing to find.
-    static func labels(of clause: FunctionParameterClauseSyntax) -> [String?] {
-        clause.parameters.map { $0.firstName.text == "_" ? nil : $0.firstName.text }
-    }
-
-    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        let name = node.name.text
-        for member in node.memberBlock.members {
-            if let function = member.decl.as(FunctionDeclSyntax.self),
-               function.signature.effectSpecifiers?.throwsClause != nil {
-                found[name, default: []].insert(
-                    .init(
-                        name: function.name.text,
-                        labels: Self.labels(of: function.signature.parameterClause),
-                        isInitializer: false
-                    )
-                )
-            }
-            if let initializer = member.decl.as(InitializerDeclSyntax.self),
-               initializer.signature.effectSpecifiers?.throwsClause != nil {
-                found[name, default: []].insert(
-                    .init(
-                        name: "init",
-                        labels: Self.labels(of: initializer.signature.parameterClause),
-                        isInitializer: true
-                    )
-                )
-            }
-        }
-        return .skipChildren
     }
 }

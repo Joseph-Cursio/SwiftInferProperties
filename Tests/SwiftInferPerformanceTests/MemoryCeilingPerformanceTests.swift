@@ -4,6 +4,93 @@ import SwiftInferCore
 import SwiftInferTemplates
 import Testing
 
+// MARK: - Memory sampling
+
+/// Polls `mach_task_basic_info.resident_size` on a background thread
+/// every 50ms. Captures the running peak so a transient mid-scan
+/// allocation isn't lost to a late single sample. The PRD §13 budget
+/// is "memory ceiling" — peak is the conservative read (open decision
+/// #1 in `git show 31a347a:'docs/archive/v0.1.0 Release Plan.md'`).
+private final class MemorySampler: @unchecked Sendable {
+
+    private let lock = NSLock()
+    private let baseline: UInt64
+    private var peak: UInt64 = 0
+    private var running = false
+    private let intervalNanos: UInt64 = 50_000_000
+
+    init(baseline: UInt64) {
+        self.baseline = baseline
+    }
+
+    func start() {
+        lock.lock()
+        running = true
+        peak = max(baseline, Self.currentResidentBytes())
+        lock.unlock()
+        let queue = DispatchQueue(label: "swift-infer.memory-sampler", qos: .userInitiated)
+        queue.async { [weak self] in
+            guard let self else { return }
+            while isRunning() {
+                let sample = Self.currentResidentBytes()
+                recordSample(sample)
+                Thread.sleep(forTimeInterval: Double(intervalNanos) / 1_000_000_000)
+            }
+        }
+    }
+
+    func stop() {
+        lock.lock()
+        running = false
+        lock.unlock()
+    }
+
+    /// Peak resident bytes added on top of the baseline captured at
+    /// construction time. Negative deltas (e.g. allocator returning
+    /// memory mid-scan) clamp to zero — the budget gates the
+    /// allocation peak, not the trough.
+    func peakDeltaBytes() -> UInt64 {
+        lock.lock()
+        defer { lock.unlock() }
+        return peak > baseline ? peak - baseline : 0
+    }
+
+    private func isRunning() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return running
+    }
+
+    private func recordSample(_ sample: UInt64) {
+        lock.lock()
+        if sample > peak { peak = sample }
+        lock.unlock()
+    }
+
+    /// Mach call against `MACH_TASK_BASIC_INFO`. Returns 0 on failure
+    /// — failure here would surface as a 0-byte peak which the
+    /// assertion always trips through, so the test would fail loudly
+    /// rather than pass spuriously.
+    static func currentResidentBytes() -> UInt64 {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(
+            MemoryLayout<mach_task_basic_info>.size / MemoryLayout<integer_t>.size
+        )
+        let result = withUnsafeMutablePointer(to: &info) { infoPtr -> kern_return_t in
+            infoPtr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { ptr in
+                task_info(
+                    mach_task_self_,
+                    task_flavor_t(MACH_TASK_BASIC_INFO),
+                    ptr,
+                    &count
+                )
+            }
+        }
+        guard result == KERN_SUCCESS else { return 0 }
+        return UInt64(info.resident_size)
+    }
+}
+
 /// PRD §13 row 4 — `swift-infer discover` against a 500-file module
 /// must stay under the calibrated memory budget. The row had no
 /// regression test before R1.1.b. The test polls
@@ -131,92 +218,5 @@ struct MemoryCeilingPerformanceTests {
 
     private func formatted(_ value: Double) -> String {
         String(format: "%.1f", value)
-    }
-}
-
-// MARK: - Memory sampling
-
-/// Polls `mach_task_basic_info.resident_size` on a background thread
-/// every 50ms. Captures the running peak so a transient mid-scan
-/// allocation isn't lost to a late single sample. The PRD §13 budget
-/// is "memory ceiling" — peak is the conservative read (open decision
-/// #1 in `git show 31a347a:'docs/archive/v0.1.0 Release Plan.md'`).
-private final class MemorySampler: @unchecked Sendable {
-
-    private let lock = NSLock()
-    private let baseline: UInt64
-    private var peak: UInt64 = 0
-    private var running = false
-    private let intervalNanos: UInt64 = 50_000_000
-
-    init(baseline: UInt64) {
-        self.baseline = baseline
-    }
-
-    func start() {
-        lock.lock()
-        running = true
-        peak = max(baseline, Self.currentResidentBytes())
-        lock.unlock()
-        let queue = DispatchQueue(label: "swift-infer.memory-sampler", qos: .userInitiated)
-        queue.async { [weak self] in
-            guard let self else { return }
-            while isRunning() {
-                let sample = Self.currentResidentBytes()
-                recordSample(sample)
-                Thread.sleep(forTimeInterval: Double(intervalNanos) / 1_000_000_000)
-            }
-        }
-    }
-
-    func stop() {
-        lock.lock()
-        running = false
-        lock.unlock()
-    }
-
-    /// Peak resident bytes added on top of the baseline captured at
-    /// construction time. Negative deltas (e.g. allocator returning
-    /// memory mid-scan) clamp to zero — the budget gates the
-    /// allocation peak, not the trough.
-    func peakDeltaBytes() -> UInt64 {
-        lock.lock()
-        defer { lock.unlock() }
-        return peak > baseline ? peak - baseline : 0
-    }
-
-    private func isRunning() -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return running
-    }
-
-    private func recordSample(_ sample: UInt64) {
-        lock.lock()
-        if sample > peak { peak = sample }
-        lock.unlock()
-    }
-
-    /// Mach call against `MACH_TASK_BASIC_INFO`. Returns 0 on failure
-    /// — failure here would surface as a 0-byte peak which the
-    /// assertion always trips through, so the test would fail loudly
-    /// rather than pass spuriously.
-    static func currentResidentBytes() -> UInt64 {
-        var info = mach_task_basic_info()
-        var count = mach_msg_type_number_t(
-            MemoryLayout<mach_task_basic_info>.size / MemoryLayout<integer_t>.size
-        )
-        let result = withUnsafeMutablePointer(to: &info) { infoPtr -> kern_return_t in
-            infoPtr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { ptr in
-                task_info(
-                    mach_task_self_,
-                    task_flavor_t(MACH_TASK_BASIC_INFO),
-                    ptr,
-                    &count
-                )
-            }
-        }
-        guard result == KERN_SUCCESS else { return 0 }
-        return UInt64(info.resident_size)
     }
 }

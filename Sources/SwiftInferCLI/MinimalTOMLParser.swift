@@ -1,5 +1,32 @@
 import Foundation
 
+/// One value in the parsed TOML map. M2.2 only needs booleans and
+/// strings; numbers / dates / arrays land in subsequent milestones if
+/// the config surface ever requires them (and likely as a dep swap, see
+/// `MinimalTOMLParser`'s doc comment).
+public enum TOMLValue: Sendable, Equatable {
+    case boolean(Bool)
+    case string(String)
+}
+
+/// Thrown by `MinimalTOMLParser.parse` when the input violates the
+/// supported subset. `line` is 1-based to match how editors display it
+/// — `ConfigLoader` includes it in the warning rendered to stderr.
+public struct TOMLParseError: Error, Equatable, CustomStringConvertible {
+
+    public let line: Int
+    public let message: String
+
+    public init(line: Int, message: String) {
+        self.line = line
+        self.message = message
+    }
+
+    public var description: String {
+        "TOML parse error at line \(line): \(message)"
+    }
+}
+
 /// Hand-rolled TOML 1.0 subset sufficient for `.swiftinfer/config.toml`
 /// in M2.2: section headers, key-value pairs whose values are booleans
 /// or basic double-quoted strings, line-trailing comments. The M2 plan
@@ -207,32 +234,5 @@ public enum MinimalTOMLParser {
         return key.allSatisfy { char in
             char.isLetter || char.isNumber || char == "_" || char == "-"
         }
-    }
-}
-
-/// One value in the parsed TOML map. M2.2 only needs booleans and
-/// strings; numbers / dates / arrays land in subsequent milestones if
-/// the config surface ever requires them (and likely as a dep swap, see
-/// `MinimalTOMLParser`'s doc comment).
-public enum TOMLValue: Sendable, Equatable {
-    case boolean(Bool)
-    case string(String)
-}
-
-/// Thrown by `MinimalTOMLParser.parse` when the input violates the
-/// supported subset. `line` is 1-based to match how editors display it
-/// — `ConfigLoader` includes it in the warning rendered to stderr.
-public struct TOMLParseError: Error, Equatable, CustomStringConvertible {
-
-    public let line: Int
-    public let message: String
-
-    public init(line: Int, message: String) {
-        self.line = line
-        self.message = message
-    }
-
-    public var description: String {
-        "TOML parse error at line \(line): \(message)"
     }
 }

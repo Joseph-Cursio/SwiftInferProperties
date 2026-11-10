@@ -1,6 +1,146 @@
 import SwiftInferCore
 import SwiftSyntax
 
+// MARK: - AssertionAnchor
+
+/// Locates the *terminal* assertion call inside a body — the one the
+/// slicer anchors on. "Terminal" = the *last* assertion in source order
+/// among the body's top-level statements. Tests with multiple
+/// assertions get sliced against the final one; M1's round-trip
+/// detector is happy with that posture (it asks "what does the final
+/// assertion claim?").
+enum AssertionAnchor {
+
+    struct Located {
+        let index: Int
+        let assertion: AssertionInvocation
+    }
+
+    static func locate(in items: [CodeBlockItemSyntax]) -> Located? {
+        var lastFound: Located?
+        for (index, item) in items.enumerated() {
+            guard case .expr(let expr) = item.item else {
+                continue
+            }
+            if let invocation = parseInvocation(from: expr) {
+                lastFound = Located(index: index, assertion: invocation)
+            }
+        }
+        return lastFound
+    }
+
+    private static func parseInvocation(from expr: ExprSyntax) -> AssertionInvocation? {
+        if let call = expr.as(FunctionCallExprSyntax.self),
+           let kind = xctAssertKind(of: call) {
+            let args = call.arguments.map(\.expression)
+            return AssertionInvocation(
+                kind: kind,
+                arguments: args,
+                location: location(of: Syntax(call))
+            )
+        }
+        if let macro = expr.as(MacroExpansionExprSyntax.self),
+           let kind = swiftTestingMacroKind(of: macro) {
+            let args = macro.arguments.map(\.expression)
+            return AssertionInvocation(
+                kind: kind,
+                arguments: args,
+                location: location(of: Syntax(macro))
+            )
+        }
+        return nil
+    }
+
+    /// Assertion-callee → kind dispatch table. Centralizing the
+    /// mapping in a static dictionary keeps `xctAssertKind` under
+    /// SwiftLint's cyclomatic-complexity cap as the kind list grows
+    /// (M5.1 added two; M7.0 adds three more).
+    ///
+    /// **`Kind` discriminates assertion SHAPE, not harness.** The case names
+    /// carry an `xctAssert` prefix for historical reasons, but what every
+    /// downstream detector switches on is the shape — "two expressions asserted
+    /// equal", "one expression asserted true". `StdlibUnittest`'s `expect*`
+    /// family has exactly those shapes, so it maps onto the existing cases
+    /// rather than adding parallel ones. That is what makes the whole detector
+    /// suite (round-trip, symmetry, idempotence, count-change, …) work on the
+    /// swift.org corpus without touching any of them.
+    private static let xctAssertKindByCallee: [String: AssertionInvocation.Kind] = [
+        "XCTAssertEqual": .xctAssertEqual,
+        "XCTAssertTrue": .xctAssertTrue,
+        "XCTAssert": .xctAssert,
+        "XCTAssertNotNil": .xctAssertNotNil,
+        "XCTAssertNil": .xctAssertNil,
+        "XCTAssertLessThan": .xctAssertLessThan,
+        "XCTAssertLessThanOrEqual": .xctAssertLessThanOrEqual,
+        "XCTAssertNotEqual": .xctAssertNotEqual,
+        "XCTAssertGreaterThan": .xctAssertGreaterThan,
+        "XCTAssertGreaterThanOrEqual": .xctAssertGreaterThanOrEqual,
+        "XCTAssertFalse": .xctAssertFalse,
+        // `StdlibUnittest` — the swift.org stdlib test harness. Counts are
+        // call sites across `test/stdlib` + `validation-test/stdlib` at
+        // `swift` @ `408632e5`, and they are why this table entry exists:
+        // every one of these was invisible to the lifter.
+        "expectEqual": .xctAssertEqual,                       // 8,665
+        "expectTrue": .xctAssertTrue,                         // 2,342
+        "expectFalse": .xctAssertFalse,                       // 1,016
+        "expectNotNil": .xctAssertNotNil,                     //   341
+        "expectNil": .xctAssertNil,                           //   809
+        "expectEqualSequence": .xctAssertEqual,               //   269
+        "expectNotEqual": .xctAssertNotEqual,                 //   235
+        "expectGE": .xctAssertGreaterThanOrEqual,             //    56
+        "expectGT": .xctAssertGreaterThan,                    //    21
+        "expectLE": .xctAssertLessThanOrEqual,                //    14
+        "expectLT": .xctAssertLessThan,                        //    14
+        //
+        // `expectNil` was deliberately absent until `.xctAssertNil` existed:
+        // mapping it onto `.xctAssertNotNil` would have INVERTED the
+        // assertion, so a detector would read "asserted non-nil" from
+        // `expectNil(x)` and infer the opposite law. The kind now exists, so
+        // the 809 sites map at their true polarity.
+        //
+        // STILL ABSENT, and not equality or ordering assertions at all:
+        //   `expectCrashLater` (810), `expectParse` (441), `expectType` (227),
+        //   `expectPrinted` (191). They anchor process death, parse success,
+        //   static typing and rendering; none is a shape any detector reads.
+    ]
+
+    private static func xctAssertKind(of call: FunctionCallExprSyntax) -> AssertionInvocation.Kind? {
+        guard let ref = call.calledExpression.as(DeclReferenceExprSyntax.self) else {
+            return nil
+        }
+        return xctAssertKindByCallee[ref.baseName.text]
+    }
+
+    private static func swiftTestingMacroKind(of macro: MacroExpansionExprSyntax) -> AssertionInvocation.Kind? {
+        switch macro.macroName.text {
+        case "expect":
+            return .expectMacro
+
+        case "require":
+            return .requireMacro
+
+        default:
+            return nil
+        }
+    }
+
+    private static func location(of _: Syntax) -> SwiftInferCore.SourceLocation {
+        // The slicer doesn't carry a SourceLocationConverter, and M1.3's
+        // round-trip detector consumes the assertion's argument shape, not its
+        // absolute location. We surface a placeholder here; M1.5's CLI wiring was
+        // to thread a converter through when the location actually fed rendering.
+        //
+        // **It never did, and the placeholder reached users for the whole of that
+        // gap** — every lifted row rendered `Lifted from <test-body>:0`. Rather
+        // than thread a converter (which would move an assertion-precise location
+        // through six detectors), `makeExplainability` now falls back to
+        // `LiftedOrigin`, which already carries the enclosing test METHOD's real
+        // file and line. Less precise than the assertion line, and auditable,
+        // which the placeholder was not.
+        SwiftInferCore.SourceLocation.testBodyPlaceholder
+    }
+}
+
 /// PRD §7.2 four-rule slicing pass over a test method body. Anchors on
 /// the terminal assertion, backward-slices contributing statements,
 /// classifies the remainder as setup, and identifies parameterized
@@ -234,145 +374,5 @@ public enum Slicer {
             return .float
         }
         return nil
-    }
-}
-
-// MARK: - AssertionAnchor
-
-/// Locates the *terminal* assertion call inside a body — the one the
-/// slicer anchors on. "Terminal" = the *last* assertion in source order
-/// among the body's top-level statements. Tests with multiple
-/// assertions get sliced against the final one; M1's round-trip
-/// detector is happy with that posture (it asks "what does the final
-/// assertion claim?").
-enum AssertionAnchor {
-
-    struct Located {
-        let index: Int
-        let assertion: AssertionInvocation
-    }
-
-    static func locate(in items: [CodeBlockItemSyntax]) -> Located? {
-        var lastFound: Located?
-        for (index, item) in items.enumerated() {
-            guard case .expr(let expr) = item.item else {
-                continue
-            }
-            if let invocation = parseInvocation(from: expr) {
-                lastFound = Located(index: index, assertion: invocation)
-            }
-        }
-        return lastFound
-    }
-
-    private static func parseInvocation(from expr: ExprSyntax) -> AssertionInvocation? {
-        if let call = expr.as(FunctionCallExprSyntax.self),
-           let kind = xctAssertKind(of: call) {
-            let args = call.arguments.map(\.expression)
-            return AssertionInvocation(
-                kind: kind,
-                arguments: args,
-                location: location(of: Syntax(call))
-            )
-        }
-        if let macro = expr.as(MacroExpansionExprSyntax.self),
-           let kind = swiftTestingMacroKind(of: macro) {
-            let args = macro.arguments.map(\.expression)
-            return AssertionInvocation(
-                kind: kind,
-                arguments: args,
-                location: location(of: Syntax(macro))
-            )
-        }
-        return nil
-    }
-
-    /// Assertion-callee → kind dispatch table. Centralizing the
-    /// mapping in a static dictionary keeps `xctAssertKind` under
-    /// SwiftLint's cyclomatic-complexity cap as the kind list grows
-    /// (M5.1 added two; M7.0 adds three more).
-    ///
-    /// **`Kind` discriminates assertion SHAPE, not harness.** The case names
-    /// carry an `xctAssert` prefix for historical reasons, but what every
-    /// downstream detector switches on is the shape — "two expressions asserted
-    /// equal", "one expression asserted true". `StdlibUnittest`'s `expect*`
-    /// family has exactly those shapes, so it maps onto the existing cases
-    /// rather than adding parallel ones. That is what makes the whole detector
-    /// suite (round-trip, symmetry, idempotence, count-change, …) work on the
-    /// swift.org corpus without touching any of them.
-    private static let xctAssertKindByCallee: [String: AssertionInvocation.Kind] = [
-        "XCTAssertEqual": .xctAssertEqual,
-        "XCTAssertTrue": .xctAssertTrue,
-        "XCTAssert": .xctAssert,
-        "XCTAssertNotNil": .xctAssertNotNil,
-        "XCTAssertNil": .xctAssertNil,
-        "XCTAssertLessThan": .xctAssertLessThan,
-        "XCTAssertLessThanOrEqual": .xctAssertLessThanOrEqual,
-        "XCTAssertNotEqual": .xctAssertNotEqual,
-        "XCTAssertGreaterThan": .xctAssertGreaterThan,
-        "XCTAssertGreaterThanOrEqual": .xctAssertGreaterThanOrEqual,
-        "XCTAssertFalse": .xctAssertFalse,
-        // `StdlibUnittest` — the swift.org stdlib test harness. Counts are
-        // call sites across `test/stdlib` + `validation-test/stdlib` at
-        // `swift` @ `408632e5`, and they are why this table entry exists:
-        // every one of these was invisible to the lifter.
-        "expectEqual": .xctAssertEqual,                       // 8,665
-        "expectTrue": .xctAssertTrue,                         // 2,342
-        "expectFalse": .xctAssertFalse,                       // 1,016
-        "expectNotNil": .xctAssertNotNil,                     //   341
-        "expectNil": .xctAssertNil,                           //   809
-        "expectEqualSequence": .xctAssertEqual,               //   269
-        "expectNotEqual": .xctAssertNotEqual,                 //   235
-        "expectGE": .xctAssertGreaterThanOrEqual,             //    56
-        "expectGT": .xctAssertGreaterThan,                    //    21
-        "expectLE": .xctAssertLessThanOrEqual,                //    14
-        "expectLT": .xctAssertLessThan,                        //    14
-        //
-        // `expectNil` was deliberately absent until `.xctAssertNil` existed:
-        // mapping it onto `.xctAssertNotNil` would have INVERTED the
-        // assertion, so a detector would read "asserted non-nil" from
-        // `expectNil(x)` and infer the opposite law. The kind now exists, so
-        // the 809 sites map at their true polarity.
-        //
-        // STILL ABSENT, and not equality or ordering assertions at all:
-        //   `expectCrashLater` (810), `expectParse` (441), `expectType` (227),
-        //   `expectPrinted` (191). They anchor process death, parse success,
-        //   static typing and rendering; none is a shape any detector reads.
-    ]
-
-    private static func xctAssertKind(of call: FunctionCallExprSyntax) -> AssertionInvocation.Kind? {
-        guard let ref = call.calledExpression.as(DeclReferenceExprSyntax.self) else {
-            return nil
-        }
-        return xctAssertKindByCallee[ref.baseName.text]
-    }
-
-    private static func swiftTestingMacroKind(of macro: MacroExpansionExprSyntax) -> AssertionInvocation.Kind? {
-        switch macro.macroName.text {
-        case "expect":
-            return .expectMacro
-
-        case "require":
-            return .requireMacro
-
-        default:
-            return nil
-        }
-    }
-
-    private static func location(of _: Syntax) -> SwiftInferCore.SourceLocation {
-        // The slicer doesn't carry a SourceLocationConverter, and M1.3's
-        // round-trip detector consumes the assertion's argument shape, not its
-        // absolute location. We surface a placeholder here; M1.5's CLI wiring was
-        // to thread a converter through when the location actually fed rendering.
-        //
-        // **It never did, and the placeholder reached users for the whole of that
-        // gap** — every lifted row rendered `Lifted from <test-body>:0`. Rather
-        // than thread a converter (which would move an assertion-precise location
-        // through six detectors), `makeExplainability` now falls back to
-        // `LiftedOrigin`, which already carries the enclosing test METHOD's real
-        // file and line. Less precise than the assertion line, and auditable,
-        // which the placeholder was not.
-        SwiftInferCore.SourceLocation.testBodyPlaceholder
     }
 }

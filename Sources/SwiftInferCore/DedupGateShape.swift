@@ -1,47 +1,5 @@
 import SwiftSyntax
 
-/// A **dedup gate** in a side-effecting handler's body: the structural tell that
-/// the handler is safe to run twice because an early branch short-circuits the
-/// second run before it repeats the effect. Read by `ReplayIdempotenceTemplate`'s
-/// Branch C (M2), which proposes a replay-idempotency property for a handler that
-/// carries neither an `@ExternallyIdempotent` annotation nor an `IdempotencyKey`
-/// parameter — the two shapes M1 could see — but *does* guard its effect.
-///
-/// The refutation is structural and needs no separate veto: a handler with no such
-/// leading branch (the ungated buggy twin whose effect runs unconditionally) yields
-/// `nil`, so Branch C never fires on it. No gate, no proposal.
-public enum DedupGateShape: Sendable, Equatable {
-
-    /// `if <dedupCheck>(<key>) { return … }` before the effect — an early return
-    /// when the key has already been handled (`OrderCreatedHandler.handle`).
-    /// Carries the key expression's root identifier when recoverable (`order`
-    /// from `order.id`), for the property's "hold this fixed" hint.
-    case earlyReturnDedup(keyRoot: String?)
-
-    /// `if let hit = <fetch>(…) { return hit }` — fetch an existing row under the
-    /// key and return it on a hit, inserting only on a miss
-    /// (`OfflineManager.download`). Also the *pre-fetched* form, where the fetch is
-    /// an upstream `let` and the gate re-binds it (`MacCloud restoreFileVersion`).
-    case fetchThenInsert
-
-    /// `if <handledFlag> { return }` — an early return on a state property that
-    /// reads as already-handled (`if file.isDeleted { return .ok }`,
-    /// `MacCloud deleteFile`). The same semantic gate as `earlyReturnDedup`, but
-    /// the "already handled?" question is answered by a stored flag rather than a
-    /// dedup-store method call. Carries the flag name.
-    case stateFlagGuard(flag: String?)
-
-    /// `guard <claim> else { return }` — the `guard`-form dedup the M4 public-corpus
-    /// sweep found the template blind to (penny-bot's
-    /// `guard await cache.canGiveCoin(…) else { return }`). `guard` inverts the
-    /// polarity — it returns when the condition is *false* — so the dedup reads as a
-    /// positive "claim-once" capability (`canGive…`/`shouldProcess`) or a negated
-    /// dedup check (`!hasHandled`). Carries the verb. Guarded by the same
-    /// else-must-return and body-must-have-an-effect requirements as the `if` forms,
-    /// so a permission guard (`guard canWrite else { throw }`) does not qualify.
-    case guardDedup(verb: String?)
-}
-
 /// Reads a `DedupGateShape` off a handler body.
 ///
 /// **Shallow and precise by design.** It inspects the body's TOP-LEVEL statements
@@ -397,4 +355,46 @@ private final class ReturnFinder: SyntaxVisitor {
     override func visit(_: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         .skipChildren
     }
+}
+
+/// A **dedup gate** in a side-effecting handler's body: the structural tell that
+/// the handler is safe to run twice because an early branch short-circuits the
+/// second run before it repeats the effect. Read by `ReplayIdempotenceTemplate`'s
+/// Branch C (M2), which proposes a replay-idempotency property for a handler that
+/// carries neither an `@ExternallyIdempotent` annotation nor an `IdempotencyKey`
+/// parameter — the two shapes M1 could see — but *does* guard its effect.
+///
+/// The refutation is structural and needs no separate veto: a handler with no such
+/// leading branch (the ungated buggy twin whose effect runs unconditionally) yields
+/// `nil`, so Branch C never fires on it. No gate, no proposal.
+public enum DedupGateShape: Sendable, Equatable {
+
+    /// `if <dedupCheck>(<key>) { return … }` before the effect — an early return
+    /// when the key has already been handled (`OrderCreatedHandler.handle`).
+    /// Carries the key expression's root identifier when recoverable (`order`
+    /// from `order.id`), for the property's "hold this fixed" hint.
+    case earlyReturnDedup(keyRoot: String?)
+
+    /// `if let hit = <fetch>(…) { return hit }` — fetch an existing row under the
+    /// key and return it on a hit, inserting only on a miss
+    /// (`OfflineManager.download`). Also the *pre-fetched* form, where the fetch is
+    /// an upstream `let` and the gate re-binds it (`MacCloud restoreFileVersion`).
+    case fetchThenInsert
+
+    /// `if <handledFlag> { return }` — an early return on a state property that
+    /// reads as already-handled (`if file.isDeleted { return .ok }`,
+    /// `MacCloud deleteFile`). The same semantic gate as `earlyReturnDedup`, but
+    /// the "already handled?" question is answered by a stored flag rather than a
+    /// dedup-store method call. Carries the flag name.
+    case stateFlagGuard(flag: String?)
+
+    /// `guard <claim> else { return }` — the `guard`-form dedup the M4 public-corpus
+    /// sweep found the template blind to (penny-bot's
+    /// `guard await cache.canGiveCoin(…) else { return }`). `guard` inverts the
+    /// polarity — it returns when the condition is *false* — so the dedup reads as a
+    /// positive "claim-once" capability (`canGive…`/`shouldProcess`) or a negated
+    /// dedup check (`!hasHandled`). Carries the verb. Guarded by the same
+    /// else-must-return and body-must-have-an-effect requirements as the `if` forms,
+    /// so a permission guard (`guard canWrite else { throw }`) does not qualify.
+    case guardDedup(verb: String?)
 }

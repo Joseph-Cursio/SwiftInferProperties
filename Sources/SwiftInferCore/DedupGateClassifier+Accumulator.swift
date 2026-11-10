@@ -1,49 +1,5 @@
 import SwiftSyntax
 
-/// The mutating-accumulator veto (M8) for `DedupGateClassifier`.
-///
-/// A dedup gate makes the effect it *dominates* run at most once. But a handler
-/// can also accumulate on an **ungated** path — a counter increment or a collection
-/// append in the statements *before* the gate, which run on every invocation
-/// including replays. `self.callCount += 1` before `if hasHandled { return }` grows
-/// on each retry, so the handler is not idempotent even though the gate is real.
-/// Effect-dominance (M7) catches an ungated *effect-verb call*; this catches an
-/// ungated *mutation of stored state*, which is not a call.
-///
-/// Member-scoped for precision: only a compound-assign into a **member**
-/// (`self.count += 1`, not a bare local `count += 1`) or an `.append` on a **member**
-/// receiver (`self.items.append(…)`) counts — a local accumulator resets each call
-/// and is not an observable effect.
-extension DedupGateClassifier {
-
-    /// Whether the gate is defeated by an accumulator: one in a statement strictly
-    /// before the gate (runs on every call), OR one in the gate's own **hit branch**
-    /// — the `if let existing { … }` body that returns the existing row (M11). A
-    /// `+=`/`.append` there is non-idempotent even though it is "inside" the gate:
-    /// on a replay the hit branch runs again and grows (`registerConnectionError`'s
-    /// `numberOfErrors += 1`). It distinguishes a set-update (`x.field = v`,
-    /// idempotent — `mute`) from an increment/append.
-    static func hasUngatedAccumulator(
-        _ statements: [CodeBlockItemSyntax],
-        beforeGate gateIndex: Int
-    ) -> Bool {
-        if statements[..<gateIndex].contains(where: { accumulates(Syntax($0)) }) {
-            return true
-        }
-        if let ifExpr = ifExpr(from: statements[gateIndex]),
-           accumulates(Syntax(ifExpr.body)) {
-            return true
-        }
-        return false
-    }
-
-    private static func accumulates(_ subtree: Syntax) -> Bool {
-        let finder = AccumulatorFinder()
-        finder.walk(subtree)
-        return finder.found
-    }
-}
-
 /// Finds a stored-state accumulation: a member compound-assign or a member
 /// `.append`, ignoring nested closures / functions.
 private final class AccumulatorFinder: SyntaxVisitor {
@@ -91,5 +47,49 @@ private final class AccumulatorFinder: SyntaxVisitor {
 
     override func visit(_: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         .skipChildren
+    }
+}
+
+/// The mutating-accumulator veto (M8) for `DedupGateClassifier`.
+///
+/// A dedup gate makes the effect it *dominates* run at most once. But a handler
+/// can also accumulate on an **ungated** path — a counter increment or a collection
+/// append in the statements *before* the gate, which run on every invocation
+/// including replays. `self.callCount += 1` before `if hasHandled { return }` grows
+/// on each retry, so the handler is not idempotent even though the gate is real.
+/// Effect-dominance (M7) catches an ungated *effect-verb call*; this catches an
+/// ungated *mutation of stored state*, which is not a call.
+///
+/// Member-scoped for precision: only a compound-assign into a **member**
+/// (`self.count += 1`, not a bare local `count += 1`) or an `.append` on a **member**
+/// receiver (`self.items.append(…)`) counts — a local accumulator resets each call
+/// and is not an observable effect.
+extension DedupGateClassifier {
+
+    /// Whether the gate is defeated by an accumulator: one in a statement strictly
+    /// before the gate (runs on every call), OR one in the gate's own **hit branch**
+    /// — the `if let existing { … }` body that returns the existing row (M11). A
+    /// `+=`/`.append` there is non-idempotent even though it is "inside" the gate:
+    /// on a replay the hit branch runs again and grows (`registerConnectionError`'s
+    /// `numberOfErrors += 1`). It distinguishes a set-update (`x.field = v`,
+    /// idempotent — `mute`) from an increment/append.
+    static func hasUngatedAccumulator(
+        _ statements: [CodeBlockItemSyntax],
+        beforeGate gateIndex: Int
+    ) -> Bool {
+        if statements[..<gateIndex].contains(where: { accumulates(Syntax($0)) }) {
+            return true
+        }
+        if let ifExpr = ifExpr(from: statements[gateIndex]),
+           accumulates(Syntax(ifExpr.body)) {
+            return true
+        }
+        return false
+    }
+
+    private static func accumulates(_ subtree: Syntax) -> Bool {
+        let finder = AccumulatorFinder()
+        finder.walk(subtree)
+        return finder.found
     }
 }

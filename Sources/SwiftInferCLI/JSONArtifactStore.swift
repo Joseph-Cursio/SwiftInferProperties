@@ -59,31 +59,6 @@ public protocol JSONArtifact: Codable, Equatable, Sendable {
     static var conventionalRelativePath: String { get }
 }
 
-extension Baseline: JSONArtifact {
-    public static var artifactNoun: String { "baseline" }
-    public static var conventionalRelativePath: String { ".swiftinfer/baseline.json" }
-}
-
-extension Decisions: JSONArtifact {
-    public static var artifactNoun: String { "decisions" }
-    public static var conventionalRelativePath: String { ".swiftinfer/decisions.json" }
-}
-
-extension VerifyEvidenceLog: JSONArtifact {
-    public static var artifactNoun: String { "verify-evidence" }
-    public static var conventionalRelativePath: String { ".swiftinfer/verify-evidence.json" }
-}
-
-extension InteractionBaseline: JSONArtifact {
-    public static var artifactNoun: String { "interaction-baseline" }
-    public static var conventionalRelativePath: String { ".swiftinfer/interaction-baseline.json" }
-}
-
-extension InteractionDecisions: JSONArtifact {
-    public static var artifactNoun: String { "interaction-decisions" }
-    public static var conventionalRelativePath: String { ".swiftinfer/interaction-decisions.json" }
-}
-
 /// The canonical coder pair every `.swiftinfer/` artifact is read and written
 /// with. Deliberately non-generic: the settings do not depend on the artifact,
 /// so all five share one instance rather than one per specialisation — and
@@ -256,4 +231,29 @@ public enum JSONArtifactStore<Artifact: JSONArtifact> {
             current = parent
         }
     }
+}
+
+extension Baseline: JSONArtifact {
+    public static var artifactNoun: String { "baseline" }
+    public static var conventionalRelativePath: String { ".swiftinfer/baseline.json" }
+}
+
+extension Decisions: JSONArtifact {
+    public static var artifactNoun: String { "decisions" }
+    public static var conventionalRelativePath: String { ".swiftinfer/decisions.json" }
+}
+
+extension VerifyEvidenceLog: JSONArtifact {
+    public static var artifactNoun: String { "verify-evidence" }
+    public static var conventionalRelativePath: String { ".swiftinfer/verify-evidence.json" }
+}
+
+extension InteractionBaseline: JSONArtifact {
+    public static var artifactNoun: String { "interaction-baseline" }
+    public static var conventionalRelativePath: String { ".swiftinfer/interaction-baseline.json" }
+}
+
+extension InteractionDecisions: JSONArtifact {
+    public static var artifactNoun: String { "interaction-decisions" }
+    public static var conventionalRelativePath: String { ".swiftinfer/interaction-decisions.json" }
 }

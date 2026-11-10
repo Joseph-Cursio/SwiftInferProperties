@@ -1,6 +1,20 @@
 import Foundation
 import SwiftInferCore
 
+/// One index lookup's results, kept together.
+///
+/// Was a 3-tuple until `sourceFileByTypeName` joined it and tripped `large_tuple`. The rule is
+/// right here for a reason beyond arity: two of these three are whole-corpus maps that only mean
+/// anything alongside the entry they were loaded with, and a tuple makes it easy to pass one and
+/// forget the other — which is the shape of the bug that left the survey importing nothing.
+struct ResolvedEntry {
+    let entry: SemanticIndexEntry
+    /// Whole-module shape universe, for recursive carrier derivation.
+    let allShapes: [String: IndexedTypeShape]
+    /// Declaration site per type name, for resolving which modules to import.
+    let sourceFiles: [String: String]
+}
+
 /// **What the verifier package depends on, and what the stub imports.**
 ///
 /// Extracted when target derivation gave the two verify paths — single-suggestion and
@@ -140,18 +154,4 @@ extension SwiftInferCommand.Verify {
         }
         return (reference, [corpusModuleName])
     }
-}
-
-/// One index lookup's results, kept together.
-///
-/// Was a 3-tuple until `sourceFileByTypeName` joined it and tripped `large_tuple`. The rule is
-/// right here for a reason beyond arity: two of these three are whole-corpus maps that only mean
-/// anything alongside the entry they were loaded with, and a tuple makes it easy to pass one and
-/// forget the other — which is the shape of the bug that left the survey importing nothing.
-struct ResolvedEntry {
-    let entry: SemanticIndexEntry
-    /// Whole-module shape universe, for recursive carrier derivation.
-    let allShapes: [String: IndexedTypeShape]
-    /// Declaration site per type name, for resolving which modules to import.
-    let sourceFiles: [String: String]
 }

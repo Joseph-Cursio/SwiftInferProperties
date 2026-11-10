@@ -5,6 +5,37 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+// MARK: - Test doubles
+
+private struct SilentECNCDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class SilentECNCDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class RecordingECNCOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+    var text: String { lines.joined(separator: "\n") }
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
+private final class ScriptedECNCPromptInput: PromptInput, @unchecked Sendable {
+    private var remaining: [String]
+
+    init(scriptedLines: [String]) {
+        self.remaining = scriptedLines
+    }
+    func readLine() -> String? {
+        guard !remaining.isEmpty else { return nil }
+        return remaining.removeFirst()
+    }
+}
+
 /// TestLifter M14.2 — companion to `EquivalenceClassRenderingNClassTests`.
 /// Covers the partial-coverage path of the M14 axis-4 exhaustiveness
 /// rule end-to-end: a `Size` enum with four cases vs a vocabulary
@@ -130,36 +161,5 @@ struct ECNClassPartialCoverageTests {
             to: tests.appendingPathComponent("SizerTests.swift"),
             atomically: true, encoding: .utf8
         )
-    }
-}
-
-// MARK: - Test doubles
-
-private struct SilentECNCDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class SilentECNCDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class RecordingECNCOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
-    }
-}
-
-private final class ScriptedECNCPromptInput: PromptInput, @unchecked Sendable {
-    private var remaining: [String]
-
-    init(scriptedLines: [String]) {
-        self.remaining = scriptedLines
-    }
-    func readLine() -> String? {
-        guard !remaining.isEmpty else { return nil }
-        return remaining.removeFirst()
     }
 }

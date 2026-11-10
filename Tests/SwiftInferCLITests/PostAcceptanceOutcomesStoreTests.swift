@@ -8,6 +8,14 @@ import Testing
 // files. Mirrors VerifyEvidenceStoreTests' shape — the parallel
 // store carries the parallel guarantees.
 
+/// Test-only `FileSystemReader` reporting every path as missing.
+private struct NoFilesFileSystem: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
+        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
+    }
+}
+
 @Suite("PostAcceptanceOutcomesStore — V1.72.B load + write + walk-up")
 struct PostAcceptanceOutcomesStoreTests {
 
@@ -159,13 +167,5 @@ struct PostAcceptanceOutcomesStoreTests {
             .appendingPathComponent("PostAcceptanceOutcomesStoreTests-\(name)-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base
-    }
-}
-
-/// Test-only `FileSystemReader` reporting every path as missing.
-private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) throws -> Data {
-        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

@@ -3,6 +3,29 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
+/// V1.C — errors thrown by the `discover-reducers` pipeline. Hoisted
+/// to file scope (rather than nested under
+/// `SwiftInferCommand.DiscoverReducers`) to satisfy SwiftLint's
+/// `nesting` 1-level cap — same posture as `VerifyError` and
+/// `AcceptCheckResult`. Public so tests can pattern-match on the case
+/// rather than the rendered text.
+public enum DiscoverReducersError: Error, CustomStringConvertible, Equatable {
+    case pinNoMatch(raw: String)
+    case pinAmbiguous(raw: String, matches: [String])
+
+    public var description: String {
+        switch self {
+        case let .pinNoMatch(raw):
+            return "swift-infer discover-reducers: no reducer matches pin '\(raw)'."
+
+        case let .pinAmbiguous(raw, matches):
+            return "swift-infer discover-reducers: pin '\(raw)' is ambiguous — "
+                + "matches \(matches.count) reducers: \(matches.joined(separator: ", ")). "
+                + "Lengthen the pin (add a type prefix) to disambiguate."
+        }
+    }
+}
+
 /// V2.0 M1.A — `swift-infer discover-reducers` subcommand surface.
 ///
 /// **What it does.** Scans `Sources/<target>/` for functions whose
@@ -360,28 +383,5 @@ public extension SwiftInferCommand {
         if lhs.location != rhs.location { return lhs.location < rhs.location }
         return lhs.functionName < rhs.functionName
     }
-    }
-}
-
-/// V1.C — errors thrown by the `discover-reducers` pipeline. Hoisted
-/// to file scope (rather than nested under
-/// `SwiftInferCommand.DiscoverReducers`) to satisfy SwiftLint's
-/// `nesting` 1-level cap — same posture as `VerifyError` and
-/// `AcceptCheckResult`. Public so tests can pattern-match on the case
-/// rather than the rendered text.
-public enum DiscoverReducersError: Error, CustomStringConvertible, Equatable {
-    case pinNoMatch(raw: String)
-    case pinAmbiguous(raw: String, matches: [String])
-
-    public var description: String {
-        switch self {
-        case let .pinNoMatch(raw):
-            return "swift-infer discover-reducers: no reducer matches pin '\(raw)'."
-
-        case let .pinAmbiguous(raw, matches):
-            return "swift-infer discover-reducers: pin '\(raw)' is ambiguous — "
-                + "matches \(matches.count) reducers: \(matches.joined(separator: ", ")). "
-                + "Lengthen the pin (add a type prefix) to disambiguate."
-        }
     }
 }

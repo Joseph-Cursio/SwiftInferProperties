@@ -5,6 +5,10 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+private struct SilentIdempotenceDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M2.4 acceptance — parallel of M1.5's
 /// `TestLifterCrossValidationTests` for the idempotence template.
 /// Constructs a synthetic project with `Sources/Foo/Normalizer.swift`
@@ -141,8 +145,4 @@ struct TestLifterIdempotenceCrossValTests {
             encoding: .utf8
         )
     }
-}
-
-private struct SilentIdempotenceDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

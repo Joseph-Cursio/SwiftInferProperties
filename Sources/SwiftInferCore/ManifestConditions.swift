@@ -2,60 +2,6 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
-/// The custom compilation conditions a package's `Package.swift` sets, read from its syntax.
-///
-/// Part of evaluating `#if` before scanning (`docs/plans/inactive-if-config-scope.md`). The reader follows
-/// the manifest's literal structure, never its execution, and every imprecision leans towards KEEPING code:
-/// a `.define` counts package-wide rather than per target, and one the reader cannot place — inside an
-/// `if`, `guard` or `#if` of the manifest — is `unknown`, which keeps both branches of a `#if` on it.
-/// Commented-out defines are trivia and never reach the tree, which is right: swift-collections turns
-/// `COLLECTIONS_INTERNAL_CHECKS` on by uncommenting a line.
-public struct ManifestConditions: Sendable, Equatable {
-
-    /// Conditions the build sets.
-    public let set: Set<String>
-    /// Conditions the manifest may or may not set — a define under a manifest-level branch.
-    public let unknown: Set<String>
-
-    public init(set: Set<String>, unknown: Set<String> = []) {
-        self.set = set
-        self.unknown = unknown
-    }
-
-    /// `.set` / `.unset` when the manifest decides `name`, `.undecided` when it cannot.
-    public func state(of name: String) -> ConditionState {
-        if set.contains(name) { return .set }
-        if unknown.contains(name) { return .undecided }
-        return .unset
-    }
-
-    /// Reads `source`, a `Package.swift`: top-level `.define("X")` and `-DX` in `unsafeFlags`, filtered by
-    /// `.when(platforms:configuration:traits:)` for a macOS debug build, and the traits enabled by
-    /// `.default(enabledTraits:)`, closed over each enabled trait's own `enabledTraits`.
-    public static func read(manifest source: String) -> Self {
-        let tree = Parser.parse(source: source)
-        let collector = ManifestCollector(viewMode: .sourceAccurate)
-        collector.walk(tree)
-        var traits = collector.defaultTraits
-        var grew = true
-        while grew {
-            let implied = traits.flatMap { collector.traitImplications[$0] ?? [] }
-            grew = !Set(implied).isSubset(of: traits)
-            traits.formUnion(implied)
-        }
-        var setNames = traits
-        var undecidedNames: Set<String> = []
-        for define in collector.defines {
-            switch define.state(enabledTraits: traits) {
-            case .set: setNames.insert(define.name)
-            case .undecided: undecidedNames.insert(define.name)
-            case .unset: break
-            }
-        }
-        return Self(set: setNames, unknown: undecidedNames.subtracting(setNames))
-    }
-}
-
 /// One `.define` or `-D` flag and what gates it.
 private struct ManifestDefine {
     let name: String
@@ -156,5 +102,59 @@ private final class ManifestCollector: SyntaxVisitor {
     private static func memberNames(_ expr: ExprSyntax) -> [String] {
         if let member = expr.as(MemberAccessExprSyntax.self) { return [member.declName.baseName.text] }
         return expr.as(ArrayExprSyntax.self)?.elements.flatMap { memberNames($0.expression) } ?? []
+    }
+}
+
+/// The custom compilation conditions a package's `Package.swift` sets, read from its syntax.
+///
+/// Part of evaluating `#if` before scanning (`docs/plans/inactive-if-config-scope.md`). The reader follows
+/// the manifest's literal structure, never its execution, and every imprecision leans towards KEEPING code:
+/// a `.define` counts package-wide rather than per target, and one the reader cannot place — inside an
+/// `if`, `guard` or `#if` of the manifest — is `unknown`, which keeps both branches of a `#if` on it.
+/// Commented-out defines are trivia and never reach the tree, which is right: swift-collections turns
+/// `COLLECTIONS_INTERNAL_CHECKS` on by uncommenting a line.
+public struct ManifestConditions: Sendable, Equatable {
+
+    /// Conditions the build sets.
+    public let set: Set<String>
+    /// Conditions the manifest may or may not set — a define under a manifest-level branch.
+    public let unknown: Set<String>
+
+    public init(set: Set<String>, unknown: Set<String> = []) {
+        self.set = set
+        self.unknown = unknown
+    }
+
+    /// `.set` / `.unset` when the manifest decides `name`, `.undecided` when it cannot.
+    public func state(of name: String) -> ConditionState {
+        if set.contains(name) { return .set }
+        if unknown.contains(name) { return .undecided }
+        return .unset
+    }
+
+    /// Reads `source`, a `Package.swift`: top-level `.define("X")` and `-DX` in `unsafeFlags`, filtered by
+    /// `.when(platforms:configuration:traits:)` for a macOS debug build, and the traits enabled by
+    /// `.default(enabledTraits:)`, closed over each enabled trait's own `enabledTraits`.
+    public static func read(manifest source: String) -> Self {
+        let tree = Parser.parse(source: source)
+        let collector = ManifestCollector(viewMode: .sourceAccurate)
+        collector.walk(tree)
+        var traits = collector.defaultTraits
+        var grew = true
+        while grew {
+            let implied = traits.flatMap { collector.traitImplications[$0] ?? [] }
+            grew = !Set(implied).isSubset(of: traits)
+            traits.formUnion(implied)
+        }
+        var setNames = traits
+        var undecidedNames: Set<String> = []
+        for define in collector.defines {
+            switch define.state(enabledTraits: traits) {
+            case .set: setNames.insert(define.name)
+            case .undecided: undecidedNames.insert(define.name)
+            case .unset: break
+            }
+        }
+        return Self(set: setNames, unknown: undecidedNames.subtracting(setNames))
     }
 }

@@ -5,6 +5,10 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+private struct SilentSkipDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M6.1 acceptance — `// swiftinfer: skip <hash>` markers
 /// suppress matching lifted suggestions, regardless of which
 /// directory the marker lives in (production target OR resolved test
@@ -192,8 +196,4 @@ struct LiftedSkipMarkerHonoringTests {
         })
         return lifted.identity.normalized
     }
-}
-
-private struct SilentSkipDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

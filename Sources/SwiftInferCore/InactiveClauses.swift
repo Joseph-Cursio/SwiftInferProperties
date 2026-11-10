@@ -2,46 +2,6 @@ import Foundation
 import SwiftIfConfig
 import SwiftSyntax
 
-/// The `#if` clauses of one file that the build does not compile, whatever the unknowns turn out to be.
-///
-/// `open-threads.md` row 74: `FunctionScanner` walked every branch `.sourceAccurate`, so a declaration in
-/// an inactive branch was scanned as live — 138 whole-file rows in `inactive-if-config-census.md`, and
-/// two false generator declines in `precondition-helper-hop.md`. `configuredRegions(in:)` answers a
-/// condition the configuration cannot decide as `false`, which would DROP code on an unknown; so each file
-/// is evaluated twice, once with every unknown answered `true` and once `false`, and a clause is skipped
-/// only when it is inactive in BOTH. `#if canImport(X) … #else …` keeps both branches; `#if os(Linux)`
-/// drops its body on this host. Plan: `docs/plans/inactive-if-config-scope.md`.
-enum InactiveClauses {
-
-    static func of(_ tree: SourceFileSyntax, conditions: ManifestConditions?) -> Set<SyntaxIdentifier> {
-        // A file with no `#if` pays for nothing.
-        guard tree.description.contains("#if") else { return [] }
-        let optimistic = inactive(in: tree.configuredRegions(in: HostBuildConfiguration(conditions, unknown: true)))
-        guard !optimistic.isEmpty else { return [] }
-        let pessimistic = inactive(in: tree.configuredRegions(in: HostBuildConfiguration(conditions, unknown: false)))
-        return optimistic.intersection(pessimistic)
-    }
-
-    private static func inactive(in regions: ConfiguredRegions) -> Set<SyntaxIdentifier> {
-        Set(regions.filter { $0.state != .active }.map(\.ifClause.id))
-    }
-
-    /// The nearest `Package.swift` above an on-disk `file`, read once per manifest. `nil` when `file` is
-    /// not on disk — an in-memory fixture's label must never pick up whatever package the process runs in.
-    static func conditions(forFile file: String) -> ManifestConditions? {
-        guard file.hasPrefix("/"), FileManager.default.fileExists(atPath: file) else { return nil }
-        var directory = URL(fileURLWithPath: file).deletingLastPathComponent()
-        while directory.path != "/" {
-            let manifest = directory.appendingPathComponent("Package.swift")
-            if FileManager.default.fileExists(atPath: manifest.path) {
-                return ManifestCache.shared.conditions(at: manifest.path)
-            }
-            directory.deleteLastPathComponent()
-        }
-        return nil
-    }
-}
-
 private final class ManifestCache: @unchecked Sendable {
     static let shared = ManifestCache()
     private let lock = NSLock()
@@ -90,4 +50,44 @@ struct HostBuildConfiguration: BuildConfiguration {
     /// `compiler(>=…)` block the day the toolchain moves.
     var languageVersion: VersionTuple { unknown ? VersionTuple(99) : VersionTuple(0) }
     var compilerVersion: VersionTuple { languageVersion }
+}
+
+/// The `#if` clauses of one file that the build does not compile, whatever the unknowns turn out to be.
+///
+/// `open-threads.md` row 74: `FunctionScanner` walked every branch `.sourceAccurate`, so a declaration in
+/// an inactive branch was scanned as live — 138 whole-file rows in `inactive-if-config-census.md`, and
+/// two false generator declines in `precondition-helper-hop.md`. `configuredRegions(in:)` answers a
+/// condition the configuration cannot decide as `false`, which would DROP code on an unknown; so each file
+/// is evaluated twice, once with every unknown answered `true` and once `false`, and a clause is skipped
+/// only when it is inactive in BOTH. `#if canImport(X) … #else …` keeps both branches; `#if os(Linux)`
+/// drops its body on this host. Plan: `docs/plans/inactive-if-config-scope.md`.
+enum InactiveClauses {
+
+    static func of(_ tree: SourceFileSyntax, conditions: ManifestConditions?) -> Set<SyntaxIdentifier> {
+        // A file with no `#if` pays for nothing.
+        guard tree.description.contains("#if") else { return [] }
+        let optimistic = inactive(in: tree.configuredRegions(in: HostBuildConfiguration(conditions, unknown: true)))
+        guard !optimistic.isEmpty else { return [] }
+        let pessimistic = inactive(in: tree.configuredRegions(in: HostBuildConfiguration(conditions, unknown: false)))
+        return optimistic.intersection(pessimistic)
+    }
+
+    private static func inactive(in regions: ConfiguredRegions) -> Set<SyntaxIdentifier> {
+        Set(regions.filter { $0.state != .active }.map(\.ifClause.id))
+    }
+
+    /// The nearest `Package.swift` above an on-disk `file`, read once per manifest. `nil` when `file` is
+    /// not on disk — an in-memory fixture's label must never pick up whatever package the process runs in.
+    static func conditions(forFile file: String) -> ManifestConditions? {
+        guard file.hasPrefix("/"), FileManager.default.fileExists(atPath: file) else { return nil }
+        var directory = URL(fileURLWithPath: file).deletingLastPathComponent()
+        while directory.path != "/" {
+            let manifest = directory.appendingPathComponent("Package.swift")
+            if FileManager.default.fileExists(atPath: manifest.path) {
+                return ManifestCache.shared.conditions(at: manifest.path)
+            }
+            directory.deleteLastPathComponent()
+        }
+        return nil
+    }
 }

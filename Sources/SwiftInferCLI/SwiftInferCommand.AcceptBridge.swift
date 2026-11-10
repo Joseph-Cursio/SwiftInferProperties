@@ -2,6 +2,61 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// V1.110 — request bundle for `accept-bridge`. Wraps the "what to
+/// record" inputs so the static-pipeline entry stays under
+/// SwiftLint's `function_parameter_count` cap. File-scope for the
+/// nesting rule.
+public struct AcceptBridgeRequest: Sendable {
+    public let identity: String
+    public let decisionRaw: String
+    public let peerIndex: Int?
+    public let explicitDecisionsPath: URL?
+
+    public init(
+        identity: String,
+        decisionRaw: String,
+        peerIndex: Int? = nil,
+        explicitDecisionsPath: URL? = nil
+    ) {
+        self.identity = identity
+        self.decisionRaw = decisionRaw
+        self.peerIndex = peerIndex
+        self.explicitDecisionsPath = explicitDecisionsPath
+    }
+}
+
+/// V1.110 — errors thrown by `accept-bridge`. File-scope for
+/// SwiftLint nesting; public so tests pattern-match on cases.
+public enum AcceptBridgeError: Error, CustomStringConvertible, Equatable {
+    case unknownDecision(raw: String)
+    case nonBridgeDecision(raw: String)
+    case unknownBridgeIdentity(hash: String)
+    case peerOutOfRange(index: Int, peerCount: Int)
+
+    public var description: String {
+        switch self {
+        case let .unknownDecision(raw):
+            return "swift-infer accept-bridge: unknown decision '\(raw)'. "
+                + "Valid for bridges: accepted-as-conformance, rejected."
+
+        case let .nonBridgeDecision(raw):
+            return "swift-infer accept-bridge: decision '\(raw)' is not valid "
+                + "for bridges. Bridges imply kit-side protocol conformance "
+                + "commitment (PRD §9.4) — only accepted-as-conformance and "
+                + "rejected are accepted."
+
+        case let .unknownBridgeIdentity(hash):
+            return "swift-infer accept-bridge: no current bridge matches "
+                + "identity 0x\(hash). Re-run discover-interaction "
+                + "--interactive-bridges to see the current bridge set."
+
+        case let .peerOutOfRange(index, peerCount):
+            return "swift-infer accept-bridge: --peer \(index) out of range "
+                + "(bridge has \(peerCount) peers, valid indices 1...\(peerCount))."
+        }
+    }
+}
+
 /// V1.110 (cycle-103d) — `swift-infer accept-bridge` subcommand.
 /// Records a decision against a specific `BridgeSuggestion` identity
 /// hash in `.swiftinfer/interaction-decisions.json`. Minimal
@@ -248,61 +303,6 @@ public extension SwiftInferCommand {
             return "Recorded \(decision.rawValue) for \(scopeText) of bridge "
                 + "0x\(bridge.identity.normalized) on \(bridge.reducerQualifiedName) "
                 + "(\(recordedCount) invariants)."
-        }
-    }
-}
-
-/// V1.110 — request bundle for `accept-bridge`. Wraps the "what to
-/// record" inputs so the static-pipeline entry stays under
-/// SwiftLint's `function_parameter_count` cap. File-scope for the
-/// nesting rule.
-public struct AcceptBridgeRequest: Sendable {
-    public let identity: String
-    public let decisionRaw: String
-    public let peerIndex: Int?
-    public let explicitDecisionsPath: URL?
-
-    public init(
-        identity: String,
-        decisionRaw: String,
-        peerIndex: Int? = nil,
-        explicitDecisionsPath: URL? = nil
-    ) {
-        self.identity = identity
-        self.decisionRaw = decisionRaw
-        self.peerIndex = peerIndex
-        self.explicitDecisionsPath = explicitDecisionsPath
-    }
-}
-
-/// V1.110 — errors thrown by `accept-bridge`. File-scope for
-/// SwiftLint nesting; public so tests pattern-match on cases.
-public enum AcceptBridgeError: Error, CustomStringConvertible, Equatable {
-    case unknownDecision(raw: String)
-    case nonBridgeDecision(raw: String)
-    case unknownBridgeIdentity(hash: String)
-    case peerOutOfRange(index: Int, peerCount: Int)
-
-    public var description: String {
-        switch self {
-        case let .unknownDecision(raw):
-            return "swift-infer accept-bridge: unknown decision '\(raw)'. "
-                + "Valid for bridges: accepted-as-conformance, rejected."
-
-        case let .nonBridgeDecision(raw):
-            return "swift-infer accept-bridge: decision '\(raw)' is not valid "
-                + "for bridges. Bridges imply kit-side protocol conformance "
-                + "commitment (PRD §9.4) — only accepted-as-conformance and "
-                + "rejected are accepted."
-
-        case let .unknownBridgeIdentity(hash):
-            return "swift-infer accept-bridge: no current bridge matches "
-                + "identity 0x\(hash). Re-run discover-interaction "
-                + "--interactive-bridges to see the current bridge set."
-
-        case let .peerOutOfRange(index, peerCount):
-            return "swift-infer accept-bridge: --peer \(index) out of range "
-                + "(bridge has \(peerCount) peers, valid indices 1...\(peerCount))."
         }
     }
 }

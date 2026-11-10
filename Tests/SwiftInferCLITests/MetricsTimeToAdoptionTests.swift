@@ -8,6 +8,88 @@ import Testing
 // accepting it (`DecisionRecord.timestamp`). Joined by identity hash;
 // no `Decisions` schema bump.
 
+/// V1.71 — `metrics` default + `--decisions` modes load the
+/// SemanticIndex (conventional path / sibling `index.json`) for the
+/// time-to-adoption join. Drives `loadAggregate` with on-disk fixtures.
+@Suite("Metrics --decisions — V1.71 per-corpus index join")
+struct MetricsTimeToAdoptionLoadTests {
+
+    private func makeCorpus(name: String, withIndex: Bool) throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MetricsTTA-\(name)-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try DecisionsLoader.write(
+            Decisions(records: [
+                DecisionRecord(
+                    identityHash: "AAA1111111111111",
+                    template: "round-trip",
+                    scoreAtDecision: 80,
+                    tier: .strong,
+                    decision: .accepted,
+                    timestamp: Date(timeIntervalSince1970: 1_778_753_100) // 2026-05-14T10:05:00Z
+                ),
+            ]),
+            to: directory.appendingPathComponent("decisions.json")
+        )
+        if withIndex {
+            try IndexStore.save(
+                IndexStore.Index(
+                    updatedAt: "2026-05-14T10:00:00Z",
+                    entries: [
+                        SemanticIndexEntry(
+                            identityHash: "0xAAA1111111111111",
+                            templateName: "round-trip",
+                            score: 80,
+                            tier: "Strong",
+                            primaryFunctionName: "f(_:)",
+                            location: "F.swift:1",
+                            firstSeenAt: "2026-05-14T10:00:00Z",
+                            lastSeenAt: "2026-05-14T10:00:00Z"
+                        ),
+                    ]
+                ),
+                to: directory.appendingPathComponent("index.json")
+            )
+        }
+        return directory.appendingPathComponent("decisions.json")
+    }
+
+    @Test("a corpus's sibling index.json joins into the time-to-adoption section")
+    func siblingIndexJoins() throws {
+        let corpus = try makeCorpus(name: "withIndex", withIndex: true)
+        defer { try? FileManager.default.removeItem(at: corpus.deletingLastPathComponent()) }
+
+        let result = SwiftInferCommand.Metrics.loadAggregate(
+            directoryOverride: nil,
+            explicitPaths: [corpus.path]
+        )
+        #expect(result.indexEntries.count == 1)
+        #expect(result.warnings.isEmpty)
+
+        let rendered = MetricsRenderer.render(
+            decisions: result.decisions,
+            sources: result.sources,
+            evidence: result.evidence,
+            indexEntries: result.indexEntries
+        )
+        #expect(rendered.contains("1 accepted decision joined to the index"))
+        #expect(!rendered.contains("(no SemanticIndex"))
+    }
+
+    @Test("a corpus with no sibling index.json is skipped silently")
+    func missingIndexSiblingIsSilent() throws {
+        let corpus = try makeCorpus(name: "noIndex", withIndex: false)
+        defer { try? FileManager.default.removeItem(at: corpus.deletingLastPathComponent()) }
+
+        let result = SwiftInferCommand.Metrics.loadAggregate(
+            directoryOverride: nil,
+            explicitPaths: [corpus.path]
+        )
+        #expect(result.indexEntries.isEmpty)
+        #expect(result.warnings.isEmpty)
+    }
+}
+
 @Suite("MetricsRenderer — V1.71 time-to-adoption")
 struct MetricsTimeToAdoptionTests {
 
@@ -168,87 +250,5 @@ struct MetricsTimeToAdoptionTests {
     func renderIncludesSection() {
         let rendered = MetricsRenderer.render(decisions: .empty, sources: ["x"])
         #expect(rendered.contains("Time-to-adoption (PRD §17.2):"))
-    }
-}
-
-/// V1.71 — `metrics` default + `--decisions` modes load the
-/// SemanticIndex (conventional path / sibling `index.json`) for the
-/// time-to-adoption join. Drives `loadAggregate` with on-disk fixtures.
-@Suite("Metrics --decisions — V1.71 per-corpus index join")
-struct MetricsTimeToAdoptionLoadTests {
-
-    private func makeCorpus(name: String, withIndex: Bool) throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("MetricsTTA-\(name)-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        try DecisionsLoader.write(
-            Decisions(records: [
-                DecisionRecord(
-                    identityHash: "AAA1111111111111",
-                    template: "round-trip",
-                    scoreAtDecision: 80,
-                    tier: .strong,
-                    decision: .accepted,
-                    timestamp: Date(timeIntervalSince1970: 1_778_753_100) // 2026-05-14T10:05:00Z
-                ),
-            ]),
-            to: directory.appendingPathComponent("decisions.json")
-        )
-        if withIndex {
-            try IndexStore.save(
-                IndexStore.Index(
-                    updatedAt: "2026-05-14T10:00:00Z",
-                    entries: [
-                        SemanticIndexEntry(
-                            identityHash: "0xAAA1111111111111",
-                            templateName: "round-trip",
-                            score: 80,
-                            tier: "Strong",
-                            primaryFunctionName: "f(_:)",
-                            location: "F.swift:1",
-                            firstSeenAt: "2026-05-14T10:00:00Z",
-                            lastSeenAt: "2026-05-14T10:00:00Z"
-                        ),
-                    ]
-                ),
-                to: directory.appendingPathComponent("index.json")
-            )
-        }
-        return directory.appendingPathComponent("decisions.json")
-    }
-
-    @Test("a corpus's sibling index.json joins into the time-to-adoption section")
-    func siblingIndexJoins() throws {
-        let corpus = try makeCorpus(name: "withIndex", withIndex: true)
-        defer { try? FileManager.default.removeItem(at: corpus.deletingLastPathComponent()) }
-
-        let result = SwiftInferCommand.Metrics.loadAggregate(
-            directoryOverride: nil,
-            explicitPaths: [corpus.path]
-        )
-        #expect(result.indexEntries.count == 1)
-        #expect(result.warnings.isEmpty)
-
-        let rendered = MetricsRenderer.render(
-            decisions: result.decisions,
-            sources: result.sources,
-            evidence: result.evidence,
-            indexEntries: result.indexEntries
-        )
-        #expect(rendered.contains("1 accepted decision joined to the index"))
-        #expect(!rendered.contains("(no SemanticIndex"))
-    }
-
-    @Test("a corpus with no sibling index.json is skipped silently")
-    func missingIndexSiblingIsSilent() throws {
-        let corpus = try makeCorpus(name: "noIndex", withIndex: false)
-        defer { try? FileManager.default.removeItem(at: corpus.deletingLastPathComponent()) }
-
-        let result = SwiftInferCommand.Metrics.loadAggregate(
-            directoryOverride: nil,
-            explicitPaths: [corpus.path]
-        )
-        #expect(result.indexEntries.isEmpty)
-        #expect(result.warnings.isEmpty)
     }
 }

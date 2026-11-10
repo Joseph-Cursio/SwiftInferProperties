@@ -15,6 +15,81 @@ import Testing
 // third consumer in cycle 9. Cross-template assertions below reference
 // the new canonical home.
 
+@Suite("InversePairTemplate — V1.11.1 end-to-end discover() integration")
+struct InversePairDirectionLabelDiscoverTests {
+
+    @Test("V1.11.1 — `index(after:) ↔ index(before:)` no longer surfaces in discover() output")
+    func indexAfterIndexBeforeSuppressedEndToEnd() {
+        let indexAfter = makeSummary(
+            name: "index",
+            label: "after",
+            paramType: "Index",
+            returnType: "Index",
+            line: 10
+        )
+        let indexBefore = makeSummary(
+            name: "index",
+            label: "before",
+            paramType: "Index",
+            returnType: "Index",
+            line: 20
+        )
+        let suggestions = TemplateRegistry.discover(
+            in: [indexAfter, indexBefore],
+            typeDecls: []
+        )
+        let inversePairCount = suggestions.filter { $0.templateName == "inverse-pair" }.count
+        #expect(inversePairCount == 0, "Direction-labeled inverse-pair should not surface")
+    }
+
+    @Test("V1.11.1 — non-direction-labeled inverse pair still surfaces")
+    func nonDirectionPairStillSurfacesEndToEnd() {
+        // `parse(_:) × format(_:)` shape on a non-Equatable carrier —
+        // FunctionPairing classifies as inverse-pair candidate.
+        let parse = makeSummary(
+            name: "parse",
+            label: nil,
+            paramType: "MyToken",
+            returnType: "String",
+            line: 30
+        )
+        let format = makeSummary(
+            name: "format",
+            label: nil,
+            paramType: "String",
+            returnType: "MyToken",
+            line: 40
+        )
+        let suggestions = TemplateRegistry.discover(
+            in: [parse, format],
+            typeDecls: []
+        )
+        let inversePair = suggestions.first { $0.templateName == "inverse-pair" }
+        #expect(inversePair != nil, "Non-direction-labeled pair should still surface")
+    }
+
+    private func makeSummary(
+        name: String,
+        label: String?,
+        paramType: String,
+        returnType: String,
+        line: Int
+    ) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [Parameter(label: label, internalName: "x", typeText: paramType, isInout: false)],
+            returnTypeText: returnType,
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: line, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+    }
+}
+
 @Suite("InversePairTemplate — V1.11.1 direction-label counter-signal")
 struct InversePairDirectionLabelCounterTests {
 
@@ -273,80 +348,5 @@ struct InversePairDirectionLabelCounterTests {
             bodySignals: .empty
         )
         return FunctionPair(forward: forward, reverse: reverse)
-    }
-}
-
-@Suite("InversePairTemplate — V1.11.1 end-to-end discover() integration")
-struct InversePairDirectionLabelDiscoverTests {
-
-    @Test("V1.11.1 — `index(after:) ↔ index(before:)` no longer surfaces in discover() output")
-    func indexAfterIndexBeforeSuppressedEndToEnd() {
-        let indexAfter = makeSummary(
-            name: "index",
-            label: "after",
-            paramType: "Index",
-            returnType: "Index",
-            line: 10
-        )
-        let indexBefore = makeSummary(
-            name: "index",
-            label: "before",
-            paramType: "Index",
-            returnType: "Index",
-            line: 20
-        )
-        let suggestions = TemplateRegistry.discover(
-            in: [indexAfter, indexBefore],
-            typeDecls: []
-        )
-        let inversePairCount = suggestions.filter { $0.templateName == "inverse-pair" }.count
-        #expect(inversePairCount == 0, "Direction-labeled inverse-pair should not surface")
-    }
-
-    @Test("V1.11.1 — non-direction-labeled inverse pair still surfaces")
-    func nonDirectionPairStillSurfacesEndToEnd() {
-        // `parse(_:) × format(_:)` shape on a non-Equatable carrier —
-        // FunctionPairing classifies as inverse-pair candidate.
-        let parse = makeSummary(
-            name: "parse",
-            label: nil,
-            paramType: "MyToken",
-            returnType: "String",
-            line: 30
-        )
-        let format = makeSummary(
-            name: "format",
-            label: nil,
-            paramType: "String",
-            returnType: "MyToken",
-            line: 40
-        )
-        let suggestions = TemplateRegistry.discover(
-            in: [parse, format],
-            typeDecls: []
-        )
-        let inversePair = suggestions.first { $0.templateName == "inverse-pair" }
-        #expect(inversePair != nil, "Non-direction-labeled pair should still surface")
-    }
-
-    private func makeSummary(
-        name: String,
-        label: String?,
-        paramType: String,
-        returnType: String,
-        line: Int
-    ) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: [Parameter(label: label, internalName: "x", typeText: paramType, isInout: false)],
-            returnTypeText: returnType,
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: line, column: 1),
-            containingTypeName: nil,
-            bodySignals: .empty
-        )
     }
 }

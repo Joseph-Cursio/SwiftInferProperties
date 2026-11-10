@@ -2,107 +2,6 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
-/// V2.0 M7 — SwiftSyntax pass detecting Biconditional / iff
-/// witnesses inside a named State struct.
-///
-/// **Pairing strategy.** Cartesian product of `is*`-shaped Bool
-/// fields × all Optional fields. v0.0 deliberately broad per PRD
-/// §5.6's calibration framing ("trickiest of the five families,
-/// cycles 3-5 to dial precision").
-public enum BiconditionalWitnessDetector {
-
-    /// Bool name patterns. Case-sensitive substring match — Swift
-    /// camelCase convention. `isLoadingResults` / `isShowingDetail`
-    /// match; `loadingResults` (no `is`) doesn't qualify.
-    static let boolNamePatterns: [String] = [
-        "Loading", "Showing", "Presenting", "Active", "Fetching", "Refreshing"
-    ]
-
-    /// V2.0 M7 — detect witnesses in `source`. Pure.
-    public static func detect(
-        stateTypeName: String,
-        in source: String
-    ) -> [BiconditionalWitness] {
-        let tree = Parser.parse(source: source)
-        let visitor = Visitor(targetName: stateTypeName)
-        visitor.walk(tree)
-        return visitor.witnesses
-    }
-
-    /// V2.0 M7 — detect across every `.swift` file under `directory`.
-    public static func detect(
-        stateTypeName: String,
-        in directory: URL
-    ) throws -> [BiconditionalWitness] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(
-            at: directory,
-            includingPropertiesForKeys: [.isRegularFileKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            return []
-        }
-        var swiftFiles: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "swift" {
-            swiftFiles.append(url)
-        }
-        swiftFiles.sort { $0.path < $1.path }
-        var witnesses: [BiconditionalWitness] = []
-        for fileURL in swiftFiles {
-            let source = try String(contentsOf: fileURL, encoding: .utf8)
-            witnesses.append(contentsOf: detect(stateTypeName: stateTypeName, in: source))
-        }
-        return witnesses
-    }
-
-    // MARK: - Visitor
-
-    private final class Visitor: SyntaxVisitor {
-        let targetComponents: [String]
-        var typeStack: [String] = []
-        var witnesses: [BiconditionalWitness] = []
-
-        init(targetName: String) {
-            self.targetComponents = targetName.split(separator: ".").map(String.init)
-            super.init(viewMode: .sourceAccurate)
-        }
-
-        override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-            typeStack.append(node.name.text)
-            if matchesTarget() {
-                witnesses.append(
-                    contentsOf: BiconditionalExtractor.extract(from: node.memberBlock)
-                )
-            }
-            return .visitChildren
-        }
-        override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
-
-        override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-            typeStack.append(node.name.text)
-            if matchesTarget() {
-                witnesses.append(
-                    contentsOf: BiconditionalExtractor.extract(from: node.memberBlock)
-                )
-            }
-            return .visitChildren
-        }
-        override func visitPost(_: ClassDeclSyntax) { typeStack.removeLast() }
-
-        override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-            typeStack.append(node.name.text)
-            return .visitChildren
-        }
-        override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
-
-        private func matchesTarget() -> Bool {
-            guard typeStack.count >= targetComponents.count else { return false }
-            let suffix = typeStack.suffix(targetComponents.count)
-            return Array(suffix) == targetComponents
-        }
-    }
-}
-
 /// V2.0 M7 — extracts Biconditional witnesses from one member block.
 /// Pure; testable in isolation.
 enum BiconditionalExtractor {
@@ -254,5 +153,106 @@ enum BiconditionalExtractor {
     /// `isactive` doesn't (lowercase `a`).
     static func nameLooksLikeBiconditionalFlag(_ name: String) -> Bool {
         BiconditionalWitnessDetector.boolNamePatterns.contains { name.contains($0) }
+    }
+}
+
+/// V2.0 M7 — SwiftSyntax pass detecting Biconditional / iff
+/// witnesses inside a named State struct.
+///
+/// **Pairing strategy.** Cartesian product of `is*`-shaped Bool
+/// fields × all Optional fields. v0.0 deliberately broad per PRD
+/// §5.6's calibration framing ("trickiest of the five families,
+/// cycles 3-5 to dial precision").
+public enum BiconditionalWitnessDetector {
+
+    /// Bool name patterns. Case-sensitive substring match — Swift
+    /// camelCase convention. `isLoadingResults` / `isShowingDetail`
+    /// match; `loadingResults` (no `is`) doesn't qualify.
+    static let boolNamePatterns: [String] = [
+        "Loading", "Showing", "Presenting", "Active", "Fetching", "Refreshing"
+    ]
+
+    /// V2.0 M7 — detect witnesses in `source`. Pure.
+    public static func detect(
+        stateTypeName: String,
+        in source: String
+    ) -> [BiconditionalWitness] {
+        let tree = Parser.parse(source: source)
+        let visitor = Visitor(targetName: stateTypeName)
+        visitor.walk(tree)
+        return visitor.witnesses
+    }
+
+    /// V2.0 M7 — detect across every `.swift` file under `directory`.
+    public static func detect(
+        stateTypeName: String,
+        in directory: URL
+    ) throws -> [BiconditionalWitness] {
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return []
+        }
+        var swiftFiles: [URL] = []
+        for case let url as URL in enumerator where url.pathExtension == "swift" {
+            swiftFiles.append(url)
+        }
+        swiftFiles.sort { $0.path < $1.path }
+        var witnesses: [BiconditionalWitness] = []
+        for fileURL in swiftFiles {
+            let source = try String(contentsOf: fileURL, encoding: .utf8)
+            witnesses.append(contentsOf: detect(stateTypeName: stateTypeName, in: source))
+        }
+        return witnesses
+    }
+
+    // MARK: - Visitor
+
+    private final class Visitor: SyntaxVisitor {
+        let targetComponents: [String]
+        var typeStack: [String] = []
+        var witnesses: [BiconditionalWitness] = []
+
+        init(targetName: String) {
+            self.targetComponents = targetName.split(separator: ".").map(String.init)
+            super.init(viewMode: .sourceAccurate)
+        }
+
+        override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+            typeStack.append(node.name.text)
+            if matchesTarget() {
+                witnesses.append(
+                    contentsOf: BiconditionalExtractor.extract(from: node.memberBlock)
+                )
+            }
+            return .visitChildren
+        }
+        override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
+
+        override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+            typeStack.append(node.name.text)
+            if matchesTarget() {
+                witnesses.append(
+                    contentsOf: BiconditionalExtractor.extract(from: node.memberBlock)
+                )
+            }
+            return .visitChildren
+        }
+        override func visitPost(_: ClassDeclSyntax) { typeStack.removeLast() }
+
+        override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+            typeStack.append(node.name.text)
+            return .visitChildren
+        }
+        override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
+
+        private func matchesTarget() -> Bool {
+            guard typeStack.count >= targetComponents.count else { return false }
+            let suffix = typeStack.suffix(targetComponents.count)
+            return Array(suffix) == targetComponents
+        }
     }
 }

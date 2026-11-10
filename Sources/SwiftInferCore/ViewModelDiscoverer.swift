@@ -2,6 +2,72 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
+// MARK: - Per-type accumulator
+
+/// Mutable per-type info gathered across the class declaration + all its
+/// extensions. `observability` / `declLocation` are set only from the
+/// class decl; methods + stored fields merge from every source.
+struct RawTypeInfo {
+    var observability: ViewModelObservability?
+    var declLocation: SourceLocation?
+    var rawFields: [RawStoredField] = []
+    var methods: [RawMethod] = []
+    /// Parameters of each declared initializer — drives the zero-arg
+    /// constructibility gate (a parameterized init suppresses the
+    /// synthesized `init()`) and dependency-faking construction.
+    var declaredInits: [[ViewModelInitParameter]] = []
+    /// `<file>:<line>` of the type's `class` declaration, set for *every*
+    /// class (not gated on observability). Non-`nil` iff the type is a class —
+    /// the recognition signal `ConventionRoleDiscoverer` uses (presenters /
+    /// interactors are reference types).
+    var classLocation: SourceLocation?
+    /// Inherited-type names from the class declaration + any extensions —
+    /// the conformance signal for convention recognition (VIPER
+    /// `FooInteractor: FooInteractorInput`). Not used by MVVM assembly.
+    var inheritedTypeNames: [String] = []
+
+    mutating func merge(_ other: Self) {
+        observability = observability ?? other.observability
+        declLocation = declLocation ?? other.declLocation
+        classLocation = classLocation ?? other.classLocation
+        rawFields.append(contentsOf: other.rawFields)
+        methods.append(contentsOf: other.methods)
+        declaredInits.append(contentsOf: other.declaredInits)
+        inheritedTypeNames.append(contentsOf: other.inheritedTypeNames)
+    }
+}
+
+/// A stored property gathered during the scan, before State-vs-dependency
+/// classification (`ViewModelDiscoverer.classifyExclusion`).
+struct RawStoredField: Equatable {
+    let name: String
+    let typeText: String
+    let isMutable: Bool
+    let isObservationIgnored: Bool
+    /// `true` when the binding has an initializer (`var x = 0` / `var x: T = …`).
+    let hasDefault: Bool
+    var isOptional: Bool { typeText.hasSuffix("?") }
+}
+
+/// One instance method gathered during the scan, with its precomputed
+/// body mutation signals.
+struct RawMethod: Equatable {
+    let name: String
+    let parameterTypes: [String]
+    let firstParameterLabel: String?
+    /// Full label+type per parameter — the source of truth for synthetic
+    /// Action-enum case + dispatch-call emission.
+    let parameters: [ViewModelActionParameter]
+    let isAsync: Bool
+    let isThrows: Bool
+    /// Clock-determinism claim on the method decl (workplan Phase 4) —
+    /// carried through to `ViewModelAction` so the enum emitter's async
+    /// gate can apply the conjunction. Defaults to `false` so signal-only
+    /// fabrication sites stay terse.
+    var isClockDeterministic: Bool = false
+    let signals: ViewModelMethodSignals
+}
+
 /// PROTOTYPE — SwiftSyntax pass that recognises SwiftUI MVVM view models
 /// (`@Observable` macro or `: ObservableObject`) and emits each as a
 /// `ViewModelCandidate`: its stored properties (State) + its
@@ -202,70 +268,4 @@ public enum ViewModelDiscoverer {
             }
             .sorted { $0.name < $1.name }
     }
-}
-
-// MARK: - Per-type accumulator
-
-/// Mutable per-type info gathered across the class declaration + all its
-/// extensions. `observability` / `declLocation` are set only from the
-/// class decl; methods + stored fields merge from every source.
-struct RawTypeInfo {
-    var observability: ViewModelObservability?
-    var declLocation: SourceLocation?
-    var rawFields: [RawStoredField] = []
-    var methods: [RawMethod] = []
-    /// Parameters of each declared initializer — drives the zero-arg
-    /// constructibility gate (a parameterized init suppresses the
-    /// synthesized `init()`) and dependency-faking construction.
-    var declaredInits: [[ViewModelInitParameter]] = []
-    /// `<file>:<line>` of the type's `class` declaration, set for *every*
-    /// class (not gated on observability). Non-`nil` iff the type is a class —
-    /// the recognition signal `ConventionRoleDiscoverer` uses (presenters /
-    /// interactors are reference types).
-    var classLocation: SourceLocation?
-    /// Inherited-type names from the class declaration + any extensions —
-    /// the conformance signal for convention recognition (VIPER
-    /// `FooInteractor: FooInteractorInput`). Not used by MVVM assembly.
-    var inheritedTypeNames: [String] = []
-
-    mutating func merge(_ other: Self) {
-        observability = observability ?? other.observability
-        declLocation = declLocation ?? other.declLocation
-        classLocation = classLocation ?? other.classLocation
-        rawFields.append(contentsOf: other.rawFields)
-        methods.append(contentsOf: other.methods)
-        declaredInits.append(contentsOf: other.declaredInits)
-        inheritedTypeNames.append(contentsOf: other.inheritedTypeNames)
-    }
-}
-
-/// A stored property gathered during the scan, before State-vs-dependency
-/// classification (`ViewModelDiscoverer.classifyExclusion`).
-struct RawStoredField: Equatable {
-    let name: String
-    let typeText: String
-    let isMutable: Bool
-    let isObservationIgnored: Bool
-    /// `true` when the binding has an initializer (`var x = 0` / `var x: T = …`).
-    let hasDefault: Bool
-    var isOptional: Bool { typeText.hasSuffix("?") }
-}
-
-/// One instance method gathered during the scan, with its precomputed
-/// body mutation signals.
-struct RawMethod: Equatable {
-    let name: String
-    let parameterTypes: [String]
-    let firstParameterLabel: String?
-    /// Full label+type per parameter — the source of truth for synthetic
-    /// Action-enum case + dispatch-call emission.
-    let parameters: [ViewModelActionParameter]
-    let isAsync: Bool
-    let isThrows: Bool
-    /// Clock-determinism claim on the method decl (workplan Phase 4) —
-    /// carried through to `ViewModelAction` so the enum emitter's async
-    /// gate can apply the conjunction. Defaults to `false` so signal-only
-    /// fabrication sites stay terse.
-    var isClockDeterministic: Bool = false
-    let signals: ViewModelMethodSignals
 }

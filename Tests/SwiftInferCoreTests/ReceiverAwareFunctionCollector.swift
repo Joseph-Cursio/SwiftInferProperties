@@ -7,76 +7,6 @@ import SwiftSyntax
 // walker that never fires and an empty corpus produce the same zero, and only a
 // synthetic witness separates those readings.
 
-/// Function declarations paired with **what `self` is** where they are declared.
-///
-/// The receiver's kind is the whole question in bucket 1: a write to `self` on a
-/// `class` mutates state every holder of the reference sees, while on a `struct` it
-/// mutates a copy and Swift makes the caller write `mutating`. An `extension` of a
-/// type declared in another file cannot be resolved by a parse, so it gets its own
-/// bucket instead of a guess — the same treatment the unrecognised-callee census gives
-/// a callee it has no oracle for.
-final class ReceiverAwareFunctionCollector: SyntaxVisitor {
-
-    struct Entry {
-        let function: FunctionDeclSyntax
-        let kind: BlindSpotBaseRateCensusMeasuredTests.ReceiverKind
-    }
-
-    private(set) var entries: [Entry] = []
-    private var stack: [BlindSpotBaseRateCensusMeasuredTests.ReceiverKind] = []
-    /// Type names declared in this file, so an `extension` of a local type resolves
-    /// rather than falling into `.unknown`.
-    private var localKinds: [String: BlindSpotBaseRateCensusMeasuredTests.ReceiverKind] = [:]
-    private var functionDepth = 0
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        // Nested functions belong to their enclosing function, not to the type.
-        if functionDepth == 0, node.body != nil, let kind = stack.last {
-            entries.append(Entry(function: node, kind: kind))
-        }
-        functionDepth += 1
-        return .visitChildren
-    }
-
-    override func visitPost(_: FunctionDeclSyntax) { functionDepth -= 1 }
-
-    override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        localKinds[node.name.text] = .reference
-        stack.append(.reference)
-        return .visitChildren
-    }
-
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        localKinds[node.name.text] = .value
-        stack.append(.value)
-        return .visitChildren
-    }
-
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        localKinds[node.name.text] = .value
-        stack.append(.value)
-        return .visitChildren
-    }
-
-    override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
-        localKinds[node.name.text] = .actorIsolated
-        stack.append(.actorIsolated)
-        return .visitChildren
-    }
-
-    override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-        let extended = node.extendedType.trimmedDescription
-        stack.append(localKinds[extended] ?? .unknown)
-        return .visitChildren
-    }
-
-    override func visitPost(_: ClassDeclSyntax) { stack.removeLast() }
-    override func visitPost(_: StructDeclSyntax) { stack.removeLast() }
-    override func visitPost(_: EnumDeclSyntax) { stack.removeLast() }
-    override func visitPost(_: ActorDeclSyntax) { stack.removeLast() }
-    override func visitPost(_: ExtensionDeclSyntax) { stack.removeLast() }
-}
-
 /// Whether a body assigns to `self.something`.
 ///
 /// **Both operator forms**, because `Parser.parse` produces the unfolded one and a
@@ -216,4 +146,74 @@ final class UnorderedRenderChecker: SyntaxVisitor {
     static func rootName(of member: MemberAccessExprSyntax) -> String? {
         member.base.flatMap { rootName(of: $0) }
     }
+}
+
+/// Function declarations paired with **what `self` is** where they are declared.
+///
+/// The receiver's kind is the whole question in bucket 1: a write to `self` on a
+/// `class` mutates state every holder of the reference sees, while on a `struct` it
+/// mutates a copy and Swift makes the caller write `mutating`. An `extension` of a
+/// type declared in another file cannot be resolved by a parse, so it gets its own
+/// bucket instead of a guess — the same treatment the unrecognised-callee census gives
+/// a callee it has no oracle for.
+final class ReceiverAwareFunctionCollector: SyntaxVisitor {
+
+    struct Entry {
+        let function: FunctionDeclSyntax
+        let kind: BlindSpotBaseRateCensusMeasuredTests.ReceiverKind
+    }
+
+    private(set) var entries: [Entry] = []
+    private var stack: [BlindSpotBaseRateCensusMeasuredTests.ReceiverKind] = []
+    /// Type names declared in this file, so an `extension` of a local type resolves
+    /// rather than falling into `.unknown`.
+    private var localKinds: [String: BlindSpotBaseRateCensusMeasuredTests.ReceiverKind] = [:]
+    private var functionDepth = 0
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        // Nested functions belong to their enclosing function, not to the type.
+        if functionDepth == 0, node.body != nil, let kind = stack.last {
+            entries.append(Entry(function: node, kind: kind))
+        }
+        functionDepth += 1
+        return .visitChildren
+    }
+
+    override func visitPost(_: FunctionDeclSyntax) { functionDepth -= 1 }
+
+    override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+        localKinds[node.name.text] = .reference
+        stack.append(.reference)
+        return .visitChildren
+    }
+
+    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+        localKinds[node.name.text] = .value
+        stack.append(.value)
+        return .visitChildren
+    }
+
+    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+        localKinds[node.name.text] = .value
+        stack.append(.value)
+        return .visitChildren
+    }
+
+    override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+        localKinds[node.name.text] = .actorIsolated
+        stack.append(.actorIsolated)
+        return .visitChildren
+    }
+
+    override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
+        let extended = node.extendedType.trimmedDescription
+        stack.append(localKinds[extended] ?? .unknown)
+        return .visitChildren
+    }
+
+    override func visitPost(_: ClassDeclSyntax) { stack.removeLast() }
+    override func visitPost(_: StructDeclSyntax) { stack.removeLast() }
+    override func visitPost(_: EnumDeclSyntax) { stack.removeLast() }
+    override func visitPost(_: ActorDeclSyntax) { stack.removeLast() }
+    override func visitPost(_: ExtensionDeclSyntax) { stack.removeLast() }
 }

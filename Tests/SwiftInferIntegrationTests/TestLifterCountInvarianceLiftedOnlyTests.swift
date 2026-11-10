@@ -5,6 +5,10 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+private struct SilentLiftedOnlyDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M5.6 acceptance bar item (h) — count-invariance
 /// **lifted-only** emission. When TestLifter detects
 /// `f(xs).count == xs.count` in a test body BUT the production-side
@@ -98,8 +102,4 @@ struct TestLifterCountInvarianceLiftedOnlyTests {
             encoding: .utf8
         )
     }
-}
-
-private struct SilentLiftedOnlyDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

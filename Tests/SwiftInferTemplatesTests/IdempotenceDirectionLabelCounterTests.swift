@@ -9,6 +9,35 @@ import Testing
 // rejection sub-pattern). Split from IdempotenceTemplateTests.swift
 // per the V1.7.1/V1.8.1 split precedent.
 
+@Suite("IdempotenceTemplate — V1.10.1 end-to-end discover() integration")
+struct IdempotenceDirectionLabelDiscoverTests {
+
+    @Test("V1.10.1 — `index(after:)` no longer surfaces in discover() output")
+    func indexAfterSuppressedEndToEnd() {
+        let indexAfter = makeIdempotenceSummary(
+            name: "index",
+            parameters: [Parameter(label: "after", internalName: "i", typeText: "Int", isInout: false)],
+            returnType: "Int"
+        )
+        let suggestions = TemplateRegistry.discover(in: [indexAfter], typeDecls: [])
+        let idempotenceCount = suggestions.filter { $0.templateName == "idempotence" }.count
+        #expect(idempotenceCount == 0)
+    }
+
+    @Test("V1.10.1 — `normalize(_:)` still surfaces at Likely tier")
+    func normalizeStillSurfaces() {
+        let normalize = makeIdempotenceSummary(
+            name: "normalize",
+            returnType: "String",
+            paramType: "String"
+        )
+        let suggestions = TemplateRegistry.discover(in: [normalize], typeDecls: [])
+        let idempotence = suggestions.first { $0.templateName == "idempotence" }
+        #expect(idempotence != nil)
+        #expect(idempotence?.score.tier == .likely)
+    }
+}
+
 @Suite("IdempotenceTemplate — V1.10.1 direction-label counter-signal")
 struct IdempotenceDirectionLabelCounterTests {
 
@@ -168,34 +197,5 @@ struct IdempotenceDirectionLabelCounterTests {
             "advance", "succ", "pred", "successor", "predecessor",
         ]
         #expect(DirectionLabels.curated == expected)
-    }
-}
-
-@Suite("IdempotenceTemplate — V1.10.1 end-to-end discover() integration")
-struct IdempotenceDirectionLabelDiscoverTests {
-
-    @Test("V1.10.1 — `index(after:)` no longer surfaces in discover() output")
-    func indexAfterSuppressedEndToEnd() {
-        let indexAfter = makeIdempotenceSummary(
-            name: "index",
-            parameters: [Parameter(label: "after", internalName: "i", typeText: "Int", isInout: false)],
-            returnType: "Int"
-        )
-        let suggestions = TemplateRegistry.discover(in: [indexAfter], typeDecls: [])
-        let idempotenceCount = suggestions.filter { $0.templateName == "idempotence" }.count
-        #expect(idempotenceCount == 0)
-    }
-
-    @Test("V1.10.1 — `normalize(_:)` still surfaces at Likely tier")
-    func normalizeStillSurfaces() {
-        let normalize = makeIdempotenceSummary(
-            name: "normalize",
-            returnType: "String",
-            paramType: "String"
-        )
-        let suggestions = TemplateRegistry.discover(in: [normalize], typeDecls: [])
-        let idempotence = suggestions.first { $0.templateName == "idempotence" }
-        #expect(idempotence != nil)
-        #expect(idempotence?.score.tier == .likely)
     }
 }

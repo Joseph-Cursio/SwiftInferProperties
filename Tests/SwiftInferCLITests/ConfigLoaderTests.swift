@@ -3,6 +3,11 @@ import Foundation
 import SwiftInferCore
 import Testing
 
+private struct NoPackageStub: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) -> Data { Data() }
+}
+
 @Suite("ConfigLoader — explicit path + walk-up implicit lookup per PRD §5.8 (M2)")
 struct ConfigLoaderTests {
 
@@ -179,9 +184,4 @@ struct ConfigLoaderTests {
         let path = dir.appendingPathComponent("config.toml")
         try Data(contents.utf8).write(to: path)
     }
-}
-
-private struct NoPackageStub: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) -> Data { Data() }
 }

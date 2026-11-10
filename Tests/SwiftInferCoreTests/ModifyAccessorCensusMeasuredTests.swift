@@ -6,6 +6,16 @@ import Testing
 @testable import SwiftInferCore
 @testable import SwiftInferTemplates
 
+/// Every `var` carrying an accessor block, for the census's accessor lookup.
+final class ModifyPropertyCollector: SyntaxVisitor {
+    var properties: [VariableDeclSyntax] = []
+
+    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+        if node.bindings.first?.accessorBlock != nil { properties.append(node) }
+        return .skipChildren
+    }
+}
+
 /// **`isReadOnlyGetter` accepts a `_modify` coroutine, so a MUTABLE property is summarised
 /// as a read-only one and carries laws.**
 ///
@@ -166,15 +176,5 @@ struct ModifyAccessorCensusMeasuredTests {
             \(arm.multiAccessorAdmitted.joined(separator: ", "))
             """)
         }
-    }
-}
-
-/// Every `var` carrying an accessor block, for the census's accessor lookup.
-final class ModifyPropertyCollector: SyntaxVisitor {
-    var properties: [VariableDeclSyntax] = []
-
-    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-        if node.bindings.first?.accessorBlock != nil { properties.append(node) }
-        return .skipChildren
     }
 }

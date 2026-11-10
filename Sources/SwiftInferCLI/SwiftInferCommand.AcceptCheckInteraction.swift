@@ -2,6 +2,49 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// V2.0 accept-check follow-up — classified result of one
+/// accept-check rerun. File-scope for SwiftLint nesting (the
+/// owning subcommand is already nested inside `SwiftInferCommand`
+/// via extension). Public so tests pattern-match on the kind /
+/// detail fields.
+/// V1.89 lint pass — per-check context bundle, lifted from
+/// `runChecks`'s 8-param signature so the function stays under the
+/// `function_parameter_count` cap. File-scope rather than nested
+/// under `AcceptCheckInteraction` to satisfy the 1-level `nesting`
+/// rule.
+struct AcceptCheckInteractionCheckMetadata {
+    let target: String
+    let workingDirectory: URL
+    let now: Date
+    let swiftInferVersion: String
+}
+
+public struct InteractionAcceptCheckOutcome: Equatable, Sendable {
+    public let kind: InteractionPostAcceptanceOutcomeKind
+    public let detail: String?
+
+    public init(kind: InteractionPostAcceptanceOutcomeKind, detail: String?) {
+        self.kind = kind
+        self.detail = detail
+    }
+}
+
+/// V2.0 accept-check follow-up — errors thrown by
+/// `accept-check-interaction`. File-scope for SwiftLint nesting;
+/// public so tests pattern-match on cases.
+public enum AcceptCheckInteractionError: Error, CustomStringConvertible, Equatable {
+    case unknownFamily(raw: String)
+
+    public var description: String {
+        switch self {
+        case let .unknownFamily(raw):
+            return "swift-infer accept-check-interaction: unknown family "
+                + "'\(raw)'. Valid: conservation, idempotence, cardinality, "
+                + "referential-integrity, biconditional."
+        }
+    }
+}
+
 /// V2.0 accept-check follow-up — `swift-infer accept-check-interaction`
 /// subcommand. Analog of v1.72.A's `accept-check` but keyed on
 /// interaction invariants. Walks
@@ -284,49 +327,6 @@ public extension SwiftInferCommand {
             let detailPart = outcome.detail.map { " — \($0)" } ?? ""
             return "[\(outcome.kind.rawValue)] \(record.family.rawValue) invariant "
                 + "0x\(record.identityHash) on \(record.reducerQualifiedName)\(detailPart)"
-        }
-    }
-}
-
-/// V2.0 accept-check follow-up — classified result of one
-/// accept-check rerun. File-scope for SwiftLint nesting (the
-/// owning subcommand is already nested inside `SwiftInferCommand`
-/// via extension). Public so tests pattern-match on the kind /
-/// detail fields.
-/// V1.89 lint pass — per-check context bundle, lifted from
-/// `runChecks`'s 8-param signature so the function stays under the
-/// `function_parameter_count` cap. File-scope rather than nested
-/// under `AcceptCheckInteraction` to satisfy the 1-level `nesting`
-/// rule.
-struct AcceptCheckInteractionCheckMetadata {
-    let target: String
-    let workingDirectory: URL
-    let now: Date
-    let swiftInferVersion: String
-}
-
-public struct InteractionAcceptCheckOutcome: Equatable, Sendable {
-    public let kind: InteractionPostAcceptanceOutcomeKind
-    public let detail: String?
-
-    public init(kind: InteractionPostAcceptanceOutcomeKind, detail: String?) {
-        self.kind = kind
-        self.detail = detail
-    }
-}
-
-/// V2.0 accept-check follow-up — errors thrown by
-/// `accept-check-interaction`. File-scope for SwiftLint nesting;
-/// public so tests pattern-match on cases.
-public enum AcceptCheckInteractionError: Error, CustomStringConvertible, Equatable {
-    case unknownFamily(raw: String)
-
-    public var description: String {
-        switch self {
-        case let .unknownFamily(raw):
-            return "swift-infer accept-check-interaction: unknown family "
-                + "'\(raw)'. Valid: conservation, idempotence, cardinality, "
-                + "referential-integrity, biconditional."
         }
     }
 }

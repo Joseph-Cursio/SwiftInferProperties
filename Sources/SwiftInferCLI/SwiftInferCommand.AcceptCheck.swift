@@ -2,6 +2,28 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// V1.72.A — per-decision accept-check result. File-scope rather than
+/// nested under `SwiftInferCommand.AcceptCheck` to satisfy SwiftLint's
+/// 1-level `nesting` cap — `AcceptCheck` is already nested inside
+/// `SwiftInferCommand` via the extension, so a third level here would
+/// violate the rule. Mirrors how `VerifyError` is hoisted out of
+/// `SwiftInferCommand.Verify` for the same reason.
+public struct AcceptCheckResult: Equatable {
+    public let record: DecisionRecord
+    public let kind: PostAcceptanceOutcomeKind
+    public let detail: String?
+
+    public init(
+        record: DecisionRecord,
+        kind: PostAcceptanceOutcomeKind,
+        detail: String?
+    ) {
+        self.record = record
+        self.kind = kind
+        self.detail = detail
+    }
+}
+
 /// V1.72.A — `swift-infer accept-check` subcommand surface.
 ///
 /// **What it does.** Walks `.swiftinfer/decisions.json`, filters to
@@ -347,27 +369,5 @@ public extension SwiftInferCommand {
             }
             return lines.joined(separator: "\n") + "\n"
         }
-    }
-}
-
-/// V1.72.A — per-decision accept-check result. File-scope rather than
-/// nested under `SwiftInferCommand.AcceptCheck` to satisfy SwiftLint's
-/// 1-level `nesting` cap — `AcceptCheck` is already nested inside
-/// `SwiftInferCommand` via the extension, so a third level here would
-/// violate the rule. Mirrors how `VerifyError` is hoisted out of
-/// `SwiftInferCommand.Verify` for the same reason.
-public struct AcceptCheckResult: Equatable {
-    public let record: DecisionRecord
-    public let kind: PostAcceptanceOutcomeKind
-    public let detail: String?
-
-    public init(
-        record: DecisionRecord,
-        kind: PostAcceptanceOutcomeKind,
-        detail: String?
-    ) {
-        self.record = record
-        self.kind = kind
-        self.detail = detail
     }
 }

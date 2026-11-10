@@ -3,6 +3,68 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
+@Suite("TemplateRegistry — cross-validation seam (M3.5)")
+struct TemplateRegistryCrossValidationTests {
+
+    @Test("Cross-validation seam adds +20 signal to matching keys")
+    func crossValidationLiftsScoreOnMatchingKey() throws {
+        let normalize = makeRegistryIdempotentSummary(file: "A.swift", line: 1)
+        let baseline = TemplateRegistry.discover(in: [normalize])
+        let target = try #require(baseline.first { $0.templateName == "idempotence" })
+        let baselineTotal = target.score.total
+
+        let crossValidated = TemplateRegistry.discover(
+            in: [normalize],
+            crossValidationFromTestLifter: [target.crossValidationKey]
+        )
+        let lifted = try #require(crossValidated.first { $0.templateName == "idempotence" })
+        #expect(lifted.score.total == baselineTotal + 20)
+        #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })
+        #expect(lifted.identity == target.identity)
+        #expect(lifted.explainability.whySuggested.contains { $0.contains("Cross-validated by TestLifter") })
+    }
+
+    @Test("Cross-validation set with no matches leaves suggestions byte-stable")
+    func crossValidationNoMatchIsByteStable() {
+        let normalize = makeRegistryIdempotentSummary(file: "A.swift", line: 1)
+        let baseline = TemplateRegistry.discover(in: [normalize])
+        let unrelated = CrossValidationKey(templateName: "never-matches", calleeNames: ["x"])
+        let withCrossValidation = TemplateRegistry.discover(
+            in: [normalize],
+            crossValidationFromTestLifter: [unrelated]
+        )
+        #expect(baseline == withCrossValidation)
+    }
+
+    @Test("Cross-validation does not resurrect a contradiction-dropped suggestion")
+    func crossValidationDoesNotResurrectDroppedSuggestion() {
+        // Commutativity over Any → dropped by the §5.6 #2 detector.
+        // Even with the suggestion's identity in the cross-validation
+        // set, it stays gone — drops happen before cross-validation.
+        let merge = FunctionSummary(
+            name: "merge",
+            parameters: [
+                Parameter(label: nil, internalName: "a", typeText: "Any", isInout: false),
+                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false),
+            ],
+            returnTypeText: "Any",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Mixer.swift", line: 1, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let droppedSuggestion = CommutativityTemplate.suggest(for: merge)
+        let crossValidated = TemplateRegistry.discover(
+            in: [merge],
+            crossValidationFromTestLifter: droppedSuggestion.map { [$0.crossValidationKey] } ?? []
+        )
+        #expect(crossValidated.allSatisfy { $0.templateName != "commutativity" })
+    }
+}
+
 @Suite("TemplateRegistry — GeneratorSelection (M4.2)")
 struct TemplateRegistryGeneratorTests {
 
@@ -73,67 +135,5 @@ struct TemplateRegistryGeneratorTests {
         let idempotence = try #require(suggestions.first { $0.templateName == "idempotence" })
         #expect(idempotence.generator.source == .registered)
         #expect(idempotence.generator.confidence == .high)
-    }
-}
-
-@Suite("TemplateRegistry — cross-validation seam (M3.5)")
-struct TemplateRegistryCrossValidationTests {
-
-    @Test("Cross-validation seam adds +20 signal to matching keys")
-    func crossValidationLiftsScoreOnMatchingKey() throws {
-        let normalize = makeRegistryIdempotentSummary(file: "A.swift", line: 1)
-        let baseline = TemplateRegistry.discover(in: [normalize])
-        let target = try #require(baseline.first { $0.templateName == "idempotence" })
-        let baselineTotal = target.score.total
-
-        let crossValidated = TemplateRegistry.discover(
-            in: [normalize],
-            crossValidationFromTestLifter: [target.crossValidationKey]
-        )
-        let lifted = try #require(crossValidated.first { $0.templateName == "idempotence" })
-        #expect(lifted.score.total == baselineTotal + 20)
-        #expect(lifted.score.signals.contains { $0.kind == .crossValidation && $0.weight == 20 })
-        #expect(lifted.identity == target.identity)
-        #expect(lifted.explainability.whySuggested.contains { $0.contains("Cross-validated by TestLifter") })
-    }
-
-    @Test("Cross-validation set with no matches leaves suggestions byte-stable")
-    func crossValidationNoMatchIsByteStable() {
-        let normalize = makeRegistryIdempotentSummary(file: "A.swift", line: 1)
-        let baseline = TemplateRegistry.discover(in: [normalize])
-        let unrelated = CrossValidationKey(templateName: "never-matches", calleeNames: ["x"])
-        let withCrossValidation = TemplateRegistry.discover(
-            in: [normalize],
-            crossValidationFromTestLifter: [unrelated]
-        )
-        #expect(baseline == withCrossValidation)
-    }
-
-    @Test("Cross-validation does not resurrect a contradiction-dropped suggestion")
-    func crossValidationDoesNotResurrectDroppedSuggestion() {
-        // Commutativity over Any → dropped by the §5.6 #2 detector.
-        // Even with the suggestion's identity in the cross-validation
-        // set, it stays gone — drops happen before cross-validation.
-        let merge = FunctionSummary(
-            name: "merge",
-            parameters: [
-                Parameter(label: nil, internalName: "a", typeText: "Any", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false),
-            ],
-            returnTypeText: "Any",
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Mixer.swift", line: 1, column: 1),
-            containingTypeName: nil,
-            bodySignals: .empty
-        )
-        let droppedSuggestion = CommutativityTemplate.suggest(for: merge)
-        let crossValidated = TemplateRegistry.discover(
-            in: [merge],
-            crossValidationFromTestLifter: droppedSuggestion.map { [$0.crossValidationKey] } ?? []
-        )
-        #expect(crossValidated.allSatisfy { $0.templateName != "commutativity" })
     }
 }

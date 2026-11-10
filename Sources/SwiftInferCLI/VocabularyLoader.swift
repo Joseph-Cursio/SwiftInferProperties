@@ -1,6 +1,26 @@
 import Foundation
 import SwiftInferCore
 
+/// Test seam over the two FileManager calls the loader makes. Production
+/// code uses `DefaultFileSystemReader`; tests can supply a stub to mock
+/// out walk-up behaviour without writing a fixture tree to disk.
+public protocol FileSystemReader: Sendable {
+    func fileExists(atPath: String) -> Bool
+    func contents(of url: URL) throws -> Data
+}
+
+public struct DefaultFileSystemReader: FileSystemReader {
+    public init() { /* no-op */ }
+
+    public func fileExists(atPath path: String) -> Bool {
+        FileManager.default.fileExists(atPath: path)
+    }
+
+    public func contents(of url: URL) throws -> Data {
+        try Data(contentsOf: url)
+    }
+}
+
 /// Disk-resident vocabulary lookup for `swift-infer discover`. Resolves
 /// `.swiftinfer/vocabulary.json` per PRD §4.5 with two paths:
 ///
@@ -104,25 +124,5 @@ public enum VocabularyLoader {
             }
             current = parent
         }
-    }
-}
-
-/// Test seam over the two FileManager calls the loader makes. Production
-/// code uses `DefaultFileSystemReader`; tests can supply a stub to mock
-/// out walk-up behaviour without writing a fixture tree to disk.
-public protocol FileSystemReader: Sendable {
-    func fileExists(atPath: String) -> Bool
-    func contents(of url: URL) throws -> Data
-}
-
-public struct DefaultFileSystemReader: FileSystemReader {
-    public init() { /* no-op */ }
-
-    public func fileExists(atPath path: String) -> Bool {
-        FileManager.default.fileExists(atPath: path)
-    }
-
-    public func contents(of url: URL) throws -> Data {
-        try Data(contentsOf: url)
     }
 }

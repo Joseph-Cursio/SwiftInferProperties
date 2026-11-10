@@ -1,6 +1,17 @@
 import Foundation
 import SwiftInferCore
 
+enum SpeculativeRefactorError: Error, CustomStringConvertible {
+    case noSourcesDirectory(String)
+
+    var description: String {
+        switch self {
+        case let .noSourcesDirectory(path):
+            return "speculative refactoring needs a Sources/ directory to snapshot — none at \(path)"
+        }
+    }
+}
+
 /// Copy the tree, widen one access modifier, discover what became visible, and
 /// report the law with its verdict — the `--speculative` half of
 /// `suggest-refactors`.
@@ -133,16 +144,5 @@ enum SpeculativeRefactorRunner {
     static func relative(_ path: String, to root: URL) -> String {
         let prefix = root.path + "/"
         return path.hasPrefix(prefix) ? String(path.dropFirst(prefix.count)) : path
-    }
-}
-
-enum SpeculativeRefactorError: Error, CustomStringConvertible {
-    case noSourcesDirectory(String)
-
-    var description: String {
-        switch self {
-        case let .noSourcesDirectory(path):
-            return "speculative refactoring needs a Sources/ directory to snapshot — none at \(path)"
-        }
     }
 }

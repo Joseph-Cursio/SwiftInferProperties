@@ -6,6 +6,23 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// Function declarations and accessor blocks, so a computed property is reachable
+/// through the same probe as a function.
+private final class BacktestDeclarationFinder: SyntaxVisitor {
+    private(set) var functions: [FunctionDeclSyntax] = []
+    private(set) var accessors: [AccessorBlockSyntax] = []
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        functions.append(node)
+        return .visitChildren
+    }
+
+    override func visit(_ node: AccessorBlockSyntax) -> SyntaxVisitorContinueKind {
+        accessors.append(node)
+        return .visitChildren
+    }
+}
+
 /// **Phase 0.6 of `docs/plans/declaration-claims-plan.md`: does the purity oracle
 /// flag a real historical purity bug, and not its fix?**
 ///
@@ -245,22 +262,5 @@ struct PurityBacktestMeasuredTests {
         lines.append("")
         lines.append("HITS: \(hits) of \(Self.readings.count)")
         print(lines.joined(separator: "\n"))
-    }
-}
-
-/// Function declarations and accessor blocks, so a computed property is reachable
-/// through the same probe as a function.
-private final class BacktestDeclarationFinder: SyntaxVisitor {
-    private(set) var functions: [FunctionDeclSyntax] = []
-    private(set) var accessors: [AccessorBlockSyntax] = []
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        functions.append(node)
-        return .visitChildren
-    }
-
-    override func visit(_ node: AccessorBlockSyntax) -> SyntaxVisitorContinueKind {
-        accessors.append(node)
-        return .visitChildren
     }
 }

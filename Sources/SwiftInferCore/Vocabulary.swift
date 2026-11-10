@@ -1,3 +1,47 @@
+/// A project-supplied generator for a type the strategist can't derive
+/// (`Vocabulary.registeredGenerators`). `expression` is spliced in verbatim as
+/// the type's leaf generator (a `Gen<Type>` — idiomatically `Type.gen()`);
+/// `imports` names any modules the expression needs (`["Yams"]`), propagated
+/// up so the composed carrier generator carries them. Encoded as a JSON object
+/// `{ "expression": "...", "imports": [...] }`; `imports` defaults to `[]`.
+public struct RegisteredGenerator: Sendable, Equatable {
+
+    public let expression: String
+    public let imports: [String]
+
+    public init(expression: String, imports: [String] = []) {
+        self.expression = expression
+        self.imports = imports
+    }
+}
+
+/// V1.18.C — project-supplied dual-style member-name pair, encoded as a
+/// two-element JSON array `["mutating", "nonMutating"]` to match
+/// `InversePair`'s schema posture.
+public struct DualStyleNamePair: Sendable, Equatable {
+
+    public let mutating: String
+    public let nonMutating: String
+
+    public init(mutating: String, nonMutating: String) {
+        self.mutating = mutating
+        self.nonMutating = nonMutating
+    }
+}
+
+/// One project-supplied inverse-name pair. Encoded as a two-element JSON
+/// array `["forward", "reverse"]` to match the PRD §4.5 schema.
+public struct InversePair: Sendable, Equatable {
+
+    public let forward: String
+    public let reverse: String
+
+    public init(forward: String, reverse: String) {
+        self.forward = forward
+        self.reverse = reverse
+    }
+}
+
 /// Project-extensible naming vocabulary loaded from `.swiftinfer/vocabulary.json`
 /// per PRD §4.5. Templates consult vocabulary entries alongside their
 /// curated lists; project-vocabulary matches contribute the same +40 / +25 /
@@ -132,48 +176,4 @@ public struct Vocabulary: Sendable, Equatable {
     /// The default vocabulary — every list empty. Templates fall back to
     /// their curated lists alone when no project vocabulary is supplied.
     public static let empty = Self()
-}
-
-/// A project-supplied generator for a type the strategist can't derive
-/// (`Vocabulary.registeredGenerators`). `expression` is spliced in verbatim as
-/// the type's leaf generator (a `Gen<Type>` — idiomatically `Type.gen()`);
-/// `imports` names any modules the expression needs (`["Yams"]`), propagated
-/// up so the composed carrier generator carries them. Encoded as a JSON object
-/// `{ "expression": "...", "imports": [...] }`; `imports` defaults to `[]`.
-public struct RegisteredGenerator: Sendable, Equatable {
-
-    public let expression: String
-    public let imports: [String]
-
-    public init(expression: String, imports: [String] = []) {
-        self.expression = expression
-        self.imports = imports
-    }
-}
-
-/// V1.18.C — project-supplied dual-style member-name pair, encoded as a
-/// two-element JSON array `["mutating", "nonMutating"]` to match
-/// `InversePair`'s schema posture.
-public struct DualStyleNamePair: Sendable, Equatable {
-
-    public let mutating: String
-    public let nonMutating: String
-
-    public init(mutating: String, nonMutating: String) {
-        self.mutating = mutating
-        self.nonMutating = nonMutating
-    }
-}
-
-/// One project-supplied inverse-name pair. Encoded as a two-element JSON
-/// array `["forward", "reverse"]` to match the PRD §4.5 schema.
-public struct InversePair: Sendable, Equatable {
-
-    public let forward: String
-    public let reverse: String
-
-    public init(forward: String, reverse: String) {
-        self.forward = forward
-        self.reverse = reverse
-    }
 }

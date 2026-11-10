@@ -2,6 +2,67 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// V1.143.B — pure, testable replay outcome. Hoisted to file scope (the
+/// `nesting` lint rule caps at one level and `Verify` is already nested in
+/// `SwiftInferCommand`).
+struct ReplayReport {
+
+    enum Status: String {
+        case stillFailing
+        case nowHolds
+        case inconclusive
+        case skipped
+    }
+
+    struct Line {
+        let identityHash: String
+        let template: String
+        let status: Status
+        let detail: String?
+    }
+
+    let lines: [Line]
+
+    /// Map a re-verify outcome to a replay status. A recorded counterexample
+    /// that still fails is a present bug; a now-passing one means the property
+    /// was fixed (the corpus entry is holding); error / coverage-pending are
+    /// inconclusive (the run couldn't render a verdict).
+    static func status(for outcome: SwiftInferCommand.Verify.SurveyOutcome) -> Status {
+        switch outcome {
+        case .measuredDefaultFails: return .stillFailing
+        case .measuredBothPass, .measuredEdgeCaseAdvisory: return .nowHolds
+        case .measuredError, .architecturalCoveragePending: return .inconclusive
+        }
+    }
+
+    func count(_ status: Status) -> Int { lines.filter { $0.status == status }.count }
+
+    /// The CI gate: red while any recorded counterexample still fails.
+    var hasRegressions: Bool { count(.stillFailing) > 0 }
+
+    func render() -> String {
+        var out = [
+            "verify --replay-only: \(lines.count) recorded counterexample(s)",
+            "  ✓ now holds: \(count(.nowHolds))   ✗ still failing: \(count(.stillFailing))"
+                + "   ? inconclusive: \(count(.inconclusive))   – skipped: \(count(.skipped))",
+        ]
+        for line in lines.sorted(by: { $0.identityHash < $1.identityHash }) {
+            let suffix = line.detail.map { " — \($0)" } ?? ""
+            out.append("    \(Self.glyph(line.status)) \(line.identityHash) [\(line.template)]\(suffix)")
+        }
+        return out.joined(separator: "\n")
+    }
+
+    private static func glyph(_ status: Status) -> String {
+        switch status {
+        case .stillFailing: return "✗"
+        case .nowHolds: return "✓"
+        case .inconclusive: return "?"
+        case .skipped: return "–"
+        }
+    }
+}
+
 extension SwiftInferCommand.Verify {
 
     /// V1.143.B — corpus-first replay (regression gate). Re-verifies every
@@ -66,66 +127,5 @@ extension SwiftInferCommand.Verify {
         let report = ReplayReport(lines: lines)
         print(report.render())
         if report.hasRegressions { throw ExitCode.failure }
-    }
-}
-
-/// V1.143.B — pure, testable replay outcome. Hoisted to file scope (the
-/// `nesting` lint rule caps at one level and `Verify` is already nested in
-/// `SwiftInferCommand`).
-struct ReplayReport {
-
-    enum Status: String {
-        case stillFailing
-        case nowHolds
-        case inconclusive
-        case skipped
-    }
-
-    struct Line {
-        let identityHash: String
-        let template: String
-        let status: Status
-        let detail: String?
-    }
-
-    let lines: [Line]
-
-    /// Map a re-verify outcome to a replay status. A recorded counterexample
-    /// that still fails is a present bug; a now-passing one means the property
-    /// was fixed (the corpus entry is holding); error / coverage-pending are
-    /// inconclusive (the run couldn't render a verdict).
-    static func status(for outcome: SwiftInferCommand.Verify.SurveyOutcome) -> Status {
-        switch outcome {
-        case .measuredDefaultFails: return .stillFailing
-        case .measuredBothPass, .measuredEdgeCaseAdvisory: return .nowHolds
-        case .measuredError, .architecturalCoveragePending: return .inconclusive
-        }
-    }
-
-    func count(_ status: Status) -> Int { lines.filter { $0.status == status }.count }
-
-    /// The CI gate: red while any recorded counterexample still fails.
-    var hasRegressions: Bool { count(.stillFailing) > 0 }
-
-    func render() -> String {
-        var out = [
-            "verify --replay-only: \(lines.count) recorded counterexample(s)",
-            "  ✓ now holds: \(count(.nowHolds))   ✗ still failing: \(count(.stillFailing))"
-                + "   ? inconclusive: \(count(.inconclusive))   – skipped: \(count(.skipped))",
-        ]
-        for line in lines.sorted(by: { $0.identityHash < $1.identityHash }) {
-            let suffix = line.detail.map { " — \($0)" } ?? ""
-            out.append("    \(Self.glyph(line.status)) \(line.identityHash) [\(line.template)]\(suffix)")
-        }
-        return out.joined(separator: "\n")
-    }
-
-    private static func glyph(_ status: Status) -> String {
-        switch status {
-        case .stillFailing: return "✗"
-        case .nowHolds: return "✓"
-        case .inconclusive: return "?"
-        case .skipped: return "–"
-        }
     }
 }

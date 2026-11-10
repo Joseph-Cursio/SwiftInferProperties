@@ -3,6 +3,105 @@ import SwiftInferCore
 @testable import SwiftInferTestLifter
 import Testing
 
+/// One per-pattern test-source fixture for the six-detector fan-out
+/// integration test. Holds the file name + body as a value so the
+/// orchestrator stays under SwiftLint's function-body-length cap.
+private struct SixPatternFixture {
+    let fileName: String
+    let body: String
+
+    static let roundTrip = Self(
+        fileName: "CodecTests.swift",
+        body: """
+        import XCTest
+
+        final class CodecTests: XCTestCase {
+            func testRoundTrip() {
+                let original = MyData()
+                let encoded = encode(original)
+                let decoded = decode(encoded)
+                XCTAssertEqual(original, decoded)
+            }
+        }
+        """
+    )
+
+    static let idempotence = Self(
+        fileName: "NormalizerTests.swift",
+        body: """
+        import XCTest
+
+        final class NormalizerTests: XCTestCase {
+            func testNormalizeIsIdempotent() {
+                let s = "hello"
+                let once = normalize(s)
+                let twice = normalize(once)
+                XCTAssertEqual(once, twice)
+            }
+        }
+        """
+    )
+
+    static let commutativity = Self(
+        fileName: "MergerTests.swift",
+        body: """
+        import XCTest
+
+        final class MergerTests: XCTestCase {
+            func testMergeIsCommutative() {
+                let a = [1, 2]
+                let b = [3, 4]
+                XCTAssertEqual(merge(a, b), merge(b, a))
+            }
+        }
+        """
+    )
+
+    static let monotonicity = Self(
+        fileName: "PricingTests.swift",
+        body: """
+        import XCTest
+
+        final class PricingTests: XCTestCase {
+            func testApplyDiscountIsMonotonic() {
+                let a = 5
+                let b = 10
+                XCTAssertLessThan(a, b)
+                XCTAssertLessThanOrEqual(applyDiscount(a), applyDiscount(b))
+            }
+        }
+        """
+    )
+
+    static let countInvariance = Self(
+        fileName: "FilterTests.swift",
+        body: """
+        import XCTest
+
+        final class FilterTests: XCTestCase {
+            func testFilterPreservesCount() {
+                let xs = [1, 2, 3, 4]
+                XCTAssertEqual(filter(xs).count, xs.count)
+            }
+        }
+        """
+    )
+
+    static let reduceEquivalence = Self(
+        fileName: "ReducerTests.swift",
+        body: """
+        import XCTest
+
+        final class ReducerTests: XCTestCase {
+            func testSumReduceIsReversalInvariant() {
+                let items = [1, 2, 3]
+                XCTAssertEqual(items.reduce(0, +), items.reversed().reduce(0, +))
+            }
+        }
+        """
+    )
+}
+
 /// TestLifter M5.5 acceptance — `TestLifter.discover(in:)` fans the
 /// per-summary loop out to all six detectors (round-trip + idempotence
 /// + commutativity from M1+M2 + monotonicity + countInvariance +
@@ -116,103 +215,4 @@ struct TestLifterDiscoverSixDetectorFanOutTests {
             encoding: .utf8
         )
     }
-}
-
-/// One per-pattern test-source fixture for the six-detector fan-out
-/// integration test. Holds the file name + body as a value so the
-/// orchestrator stays under SwiftLint's function-body-length cap.
-private struct SixPatternFixture {
-    let fileName: String
-    let body: String
-
-    static let roundTrip = Self(
-        fileName: "CodecTests.swift",
-        body: """
-        import XCTest
-
-        final class CodecTests: XCTestCase {
-            func testRoundTrip() {
-                let original = MyData()
-                let encoded = encode(original)
-                let decoded = decode(encoded)
-                XCTAssertEqual(original, decoded)
-            }
-        }
-        """
-    )
-
-    static let idempotence = Self(
-        fileName: "NormalizerTests.swift",
-        body: """
-        import XCTest
-
-        final class NormalizerTests: XCTestCase {
-            func testNormalizeIsIdempotent() {
-                let s = "hello"
-                let once = normalize(s)
-                let twice = normalize(once)
-                XCTAssertEqual(once, twice)
-            }
-        }
-        """
-    )
-
-    static let commutativity = Self(
-        fileName: "MergerTests.swift",
-        body: """
-        import XCTest
-
-        final class MergerTests: XCTestCase {
-            func testMergeIsCommutative() {
-                let a = [1, 2]
-                let b = [3, 4]
-                XCTAssertEqual(merge(a, b), merge(b, a))
-            }
-        }
-        """
-    )
-
-    static let monotonicity = Self(
-        fileName: "PricingTests.swift",
-        body: """
-        import XCTest
-
-        final class PricingTests: XCTestCase {
-            func testApplyDiscountIsMonotonic() {
-                let a = 5
-                let b = 10
-                XCTAssertLessThan(a, b)
-                XCTAssertLessThanOrEqual(applyDiscount(a), applyDiscount(b))
-            }
-        }
-        """
-    )
-
-    static let countInvariance = Self(
-        fileName: "FilterTests.swift",
-        body: """
-        import XCTest
-
-        final class FilterTests: XCTestCase {
-            func testFilterPreservesCount() {
-                let xs = [1, 2, 3, 4]
-                XCTAssertEqual(filter(xs).count, xs.count)
-            }
-        }
-        """
-    )
-
-    static let reduceEquivalence = Self(
-        fileName: "ReducerTests.swift",
-        body: """
-        import XCTest
-
-        final class ReducerTests: XCTestCase {
-            func testSumReduceIsReversalInvariant() {
-                let items = [1, 2, 3]
-                XCTAssertEqual(items.reduce(0, +), items.reversed().reduce(0, +))
-            }
-        }
-        """
-    )
 }

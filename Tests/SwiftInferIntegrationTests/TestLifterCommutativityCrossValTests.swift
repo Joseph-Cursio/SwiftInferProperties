@@ -5,6 +5,10 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+private struct SilentCommutativityDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M2.4 acceptance — parallel of M1.5's
 /// `TestLifterCrossValidationTests` for the commutativity template.
 /// Constructs a synthetic project with `Sources/Foo/Merger.swift`
@@ -136,8 +140,4 @@ struct TestLifterCommutativityCrossValTests {
             encoding: .utf8
         )
     }
-}
-
-private struct SilentCommutativityDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

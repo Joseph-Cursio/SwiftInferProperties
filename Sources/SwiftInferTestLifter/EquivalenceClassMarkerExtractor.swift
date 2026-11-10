@@ -1,6 +1,144 @@
 import SwiftInferCore
 import SwiftSyntax
 
+// `MarkerPair` was lifted to `SwiftInferCore.MarkerTable.swift` at M13.0
+// so the CLI's `Vocabulary` schema and the TestLifter detectors share one
+// source of truth. The constant `MarkerPair.defaultTable` (still
+// `[Valid/Invalid]`) is preserved at the M13.0 cut and consumed by this
+// extractor unchanged; M13.1's refactor switches the discover loop to
+// consume `MarkerTable.curatedPairs` (the broader v1.x default).
+
+/// Polarity surfaced by `EquivalenceClassMarkerExtractor.extractPredicate`
+/// — the assertion's effective truth value over the predicate call. The
+/// extractor combines the assertion's kind (`xctAssertTrue` /
+/// `xctAssertFalse` / `expect` / `require`) with optional `!` negation in
+/// the argument expression so `XCTAssertTrue(!isValid(x))` and
+/// `XCTAssertFalse(isValid(x))` both classify as `.negative` (the M11.1
+/// detector then matches polarity against the marker bucket — positive
+/// marker expects `.positive`, negative marker expects `.negative`).
+public enum Polarity: Sendable, Equatable {
+    case positive
+    case negative
+}
+
+/// One classified test method ready for partition aggregation. Either
+/// the method matched the marker pair cleanly (becoming a `PartitionSite`),
+/// or it carried a marker but the body failed one of the polarity /
+/// predicate-shape checks (becoming an outlier — the M11.1 detector's
+/// "one outlier kills" rule fires per PRD §3.5 conservative bias).
+///
+/// The outlier's `predicateName` is populated only when the body still
+/// yielded a clean unary predicate call (i.e. polarity-mismatch). Other
+/// outlier kinds — `noTerminalAssertion`, `nonPredicateAssertion`,
+/// `ambiguousMarker` — carry `nil` and are dropped during aggregation
+/// because they don't unambiguously belong to any partition.
+public enum Classification: Sendable, Equatable {
+
+    case matched(predicateName: String, polarity: Polarity)
+
+    case outlier(predicateName: String?, reason: OutlierReason)
+
+    var routingPredicateName: String? {
+        switch self {
+        case .matched(let name, _): return name
+        case .outlier(let name, _): return name
+        }
+    }
+}
+
+/// Why a marker-bearing test method failed to become a `PartitionSite`.
+/// Surfaced for diagnostics; the M11.1 detector treats any outlier as a
+/// partition-kill signal regardless of reason.
+public enum OutlierReason: Sendable, Equatable {
+
+    /// Method's name carried BOTH the positive AND negative marker
+    /// (e.g. `testValidInvalid_*`). Treated as outlier rather than
+    /// double-counted to either bucket.
+    case ambiguousMarker
+
+    /// Slicer found no recognized terminal assertion in the method body.
+    /// The method might be a setup helper or a non-property test.
+    case noTerminalAssertion
+
+    /// Terminal assertion was recognized but didn't yield a unary
+    /// predicate call (e.g. `XCTAssertEqual`, compound boolean, multi-arg
+    /// expression).
+    case nonPredicateAssertion
+
+    /// Marker bucket and assertion polarity disagreed (e.g. a `Valid`-
+    /// marked test that asserts `XCTAssertFalse(predicate(x))`).
+    case polarityMismatch
+}
+
+/// One verified positive- or negative-bucket site inside a
+/// `PartitionCandidate`. Carries the originating method name for
+/// diagnostics; the M11.1 detector uses bucket counts (not site detail)
+/// to apply threshold + homogeneity.
+public struct PartitionSite: Sendable, Equatable {
+
+    public let methodName: String
+
+    public init(methodName: String) {
+        self.methodName = methodName
+    }
+}
+
+/// One aggregated `(predicate, markerPair)` or `(predicate, markerSet)`
+/// partition emitted by the extractor. The M11.1 / M13.2 detectors
+/// consume one of these per call; `outlierSiteCount > 0` means at least
+/// one marker-bearing method failed the polarity / shape / case-literal
+/// checks and the partition will be killed by the conservative-bias
+/// rule (PRD §3.5) regardless of how many clean sites the buckets hold.
+///
+/// **Carrier shape:** `markerPair` and `markerSet` are mutually
+/// exclusive — exactly one is non-nil. M11/M13 two-class candidates
+/// carry `markerPair` and populate `positiveSites` / `negativeSites`;
+/// M13.2's N-class candidates carry `markerSet` and populate
+/// `nClassBucketsByMarker`. The other field group stays empty / nil
+/// for that candidate's variant. The M11.1 / M13.2 detectors guard on
+/// the carrier shape and only fire on candidates carrying their
+/// expected variant.
+public struct PartitionCandidate: Sendable, Equatable {
+
+    public let predicateName: String
+    public let markerPair: MarkerPair?
+    public let markerSet: MarkerSet?
+    public let positiveSites: [PartitionSite]
+    public let negativeSites: [PartitionSite]
+    /// N-class per-marker bucket sites — non-nil only for candidates
+    /// where `markerSet != nil`. Keyed by marker name from the marker
+    /// set (verbatim, not lowercased — the detector consults the
+    /// `MarkerSet.markers` order separately for ordering).
+    public let nClassBucketsByMarker: [String: [PartitionSite]]?
+    public let outlierSiteCount: Int
+    /// M13.3 — `true` when every two-class site uses the canonical
+    /// `XCTAssertTrue(predicate(x))` (positive) /
+    /// `XCTAssertFalse(predicate(x))` (negative) form. The M11.1
+    /// detector reads this to set `EquivalenceClassHint.coversDomain`.
+    /// Defaults to `false`; only meaningful for two-class candidates.
+    public let coversDomainSyntactic: Bool
+
+    public init(
+        predicateName: String,
+        outlierSiteCount: Int,
+        markerPair: MarkerPair? = nil,
+        markerSet: MarkerSet? = nil,
+        positiveSites: [PartitionSite] = [],
+        negativeSites: [PartitionSite] = [],
+        nClassBucketsByMarker: [String: [PartitionSite]]? = nil,
+        coversDomainSyntactic: Bool = false
+    ) {
+        self.predicateName = predicateName
+        self.markerPair = markerPair
+        self.markerSet = markerSet
+        self.positiveSites = positiveSites
+        self.negativeSites = negativeSites
+        self.nClassBucketsByMarker = nClassBucketsByMarker
+        self.outlierSiteCount = outlierSiteCount
+        self.coversDomainSyntactic = coversDomainSyntactic
+    }
+}
+
 /// TestLifter M11.1 — pure-function pass that walks a paired
 /// `[TestMethodSummary]` + `[SlicedTestBody]` corpus, classifies each
 /// method against a curated marker table (per M11 plan OD #1, the v1.1
@@ -216,144 +354,6 @@ public enum EquivalenceClassMarkerExtractor {
         guard let call = expr.as(FunctionCallExprSyntax.self) else { return nil }
         guard call.arguments.count == 1 else { return nil }
         return call.calledExpression.trailingIdentifierName
-    }
-}
-
-// `MarkerPair` was lifted to `SwiftInferCore.MarkerTable.swift` at M13.0
-// so the CLI's `Vocabulary` schema and the TestLifter detectors share one
-// source of truth. The constant `MarkerPair.defaultTable` (still
-// `[Valid/Invalid]`) is preserved at the M13.0 cut and consumed by this
-// extractor unchanged; M13.1's refactor switches the discover loop to
-// consume `MarkerTable.curatedPairs` (the broader v1.x default).
-
-/// Polarity surfaced by `EquivalenceClassMarkerExtractor.extractPredicate`
-/// — the assertion's effective truth value over the predicate call. The
-/// extractor combines the assertion's kind (`xctAssertTrue` /
-/// `xctAssertFalse` / `expect` / `require`) with optional `!` negation in
-/// the argument expression so `XCTAssertTrue(!isValid(x))` and
-/// `XCTAssertFalse(isValid(x))` both classify as `.negative` (the M11.1
-/// detector then matches polarity against the marker bucket — positive
-/// marker expects `.positive`, negative marker expects `.negative`).
-public enum Polarity: Sendable, Equatable {
-    case positive
-    case negative
-}
-
-/// One classified test method ready for partition aggregation. Either
-/// the method matched the marker pair cleanly (becoming a `PartitionSite`),
-/// or it carried a marker but the body failed one of the polarity /
-/// predicate-shape checks (becoming an outlier — the M11.1 detector's
-/// "one outlier kills" rule fires per PRD §3.5 conservative bias).
-///
-/// The outlier's `predicateName` is populated only when the body still
-/// yielded a clean unary predicate call (i.e. polarity-mismatch). Other
-/// outlier kinds — `noTerminalAssertion`, `nonPredicateAssertion`,
-/// `ambiguousMarker` — carry `nil` and are dropped during aggregation
-/// because they don't unambiguously belong to any partition.
-public enum Classification: Sendable, Equatable {
-
-    case matched(predicateName: String, polarity: Polarity)
-
-    case outlier(predicateName: String?, reason: OutlierReason)
-
-    var routingPredicateName: String? {
-        switch self {
-        case .matched(let name, _): return name
-        case .outlier(let name, _): return name
-        }
-    }
-}
-
-/// Why a marker-bearing test method failed to become a `PartitionSite`.
-/// Surfaced for diagnostics; the M11.1 detector treats any outlier as a
-/// partition-kill signal regardless of reason.
-public enum OutlierReason: Sendable, Equatable {
-
-    /// Method's name carried BOTH the positive AND negative marker
-    /// (e.g. `testValidInvalid_*`). Treated as outlier rather than
-    /// double-counted to either bucket.
-    case ambiguousMarker
-
-    /// Slicer found no recognized terminal assertion in the method body.
-    /// The method might be a setup helper or a non-property test.
-    case noTerminalAssertion
-
-    /// Terminal assertion was recognized but didn't yield a unary
-    /// predicate call (e.g. `XCTAssertEqual`, compound boolean, multi-arg
-    /// expression).
-    case nonPredicateAssertion
-
-    /// Marker bucket and assertion polarity disagreed (e.g. a `Valid`-
-    /// marked test that asserts `XCTAssertFalse(predicate(x))`).
-    case polarityMismatch
-}
-
-/// One verified positive- or negative-bucket site inside a
-/// `PartitionCandidate`. Carries the originating method name for
-/// diagnostics; the M11.1 detector uses bucket counts (not site detail)
-/// to apply threshold + homogeneity.
-public struct PartitionSite: Sendable, Equatable {
-
-    public let methodName: String
-
-    public init(methodName: String) {
-        self.methodName = methodName
-    }
-}
-
-/// One aggregated `(predicate, markerPair)` or `(predicate, markerSet)`
-/// partition emitted by the extractor. The M11.1 / M13.2 detectors
-/// consume one of these per call; `outlierSiteCount > 0` means at least
-/// one marker-bearing method failed the polarity / shape / case-literal
-/// checks and the partition will be killed by the conservative-bias
-/// rule (PRD §3.5) regardless of how many clean sites the buckets hold.
-///
-/// **Carrier shape:** `markerPair` and `markerSet` are mutually
-/// exclusive — exactly one is non-nil. M11/M13 two-class candidates
-/// carry `markerPair` and populate `positiveSites` / `negativeSites`;
-/// M13.2's N-class candidates carry `markerSet` and populate
-/// `nClassBucketsByMarker`. The other field group stays empty / nil
-/// for that candidate's variant. The M11.1 / M13.2 detectors guard on
-/// the carrier shape and only fire on candidates carrying their
-/// expected variant.
-public struct PartitionCandidate: Sendable, Equatable {
-
-    public let predicateName: String
-    public let markerPair: MarkerPair?
-    public let markerSet: MarkerSet?
-    public let positiveSites: [PartitionSite]
-    public let negativeSites: [PartitionSite]
-    /// N-class per-marker bucket sites — non-nil only for candidates
-    /// where `markerSet != nil`. Keyed by marker name from the marker
-    /// set (verbatim, not lowercased — the detector consults the
-    /// `MarkerSet.markers` order separately for ordering).
-    public let nClassBucketsByMarker: [String: [PartitionSite]]?
-    public let outlierSiteCount: Int
-    /// M13.3 — `true` when every two-class site uses the canonical
-    /// `XCTAssertTrue(predicate(x))` (positive) /
-    /// `XCTAssertFalse(predicate(x))` (negative) form. The M11.1
-    /// detector reads this to set `EquivalenceClassHint.coversDomain`.
-    /// Defaults to `false`; only meaningful for two-class candidates.
-    public let coversDomainSyntactic: Bool
-
-    public init(
-        predicateName: String,
-        outlierSiteCount: Int,
-        markerPair: MarkerPair? = nil,
-        markerSet: MarkerSet? = nil,
-        positiveSites: [PartitionSite] = [],
-        negativeSites: [PartitionSite] = [],
-        nClassBucketsByMarker: [String: [PartitionSite]]? = nil,
-        coversDomainSyntactic: Bool = false
-    ) {
-        self.predicateName = predicateName
-        self.markerPair = markerPair
-        self.markerSet = markerSet
-        self.positiveSites = positiveSites
-        self.negativeSites = negativeSites
-        self.nClassBucketsByMarker = nClassBucketsByMarker
-        self.outlierSiteCount = outlierSiteCount
-        self.coversDomainSyntactic = coversDomainSyntactic
     }
 }
 

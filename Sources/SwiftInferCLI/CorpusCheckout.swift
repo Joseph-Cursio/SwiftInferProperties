@@ -1,49 +1,5 @@
 import Foundation
 
-/// What is actually on disk for a corpus entry, and whether it matches the pin its baseline
-/// was measured against.
-///
-/// ## Cannot-answer is a state, not a pass
-///
-/// The corpus lives outside this repository, and this project is worked from two machines, so
-/// a clone that is present on one and absent on the other is the ordinary case. The tempting
-/// shape — available *and* at pin, everything else off — would make a missing clone read as a
-/// clean bill of health, which is exactly the failure `DeferralFalsifierTests` reports as
-/// `unavailable` rather than folding into "absent".
-///
-/// So there are three answers and the third is the point: at pin, off pin, or **could not
-/// check**. The renderer states the denominator on every run for the same reason — a summary
-/// that says "all corpora at pin" while having checked one of three is a confident zero.
-enum CorpusCheckout: Equatable, Sendable {
-
-    /// Nothing at the resolved path.
-    case missing(path: String)
-
-    /// Something is there, but it is not a git checkout — so there is no revision to compare
-    /// and none can be invented. `CorpusProvenance`'s standing rule.
-    case untracked(path: String)
-
-    case resolved(path: String, head: String, dirty: Bool)
-
-    /// Read the checkout for an entry. Touches only the local filesystem and `git`; never the
-    /// network, so a stale clone reports as off-pin rather than being silently fetched.
-    static func read(_ entry: CorpusManifest.Entry, repositoryRoot: URL) -> Self {
-        let url = entry.resolvedPath(repositoryRoot: repositoryRoot)
-        var isDirectory: ObjCBool = false
-        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
-        guard exists, isDirectory.boolValue else { return .missing(path: url.path) }
-        guard let head = CorpusProvenance.head(at: url) else { return .untracked(path: url.path) }
-        return .resolved(path: url.path, head: head.revision, dirty: head.dirty)
-    }
-
-    var path: String {
-        switch self {
-        case let .missing(path), let .untracked(path), let .resolved(path, _, _):
-            return path
-        }
-    }
-}
-
 /// Whether a corpus checkout stands where its baseline was measured.
 enum CorpusPin: Equatable, Sendable {
 
@@ -127,5 +83,49 @@ struct CorpusStatus: Sendable {
 
     static func resolveAll(_ manifest: CorpusManifest, repositoryRoot: URL) -> [Self] {
         manifest.corpora.map { resolve($0, repositoryRoot: repositoryRoot) }
+    }
+}
+
+/// What is actually on disk for a corpus entry, and whether it matches the pin its baseline
+/// was measured against.
+///
+/// ## Cannot-answer is a state, not a pass
+///
+/// The corpus lives outside this repository, and this project is worked from two machines, so
+/// a clone that is present on one and absent on the other is the ordinary case. The tempting
+/// shape — available *and* at pin, everything else off — would make a missing clone read as a
+/// clean bill of health, which is exactly the failure `DeferralFalsifierTests` reports as
+/// `unavailable` rather than folding into "absent".
+///
+/// So there are three answers and the third is the point: at pin, off pin, or **could not
+/// check**. The renderer states the denominator on every run for the same reason — a summary
+/// that says "all corpora at pin" while having checked one of three is a confident zero.
+enum CorpusCheckout: Equatable, Sendable {
+
+    /// Nothing at the resolved path.
+    case missing(path: String)
+
+    /// Something is there, but it is not a git checkout — so there is no revision to compare
+    /// and none can be invented. `CorpusProvenance`'s standing rule.
+    case untracked(path: String)
+
+    case resolved(path: String, head: String, dirty: Bool)
+
+    /// Read the checkout for an entry. Touches only the local filesystem and `git`; never the
+    /// network, so a stale clone reports as off-pin rather than being silently fetched.
+    static func read(_ entry: CorpusManifest.Entry, repositoryRoot: URL) -> Self {
+        let url = entry.resolvedPath(repositoryRoot: repositoryRoot)
+        var isDirectory: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+        guard exists, isDirectory.boolValue else { return .missing(path: url.path) }
+        guard let head = CorpusProvenance.head(at: url) else { return .untracked(path: url.path) }
+        return .resolved(path: url.path, head: head.revision, dirty: head.dirty)
+    }
+
+    var path: String {
+        switch self {
+        case let .missing(path), let .untracked(path), let .resolved(path, _, _):
+            return path
+        }
     }
 }

@@ -1,5 +1,24 @@
 import Foundation
 
+/// V1.C — errors thrown by `ReducerPin.parse`. Each carries the raw
+/// input so the CLI can echo it back in the error message.
+public enum ReducerPinError: Error, CustomStringConvertible, Equatable {
+    case emptyPin
+    case malformed(raw: String)
+
+    public var description: String {
+        switch self {
+        case .emptyPin:
+            return "--reducer pin is empty; expected `<funcName>`, `<typeName>.<funcName>`, "
+                + "or `<module>.<typeName>.<funcName>`"
+
+        case let .malformed(raw):
+            return "--reducer pin '\(raw)' is malformed; expected `<funcName>`, "
+                + "`<typeName>.<funcName>`, or `<module>.<typeName>.<funcName>`"
+        }
+    }
+}
+
 /// V1.C — parsed `--reducer <module>.<typeName>.<funcName>` pin
 /// used by `swift-infer discover-reducers` (to filter the candidate
 /// list to one entry) and by downstream M2+ pipelines (to know which
@@ -108,24 +127,5 @@ public struct ReducerPin: Sendable, Equatable {
             return false
         }
         return true
-    }
-}
-
-/// V1.C — errors thrown by `ReducerPin.parse`. Each carries the raw
-/// input so the CLI can echo it back in the error message.
-public enum ReducerPinError: Error, CustomStringConvertible, Equatable {
-    case emptyPin
-    case malformed(raw: String)
-
-    public var description: String {
-        switch self {
-        case .emptyPin:
-            return "--reducer pin is empty; expected `<funcName>`, `<typeName>.<funcName>`, "
-                + "or `<module>.<typeName>.<funcName>`"
-
-        case let .malformed(raw):
-            return "--reducer pin '\(raw)' is malformed; expected `<funcName>`, "
-                + "`<typeName>.<funcName>`, or `<module>.<typeName>.<funcName>`"
-        }
     }
 }

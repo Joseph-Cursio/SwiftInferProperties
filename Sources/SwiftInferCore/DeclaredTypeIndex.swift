@@ -27,6 +27,23 @@ public enum ActionTypeKind: String, Sendable, Equatable, Codable, CaseIterable {
     case unresolved
 }
 
+/// One file's walk: its candidates, the type stack each was found under, and
+/// the types it declared. Kept instead of the visitor so a directory scan holds
+/// no syntax trees while it waits to resolve against the whole directory.
+struct ReducerFileScan {
+    let candidates: [ReducerCandidate]
+    let scopes: [[String]]
+    let declaredTypes: DeclaredTypeIndex
+
+    func resolvingActionTypes(in universe: DeclaredTypeIndex) -> [ReducerCandidate] {
+        zip(candidates, scopes).map { candidate, scope in
+            var resolved = candidate
+            resolved.actionTypeKind = universe.resolve(candidate.actionTypeName, scope: scope)
+            return resolved
+        }
+    }
+}
+
 /// Every nominal type and `typealias` one discovery walk declared, keyed by its
 /// qualified path (`Outer.Inner.Action`). Resolves a spelled type name the way
 /// Swift does: innermost enclosing scope first, then outward — never by leaf
@@ -125,23 +142,6 @@ struct DeclaredTypeIndex {
     private static func isIdentifierPath(_ name: String) -> Bool {
         name.split(separator: ".", omittingEmptySubsequences: false).allSatisfy { component in
             !component.isEmpty && component.allSatisfy { $0.isLetter || $0.isNumber || $0 == "_" }
-        }
-    }
-}
-
-/// One file's walk: its candidates, the type stack each was found under, and
-/// the types it declared. Kept instead of the visitor so a directory scan holds
-/// no syntax trees while it waits to resolve against the whole directory.
-struct ReducerFileScan {
-    let candidates: [ReducerCandidate]
-    let scopes: [[String]]
-    let declaredTypes: DeclaredTypeIndex
-
-    func resolvingActionTypes(in universe: DeclaredTypeIndex) -> [ReducerCandidate] {
-        zip(candidates, scopes).map { candidate, scope in
-            var resolved = candidate
-            resolved.actionTypeKind = universe.resolve(candidate.actionTypeName, scope: scope)
-            return resolved
         }
     }
 }

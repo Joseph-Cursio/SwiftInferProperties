@@ -42,6 +42,85 @@ public enum PostAcceptanceOutcomeKind: String, Sendable, Equatable, Codable, Cas
     case error
 }
 
+/// V1.72.B — top-level `.swiftinfer/post-acceptance-outcomes.json`
+/// shape. Wraps the outcome list with a schema version so future
+/// changes can be detected and migrated without silent data loss.
+///
+/// `upserting` is the canonical mutator: a second accept-check run on
+/// the same identity replaces the first — the latest run is the
+/// outcome currently in effect (the same posture as `VerifyEvidence`
+/// and `Decisions`). The §17.2 metric renders the *current* state of
+/// each accepted suggestion; historical re-runs are out of scope for
+/// v1.72.
+public struct PostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
+
+    /// Bumped when the on-disk schema changes incompatibly. Ships at
+    /// version `1` (v1.72). Loaders that see a higher number warn and
+    /// load what they can — same posture as `Decisions` and
+    /// `VerifyEvidenceLog`.
+    public static let currentSchemaVersion = 1
+
+    public let schemaVersion: Int
+    public let records: [PostAcceptanceOutcome]
+
+    public init(
+        schemaVersion: Int = Self.currentSchemaVersion,
+        records: [PostAcceptanceOutcome] = []
+    ) {
+        self.schemaVersion = schemaVersion
+        self.records = records
+    }
+
+    /// The empty value — schema version present, no records yet.
+    /// `PostAcceptanceOutcomesStore.load` returns this when the file
+    /// is absent.
+    public static let empty = Self()
+
+    /// Look up outcome by suggestion-identity hash. Used by the
+    /// §17.2 metric's render-time join.
+    public func record(for identityHash: String) -> PostAcceptanceOutcome? {
+        records.first { $0.identityHash == identityHash }
+    }
+
+    /// Append-or-overwrite by identity. Returns a new log with the
+    /// prior record for the same identity removed (if any) and the
+    /// new record appended at the end. The trailing-append shape
+    /// keeps re-saved JSON stable for previously-recorded outcomes —
+    /// mirrors `VerifyEvidenceLog.upserting`.
+    public func upserting(_ record: PostAcceptanceOutcome) -> Self {
+        let withoutPrior = records.filter { $0.identityHash != record.identityHash }
+        return Self(
+            schemaVersion: schemaVersion,
+            records: withoutPrior + [record]
+        )
+    }
+
+    /// Fold another `PostAcceptanceOutcomeLog` into this one. Used by
+    /// `swift-infer metrics --decisions` to aggregate the
+    /// `.swiftinfer/post-acceptance-outcomes.json` files across
+    /// multiple benchmark corpora into one in-memory log for the
+    /// §17.2 section's denominator. Identity-keyed; on collision the
+    /// record with the later `checkedAt` wins (mirrors
+    /// `upserting(_:)`'s "latest run in effect" posture), and an EQUAL
+    /// `checkedAt` is broken by canonical encoding — see
+    /// `IdentityKeyedFold`. The result is sorted by `checkedAt` then
+    /// `identityHash`, so the aggregate is order-deterministic in its
+    /// rows AND in their contents. **It used to guarantee only the
+    /// former**, which is what made this the §17.2 regression count's
+    /// bug rather than a cosmetic one.
+    public func merge(_ other: Self) -> Self {
+        Self(
+            schemaVersion: max(schemaVersion, other.schemaVersion),
+            records: IdentityKeyedFold.merged(
+                primary: records,
+                secondary: other.records,
+                identity: \.identityHash,
+                timestamp: \.checkedAt
+            )
+        )
+    }
+}
+
 /// V1.72.B — one persisted post-acceptance outcome, keyed by suggestion
 /// identity. Mirrors `VerifyEvidence`'s shape (single record + top-level
 /// log + upsert by hash) but with semantically distinct fields: the
@@ -124,84 +203,5 @@ public struct PostAcceptanceOutcome: Sendable, Equatable, Codable {
         self.originalAcceptedAt = originalAcceptedAt
         self.checkedAt = checkedAt
         self.swiftInferVersion = swiftInferVersion
-    }
-}
-
-/// V1.72.B — top-level `.swiftinfer/post-acceptance-outcomes.json`
-/// shape. Wraps the outcome list with a schema version so future
-/// changes can be detected and migrated without silent data loss.
-///
-/// `upserting` is the canonical mutator: a second accept-check run on
-/// the same identity replaces the first — the latest run is the
-/// outcome currently in effect (the same posture as `VerifyEvidence`
-/// and `Decisions`). The §17.2 metric renders the *current* state of
-/// each accepted suggestion; historical re-runs are out of scope for
-/// v1.72.
-public struct PostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
-
-    /// Bumped when the on-disk schema changes incompatibly. Ships at
-    /// version `1` (v1.72). Loaders that see a higher number warn and
-    /// load what they can — same posture as `Decisions` and
-    /// `VerifyEvidenceLog`.
-    public static let currentSchemaVersion = 1
-
-    public let schemaVersion: Int
-    public let records: [PostAcceptanceOutcome]
-
-    public init(
-        schemaVersion: Int = Self.currentSchemaVersion,
-        records: [PostAcceptanceOutcome] = []
-    ) {
-        self.schemaVersion = schemaVersion
-        self.records = records
-    }
-
-    /// The empty value — schema version present, no records yet.
-    /// `PostAcceptanceOutcomesStore.load` returns this when the file
-    /// is absent.
-    public static let empty = Self()
-
-    /// Look up outcome by suggestion-identity hash. Used by the
-    /// §17.2 metric's render-time join.
-    public func record(for identityHash: String) -> PostAcceptanceOutcome? {
-        records.first { $0.identityHash == identityHash }
-    }
-
-    /// Append-or-overwrite by identity. Returns a new log with the
-    /// prior record for the same identity removed (if any) and the
-    /// new record appended at the end. The trailing-append shape
-    /// keeps re-saved JSON stable for previously-recorded outcomes —
-    /// mirrors `VerifyEvidenceLog.upserting`.
-    public func upserting(_ record: PostAcceptanceOutcome) -> Self {
-        let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return Self(
-            schemaVersion: schemaVersion,
-            records: withoutPrior + [record]
-        )
-    }
-
-    /// Fold another `PostAcceptanceOutcomeLog` into this one. Used by
-    /// `swift-infer metrics --decisions` to aggregate the
-    /// `.swiftinfer/post-acceptance-outcomes.json` files across
-    /// multiple benchmark corpora into one in-memory log for the
-    /// §17.2 section's denominator. Identity-keyed; on collision the
-    /// record with the later `checkedAt` wins (mirrors
-    /// `upserting(_:)`'s "latest run in effect" posture), and an EQUAL
-    /// `checkedAt` is broken by canonical encoding — see
-    /// `IdentityKeyedFold`. The result is sorted by `checkedAt` then
-    /// `identityHash`, so the aggregate is order-deterministic in its
-    /// rows AND in their contents. **It used to guarantee only the
-    /// former**, which is what made this the §17.2 regression count's
-    /// bug rather than a cosmetic one.
-    public func merge(_ other: Self) -> Self {
-        Self(
-            schemaVersion: max(schemaVersion, other.schemaVersion),
-            records: IdentityKeyedFold.merged(
-                primary: records,
-                secondary: other.records,
-                identity: \.identityHash,
-                timestamp: \.checkedAt
-            )
-        )
     }
 }

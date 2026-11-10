@@ -6,6 +6,16 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// The first `MemberBlockSyntax` in a tree — enough for these single-type fixtures.
+final class FirstMemberBlockFinder: SyntaxVisitor {
+    private(set) var found: MemberBlockSyntax?
+
+    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+        if found == nil { found = node.memberBlock }
+        return .skipChildren
+    }
+}
+
 /// **An initializer a test cannot call must never reach the strategist.**
 ///
 /// Measured on `swift-http-types` @ `5b99e00` (`docs/measurements/criterion-a-unmet-subject.md`):
@@ -90,15 +100,5 @@ struct InaccessibleInitializerTests {
         }
         """
         #expect(Self.initializers(in: source).count == 1)
-    }
-}
-
-/// The first `MemberBlockSyntax` in a tree — enough for these single-type fixtures.
-final class FirstMemberBlockFinder: SyntaxVisitor {
-    private(set) var found: MemberBlockSyntax?
-
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        if found == nil { found = node.memberBlock }
-        return .skipChildren
     }
 }

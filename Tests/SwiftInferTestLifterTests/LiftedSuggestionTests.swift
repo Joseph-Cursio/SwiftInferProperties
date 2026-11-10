@@ -3,6 +3,53 @@ import SwiftInferTemplates
 @testable import SwiftInferTestLifter
 import Testing
 
+@Suite("Suggestion.crossValidationKey — name extraction (M1.4)")
+struct SuggestionCrossValidationKeyTests {
+
+    @Test("crossValidationKey strips the (labels:) suffix from displayName")
+    func stripsLabelSuffix() {
+        let suggestion = Suggestion(
+            templateName: "round-trip",
+            evidence: [
+                Evidence(
+                    displayName: "encode(_:)",
+                    signature: "(MyData) -> Data",
+                    location: SourceLocation(file: "X.swift", line: 1, column: 1)
+                ),
+                Evidence(
+                    displayName: "decode(_:)",
+                    signature: "(Data) -> MyData",
+                    location: SourceLocation(file: "X.swift", line: 5, column: 1)
+                ),
+            ],
+            score: Score(signals: []),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: "round-trip|x|y")
+        )
+        #expect(suggestion.crossValidationKey.calleeNames == ["decode", "encode"])
+    }
+
+    @Test("displayName without parens is preserved")
+    func preservesParenlessDisplayName() {
+        let suggestion = Suggestion(
+            templateName: "idempotence",
+            evidence: [
+                Evidence(
+                    displayName: "normalize",
+                    signature: "(String) -> String",
+                    location: SourceLocation(file: "X.swift", line: 1, column: 1)
+                ),
+            ],
+            score: Score(signals: []),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: "idempotence|x")
+        )
+        #expect(suggestion.crossValidationKey.calleeNames == ["normalize"])
+    }
+}
+
 @Suite("LiftedSuggestion + cross-validation-key parity (M1.4)")
 struct LiftedSuggestionTests {
 
@@ -170,52 +217,5 @@ struct LiftedSuggestionTests {
             assertionLocation: SourceLocation(file: "X.swift", line: 1, column: 1)
         )).crossValidationKey
         #expect(mineKey != otherKey)
-    }
-}
-
-@Suite("Suggestion.crossValidationKey — name extraction (M1.4)")
-struct SuggestionCrossValidationKeyTests {
-
-    @Test("crossValidationKey strips the (labels:) suffix from displayName")
-    func stripsLabelSuffix() {
-        let suggestion = Suggestion(
-            templateName: "round-trip",
-            evidence: [
-                Evidence(
-                    displayName: "encode(_:)",
-                    signature: "(MyData) -> Data",
-                    location: SourceLocation(file: "X.swift", line: 1, column: 1)
-                ),
-                Evidence(
-                    displayName: "decode(_:)",
-                    signature: "(Data) -> MyData",
-                    location: SourceLocation(file: "X.swift", line: 5, column: 1)
-                ),
-            ],
-            score: Score(signals: []),
-            generator: .m1Placeholder,
-            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
-            identity: SuggestionIdentity(canonicalInput: "round-trip|x|y")
-        )
-        #expect(suggestion.crossValidationKey.calleeNames == ["decode", "encode"])
-    }
-
-    @Test("displayName without parens is preserved")
-    func preservesParenlessDisplayName() {
-        let suggestion = Suggestion(
-            templateName: "idempotence",
-            evidence: [
-                Evidence(
-                    displayName: "normalize",
-                    signature: "(String) -> String",
-                    location: SourceLocation(file: "X.swift", line: 1, column: 1)
-                ),
-            ],
-            score: Score(signals: []),
-            generator: .m1Placeholder,
-            explainability: ExplainabilityBlock(whySuggested: [], whyMightBeWrong: []),
-            identity: SuggestionIdentity(canonicalInput: "idempotence|x")
-        )
-        #expect(suggestion.crossValidationKey.calleeNames == ["normalize"])
     }
 }

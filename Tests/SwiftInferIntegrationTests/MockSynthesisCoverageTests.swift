@@ -5,6 +5,12 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+// MARK: - Test doubles
+
+private struct SilentCovDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// PRD §13 numerical acceptance for TestLifter M4.3 — verbatim:
 ///
 /// > Mock-based generator synthesis produces a valid `Gen<T>` for at
@@ -128,10 +134,4 @@ struct MockSynthesisCoverageTests {
             )
         }
     }
-}
-
-// MARK: - Test doubles
-
-private struct SilentCovDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

@@ -2,6 +2,50 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
+@Suite("IdentityOperatorAlgebra — curated set membership")
+struct IdentityOperatorAlgebraTests {
+
+    @Test("Additive set contains +, add, plus, addingProduct, _relaxedAdd")
+    func additiveSetMembers() {
+        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("+"))
+        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("add"))
+        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("plus"))
+        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("addingProduct"))
+        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("_relaxedAdd"))
+    }
+
+    @Test("Additive set excludes - (only right-identity, not two-sided)")
+    func additiveSetExcludesMinus() {
+        #expect(!IdentityOperatorAlgebra.additiveOperatorNames.contains("-"))
+    }
+
+    @Test("Multiplicative set excludes / (only right-identity, not two-sided)")
+    func multiplicativeSetExcludesDivide() {
+        #expect(!IdentityOperatorAlgebra.multiplicativeOperatorNames.contains("/"))
+    }
+
+    @Test("isIncompatibleFamily: (zero, rescaledDivide) is incompatible")
+    func zeroRescaledDivideIncompatible() {
+        #expect(IdentityOperatorAlgebra.isIncompatibleFamily(
+            identityName: "zero", opName: "rescaledDivide"
+        ))
+    }
+
+    @Test("isIncompatibleFamily: (zero, +) is compatible")
+    func zeroPlusCompatible() {
+        #expect(!IdentityOperatorAlgebra.isIncompatibleFamily(
+            identityName: "zero", opName: "+"
+        ))
+    }
+
+    @Test("isIncompatibleFamily: (empty, anything) returns false (not in gate scope)")
+    func emptyAlwaysCompatible() {
+        #expect(!IdentityOperatorAlgebra.isIncompatibleFamily(
+            identityName: "empty", opName: "rescaledDivide"
+        ))
+    }
+}
+
 /// V1.29.B — algebraic-family-mismatch veto on IdentityElementTemplate.
 /// Closes cycle-25 finding 2: `rescaledDivide(_:_:) × Complex.zero` was
 /// a 6-cycle stable reject (cycles 17 + 20 + 23 + 25) because the `+40`
@@ -133,49 +177,5 @@ struct IdentityElementAlgebraicFamilyTests {
         )
         let suggestion = try #require(IdentityElementTemplate.suggest(for: pair))
         #expect(suggestion.score.tier == .likely)
-    }
-}
-
-@Suite("IdentityOperatorAlgebra — curated set membership")
-struct IdentityOperatorAlgebraTests {
-
-    @Test("Additive set contains +, add, plus, addingProduct, _relaxedAdd")
-    func additiveSetMembers() {
-        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("+"))
-        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("add"))
-        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("plus"))
-        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("addingProduct"))
-        #expect(IdentityOperatorAlgebra.additiveOperatorNames.contains("_relaxedAdd"))
-    }
-
-    @Test("Additive set excludes - (only right-identity, not two-sided)")
-    func additiveSetExcludesMinus() {
-        #expect(!IdentityOperatorAlgebra.additiveOperatorNames.contains("-"))
-    }
-
-    @Test("Multiplicative set excludes / (only right-identity, not two-sided)")
-    func multiplicativeSetExcludesDivide() {
-        #expect(!IdentityOperatorAlgebra.multiplicativeOperatorNames.contains("/"))
-    }
-
-    @Test("isIncompatibleFamily: (zero, rescaledDivide) is incompatible")
-    func zeroRescaledDivideIncompatible() {
-        #expect(IdentityOperatorAlgebra.isIncompatibleFamily(
-            identityName: "zero", opName: "rescaledDivide"
-        ))
-    }
-
-    @Test("isIncompatibleFamily: (zero, +) is compatible")
-    func zeroPlusCompatible() {
-        #expect(!IdentityOperatorAlgebra.isIncompatibleFamily(
-            identityName: "zero", opName: "+"
-        ))
-    }
-
-    @Test("isIncompatibleFamily: (empty, anything) returns false (not in gate scope)")
-    func emptyAlwaysCompatible() {
-        #expect(!IdentityOperatorAlgebra.isIncompatibleFamily(
-            identityName: "empty", opName: "rescaledDivide"
-        ))
     }
 }

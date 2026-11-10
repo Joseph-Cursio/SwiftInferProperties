@@ -2,6 +2,64 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
+/// Errors surfaced by the `verify` subcommand. Hoisted to file scope
+/// (rather than nested under `SwiftInferCommand.Verify`) to satisfy the
+/// `nesting` lint rule's 1-level cap — `Verify` is already nested inside
+/// `SwiftInferCommand` via the extension, so a third level here would
+/// violate the rule. Public so tests can pattern-match on the case
+/// rather than the rendered text.
+///
+/// **On version numbers in these messages: don't.** Three of these refusals used to read "not
+/// supported in v1.42 … wider support lands in v1.44", and a fourth case, `.harnessNotYetWired`,
+/// told the reader to "try again after the next v1.42 deliverable". Pointing the tool at
+/// SwiftProjectLint on 2026-08-11 surfaced all four from a **1.149.0** binary: the reader is
+/// refused, and then told to wait for a release that shipped a hundred versions ago without
+/// delivering the thing. A refusal is the one message a user is guaranteed to read closely, so it
+/// must name the actual gate — what would have to be true — rather than a date.
+///
+/// `.harnessNotYetWired` was deleted in the same pass. Nothing had raised it since V1.42.C.6; its
+/// only reference was a test asserting the description was "still load-bearing", which is the
+/// `make dead-code` **test-only** verdict — a passing suite keeping dead code looking maintained.
+///
+/// `.missingPairedFunction` below is the shape to copy: it dates its claim ("before 2026-08-08")
+/// and names the remedy, so it stays true or becomes visibly false.
+public enum VerifyError: Error, CustomStringConvertible {
+    case suggestionNotFound(prefix: String, closest: [String])
+    case ambiguousPrefix(prefix: String, matches: [String])
+    case indexMissing(expectedPath: URL)
+    case indexEmpty(path: URL?)
+    case unsupportedCarrier(carrier: String, expected: [String])
+    case buildFailed(exitCode: Int32, stderr: String)
+    case runnerCrashed(reason: String)
+    case unsupportedTemplate(template: String, expected: [String])
+    case unsupportedPair(forward: String, supported: [String])
+    /// A two-function law whose entry carries only its primary half.
+    ///
+    /// Distinct from `.unsupportedPair`, which means *this function is not in
+    /// the curated table*. `differential-equivalence` has no curated table by
+    /// design — it reconstructs its pair from `secondaryFunctionName`, which the
+    /// index populated for round-trip only until 2026-08-08. So the failure is
+    /// a **stale entry**, and the remedy is re-indexing rather than expanding a
+    /// list; saying "not in the curated pair list" would send the reader to fix
+    /// the wrong thing.
+    case missingPairedFunction(template: String, primary: String)
+    /// Monotonicity pre-flight: the property `a ≤ b ⟹ f(a) ≤ f(b)` orders the
+    /// input domain with `min`/`max`, so a non-`Comparable` domain can't be
+    /// verified (the ordering is undefined). Thrown at emit so the doomed
+    /// `swift build` is skipped; maps to architectural-coverage-pending.
+    case monotonicityDomainNotComparable(domain: String)
+
+    /// The template's law compares values with `==` and the carrier is not `Equatable`.
+    /// See `UnverifiableCause.carrierNotEquatable` for why this is neither an
+    /// `unsupportedTemplate` nor an `unsupportedCarrier`.
+    case carrierNotEquatable(carrier: String, template: String)
+
+    /// V1.50.B — argument-validation error surfaced when the user
+    /// passes a forbidden combination (e.g., `--suggestion` and
+    /// `--all-from-index` together, or neither).
+    case invalidArguments(reason: String)
+}
+
 /// V1.42.B — `swift-infer verify` subcommand surface declaration.
 ///
 /// **v1.42 status: argument surface only.** The actual compile-and-run
@@ -261,62 +319,4 @@ public extension SwiftInferCommand {
             print(run.rendered)
         }
     }
-}
-
-/// Errors surfaced by the `verify` subcommand. Hoisted to file scope
-/// (rather than nested under `SwiftInferCommand.Verify`) to satisfy the
-/// `nesting` lint rule's 1-level cap — `Verify` is already nested inside
-/// `SwiftInferCommand` via the extension, so a third level here would
-/// violate the rule. Public so tests can pattern-match on the case
-/// rather than the rendered text.
-///
-/// **On version numbers in these messages: don't.** Three of these refusals used to read "not
-/// supported in v1.42 … wider support lands in v1.44", and a fourth case, `.harnessNotYetWired`,
-/// told the reader to "try again after the next v1.42 deliverable". Pointing the tool at
-/// SwiftProjectLint on 2026-08-11 surfaced all four from a **1.149.0** binary: the reader is
-/// refused, and then told to wait for a release that shipped a hundred versions ago without
-/// delivering the thing. A refusal is the one message a user is guaranteed to read closely, so it
-/// must name the actual gate — what would have to be true — rather than a date.
-///
-/// `.harnessNotYetWired` was deleted in the same pass. Nothing had raised it since V1.42.C.6; its
-/// only reference was a test asserting the description was "still load-bearing", which is the
-/// `make dead-code` **test-only** verdict — a passing suite keeping dead code looking maintained.
-///
-/// `.missingPairedFunction` below is the shape to copy: it dates its claim ("before 2026-08-08")
-/// and names the remedy, so it stays true or becomes visibly false.
-public enum VerifyError: Error, CustomStringConvertible {
-    case suggestionNotFound(prefix: String, closest: [String])
-    case ambiguousPrefix(prefix: String, matches: [String])
-    case indexMissing(expectedPath: URL)
-    case indexEmpty(path: URL?)
-    case unsupportedCarrier(carrier: String, expected: [String])
-    case buildFailed(exitCode: Int32, stderr: String)
-    case runnerCrashed(reason: String)
-    case unsupportedTemplate(template: String, expected: [String])
-    case unsupportedPair(forward: String, supported: [String])
-    /// A two-function law whose entry carries only its primary half.
-    ///
-    /// Distinct from `.unsupportedPair`, which means *this function is not in
-    /// the curated table*. `differential-equivalence` has no curated table by
-    /// design — it reconstructs its pair from `secondaryFunctionName`, which the
-    /// index populated for round-trip only until 2026-08-08. So the failure is
-    /// a **stale entry**, and the remedy is re-indexing rather than expanding a
-    /// list; saying "not in the curated pair list" would send the reader to fix
-    /// the wrong thing.
-    case missingPairedFunction(template: String, primary: String)
-    /// Monotonicity pre-flight: the property `a ≤ b ⟹ f(a) ≤ f(b)` orders the
-    /// input domain with `min`/`max`, so a non-`Comparable` domain can't be
-    /// verified (the ordering is undefined). Thrown at emit so the doomed
-    /// `swift build` is skipped; maps to architectural-coverage-pending.
-    case monotonicityDomainNotComparable(domain: String)
-
-    /// The template's law compares values with `==` and the carrier is not `Equatable`.
-    /// See `UnverifiableCause.carrierNotEquatable` for why this is neither an
-    /// `unsupportedTemplate` nor an `unsupportedCarrier`.
-    case carrierNotEquatable(carrier: String, template: String)
-
-    /// V1.50.B — argument-validation error surfaced when the user
-    /// passes a forbidden combination (e.g., `--suggestion` and
-    /// `--all-from-index` together, or neither).
-    case invalidArguments(reason: String)
 }

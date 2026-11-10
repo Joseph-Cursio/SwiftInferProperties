@@ -5,6 +5,10 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+private struct SilentCountInvarianceDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M5.6 acceptance — parallel of M2.4's idempotence
 /// cross-validation test for the count-invariance template. Constructs
 /// a synthetic project with `Sources/Foo/Filter.swift` (defining
@@ -109,8 +113,4 @@ struct TestLifterCountInvarianceCrossValTests {
             encoding: .utf8
         )
     }
-}
-
-private struct SilentCountInvarianceDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

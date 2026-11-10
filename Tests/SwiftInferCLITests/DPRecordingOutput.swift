@@ -1,6 +1,21 @@
 import Foundation
 @testable import SwiftInferCLI
 
+/// In-memory diagnostic sink used by the M2.1 vocabulary tests to
+/// assert against stderr-bound warnings without writing to the real
+/// stderr.
+final class DPRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    var lines: [String] = []
+
+    /// Every diagnostic as one string, for assertions that care what was said rather than how
+    /// many times it was said.
+    var joined: String { lines.joined(separator: "\n") }
+
+    func writeDiagnostic(_ text: String) {
+        lines.append(text)
+    }
+}
+
 func makeDPFixtureDirectory(name: String) throws -> URL {
     let base = FileManager.default.temporaryDirectory
         .appendingPathComponent("SwiftInferCLITests-\(name)-\(UUID().uuidString)")
@@ -66,20 +81,5 @@ final class DPRecordingOutput: DiscoverOutput, @unchecked Sendable {
             return text
         }
         return String(text[breakRange.upperBound...])
-    }
-}
-
-/// In-memory diagnostic sink used by the M2.1 vocabulary tests to
-/// assert against stderr-bound warnings without writing to the real
-/// stderr.
-final class DPRecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    var lines: [String] = []
-
-    /// Every diagnostic as one string, for assertions that care what was said rather than how
-    /// many times it was said.
-    var joined: String { lines.joined(separator: "\n") }
-
-    func writeDiagnostic(_ text: String) {
-        lines.append(text)
     }
 }

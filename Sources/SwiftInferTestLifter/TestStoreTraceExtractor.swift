@@ -2,117 +2,6 @@ import Foundation
 import SwiftInferCore
 import SwiftSyntax
 
-/// TestStore Trace Mining, Slice 1 — extracts the ordered action
-/// sequences a repo's TCA `TestStore` tests already contain, so the
-/// interaction verifier can check developer-authored orderings before
-/// (never instead of) random generation. See
-/// `docs/archive/teststore-trace-mining-build-plan.md`.
-///
-/// Consumes `TestMethodSummary.body` — the same input the `Slicer` takes,
-/// so no new parsing infrastructure. Recognizes, per test body:
-///   - `TestStore(initialState:) { Feature() }` (or a `reducer:` arg) →
-///     the reducer type + verbatim initial-state expression;
-///   - `store.send(.case(args))` / `store.receive(.case(args))` on a
-///     bound `TestStore` variable → one `MinedAction` each.
-///
-/// **Argument capture is verbatim** — a payload-bearing action's args
-/// reference test-body-local bindings, so they're recorded but not
-/// reconstructible standalone (Slice 2 emits only the payload-free
-/// subset; §3 of the build plan).
-///
-/// **Hard contract (PRD §15):** never throws from the per-summary path.
-/// A body with no `TestStore` yields `[]`.
-public enum TestStoreTraceExtractor {
-
-    /// Mine every `TestStore` trace from one parsed test method.
-    public static func extract(from summary: TestMethodSummary) -> [MinedActionTrace] {
-        let visitor = TestStoreTraceVisitor(viewMode: .sourceAccurate)
-        visitor.walk(summary.body)
-        return assembleTraces(
-            constructions: visitor.constructions,
-            actions: visitor.actions,
-            location: summary.location
-        )
-    }
-
-    /// Mine traces from every test method under `directory`. Reuses
-    /// `TestSuiteParser`'s deterministic sorted-path scan.
-    public static func extract(fromTestsDirectory directory: URL) throws -> [MinedActionTrace] {
-        let summaries = try TestSuiteParser.scanTests(directory: directory)
-        return summaries.flatMap { extract(from: $0) }
-    }
-
-    // MARK: - Trace assembly
-
-    /// Group the flat construction / action event lists (each carrying a
-    /// source-order index) into one trace per `TestStore`.
-    private static func assembleTraces(
-        constructions: [RawConstruction],
-        actions: [RawAction],
-        location: SwiftInferCore.SourceLocation
-    ) -> [MinedActionTrace] {
-        // Fallback: sends on the conventional bare `store` name with no
-        // resolved construction (e.g. built in a helper). Restricted to
-        // `store` so an unrelated `foo.send(x)` is never mined.
-        guard !constructions.isEmpty else {
-            let storeActions = actions.filter { $0.receiverName == "store" }
-            guard !storeActions.isEmpty else {
-                return []
-            }
-            let fallback = makeTrace(
-                reducerTypeName: nil,
-                initialStateExpr: nil,
-                actions: storeActions,
-                location: location
-            )
-            return [fallback]
-        }
-
-        var traces: [MinedActionTrace] = []
-        for (index, construction) in constructions.enumerated() {
-            guard let varName = construction.varName else {
-                continue  // unbound TestStore can't be referenced by a named send
-            }
-            // Actions for this var after its construction, up to the next
-            // re-construction of the same var (rare) — keeps separate
-            // stores separate.
-            let nextSameVarOrder = constructions[(index + 1)...]
-                .first { $0.varName == varName }?.order ?? Int.max
-            let mine = actions.filter {
-                $0.receiverName == varName
-                    && $0.order > construction.order
-                    && $0.order < nextSameVarOrder
-            }
-            guard !mine.isEmpty else {
-                continue  // an actionless store isn't useful for action mining
-            }
-            traces.append(makeTrace(
-                reducerTypeName: construction.reducerTypeName,
-                initialStateExpr: construction.initialStateExpr,
-                actions: mine,
-                location: location
-            ))
-        }
-        return traces
-    }
-
-    private static func makeTrace(
-        reducerTypeName: String?,
-        initialStateExpr: String?,
-        actions: [RawAction],
-        location: SwiftInferCore.SourceLocation
-    ) -> MinedActionTrace {
-        // `actions` arrive in source order already (visitor is pre-order).
-        MinedActionTrace(
-            reducerTypeName: reducerTypeName,
-            initialStateExpr: initialStateExpr,
-            sent: actions.filter { $0.action.kind == .send }.map(\.action),
-            received: actions.filter { $0.action.kind == .receive }.map(\.action),
-            location: location
-        )
-    }
-}
-
 // MARK: - Raw events
 
 /// A `TestStore(...)` construction, tagged with its bound variable name
@@ -259,5 +148,116 @@ final class TestStoreTraceVisitor: SyntaxVisitor {
     private func nextOrder() -> Int {
         defer { orderCounter += 1 }
         return orderCounter
+    }
+}
+
+/// TestStore Trace Mining, Slice 1 — extracts the ordered action
+/// sequences a repo's TCA `TestStore` tests already contain, so the
+/// interaction verifier can check developer-authored orderings before
+/// (never instead of) random generation. See
+/// `docs/archive/teststore-trace-mining-build-plan.md`.
+///
+/// Consumes `TestMethodSummary.body` — the same input the `Slicer` takes,
+/// so no new parsing infrastructure. Recognizes, per test body:
+///   - `TestStore(initialState:) { Feature() }` (or a `reducer:` arg) →
+///     the reducer type + verbatim initial-state expression;
+///   - `store.send(.case(args))` / `store.receive(.case(args))` on a
+///     bound `TestStore` variable → one `MinedAction` each.
+///
+/// **Argument capture is verbatim** — a payload-bearing action's args
+/// reference test-body-local bindings, so they're recorded but not
+/// reconstructible standalone (Slice 2 emits only the payload-free
+/// subset; §3 of the build plan).
+///
+/// **Hard contract (PRD §15):** never throws from the per-summary path.
+/// A body with no `TestStore` yields `[]`.
+public enum TestStoreTraceExtractor {
+
+    /// Mine every `TestStore` trace from one parsed test method.
+    public static func extract(from summary: TestMethodSummary) -> [MinedActionTrace] {
+        let visitor = TestStoreTraceVisitor(viewMode: .sourceAccurate)
+        visitor.walk(summary.body)
+        return assembleTraces(
+            constructions: visitor.constructions,
+            actions: visitor.actions,
+            location: summary.location
+        )
+    }
+
+    /// Mine traces from every test method under `directory`. Reuses
+    /// `TestSuiteParser`'s deterministic sorted-path scan.
+    public static func extract(fromTestsDirectory directory: URL) throws -> [MinedActionTrace] {
+        let summaries = try TestSuiteParser.scanTests(directory: directory)
+        return summaries.flatMap { extract(from: $0) }
+    }
+
+    // MARK: - Trace assembly
+
+    /// Group the flat construction / action event lists (each carrying a
+    /// source-order index) into one trace per `TestStore`.
+    private static func assembleTraces(
+        constructions: [RawConstruction],
+        actions: [RawAction],
+        location: SwiftInferCore.SourceLocation
+    ) -> [MinedActionTrace] {
+        // Fallback: sends on the conventional bare `store` name with no
+        // resolved construction (e.g. built in a helper). Restricted to
+        // `store` so an unrelated `foo.send(x)` is never mined.
+        guard !constructions.isEmpty else {
+            let storeActions = actions.filter { $0.receiverName == "store" }
+            guard !storeActions.isEmpty else {
+                return []
+            }
+            let fallback = makeTrace(
+                reducerTypeName: nil,
+                initialStateExpr: nil,
+                actions: storeActions,
+                location: location
+            )
+            return [fallback]
+        }
+
+        var traces: [MinedActionTrace] = []
+        for (index, construction) in constructions.enumerated() {
+            guard let varName = construction.varName else {
+                continue  // unbound TestStore can't be referenced by a named send
+            }
+            // Actions for this var after its construction, up to the next
+            // re-construction of the same var (rare) — keeps separate
+            // stores separate.
+            let nextSameVarOrder = constructions[(index + 1)...]
+                .first { $0.varName == varName }?.order ?? Int.max
+            let mine = actions.filter {
+                $0.receiverName == varName
+                    && $0.order > construction.order
+                    && $0.order < nextSameVarOrder
+            }
+            guard !mine.isEmpty else {
+                continue  // an actionless store isn't useful for action mining
+            }
+            traces.append(makeTrace(
+                reducerTypeName: construction.reducerTypeName,
+                initialStateExpr: construction.initialStateExpr,
+                actions: mine,
+                location: location
+            ))
+        }
+        return traces
+    }
+
+    private static func makeTrace(
+        reducerTypeName: String?,
+        initialStateExpr: String?,
+        actions: [RawAction],
+        location: SwiftInferCore.SourceLocation
+    ) -> MinedActionTrace {
+        // `actions` arrive in source order already (visitor is pre-order).
+        MinedActionTrace(
+            reducerTypeName: reducerTypeName,
+            initialStateExpr: initialStateExpr,
+            sent: actions.filter { $0.action.kind == .send }.map(\.action),
+            received: actions.filter { $0.action.kind == .receive }.map(\.action),
+            location: location
+        )
     }
 }

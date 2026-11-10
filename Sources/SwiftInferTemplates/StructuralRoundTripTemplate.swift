@@ -1,5 +1,74 @@
 import SwiftInferCore
 
+/// A parser `input-totality` proposes for, returning a named type nothing prints back.
+public struct StructuralRoundTripSubject: Sendable, Equatable {
+    public let parser: FunctionSummary
+    /// The parsed type, with `Self` resolved to the declaring type.
+    public let structure: String
+
+    public init(parser: FunctionSummary, structure: String) {
+        self.parser = parser
+        self.structure = structure
+    }
+
+    /// Every such parser in `summaries`.
+    ///
+    /// **A printer is any function from the type to `String`** — the `T -> String` half that
+    /// `FunctionPairing` would pair with the parser, checked here in linear time: pairing is
+    /// quadratic and has already run once. A type with one is left to `round-trip` and
+    /// `normal-form`, which can state the law without a hand-written printer.
+    public static func candidates(in summaries: [FunctionSummary]) -> [Self] {
+        let declared = FunctionPairing.declaredTypePaths(in: summaries)
+        let printed = Set(summaries.compactMap { summary -> String? in
+            guard let result = summary.returnTypeText, result == "String" || result == "Substring" else {
+                return nil
+            }
+            return FunctionPairing.transformationDomain(summary)
+        })
+        return summaries.compactMap { parser in
+            guard let parsedStructureName = parsedStructure(of: parser, declared: declared),
+                  !printed.contains(parsedStructureName),
+                  InputTotalityTemplate.suggest(for: parser) != nil else {
+                return nil
+            }
+            return Self(parser: parser, structure: parsedStructureName)
+        }
+    }
+
+    /// The named type a single-`String` parser returns: not a collection, an optional, a tuple, a
+    /// standard-library scalar, or a generic container — those have no layout of their own to print.
+    ///
+    /// **A dotted name counts only when its head is a type the scanned code declares.** The census
+    /// found swift-foundation's three `ParseStrategy.parse(_:) -> Format.FormatInput`: `Format` is
+    /// the strategy's generic parameter, so the result is an associated type with no layout of its
+    /// own — and its printer, `FormatStyle.format`, exists under a spelling the textual check cannot
+    /// match. `C7ColorCube.Resource` passes, because `C7ColorCube` is declared.
+    static func parsedStructure(of parser: FunctionSummary, declared: Set<String>) -> String? {
+        guard parser.parameters.count == 1,
+              let input = parser.parameters.first?.typeText, input == "String" || input == "Substring",
+              let result = parser.returnTypeText else {
+            return nil
+        }
+        let named = result == "Self" ? parser.containingTypeName : result
+        guard let named,
+              let first = named.first, first.isUppercase,
+              !named.contains("<"), !named.contains("?"), !named.contains("("), !named.contains("["),
+              !Self.scalars.contains(named) else {
+            return nil
+        }
+        if let head = named.split(separator: ".").first, named.contains("."), !declared.contains(String(head)) {
+            return nil
+        }
+        return named
+    }
+
+    private static let scalars: Set<String> = [
+        "String", "Substring", "Character", "Bool", "Int", "Int8", "Int16", "Int32", "Int64",
+        "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "Double", "Float", "Decimal", "Date",
+        "URL", "UUID", "Data",
+    ]
+}
+
 /// The **structural-round-trip** scaffold: a parser with no printer in the code still owes
 /// `parse(render(value)) == value` — with a `render` the author writes (SwiftInferProperties#646).
 ///
@@ -72,75 +141,6 @@ public enum StructuralRoundTripTemplate {
                 + "does not (a parse timestamp, a source location), compare a projection instead.",
         ]
     }
-}
-
-/// A parser `input-totality` proposes for, returning a named type nothing prints back.
-public struct StructuralRoundTripSubject: Sendable, Equatable {
-    public let parser: FunctionSummary
-    /// The parsed type, with `Self` resolved to the declaring type.
-    public let structure: String
-
-    public init(parser: FunctionSummary, structure: String) {
-        self.parser = parser
-        self.structure = structure
-    }
-
-    /// Every such parser in `summaries`.
-    ///
-    /// **A printer is any function from the type to `String`** — the `T -> String` half that
-    /// `FunctionPairing` would pair with the parser, checked here in linear time: pairing is
-    /// quadratic and has already run once. A type with one is left to `round-trip` and
-    /// `normal-form`, which can state the law without a hand-written printer.
-    public static func candidates(in summaries: [FunctionSummary]) -> [Self] {
-        let declared = FunctionPairing.declaredTypePaths(in: summaries)
-        let printed = Set(summaries.compactMap { summary -> String? in
-            guard let result = summary.returnTypeText, result == "String" || result == "Substring" else {
-                return nil
-            }
-            return FunctionPairing.transformationDomain(summary)
-        })
-        return summaries.compactMap { parser in
-            guard let parsedStructureName = parsedStructure(of: parser, declared: declared),
-                  !printed.contains(parsedStructureName),
-                  InputTotalityTemplate.suggest(for: parser) != nil else {
-                return nil
-            }
-            return Self(parser: parser, structure: parsedStructureName)
-        }
-    }
-
-    /// The named type a single-`String` parser returns: not a collection, an optional, a tuple, a
-    /// standard-library scalar, or a generic container — those have no layout of their own to print.
-    ///
-    /// **A dotted name counts only when its head is a type the scanned code declares.** The census
-    /// found swift-foundation's three `ParseStrategy.parse(_:) -> Format.FormatInput`: `Format` is
-    /// the strategy's generic parameter, so the result is an associated type with no layout of its
-    /// own — and its printer, `FormatStyle.format`, exists under a spelling the textual check cannot
-    /// match. `C7ColorCube.Resource` passes, because `C7ColorCube` is declared.
-    static func parsedStructure(of parser: FunctionSummary, declared: Set<String>) -> String? {
-        guard parser.parameters.count == 1,
-              let input = parser.parameters.first?.typeText, input == "String" || input == "Substring",
-              let result = parser.returnTypeText else {
-            return nil
-        }
-        let named = result == "Self" ? parser.containingTypeName : result
-        guard let named,
-              let first = named.first, first.isUppercase,
-              !named.contains("<"), !named.contains("?"), !named.contains("("), !named.contains("["),
-              !Self.scalars.contains(named) else {
-            return nil
-        }
-        if let head = named.split(separator: ".").first, named.contains("."), !declared.contains(String(head)) {
-            return nil
-        }
-        return named
-    }
-
-    private static let scalars: Set<String> = [
-        "String", "Substring", "Character", "Bool", "Int", "Int8", "Int16", "Int32", "Int64",
-        "UInt", "UInt8", "UInt16", "UInt32", "UInt64", "Double", "Float", "Decimal", "Date",
-        "URL", "UUID", "Data",
-    ]
 }
 
 extension TemplateRegistry {

@@ -1,5 +1,51 @@
 import Foundation
 
+// MARK: - The probe's vocabulary
+
+/// A failure in the harness itself, never a finding. Kept distinct from a denial so a
+/// compiler that could not run is never reported as a sandbox that denied everything —
+/// the two look identical in a results table and mean opposite things.
+enum ProbeError: Error {
+    case compilationFailed(String)
+    case launchFailed(String)
+}
+
+/// One operation the probe attempts, and what the run made of it.
+///
+/// `ALLOWED` means *the policy permitted the syscall*, which is why a loopback
+/// `connect` refused with `ECONNREFUSED` counts as allowed: the sandbox let it through
+/// and nothing was listening. Only `EPERM` is a denial.
+enum Probe {
+
+    enum Step: String, CaseIterable {
+        case writeInsideAtomic = "write-inside-atomic"
+        case writeInsideNonAtomic = "write-inside-nonatomic"
+        case createFileInside = "create-file-inside"
+        case writeOutside = "write-outside"
+        case spawn = "spawn"
+        case connectLoopback = "connect-loopback"
+    }
+
+    struct Outcome {
+        let allowed: Bool
+        /// The POSIX errno where one surfaced. A Cocoa error carrying no underlying
+        /// POSIX error is reported as its **negated** Cocoa code, so `-4`
+        /// (`NSFileNoSuchFileError`) is distinguishable from `EPERM` rather than
+        /// silently equal to some errno.
+        let detail: Int
+    }
+
+    /// The parsed stdout of one run.
+    struct Run {
+        let outcomes: [Step: Outcome]
+        /// The probe reached its final line. False means it was killed mid-way, which
+        /// is the §6.1 failure this suite exists to rule out.
+        let completed: Bool
+
+        subscript(step: Step) -> Outcome? { outcomes[step] }
+    }
+}
+
 /// The probe, its profiles, and the source scan for
 /// `SandboxDetectorMechanismMeasuredTests`. Split out only for the 400-line file cap;
 /// the reasoning that governs both lives in that suite's header.
@@ -70,52 +116,6 @@ extension SandboxDetectorMechanismMeasuredTests {
             guard let url = element as? URL, url.pathExtension == "swift" else { return nil }
             return url
         }
-    }
-}
-
-// MARK: - The probe's vocabulary
-
-/// A failure in the harness itself, never a finding. Kept distinct from a denial so a
-/// compiler that could not run is never reported as a sandbox that denied everything —
-/// the two look identical in a results table and mean opposite things.
-enum ProbeError: Error {
-    case compilationFailed(String)
-    case launchFailed(String)
-}
-
-/// One operation the probe attempts, and what the run made of it.
-///
-/// `ALLOWED` means *the policy permitted the syscall*, which is why a loopback
-/// `connect` refused with `ECONNREFUSED` counts as allowed: the sandbox let it through
-/// and nothing was listening. Only `EPERM` is a denial.
-enum Probe {
-
-    enum Step: String, CaseIterable {
-        case writeInsideAtomic = "write-inside-atomic"
-        case writeInsideNonAtomic = "write-inside-nonatomic"
-        case createFileInside = "create-file-inside"
-        case writeOutside = "write-outside"
-        case spawn = "spawn"
-        case connectLoopback = "connect-loopback"
-    }
-
-    struct Outcome {
-        let allowed: Bool
-        /// The POSIX errno where one surfaced. A Cocoa error carrying no underlying
-        /// POSIX error is reported as its **negated** Cocoa code, so `-4`
-        /// (`NSFileNoSuchFileError`) is distinguishable from `EPERM` rather than
-        /// silently equal to some errno.
-        let detail: Int
-    }
-
-    /// The parsed stdout of one run.
-    struct Run {
-        let outcomes: [Step: Outcome]
-        /// The probe reached its final line. False means it was killed mid-way, which
-        /// is the §6.1 failure this suite exists to rule out.
-        let completed: Bool
-
-        subscript(step: Step) -> Outcome? { outcomes[step] }
     }
 }
 

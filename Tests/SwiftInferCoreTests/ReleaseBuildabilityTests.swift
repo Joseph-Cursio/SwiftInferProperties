@@ -3,6 +3,37 @@ import SwiftParser
 import SwiftSyntax
 import Testing
 
+/// A real `@testable import` declaration that is **not** inside a `#if`.
+///
+/// Both halves are read off the syntax rather than the text, and the second half is why:
+/// the first version asked whether the file *contained* the string `#if DEBUG`, which
+/// `//#if DEBUG` satisfies. Commenting the guard out would have kept the test green while
+/// breaking the release build — a guard defeated by the exact edit it exists to catch.
+final class TestableImportCollector: SyntaxVisitor {
+    private(set) var unguarded = false
+
+    override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
+        let isTestable = node.attributes.contains { attribute in
+            attribute.as(AttributeSyntax.self)?.attributeName.trimmedDescription == "testable"
+        }
+        guard isTestable, !Self.isInsideIfConfig(node) else { return .skipChildren }
+        unguarded = true
+        return .skipChildren
+    }
+
+    /// Any enclosing `#if` counts. Which condition it tests is deliberately not checked:
+    /// the failure is an unconditional testable import, and a project that guards one on
+    /// something other than `DEBUG` has still thought about it.
+    static func isInsideIfConfig(_ node: some SyntaxProtocol) -> Bool {
+        var parent = node.parent
+        while let current = parent {
+            if current.is(IfConfigDeclSyntax.self) { return true }
+            parent = current.parent
+        }
+        return false
+    }
+}
+
 /// **Nothing in the suite release-builds the package, so a release-only break is
 /// invisible to it.**
 ///
@@ -62,36 +93,5 @@ struct ReleaseBuildabilityTests {
         `swift build -c release` will fail with "module … was not compiled for testing": \
         \(offenders.sorted().joined(separator: ", "))
         """)
-    }
-}
-
-/// A real `@testable import` declaration that is **not** inside a `#if`.
-///
-/// Both halves are read off the syntax rather than the text, and the second half is why:
-/// the first version asked whether the file *contained* the string `#if DEBUG`, which
-/// `//#if DEBUG` satisfies. Commenting the guard out would have kept the test green while
-/// breaking the release build — a guard defeated by the exact edit it exists to catch.
-final class TestableImportCollector: SyntaxVisitor {
-    private(set) var unguarded = false
-
-    override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
-        let isTestable = node.attributes.contains { attribute in
-            attribute.as(AttributeSyntax.self)?.attributeName.trimmedDescription == "testable"
-        }
-        guard isTestable, !Self.isInsideIfConfig(node) else { return .skipChildren }
-        unguarded = true
-        return .skipChildren
-    }
-
-    /// Any enclosing `#if` counts. Which condition it tests is deliberately not checked:
-    /// the failure is an unconditional testable import, and a project that guards one on
-    /// something other than `DEBUG` has still thought about it.
-    static func isInsideIfConfig(_ node: some SyntaxProtocol) -> Bool {
-        var parent = node.parent
-        while let current = parent {
-            if current.is(IfConfigDeclSyntax.self) { return true }
-            parent = current.parent
-        }
-        return false
     }
 }

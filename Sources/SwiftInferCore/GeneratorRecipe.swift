@@ -1,59 +1,5 @@
 import Foundation
 
-/// A generator the law needs, written out so the reader can run it.
-///
-/// ## Why a template must ship its generator, and not merely describe one
-///
-/// A law and the inputs it is checked against are **one artefact**. Stating the law and leaving the
-/// generator to the reader looks like a division of labour and is not: for a large class of real
-/// bugs, a uniform generator makes the law pass *vacuously*, and the reader who writes the obvious
-/// generator learns nothing and concludes the code is fine.
-///
-/// This is not a hypothesis. On the road-test fixture the only bug the loop reliably surfaces —
-/// a listing predicate that strips **every** occurrence of a path prefix rather than the leading one —
-/// is invisible to a generator drawing strings from a wide alphabet, because such a generator
-/// essentially never produces a path in which the parent path *recurs*. Three independent readers
-/// found the bug, and all three found it the same way: they read a caveat that told them to shrink
-/// the alphabet, and then **hand-wrote the generator themselves**. One measured 5341 failures in
-/// 20000 inputs once they did; with a wide alphabet the same law passes clean.
-///
-/// So the template knew the generator the law needed, printed it as English, and made the reader
-/// re-derive it. That is the same failure as a linter that prints a finding it never seeds: the
-/// knowledge is in the tool and does not reach the work.
-///
-/// ## The principle
-///
-/// **A law that distinguishes two notions which usually coincide will pass vacuously under a uniform
-/// generator.** `isImmediateChild` confuses "strip the prefix" with "strip every occurrence" — and
-/// those two agree on every input where the prefix occurs exactly once, which is almost every input a
-/// wide alphabet produces. The counterexample lives in the collisions, and collisions have to be
-/// *manufactured*: shrink the universe until values repeat.
-///
-/// That is what `CollisionBias` builds, and what this type carries to the reader.
-public struct GeneratorRecipe: Sendable, Equatable {
-
-    /// The parameter this generator feeds — `path`, `index`.
-    public let subject: String
-
-    /// The Swift type it produces.
-    public let typeName: String
-
-    /// Runnable Swift, in the kit's `Gen` idiom. Paste-able into a property test.
-    public let expression: String
-
-    /// **Why this bias rather than the obvious one.** Not decoration: a reader who does not
-    /// understand why the alphabet is small will widen it back on the first cleanup pass, and the law
-    /// will go quiet without anyone noticing it stopped testing anything.
-    public let rationale: String
-
-    public init(subject: String, typeName: String, expression: String, rationale: String) {
-        self.subject = subject
-        self.typeName = typeName
-        self.expression = expression
-        self.rationale = rationale
-    }
-}
-
 /// The generator vocabulary for laws whose counterexamples live in **collisions**.
 ///
 /// Every recipe here answers one question: *what has to repeat before this law can fail?* A uniform
@@ -318,5 +264,59 @@ public enum CollisionBias {
                 + "incomparable, so the transitivity-of-incomparability clause is checked against no "
                 + "input that could break it."
         )
+    }
+}
+
+/// A generator the law needs, written out so the reader can run it.
+///
+/// ## Why a template must ship its generator, and not merely describe one
+///
+/// A law and the inputs it is checked against are **one artefact**. Stating the law and leaving the
+/// generator to the reader looks like a division of labour and is not: for a large class of real
+/// bugs, a uniform generator makes the law pass *vacuously*, and the reader who writes the obvious
+/// generator learns nothing and concludes the code is fine.
+///
+/// This is not a hypothesis. On the road-test fixture the only bug the loop reliably surfaces —
+/// a listing predicate that strips **every** occurrence of a path prefix rather than the leading one —
+/// is invisible to a generator drawing strings from a wide alphabet, because such a generator
+/// essentially never produces a path in which the parent path *recurs*. Three independent readers
+/// found the bug, and all three found it the same way: they read a caveat that told them to shrink
+/// the alphabet, and then **hand-wrote the generator themselves**. One measured 5341 failures in
+/// 20000 inputs once they did; with a wide alphabet the same law passes clean.
+///
+/// So the template knew the generator the law needed, printed it as English, and made the reader
+/// re-derive it. That is the same failure as a linter that prints a finding it never seeds: the
+/// knowledge is in the tool and does not reach the work.
+///
+/// ## The principle
+///
+/// **A law that distinguishes two notions which usually coincide will pass vacuously under a uniform
+/// generator.** `isImmediateChild` confuses "strip the prefix" with "strip every occurrence" — and
+/// those two agree on every input where the prefix occurs exactly once, which is almost every input a
+/// wide alphabet produces. The counterexample lives in the collisions, and collisions have to be
+/// *manufactured*: shrink the universe until values repeat.
+///
+/// That is what `CollisionBias` builds, and what this type carries to the reader.
+public struct GeneratorRecipe: Sendable, Equatable {
+
+    /// The parameter this generator feeds — `path`, `index`.
+    public let subject: String
+
+    /// The Swift type it produces.
+    public let typeName: String
+
+    /// Runnable Swift, in the kit's `Gen` idiom. Paste-able into a property test.
+    public let expression: String
+
+    /// **Why this bias rather than the obvious one.** Not decoration: a reader who does not
+    /// understand why the alphabet is small will widen it back on the first cleanup pass, and the law
+    /// will go quiet without anyone noticing it stopped testing anything.
+    public let rationale: String
+
+    public init(subject: String, typeName: String, expression: String, rationale: String) {
+        self.subject = subject
+        self.typeName = typeName
+        self.expression = expression
+        self.rationale = rationale
     }
 }

@@ -3,111 +3,6 @@ import Foundation
 import SwiftInferCore
 import Testing
 
-@Suite("Drift command + --update-baseline (M6.5)")
-struct DriftCommandTests {
-
-    // MARK: - --update-baseline
-
-    @Test
-    func updateBaselineWritesByteIdenticalJsonAcrossReSaves() throws {
-        let directory = try makeFixtureDirectory(name: "UpdateBaselineByteStable")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try Data("// swift-tools-version: 6.1\n".utf8).write(
-            to: directory.appendingPathComponent("Package.swift")
-        )
-        let target = try makeTarget(in: directory, contents: """
-        struct Sanitizer {
-            func normalize(_ value: String) -> String {
-                return normalize(normalize(value))
-            }
-        }
-        """)
-
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            output: RecordingOutput(),
-            updateBaseline: true,
-            diagnostics: RecordingDiagnosticOutput()
-        )
-        let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
-        let firstSave = try Data(contentsOf: baselinePath)
-
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            output: RecordingOutput(),
-            updateBaseline: true,
-            diagnostics: RecordingDiagnosticOutput()
-        )
-        let secondSave = try Data(contentsOf: baselinePath)
-        #expect(firstSave == secondSave)
-
-        let baseline = try JSONDecoder().decode(Baseline.self, from: firstSave)
-        #expect(baseline.entries.count == 1)
-        #expect(baseline.entries.first?.template == "idempotence")
-        #expect(baseline.entries.first?.tier == .strong)
-    }
-
-    @Test
-    func updateBaselineWithDryRunReportsPathAndWritesNothing() throws {
-        let directory = try makeFixtureDirectory(name: "UpdateBaselineDryRun")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try Data("// swift-tools-version: 6.1\n".utf8).write(
-            to: directory.appendingPathComponent("Package.swift")
-        )
-        let target = try makeTarget(in: directory, contents: """
-        struct Sanitizer {
-            func normalize(_ value: String) -> String {
-                return normalize(normalize(value))
-            }
-        }
-        """)
-        let recording = RecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            output: recording,
-            dryRun: true,
-            updateBaseline: true,
-            diagnostics: RecordingDiagnosticOutput()
-        )
-        #expect(recording.lines.contains { line in
-            line.contains("[dry-run] would write baseline to") && line.contains(".swiftinfer/baseline.json")
-        })
-        let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
-        #expect(!FileManager.default.fileExists(atPath: baselinePath.path))
-    }
-
-    @Test
-    func updateBaselineMixedWithInteractiveEmitsConflictWarning() throws {
-        let directory = try makeFixtureDirectory(name: "UpdateBaselineConflict")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try Data("// swift-tools-version: 6.1\n".utf8).write(
-            to: directory.appendingPathComponent("Package.swift")
-        )
-        let target = try makeTarget(in: directory, contents: """
-        struct Sanitizer {
-            func normalize(_ value: String) -> String {
-                return normalize(normalize(value))
-            }
-        }
-        """)
-        let diagnostics = RecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: target,
-            output: RecordingOutput(),
-            interactive: true,
-            updateBaseline: true,
-            promptInput: ScriptedPromptInput(scriptedLines: ["s"]),
-            diagnostics: diagnostics
-        )
-        #expect(diagnostics.lines.contains { line in
-            line.contains("--interactive and --update-baseline are mutually exclusive")
-        })
-        // --update-baseline is ignored when --interactive is also set.
-        let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
-        #expect(!FileManager.default.fileExists(atPath: baselinePath.path))
-    }
-}
-
 // MARK: - swift-infer drift
 
 @Suite("swift-infer drift — detection + verify integration (M6.5 / V1.68)")
@@ -340,29 +235,6 @@ struct DriftDetectionTests {
     }
 }
 
-// MARK: - Shared fixture helpers (file-private free functions so both
-// DriftCommandTests and DriftDetectionTests share one definition).
-
-private func makeFixtureDirectory(name: String) throws -> URL {
-    let base = FileManager.default.temporaryDirectory
-        .appendingPathComponent("DriftCommandTests-\(name)-\(UUID().uuidString)")
-    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-    return base
-}
-
-private func makeTarget(in root: URL, contents: String) throws -> URL {
-    let target = root
-        .appendingPathComponent("Sources")
-        .appendingPathComponent("Lib")
-    try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
-    try contents.write(
-        to: target.appendingPathComponent("Source.swift"),
-        atomically: true,
-        encoding: .utf8
-    )
-    return target
-}
-
 // MARK: - Local recording stubs (file-private to avoid colliding with
 // same-named helpers in DiscoverPipelineTests / InteractiveTriageTests).
 
@@ -391,5 +263,133 @@ private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
     func readLine() -> String? {
         guard !remaining.isEmpty else { return nil }
         return remaining.removeFirst()
+    }
+}
+
+// MARK: - Shared fixture helpers (file-private free functions so both
+// DriftCommandTests and DriftDetectionTests share one definition).
+
+private func makeFixtureDirectory(name: String) throws -> URL {
+    let base = FileManager.default.temporaryDirectory
+        .appendingPathComponent("DriftCommandTests-\(name)-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+    return base
+}
+
+private func makeTarget(in root: URL, contents: String) throws -> URL {
+    let target = root
+        .appendingPathComponent("Sources")
+        .appendingPathComponent("Lib")
+    try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+    try contents.write(
+        to: target.appendingPathComponent("Source.swift"),
+        atomically: true,
+        encoding: .utf8
+    )
+    return target
+}
+
+@Suite("Drift command + --update-baseline (M6.5)")
+struct DriftCommandTests {
+
+    // MARK: - --update-baseline
+
+    @Test
+    func updateBaselineWritesByteIdenticalJsonAcrossReSaves() throws {
+        let directory = try makeFixtureDirectory(name: "UpdateBaselineByteStable")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: directory.appendingPathComponent("Package.swift")
+        )
+        let target = try makeTarget(in: directory, contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            output: RecordingOutput(),
+            updateBaseline: true,
+            diagnostics: RecordingDiagnosticOutput()
+        )
+        let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
+        let firstSave = try Data(contentsOf: baselinePath)
+
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            output: RecordingOutput(),
+            updateBaseline: true,
+            diagnostics: RecordingDiagnosticOutput()
+        )
+        let secondSave = try Data(contentsOf: baselinePath)
+        #expect(firstSave == secondSave)
+
+        let baseline = try JSONDecoder().decode(Baseline.self, from: firstSave)
+        #expect(baseline.entries.count == 1)
+        #expect(baseline.entries.first?.template == "idempotence")
+        #expect(baseline.entries.first?.tier == .strong)
+    }
+
+    @Test
+    func updateBaselineWithDryRunReportsPathAndWritesNothing() throws {
+        let directory = try makeFixtureDirectory(name: "UpdateBaselineDryRun")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: directory.appendingPathComponent("Package.swift")
+        )
+        let target = try makeTarget(in: directory, contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        let recording = RecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            output: recording,
+            dryRun: true,
+            updateBaseline: true,
+            diagnostics: RecordingDiagnosticOutput()
+        )
+        #expect(recording.lines.contains { line in
+            line.contains("[dry-run] would write baseline to") && line.contains(".swiftinfer/baseline.json")
+        })
+        let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
+        #expect(!FileManager.default.fileExists(atPath: baselinePath.path))
+    }
+
+    @Test
+    func updateBaselineMixedWithInteractiveEmitsConflictWarning() throws {
+        let directory = try makeFixtureDirectory(name: "UpdateBaselineConflict")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        try Data("// swift-tools-version: 6.1\n".utf8).write(
+            to: directory.appendingPathComponent("Package.swift")
+        )
+        let target = try makeTarget(in: directory, contents: """
+        struct Sanitizer {
+            func normalize(_ value: String) -> String {
+                return normalize(normalize(value))
+            }
+        }
+        """)
+        let diagnostics = RecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: target,
+            output: RecordingOutput(),
+            interactive: true,
+            updateBaseline: true,
+            promptInput: ScriptedPromptInput(scriptedLines: ["s"]),
+            diagnostics: diagnostics
+        )
+        #expect(diagnostics.lines.contains { line in
+            line.contains("--interactive and --update-baseline are mutually exclusive")
+        })
+        // --update-baseline is ignored when --interactive is also set.
+        let baselinePath = directory.appendingPathComponent(".swiftinfer/baseline.json")
+        #expect(!FileManager.default.fileExists(atPath: baselinePath.path))
     }
 }

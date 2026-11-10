@@ -3,89 +3,6 @@ import PropertyLawCore
 import SwiftParser
 import SwiftSyntax
 
-/// Static-analysis pipeline that walks Swift source and emits one
-/// `FunctionSummary` per function declaration. M1.2 surface — the M1.3+
-/// scoring engine consumes the produced summaries without further parsing.
-///
-/// Coverage:
-/// - Top-level functions and functions inside `class`, `struct`, `enum`,
-///   `actor`, and `extension` decls. Containing-type stack tracks the
-///   innermost enclosing type by source name; extensions contribute the
-///   `extendedType` text (e.g. `"Array"`).
-/// - Protocol *requirements* (function decls inside `protocol` bodies) are
-///   intentionally skipped — they have no body to score against and the
-///   templates fire on implementations.
-/// - Nested function decls (functions declared inside another function's
-///   body) are skipped — rare in idiomatic Swift, and including them would
-///   conflate the body-signal scan with the outer function's signals.
-public enum FunctionScanner {
-
-    /// Scan a single in-memory source string. `file` is the label attached
-    /// to every emitted `SourceLocation` — pass the path you want shown to
-    /// the user (e.g. `Sources/MyTarget/MyFile.swift`).
-    public static func scan(source: String, file: String) -> [FunctionSummary] {
-        scanCorpus(source: source, file: file).summaries
-    }
-
-    /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
-    public static func scan(file: URL) throws -> [FunctionSummary] {
-        let source = try String(contentsOf: file, encoding: .utf8)
-        return scan(source: source, file: file.path)
-    }
-
-    /// Recursively scan every `.swift` file under `directory`. Files are
-    /// visited in deterministic (sorted-path) order so output is stable
-    /// across runs — supports the byte-identical-reproducibility guarantee
-    /// (PRD §16 #6).
-    public static func scan(directory: URL) throws -> [FunctionSummary] {
-        try scanCorpus(directory: directory).summaries
-    }
-
-    /// One-pass scan that emits `FunctionSummary`, `IdentityCandidate`,
-    /// and `TypeDecl` records from a single AST walk. Started in M2.5 for
-    /// the identity-element template; M3.2 extended the same walk to
-    /// emit `TypeDecl` records for M3.3's `EquatableResolver`. Keeps
-    /// the §13 perf budget intact by avoiding a second pass over the
-    /// source tree.
-    ///
-    /// **One source is its own package**: its construction facts are built from its own tree, so a
-    /// `struct Item { let id = UUID() }` beside `func make() -> Item { Item() }` refutes `make`
-    /// here exactly as it would in a directory holding only this file.
-    public static func scanCorpus(source: String, file: String) -> ScannedCorpus {
-        let tree = Parser.parse(source: source)
-        return scanCorpus(tree: tree, file: file, purity: PackagePurity.selfContained(tree).oracle)
-    }
-
-    /// One already-parsed file judged by `purity` — the body every per-file path shares, unjoined
-    /// like each of them. Pass the tree the facts were built from, never a re-parse
-    /// (`PackagePurity`'s doc says why).
-    static func scanCorpus(tree: SourceFileSyntax, file: String, purity: SoundPurity) -> ScannedCorpus {
-        let converter = SourceLocationConverter(fileName: file, tree: tree)
-        let visitor = FunctionScannerVisitor(file: file, converter: converter, purity: purity)
-        visitor.inactiveClauses = InactiveClauses.of(tree, conditions: InactiveClauses.conditions(forFile: file))
-        visitor.walk(tree)
-        return ScannedCorpus(
-            summaries: visitor.summaries,
-            identities: visitor.identities,
-            typeDecls: PreconditionHelperHop.applied(to: visitor.typeDecls, trapping: visitor.trappingFunctions),
-            restricted: visitor.restricted,
-            typeAliases: TypeAliasMap.merged([visitor.typeAliases]),
-            trappingFunctions: visitor.trappingFunctions
-        )
-    }
-
-    /// Scan a single `.swift` file on disk. Reads the file as UTF-8. Self-contained, like
-    /// `scanCorpus(source:file:)`: a file alone is not a package. To judge it as part of one, use
-    /// `scanCorpus(file:purity:)`.
-    public static func scanCorpus(file: URL) throws -> ScannedCorpus {
-        let source = try String(contentsOf: file, encoding: .utf8)
-        return scanCorpus(source: source, file: file.path)
-    }
-
-    // `scanCorpus(directory:)`, the other package-scope entry points and the package-scope
-    // merge are in `FunctionScanner+Package.swift`, split out for the 400-line file cap.
-}
-
 // MARK: - Visitor
 
 /// Single-pass AST walker emitting function summaries, identity
@@ -368,4 +285,87 @@ final class FunctionScannerVisitor: SyntaxVisitor {
         ))
         return .skipChildren
     }
+}
+
+/// Static-analysis pipeline that walks Swift source and emits one
+/// `FunctionSummary` per function declaration. M1.2 surface — the M1.3+
+/// scoring engine consumes the produced summaries without further parsing.
+///
+/// Coverage:
+/// - Top-level functions and functions inside `class`, `struct`, `enum`,
+///   `actor`, and `extension` decls. Containing-type stack tracks the
+///   innermost enclosing type by source name; extensions contribute the
+///   `extendedType` text (e.g. `"Array"`).
+/// - Protocol *requirements* (function decls inside `protocol` bodies) are
+///   intentionally skipped — they have no body to score against and the
+///   templates fire on implementations.
+/// - Nested function decls (functions declared inside another function's
+///   body) are skipped — rare in idiomatic Swift, and including them would
+///   conflate the body-signal scan with the outer function's signals.
+public enum FunctionScanner {
+
+    /// Scan a single in-memory source string. `file` is the label attached
+    /// to every emitted `SourceLocation` — pass the path you want shown to
+    /// the user (e.g. `Sources/MyTarget/MyFile.swift`).
+    public static func scan(source: String, file: String) -> [FunctionSummary] {
+        scanCorpus(source: source, file: file).summaries
+    }
+
+    /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
+    public static func scan(file: URL) throws -> [FunctionSummary] {
+        let source = try String(contentsOf: file, encoding: .utf8)
+        return scan(source: source, file: file.path)
+    }
+
+    /// Recursively scan every `.swift` file under `directory`. Files are
+    /// visited in deterministic (sorted-path) order so output is stable
+    /// across runs — supports the byte-identical-reproducibility guarantee
+    /// (PRD §16 #6).
+    public static func scan(directory: URL) throws -> [FunctionSummary] {
+        try scanCorpus(directory: directory).summaries
+    }
+
+    /// One-pass scan that emits `FunctionSummary`, `IdentityCandidate`,
+    /// and `TypeDecl` records from a single AST walk. Started in M2.5 for
+    /// the identity-element template; M3.2 extended the same walk to
+    /// emit `TypeDecl` records for M3.3's `EquatableResolver`. Keeps
+    /// the §13 perf budget intact by avoiding a second pass over the
+    /// source tree.
+    ///
+    /// **One source is its own package**: its construction facts are built from its own tree, so a
+    /// `struct Item { let id = UUID() }` beside `func make() -> Item { Item() }` refutes `make`
+    /// here exactly as it would in a directory holding only this file.
+    public static func scanCorpus(source: String, file: String) -> ScannedCorpus {
+        let tree = Parser.parse(source: source)
+        return scanCorpus(tree: tree, file: file, purity: PackagePurity.selfContained(tree).oracle)
+    }
+
+    /// One already-parsed file judged by `purity` — the body every per-file path shares, unjoined
+    /// like each of them. Pass the tree the facts were built from, never a re-parse
+    /// (`PackagePurity`'s doc says why).
+    static func scanCorpus(tree: SourceFileSyntax, file: String, purity: SoundPurity) -> ScannedCorpus {
+        let converter = SourceLocationConverter(fileName: file, tree: tree)
+        let visitor = FunctionScannerVisitor(file: file, converter: converter, purity: purity)
+        visitor.inactiveClauses = InactiveClauses.of(tree, conditions: InactiveClauses.conditions(forFile: file))
+        visitor.walk(tree)
+        return ScannedCorpus(
+            summaries: visitor.summaries,
+            identities: visitor.identities,
+            typeDecls: PreconditionHelperHop.applied(to: visitor.typeDecls, trapping: visitor.trappingFunctions),
+            restricted: visitor.restricted,
+            typeAliases: TypeAliasMap.merged([visitor.typeAliases]),
+            trappingFunctions: visitor.trappingFunctions
+        )
+    }
+
+    /// Scan a single `.swift` file on disk. Reads the file as UTF-8. Self-contained, like
+    /// `scanCorpus(source:file:)`: a file alone is not a package. To judge it as part of one, use
+    /// `scanCorpus(file:purity:)`.
+    public static func scanCorpus(file: URL) throws -> ScannedCorpus {
+        let source = try String(contentsOf: file, encoding: .utf8)
+        return scanCorpus(source: source, file: file.path)
+    }
+
+    // `scanCorpus(directory:)`, the other package-scope entry points and the package-scope
+    // merge are in `FunctionScanner+Package.swift`, split out for the 400-line file cap.
 }

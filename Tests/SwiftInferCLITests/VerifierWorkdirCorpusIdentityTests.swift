@@ -3,154 +3,6 @@ import Foundation
 import SwiftInferCore
 import Testing
 
-/// #169 — a corpus that IS one of the verifier's own dependencies.
-///
-/// SwiftPM derives package identity from the last path component on both sides,
-/// so a `.package(url: …/swift-collections.git)` and a
-/// `.package(path: …/swift-collections)` are one identity from two sources and
-/// the graph is rejected before any property is involved. Measured: 0 of 98
-/// entries executed on swift-collections, 0 of 39 on SwiftPropertyLaws.
-@Suite("Verifier workdir — a corpus that is one of our own dependencies")
-struct VerifierWorkdirCorpusIdentityTests {
-
-    private static func corpus(named directory: String) -> VerifierWorkdir.UserPackageReference {
-        VerifierWorkdir.UserPackageReference(
-            packagePath: URL(fileURLWithPath: "/tmp/\(directory)"),
-            productNames: ["Collections"]
-        )
-    }
-
-    private static func dependencyLines(
-        corpus: VerifierWorkdir.UserPackageReference?,
-        mode: WorkdirMode
-    ) -> [String] {
-        VerifierWorkdir.renderDependenciesBlock(userPackage: corpus, mode: mode)
-            .components(separatedBy: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            // The last entry carries no trailing comma, so whether a line ends
-            // in one depends on what follows it. Comparing raw lines would make
-            // "a path dependency was appended" look like "a dependency changed".
-            .map { $0.hasSuffix(",") ? String($0.dropLast()) : $0 }
-            .filter { $0.hasPrefix(".package(") }
-    }
-
-    /// **The guard that makes the parse safe.** `urlDependencyIdentity` reads a
-    /// string the renderer just produced; a shape it cannot read is silently
-    /// *kept*, which re-opens the collision rather than dropping a needed
-    /// dependency. That is the right failure direction only if something notices
-    /// — this is that something. A new arm, or a `.package(url:)` spelled
-    /// differently, fails here.
-    @Test("every URL dependency in every mode yields an identity")
-    func everyURLDependencyIsReadable() {
-        for mode in WorkdirMode.allCases {
-            let syntaxCorpus = Self.corpus(named: "SomeUnrelatedCorpus")
-            for line in Self.dependencyLines(corpus: syntaxCorpus, mode: mode) {
-                if line.contains("path:") { continue }
-                #expect(
-                    VerifierWorkdir.urlDependencyIdentity(in: line) != nil,
-                    "unreadable URL dependency in \(mode): \(line) — the collapse silently skips it"
-                )
-            }
-        }
-    }
-
-    @Test(
-        "the colliding URL dependency is dropped",
-        arguments: [
-            ("swift-collections", "swift-collections"),
-            ("swift-numerics", "swift-numerics"),
-            ("swift-property-based", "swift-property-based"),
-            ("SwiftPropertyLaws", "SwiftPropertyLaws"),
-        ]
-    )
-    func collidingDependencyIsDropped(directory: String, identity: String) {
-        let lines = Self.dependencyLines(corpus: Self.corpus(named: directory), mode: .algebraic)
-        let urlIdentities = lines.compactMap { VerifierWorkdir.urlDependencyIdentity(in: $0) }
-        #expect(
-            !urlIdentities.map { $0.lowercased() }.contains(identity.lowercased()),
-            "\(identity) is still declared by URL beside the corpus path dependency"
-        )
-        #expect(lines.contains { $0.contains("path: \"/tmp/\(directory)\"") })
-    }
-
-    /// Identity comparison is case-insensitive, as SwiftPM's is. A checkout
-    /// named `swiftpropertylaws` collides with `SwiftPropertyLaws.git` just as
-    /// surely, and a case-sensitive filter would ship the graph SwiftPM rejects.
-    @Test("collision detection ignores case")
-    func collisionIsCaseInsensitive() {
-        let lines = Self.dependencyLines(corpus: Self.corpus(named: "swiftpropertylaws"), mode: .algebraic)
-        let identities = lines.compactMap { VerifierWorkdir.urlDependencyIdentity(in: $0) }
-        #expect(!identities.map { $0.lowercased() }.contains("swiftpropertylaws"))
-    }
-
-    /// The normal case must not regress: an ordinary corpus keeps every
-    /// dependency it had before, or the fix trades one broken population for a
-    /// much larger one.
-    @Test("an unrelated corpus keeps every dependency")
-    func unrelatedCorpusIsUnchanged() {
-        for mode in WorkdirMode.allCases {
-            let withCorpus = Self.dependencyLines(corpus: Self.corpus(named: "MyApp"), mode: mode)
-                .filter { !$0.contains("path:") }
-            let without = Self.dependencyLines(corpus: nil, mode: mode)
-            #expect(withCorpus == without, "\(mode): an unrelated corpus changed the dependency list")
-            #expect(!without.isEmpty, "\(mode): no dependencies at all — the scan proves nothing")
-        }
-    }
-
-    /// The `.product(name:package:)` edges deliberately do NOT change: the
-    /// collision *is* the two identities being equal, so the surviving path
-    /// dependency answers to the name the built-in edges already spell.
-    @Test("product edges still name an identity that is declared")
-    func productEdgesResolveAgainstSurvivingDependency() {
-        let corpus = Self.corpus(named: "swift-collections")
-        let declared = Set(
-            Self.dependencyLines(corpus: corpus, mode: .algebraic).compactMap { line -> String? in
-                if line.contains("path:") { return corpus.packageIdentity.lowercased() }
-                return VerifierWorkdir.urlDependencyIdentity(in: line)?.lowercased()
-            }
-        )
-        let products = VerifierWorkdir.renderTargetDependenciesBlock(
-            userPackage: corpus, mode: .algebraic
-        )
-        for line in products.components(separatedBy: "\n") {
-            guard let range = line.range(of: "package: \"") else { continue }
-            let rest = line[range.upperBound...]
-            guard let end = rest.firstIndex(of: "\"") else { continue }
-            let named = String(rest[..<end]).lowercased()
-            #expect(declared.contains(named), "product edge names undeclared package '\(named)'")
-        }
-    }
-
-    /// Surveying swift-collections makes the built-in `OrderedCollections` edge
-    /// and the corpus's own resolved product the same line.
-    @Test("a product is not declared twice when the corpus vends a built-in one")
-    func productEdgesAreDeduplicated() {
-        let corpus = VerifierWorkdir.UserPackageReference(
-            packagePath: URL(fileURLWithPath: "/tmp/swift-collections"),
-            productNames: ["OrderedCollections", "DequeModule"]
-        )
-        let lines = VerifierWorkdir.renderTargetDependenciesBlock(userPackage: corpus, mode: .algebraic)
-            .components(separatedBy: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-        #expect(lines.count == Set(lines).count, "duplicate product edge: \(lines)")
-    }
-
-    @Test("the substitution is reportable, and empty when nothing collides")
-    func supersededIdentitiesAreExposed() {
-        #expect(
-            VerifierWorkdir.supersededDependencyIdentities(
-                userPackage: Self.corpus(named: "swift-numerics"), mode: .algebraic
-            ) == ["swift-numerics"]
-        )
-        #expect(
-            VerifierWorkdir.supersededDependencyIdentities(
-                userPackage: Self.corpus(named: "MyApp"), mode: .algebraic
-            ).isEmpty
-        )
-    }
-}
-
 /// The union half of #169 — and the reason the first fix measured as no fix.
 ///
 /// The survey manifest is a `Set` union across members. Collapsing per member
@@ -336,5 +188,153 @@ struct SharedPackageProductQuarantineTests {
         ])
         #expect(usable.count == 1)
         #expect(quarantined.isEmpty)
+    }
+}
+
+/// #169 — a corpus that IS one of the verifier's own dependencies.
+///
+/// SwiftPM derives package identity from the last path component on both sides,
+/// so a `.package(url: …/swift-collections.git)` and a
+/// `.package(path: …/swift-collections)` are one identity from two sources and
+/// the graph is rejected before any property is involved. Measured: 0 of 98
+/// entries executed on swift-collections, 0 of 39 on SwiftPropertyLaws.
+@Suite("Verifier workdir — a corpus that is one of our own dependencies")
+struct VerifierWorkdirCorpusIdentityTests {
+
+    private static func corpus(named directory: String) -> VerifierWorkdir.UserPackageReference {
+        VerifierWorkdir.UserPackageReference(
+            packagePath: URL(fileURLWithPath: "/tmp/\(directory)"),
+            productNames: ["Collections"]
+        )
+    }
+
+    private static func dependencyLines(
+        corpus: VerifierWorkdir.UserPackageReference?,
+        mode: WorkdirMode
+    ) -> [String] {
+        VerifierWorkdir.renderDependenciesBlock(userPackage: corpus, mode: mode)
+            .components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            // The last entry carries no trailing comma, so whether a line ends
+            // in one depends on what follows it. Comparing raw lines would make
+            // "a path dependency was appended" look like "a dependency changed".
+            .map { $0.hasSuffix(",") ? String($0.dropLast()) : $0 }
+            .filter { $0.hasPrefix(".package(") }
+    }
+
+    /// **The guard that makes the parse safe.** `urlDependencyIdentity` reads a
+    /// string the renderer just produced; a shape it cannot read is silently
+    /// *kept*, which re-opens the collision rather than dropping a needed
+    /// dependency. That is the right failure direction only if something notices
+    /// — this is that something. A new arm, or a `.package(url:)` spelled
+    /// differently, fails here.
+    @Test("every URL dependency in every mode yields an identity")
+    func everyURLDependencyIsReadable() {
+        for mode in WorkdirMode.allCases {
+            let syntaxCorpus = Self.corpus(named: "SomeUnrelatedCorpus")
+            for line in Self.dependencyLines(corpus: syntaxCorpus, mode: mode) {
+                if line.contains("path:") { continue }
+                #expect(
+                    VerifierWorkdir.urlDependencyIdentity(in: line) != nil,
+                    "unreadable URL dependency in \(mode): \(line) — the collapse silently skips it"
+                )
+            }
+        }
+    }
+
+    @Test(
+        "the colliding URL dependency is dropped",
+        arguments: [
+            ("swift-collections", "swift-collections"),
+            ("swift-numerics", "swift-numerics"),
+            ("swift-property-based", "swift-property-based"),
+            ("SwiftPropertyLaws", "SwiftPropertyLaws"),
+        ]
+    )
+    func collidingDependencyIsDropped(directory: String, identity: String) {
+        let lines = Self.dependencyLines(corpus: Self.corpus(named: directory), mode: .algebraic)
+        let urlIdentities = lines.compactMap { VerifierWorkdir.urlDependencyIdentity(in: $0) }
+        #expect(
+            !urlIdentities.map { $0.lowercased() }.contains(identity.lowercased()),
+            "\(identity) is still declared by URL beside the corpus path dependency"
+        )
+        #expect(lines.contains { $0.contains("path: \"/tmp/\(directory)\"") })
+    }
+
+    /// Identity comparison is case-insensitive, as SwiftPM's is. A checkout
+    /// named `swiftpropertylaws` collides with `SwiftPropertyLaws.git` just as
+    /// surely, and a case-sensitive filter would ship the graph SwiftPM rejects.
+    @Test("collision detection ignores case")
+    func collisionIsCaseInsensitive() {
+        let lines = Self.dependencyLines(corpus: Self.corpus(named: "swiftpropertylaws"), mode: .algebraic)
+        let identities = lines.compactMap { VerifierWorkdir.urlDependencyIdentity(in: $0) }
+        #expect(!identities.map { $0.lowercased() }.contains("swiftpropertylaws"))
+    }
+
+    /// The normal case must not regress: an ordinary corpus keeps every
+    /// dependency it had before, or the fix trades one broken population for a
+    /// much larger one.
+    @Test("an unrelated corpus keeps every dependency")
+    func unrelatedCorpusIsUnchanged() {
+        for mode in WorkdirMode.allCases {
+            let withCorpus = Self.dependencyLines(corpus: Self.corpus(named: "MyApp"), mode: mode)
+                .filter { !$0.contains("path:") }
+            let without = Self.dependencyLines(corpus: nil, mode: mode)
+            #expect(withCorpus == without, "\(mode): an unrelated corpus changed the dependency list")
+            #expect(!without.isEmpty, "\(mode): no dependencies at all — the scan proves nothing")
+        }
+    }
+
+    /// The `.product(name:package:)` edges deliberately do NOT change: the
+    /// collision *is* the two identities being equal, so the surviving path
+    /// dependency answers to the name the built-in edges already spell.
+    @Test("product edges still name an identity that is declared")
+    func productEdgesResolveAgainstSurvivingDependency() {
+        let corpus = Self.corpus(named: "swift-collections")
+        let declared = Set(
+            Self.dependencyLines(corpus: corpus, mode: .algebraic).compactMap { line -> String? in
+                if line.contains("path:") { return corpus.packageIdentity.lowercased() }
+                return VerifierWorkdir.urlDependencyIdentity(in: line)?.lowercased()
+            }
+        )
+        let products = VerifierWorkdir.renderTargetDependenciesBlock(
+            userPackage: corpus, mode: .algebraic
+        )
+        for line in products.components(separatedBy: "\n") {
+            guard let range = line.range(of: "package: \"") else { continue }
+            let rest = line[range.upperBound...]
+            guard let end = rest.firstIndex(of: "\"") else { continue }
+            let named = String(rest[..<end]).lowercased()
+            #expect(declared.contains(named), "product edge names undeclared package '\(named)'")
+        }
+    }
+
+    /// Surveying swift-collections makes the built-in `OrderedCollections` edge
+    /// and the corpus's own resolved product the same line.
+    @Test("a product is not declared twice when the corpus vends a built-in one")
+    func productEdgesAreDeduplicated() {
+        let corpus = VerifierWorkdir.UserPackageReference(
+            packagePath: URL(fileURLWithPath: "/tmp/swift-collections"),
+            productNames: ["OrderedCollections", "DequeModule"]
+        )
+        let lines = VerifierWorkdir.renderTargetDependenciesBlock(userPackage: corpus, mode: .algebraic)
+            .components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        #expect(lines.count == Set(lines).count, "duplicate product edge: \(lines)")
+    }
+
+    @Test("the substitution is reportable, and empty when nothing collides")
+    func supersededIdentitiesAreExposed() {
+        #expect(
+            VerifierWorkdir.supersededDependencyIdentities(
+                userPackage: Self.corpus(named: "swift-numerics"), mode: .algebraic
+            ) == ["swift-numerics"]
+        )
+        #expect(
+            VerifierWorkdir.supersededDependencyIdentities(
+                userPackage: Self.corpus(named: "MyApp"), mode: .algebraic
+            ).isEmpty
+        )
     }
 }

@@ -87,6 +87,16 @@ final class FileScopeVarCollector: SyntaxVisitor {
     }
 }
 
+/// Function declarations, for addressing a probe's subject by name.
+final class ModuleStateFunctionFinder: SyntaxVisitor {
+    private(set) var found: [FunctionDeclSyntax] = []
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        found.append(node)
+        return .visitChildren
+    }
+}
+
 /// Writes to a named global inside a body, plus the names the body binds itself.
 ///
 /// Three write shapes, because Swift spells assignment three ways and missing one
@@ -199,15 +209,5 @@ final class ModuleStateWriteChecker: SyntaxVisitor {
         if let optional = expression.as(OptionalChainingExprSyntax.self) {
             noteWrite(optional.expression)
         }
-    }
-}
-
-/// Function declarations, for addressing a probe's subject by name.
-final class ModuleStateFunctionFinder: SyntaxVisitor {
-    private(set) var found: [FunctionDeclSyntax] = []
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        found.append(node)
-        return .visitChildren
     }
 }

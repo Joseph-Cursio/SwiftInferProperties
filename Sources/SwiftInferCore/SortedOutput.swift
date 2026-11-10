@@ -14,48 +14,6 @@ public struct SortKey: Sendable, Equatable {
     }
 }
 
-/// The ordering a function's result is sorted by, read from the comparator it sorts with
-/// (SwiftInferProperties#647).
-///
-/// ```swift
-/// .sorted { lhs, rhs in
-///     if lhs.fileCount != rhs.fileCount { return lhs.fileCount > rhs.fileCount }
-///     if lhs.findingCount != rhs.findingCount { return lhs.findingCount > rhs.findingCount }
-///     return lhs.ruleID < rhs.ruleID
-/// }
-/// ```
-///
-/// states that the result is ordered by `(fileCount ↓, findingCount ↓, ruleID ↑)`. The law is read
-/// from the comparator, as `GuardDomain`'s is read from the guard, so it holds of the code it was
-/// read from by construction — except when the comparator is not a strict weak ordering, which is
-/// the one way `sorted(by:)` can return an array its own comparator calls unsorted.
-public struct SortedOutput: Sendable, Equatable {
-    /// The member of the returned value that holds the sorted array — `ruleImpacts` in
-    /// `Self(…, ruleImpacts: impacts)` — or `nil` when the function returns the array itself.
-    public let member: String?
-    /// The comparator's keys in priority order; the last is the final tie-break.
-    public let keys: [SortKey]
-    /// The element member that holds the key of the `Dictionary` the sorted array was mapped from —
-    /// `ruleID` in `byRule.map { ruleID, group in RuleImpact(ruleID: ruleID, …) }.sorted { … }` — or
-    /// `nil` when it was not mapped from one in a shape `DictionaryKeyReader` restates. It is what
-    /// `input-order-independence` compares: the dictionary's keys are distinct, so the sequence of
-    /// them says the whole order, including the order of elements the comparator calls tied.
-    public let dictionaryKeyMember: String?
-
-    public init(member: String?, keys: [SortKey], dictionaryKeyMember: String? = nil) {
-        self.member = member
-        self.keys = keys
-        self.dictionaryKeyMember = dictionaryKeyMember
-    }
-
-    /// Whether the comparator reaches the dictionary's key, so no two elements compare tied and the
-    /// order cannot depend on the dictionary's. `false` when there is no dictionary key to reach.
-    public var comparatorReachesDictionaryKey: Bool {
-        guard let dictionaryKeyMember else { return false }
-        return keys.contains { $0.path == dictionaryKeyMember }
-    }
-}
-
 /// Reads a `SortedOutput` from a function body, or `nil` when the body does not return a sorted
 /// array in a shape whose ordering can be restated.
 ///
@@ -291,5 +249,47 @@ public enum SortedOutputReader {
             )
         }
         return nil
+    }
+}
+
+/// The ordering a function's result is sorted by, read from the comparator it sorts with
+/// (SwiftInferProperties#647).
+///
+/// ```swift
+/// .sorted { lhs, rhs in
+///     if lhs.fileCount != rhs.fileCount { return lhs.fileCount > rhs.fileCount }
+///     if lhs.findingCount != rhs.findingCount { return lhs.findingCount > rhs.findingCount }
+///     return lhs.ruleID < rhs.ruleID
+/// }
+/// ```
+///
+/// states that the result is ordered by `(fileCount ↓, findingCount ↓, ruleID ↑)`. The law is read
+/// from the comparator, as `GuardDomain`'s is read from the guard, so it holds of the code it was
+/// read from by construction — except when the comparator is not a strict weak ordering, which is
+/// the one way `sorted(by:)` can return an array its own comparator calls unsorted.
+public struct SortedOutput: Sendable, Equatable {
+    /// The member of the returned value that holds the sorted array — `ruleImpacts` in
+    /// `Self(…, ruleImpacts: impacts)` — or `nil` when the function returns the array itself.
+    public let member: String?
+    /// The comparator's keys in priority order; the last is the final tie-break.
+    public let keys: [SortKey]
+    /// The element member that holds the key of the `Dictionary` the sorted array was mapped from —
+    /// `ruleID` in `byRule.map { ruleID, group in RuleImpact(ruleID: ruleID, …) }.sorted { … }` — or
+    /// `nil` when it was not mapped from one in a shape `DictionaryKeyReader` restates. It is what
+    /// `input-order-independence` compares: the dictionary's keys are distinct, so the sequence of
+    /// them says the whole order, including the order of elements the comparator calls tied.
+    public let dictionaryKeyMember: String?
+
+    public init(member: String?, keys: [SortKey], dictionaryKeyMember: String? = nil) {
+        self.member = member
+        self.keys = keys
+        self.dictionaryKeyMember = dictionaryKeyMember
+    }
+
+    /// Whether the comparator reaches the dictionary's key, so no two elements compare tied and the
+    /// order cannot depend on the dictionary's. `false` when there is no dictionary key to reach.
+    public var comparatorReachesDictionaryKey: Bool {
+        guard let dictionaryKeyMember else { return false }
+        return keys.contains { $0.path == dictionaryKeyMember }
     }
 }

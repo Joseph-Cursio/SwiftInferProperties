@@ -8,6 +8,15 @@ import Testing
 // gate), so tests inject synthetic Strong-tier bridges via the
 // runWithBridges seam.
 
+final class ABRecordingOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+    var text: String { lines.joined(separator: "\n") }
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
 @Suite("AcceptBridge — V1.110 bridge-decision recorder")
 struct AcceptBridgeCommandTests {
 
@@ -207,14 +216,5 @@ struct AcceptBridgeCommandTests {
         #expect(parsed.decision == "accepted-as-conformance")
         #expect(parsed.peer == 2)
         #expect(parsed.decisions == "/tmp/foo.json")
-    }
-}
-
-final class ABRecordingOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
     }
 }

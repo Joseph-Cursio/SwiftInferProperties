@@ -1,43 +1,5 @@
 import SwiftSyntax
 
-/// What a string-rewriting function's body guarantees about its output: the tokens it removes.
-///
-/// ```swift
-/// static func safeAlias(_ name: String) -> String {
-///     name.replacingOccurrences(of: "-", with: "_").replacingOccurrences(of: " ", with: "_")
-/// }
-/// ```
-///
-/// never returns a `-` or a space, and
-///
-/// ```swift
-/// func parseCommaDelimitedList(_ string: String) -> [String] {
-///     string.components(separatedBy: ",").compactMap { … trimmed, or nil … }
-/// }
-/// ```
-///
-/// never returns an element containing `,`. Both are read from the body, so the code satisfies them
-/// today; what they catch is an edit that drops a replacement or changes the separator — the two
-/// law-blind mutant shapes `docs/measurements/law-blind-mutants.md` names, which passed their
-/// idempotence and totality laws.
-public struct RewritePostcondition: Sendable, Equatable, Codable {
-
-    public enum Guarantee: Sendable, Equatable, Codable {
-        /// The returned `String` contains none of these tokens.
-        case outputLacks([String])
-        /// No element of the returned `[String]` contains this separator.
-        case elementsLack(String)
-    }
-
-    public let parameterName: String
-    public let guarantee: Guarantee
-
-    public init(parameterName: String, guarantee: Guarantee) {
-        self.parameterName = parameterName
-        self.guarantee = guarantee
-    }
-}
-
 /// Reads a `RewritePostcondition` off a unary `String` function whose whole body is the rewrite.
 ///
 /// ## Two shapes, both narrow on purpose
@@ -160,5 +122,43 @@ public enum RewritePostconditionReader {
             return false
         }
         return true
+    }
+}
+
+/// What a string-rewriting function's body guarantees about its output: the tokens it removes.
+///
+/// ```swift
+/// static func safeAlias(_ name: String) -> String {
+///     name.replacingOccurrences(of: "-", with: "_").replacingOccurrences(of: " ", with: "_")
+/// }
+/// ```
+///
+/// never returns a `-` or a space, and
+///
+/// ```swift
+/// func parseCommaDelimitedList(_ string: String) -> [String] {
+///     string.components(separatedBy: ",").compactMap { … trimmed, or nil … }
+/// }
+/// ```
+///
+/// never returns an element containing `,`. Both are read from the body, so the code satisfies them
+/// today; what they catch is an edit that drops a replacement or changes the separator — the two
+/// law-blind mutant shapes `docs/measurements/law-blind-mutants.md` names, which passed their
+/// idempotence and totality laws.
+public struct RewritePostcondition: Sendable, Equatable, Codable {
+
+    public enum Guarantee: Sendable, Equatable, Codable {
+        /// The returned `String` contains none of these tokens.
+        case outputLacks([String])
+        /// No element of the returned `[String]` contains this separator.
+        case elementsLack(String)
+    }
+
+    public let parameterName: String
+    public let guarantee: Guarantee
+
+    public init(parameterName: String, guarantee: Guarantee) {
+        self.parameterName = parameterName
+        self.guarantee = guarantee
     }
 }

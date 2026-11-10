@@ -1,5 +1,18 @@
 import SwiftInferCore
 
+/// Discriminator for which positive pattern the counter-signal
+/// contradicts. Carries just the callee names (not the full
+/// detection record) since counter-signals are matched by key only;
+/// the detail is for diagnostics.
+public enum DetectedAsymmetricAssertion: Sendable, Equatable {
+    case roundTrip(forwardCallee: String, backwardCallee: String)
+    case idempotence(calleeName: String)
+    case commutativity(calleeName: String)
+    case monotonicity(calleeName: String)
+    case countInvariance(calleeName: String)
+    case reduceEquivalence(opCalleeName: String)
+}
+
 /// One asymmetric-assertion counter-signal surfaced by TestLifter
 /// against a sliced test body — a negative-form mirror of one of the
 /// six positive `LiftedSuggestion` patterns. Carries the same
@@ -162,17 +175,4 @@ public struct LiftedCounterSignal: Sendable, Equatable {
             origin: origin
         )
     }
-}
-
-/// Discriminator for which positive pattern the counter-signal
-/// contradicts. Carries just the callee names (not the full
-/// detection record) since counter-signals are matched by key only;
-/// the detail is for diagnostics.
-public enum DetectedAsymmetricAssertion: Sendable, Equatable {
-    case roundTrip(forwardCallee: String, backwardCallee: String)
-    case idempotence(calleeName: String)
-    case commutativity(calleeName: String)
-    case monotonicity(calleeName: String)
-    case countInvariance(calleeName: String)
-    case reduceEquivalence(opCalleeName: String)
 }

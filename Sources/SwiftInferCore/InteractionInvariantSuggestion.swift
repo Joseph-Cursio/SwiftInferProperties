@@ -1,5 +1,58 @@
 import Foundation
 
+/// V2.0 M4.A — the five interaction-invariant families from PRD §5.
+/// All five ship in the enum at M4.A; the *templates* that fire on
+/// each family ship across M4–M7:
+///
+///   - `conservation` — M4 (lifted from v1). Stored aggregate that
+///     should equal the recomputation from a contributing collection.
+///   - `idempotence` — M4 (lifted from v1). Applying-twice an Action
+///     case equals applying-once.
+///   - `cardinality` — M5. At most one transient-presentation flag
+///     active.
+///   - `referentialIntegrity` — M6. Selected ID exists in extant
+///     collection.
+///   - `biconditional` — M7. Two State fields that should be
+///     either both-set or both-unset.
+///
+/// Raw values are stable strings so downstream consumers (the
+/// `discover-interaction` render path, the §17 metrics arc once
+/// schema v4 ships) can key on them.
+public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, CaseIterable {
+    case conservation
+    case idempotence
+    case cardinality
+    case referentialIntegrity = "referential-integrity"
+    case biconditional
+    /// A `.redux`-family reducer's paradigm-distinctive purity guarantee:
+    /// `reduce(s, a) == reduce(s, a)` for the same inputs. Unlike the other
+    /// families this is not a State-shape predicate but a two-call
+    /// comparison (mirrors `idempotence`'s post-loop double-apply), and it
+    /// is genuinely falsifiable at runtime — a hidden `Date()` / `UUID()` /
+    /// `.random()` makes the two calls differ, which static purity analysis
+    /// cannot catch.
+    case determinism
+    /// A `.redux`-family reducer with an *open* Action alphabet (a protocol
+    /// `Action` à la ReSwift, or String/opaque dispatch — `hasClosedActionAlphabet`
+    /// is false): an action the reducer does not recognise should fall through to
+    /// the default branch and leave State unchanged — `reduce(s, unknown) ==
+    /// s`. Measured by minting a fresh probe type conforming to the open
+    /// alphabet and asserting the reducer leaves State untouched. Closed Swift
+    /// enums are exhaustive, so no "unknown" is representable and the family
+    /// never fires on them.
+    case unknownActionIsNoOp = "unknown-action-is-no-op"
+    /// A convention role's (VIPER interactor / MVP presenter) paradigm-
+    /// distinctive guarantee: given the same input, the role's calls to its
+    /// output protocol are deterministic. Unlike the other families this is
+    /// neither a State-shape predicate nor a reducer property — it's verified
+    /// by a dedicated harness (`OutputDeterminismVerifierEmitter`) that runs the
+    /// role twice with a *recording* fake for the output collaborator and
+    /// compares the recorded call logs. A hidden `Date()` / `UUID()` /
+    /// `.random()` in the output path makes the two logs differ. Discovered off
+    /// `ConventionRoleDiscoverer` roles, not the reducer template engine.
+    case outputDeterminism = "output-determinism"
+}
+
 /// V2.0 M4.A — one inferred interaction-invariant candidate. The
 /// output unit of the M4+ template engine and the input unit for
 /// every downstream stage (M4.D embeds the predicate into M3.B's
@@ -160,57 +213,4 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
     ) -> String {
         "\(family.rawValue)::\(reducerQualifiedName)::\(predicate)"
     }
-}
-
-/// V2.0 M4.A — the five interaction-invariant families from PRD §5.
-/// All five ship in the enum at M4.A; the *templates* that fire on
-/// each family ship across M4–M7:
-///
-///   - `conservation` — M4 (lifted from v1). Stored aggregate that
-///     should equal the recomputation from a contributing collection.
-///   - `idempotence` — M4 (lifted from v1). Applying-twice an Action
-///     case equals applying-once.
-///   - `cardinality` — M5. At most one transient-presentation flag
-///     active.
-///   - `referentialIntegrity` — M6. Selected ID exists in extant
-///     collection.
-///   - `biconditional` — M7. Two State fields that should be
-///     either both-set or both-unset.
-///
-/// Raw values are stable strings so downstream consumers (the
-/// `discover-interaction` render path, the §17 metrics arc once
-/// schema v4 ships) can key on them.
-public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, CaseIterable {
-    case conservation
-    case idempotence
-    case cardinality
-    case referentialIntegrity = "referential-integrity"
-    case biconditional
-    /// A `.redux`-family reducer's paradigm-distinctive purity guarantee:
-    /// `reduce(s, a) == reduce(s, a)` for the same inputs. Unlike the other
-    /// families this is not a State-shape predicate but a two-call
-    /// comparison (mirrors `idempotence`'s post-loop double-apply), and it
-    /// is genuinely falsifiable at runtime — a hidden `Date()` / `UUID()` /
-    /// `.random()` makes the two calls differ, which static purity analysis
-    /// cannot catch.
-    case determinism
-    /// A `.redux`-family reducer with an *open* Action alphabet (a protocol
-    /// `Action` à la ReSwift, or String/opaque dispatch — `hasClosedActionAlphabet`
-    /// is false): an action the reducer does not recognise should fall through to
-    /// the default branch and leave State unchanged — `reduce(s, unknown) ==
-    /// s`. Measured by minting a fresh probe type conforming to the open
-    /// alphabet and asserting the reducer leaves State untouched. Closed Swift
-    /// enums are exhaustive, so no "unknown" is representable and the family
-    /// never fires on them.
-    case unknownActionIsNoOp = "unknown-action-is-no-op"
-    /// A convention role's (VIPER interactor / MVP presenter) paradigm-
-    /// distinctive guarantee: given the same input, the role's calls to its
-    /// output protocol are deterministic. Unlike the other families this is
-    /// neither a State-shape predicate nor a reducer property — it's verified
-    /// by a dedicated harness (`OutputDeterminismVerifierEmitter`) that runs the
-    /// role twice with a *recording* fake for the output collaborator and
-    /// compares the recorded call logs. A hidden `Date()` / `UUID()` /
-    /// `.random()` in the output path makes the two logs differ. Discovered off
-    /// `ConventionRoleDiscoverer` roles, not the reducer template engine.
-    case outputDeterminism = "output-determinism"
 }

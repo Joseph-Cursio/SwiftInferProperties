@@ -20,6 +20,51 @@ import Testing
 //   curated name + veto         : +25 + 10 - 25 = +10 → Suppressed
 //                                                       (still suppressed)
 
+@Suite("InversePairTemplate — V1.14.1 end-to-end discover() integration")
+struct InversePairSetAlgebraShapeDiscoverTests {
+
+    @Test("V1.14.1 — `intersection(_:) ↔ subtracting(_:)` Self-pair no longer surfaces in discover()")
+    func intersectionSubtractingSuppressedEndToEnd() {
+        let intersection = makeSummary(name: "intersection", line: 10)
+        let subtracting = makeSummary(name: "subtracting", line: 20)
+        let suggestions = TemplateRegistry.discover(
+            in: [intersection, subtracting],
+            typeDecls: []
+        )
+        let inversePairCount = suggestions.filter { $0.templateName == "inverse-pair" }.count
+        #expect(inversePairCount == 0, "SetAlgebra-shape pair should not surface")
+    }
+
+    @Test("V1.14.1 — non-SetAlgebra Self-pair still surfaces")
+    func nonSetAlgebraSelfPairStillSurfaces() {
+        // Custom domain ops on Self-typed carrier: `apply ↔ unapply`
+        // — not in SetAlgebra curated set, should still surface.
+        let apply = makeSummary(name: "apply", line: 30)
+        let unapply = makeSummary(name: "unapply", line: 40)
+        let suggestions = TemplateRegistry.discover(
+            in: [apply, unapply],
+            typeDecls: []
+        )
+        let inversePair = suggestions.first { $0.templateName == "inverse-pair" }
+        #expect(inversePair != nil, "Non-SetAlgebra Self-pair should still surface")
+    }
+
+    private func makeSummary(name: String, line: Int) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [Parameter(label: nil, internalName: "other", typeText: "Self", isInout: false)],
+            returnTypeText: "Self",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: line, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+    }
+}
+
 @Suite("InversePairTemplate — V1.14.1 SetAlgebra-shape veto")
 struct InversePairSetAlgebraShapeGateTests {
 
@@ -264,50 +309,5 @@ struct InversePairSetAlgebraShapeGateTests {
             bodySignals: .empty
         )
         return FunctionPair(forward: forward, reverse: reverse)
-    }
-}
-
-@Suite("InversePairTemplate — V1.14.1 end-to-end discover() integration")
-struct InversePairSetAlgebraShapeDiscoverTests {
-
-    @Test("V1.14.1 — `intersection(_:) ↔ subtracting(_:)` Self-pair no longer surfaces in discover()")
-    func intersectionSubtractingSuppressedEndToEnd() {
-        let intersection = makeSummary(name: "intersection", line: 10)
-        let subtracting = makeSummary(name: "subtracting", line: 20)
-        let suggestions = TemplateRegistry.discover(
-            in: [intersection, subtracting],
-            typeDecls: []
-        )
-        let inversePairCount = suggestions.filter { $0.templateName == "inverse-pair" }.count
-        #expect(inversePairCount == 0, "SetAlgebra-shape pair should not surface")
-    }
-
-    @Test("V1.14.1 — non-SetAlgebra Self-pair still surfaces")
-    func nonSetAlgebraSelfPairStillSurfaces() {
-        // Custom domain ops on Self-typed carrier: `apply ↔ unapply`
-        // — not in SetAlgebra curated set, should still surface.
-        let apply = makeSummary(name: "apply", line: 30)
-        let unapply = makeSummary(name: "unapply", line: 40)
-        let suggestions = TemplateRegistry.discover(
-            in: [apply, unapply],
-            typeDecls: []
-        )
-        let inversePair = suggestions.first { $0.templateName == "inverse-pair" }
-        #expect(inversePair != nil, "Non-SetAlgebra Self-pair should still surface")
-    }
-
-    private func makeSummary(name: String, line: Int) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: [Parameter(label: nil, internalName: "other", typeText: "Self", isInout: false)],
-            returnTypeText: "Self",
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: line, column: 1),
-            containingTypeName: nil,
-            bodySignals: .empty
-        )
     }
 }

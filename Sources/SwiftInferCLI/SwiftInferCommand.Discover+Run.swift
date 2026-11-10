@@ -3,6 +3,24 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
+/// V1.89 lint pass — small I/O bundle for the interactive-triage path,
+/// lifted from the four individual `Discover.run` params (`promptInput`,
+/// `output`, `diagnostics`, `dryRun`) so `runInteractiveBranch` stays
+/// at 5 params. File-scope rather than nested under `Discover` to keep
+/// SwiftLint's nesting cap satisfied.
+struct DiscoverInteractiveIO {
+    let prompt: any PromptInput
+    let output: any DiscoverOutput
+    let diagnostics: any DiagnosticOutput
+    let dryRun: Bool
+
+    /// `--output-dir`, when the caller passed one. Rides here rather than as a sixth
+    /// `runInteractiveBranch` parameter — the bundle exists for exactly that cap, and a
+    /// destination the user named at the command line is of a piece with the rest of the
+    /// interactive path's IO.
+    let outputDirectoryOverride: URL?
+}
+
 /// `Discover`'s behavior — split out of `SwiftInferCommand.swift` to keep that
 /// file within the `file_length` limit and the `Discover` struct's primary
 /// declaration within the `type_body_length` limit. Property wrappers
@@ -319,22 +337,4 @@ extension SwiftInferCommand.Discover {
         )
         try runInteractive(suggestions: visible, packageRoot: packageRoot, context: context)
     }
-}
-
-/// V1.89 lint pass — small I/O bundle for the interactive-triage path,
-/// lifted from the four individual `Discover.run` params (`promptInput`,
-/// `output`, `diagnostics`, `dryRun`) so `runInteractiveBranch` stays
-/// at 5 params. File-scope rather than nested under `Discover` to keep
-/// SwiftLint's nesting cap satisfied.
-struct DiscoverInteractiveIO {
-    let prompt: any PromptInput
-    let output: any DiscoverOutput
-    let diagnostics: any DiagnosticOutput
-    let dryRun: Bool
-
-    /// `--output-dir`, when the caller passed one. Rides here rather than as a sixth
-    /// `runInteractiveBranch` parameter — the bundle exists for exactly that cap, and a
-    /// destination the user named at the command line is of a piece with the rest of the
-    /// interactive path's IO.
-    let outputDirectoryOverride: URL?
 }

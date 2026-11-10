@@ -1,41 +1,6 @@
 import Foundation
 import SwiftInferCore
 
-/// PROTOTYPE — synthesizes a no-op `struct Fake_<P>: <P> { … }` conformer
-/// for a scanned protocol, stubbing every requirement with a default:
-///   - `Void` method → `{ }`
-///   - non-`Void` method → `{ return <default> }`
-///   - property → a stored `var name: Type = <default>` (satisfies `get`
-///     and `get set`)
-/// Returns `nil` (not fakeable) when a requirement's type isn't defaultable
-/// (a custom/concrete type with no synthesizable value) or the protocol has
-/// an unsupported requirement (`init` / `subscript` / `associatedtype` /
-/// `static`).
-public enum ViewModelProtocolFaker {
-
-    /// Source for a no-op `Fake_<P>` conformer to `proto`, or `nil` when a requirement can't be defaulted.
-    public static func fakeStruct(for proto: ViewModelProtocolScanner.ProtocolDecl) -> String? {
-        guard !proto.hasUnsupportedRequirement else { return nil }
-        var members: [String] = []
-        for property in proto.properties {
-            guard let value = ViewModelDefaultValue.value(for: property.typeText) else { return nil }
-            members.append("    var \(property.name): \(property.typeText) = \(value)")
-        }
-        for method in proto.methods {
-            guard let returnType = method.returnType else {
-                members.append("    \(method.signature) { }")
-                continue
-            }
-            guard let value = ViewModelDefaultValue.value(for: returnType) else { return nil }
-            members.append("    \(method.signature) { return \(value) }")
-        }
-        guard !members.isEmpty else {
-            return "struct Fake_\(proto.name): \(proto.name) {}"
-        }
-        return "struct Fake_\(proto.name): \(proto.name) {\n\(members.joined(separator: "\n"))\n}"
-    }
-}
-
 /// PROTOTYPE — a synthesizable default literal for a (defaultable) type, or
 /// `nil`. Covers Optionals (`nil`), collections (`[]` / `[:]`), and the
 /// curated scalars. A custom/concrete type returns `nil` (gates faking +
@@ -73,5 +38,40 @@ public enum ViewModelDefaultValue {
         default:
             return nil
         }
+    }
+}
+
+/// PROTOTYPE — synthesizes a no-op `struct Fake_<P>: <P> { … }` conformer
+/// for a scanned protocol, stubbing every requirement with a default:
+///   - `Void` method → `{ }`
+///   - non-`Void` method → `{ return <default> }`
+///   - property → a stored `var name: Type = <default>` (satisfies `get`
+///     and `get set`)
+/// Returns `nil` (not fakeable) when a requirement's type isn't defaultable
+/// (a custom/concrete type with no synthesizable value) or the protocol has
+/// an unsupported requirement (`init` / `subscript` / `associatedtype` /
+/// `static`).
+public enum ViewModelProtocolFaker {
+
+    /// Source for a no-op `Fake_<P>` conformer to `proto`, or `nil` when a requirement can't be defaulted.
+    public static func fakeStruct(for proto: ViewModelProtocolScanner.ProtocolDecl) -> String? {
+        guard !proto.hasUnsupportedRequirement else { return nil }
+        var members: [String] = []
+        for property in proto.properties {
+            guard let value = ViewModelDefaultValue.value(for: property.typeText) else { return nil }
+            members.append("    var \(property.name): \(property.typeText) = \(value)")
+        }
+        for method in proto.methods {
+            guard let returnType = method.returnType else {
+                members.append("    \(method.signature) { }")
+                continue
+            }
+            guard let value = ViewModelDefaultValue.value(for: returnType) else { return nil }
+            members.append("    \(method.signature) { return \(value) }")
+        }
+        guard !members.isEmpty else {
+            return "struct Fake_\(proto.name): \(proto.name) {}"
+        }
+        return "struct Fake_\(proto.name): \(proto.name) {\n\(members.joined(separator: "\n"))\n}"
     }
 }

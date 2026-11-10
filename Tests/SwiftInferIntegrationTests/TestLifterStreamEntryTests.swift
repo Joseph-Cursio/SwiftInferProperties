@@ -5,6 +5,13 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+/// No-op diagnostic sink — the stream-entry tests don't care about the
+/// warning stream from ConfigLoader / VocabularyLoader because the
+/// fixture directories don't carry config files.
+private struct SilentDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M3.2 acceptance — lifted suggestions whose callee has no
 /// matching production-side function enter the visible `discover`
 /// stream as promoted Suggestions with a +50 `.testBodyPattern` signal,
@@ -221,11 +228,4 @@ struct TestLifterStreamEntryTests {
             encoding: .utf8
         )
     }
-}
-
-/// No-op diagnostic sink — the stream-entry tests don't care about the
-/// warning stream from ConfigLoader / VocabularyLoader because the
-/// fixture directories don't carry config files.
-private struct SilentDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

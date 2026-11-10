@@ -3,6 +3,34 @@ import SwiftInferCLI
 import SwiftInferCore
 import Testing
 
+// MARK: - Recording stubs
+
+private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
+    private let lock = NSLock()
+    private var captured: [String] = []
+    var lines: [String] {
+        lock.lock(); defer { lock.unlock() }
+        return captured
+    }
+
+    func write(_ text: String) {
+        lock.lock(); captured.append(text); lock.unlock()
+    }
+}
+
+private final class RecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    private let lock = NSLock()
+    private var captured: [String] = []
+    var lines: [String] {
+        lock.lock(); defer { lock.unlock() }
+        return captured
+    }
+
+    func writeDiagnostic(_ text: String) {
+        lock.lock(); captured.append(text); lock.unlock()
+    }
+}
+
 /// PRD §16 #3 hard guarantee — "SwiftInfer never auto-accepts
 /// suggestions. Even in CI mode, `drift` emits warnings, not
 /// failures. The accept/reject step is always human." The contract
@@ -118,33 +146,5 @@ struct DriftNeverFailsCITests {
             }
         }
         """
-    }
-}
-
-// MARK: - Recording stubs
-
-private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
-    private let lock = NSLock()
-    private var captured: [String] = []
-    var lines: [String] {
-        lock.lock(); defer { lock.unlock() }
-        return captured
-    }
-
-    func write(_ text: String) {
-        lock.lock(); captured.append(text); lock.unlock()
-    }
-}
-
-private final class RecordingDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    private let lock = NSLock()
-    private var captured: [String] = []
-    var lines: [String] {
-        lock.lock(); defer { lock.unlock() }
-        return captured
-    }
-
-    func writeDiagnostic(_ text: String) {
-        lock.lock(); captured.append(text); lock.unlock()
     }
 }

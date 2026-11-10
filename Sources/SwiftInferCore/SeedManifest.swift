@@ -1,5 +1,132 @@
 import Foundation
 
+/// What a seed *is*, which decides what may be done with it.
+///
+/// A seed is not always a symbol to analyse. Some name a place where pure logic **exists but has no
+/// name yet** — an extractable kernel inlined in an impure method. There is nothing to index there:
+/// nothing to call, nothing to generate inputs for, no signature to satisfy. The symbol names the
+/// *enclosing* function, which is a **location**, not a subject.
+///
+/// **Narrowing discovery to such a seed produces a confident zero.** Focus on
+/// `uploadRemainingChunks` and this tool must refuse it — `private async throws` refutes purity —
+/// and then report `kept 0` for a codebase that demonstrably has property-testable logic in it. That
+/// is the exact failure the empty-manifest guard exists to prevent, arriving by a new route: a tool
+/// telling the reader "there is nothing here" when there is. So a non-analysable seed is *reported*
+/// to the reader as work to do, and never focused on.
+public enum SeedKind: Sendable, Equatable {
+    /// A pure, total function. Index it, propose laws, run them.
+    case pureFunction
+
+    /// A function claiming idempotence that calls non-idempotent work — it arrives with a
+    /// ready-made property.
+    case idempotency
+
+    /// Pure logic trapped inside an impure method. Real, valuable, **not yet callable**.
+    case extractableKernel
+
+    /// A pure, total, **named** function that no test can reach: `private` or `fileprivate`, or
+    /// nested inside a type that is.
+    ///
+    /// This tool already knew about these — `RestrictedFunction` sets them aside, on the grounds
+    /// that `@testable import` raises `internal` and stops there. What it could not know was that
+    /// the linter was *seeding them as analysable*: 316 of 468 supposedly actionable seeds named a
+    /// function no test could call. The two tools had been disagreeing silently, and only noticed
+    /// once both sides stated their beliefs in a comparable vocabulary.
+    ///
+    /// **Analysable — the kind is a label, not a gate.**
+    ///
+    /// It first shipped grouped with `extractableKernel` as not-analysable, which conflated two
+    /// different obstacles. A kernel has no symbol: nothing to call, no signature, no law to
+    /// propose. A restricted function has both, and lacks only *verifiability* from another module.
+    /// `isAnalysable` asks whether analysis may be narrowed to this symbol, and for a private
+    /// function the answer is yes.
+    ///
+    /// Getting that wrong was not academic: `analysableSeeds` is the set `synthesizeGenericLaws`
+    /// keys on, so marking these unanalysable silently switched off the rescue this file's
+    /// `SeededPrivateFunctionTests` exists to guarantee — for every seed the producing linter
+    /// emits. Access level belongs in the advice, never in the gate.
+    case restrictedFunction
+
+    /// A **type** that owes laws — the linter's domain-type rules. `symbol` is a type name.
+    ///
+    /// Every other analysable kind names a callable, and that assumption was once written down as
+    /// a reason these rules could not seed at all: "the carrier has no callable function attached".
+    /// It is false here. `CodableRoundTripTemplate`, `ModelLawTemplate`,
+    /// `SequenceViewModelLawTemplate` and the whole `verify-value-semantics` command state laws
+    /// over a carrier type with no free function anywhere. A newtype over a primitive is that shape
+    /// exactly: `Percentage` can own `0...100` and `String` cannot.
+    ///
+    /// **Analysable**, for the same reason `restrictedFunction` is — the subject can be named and
+    /// laws proposed for it. What it cannot do is be *called*, and the templates that consume a
+    /// carrier never try.
+    ///
+    /// **Joined by type name, not by `(file, symbol)`** — see `SeedFocus.filter`. The producing
+    /// rule fires where a raw primitive is *used*, so the seed's `file` is the use site while the
+    /// type is usually declared elsewhere. Reusing the function join would miss most of the time.
+    case carrier
+
+    /// A pure function that returns **nothing** and changes one value — an `inout` argument, or a
+    /// `mutating` method's `self` — named by the seed's `mutates`.
+    ///
+    /// A mutator's result is the value it leaves behind, so its laws copy that value, apply the
+    /// mutator, and compare: twice for idempotence, two copies for determinism. SwiftLintRuleStudio's
+    /// `applyMigration(_:to:)`, which writes a config through `inout` and owes idempotence, is the
+    /// shape that motivated it.
+    ///
+    /// **Its own kind rather than a `pure-function` with a field**, on the producer's reasoning: a
+    /// consumer that ignored a field would take a `Void` function for one with a result and write
+    /// `f(x) == f(x)` over nothing. A build that predates this case decodes it as `unrecognised` and
+    /// skips it out loud, as with `carrier`.
+    ///
+    /// **Analysable**, and never demoted by the producer: a private mutator keeps this kind and
+    /// carries `restriction`, which `SeedRestrictionResolver` reads by presence.
+    case pureMutator
+
+    /// A kind emitted by a newer producer than this build knows.
+    ///
+    /// **Treated as not-analysable, deliberately.** The two ways to be wrong here are not
+    /// symmetric. Guess "analysable" and a future refactor-pending kind (a pure closure, say) gets
+    /// focused on, refused, and reported as a zero — silently. Guess "not analysable" and the seed
+    /// is merely skipped, *and said out loud*. Never silently narrow to a symbol you do not
+    /// understand.
+    case unrecognised(String)
+
+    public var isAnalysable: Bool {
+        switch self {
+        case .pureFunction, .idempotency, .restrictedFunction, .carrier, .pureMutator:
+            return true
+
+        case .extractableKernel, .unrecognised:
+            return false
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .pureFunction:
+            return "pure-function"
+
+        case .idempotency:
+            return "idempotency"
+
+        case .extractableKernel:
+            return "extractable-kernel"
+
+        case .restrictedFunction:
+            return "restricted-function"
+
+        case .carrier:
+            return "carrier"
+
+        case .pureMutator:
+            return "pure-mutator"
+
+        case .unrecognised(let raw):
+            return raw
+        }
+    }
+}
+
 /// A property-test *seed manifest* produced by an external linter and consumed
 /// by `swift-infer discover --seeds`.
 ///
@@ -225,133 +352,6 @@ public struct SeedManifest: Codable, Sendable, Equatable {
             // it mutates, and absence is the honest answer for every other seed.
             self.requires = try container.decodeIfPresent(SeedRequirement.self, forKey: .requires)
             self.mutates = try container.decodeIfPresent(String.self, forKey: .mutates)
-        }
-    }
-}
-
-/// What a seed *is*, which decides what may be done with it.
-///
-/// A seed is not always a symbol to analyse. Some name a place where pure logic **exists but has no
-/// name yet** — an extractable kernel inlined in an impure method. There is nothing to index there:
-/// nothing to call, nothing to generate inputs for, no signature to satisfy. The symbol names the
-/// *enclosing* function, which is a **location**, not a subject.
-///
-/// **Narrowing discovery to such a seed produces a confident zero.** Focus on
-/// `uploadRemainingChunks` and this tool must refuse it — `private async throws` refutes purity —
-/// and then report `kept 0` for a codebase that demonstrably has property-testable logic in it. That
-/// is the exact failure the empty-manifest guard exists to prevent, arriving by a new route: a tool
-/// telling the reader "there is nothing here" when there is. So a non-analysable seed is *reported*
-/// to the reader as work to do, and never focused on.
-public enum SeedKind: Sendable, Equatable {
-    /// A pure, total function. Index it, propose laws, run them.
-    case pureFunction
-
-    /// A function claiming idempotence that calls non-idempotent work — it arrives with a
-    /// ready-made property.
-    case idempotency
-
-    /// Pure logic trapped inside an impure method. Real, valuable, **not yet callable**.
-    case extractableKernel
-
-    /// A pure, total, **named** function that no test can reach: `private` or `fileprivate`, or
-    /// nested inside a type that is.
-    ///
-    /// This tool already knew about these — `RestrictedFunction` sets them aside, on the grounds
-    /// that `@testable import` raises `internal` and stops there. What it could not know was that
-    /// the linter was *seeding them as analysable*: 316 of 468 supposedly actionable seeds named a
-    /// function no test could call. The two tools had been disagreeing silently, and only noticed
-    /// once both sides stated their beliefs in a comparable vocabulary.
-    ///
-    /// **Analysable — the kind is a label, not a gate.**
-    ///
-    /// It first shipped grouped with `extractableKernel` as not-analysable, which conflated two
-    /// different obstacles. A kernel has no symbol: nothing to call, no signature, no law to
-    /// propose. A restricted function has both, and lacks only *verifiability* from another module.
-    /// `isAnalysable` asks whether analysis may be narrowed to this symbol, and for a private
-    /// function the answer is yes.
-    ///
-    /// Getting that wrong was not academic: `analysableSeeds` is the set `synthesizeGenericLaws`
-    /// keys on, so marking these unanalysable silently switched off the rescue this file's
-    /// `SeededPrivateFunctionTests` exists to guarantee — for every seed the producing linter
-    /// emits. Access level belongs in the advice, never in the gate.
-    case restrictedFunction
-
-    /// A **type** that owes laws — the linter's domain-type rules. `symbol` is a type name.
-    ///
-    /// Every other analysable kind names a callable, and that assumption was once written down as
-    /// a reason these rules could not seed at all: "the carrier has no callable function attached".
-    /// It is false here. `CodableRoundTripTemplate`, `ModelLawTemplate`,
-    /// `SequenceViewModelLawTemplate` and the whole `verify-value-semantics` command state laws
-    /// over a carrier type with no free function anywhere. A newtype over a primitive is that shape
-    /// exactly: `Percentage` can own `0...100` and `String` cannot.
-    ///
-    /// **Analysable**, for the same reason `restrictedFunction` is — the subject can be named and
-    /// laws proposed for it. What it cannot do is be *called*, and the templates that consume a
-    /// carrier never try.
-    ///
-    /// **Joined by type name, not by `(file, symbol)`** — see `SeedFocus.filter`. The producing
-    /// rule fires where a raw primitive is *used*, so the seed's `file` is the use site while the
-    /// type is usually declared elsewhere. Reusing the function join would miss most of the time.
-    case carrier
-
-    /// A pure function that returns **nothing** and changes one value — an `inout` argument, or a
-    /// `mutating` method's `self` — named by the seed's `mutates`.
-    ///
-    /// A mutator's result is the value it leaves behind, so its laws copy that value, apply the
-    /// mutator, and compare: twice for idempotence, two copies for determinism. SwiftLintRuleStudio's
-    /// `applyMigration(_:to:)`, which writes a config through `inout` and owes idempotence, is the
-    /// shape that motivated it.
-    ///
-    /// **Its own kind rather than a `pure-function` with a field**, on the producer's reasoning: a
-    /// consumer that ignored a field would take a `Void` function for one with a result and write
-    /// `f(x) == f(x)` over nothing. A build that predates this case decodes it as `unrecognised` and
-    /// skips it out loud, as with `carrier`.
-    ///
-    /// **Analysable**, and never demoted by the producer: a private mutator keeps this kind and
-    /// carries `restriction`, which `SeedRestrictionResolver` reads by presence.
-    case pureMutator
-
-    /// A kind emitted by a newer producer than this build knows.
-    ///
-    /// **Treated as not-analysable, deliberately.** The two ways to be wrong here are not
-    /// symmetric. Guess "analysable" and a future refactor-pending kind (a pure closure, say) gets
-    /// focused on, refused, and reported as a zero — silently. Guess "not analysable" and the seed
-    /// is merely skipped, *and said out loud*. Never silently narrow to a symbol you do not
-    /// understand.
-    case unrecognised(String)
-
-    public var isAnalysable: Bool {
-        switch self {
-        case .pureFunction, .idempotency, .restrictedFunction, .carrier, .pureMutator:
-            return true
-
-        case .extractableKernel, .unrecognised:
-            return false
-        }
-    }
-
-    public var rawValue: String {
-        switch self {
-        case .pureFunction:
-            return "pure-function"
-
-        case .idempotency:
-            return "idempotency"
-
-        case .extractableKernel:
-            return "extractable-kernel"
-
-        case .restrictedFunction:
-            return "restricted-function"
-
-        case .carrier:
-            return "carrier"
-
-        case .pureMutator:
-            return "pure-mutator"
-
-        case .unrecognised(let raw):
-            return raw
         }
     }
 }

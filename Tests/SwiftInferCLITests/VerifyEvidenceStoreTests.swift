@@ -3,6 +3,16 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Test-only `FileSystemReader` reporting every path as missing. Used
+/// to drive the "no walk-up target found" code path without setting up
+/// a real fixture tree.
+private struct NoFilesFileSystem: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
+        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
+    }
+}
+
 @Suite("VerifyEvidenceStore — explicit path + walk-up implicit lookup + atomic write (V1.64.A)")
 struct VerifyEvidenceStoreTests {
 
@@ -224,15 +234,5 @@ struct VerifyEvidenceStoreTests {
             .appendingPathComponent("VerifyEvidenceStoreTests-\(name)-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base
-    }
-}
-
-/// Test-only `FileSystemReader` reporting every path as missing. Used
-/// to drive the "no walk-up target found" code path without setting up
-/// a real fixture tree.
-private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) throws -> Data {
-        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

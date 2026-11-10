@@ -1,69 +1,3 @@
-/// One logical line of generated Swift, read as the brackets, string literals and block comments
-/// a re-layout has to respect — see `GeneratedFileLayout`.
-///
-/// Deliberately not a syntax tree. A layout only ever inserts a line break immediately after an
-/// opening bracket, after a comma or a `;`, or immediately before a closing bracket, and none of
-/// those positions can change what Swift parses; so the bracket structure is the whole of what it
-/// needs to know. What it must never do is look inside a string literal or a comment, which is
-/// why those are opaque leaves here.
-indirect enum LayoutNode: Equatable, Sendable {
-    case text(String)
-    /// A complete single-line string literal, quotes included.
-    case literal(String)
-    /// A complete `/* … */` comment.
-    case comment(String)
-    case group(open: Character, children: [Self], close: Character)
-
-    var flat: String {
-        switch self {
-        case .text(let text), .literal(let text), .comment(let text):
-            return text
-
-        case let .group(open, children, close):
-            return String(open) + children.flat + String(close)
-        }
-    }
-}
-
-extension Array where Element == LayoutNode {
-
-    var flat: String { map(\.flat).joined() }
-
-    /// `self` without whitespace at either end, so an element split out of a list starts and ends
-    /// on its own content.
-    var trimmed: [LayoutNode] {
-        var nodes = self
-        while case .text(let text)? = nodes.first {
-            let kept = String(text.drop { $0 == " " })
-            if kept.isEmpty { nodes.removeFirst() } else { nodes[0] = .text(kept); break }
-        }
-        while case .text(let text)? = nodes.last {
-            let kept = String(text.reversed().drop { $0 == " " }.reversed())
-            if kept.isEmpty { nodes.removeLast() } else { nodes[nodes.count - 1] = .text(kept); break }
-        }
-        return nodes
-    }
-
-    /// `self` split wherever `separator` appears in a top-level text node — commas between the
-    /// elements of a list, semicolons between the statements of a body. A separator inside a
-    /// nested group or a literal is not top-level and does not split.
-    func split(on separator: Character) -> [[LayoutNode]] {
-        var parts: [[LayoutNode]] = [[]]
-        for node in self {
-            guard case .text(let text) = node, text.contains(separator) else {
-                parts[parts.count - 1].append(node)
-                continue
-            }
-            let pieces = text.split(separator: separator, omittingEmptySubsequences: false)
-            for (offset, piece) in pieces.enumerated() {
-                if offset > 0 { parts.append([]) }
-                if !piece.isEmpty { parts[parts.count - 1].append(.text(String(piece))) }
-            }
-        }
-        return parts.map(\.trimmed)
-    }
-}
-
 /// Reads one logical line into `LayoutNode`s, or answers `nil` when it holds something a layout
 /// must not touch: unbalanced brackets, a raw or multi-line string, or a `//` comment.
 struct LayoutParser {
@@ -226,5 +160,71 @@ struct LayoutParser {
             }
         }
         return nil
+    }
+}
+
+/// One logical line of generated Swift, read as the brackets, string literals and block comments
+/// a re-layout has to respect — see `GeneratedFileLayout`.
+///
+/// Deliberately not a syntax tree. A layout only ever inserts a line break immediately after an
+/// opening bracket, after a comma or a `;`, or immediately before a closing bracket, and none of
+/// those positions can change what Swift parses; so the bracket structure is the whole of what it
+/// needs to know. What it must never do is look inside a string literal or a comment, which is
+/// why those are opaque leaves here.
+indirect enum LayoutNode: Equatable, Sendable {
+    case text(String)
+    /// A complete single-line string literal, quotes included.
+    case literal(String)
+    /// A complete `/* … */` comment.
+    case comment(String)
+    case group(open: Character, children: [Self], close: Character)
+
+    var flat: String {
+        switch self {
+        case .text(let text), .literal(let text), .comment(let text):
+            return text
+
+        case let .group(open, children, close):
+            return String(open) + children.flat + String(close)
+        }
+    }
+}
+
+extension Array where Element == LayoutNode {
+
+    var flat: String { map(\.flat).joined() }
+
+    /// `self` without whitespace at either end, so an element split out of a list starts and ends
+    /// on its own content.
+    var trimmed: [LayoutNode] {
+        var nodes = self
+        while case .text(let text)? = nodes.first {
+            let kept = String(text.drop { $0 == " " })
+            if kept.isEmpty { nodes.removeFirst() } else { nodes[0] = .text(kept); break }
+        }
+        while case .text(let text)? = nodes.last {
+            let kept = String(text.reversed().drop { $0 == " " }.reversed())
+            if kept.isEmpty { nodes.removeLast() } else { nodes[nodes.count - 1] = .text(kept); break }
+        }
+        return nodes
+    }
+
+    /// `self` split wherever `separator` appears in a top-level text node — commas between the
+    /// elements of a list, semicolons between the statements of a body. A separator inside a
+    /// nested group or a literal is not top-level and does not split.
+    func split(on separator: Character) -> [[LayoutNode]] {
+        var parts: [[LayoutNode]] = [[]]
+        for node in self {
+            guard case .text(let text) = node, text.contains(separator) else {
+                parts[parts.count - 1].append(node)
+                continue
+            }
+            let pieces = text.split(separator: separator, omittingEmptySubsequences: false)
+            for (offset, piece) in pieces.enumerated() {
+                if offset > 0 { parts.append([]) }
+                if !piece.isEmpty { parts[parts.count - 1].append(.text(String(piece))) }
+            }
+        }
+        return parts.map(\.trimmed)
     }
 }

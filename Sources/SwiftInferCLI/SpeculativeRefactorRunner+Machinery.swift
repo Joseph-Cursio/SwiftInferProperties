@@ -1,6 +1,12 @@
 import Foundation
 import SwiftInferCore
 
+/// Discover writes progress to stderr; a speculative run does it once per
+/// candidate and the noise would bury the proposals.
+struct SilentDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* deliberately silent */ }
+}
+
 /// The copy-mutate-verify machinery. Split from the runner's policy half both for
 /// the file-length cap and because this is the part the design says **later tiers
 /// reuse** — closure extraction and kernel extraction differ only in the mutation,
@@ -227,12 +233,6 @@ extension SpeculativeRefactorRunner {
             .filter { $0.pathExtension == "swift" }
             .sorted { $0.path < $1.path }
     }
-}
-
-/// Discover writes progress to stderr; a speculative run does it once per
-/// candidate and the noise would bury the proposals.
-struct SilentDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* deliberately silent */ }
 }
 
 extension SpeculativeRefactorRunner {

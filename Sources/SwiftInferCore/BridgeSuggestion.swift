@@ -1,65 +1,5 @@
 import Foundation
 
-/// V2.0 M9 — InteractionInvariantBridge proposal (PRD §9). Fires
-/// when `InteractionTemplateEngine` accumulates ≥ 3 Strong-tier
-/// `InteractionInvariantSuggestion`s on the same reducer. Each peer
-/// proposal corresponds to one of the kit's family-specific
-/// `InteractionInvariant` sub-protocols.
-///
-/// **Peer-proposal shape.** PRD §9.4 settles that the families are
-/// mutually independent — no umbrella protocol. When ≥ 2 distinct
-/// families fire as Strong on the same reducer, the user sees an
-/// N-arm extended triage prompt (`[A/B/B'/B''/.../s/n/?]`); each
-/// `B*` arm corresponds to one peer in `peers`. A reducer with all
-/// Strong-tier suggestions in a single family fires a 1-arm Bridge.
-public struct BridgeSuggestion: Sendable, Equatable, Codable {
-
-    /// Stable identity hash for the §17 metrics arc + accept-flow
-    /// plumbing. Derived from `(reducerQualifiedName, sorted family
-    /// rawValues)` so the same set of fires on the same reducer
-    /// produces the same identity across runs.
-    public let identity: SuggestionIdentity
-
-    /// `reducerQualifiedName` + `stateTypeName` are copied from the
-    /// source `InteractionInvariantSuggestion`s so the bridge is
-    /// self-describing.
-    public let reducerQualifiedName: String
-    public let stateTypeName: String
-
-    /// One peer proposal per distinct family. Sorted by `family.rawValue`
-    /// for byte-stable rendering.
-    public let peers: [PeerProposal]
-
-    /// Wall-clock time the bridge was first emitted. Mirrors
-    /// `InteractionInvariantSuggestion.firstSeenAt`.
-    public let firstSeenAt: Date
-
-    public init(
-        identity: SuggestionIdentity,
-        reducerQualifiedName: String,
-        stateTypeName: String,
-        peers: [PeerProposal],
-        firstSeenAt: Date
-    ) {
-        self.identity = identity
-        self.reducerQualifiedName = reducerQualifiedName
-        self.stateTypeName = stateTypeName
-        self.peers = peers
-        self.firstSeenAt = firstSeenAt
-    }
-
-    /// V2.0 M9 — canonical input the identity hash derives from.
-    /// `family rawValues` are sorted before joining so the order of
-    /// fires doesn't affect the hash.
-    public static func identityCanonicalInput(
-        reducerQualifiedName: String,
-        families: [InteractionInvariantFamily]
-    ) -> String {
-        let sortedRaws = families.map(\.rawValue).sorted()
-        return "bridge::\(reducerQualifiedName)::\(sortedRaws.joined(separator: ","))"
-    }
-}
-
 /// V2.0 M9 — one arm of a Bridge proposal. Corresponds to one
 /// kit-side `InteractionInvariant` sub-protocol. The user accepts
 /// each peer independently per PRD §9.4.
@@ -148,5 +88,65 @@ public func kitProtocolName(for family: InteractionInvariantFamily) -> String {
     // kit-side conformance protocol, so this name is a placeholder the
     // measured-verify path never consumes.
     case .outputDeterminism: return "OutputDeterminismInvariant"
+    }
+}
+
+/// V2.0 M9 — InteractionInvariantBridge proposal (PRD §9). Fires
+/// when `InteractionTemplateEngine` accumulates ≥ 3 Strong-tier
+/// `InteractionInvariantSuggestion`s on the same reducer. Each peer
+/// proposal corresponds to one of the kit's family-specific
+/// `InteractionInvariant` sub-protocols.
+///
+/// **Peer-proposal shape.** PRD §9.4 settles that the families are
+/// mutually independent — no umbrella protocol. When ≥ 2 distinct
+/// families fire as Strong on the same reducer, the user sees an
+/// N-arm extended triage prompt (`[A/B/B'/B''/.../s/n/?]`); each
+/// `B*` arm corresponds to one peer in `peers`. A reducer with all
+/// Strong-tier suggestions in a single family fires a 1-arm Bridge.
+public struct BridgeSuggestion: Sendable, Equatable, Codable {
+
+    /// Stable identity hash for the §17 metrics arc + accept-flow
+    /// plumbing. Derived from `(reducerQualifiedName, sorted family
+    /// rawValues)` so the same set of fires on the same reducer
+    /// produces the same identity across runs.
+    public let identity: SuggestionIdentity
+
+    /// `reducerQualifiedName` + `stateTypeName` are copied from the
+    /// source `InteractionInvariantSuggestion`s so the bridge is
+    /// self-describing.
+    public let reducerQualifiedName: String
+    public let stateTypeName: String
+
+    /// One peer proposal per distinct family. Sorted by `family.rawValue`
+    /// for byte-stable rendering.
+    public let peers: [PeerProposal]
+
+    /// Wall-clock time the bridge was first emitted. Mirrors
+    /// `InteractionInvariantSuggestion.firstSeenAt`.
+    public let firstSeenAt: Date
+
+    public init(
+        identity: SuggestionIdentity,
+        reducerQualifiedName: String,
+        stateTypeName: String,
+        peers: [PeerProposal],
+        firstSeenAt: Date
+    ) {
+        self.identity = identity
+        self.reducerQualifiedName = reducerQualifiedName
+        self.stateTypeName = stateTypeName
+        self.peers = peers
+        self.firstSeenAt = firstSeenAt
+    }
+
+    /// V2.0 M9 — canonical input the identity hash derives from.
+    /// `family rawValues` are sorted before joining so the order of
+    /// fires doesn't affect the hash.
+    public static func identityCanonicalInput(
+        reducerQualifiedName: String,
+        families: [InteractionInvariantFamily]
+    ) -> String {
+        let sortedRaws = families.map(\.rawValue).sorted()
+        return "bridge::\(reducerQualifiedName)::\(sortedRaws.joined(separator: ","))"
     }
 }

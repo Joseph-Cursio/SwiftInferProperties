@@ -1,5 +1,38 @@
 import SwiftSyntax
 
+/// Curated callee-text matches for non-deterministic APIs. Kept small
+/// and explicit for M1.2; expansion happens as templates encounter
+/// false negatives.
+private enum NonDeterministicAPIs {
+
+    private static let exactMatches: Set<String> = [
+        "Date",
+        "Date.now",
+        "UUID",
+        "URLSession.shared",
+        "arc4random",
+        "arc4random_uniform",
+        "drand48",
+        "rand",
+        "random",
+    ]
+
+    /// Callee texts ending in `.random` or `.random(in:)` cover the
+    /// `Int.random`, `Double.random(in:)`, `Bool.random()` family
+    /// without enumerating every numeric type.
+    private static let suffixMatches: [String] = [
+        ".random",
+        ".random(in:)",
+    ]
+
+    static func matches(_ calleeText: String) -> Bool {
+        if exactMatches.contains(calleeText) {
+            return true
+        }
+        return suffixMatches.contains { calleeText.hasSuffix($0) }
+    }
+}
+
 /// Walks a single function body and collects the M1.2 + M2.4 + M2.5
 /// signals: non-deterministic API calls, self-composition shapes, and
 /// reducer-op references (with the M2.5 identity-shaped seed
@@ -149,38 +182,5 @@ final class BodySignalVisitor: SyntaxVisitor {
         case .elements(let elements):
             return elements.isEmpty
         }
-    }
-}
-
-/// Curated callee-text matches for non-deterministic APIs. Kept small
-/// and explicit for M1.2; expansion happens as templates encounter
-/// false negatives.
-private enum NonDeterministicAPIs {
-
-    private static let exactMatches: Set<String> = [
-        "Date",
-        "Date.now",
-        "UUID",
-        "URLSession.shared",
-        "arc4random",
-        "arc4random_uniform",
-        "drand48",
-        "rand",
-        "random",
-    ]
-
-    /// Callee texts ending in `.random` or `.random(in:)` cover the
-    /// `Int.random`, `Double.random(in:)`, `Bool.random()` family
-    /// without enumerating every numeric type.
-    private static let suffixMatches: [String] = [
-        ".random",
-        ".random(in:)",
-    ]
-
-    static func matches(_ calleeText: String) -> Bool {
-        if exactMatches.contains(calleeText) {
-            return true
-        }
-        return suffixMatches.contains { calleeText.hasSuffix($0) }
     }
 }

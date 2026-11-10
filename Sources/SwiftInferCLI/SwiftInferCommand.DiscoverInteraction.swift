@@ -3,6 +3,20 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
+/// V2.0 M4.E — errors thrown by the discover-interaction pipeline.
+/// File-scope for the SwiftLint nesting cap; public so tests can
+/// pattern-match on the case.
+public enum DiscoverInteractionError: Error, CustomStringConvertible, Equatable {
+    case noMatchingReducer(pin: String)
+
+    public var description: String {
+        switch self {
+        case let .noMatchingReducer(pin):
+            return "swift-infer discover-interaction: no reducer matches pin '\(pin)'."
+        }
+    }
+}
+
 /// V2.0 M4.E — `swift-infer discover-interaction` subcommand.
 ///
 /// **What it does.** Discovers reducer-shaped functions under
@@ -287,20 +301,6 @@ public extension SwiftInferCommand {
                 throw DiscoverInteractionError.noMatchingReducer(pin: pinRaw)
             }
             return matched
-        }
-    }
-}
-
-/// V2.0 M4.E — errors thrown by the discover-interaction pipeline.
-/// File-scope for the SwiftLint nesting cap; public so tests can
-/// pattern-match on the case.
-public enum DiscoverInteractionError: Error, CustomStringConvertible, Equatable {
-    case noMatchingReducer(pin: String)
-
-    public var description: String {
-        switch self {
-        case let .noMatchingReducer(pin):
-            return "swift-infer discover-interaction: no reducer matches pin '\(pin)'."
         }
     }
 }

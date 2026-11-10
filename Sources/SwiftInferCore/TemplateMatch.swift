@@ -1,103 +1,3 @@
-/// **What a template matched, carried as data rather than rendered into prose (#477).**
-///
-/// ## The defect this closes
-///
-/// Four templates computed a structured match, spent it on a signal detail or a caveat sentence,
-/// and dropped it. `guard-domain` knows the condition, the returned expression, the parameter the
-/// law quantifies over and which way the guard fires — and by the time a `Suggestion` reaches the
-/// accept path, all four facts survive only inside
-/// `"the body states it: !(source.hasPrefix(\"---\")) ⟹ parse(source) == (Self(), source)"`.
-///
-/// So a stub writer had two options: parse that sentence back apart, or emit nothing. It emitted
-/// nothing — **62 declined `guard-domain` suggestions in the corpus funnel census, the largest
-/// population of the nine templates #468 found without a writer.**
-///
-/// Parsing it back is the option that must not be taken. This project has recorded the shape often
-/// enough to name it: a measurement that pattern-matches on text measures the text.
-/// `Evidence.parameterTypeNames` exists for exactly this reason on the evidence side — *"that
-/// string is a rendering, and splitting it back apart is wrong the moment a parameter is itself
-/// generic over two arguments"* — and this is the same rule applied to the match.
-///
-/// ## Why an enum rather than optional fields on `Suggestion`
-///
-/// Per-template optional fields would put four properties on `Suggestion` of which at most one is
-/// ever non-`nil`, and nothing would say so. A closed enum says *this suggestion carries exactly
-/// one template's match, or none*, and a writer that switches on it cannot read `partition`'s
-/// fields off a `guard-domain` row.
-///
-/// ## Text only — no `FunctionSummary` crosses this line
-///
-/// `PartitionShape` holds two whole `FunctionSummary` values, and `PartitionMatch` flattens them to
-/// names. That is deliberate and it is `Evidence`'s rule, stated where `Evidence` states it:
-/// *"captured as text rather than a pointer back to the `FunctionSummary` so renderer output is
-/// decoupled from the parsing pipeline."* A payload that dragged the parse tree into the render
-/// model would couple every consumer of a `Suggestion` to the scanner.
-///
-/// ## Adding a case is a claim about a writer
-///
-/// A match is carried so that something can *read* it. Three of the four cases below have a
-/// measured population of **one or zero** — see `docs/measurements/template-match-payloads.md` —
-/// and are carried anyway because the cost is one case and the alternative is a seam that exists
-/// for one template and looks arbitrary. Do not read their presence as evidence that a writer for
-/// them is warranted; read the population.
-public enum TemplateMatch: Sendable, Equatable {
-
-    /// `guard-domain` — the sub-domain the body's own early return carves out. See `GuardDomain`.
-    case guardDomain(GuardDomain)
-
-    /// `selection-subset` — the container member the result must be drawn from.
-    case selectionSubset(SelectionSubsetMatch)
-
-    /// `diff-disjointness` — the complementary member pair that must not overlap.
-    case diffDisjointness(DiffDisjointnessMatch)
-
-    /// `partition` — the tiler, its form, and the optional progress member.
-    case partition(PartitionMatch)
-
-    /// `rewrite-postcondition` — the tokens a string-rewriting body removes. See `RewritePostcondition`.
-    case rewritePostcondition(RewritePostcondition)
-
-    /// `documented-range` — the closed range the doc comment says the result lies in.
-    case documentedRange(DocumentedRange)
-
-    /// `sorted-output` — the keys the returned array is sorted by, and the member that holds it.
-    case sortedOutput(SortedOutput)
-
-    /// `marker-dispatch` — the keyword table, and the lookup a test must step around to reach it.
-    case markerDispatch(MarkerDispatchMatch)
-
-    /// The `GuardDomain` this match carries, or `nil` for any other template.
-    ///
-    /// Present so a writer reads one accessor rather than spelling a `switch` with three
-    /// `return nil` arms at every call site. Each case gets one as it gains a reader.
-    public var guardDomainMatch: GuardDomain? {
-        guard case .guardDomain(let domain) = self else { return nil }
-        return domain
-    }
-
-    /// The `RewritePostcondition` this match carries, or `nil` for any other template.
-    public var rewritePostconditionMatch: RewritePostcondition? {
-        guard case .rewritePostcondition(let postcondition) = self else { return nil }
-        return postcondition
-    }
-
-    /// The `DocumentedRange` this match carries, or `nil` for any other template.
-    public var documentedRangeMatch: DocumentedRange? {
-        guard case .documentedRange(let range) = self else { return nil }
-        return range
-    }
-
-    public var sortedOutputMatch: SortedOutput? {
-        guard case .sortedOutput(let ordering) = self else { return nil }
-        return ordering
-    }
-
-    public var markerDispatchMatch: MarkerDispatchMatch? {
-        guard case .markerDispatch(let match) = self else { return nil }
-        return match
-    }
-}
-
 /// `documented-range`'s match: the bounds a doc comment states, as numeric literals a writer can
 /// splice — `0.0` and `1.0` from "Fraction of files processed (0.0 to 1.0)". Nothing in the
 /// signature carries them, so without the payload a writer would re-read prose it cannot see.
@@ -223,5 +123,105 @@ public struct MarkerDispatchMatch: Sendable, Equatable {
         self.dispatch = dispatch
         self.front = front
         self.resultType = resultType
+    }
+}
+
+/// **What a template matched, carried as data rather than rendered into prose (#477).**
+///
+/// ## The defect this closes
+///
+/// Four templates computed a structured match, spent it on a signal detail or a caveat sentence,
+/// and dropped it. `guard-domain` knows the condition, the returned expression, the parameter the
+/// law quantifies over and which way the guard fires — and by the time a `Suggestion` reaches the
+/// accept path, all four facts survive only inside
+/// `"the body states it: !(source.hasPrefix(\"---\")) ⟹ parse(source) == (Self(), source)"`.
+///
+/// So a stub writer had two options: parse that sentence back apart, or emit nothing. It emitted
+/// nothing — **62 declined `guard-domain` suggestions in the corpus funnel census, the largest
+/// population of the nine templates #468 found without a writer.**
+///
+/// Parsing it back is the option that must not be taken. This project has recorded the shape often
+/// enough to name it: a measurement that pattern-matches on text measures the text.
+/// `Evidence.parameterTypeNames` exists for exactly this reason on the evidence side — *"that
+/// string is a rendering, and splitting it back apart is wrong the moment a parameter is itself
+/// generic over two arguments"* — and this is the same rule applied to the match.
+///
+/// ## Why an enum rather than optional fields on `Suggestion`
+///
+/// Per-template optional fields would put four properties on `Suggestion` of which at most one is
+/// ever non-`nil`, and nothing would say so. A closed enum says *this suggestion carries exactly
+/// one template's match, or none*, and a writer that switches on it cannot read `partition`'s
+/// fields off a `guard-domain` row.
+///
+/// ## Text only — no `FunctionSummary` crosses this line
+///
+/// `PartitionShape` holds two whole `FunctionSummary` values, and `PartitionMatch` flattens them to
+/// names. That is deliberate and it is `Evidence`'s rule, stated where `Evidence` states it:
+/// *"captured as text rather than a pointer back to the `FunctionSummary` so renderer output is
+/// decoupled from the parsing pipeline."* A payload that dragged the parse tree into the render
+/// model would couple every consumer of a `Suggestion` to the scanner.
+///
+/// ## Adding a case is a claim about a writer
+///
+/// A match is carried so that something can *read* it. Three of the four cases below have a
+/// measured population of **one or zero** — see `docs/measurements/template-match-payloads.md` —
+/// and are carried anyway because the cost is one case and the alternative is a seam that exists
+/// for one template and looks arbitrary. Do not read their presence as evidence that a writer for
+/// them is warranted; read the population.
+public enum TemplateMatch: Sendable, Equatable {
+
+    /// `guard-domain` — the sub-domain the body's own early return carves out. See `GuardDomain`.
+    case guardDomain(GuardDomain)
+
+    /// `selection-subset` — the container member the result must be drawn from.
+    case selectionSubset(SelectionSubsetMatch)
+
+    /// `diff-disjointness` — the complementary member pair that must not overlap.
+    case diffDisjointness(DiffDisjointnessMatch)
+
+    /// `partition` — the tiler, its form, and the optional progress member.
+    case partition(PartitionMatch)
+
+    /// `rewrite-postcondition` — the tokens a string-rewriting body removes. See `RewritePostcondition`.
+    case rewritePostcondition(RewritePostcondition)
+
+    /// `documented-range` — the closed range the doc comment says the result lies in.
+    case documentedRange(DocumentedRange)
+
+    /// `sorted-output` — the keys the returned array is sorted by, and the member that holds it.
+    case sortedOutput(SortedOutput)
+
+    /// `marker-dispatch` — the keyword table, and the lookup a test must step around to reach it.
+    case markerDispatch(MarkerDispatchMatch)
+
+    /// The `GuardDomain` this match carries, or `nil` for any other template.
+    ///
+    /// Present so a writer reads one accessor rather than spelling a `switch` with three
+    /// `return nil` arms at every call site. Each case gets one as it gains a reader.
+    public var guardDomainMatch: GuardDomain? {
+        guard case .guardDomain(let domain) = self else { return nil }
+        return domain
+    }
+
+    /// The `RewritePostcondition` this match carries, or `nil` for any other template.
+    public var rewritePostconditionMatch: RewritePostcondition? {
+        guard case .rewritePostcondition(let postcondition) = self else { return nil }
+        return postcondition
+    }
+
+    /// The `DocumentedRange` this match carries, or `nil` for any other template.
+    public var documentedRangeMatch: DocumentedRange? {
+        guard case .documentedRange(let range) = self else { return nil }
+        return range
+    }
+
+    public var sortedOutputMatch: SortedOutput? {
+        guard case .sortedOutput(let ordering) = self else { return nil }
+        return ordering
+    }
+
+    public var markerDispatchMatch: MarkerDispatchMatch? {
+        guard case .markerDispatch(let match) = self else { return nil }
+        return match
     }
 }

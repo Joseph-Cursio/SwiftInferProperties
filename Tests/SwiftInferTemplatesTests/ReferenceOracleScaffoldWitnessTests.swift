@@ -3,98 +3,6 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
-/// Every shape `referenceOracle(subject:draws:…)` writes is held, verbatim, by
-/// `ReferenceOracleScaffoldWitness.swift`, which this test target compiles and runs.
-///
-/// Each case is emitted here, its one `fatalError(…)` line is replaced by a correct body — the one
-/// edit the scaffold asks of its reader — and the witness file must contain the result byte for
-/// byte. So the target building proves the emitted text compiles once that line is replaced, and
-/// the witness's `@Test`s passing proves the law it states holds for a right reference. If the
-/// emitter changes, this fails until the witness is regenerated, and the regenerated witness only
-/// builds if the new text compiles.
-@Suite("Reference oracle — every emitted shape compiles, and the witness holds it verbatim")
-struct ReferenceOracleScaffoldWitnessTests {
-
-    /// One witnessed shape: the emitter's inputs, and the body that replaces `fatalError`.
-    struct WitnessCase: Sendable, CustomTestStringConvertible {
-        let name: String
-        let subject: LiftedTestEmitter.ReferenceOracleSubject
-        let draws: LiftedTestEmitter.ReferenceOracleDraws
-        var equalityKind: LiftedTestEmitter.EqualityKind = .strict
-        let docComment: String
-        let body: String
-
-        var testDescription: String { name }
-    }
-
-    /// The two witness files: W1 to W5b, and W6 to W11 (split for SwiftLint's file-length cap).
-    static let witnessFiles = ["ReferenceOracleScaffoldWitness.swift", "ReferenceOracleScaffoldWitness+Shapes.swift"]
-    static let seed = SamplingSeed.Value(stateA: 0x5EED, stateB: 0x0C0FFEE, stateC: 0xBEEF, stateD: 0xF00D)
-    static let fatalLine = #"fatalError("state the reference definition from the docstring, then replace this line")"#
-
-    static func witnessText(_ file: String) throws -> String {
-        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent(file)
-        return try String(contentsOf: url, encoding: .utf8)
-    }
-
-    static func witnessText() throws -> String {
-        try witnessFiles.map(witnessText).joined(separator: "\n")
-    }
-
-    /// The scaffold for `witness`, with its `fatalError` line replaced by the case's body.
-    static func witnessed(_ witness: WitnessCase) -> String {
-        let scaffold = LiftedTestEmitter.referenceOracle(
-            subject: witness.subject,
-            draws: witness.draws,
-            equalityKind: witness.equalityKind,
-            docComment: witness.docComment,
-            seed: seed
-        )
-        return scaffold.replacingOccurrences(of: fatalLine, with: witness.body)
-    }
-
-    @Test("the witness holds the scaffold the emitter writes", arguments: ReferenceOracleWitnessCases.all)
-    func theWitnessHoldsTheEmittedScaffold(_ witness: WitnessCase) throws {
-        let text = try Self.witnessText()
-        let scaffold = Self.witnessed(witness)
-        #expect(scaffold.contains(Self.fatalLine) == false, "the body replaced the one line the reader edits")
-        #expect(text.contains(scaffold), "regenerate the witness; the emitter now writes:\n\(scaffold)")
-    }
-
-    /// What each witnessed shape exercises, read off the emitted text — so a case cannot drift
-    /// into a shape that no longer tests what its name says.
-    @Test("each witnessed case is the shape its name claims", arguments: [
-        ("W1", "extension OracleWitnessInbox {\n    static func largest_reference(in messages: [Message])"),
-        ("W2", "(try? args.0.celsius(offset: args.1)) == (try? args.0.celsius_reference(offset: args.1))"),
-        ("W3a", "in await args.0.advanced(by: args.1) == args.0.advanced_reference(by: args.1) }"),
-        ("W3b", "    nonisolated func doubled_reference(_ step: Int) -> Int {"),
-        ("W4", "{ value in await MainActor.run { OracleWitnessSidebar.title(for: value) =="),
-        ("W5a", "(await OracleWitnessLoader.load(value)) == (await OracleWitnessLoader.load_reference(value))"),
-        ("W5b", "(try? await OracleWitnessLoader.decode(value)) == (try? await"),
-        ("W6", "(args.0 + args.1) == OracleWitnessMoney.plus_reference(args.0, args.1)"),
-        ("W7", "static func resolve_reference(lineCount: Int, startLine: Int?, maxLines: Int?, cap: Int) -> Self?"),
-        ("W8", "{ (args: (String, String)) in oracleWitnessHasPrefix(args.0, matching: args.1) =="),
-        ("W9", "extension String {\n    func oracleWitnessClipped_reference(toLength limit: Int)"),
-        ("W10", "approximatelyEqual(OracleWitnessGeometry.scaled(args.0, by: args.1), "),
-        ("W11", "extension OracleWitnessTally: @unchecked Sendable {}\nextension OracleWitnessTally {"),
-    ])
-    func eachWitnessedCaseIsTheShapeItsNameClaims(name: String, shape: String) throws {
-        let witness = try #require(ReferenceOracleWitnessCases.all.first { $0.name == name })
-        #expect(Self.witnessed(witness).contains(shape))
-    }
-
-    /// The floating-point case is the only one carrying the helper, and each file declares it at
-    /// most once — two `private` helpers in one file would be a redeclaration.
-    @Test func theApproximateHelperIsWrittenOnceAndOnlyWhereItIsUsed() throws {
-        let carrying = ReferenceOracleWitnessCases.all.filter { Self.witnessed($0).contains("func approximatelyEqual") }
-        #expect(carrying.map(\.name) == ["W10"])
-        let perFile = try Self.witnessFiles.map { file in
-            try Self.witnessText(file).components(separatedBy: "func approximatelyEqual").count - 1
-        }
-        #expect(perFile == [0, 1])
-    }
-}
-
 /// The witnessed cases, W1 to W11 of the design, apart from the suite for SwiftLint's
 /// type-body-length cap.
 enum ReferenceOracleWitnessCases {
@@ -331,4 +239,96 @@ enum ReferenceOracleWitnessCases {
             body: "amount &+ total"
         ),
     ]
+}
+
+/// Every shape `referenceOracle(subject:draws:…)` writes is held, verbatim, by
+/// `ReferenceOracleScaffoldWitness.swift`, which this test target compiles and runs.
+///
+/// Each case is emitted here, its one `fatalError(…)` line is replaced by a correct body — the one
+/// edit the scaffold asks of its reader — and the witness file must contain the result byte for
+/// byte. So the target building proves the emitted text compiles once that line is replaced, and
+/// the witness's `@Test`s passing proves the law it states holds for a right reference. If the
+/// emitter changes, this fails until the witness is regenerated, and the regenerated witness only
+/// builds if the new text compiles.
+@Suite("Reference oracle — every emitted shape compiles, and the witness holds it verbatim")
+struct ReferenceOracleScaffoldWitnessTests {
+
+    /// One witnessed shape: the emitter's inputs, and the body that replaces `fatalError`.
+    struct WitnessCase: Sendable, CustomTestStringConvertible {
+        let name: String
+        let subject: LiftedTestEmitter.ReferenceOracleSubject
+        let draws: LiftedTestEmitter.ReferenceOracleDraws
+        var equalityKind: LiftedTestEmitter.EqualityKind = .strict
+        let docComment: String
+        let body: String
+
+        var testDescription: String { name }
+    }
+
+    /// The two witness files: W1 to W5b, and W6 to W11 (split for SwiftLint's file-length cap).
+    static let witnessFiles = ["ReferenceOracleScaffoldWitness.swift", "ReferenceOracleScaffoldWitness+Shapes.swift"]
+    static let seed = SamplingSeed.Value(stateA: 0x5EED, stateB: 0x0C0FFEE, stateC: 0xBEEF, stateD: 0xF00D)
+    static let fatalLine = #"fatalError("state the reference definition from the docstring, then replace this line")"#
+
+    static func witnessText(_ file: String) throws -> String {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent(file)
+        return try String(contentsOf: url, encoding: .utf8)
+    }
+
+    static func witnessText() throws -> String {
+        try witnessFiles.map(witnessText).joined(separator: "\n")
+    }
+
+    /// The scaffold for `witness`, with its `fatalError` line replaced by the case's body.
+    static func witnessed(_ witness: WitnessCase) -> String {
+        let scaffold = LiftedTestEmitter.referenceOracle(
+            subject: witness.subject,
+            draws: witness.draws,
+            equalityKind: witness.equalityKind,
+            docComment: witness.docComment,
+            seed: seed
+        )
+        return scaffold.replacingOccurrences(of: fatalLine, with: witness.body)
+    }
+
+    @Test("the witness holds the scaffold the emitter writes", arguments: ReferenceOracleWitnessCases.all)
+    func theWitnessHoldsTheEmittedScaffold(_ witness: WitnessCase) throws {
+        let text = try Self.witnessText()
+        let scaffold = Self.witnessed(witness)
+        #expect(scaffold.contains(Self.fatalLine) == false, "the body replaced the one line the reader edits")
+        #expect(text.contains(scaffold), "regenerate the witness; the emitter now writes:\n\(scaffold)")
+    }
+
+    /// What each witnessed shape exercises, read off the emitted text — so a case cannot drift
+    /// into a shape that no longer tests what its name says.
+    @Test("each witnessed case is the shape its name claims", arguments: [
+        ("W1", "extension OracleWitnessInbox {\n    static func largest_reference(in messages: [Message])"),
+        ("W2", "(try? args.0.celsius(offset: args.1)) == (try? args.0.celsius_reference(offset: args.1))"),
+        ("W3a", "in await args.0.advanced(by: args.1) == args.0.advanced_reference(by: args.1) }"),
+        ("W3b", "    nonisolated func doubled_reference(_ step: Int) -> Int {"),
+        ("W4", "{ value in await MainActor.run { OracleWitnessSidebar.title(for: value) =="),
+        ("W5a", "(await OracleWitnessLoader.load(value)) == (await OracleWitnessLoader.load_reference(value))"),
+        ("W5b", "(try? await OracleWitnessLoader.decode(value)) == (try? await"),
+        ("W6", "(args.0 + args.1) == OracleWitnessMoney.plus_reference(args.0, args.1)"),
+        ("W7", "static func resolve_reference(lineCount: Int, startLine: Int?, maxLines: Int?, cap: Int) -> Self?"),
+        ("W8", "{ (args: (String, String)) in oracleWitnessHasPrefix(args.0, matching: args.1) =="),
+        ("W9", "extension String {\n    func oracleWitnessClipped_reference(toLength limit: Int)"),
+        ("W10", "approximatelyEqual(OracleWitnessGeometry.scaled(args.0, by: args.1), "),
+        ("W11", "extension OracleWitnessTally: @unchecked Sendable {}\nextension OracleWitnessTally {"),
+    ])
+    func eachWitnessedCaseIsTheShapeItsNameClaims(name: String, shape: String) throws {
+        let witness = try #require(ReferenceOracleWitnessCases.all.first { $0.name == name })
+        #expect(Self.witnessed(witness).contains(shape))
+    }
+
+    /// The floating-point case is the only one carrying the helper, and each file declares it at
+    /// most once — two `private` helpers in one file would be a redeclaration.
+    @Test func theApproximateHelperIsWrittenOnceAndOnlyWhereItIsUsed() throws {
+        let carrying = ReferenceOracleWitnessCases.all.filter { Self.witnessed($0).contains("func approximatelyEqual") }
+        #expect(carrying.map(\.name) == ["W10"])
+        let perFile = try Self.witnessFiles.map { file in
+            try Self.witnessText(file).components(separatedBy: "func approximatelyEqual").count - 1
+        }
+        #expect(perFile == [0, 1])
+    }
 }

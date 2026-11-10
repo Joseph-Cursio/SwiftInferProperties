@@ -6,6 +6,24 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// Thread stack sizes seen by the parse hook, from whichever worker ran it.
+final class StackSizes: @unchecked Sendable {
+    private let lock = NSLock()
+    private var sizes: [Int] = []
+
+    func record(_ size: Int) {
+        lock.lock()
+        sizes.append(size)
+        lock.unlock()
+    }
+
+    var all: [Int] {
+        lock.lock()
+        defer { lock.unlock() }
+        return sizes
+    }
+}
+
 /// The construction-universe suites share this suite's fixtures and helpers under a short name.
 typealias Wiring = ConstructionPurityWiringTests
 
@@ -186,23 +204,5 @@ struct ConstructionPurityWiringTests {
         let constructsOnly = "func make() -> Item { Item() }"
         #expect(Self.verdict("make", in: FunctionScanner.scanCorpus(source: declares, file: "A.swift")) == .refuted)
         #expect(Self.verdict("make", in: FunctionScanner.scanCorpus(source: constructsOnly, file: "B.swift")) == .pure)
-    }
-}
-
-/// Thread stack sizes seen by the parse hook, from whichever worker ran it.
-final class StackSizes: @unchecked Sendable {
-    private let lock = NSLock()
-    private var sizes: [Int] = []
-
-    func record(_ size: Int) {
-        lock.lock()
-        sizes.append(size)
-        lock.unlock()
-    }
-
-    var all: [Int] {
-        lock.lock()
-        defer { lock.unlock() }
-        return sizes
     }
 }

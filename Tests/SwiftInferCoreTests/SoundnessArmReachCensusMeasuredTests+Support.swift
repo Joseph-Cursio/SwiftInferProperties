@@ -7,6 +7,57 @@ import SwiftSyntax
 // Type classification for `SoundnessArmReachCensusMeasuredTests`. Split out for the
 // 400-line cap; the reasoning lives in that suite's header.
 
+/// Type declarations and what they cost to construct.
+///
+/// Nested types are recorded under their own simple name, which is how a parameter
+/// spelling like `SpeculativeWidening.Candidate` resolves — the census strips to the
+/// leaf rather than tracking full paths, and a collision between two nested types of
+/// the same name would resolve to whichever file sorts first. Recorded because it is a
+/// real limit and the same name-keying hazard every census at this seam carries.
+final class TypeCostCollector: SyntaxVisitor {
+
+    private(set) var costs: [String: SoundnessArmReachCensusMeasuredTests.TypeCost] = [:]
+
+    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+        costs[node.name.text] = .stubRequired
+        return .visitChildren
+    }
+
+    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+        let conformances = node.inheritanceClause?.inheritedTypes
+            .map(\.type.trimmedDescription) ?? []
+        costs[node.name.text] = conformances.contains("CaseIterable") ? .cheap : .expensive
+        return .visitChildren
+    }
+
+    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+        costs[node.name.text] = Self.cost(ofStoredPropertiesIn: node.memberBlock)
+        return .visitChildren
+    }
+
+    /// A struct is cheap when every stored property is degenerate — then a memberwise
+    /// call supplies it. Computed properties are ignored: they take no argument.
+    ///
+    /// A property with an initial value is also fine even when its type is not
+    /// degenerate, because the memberwise initialiser defaults it — so it is skipped
+    /// rather than counted as blocking.
+    static func cost(
+        ofStoredPropertiesIn members: MemberBlockSyntax
+    ) -> SoundnessArmReachCensusMeasuredTests.TypeCost {
+        for member in members.members {
+            guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
+            for binding in variable.bindings {
+                // A computed property has an accessor block and no stored value.
+                if binding.accessorBlock != nil { continue }
+                if binding.initializer != nil { continue }
+                guard let type = binding.typeAnnotation?.type.trimmedDescription else { continue }
+                if !SoundnessArmReachCensusMeasuredTests.isDegenerate(type) { return .expensive }
+            }
+        }
+        return .cheap
+    }
+}
+
 extension SoundnessArmReachCensusMeasuredTests {
 
     /// What a probe harness would have to write to supply a value of a package type.
@@ -57,56 +108,5 @@ extension SoundnessArmReachCensusMeasuredTests {
         // A nested spelling resolves on its last component: `SpeculativeWidening.Candidate`.
         let leaf = bare.split(separator: ".").last.map(String.init) ?? bare
         return typeCosts[leaf] ?? .expensive
-    }
-}
-
-/// Type declarations and what they cost to construct.
-///
-/// Nested types are recorded under their own simple name, which is how a parameter
-/// spelling like `SpeculativeWidening.Candidate` resolves — the census strips to the
-/// leaf rather than tracking full paths, and a collision between two nested types of
-/// the same name would resolve to whichever file sorts first. Recorded because it is a
-/// real limit and the same name-keying hazard every census at this seam carries.
-final class TypeCostCollector: SyntaxVisitor {
-
-    private(set) var costs: [String: SoundnessArmReachCensusMeasuredTests.TypeCost] = [:]
-
-    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        costs[node.name.text] = .stubRequired
-        return .visitChildren
-    }
-
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        let conformances = node.inheritanceClause?.inheritedTypes
-            .map(\.type.trimmedDescription) ?? []
-        costs[node.name.text] = conformances.contains("CaseIterable") ? .cheap : .expensive
-        return .visitChildren
-    }
-
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        costs[node.name.text] = Self.cost(ofStoredPropertiesIn: node.memberBlock)
-        return .visitChildren
-    }
-
-    /// A struct is cheap when every stored property is degenerate — then a memberwise
-    /// call supplies it. Computed properties are ignored: they take no argument.
-    ///
-    /// A property with an initial value is also fine even when its type is not
-    /// degenerate, because the memberwise initialiser defaults it — so it is skipped
-    /// rather than counted as blocking.
-    static func cost(
-        ofStoredPropertiesIn members: MemberBlockSyntax
-    ) -> SoundnessArmReachCensusMeasuredTests.TypeCost {
-        for member in members.members {
-            guard let variable = member.decl.as(VariableDeclSyntax.self) else { continue }
-            for binding in variable.bindings {
-                // A computed property has an accessor block and no stored value.
-                if binding.accessorBlock != nil { continue }
-                if binding.initializer != nil { continue }
-                guard let type = binding.typeAnnotation?.type.trimmedDescription else { continue }
-                if !SoundnessArmReachCensusMeasuredTests.isDegenerate(type) { return .expensive }
-            }
-        }
-        return .cheap
     }
 }

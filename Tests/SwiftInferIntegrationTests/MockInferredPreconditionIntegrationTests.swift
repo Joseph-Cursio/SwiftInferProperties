@@ -5,6 +5,37 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+// MARK: - Test doubles
+
+private struct SilentPreconditionDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class SilentPreconditionDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class RecordingPreconditionOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+    var text: String { lines.joined(separator: "\n") }
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
+private final class ScriptedPreconditionPromptInput: PromptInput, @unchecked Sendable {
+    private var remaining: [String]
+
+    init(scriptedLines: [String]) {
+        self.remaining = scriptedLines
+    }
+    func readLine() -> String? {
+        guard !remaining.isEmpty else { return nil }
+        return remaining.removeFirst()
+    }
+}
+
 /// TestLifter M9.3 — end-to-end integration test verifying that
 /// `// Inferred precondition:` provenance comment lines surface in
 /// the writeout of an accepted lifted suggestion when the M4.1
@@ -293,36 +324,5 @@ struct MockInferredPreconditionIntegrationTests {
             atomically: true,
             encoding: .utf8
         )
-    }
-}
-
-// MARK: - Test doubles
-
-private struct SilentPreconditionDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class SilentPreconditionDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class RecordingPreconditionOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
-    }
-}
-
-private final class ScriptedPreconditionPromptInput: PromptInput, @unchecked Sendable {
-    private var remaining: [String]
-
-    init(scriptedLines: [String]) {
-        self.remaining = scriptedLines
-    }
-    func readLine() -> String? {
-        guard !remaining.isEmpty else { return nil }
-        return remaining.removeFirst()
     }
 }

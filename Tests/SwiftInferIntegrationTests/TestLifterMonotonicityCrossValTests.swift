@@ -5,6 +5,10 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+private struct SilentMonotonicityDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M5.6 acceptance — parallel of M2.4's
 /// `TestLifterIdempotenceCrossValidationTests` for the monotonicity
 /// template. Constructs a synthetic project with `Sources/Foo/Pricing.swift`
@@ -105,8 +109,4 @@ struct TestLifterMonotonicityCrossValTests {
             encoding: .utf8
         )
     }
-}
-
-private struct SilentMonotonicityDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

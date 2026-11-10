@@ -18,43 +18,6 @@ import Testing
 // repo's Swift / Testing / PropertyBased pin chain — catches
 // version-skew issues at build time, not at deferred CI time.
 
-@Suite("V1.99 — kit v2.4.0 InteractionInvariant harness smoke tests")
-struct KitV24InteractionInvariantLawsSmokeTests {
-
-    @Test func stateInvariantHarnessReachable() async throws {
-        // Positive control — a Cardinality invariant that always
-        // holds under the well-behaved reducer. Confirms the kit's
-        // `checkInteractionInvariantPropertyLaws` entry compiles +
-        // runs from this side. Sanity budget keeps the test under
-        // a few hundred milliseconds.
-        let results = try await checkInteractionInvariantPropertyLaws(
-            for: SmokeCardinality.self,
-            initialState: SmokeState(showsA: false, showsB: false),
-            reducer: { state, action in SmokeFeature.reduce(state, action) },
-            options: LawCheckOptions(budget: .sanity)
-        )
-        #expect(results.count == 1)
-        #expect(results.allSatisfy { $0.isViolation == false })
-        #expect(results[0].protocolLaw == "InteractionInvariant.invariantHoldsAfterEachStep")
-    }
-
-    @Test func actionIdempotenceHarnessReachable() async throws {
-        // Positive control — `.reset` is genuinely idempotent under
-        // the SmokeCounter reducer. Confirms the kit's
-        // `checkActionIdempotenceInvariantPropertyLaws` entry
-        // compiles + runs from this side.
-        let results = try await checkActionIdempotenceInvariantPropertyLaws(
-            for: SmokeCounterIdempotence.self,
-            initialState: SmokeCounterState(value: 0),
-            reducer: { state, action in SmokeCounterFeature.reduce(state, action) },
-            options: LawCheckOptions(budget: .sanity)
-        )
-        #expect(results.count == 1)
-        #expect(results.allSatisfy { $0.isViolation == false })
-        #expect(results[0].protocolLaw == "ActionIdempotenceInvariant.doubleApplicationEqualsSingle")
-    }
-}
-
 // MARK: - Fixtures (local to the smoke test; no dependency on kit @testable internals)
 
 struct SmokeState: Equatable, Sendable {
@@ -112,4 +75,41 @@ struct SmokeCounterIdempotence: ActionIdempotenceInvariant, Sendable {
     typealias Action = SmokeCounterAction
 
     static let idempotentActions: Set<SmokeCounterAction> = [.reset]
+}
+
+@Suite("V1.99 — kit v2.4.0 InteractionInvariant harness smoke tests")
+struct KitV24InteractionInvariantLawsSmokeTests {
+
+    @Test func stateInvariantHarnessReachable() async throws {
+        // Positive control — a Cardinality invariant that always
+        // holds under the well-behaved reducer. Confirms the kit's
+        // `checkInteractionInvariantPropertyLaws` entry compiles +
+        // runs from this side. Sanity budget keeps the test under
+        // a few hundred milliseconds.
+        let results = try await checkInteractionInvariantPropertyLaws(
+            for: SmokeCardinality.self,
+            initialState: SmokeState(showsA: false, showsB: false),
+            reducer: { state, action in SmokeFeature.reduce(state, action) },
+            options: LawCheckOptions(budget: .sanity)
+        )
+        #expect(results.count == 1)
+        #expect(results.allSatisfy { $0.isViolation == false })
+        #expect(results[0].protocolLaw == "InteractionInvariant.invariantHoldsAfterEachStep")
+    }
+
+    @Test func actionIdempotenceHarnessReachable() async throws {
+        // Positive control — `.reset` is genuinely idempotent under
+        // the SmokeCounter reducer. Confirms the kit's
+        // `checkActionIdempotenceInvariantPropertyLaws` entry
+        // compiles + runs from this side.
+        let results = try await checkActionIdempotenceInvariantPropertyLaws(
+            for: SmokeCounterIdempotence.self,
+            initialState: SmokeCounterState(value: 0),
+            reducer: { state, action in SmokeCounterFeature.reduce(state, action) },
+            options: LawCheckOptions(budget: .sanity)
+        )
+        #expect(results.count == 1)
+        #expect(results.allSatisfy { $0.isViolation == false })
+        #expect(results[0].protocolLaw == "ActionIdempotenceInvariant.doubleApplicationEqualsSingle")
+    }
 }

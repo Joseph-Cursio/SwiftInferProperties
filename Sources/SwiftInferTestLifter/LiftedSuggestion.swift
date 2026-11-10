@@ -1,5 +1,119 @@
 import SwiftInferCore
 
+/// Discriminator for the detection that produced a `LiftedSuggestion`.
+/// One case per TestLifter pattern. M5 added monotonicity /
+/// countInvariance / reduceEquivalence; M11 adds equivalenceClass —
+/// the §7.8 third-example advisory finding without a TemplateEngine
+/// counterpart. M5+ patterns extend the enum without growing
+/// `LiftedSuggestion`'s storage shape.
+public enum DetectedPattern: Sendable, Equatable {
+    case roundTrip(DetectedRoundTrip)
+    case idempotence(DetectedIdempotence)
+    case commutativity(DetectedCommutativity)
+    case monotonicity(DetectedMonotonicity)
+    case countInvariance(DetectedCountInvariance)
+    case reduceEquivalence(DetectedReduceEquivalence)
+    /// TestLifter M11.2 — predicate equivalence-class advisory finding.
+    /// Carries the `EquivalenceClassHint` produced by the M11.1
+    /// `PredicateEquivalenceClassDetector`. The promoted `Suggestion`
+    /// surfaces with `.advisory` tier (PRD §7.8) — documentation, not a
+    /// runnable property; comment-only writeout on accept.
+    case equivalenceClass(EquivalenceClassHint)
+    /// TestLifter M13.3 — N-class equivalence-class advisory finding.
+    /// Same `.advisory`-tier posture as `.equivalenceClass`; the
+    /// promoted Suggestion shares the `"equivalence-class"` template
+    /// name so the M11.2 cross-validation suppression filter applies
+    /// uniformly to both kinds.
+    case nClassEquivalenceClass(NClassEquivalenceClassHint)
+    /// TestLifter M16.2 — general consumer-producer chain advisory
+    /// finding (PRD §7.8 second example, generalized). Carries a
+    /// `DomainHint` whose `origin == .consumerProducerChain`. Same
+    /// `.advisory`-tier posture as the equivalence-class cases; the
+    /// promoted Suggestion's `templateName == "consumer-producer-chain"`
+    /// is synthetic so cross-validation suppression naturally lets it
+    /// through (M16 plan §"M16 ships" item 3).
+    case consumerProducerChain(DomainHint)
+    /// A test asserting the subject agrees with a **reference computation** —
+    /// the test-side half of the differential / oracle family. Promotes into
+    /// the `differential-equivalence` template, which is the dependency that
+    /// made this detector possible: a lifted record needs a template to
+    /// promote into, and until that template existed the shape had nowhere to
+    /// land. See `AssertReferenceEquivalenceDetector`.
+    case referenceEquivalence(DetectedReferenceEquivalence)
+}
+
+/// PRD §7.3 Assert-Ordering-Preserved → monotonicity. Carries the single
+/// callee `f` whose preservation of input ordering is asserted, plus the
+/// two argument identifiers driving the precondition `a < b` and the
+/// `f(a) <= f(b)` (or `<`) result assertion. M5.1 detector populates;
+/// M5.5 fan-out + LiftedTestEmitter consumes.
+public struct DetectedMonotonicity: Equatable, Sendable {
+    public let calleeName: String
+    public let leftArgName: String
+    public let rightArgName: String
+    public let assertionLocation: SourceLocation
+
+    public init(
+        calleeName: String,
+        leftArgName: String,
+        rightArgName: String,
+        assertionLocation: SourceLocation
+    ) {
+        self.calleeName = calleeName
+        self.leftArgName = leftArgName
+        self.rightArgName = rightArgName
+        self.assertionLocation = assertionLocation
+    }
+}
+
+/// PRD §7.3 Assert-Count-Change → invariant preservation. M5 hard-codes
+/// the invariant keyPath to `\.count` (M5 plan OD #2 default); broader
+/// keyPath generalization is M9 expanded-outputs territory. M5.2
+/// detector populates; M5.5 fan-out + LiftedTestEmitter consumes.
+public struct DetectedCountInvariance: Equatable, Sendable {
+    public let calleeName: String
+    public let inputBindingName: String
+    public let assertionLocation: SourceLocation
+
+    public init(
+        calleeName: String,
+        inputBindingName: String,
+        assertionLocation: SourceLocation
+    ) {
+        self.calleeName = calleeName
+        self.inputBindingName = inputBindingName
+        self.assertionLocation = assertionLocation
+    }
+}
+
+/// PRD §7.3 Assert-Reduce-Equivalence → associativity. The detected
+/// shape is `xs.reduce(seed, op) == xs.reversed().reduce(seed, op)` —
+/// `opCalleeName` is the reducer operation (function name or operator
+/// text), `seedSource` is the textual seed expression (used for
+/// same-seed invariant matching), `collectionBindingName` is the
+/// collection binding the reduce is applied to. M5 plan OD #3 scopes
+/// reordering to `xs.reversed()`; arbitrary permutations stay out of
+/// scope. M5.3 detector populates; M5.5 fan-out + LiftedTestEmitter
+/// consumes.
+public struct DetectedReduceEquivalence: Equatable, Sendable {
+    public let opCalleeName: String
+    public let seedSource: String
+    public let collectionBindingName: String
+    public let assertionLocation: SourceLocation
+
+    public init(
+        opCalleeName: String,
+        seedSource: String,
+        collectionBindingName: String,
+        assertionLocation: SourceLocation
+    ) {
+        self.opCalleeName = opCalleeName
+        self.seedSource = seedSource
+        self.collectionBindingName = collectionBindingName
+        self.assertionLocation = assertionLocation
+    }
+}
+
 /// One pattern surfaced by TestLifter against a sliced test body,
 /// packaged with the cross-validation key the M1.5 CLI wiring threads
 /// into TemplateEngine's `crossValidationFromTestLifter` parameter.
@@ -281,119 +395,5 @@ public struct LiftedSuggestion: Sendable, Equatable {
             pattern: .consumerProducerChain(hint),
             origin: origin
         )
-    }
-}
-
-/// Discriminator for the detection that produced a `LiftedSuggestion`.
-/// One case per TestLifter pattern. M5 added monotonicity /
-/// countInvariance / reduceEquivalence; M11 adds equivalenceClass —
-/// the §7.8 third-example advisory finding without a TemplateEngine
-/// counterpart. M5+ patterns extend the enum without growing
-/// `LiftedSuggestion`'s storage shape.
-public enum DetectedPattern: Sendable, Equatable {
-    case roundTrip(DetectedRoundTrip)
-    case idempotence(DetectedIdempotence)
-    case commutativity(DetectedCommutativity)
-    case monotonicity(DetectedMonotonicity)
-    case countInvariance(DetectedCountInvariance)
-    case reduceEquivalence(DetectedReduceEquivalence)
-    /// TestLifter M11.2 — predicate equivalence-class advisory finding.
-    /// Carries the `EquivalenceClassHint` produced by the M11.1
-    /// `PredicateEquivalenceClassDetector`. The promoted `Suggestion`
-    /// surfaces with `.advisory` tier (PRD §7.8) — documentation, not a
-    /// runnable property; comment-only writeout on accept.
-    case equivalenceClass(EquivalenceClassHint)
-    /// TestLifter M13.3 — N-class equivalence-class advisory finding.
-    /// Same `.advisory`-tier posture as `.equivalenceClass`; the
-    /// promoted Suggestion shares the `"equivalence-class"` template
-    /// name so the M11.2 cross-validation suppression filter applies
-    /// uniformly to both kinds.
-    case nClassEquivalenceClass(NClassEquivalenceClassHint)
-    /// TestLifter M16.2 — general consumer-producer chain advisory
-    /// finding (PRD §7.8 second example, generalized). Carries a
-    /// `DomainHint` whose `origin == .consumerProducerChain`. Same
-    /// `.advisory`-tier posture as the equivalence-class cases; the
-    /// promoted Suggestion's `templateName == "consumer-producer-chain"`
-    /// is synthetic so cross-validation suppression naturally lets it
-    /// through (M16 plan §"M16 ships" item 3).
-    case consumerProducerChain(DomainHint)
-    /// A test asserting the subject agrees with a **reference computation** —
-    /// the test-side half of the differential / oracle family. Promotes into
-    /// the `differential-equivalence` template, which is the dependency that
-    /// made this detector possible: a lifted record needs a template to
-    /// promote into, and until that template existed the shape had nowhere to
-    /// land. See `AssertReferenceEquivalenceDetector`.
-    case referenceEquivalence(DetectedReferenceEquivalence)
-}
-
-/// PRD §7.3 Assert-Ordering-Preserved → monotonicity. Carries the single
-/// callee `f` whose preservation of input ordering is asserted, plus the
-/// two argument identifiers driving the precondition `a < b` and the
-/// `f(a) <= f(b)` (or `<`) result assertion. M5.1 detector populates;
-/// M5.5 fan-out + LiftedTestEmitter consumes.
-public struct DetectedMonotonicity: Equatable, Sendable {
-    public let calleeName: String
-    public let leftArgName: String
-    public let rightArgName: String
-    public let assertionLocation: SourceLocation
-
-    public init(
-        calleeName: String,
-        leftArgName: String,
-        rightArgName: String,
-        assertionLocation: SourceLocation
-    ) {
-        self.calleeName = calleeName
-        self.leftArgName = leftArgName
-        self.rightArgName = rightArgName
-        self.assertionLocation = assertionLocation
-    }
-}
-
-/// PRD §7.3 Assert-Count-Change → invariant preservation. M5 hard-codes
-/// the invariant keyPath to `\.count` (M5 plan OD #2 default); broader
-/// keyPath generalization is M9 expanded-outputs territory. M5.2
-/// detector populates; M5.5 fan-out + LiftedTestEmitter consumes.
-public struct DetectedCountInvariance: Equatable, Sendable {
-    public let calleeName: String
-    public let inputBindingName: String
-    public let assertionLocation: SourceLocation
-
-    public init(
-        calleeName: String,
-        inputBindingName: String,
-        assertionLocation: SourceLocation
-    ) {
-        self.calleeName = calleeName
-        self.inputBindingName = inputBindingName
-        self.assertionLocation = assertionLocation
-    }
-}
-
-/// PRD §7.3 Assert-Reduce-Equivalence → associativity. The detected
-/// shape is `xs.reduce(seed, op) == xs.reversed().reduce(seed, op)` —
-/// `opCalleeName` is the reducer operation (function name or operator
-/// text), `seedSource` is the textual seed expression (used for
-/// same-seed invariant matching), `collectionBindingName` is the
-/// collection binding the reduce is applied to. M5 plan OD #3 scopes
-/// reordering to `xs.reversed()`; arbitrary permutations stay out of
-/// scope. M5.3 detector populates; M5.5 fan-out + LiftedTestEmitter
-/// consumes.
-public struct DetectedReduceEquivalence: Equatable, Sendable {
-    public let opCalleeName: String
-    public let seedSource: String
-    public let collectionBindingName: String
-    public let assertionLocation: SourceLocation
-
-    public init(
-        opCalleeName: String,
-        seedSource: String,
-        collectionBindingName: String,
-        assertionLocation: SourceLocation
-    ) {
-        self.opCalleeName = opCalleeName
-        self.seedSource = seedSource
-        self.collectionBindingName = collectionBindingName
-        self.assertionLocation = assertionLocation
     }
 }

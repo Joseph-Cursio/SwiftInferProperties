@@ -1,3 +1,68 @@
+/// Reasons the M11.1 detector can mark an equivalence-class hint's
+/// predicate as ineligible for the `Gen<T>.filter(predicate)` generator
+/// suggestion. Hitting any of these surfaces the hint as comment-only
+/// documentation (no generator suggestion in the rendered block) — the
+/// `swift-property-based` runner cannot shrink through `try!` / `await`,
+/// `Gen<_>.filter(_:)` is unary, and a non-generatable predicate-arg
+/// type has no path to a `Gen<T>` source.
+///
+/// Mirrors `DomainHint.ProducerVetoReason` (M10) by design — same shape,
+/// same downstream contract.
+public enum PredicateVetoReason: Sendable, Equatable, Codable {
+
+    /// Predicate is `throws`. Suggesting `Gen<T>.filter(throwingPredicate)`
+    /// would emit code that can't compile (or can't shrink) under the
+    /// `swift-property-based` runner.
+    case predicateThrows
+
+    /// Predicate is `async`. `Gen<T>.filter(_:)` is a synchronous
+    /// transformation; suggesting an async predicate breaks the runner.
+    case predicateAsync
+
+    /// Predicate takes more than one argument. `Gen<T>.filter(_:)` is
+    /// unary; partial-application is fragile (the corpus may show
+    /// variation in the second argument that the user expects to remain
+    /// configurable). Defer to the future v1.x M11.1+ general partition
+    /// expansion if real corpora show value in this case.
+    case predicateMultiArg
+
+    /// Predicate's single argument type is not auto-generatable per the
+    /// M3+ `DerivationStrategist` strategy table (the strategist returns
+    /// `.todo` or `.userGen`). The user can resolve `.userGen` cases by
+    /// providing `static func gen()` themselves and re-running discover;
+    /// the hint will then re-fire without the veto.
+    case predicateArgNotGeneratable
+
+    /// TestLifter M13.2 — predicate's return type is not `Equatable` per
+    /// the `FunctionSummary` introspection (return-type identifier doesn't
+    /// match a known Equatable stdlib type or carry an `Equatable`
+    /// conformance). Surfaced only by `NClassEquivalenceClassDetector`;
+    /// the M11.1 two-class detector never emits this case.
+    case predicateReturnNotEquatable
+
+    /// User-facing reason text surfaced in the M11.2 explainability
+    /// block + the accept-flow comment-only writeout. Mirrors the
+    /// `DomainHint.ProducerVetoReason` advisory-text pattern.
+    public var advisoryReason: String {
+        switch self {
+        case .predicateThrows:
+            return "predicate throws — Gen<T>.filter cannot apply throwing functions"
+
+        case .predicateAsync:
+            return "predicate is async — Gen<T>.filter is synchronous"
+
+        case .predicateMultiArg:
+            return "predicate takes multiple arguments — Gen<T>.filter is unary"
+
+        case .predicateArgNotGeneratable:
+            return "predicate's argument type isn't auto-generatable"
+
+        case .predicateReturnNotEquatable:
+            return "predicate's return type isn't Equatable — N-class equality classification needs ==(_:_:)"
+        }
+    }
+}
+
 /// TestLifter M11.0 — predicate-equivalence-class hint surfaced by the
 /// M11.1 `PredicateEquivalenceClassDetector` when a test corpus
 /// partitions on `(positive, negative)` method-name markers (per M11
@@ -108,70 +173,5 @@ public struct EquivalenceClassHint: Sendable, Equatable, Codable {
         self.suggestedPositiveGenerator = suggestedPositiveGenerator
         self.suggestedNegativeGenerator = suggestedNegativeGenerator
         self.coversDomain = coversDomain
-    }
-}
-
-/// Reasons the M11.1 detector can mark an equivalence-class hint's
-/// predicate as ineligible for the `Gen<T>.filter(predicate)` generator
-/// suggestion. Hitting any of these surfaces the hint as comment-only
-/// documentation (no generator suggestion in the rendered block) — the
-/// `swift-property-based` runner cannot shrink through `try!` / `await`,
-/// `Gen<_>.filter(_:)` is unary, and a non-generatable predicate-arg
-/// type has no path to a `Gen<T>` source.
-///
-/// Mirrors `DomainHint.ProducerVetoReason` (M10) by design — same shape,
-/// same downstream contract.
-public enum PredicateVetoReason: Sendable, Equatable, Codable {
-
-    /// Predicate is `throws`. Suggesting `Gen<T>.filter(throwingPredicate)`
-    /// would emit code that can't compile (or can't shrink) under the
-    /// `swift-property-based` runner.
-    case predicateThrows
-
-    /// Predicate is `async`. `Gen<T>.filter(_:)` is a synchronous
-    /// transformation; suggesting an async predicate breaks the runner.
-    case predicateAsync
-
-    /// Predicate takes more than one argument. `Gen<T>.filter(_:)` is
-    /// unary; partial-application is fragile (the corpus may show
-    /// variation in the second argument that the user expects to remain
-    /// configurable). Defer to the future v1.x M11.1+ general partition
-    /// expansion if real corpora show value in this case.
-    case predicateMultiArg
-
-    /// Predicate's single argument type is not auto-generatable per the
-    /// M3+ `DerivationStrategist` strategy table (the strategist returns
-    /// `.todo` or `.userGen`). The user can resolve `.userGen` cases by
-    /// providing `static func gen()` themselves and re-running discover;
-    /// the hint will then re-fire without the veto.
-    case predicateArgNotGeneratable
-
-    /// TestLifter M13.2 — predicate's return type is not `Equatable` per
-    /// the `FunctionSummary` introspection (return-type identifier doesn't
-    /// match a known Equatable stdlib type or carry an `Equatable`
-    /// conformance). Surfaced only by `NClassEquivalenceClassDetector`;
-    /// the M11.1 two-class detector never emits this case.
-    case predicateReturnNotEquatable
-
-    /// User-facing reason text surfaced in the M11.2 explainability
-    /// block + the accept-flow comment-only writeout. Mirrors the
-    /// `DomainHint.ProducerVetoReason` advisory-text pattern.
-    public var advisoryReason: String {
-        switch self {
-        case .predicateThrows:
-            return "predicate throws — Gen<T>.filter cannot apply throwing functions"
-
-        case .predicateAsync:
-            return "predicate is async — Gen<T>.filter is synchronous"
-
-        case .predicateMultiArg:
-            return "predicate takes multiple arguments — Gen<T>.filter is unary"
-
-        case .predicateArgNotGeneratable:
-            return "predicate's argument type isn't auto-generatable"
-
-        case .predicateReturnNotEquatable:
-            return "predicate's return type isn't Equatable — N-class equality classification needs ==(_:_:)"
-        }
     }
 }

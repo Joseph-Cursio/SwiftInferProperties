@@ -2,6 +2,92 @@ import PropertyLawCore
 @testable import SwiftInferCore
 import Testing
 
+@Suite("CarrierKindResolver — V1.18.A signal factory + helpers")
+struct CarrierKindResolverSignalFactoryTests {
+
+    private func makeResolver(_ decls: [TypeDecl] = []) -> CarrierKindResolver {
+        CarrierKindResolver(typeDecls: decls)
+    }
+
+    private func decl(
+        _ name: String,
+        _ kind: TypeDecl.Kind = .struct,
+        members: [StoredMember] = []
+    ) -> TypeDecl {
+        TypeDecl(
+            name: name,
+            kind: kind,
+            inheritedTypes: [],
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            storedMembers: members
+        )
+    }
+
+    private func member(_ name: String, _ typeName: String) -> StoredMember {
+        StoredMember(name: name, typeName: typeName)
+    }
+
+    // MARK: - Signal factory
+
+    @Test("Signal factory emits +5 .valueSemanticCarrier for value-semantic carrier")
+    func signalFactoryValueSemantic() {
+        let resolver = makeResolver([
+            decl("Counter", .struct, members: [member("value", "Int")])
+        ])
+        let signal = resolver.carrierKindSignal(forContainingTypeName: "Counter")
+        #expect(signal?.kind == .valueSemanticCarrier)
+        #expect(signal?.weight == 5)
+        #expect(signal?.detail.contains("Counter") == true)
+    }
+
+    @Test("Signal factory emits -10 .referenceTypeCarrier for class carrier")
+    func signalFactoryReferenceType() {
+        let resolver = makeResolver([decl("Service", TypeDecl.Kind.class)])
+        let signal = resolver.carrierKindSignal(forContainingTypeName: "Service")
+        #expect(signal?.kind == .referenceTypeCarrier)
+        #expect(signal?.weight == -10)
+        #expect(signal?.detail.contains("Service") == true)
+    }
+
+    @Test("Signal factory emits nil for .mixed carrier")
+    func signalFactoryMixedReturnsNil() {
+        let resolver = makeResolver([
+            decl("Bag", .struct, members: [member("callback", "() -> Void")])
+        ])
+        #expect(resolver.carrierKindSignal(forContainingTypeName: "Bag") == nil)
+    }
+
+    @Test("Signal factory emits nil for .unknown carrier")
+    func signalFactoryUnknownReturnsNil() {
+        let resolver = makeResolver()
+        #expect(resolver.carrierKindSignal(forContainingTypeName: "MysteryType") == nil)
+        #expect(resolver.carrierKindSignal(forContainingTypeName: nil) == nil)
+    }
+
+    // MARK: - Closure-detection helper
+
+    @Test("Closure-detection helper recognises bare and attributed function types")
+    func closureDetectionHelper() {
+        #expect(CarrierKindResolver.isClosureType("() -> Void"))
+        #expect(CarrierKindResolver.isClosureType("(Int) -> Int"))
+        #expect(CarrierKindResolver.isClosureType("@escaping () -> Void"))
+        #expect(CarrierKindResolver.isClosureType("@Sendable (Int) -> Bool"))
+        #expect(CarrierKindResolver.isClosureType("@MainActor (String) -> Void"))
+        // Non-closure types don't match.
+        #expect(!CarrierKindResolver.isClosureType("Int"))
+        #expect(!CarrierKindResolver.isClosureType("Array<Int>"))
+        #expect(!CarrierKindResolver.isClosureType("(Int, String)"))
+    }
+
+    @Test("Generic-parameter-stripping helper removes the angle-bracket clause")
+    func genericStrippingHelper() {
+        #expect(CarrierKindResolver.strippingGenericParameters("Array<Int>") == "Array")
+        #expect(CarrierKindResolver.strippingGenericParameters("Dictionary<K, V>") == "Dictionary")
+        #expect(CarrierKindResolver.strippingGenericParameters("Int") == "Int")
+        #expect(CarrierKindResolver.strippingGenericParameters("Result<Int, Error>") == "Result")
+    }
+}
+
 @Suite("CarrierKindResolver — V1.18.A value-semantic carrier classifier")
 struct CarrierKindResolverTests {
 
@@ -299,91 +385,5 @@ struct CarrierKindResolverTests {
         // propagates upward. (Names use full-word prefixes to avoid
         // collision with the T1/U2 generic-parameter heuristic.)
         #expect(resolver.classify(typeName: "Layer1") == .unknown)
-    }
-}
-
-@Suite("CarrierKindResolver — V1.18.A signal factory + helpers")
-struct CarrierKindResolverSignalFactoryTests {
-
-    private func makeResolver(_ decls: [TypeDecl] = []) -> CarrierKindResolver {
-        CarrierKindResolver(typeDecls: decls)
-    }
-
-    private func decl(
-        _ name: String,
-        _ kind: TypeDecl.Kind = .struct,
-        members: [StoredMember] = []
-    ) -> TypeDecl {
-        TypeDecl(
-            name: name,
-            kind: kind,
-            inheritedTypes: [],
-            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-            storedMembers: members
-        )
-    }
-
-    private func member(_ name: String, _ typeName: String) -> StoredMember {
-        StoredMember(name: name, typeName: typeName)
-    }
-
-    // MARK: - Signal factory
-
-    @Test("Signal factory emits +5 .valueSemanticCarrier for value-semantic carrier")
-    func signalFactoryValueSemantic() {
-        let resolver = makeResolver([
-            decl("Counter", .struct, members: [member("value", "Int")])
-        ])
-        let signal = resolver.carrierKindSignal(forContainingTypeName: "Counter")
-        #expect(signal?.kind == .valueSemanticCarrier)
-        #expect(signal?.weight == 5)
-        #expect(signal?.detail.contains("Counter") == true)
-    }
-
-    @Test("Signal factory emits -10 .referenceTypeCarrier for class carrier")
-    func signalFactoryReferenceType() {
-        let resolver = makeResolver([decl("Service", TypeDecl.Kind.class)])
-        let signal = resolver.carrierKindSignal(forContainingTypeName: "Service")
-        #expect(signal?.kind == .referenceTypeCarrier)
-        #expect(signal?.weight == -10)
-        #expect(signal?.detail.contains("Service") == true)
-    }
-
-    @Test("Signal factory emits nil for .mixed carrier")
-    func signalFactoryMixedReturnsNil() {
-        let resolver = makeResolver([
-            decl("Bag", .struct, members: [member("callback", "() -> Void")])
-        ])
-        #expect(resolver.carrierKindSignal(forContainingTypeName: "Bag") == nil)
-    }
-
-    @Test("Signal factory emits nil for .unknown carrier")
-    func signalFactoryUnknownReturnsNil() {
-        let resolver = makeResolver()
-        #expect(resolver.carrierKindSignal(forContainingTypeName: "MysteryType") == nil)
-        #expect(resolver.carrierKindSignal(forContainingTypeName: nil) == nil)
-    }
-
-    // MARK: - Closure-detection helper
-
-    @Test("Closure-detection helper recognises bare and attributed function types")
-    func closureDetectionHelper() {
-        #expect(CarrierKindResolver.isClosureType("() -> Void"))
-        #expect(CarrierKindResolver.isClosureType("(Int) -> Int"))
-        #expect(CarrierKindResolver.isClosureType("@escaping () -> Void"))
-        #expect(CarrierKindResolver.isClosureType("@Sendable (Int) -> Bool"))
-        #expect(CarrierKindResolver.isClosureType("@MainActor (String) -> Void"))
-        // Non-closure types don't match.
-        #expect(!CarrierKindResolver.isClosureType("Int"))
-        #expect(!CarrierKindResolver.isClosureType("Array<Int>"))
-        #expect(!CarrierKindResolver.isClosureType("(Int, String)"))
-    }
-
-    @Test("Generic-parameter-stripping helper removes the angle-bracket clause")
-    func genericStrippingHelper() {
-        #expect(CarrierKindResolver.strippingGenericParameters("Array<Int>") == "Array")
-        #expect(CarrierKindResolver.strippingGenericParameters("Dictionary<K, V>") == "Dictionary")
-        #expect(CarrierKindResolver.strippingGenericParameters("Int") == "Int")
-        #expect(CarrierKindResolver.strippingGenericParameters("Result<Int, Error>") == "Result")
     }
 }

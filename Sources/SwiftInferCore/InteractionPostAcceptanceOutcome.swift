@@ -1,5 +1,48 @@
 import Foundation
 
+/// V2.0 accept-check follow-up — top-level
+/// `.swiftinfer/interaction-post-acceptance-outcomes.json` shape.
+/// Identity-keyed upsert; latest accept-check run wins. The §17.2
+/// metric (when extended to interactions) renders the *current*
+/// state of each accepted invariant.
+public struct InteractionPostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
+
+    /// Bumped when the on-disk schema changes incompatibly.
+    /// v2.0 ships schema version 1.
+    public static let currentSchemaVersion = 1
+
+    public let schemaVersion: Int
+    public let records: [InteractionPostAcceptanceOutcome]
+
+    public init(
+        schemaVersion: Int = Self.currentSchemaVersion,
+        records: [InteractionPostAcceptanceOutcome] = []
+    ) {
+        self.schemaVersion = schemaVersion
+        self.records = records
+    }
+
+    /// The empty value. `InteractionPostAcceptanceOutcomesStore.load`
+    /// returns this when the file doesn't exist.
+    public static let empty = Self()
+
+    /// Look up an outcome by identity hash. Returns `nil` when no
+    /// accept-check has run against the given suggestion.
+    public func record(for identityHash: String) -> InteractionPostAcceptanceOutcome? {
+        records.first { $0.identityHash == identityHash }
+    }
+
+    /// Append-or-overwrite by identity. Mirrors v1's posture: a
+    /// second accept-check on the same identity replaces the first.
+    public func upserting(_ record: InteractionPostAcceptanceOutcome) -> Self {
+        let withoutPrior = records.filter { $0.identityHash != record.identityHash }
+        return Self(
+            schemaVersion: schemaVersion,
+            records: withoutPrior + [record]
+        )
+    }
+}
+
 /// V2.0 accept-check follow-up — the four-state post-acceptance verdict for an accepted
 /// interaction-invariant suggestion.
 ///
@@ -73,48 +116,5 @@ public struct InteractionPostAcceptanceOutcome: Sendable, Equatable, Codable {
         self.originalAcceptedAt = originalAcceptedAt
         self.checkedAt = checkedAt
         self.swiftInferVersion = swiftInferVersion
-    }
-}
-
-/// V2.0 accept-check follow-up — top-level
-/// `.swiftinfer/interaction-post-acceptance-outcomes.json` shape.
-/// Identity-keyed upsert; latest accept-check run wins. The §17.2
-/// metric (when extended to interactions) renders the *current*
-/// state of each accepted invariant.
-public struct InteractionPostAcceptanceOutcomeLog: Sendable, Equatable, Codable {
-
-    /// Bumped when the on-disk schema changes incompatibly.
-    /// v2.0 ships schema version 1.
-    public static let currentSchemaVersion = 1
-
-    public let schemaVersion: Int
-    public let records: [InteractionPostAcceptanceOutcome]
-
-    public init(
-        schemaVersion: Int = Self.currentSchemaVersion,
-        records: [InteractionPostAcceptanceOutcome] = []
-    ) {
-        self.schemaVersion = schemaVersion
-        self.records = records
-    }
-
-    /// The empty value. `InteractionPostAcceptanceOutcomesStore.load`
-    /// returns this when the file doesn't exist.
-    public static let empty = Self()
-
-    /// Look up an outcome by identity hash. Returns `nil` when no
-    /// accept-check has run against the given suggestion.
-    public func record(for identityHash: String) -> InteractionPostAcceptanceOutcome? {
-        records.first { $0.identityHash == identityHash }
-    }
-
-    /// Append-or-overwrite by identity. Mirrors v1's posture: a
-    /// second accept-check on the same identity replaces the first.
-    public func upserting(_ record: InteractionPostAcceptanceOutcome) -> Self {
-        let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return Self(
-            schemaVersion: schemaVersion,
-            records: withoutPrior + [record]
-        )
     }
 }

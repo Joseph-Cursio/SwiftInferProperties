@@ -6,6 +6,23 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// The first function declaration in a file with a given name.
+final class NamedFunctionFinder: SyntaxVisitor {
+
+    private let name: String
+    private(set) var found: FunctionDeclSyntax?
+
+    init(name: String, viewMode: SyntaxTreeViewMode) {
+        self.name = name
+        super.init(viewMode: viewMode)
+    }
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        if found == nil, node.name.text == name { found = node }
+        return .visitChildren
+    }
+}
+
 /// **Phase 0.5, step 1: can the soundness arm reach its own frozen prediction?**
 ///
 /// The plan's §6.3 arm sandboxes the `.pure` population and asks which functions trip
@@ -224,22 +241,5 @@ struct SoundnessArmReachCensusMeasuredTests {
             }
         }
         print(lines.joined(separator: "\n"))
-    }
-}
-
-/// The first function declaration in a file with a given name.
-final class NamedFunctionFinder: SyntaxVisitor {
-
-    private let name: String
-    private(set) var found: FunctionDeclSyntax?
-
-    init(name: String, viewMode: SyntaxTreeViewMode) {
-        self.name = name
-        super.init(viewMode: viewMode)
-    }
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        if found == nil, node.name.text == name { found = node }
-        return .visitChildren
     }
 }

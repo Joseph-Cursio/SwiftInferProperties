@@ -19,6 +19,37 @@ import Testing
 //                                                          if both fire,
 //                                                          hypothetical)
 
+@Suite("RoundTripTemplate — V1.16.1 end-to-end discover() integration")
+struct RoundTripSetAlgebraShapeDiscoverTests {
+
+    @Test("V1.16.1 — `intersection(_:) ↔ subtracting(_:)` Self-pair no longer surfaces in discover()")
+    func setAlgebraRoundTripSuppressedEndToEnd() {
+        let intersection = makeSummary(name: "intersection", line: 10)
+        let subtracting = makeSummary(name: "subtracting", line: 20)
+        let suggestions = TemplateRegistry.discover(
+            in: [intersection, subtracting],
+            typeDecls: []
+        )
+        let roundTripCount = suggestions.filter { $0.templateName == "round-trip" }.count
+        #expect(roundTripCount == 0, "SetAlgebra-shape round-trip pair should not surface")
+    }
+
+    private func makeSummary(name: String, line: Int) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [Parameter(label: nil, internalName: "other", typeText: "Self", isInout: false)],
+            returnTypeText: "Self",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: line, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+    }
+}
+
 @Suite("RoundTripTemplate — V1.16.1 SetAlgebra-shape veto")
 struct RoundTripSetAlgebraShapeGateTests {
 
@@ -198,37 +229,6 @@ struct RoundTripSetAlgebraShapeGateTests {
             isStatic: false,
             location: SourceLocation(file: file, line: line, column: 1),
             containingTypeName: containingType,
-            bodySignals: .empty
-        )
-    }
-}
-
-@Suite("RoundTripTemplate — V1.16.1 end-to-end discover() integration")
-struct RoundTripSetAlgebraShapeDiscoverTests {
-
-    @Test("V1.16.1 — `intersection(_:) ↔ subtracting(_:)` Self-pair no longer surfaces in discover()")
-    func setAlgebraRoundTripSuppressedEndToEnd() {
-        let intersection = makeSummary(name: "intersection", line: 10)
-        let subtracting = makeSummary(name: "subtracting", line: 20)
-        let suggestions = TemplateRegistry.discover(
-            in: [intersection, subtracting],
-            typeDecls: []
-        )
-        let roundTripCount = suggestions.filter { $0.templateName == "round-trip" }.count
-        #expect(roundTripCount == 0, "SetAlgebra-shape round-trip pair should not surface")
-    }
-
-    private func makeSummary(name: String, line: Int) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: [Parameter(label: nil, internalName: "other", typeText: "Self", isInout: false)],
-            returnTypeText: "Self",
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: line, column: 1),
-            containingTypeName: nil,
             bodySignals: .empty
         )
     }

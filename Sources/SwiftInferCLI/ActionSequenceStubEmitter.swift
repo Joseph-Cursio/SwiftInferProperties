@@ -2,6 +2,36 @@ import Foundation
 import PropertyLawCore
 import SwiftInferCore
 
+/// Minimal SipHash-style accumulator — just enough for deterministic
+/// seed derivation from string identifiers. We can't use Swift's
+/// built-in Hasher (its output is randomized per-process via
+/// `Hasher.seedOverride`); we need byte-stable output across runs so
+/// the verifier's seed is reproducible.
+///
+/// Tiny FNV-1a-shape mixer with an extra avalanche step. Not
+/// cryptographic — that's fine; the seed only needs to be uniform
+/// enough that Xoshiro's state isn't pathological.
+private struct SipHasher {
+    private var state: UInt64 = 0xCBF2_9CE4_8422_2325 // FNV offset basis
+
+    mutating func combine(_ value: String) {
+        for byte in value.utf8 {
+            state ^= UInt64(byte)
+            state &*= 0x0000_0100_0000_01B3 // FNV prime
+        }
+    }
+
+    mutating func finalize() -> UInt64 {
+        // xxhash avalanche step — borrowed from v1's
+        // `RoundTripStubEmitter.spread`. Ensures high bits get mixed.
+        var hash = state ^ (state >> 32)
+        hash &*= 0xC2B2_AE3D_27D4_EB4F
+        hash ^= hash >> 29
+        hash &*= 0x1656_67B1_9E37_79F9
+        return hash | 1 // Xoshiro state must not be all-zero.
+    }
+}
+
 /// V2.0 M3.B / M4.D / M8.A / M8.D — emits the verifier `main.swift`
 /// source for `swift-infer verify-interaction`. Runs N action
 /// sequences, prints an outcome marker on the clean path. M4.D
@@ -358,35 +388,5 @@ public enum ActionSequenceStubEmitter {
         let seedD = hash.finalize()
         return "0x\(String(seedA, radix: 16)), 0x\(String(seedB, radix: 16)), "
             + "0x\(String(seedC, radix: 16)), 0x\(String(seedD, radix: 16))"
-    }
-}
-
-/// Minimal SipHash-style accumulator — just enough for deterministic
-/// seed derivation from string identifiers. We can't use Swift's
-/// built-in Hasher (its output is randomized per-process via
-/// `Hasher.seedOverride`); we need byte-stable output across runs so
-/// the verifier's seed is reproducible.
-///
-/// Tiny FNV-1a-shape mixer with an extra avalanche step. Not
-/// cryptographic — that's fine; the seed only needs to be uniform
-/// enough that Xoshiro's state isn't pathological.
-private struct SipHasher {
-    private var state: UInt64 = 0xCBF2_9CE4_8422_2325 // FNV offset basis
-
-    mutating func combine(_ value: String) {
-        for byte in value.utf8 {
-            state ^= UInt64(byte)
-            state &*= 0x0000_0100_0000_01B3 // FNV prime
-        }
-    }
-
-    mutating func finalize() -> UInt64 {
-        // xxhash avalanche step — borrowed from v1's
-        // `RoundTripStubEmitter.spread`. Ensures high bits get mixed.
-        var hash = state ^ (state >> 32)
-        hash &*= 0xC2B2_AE3D_27D4_EB4F
-        hash ^= hash >> 29
-        hash &*= 0x1656_67B1_9E37_79F9
-        return hash | 1 // Xoshiro state must not be all-zero.
     }
 }

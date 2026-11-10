@@ -3,6 +3,38 @@ import Foundation
 import SwiftInferCore
 import SwiftInferTemplates
 
+/// Sink for `Discover.run(directory:output:)`. Production code uses
+/// `PrintOutput`; tests use a recording sink so they can match the rendered
+/// text byte-for-byte.
+public protocol DiscoverOutput {
+    /// Emits one chunk of rendered `discover` output.
+    func write(_ text: String)
+}
+
+public struct PrintOutput: DiscoverOutput {
+    public init() { /* no-op */ }
+    public func write(_ text: String) {
+        print(text)
+    }
+}
+
+/// Sink for diagnostic warnings (vocabulary load failures, etc.). Kept
+/// separate from `DiscoverOutput` so warnings reach stderr without
+/// disturbing the byte-stable suggestion stream on stdout — PRD §16's
+/// reproducibility guarantee depends on stdout being a function of
+/// (target sources, vocabulary, config) only.
+public protocol DiagnosticOutput {
+    /// Emits one diagnostic line, out of band from the suggestion stream.
+    func writeDiagnostic(_ text: String)
+}
+
+public struct PrintDiagnosticOutput: DiagnosticOutput {
+    public init() { /* no-op */ }
+    public func writeDiagnostic(_ text: String) {
+        FileHandle.standardError.write(Data((text + "\n").utf8))
+    }
+}
+
 /// Root command for the `swift-infer` executable. v1.2.0 ships
 /// `discover` + `drift` + `convert-counterexample` (subcommand surface
 /// unchanged from v1.1; v1.2 widens the M13 + M14 generalized-partition
@@ -56,36 +88,4 @@ public struct SwiftInferCommand: AsyncParsableCommand {
     )
 
     public init() { /* no-op */ }
-}
-
-/// Sink for `Discover.run(directory:output:)`. Production code uses
-/// `PrintOutput`; tests use a recording sink so they can match the rendered
-/// text byte-for-byte.
-public protocol DiscoverOutput {
-    /// Emits one chunk of rendered `discover` output.
-    func write(_ text: String)
-}
-
-public struct PrintOutput: DiscoverOutput {
-    public init() { /* no-op */ }
-    public func write(_ text: String) {
-        print(text)
-    }
-}
-
-/// Sink for diagnostic warnings (vocabulary load failures, etc.). Kept
-/// separate from `DiscoverOutput` so warnings reach stderr without
-/// disturbing the byte-stable suggestion stream on stdout — PRD §16's
-/// reproducibility guarantee depends on stdout being a function of
-/// (target sources, vocabulary, config) only.
-public protocol DiagnosticOutput {
-    /// Emits one diagnostic line, out of band from the suggestion stream.
-    func writeDiagnostic(_ text: String)
-}
-
-public struct PrintDiagnosticOutput: DiagnosticOutput {
-    public init() { /* no-op */ }
-    public func writeDiagnostic(_ text: String) {
-        FileHandle.standardError.write(Data((text + "\n").utf8))
-    }
 }

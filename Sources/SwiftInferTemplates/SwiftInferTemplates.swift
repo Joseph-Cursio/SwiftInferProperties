@@ -1,19 +1,6 @@
 import Foundation
 import SwiftInferCore
 
-/// SwiftInferTemplates — TemplateEngine template registry.
-///
-/// PRD §5.2 specifies eight shipped templates: round-trip,
-/// idempotence, commutativity, associativity, monotonicity,
-/// identity-element, invariant-preservation, inverse-pair. M1.3
-/// shipped **idempotence**; M1.4 added **round-trip** + cross-function
-/// pairing; M2.3 added **commutativity**; M2.4 added **associativity**
-/// with reducer/builder usage as a new type-flow signal; M2.5 added
-/// **identity-element** with op + identity constant cross-pairing and
-/// an accumulator-with-empty-seed type-flow signal; subsequent
-/// milestones added the remaining three.
-public enum SwiftInferTemplates {}
-
 /// Static registry that orchestrates every shipped template against a
 /// corpus of `FunctionSummary` records. Kept in `SwiftInferTemplates`
 /// (rather than the CLI) so the discovery pipeline is reachable from
@@ -350,3 +337,16 @@ public enum TemplateRegistry {
         )
     }
 }
+
+/// SwiftInferTemplates — TemplateEngine template registry.
+///
+/// PRD §5.2 specifies eight shipped templates: round-trip,
+/// idempotence, commutativity, associativity, monotonicity,
+/// identity-element, invariant-preservation, inverse-pair. M1.3
+/// shipped **idempotence**; M1.4 added **round-trip** + cross-function
+/// pairing; M2.3 added **commutativity**; M2.4 added **associativity**
+/// with reducer/builder usage as a new type-flow signal; M2.5 added
+/// **identity-element** with op + identity constant cross-pairing and
+/// an accumulator-with-empty-seed type-flow signal; subsequent
+/// milestones added the remaining three.
+public enum SwiftInferTemplates {}

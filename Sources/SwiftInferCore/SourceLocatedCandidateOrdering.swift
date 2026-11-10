@@ -27,13 +27,6 @@ protocol SourceLocatedCandidate {
     var location: SourceLocation { get }
 }
 
-extension DefensiveCopyCandidate: SourceLocatedCandidate {}
-extension RuleVisitorCandidate: SourceLocatedCandidate {}
-extension StatefulRole: SourceLocatedCandidate {}
-extension ViewModelCandidate: SourceLocatedCandidate {}
-extension StableIdentityCandidate: SourceLocatedCandidate {}
-extension ValueSemanticCandidate: SourceLocatedCandidate {}
-
 enum SourceLocatedCandidateOrdering {
 
     /// Source position ascending, type name ascending as the tiebreak.
@@ -48,3 +41,15 @@ enum SourceLocatedCandidateOrdering {
         (lhs.location, lhs.typeName) < (rhs.location, rhs.typeName)
     }
 }
+
+extension DefensiveCopyCandidate: SourceLocatedCandidate {}
+
+extension RuleVisitorCandidate: SourceLocatedCandidate {}
+
+extension StatefulRole: SourceLocatedCandidate {}
+
+extension ViewModelCandidate: SourceLocatedCandidate {}
+
+extension StableIdentityCandidate: SourceLocatedCandidate {}
+
+extension ValueSemanticCandidate: SourceLocatedCandidate {}

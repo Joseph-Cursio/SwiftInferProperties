@@ -1,6 +1,40 @@
 import SwiftInferCore
 import SwiftSyntax
 
+private final class CallSiteVisitor: SyntaxVisitor {
+
+    let consumer: String
+    var sites: [DomainCallSite] = []
+
+    init(consumer: String) {
+        self.consumer = consumer
+        super.init(viewMode: .sourceAccurate)
+    }
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        guard node.calledExpression.trailingIdentifierName == consumer else {
+            return .visitChildren
+        }
+        guard let firstArg = node.arguments.first else {
+            sites.append(DomainCallSite(argument: .other))
+            return .visitChildren
+        }
+        sites.append(DomainCallSite(argument: classify(firstArg.expression)))
+        return .visitChildren
+    }
+
+    private func classify(_ expr: ExprSyntax) -> ArgumentClassification {
+        if let call = expr.as(FunctionCallExprSyntax.self),
+           let producer = call.calledExpression.trailingIdentifierName {
+            return .callOutput(producerName: producer)
+        }
+        if let ident = expr.as(DeclReferenceExprSyntax.self) {
+            return .identifier(name: ident.baseName.text)
+        }
+        return .other
+    }
+}
+
 /// TestLifter M10.1 — pure-function call-site extractor for the
 /// round-trip pair's reverse-side function. Walks a `SlicedTestBody`'s
 /// `setup` and `propertyRegion` items for every `FunctionCallExprSyntax`
@@ -38,39 +72,5 @@ public enum DomainCallSiteExtractor {
             visitor.walk(item)
         }
         return visitor.sites
-    }
-}
-
-private final class CallSiteVisitor: SyntaxVisitor {
-
-    let consumer: String
-    var sites: [DomainCallSite] = []
-
-    init(consumer: String) {
-        self.consumer = consumer
-        super.init(viewMode: .sourceAccurate)
-    }
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        guard node.calledExpression.trailingIdentifierName == consumer else {
-            return .visitChildren
-        }
-        guard let firstArg = node.arguments.first else {
-            sites.append(DomainCallSite(argument: .other))
-            return .visitChildren
-        }
-        sites.append(DomainCallSite(argument: classify(firstArg.expression)))
-        return .visitChildren
-    }
-
-    private func classify(_ expr: ExprSyntax) -> ArgumentClassification {
-        if let call = expr.as(FunctionCallExprSyntax.self),
-           let producer = call.calledExpression.trailingIdentifierName {
-            return .callOutput(producerName: producer)
-        }
-        if let ident = expr.as(DeclReferenceExprSyntax.self) {
-            return .identifier(name: ident.baseName.text)
-        }
-        return .other
     }
 }

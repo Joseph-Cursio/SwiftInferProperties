@@ -5,6 +5,13 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+/// No-op diagnostic sink — the cross-validation tests don't care about
+/// the warning stream from ConfigLoader / VocabularyLoader because the
+/// fixture directories don't carry config files.
+private struct SilentDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M1.5 acceptance — the canonical end-to-end "discover walks
 /// both Sources/ and Tests/, TestLifter contributes a CrossValidationKey
 /// for the encode/decode body, RoundTripTemplate's suggestion for the
@@ -145,11 +152,4 @@ struct TestLifterCrossValidationTests {
             encoding: .utf8
         )
     }
-}
-
-/// No-op diagnostic sink — the cross-validation tests don't care about
-/// the warning stream from ConfigLoader / VocabularyLoader because the
-/// fixture directories don't carry config files.
-private struct SilentDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

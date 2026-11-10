@@ -16,32 +16,6 @@ import Testing
 // compile + execute chain — catches version-skew + plugin-loading
 // issues at build time, not at deferred CI time.
 
-@Suite("V1.100 — kit v2.5.0 @InteractionInvariantTests macro smoke")
-struct KitV25MacroSmokeTests {
-
-    @Test func macroExpandsAndGeneratedTestRuns() {
-        // The `@InteractionInvariantTests` macro attached to
-        // `SmokeMacroCardinality` below emits a peer
-        // `SmokeMacroCardinalityInteractionInvariantTests` struct
-        // containing one auto-generated `@Test`. This test exists
-        // to confirm that:
-        // 1. The macro plugin loads cleanly (kit v2.5.0 binding).
-        // 2. The expanded peer struct compiles against the v2.4.0
-        //    harness symbol it references.
-        // 3. The user-supplied `initialState` + `reducer` members
-        //    satisfy the harness's parameter shape.
-        //
-        // The auto-generated test runs as part of the same target,
-        // so we don't need to invoke it directly — `swift test`
-        // picks it up via the @Suite/@Test discovery. The explicit
-        // assertion here just confirms the conformer's invariant
-        // holds on the initial state (sanity check that the
-        // fixture types are well-formed).
-        let initial = SmokeMacroState(showsA: false, showsB: false)
-        #expect(SmokeMacroCardinality.invariantHolds(in: initial))
-    }
-}
-
 // MARK: - Fixtures: state + actions
 
 struct SmokeMacroState: Equatable, Sendable {
@@ -82,5 +56,31 @@ struct SmokeMacroCardinality: CardinalityInvariant, Sendable {
 
     static func invariantHolds(in state: SmokeMacroState) -> Bool {
         (state.showsA ? 1 : 0) + (state.showsB ? 1 : 0) <= 1
+    }
+}
+
+@Suite("V1.100 — kit v2.5.0 @InteractionInvariantTests macro smoke")
+struct KitV25MacroSmokeTests {
+
+    @Test func macroExpandsAndGeneratedTestRuns() {
+        // The `@InteractionInvariantTests` macro attached to
+        // `SmokeMacroCardinality` below emits a peer
+        // `SmokeMacroCardinalityInteractionInvariantTests` struct
+        // containing one auto-generated `@Test`. This test exists
+        // to confirm that:
+        // 1. The macro plugin loads cleanly (kit v2.5.0 binding).
+        // 2. The expanded peer struct compiles against the v2.4.0
+        //    harness symbol it references.
+        // 3. The user-supplied `initialState` + `reducer` members
+        //    satisfy the harness's parameter shape.
+        //
+        // The auto-generated test runs as part of the same target,
+        // so we don't need to invoke it directly — `swift test`
+        // picks it up via the @Suite/@Test discovery. The explicit
+        // assertion here just confirms the conformer's invariant
+        // holds on the initial state (sanity check that the
+        // fixture types are well-formed).
+        let initial = SmokeMacroState(showsA: false, showsB: false)
+        #expect(SmokeMacroCardinality.invariantHolds(in: initial))
     }
 }

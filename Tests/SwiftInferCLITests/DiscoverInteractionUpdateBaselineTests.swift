@@ -8,6 +8,18 @@ import Testing
 // Verified only so the persisted snapshot matches what
 // `InteractionDriftDetector` would warn against on the next run.
 
+/// V1.89 — appending DiscoverOutput sink. Unlike `DPRecordingOutput`
+/// (which overwrites on each write), this preserves the full call
+/// sequence so tests can assert against both the baseline-write
+/// status line AND the renderer output when --update-baseline is set.
+private final class UpdateBaselineRecordingOutput: DiscoverOutput, @unchecked Sendable {
+    var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
 @Suite("DiscoverInteraction — V1.89 --update-baseline writeout")
 struct DiscoverInteractionUpdateBaselineTests {
 
@@ -241,17 +253,5 @@ struct DiscoverInteractionUpdateBaselineTests {
         let dir = directory.appendingPathComponent(relativePath)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         try Data(contents.utf8).write(to: dir.appendingPathComponent(name))
-    }
-}
-
-/// V1.89 — appending DiscoverOutput sink. Unlike `DPRecordingOutput`
-/// (which overwrites on each write), this preserves the full call
-/// sequence so tests can assert against both the baseline-write
-/// status line AND the renderer output when --update-baseline is set.
-private final class UpdateBaselineRecordingOutput: DiscoverOutput, @unchecked Sendable {
-    var lines: [String] = []
-
-    func write(_ text: String) {
-        lines.append(text)
     }
 }

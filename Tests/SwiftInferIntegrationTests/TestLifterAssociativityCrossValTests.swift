@@ -5,6 +5,10 @@ import SwiftInferTemplates
 import SwiftInferTestLifter
 import Testing
 
+private struct SilentAssociativityDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// TestLifter M5.6 acceptance — parallel of M2.4's idempotence
 /// cross-validation test for the associativity template. Constructs
 /// a synthetic project with `Sources/Foo/Combine.swift` (defining
@@ -103,8 +107,4 @@ struct TestLifterAssociativityCrossValTests {
             encoding: .utf8
         )
     }
-}
-
-private struct SilentAssociativityDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }
