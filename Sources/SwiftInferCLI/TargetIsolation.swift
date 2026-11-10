@@ -93,12 +93,8 @@ public enum TargetIsolation {
     }
 
     private struct DumpedSettingKind: Decodable {
-        let defaultIsolation: DumpedIsolationPayload?
-    }
-
-    private struct DumpedIsolationPayload: Decodable {
-        // swiftlint:disable:next identifier_name
-        let _0: String?
+        /// The payload object, whose one key `_0` holds the isolation's name.
+        let defaultIsolation: [String: String?]?
     }
 
     // MARK: - Query
@@ -117,9 +113,13 @@ public enum TargetIsolation {
         guard let target = dumped.targets.first(where: { $0.name == targetName }) else {
             return nil
         }
-        return target.settings?
-            .first { $0.tool == "swift" && $0.kind.defaultIsolation != nil }?
-            .kind.defaultIsolation?._0
+        guard let payload = target.settings?
+            .first(where: { $0.tool == "swift" && $0.kind.defaultIsolation != nil })?
+            .kind.defaultIsolation,
+              let name = payload["_0"] else {
+            return nil
+        }
+        return name
     }
 
     /// The default isolation compiled into whichever declared target owns `file`, or `nil`.

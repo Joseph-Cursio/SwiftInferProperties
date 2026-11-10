@@ -113,7 +113,7 @@ struct VerifyAutoBridgeTests {
         )
         let parsed = VerifyOutcome.defaultFails(
             trial: 7, input: "999", forwardResult: "a", inverseResult: "b",
-            shrunk: "0", shrinkSteps: 3
+            shrink: ShrinkTrace(minimal: "0", steps: 3)
         )
         let rendered = SwiftInferCommand.Verify.renderOutcome(
             parsed: parsed,

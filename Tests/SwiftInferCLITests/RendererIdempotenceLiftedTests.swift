@@ -33,9 +33,7 @@ struct RendererIdempotenceLiftedTests {
                 trial: 0,
                 input: "[3, 1, 2]",
                 forwardResult: "[1, 2, 3]",
-                inverseResult: "[1, 2, 3, 4]",
-                shrunk: nil,
-                shrinkSteps: 0
+                inverseResult: "[1, 2, 3, 4]"
             ),
             context: Self.context
         )

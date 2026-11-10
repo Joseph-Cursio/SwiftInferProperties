@@ -82,8 +82,7 @@ struct ViewModelVerifyInteractionPipelineTests {
     @Test("a failing verifier surfaces defaultFails")
     func surfacesFailure() {
         let failure = VerifyOutcome.defaultFails(
-            trial: 1, input: "sequence", forwardResult: "", inverseResult: "",
-            shrunk: nil, shrinkSteps: 0
+            trial: 1, input: "sequence", forwardResult: "", inverseResult: ""
         )
         let result = ViewModelVerifyInteractionPipeline.verify(
             candidate: Self.candidate(actions: [Self.vmAction("selectAll")]),

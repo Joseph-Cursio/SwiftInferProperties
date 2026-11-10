@@ -5,7 +5,6 @@
 /// seed `(1, 2, 3, 4)`. The move is meant to change nothing for this shape, and
 /// `aOneParameterFreeFunctionIsByteIdenticalToBefore` holds it to that byte for byte.
 enum ReferenceOracleFrozenText {
-    // swiftlint:disable line_length
     static let isValidQuantity = #"""
     // Fill in the reference definition below — your docstring already states it:
     //   "A quantity is valid when it is finite and not negative."
@@ -26,15 +25,16 @@ enum ReferenceOracleFrozenText {
         let result = await backend.check(
             trials: 100,
             seed: seed,
-            sample: { rng in (Gen.frequency((3.0, Gen<Double>.double()), (2.0, Gen<Double?>.element(of: [0.0, -1.0, 1.0] as [Double]).map { $0! }))).run(using: &rng) },
+            sample: { rng in (Gen.frequency((3.0, Gen<Double>.double()), (2.0, Gen<Double?>.element(of: [0.0, -1.0, \#
+    1.0] as [Double]).map { $0! }))).run(using: &rng) },
             property: { value in isValidQuantity(value) == isValidQuantity_reference(value) }
         )
         if case let .failed(_, _, input, error) = result {
             Issue.record(
-                "isValidQuantity(_:) disagrees with its documented reference definition at input \(input). \(error?.message ?? "")"
+                "isValidQuantity(_:) disagrees with its documented reference definition at input \(input). \#
+    \(error?.message ?? "")"
             )
         }
     }
     """#
-    // swiftlint:enable line_length
 }

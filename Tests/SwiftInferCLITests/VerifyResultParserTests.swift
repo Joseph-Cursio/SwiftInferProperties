@@ -234,9 +234,7 @@ struct VerifyResultParserTests {
             trial: 47,
             input: "Complex(0.0042, -1.7e6)",
             forwardResult: "Complex(3.1, 2.2)",
-            inverseResult: "Complex(99.0, 0.0)",
-            shrunk: nil,
-            shrinkSteps: 0
+            inverseResult: "Complex(99.0, 0.0)"
         ))
     }
 

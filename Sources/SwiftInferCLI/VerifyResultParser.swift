@@ -108,27 +108,18 @@ public enum VerifyOutcome: Equatable, Sendable {
     case defaultFails(DefaultFailDetail)
     case error(reason: String)
 
-    // A flat 6-arg counterexample constructor naturally takes one param per
-    // marker the stub prints; the bundling that satisfies the associated-value
-    // limit lives in `DefaultFailDetail`. Waive parameter-count for this one
-    // convenience factory (scoped), rather than forcing every call site to
-    // build the struct inline.
-    // swiftlint:disable function_parameter_count
-
     /// Flat convenience constructor — keeps call sites ergonomic while the
-    /// case itself carries a single bundled `DefaultFailDetail`. The shrink
-    /// markers default to "none" so pre-v1.141 / non-shrinking emitters
-    /// construct unchanged.
+    /// case itself carries a single bundled `DefaultFailDetail`. `shrink`
+    /// defaults to none, so pre-v1.141 / non-shrinking emitters construct
+    /// unchanged.
     public static func defaultFails(
         trial: Int,
         input: String,
         forwardResult: String,
         inverseResult: String,
-        shrunk: String?,
-        shrinkSteps: Int
+        shrink: ShrinkTrace? = nil
     ) -> Self {
-        let shrink = shrunk.map { ShrinkTrace(minimal: $0, steps: shrinkSteps) }
-        return .defaultFails(
+        .defaultFails(
             DefaultFailDetail(
                 trial: trial,
                 input: input,
@@ -138,7 +129,6 @@ public enum VerifyOutcome: Equatable, Sendable {
             )
         )
     }
-    // swiftlint:enable function_parameter_count
 }
 
 /// Turns a verifier subprocess's `VERIFY_*` markers and exit code into a `VerifyOutcome`.
@@ -229,8 +219,7 @@ public enum VerifyResultParser {
                 input: input,
                 forwardResult: forwardResult,
                 inverseResult: inverseResult,
-                shrunk: shrunk,
-                shrinkSteps: shrinkSteps
+                shrink: shrunk.map { ShrinkTrace(minimal: $0, steps: shrinkSteps) }
             )
     }
 

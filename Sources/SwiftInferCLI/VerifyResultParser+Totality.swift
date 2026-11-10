@@ -59,9 +59,7 @@ extension VerifyResultParser {
             trial: trial,
             input: input,
             forwardResult: "trapped",
-            inverseResult: runtimeMessage ?? "(runtime message not captured)",
-            shrunk: nil,
-            shrinkSteps: 0
+            inverseResult: runtimeMessage ?? "(runtime message not captured)"
         )
     }
 }

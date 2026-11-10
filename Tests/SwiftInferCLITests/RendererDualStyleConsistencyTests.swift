@@ -29,9 +29,7 @@ struct RendererDualStyleConsistencyTests {
                 trial: 0,
                 input: "[3, 1, 2]",
                 forwardResult: "[1, 2, 3]",
-                inverseResult: "[3, 1, 2]",
-                shrunk: nil,
-                shrinkSteps: 0
+                inverseResult: "[3, 1, 2]"
             ),
             context: Self.context
         )

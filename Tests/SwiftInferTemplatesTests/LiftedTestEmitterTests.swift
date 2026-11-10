@@ -55,9 +55,7 @@ struct LiftedTestEmitterM7Tests {
     // MARK: - invariantPreserving(...) byte-stable golden (M7.3)
 
     // The expected block is a byte-stable copy of emitted output; the keypath
-    // failure message is legitimately one long line, so line_length is disabled
-    // for this golden only.
-    // swiftlint:disable line_length
+    // failure message is one long line, written across two with a `\` continuation.
     @Test
     func invariantPreservingEmitsByteStableTestStub() {
         let seed = SamplingSeed.Value(
@@ -91,14 +89,14 @@ struct LiftedTestEmitterM7Tests {
                 )
                 if case let .failed(_, _, input, error) = result {
                     Issue.record(
-                        "adjust(_:) failed invariant preservation \\\\.isValid at input \\(input). \\(error?.message ?? "")"
+                        "adjust(_:) failed invariant preservation \\\\.isValid at input \\(input). \\(error?.message \
+            ?? "")"
                     )
                 }
             }
             """
         #expect(source == expected)
     }
-    // swiftlint:enable line_length
 
     @Test
     func invariantPreservingSanitizesNestedKeypathInTestName() {

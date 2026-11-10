@@ -128,9 +128,7 @@ struct VerifyResultRendererTests {
                 trial: 47,
                 input: "Complex(0.0042, -1.7e6)",
                 forwardResult: "Complex(3.1, 2.2)",
-                inverseResult: "Complex(99.0, 0.0)",
-                shrunk: nil,
-                shrinkSteps: 0
+                inverseResult: "Complex(99.0, 0.0)"
             ),
             context: Self.canonicalContext
         )
@@ -150,8 +148,7 @@ struct VerifyResultRendererTests {
                 input: "Complex(0.0042, -1.7e6)",
                 forwardResult: "Complex(3.1, 2.2)",
                 inverseResult: "Complex(99.0, 0.0)",
-                shrunk: "Complex(0.0, 0.0)",
-                shrinkSteps: 14
+                shrink: ShrinkTrace(minimal: "Complex(0.0, 0.0)", steps: 14)
             ),
             context: Self.canonicalContext
         )
@@ -212,9 +209,7 @@ struct VerifyResultRendererTests {
                 trial: 3,
                 input: "Complex(1, 2)",
                 forwardResult: "Complex(0.5, 1)",
-                inverseResult: "Complex(0.25, 0.5)",
-                shrunk: nil,
-                shrinkSteps: 0
+                inverseResult: "Complex(0.25, 0.5)"
             ),
             context: Self.idempotenceContext
         )

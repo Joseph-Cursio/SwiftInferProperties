@@ -29,9 +29,7 @@ struct VerifyResultRendererMonotonicityTests {
                 trial: 0,
                 input: "(3, 7)",
                 forwardResult: "6",
-                inverseResult: "5",  // pretend non-monotone
-                shrunk: nil,
-                shrinkSteps: 0
+                inverseResult: "5"  // pretend non-monotone
             ),
             context: Self.context
         )

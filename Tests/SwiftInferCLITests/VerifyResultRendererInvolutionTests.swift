@@ -24,9 +24,7 @@ struct VerifyResultRendererInvolutionTests {
                 trial: 0,
                 input: "3",
                 forwardResult: "-3",
-                inverseResult: "3",
-                shrunk: nil,
-                shrinkSteps: 0
+                inverseResult: "3"
             ),
             context: Self.context
         )
