@@ -95,12 +95,14 @@ struct ConstructionUniverseNestedPackageTests {
             packages,
             reported: reported,
             rootHasManifest: rootHasManifest,
-            rootPath: "/work/App",
-            resolvingSymlinks: { $0 },
-            manifests: { directory in
-                if let text = manifests[directory] { return [.text(text)] }
-                return directory.isEmpty || packages.contains(directory) ? [.unreadable] : [.absent]
-            }
+            in: ConstructionUniverse.PackageTree(
+                rootPath: "/work/App",
+                resolvingSymlinks: { $0 },
+                manifests: { directory in
+                    if let text = manifests[directory] { return [.text(text)] }
+                    return directory.isEmpty || packages.contains(directory) ? [.unreadable] : [.absent]
+                }
+            )
         )
     }
 

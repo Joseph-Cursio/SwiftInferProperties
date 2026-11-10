@@ -27,17 +27,12 @@ extension ConstructionUniverse {
             : []
         return LargeStackWorkers.run {
             var read: Set<String> = []
-            let compiled = compiledNestedPackages(
-                nestedPackages,
-                reported: judged,
-                rootHasManifest: bounds,
-                rootPath: root.path,
-                resolvingSymlinks: canonicalPath
-            ) { relative in
+            let tree = PackageTree(rootPath: root.path, resolvingSymlinks: canonicalPath) { relative in
                 let manifests = manifests(inDirectory: packageDirectory(relative, under: root))
                 if !relative.isEmpty, manifests.contains(where: { $0 != .absent }) { read.insert(relative) }
                 return manifests
             }
+            let compiled = compiledNestedPackages(nestedPackages, reported: judged, rootHasManifest: bounds, in: tree)
             return (compiled, read)
         }
     }
