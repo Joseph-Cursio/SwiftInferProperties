@@ -10,12 +10,14 @@ import SwiftInferCore
 /// and the kit-overlap gate.
 public enum FunctorIdentityTemplate {
 
+    /// The `functor-identity` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: FunctorIdentityPairing.FunctorShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `functor-identity` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctorIdentityPairing.FunctorShape> {
         Constraint<FunctorIdentityPairing.FunctorShape>(
             templateName: "functor-identity",

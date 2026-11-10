@@ -11,12 +11,14 @@ import SwiftInferCore
 /// limitation rather than a fact about the shape.
 public enum BulkIncrementalTemplate {
 
+    /// The `bulk-incremental-agreement` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: BulkIncrementalPairing.BulkIncrementalShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `bulk-incremental-agreement` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint()
         -> Constraint<BulkIncrementalPairing.BulkIncrementalShape> {
         Constraint<BulkIncrementalPairing.BulkIncrementalShape>(

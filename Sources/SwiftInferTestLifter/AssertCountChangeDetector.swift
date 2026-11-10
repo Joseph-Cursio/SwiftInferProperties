@@ -42,6 +42,7 @@ import SwiftSyntax
 /// function call; non-`.count` invariants (M9).
 public enum AssertCountChangeDetector {
 
+    /// Count invariance (`f(xs).count == xs.count`) asserted by `slice`, collapsed or explicit.
     public static func detect(in slice: SlicedTestBody) -> [DetectedCountInvariance] {
         guard let assertion = slice.assertion else {
             return []

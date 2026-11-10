@@ -8,6 +8,7 @@ import Foundation
 /// against the param-type of `mutating func op(by: X)` lifts).
 public enum IdentityNames {
 
+    /// Names that read as an identity element: `zero`, `empty`, `identity`, `none`, `default`.
     public static let curated: Set<String> = [
         "zero",
         "empty",

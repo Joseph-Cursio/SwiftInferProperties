@@ -37,12 +37,14 @@ import SwiftInferCore
 /// scored down: `5..<5` and `7..<7` are both empty, so the second direction is false for it.
 public enum SequenceViewModelLawTemplate {
 
+    /// The `sequence-view-model-law` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: SequenceViewModelPairing.SequenceViewModelShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `sequence-view-model-law` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint()
         -> Constraint<SequenceViewModelPairing.SequenceViewModelShape> {
         Constraint<SequenceViewModelPairing.SequenceViewModelShape>(

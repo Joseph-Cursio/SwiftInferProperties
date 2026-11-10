@@ -14,10 +14,12 @@ import SwiftInferCore
 /// claim an example cannot make and a generator can.
 public enum ComparatorTemplate {
 
+    /// The `comparator` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `comparator` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "comparator",

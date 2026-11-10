@@ -42,6 +42,7 @@ import SwiftSyntax
 /// extraction is shared via `ExprSyntax.trailingIdentifierName`.
 public enum AsymmetricAssertionDetector {
 
+    /// Negative-form assertions in `slice` that contradict a positive property, as counter-signals.
     public static func detect(in slice: SlicedTestBody) -> [DetectedAsymmetricAssertion] {
         guard let sliceAssertion = slice.assertion else {
             return []

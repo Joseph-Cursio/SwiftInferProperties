@@ -1,5 +1,6 @@
 import Foundation
 
+/// Renders a `VerifyOutcome` as the human-readable report `swift-infer verify` prints.
 public enum VerifyResultRenderer {
 
     /// Context the renderer needs to produce a human-readable line.

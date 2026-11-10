@@ -13,6 +13,7 @@ import SwiftInferCore
 /// `static`).
 public enum ViewModelProtocolFaker {
 
+    /// Source for a no-op `Fake_<P>` conformer to `proto`, or `nil` when a requirement can't be defaulted.
     public static func fakeStruct(for proto: ViewModelProtocolScanner.ProtocolDecl) -> String? {
         guard !proto.hasUnsupportedRequirement else { return nil }
         var members: [String] = []
@@ -41,6 +42,7 @@ public enum ViewModelProtocolFaker {
 /// scalar dependency satisfaction).
 public enum ViewModelDefaultValue {
 
+    /// A default literal for `type` (`nil`, `[]`, `[:]` or a curated scalar), or `nil` if it has none.
     public static func value(for type: String) -> String? {
         let trimmed = type.trimmingCharacters(in: .whitespaces)
         if trimmed.hasSuffix("?") || trimmed.hasSuffix("!") {

@@ -41,10 +41,12 @@ public enum MeasureTemplate {
     /// can be violated. `UInt`-family returns are excluded (the type guarantees it).
     public static let signedIntegerCodomains: Set<String> = FixedWidthIntegerNames.signed
 
+    /// The `measure-non-negativity` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `measure-non-negativity` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "measure-non-negativity",

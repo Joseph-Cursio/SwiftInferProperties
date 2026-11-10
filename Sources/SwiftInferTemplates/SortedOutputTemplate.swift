@@ -30,10 +30,12 @@ import SwiftInferCore
 /// unsorted — which is a defect, and the one the `comparator` template exists to find.
 public enum SortedOutputTemplate {
 
+    /// The `sorted-output` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `sorted-output` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "sorted-output",

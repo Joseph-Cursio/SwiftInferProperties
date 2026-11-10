@@ -60,6 +60,7 @@ public enum InitDecodeStubEmitter {
         }
     }
 
+    /// The init-decode codec round-trip verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let imports = (["Foundation"] + inputs.extraImports)
             .map { "import \($0)" }

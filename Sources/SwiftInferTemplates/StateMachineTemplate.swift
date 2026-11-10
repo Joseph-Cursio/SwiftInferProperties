@@ -14,10 +14,12 @@ import SwiftInferCore
 /// fifty moves is what finds the state you never thought to construct.
 public enum StateMachineTemplate {
 
+    /// The `state-machine` suggestion for `pair`, or `nil` when the template does not apply.
     public static func suggest(for pair: InverseMutatorPair) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: pair)
     }
 
+    /// The `state-machine` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<InverseMutatorPair> {
         Constraint<InverseMutatorPair>(
             templateName: "state-machine",

@@ -73,6 +73,7 @@ public enum ViewModelIdempotenceStubEmitter {
         }
     }
 
+    /// The view-model action idempotence verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let imports = (["Foundation"] + inputs.extraImports)
             .map { "import \($0)" }

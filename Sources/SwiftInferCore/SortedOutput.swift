@@ -72,6 +72,7 @@ public struct SortedOutput: Sendable, Equatable {
 /// declined rather than approximated.
 public enum SortedOutputReader {
 
+    /// The ordering a function body's returned array is sorted by, or `nil` when it cannot be restated.
     public static func read(_ function: FunctionDeclSyntax) -> SortedOutput? {
         guard let statements = function.body?.statements,
               let last = statements.last?.item,

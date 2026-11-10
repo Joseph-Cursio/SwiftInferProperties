@@ -11,6 +11,7 @@ import SwiftInferCore
 /// Cardinality — ≥2 Optional presentation routes are mutually exclusive
 /// (at most one active at a time).
 public enum ViewModelCardinalityResolver {
+    /// A predicate that at most one Optional presentation route is set, or `nil` with fewer than two.
     public static func resolve(_ candidate: ViewModelCandidate) -> String? {
         let routes = candidate.stateFields
             .filter {
@@ -27,6 +28,7 @@ public enum ViewModelCardinalityResolver {
 /// Biconditional — a Bool flag holds iff a paired Optional is present
 /// (paired by a shared name stem: `isLoading` ⟺ `loadingTask`).
 public enum ViewModelBiconditionalResolver {
+    /// A predicate tying a `Bool` flag to its name-paired Optional's presence, or `nil` if none pair.
     public static func resolve(_ candidate: ViewModelCandidate) -> String? {
         let optionals = candidate.stateFields.filter { ViewModelNameHeuristics.isOptional($0.typeText) }
         for flag in candidate.stateFields where ViewModelNameHeuristics.isBool(flag.typeText) {
@@ -43,6 +45,7 @@ public enum ViewModelBiconditionalResolver {
 
 /// Conservation — a `*count*` Int field tracks a sibling collection's size.
 public enum ViewModelConservationResolver {
+    /// A predicate that a `count` `Int` field equals a sibling collection's `count`, or `nil`.
     public static func resolve(_ candidate: ViewModelCandidate) -> String? {
         guard let collection = candidate.stateFields.first(where: {
             ViewModelNameHeuristics.isCollection($0.typeText)

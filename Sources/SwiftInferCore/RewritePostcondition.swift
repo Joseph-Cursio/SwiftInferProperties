@@ -52,6 +52,7 @@ public struct RewritePostcondition: Sendable, Equatable, Codable {
 /// put the separator back, so it is refused.
 public enum RewritePostconditionReader {
 
+    /// The rewrite postcondition of a unary `String` function whose whole body is the rewrite, or `nil`.
     public static func read(_ function: FunctionDeclSyntax) -> RewritePostcondition? {
         let parameters = function.signature.parameterClause.parameters
         guard parameters.count == 1, let parameter = parameters.first,

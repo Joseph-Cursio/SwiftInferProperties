@@ -33,6 +33,7 @@ import SwiftSyntax
 /// only); receivers swapping mid-chain; side-effecting transforms.
 public enum AssertAfterDoubleApplyDetector {
 
+    /// Idempotence (`f(f(x)) == f(x)`) asserted by `slice`, collapsed or across three lines.
     public static func detect(in slice: SlicedTestBody) -> [DetectedIdempotence] {
         guard let assertion = slice.assertion else {
             return []

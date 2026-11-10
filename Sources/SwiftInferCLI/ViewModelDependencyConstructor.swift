@@ -30,6 +30,7 @@ public enum ViewModelDependencyConstructor {
         }
     }
 
+    /// How to construct `candidate` for verify, faking its protocol dependencies; `nil` if one can't be.
     public static func resolve(
         _ candidate: ViewModelCandidate,
         protocols: [ViewModelProtocolScanner.ProtocolDecl]

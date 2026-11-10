@@ -11,12 +11,14 @@ import SwiftInferCore
 /// forced the second.
 public enum EndedAccessRoundTripTemplate {
 
+    /// The `ended-access-round-trip` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: EndedAccessPairing.EndedAccessShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `ended-access-round-trip` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<EndedAccessPairing.EndedAccessShape> {
         Constraint<EndedAccessPairing.EndedAccessShape>(
             templateName: "ended-access-round-trip",

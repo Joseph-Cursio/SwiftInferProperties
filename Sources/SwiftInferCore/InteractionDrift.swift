@@ -22,6 +22,7 @@ import Foundation
 /// ordering for byte-stable warning streams.
 public enum InteractionDriftDetector {
 
+    /// Strong- or Verified-tier interaction suggestions missing from `baseline` and undecided: drift warnings.
     public static func warnings(
         currentSuggestions: [InteractionInvariantSuggestion],
         baseline: InteractionBaseline,

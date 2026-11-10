@@ -37,6 +37,7 @@ public enum BinaryIdempotenceTemplate {
         "meet",
     ]
 
+    /// The `binary-idempotence` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(
         for summary: FunctionSummary,
         inheritedTypesByName: [String: Set<String>] = [:]
@@ -47,6 +48,7 @@ public enum BinaryIdempotenceTemplate {
         )
     }
 
+    /// The `binary-idempotence` template as a constraint; `inheritedTypesByName` feeds its signals.
     public static func makeConstraint(
         inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Constraint<FunctionSummary> {

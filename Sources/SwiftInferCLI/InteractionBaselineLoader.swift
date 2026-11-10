@@ -21,8 +21,10 @@ public enum InteractionBaselineLoader {
         }
     }
 
+    /// The interaction baseline's path relative to the package root.
     public static let conventionalRelativePath = InteractionBaseline.conventionalRelativePath
 
+    /// Loads the interaction baseline from `explicitPath` or the package root above `directory`.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil
@@ -38,10 +40,12 @@ public enum InteractionBaselineLoader {
         )
     }
 
+    /// Writes `baseline` to `path` as canonical JSON, creating `.swiftinfer/` if needed.
     public static func write(_ baseline: InteractionBaseline, to path: URL) throws {
         try Store.write(baseline, to: path)
     }
 
+    /// The interaction baseline's path under `packageRoot`.
     public static func defaultPath(for packageRoot: URL) -> URL {
         Store.defaultPath(for: packageRoot)
     }

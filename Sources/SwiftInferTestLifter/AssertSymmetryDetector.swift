@@ -37,6 +37,7 @@ import SwiftSyntax
 /// plan's open decision #6); receivers swapping mid-chain.
 public enum AssertSymmetryDetector {
 
+    /// Commutativity (`f(a, b) == f(b, a)`) asserted by `slice`, collapsed or across three lines.
     public static func detect(in slice: SlicedTestBody) -> [DetectedCommutativity] {
         guard let assertion = slice.assertion else {
             return []

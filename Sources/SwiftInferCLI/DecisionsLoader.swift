@@ -23,8 +23,10 @@ public enum DecisionsLoader {
         }
     }
 
+    /// The decisions file's path relative to the package root: `.swiftinfer/decisions.json`.
     public static let conventionalRelativePath = Decisions.conventionalRelativePath
 
+    /// Loads decisions from `explicitPath` or the package root above `directory`; missing is empty.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil,
@@ -42,10 +44,12 @@ public enum DecisionsLoader {
         )
     }
 
+    /// Writes `decisions` to `path` as canonical JSON, creating `.swiftinfer/` if needed.
     public static func write(_ decisions: Decisions, to path: URL) throws {
         try Store.write(decisions, to: path)
     }
 
+    /// The decisions file's path under `packageRoot`.
     public static func defaultPath(for packageRoot: URL) -> URL {
         Store.defaultPath(for: packageRoot)
     }

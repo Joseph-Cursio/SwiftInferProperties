@@ -61,6 +61,7 @@ public enum ReorderPartitionStubEmitter {
         }
     }
 
+    /// The standalone reorder-partition verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let imports = (["Foundation"] + inputs.extraImports)
             .map { "import \($0)" }

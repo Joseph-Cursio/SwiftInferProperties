@@ -17,6 +17,7 @@ import SwiftSyntax
 /// (recording-output-fake + `outputDeterminism`) is Slice B.
 public enum ConventionRoleDiscoverer {
 
+    /// The convention-based state roles (interactors, presenters) that `rules` recognise in `source`.
     public static func discover(
         source: String,
         file: String,

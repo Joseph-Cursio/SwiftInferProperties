@@ -21,6 +21,7 @@ import Foundation
 /// byte-stable across runs against an unchanged corpus.
 public enum DriftDetector {
 
+    /// Strong-tier suggestions absent from `baseline` and undecided in `decisions`: the drift warnings.
     public static func warnings(
         currentSuggestions: [Suggestion],
         baseline: Baseline,

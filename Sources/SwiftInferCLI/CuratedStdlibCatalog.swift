@@ -1,47 +1,6 @@
 import Foundation
 
-/// V1.145 — a curated catalog of **known-true** properties on standard-library
-/// types, plus the famous **caveats** (properties that look plausible but do NOT
-/// hold). Shipped built-in with the engine (universal, versioned) — deliberately
-/// NOT written into any project's `.swiftinfer/`, which stays the user's own
-/// discovered corpus.
-///
-/// **Not restricted to algebraic properties**, and the restriction that used to be
-/// stated here was narrower than this file's own inclusion rule two paragraphs down.
-/// That rule is *known-true by contract* **and** *verifiable on a constructible
-/// carrier* — it says nothing about algebra, and four of the eight carriers it names
-/// are collections. `Sequence` and `Collection` contracts satisfy both halves
-/// exactly, and PropertyLawKit ships `checkSequencePropertyLaws` /
-/// `checkCollectionPropertyLaws` to run them.
-///
-/// The word survived because the *tagging* model was algebraic (see `witnesses`),
-/// not because the scope was. Scope and tag are now separated.
-///
-/// **This is ours, not Apple's.** It was named `StandardLibraryProperties` and renamed
-/// because that read like an upstream Swift type: nothing by that name exists anywhere in
-/// swift.org's stdlib or tests. The catalog is *about* the standard library, hand-curated by
-/// this project — `Curated` says who wrote it, `Stdlib` says what it covers, and `Catalog`
-/// says it holds entries of mixed kind (laws AND caveats) rather than a single law set.
-///
-/// The distinction is load-bearing rather than cosmetic. A reader who assumes this mirrors
-/// something upstream will also assume it is *complete* — and it is deliberately not. It is
-/// an editorial selection over the handful of carriers the generator can construct, which is
-/// exactly the mistake made once already: a claim that a gap in `ProtocolCoverageMap` made
-/// this surface "under-report what the toolchain covers". It was never mirroring the kit's
-/// coverage, so it cannot under-report it.
-///
-/// These are the one class of property that is both *known-true by contract*
-/// and *verifiable* (their carriers — `Int`, `Double`, `Bool`, `String`,
-/// `[T]`, `Set`, `Optional`, `Dictionary` — are exactly the ones the generator
-/// can construct), so `--verify` can confirm them live rather than assert them.
-///
-/// Each law is tagged with the **SwiftPropertyLaws protocol it witnesses**
-/// (`Semigroup` / `Monoid` / `CommutativeMonoid` / `Semilattice`) — the
-/// upstream kit protocol a conforming type satisfies. A law tags a protocol
-/// only when the *whole structure* conforms: `Double.+` is commutative with
-/// an identity but is NOT associative, so it witnesses no protocol (it is not
-/// a `Monoid`); unary idempotence / involutions aren't algebraic protocols
-/// either, so they tag none.
+/// Whether a catalog entry is a known-true law or a caveat: a plausible-looking non-property.
 public enum CuratedEntryKind: String, Sendable, Equatable {
     case law      // known-true; carries a `checkBody` so `--verify` can run it
     case caveat   // a plausible-looking NON-property; documented, never asserted true
@@ -127,9 +86,53 @@ public struct CuratedEntry: Sendable, Equatable {
     public var needsPackage: Bool { !imports.isEmpty }
 }
 
+/// V1.145 — a curated catalog of **known-true** properties on standard-library
+/// types, plus the famous **caveats** (properties that look plausible but do NOT
+/// hold). Shipped built-in with the engine (universal, versioned) — deliberately
+/// NOT written into any project's `.swiftinfer/`, which stays the user's own
+/// discovered corpus.
+///
+/// **Not restricted to algebraic properties**, and the restriction that used to be
+/// stated here was narrower than this file's own inclusion rule two paragraphs down.
+/// That rule is *known-true by contract* **and** *verifiable on a constructible
+/// carrier* — it says nothing about algebra, and four of the eight carriers it names
+/// are collections. `Sequence` and `Collection` contracts satisfy both halves
+/// exactly, and PropertyLawKit ships `checkSequencePropertyLaws` /
+/// `checkCollectionPropertyLaws` to run them.
+///
+/// The word survived because the *tagging* model was algebraic (see `witnesses`),
+/// not because the scope was. Scope and tag are now separated.
+///
+/// **This is ours, not Apple's.** It was named `StandardLibraryProperties` and renamed
+/// because that read like an upstream Swift type: nothing by that name exists anywhere in
+/// swift.org's stdlib or tests. The catalog is *about* the standard library, hand-curated by
+/// this project — `Curated` says who wrote it, `Stdlib` says what it covers, and `Catalog`
+/// says it holds entries of mixed kind (laws AND caveats) rather than a single law set.
+///
+/// The distinction is load-bearing rather than cosmetic. A reader who assumes this mirrors
+/// something upstream will also assume it is *complete* — and it is deliberately not. It is
+/// an editorial selection over the handful of carriers the generator can construct, which is
+/// exactly the mistake made once already: a claim that a gap in `ProtocolCoverageMap` made
+/// this surface "under-report what the toolchain covers". It was never mirroring the kit's
+/// coverage, so it cannot under-report it.
+///
+/// These are the one class of property that is both *known-true by contract*
+/// and *verifiable* (their carriers — `Int`, `Double`, `Bool`, `String`,
+/// `[T]`, `Set`, `Optional`, `Dictionary` — are exactly the ones the generator
+/// can construct), so `--verify` can confirm them live rather than assert them.
+///
+/// Each law is tagged with the **SwiftPropertyLaws protocol it witnesses**
+/// (`Semigroup` / `Monoid` / `CommutativeMonoid` / `Semilattice`) — the
+/// upstream kit protocol a conforming type satisfies. A law tags a protocol
+/// only when the *whole structure* conforms: `Double.+` is commutative with
+/// an identity but is NOT associative, so it witnesses no protocol (it is not
+/// a `Monoid`); unary idempotence / involutions aren't algebraic protocols
+/// either, so they tag none.
 public enum CuratedStdlibCatalog {
 
+    /// The catalog's known-true entries.
     public static let laws: [CuratedEntry] = all.filter { $0.kind == .law }
+    /// The catalog's caveats: properties that look plausible but do not hold.
     public static let caveats: [CuratedEntry] = all.filter { $0.kind == .caveat }
 
     // Int — additive commutative monoid + max semilattice
@@ -346,6 +349,7 @@ public enum CuratedStdlibCatalog {
         ),
     ]
 
+    /// Every catalog entry, laws and caveats, grouped by carrier family.
     public static let all: [CuratedEntry] =
         intLaws + doubleLaws + boolLaws + stringLaws + arrayLaws + setLaws
             + optionalLaws + dictionaryLaws + stackLaws + queueLaws

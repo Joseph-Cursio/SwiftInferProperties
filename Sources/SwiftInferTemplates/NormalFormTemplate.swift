@@ -125,10 +125,12 @@ public enum NormalFormTemplate {
         summary.name != "debugDescription"
     }
 
+    /// The `normal-form` suggestion for `pair`, or `nil` when the template does not apply.
     public static func suggest(for pair: FunctionPair) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: pair)
     }
 
+    /// The `normal-form` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionPair> {
         Constraint<FunctionPair>(
             templateName: "normal-form",

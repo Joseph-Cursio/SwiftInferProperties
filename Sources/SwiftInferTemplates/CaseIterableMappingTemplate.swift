@@ -67,6 +67,7 @@ public enum CaseIterableMappingTemplate {
         "String", "Int", "UInt", "Int32", "Int64", "Character", "StaticString"
     ]
 
+    /// The `caseiterable-key-injectivity` suggestion for `summary` (enums from `shapesByName`), or `nil`.
     public static func suggest(
         for summary: FunctionSummary,
         shapesByName: [String: TypeShape]
@@ -77,6 +78,7 @@ public enum CaseIterableMappingTemplate {
         )
     }
 
+    /// The `caseiterable-key-injectivity` template as a constraint, reading enums from `shapesByName`.
     public static func makeConstraint(shapesByName: [String: TypeShape]) -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "caseiterable-key-injectivity",

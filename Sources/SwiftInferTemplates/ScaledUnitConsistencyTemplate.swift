@@ -10,12 +10,14 @@ import SwiftInferCore
 /// form, and for why byte units are excluded.
 public enum ScaledUnitConsistencyTemplate {
 
+    /// The `scaled-unit-consistency` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: ScaledUnitPairing.ScaledUnitShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `scaled-unit-consistency` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<ScaledUnitPairing.ScaledUnitShape> {
         Constraint<ScaledUnitPairing.ScaledUnitShape>(
             templateName: "scaled-unit-consistency",

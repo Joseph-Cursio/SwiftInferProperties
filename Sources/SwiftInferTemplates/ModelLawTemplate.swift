@@ -42,10 +42,12 @@ import SwiftInferCore
 /// and bitset implementations actually break, and the algebra cannot see it.
 public enum ModelLawTemplate {
 
+    /// The `model-law` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(for shape: ModelLawPairing.MembershipModelShape) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `model-law` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<ModelLawPairing.MembershipModelShape> {
         Constraint<ModelLawPairing.MembershipModelShape>(
             templateName: "model-law",

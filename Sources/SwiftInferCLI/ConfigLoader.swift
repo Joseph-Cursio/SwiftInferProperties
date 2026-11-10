@@ -39,8 +39,10 @@ public enum ConfigLoader {
         }
     }
 
+    /// The config file's path relative to the package root: `.swiftinfer/config.toml`.
     public static let conventionalRelativePath = ".swiftinfer/config.toml"
 
+    /// Loads `config.toml` from `explicitPath` or the package root above `directory`, else `Config.defaults`.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil,

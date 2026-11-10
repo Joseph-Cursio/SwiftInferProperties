@@ -86,6 +86,7 @@ public enum ViewModelActionSequenceStubEmitter {
         }
     }
 
+    /// The materialized-enum action-sequence verifier for `inputs`; throws when it cannot be generated.
     public static func emit(_ inputs: Inputs) throws -> String {
         let lifted = ViewModelActionEnumEmitter.emit(
             typeName: inputs.typeName,

@@ -35,6 +35,7 @@ public enum DualStyleConsistencyPairResolver {
         }
     }
 
+    /// Known non-mutating/mutating spelling pairs, such as `sorted()`/`sort` and `union`/`formUnion`.
     public static let curated: [Pair] = [
         // V1.48.B initial 3 entries (Collection family; 0-arg variants).
         Pair(nonMutating: "sorted()", mutating: "sort"),

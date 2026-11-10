@@ -11,6 +11,7 @@ import Foundation
 /// exist to stop a reader being sent to write a `gen()` that cannot help.
 public extension VerifyError {
 
+    /// The user-facing message for this error, naming a remedy or saying there is none.
     var description: String {
         switch self {
         case let .suggestionNotFound(prefix, closest):

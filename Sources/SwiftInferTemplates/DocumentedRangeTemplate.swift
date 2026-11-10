@@ -31,15 +31,19 @@ import SwiftInferCore
 /// lower bound below the upper. A half-open `0..<1` states a different law and is not read.
 public enum DocumentedRangeTemplate {
 
+    /// The name this template's suggestions carry: `documented-range`.
     public static let templateName = "documented-range"
 
+    /// Return types a documented range is read for: the fixed-width integers and the floating-point types.
     public static let numericCodomains: Set<String> = FixedWidthIntegerNames.signed
         .union(["UInt", "UInt8", "UInt16", "UInt32", "UInt64", "Double", "Float", "CGFloat"])
 
+    /// The `documented-range` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `documented-range` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "documented-range",

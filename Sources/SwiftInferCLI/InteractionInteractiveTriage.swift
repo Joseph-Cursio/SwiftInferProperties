@@ -38,12 +38,18 @@ public enum InteractionInteractiveTriage {
     /// `InteractionDecisionsLoader.write` (skip / reject / accept
     /// all decisions still flow through, just no disk write).
     public struct Inputs {
+        /// Where the triage loop reads the user's choices from.
         public let prompt: any PromptInput
+        /// Where prompts and session output are written.
         public let output: any DiscoverOutput
+        /// Where warnings, such as decisions-load problems, are written.
         public let diagnostics: any DiagnosticOutput
+        /// When true, skips the final `InteractionDecisionsLoader.write`; decisions still flow through.
         public let dryRun: Bool
+        /// The timestamp stamped on every decision recorded this session.
         public let now: Date
 
+        /// Bundles the triage session's I/O; `now` defaults to the current date.
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,

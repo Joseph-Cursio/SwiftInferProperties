@@ -29,6 +29,7 @@ public enum DomainCorpusScanner {
         public static let empty = Self(callSitesByConsumer: [:], setupBindings: [:])
     }
 
+    /// `slice`'s call sites keyed by consumer name, plus its classified setup `let` bindings.
     public static func artifacts(in slice: SlicedTestBody) -> SliceArtifacts {
         let visitor = ScannerVisitor(viewMode: .sourceAccurate)
         for item in slice.setup {

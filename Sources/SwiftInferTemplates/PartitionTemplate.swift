@@ -21,10 +21,12 @@ import SwiftInferCore
 /// clothes.
 public enum PartitionTemplate {
 
+    /// The `partition` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(for shape: PartitionShape) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `partition` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<PartitionShape> {
         Constraint<PartitionShape>(
             templateName: "partition",

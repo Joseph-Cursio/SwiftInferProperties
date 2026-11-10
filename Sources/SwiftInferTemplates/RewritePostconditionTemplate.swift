@@ -26,12 +26,15 @@ import SwiftInferCore
 /// exists now. What it catches is an edit that drops a replacement or changes the separator.
 public enum RewritePostconditionTemplate {
 
+    /// The name this template's suggestions carry: `rewrite-postcondition`.
     public static let templateName = "rewrite-postcondition"
 
+    /// The `rewrite-postcondition` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `rewrite-postcondition` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             // Spelled as a literal: `StubWriterCoverageTests` finds emitted templates by this text.

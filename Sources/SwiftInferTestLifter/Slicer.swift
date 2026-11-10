@@ -110,6 +110,7 @@ public enum Slicer {
         return decl.is(VariableDeclSyntax.self)
     }
 
+    /// Slices `body` around its terminal assertion into setup, property region and parameterized values.
     public static func slice(_ body: CodeBlockSyntax) -> SlicedTestBody {
         let items = unwrappingRepetition(Array(body.statements))
         guard let anchored = AssertionAnchor.locate(in: items) else {

@@ -19,6 +19,7 @@ import SwiftSyntax
 /// Boundaries are camelCase + snake_case.
 public enum EquivalenceClassMarkerExtractor {
 
+    /// One `PartitionCandidate` per predicate and marker pair, aggregated from paired methods and slices.
     public static func extract(
         methods: [TestMethodSummary],
         slices: [SlicedTestBody],

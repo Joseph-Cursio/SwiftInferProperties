@@ -1,15 +1,6 @@
 import Foundation
 import SwiftInferCore
 
-/// V1.35.A — carrier-aware refactor-suggestion analyzer (PRD §20.1
-/// follow-up). Groups SemanticIndex entries by `typeName` and
-/// classifies the per-type cluster into a named shape that drives
-/// curated user-facing refactor suggestions.
-///
-/// Read-only over the SemanticIndex output — no source modification,
-/// no inference changes. Consumed by `swift-infer suggest-refactors`
-/// (V1.35.B).
-
 /// One per (typeName, cluster-shape) row.
 public struct RefactorCluster: Sendable, Equatable {
 
@@ -84,6 +75,14 @@ public enum ClusterShape: String, Sendable, Equatable, CaseIterable {
     case generalCluster
 }
 
+/// V1.35.A — carrier-aware refactor-suggestion analyzer (PRD §20.1
+/// follow-up). Groups SemanticIndex entries by `typeName` and
+/// classifies the per-type cluster into a named shape that drives
+/// curated user-facing refactor suggestions.
+///
+/// Read-only over the SemanticIndex output — no source modification,
+/// no inference changes. Consumed by `swift-infer suggest-refactors`
+/// (V1.35.B).
 public enum RefactorClusterAnalyzer {
 
     /// Group `entries` by `typeName`, classify each per-type cluster,

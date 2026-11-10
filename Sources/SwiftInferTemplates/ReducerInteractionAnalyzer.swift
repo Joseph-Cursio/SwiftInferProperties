@@ -58,6 +58,7 @@ public struct ReducerInteractionCandidate: Sendable, Equatable {
 ///     than emit a tautology.
 public enum ReducerInteractionAnalyzer {
 
+    /// Determinism and unknown-action-is-no-op candidates for a Redux-family reducer; none for others.
     public static func analyze(_ candidate: ReducerCandidate) -> [ReducerInteractionCandidate] {
         guard candidate.carrierKind.isReduxFamily else { return [] }
         var out: [ReducerInteractionCandidate] = []

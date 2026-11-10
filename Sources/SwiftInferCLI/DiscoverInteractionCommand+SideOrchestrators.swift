@@ -30,15 +30,24 @@ public struct DiscoverInteractionEffectiveFlags: Sendable, Equatable {
 /// file-scope (nesting cap) + lets the dispatch helper stay a
 /// 2-arg function (suggestions + inputs).
 public struct SideOrchestratorInputs {
+    /// The resolved `discover-interaction` flags that pick the triage or baseline branch.
     public let effectiveFlags: DiscoverInteractionEffectiveFlags
+    /// The directory the command ran from; `Sources/<target>/` and the package root resolve from it.
     public let workingDirectory: URL
+    /// The target whose `Sources/<target>/` directory locates the package root.
     public let target: String
+    /// Where interactive triage reads the user's answers from.
     public let promptInput: any PromptInput
+    /// Where triage prompts and baseline summaries are written.
     public let output: any DiscoverOutput
+    /// Where warnings go, kept off the `output` stream.
     public let diagnostics: any DiagnosticOutput
+    /// When true, the triage and baseline branches report without writing `.swiftinfer/` files.
     public let dryRun: Bool
+    /// The timestamp stamped on bridges built for `--interactive-bridges` triage.
     public let firstSeenAt: Date
 
+    /// Bundles the eight `dispatchSideOrchestrator` dependencies.
     public init(
         effectiveFlags: DiscoverInteractionEffectiveFlags,
         workingDirectory: URL,

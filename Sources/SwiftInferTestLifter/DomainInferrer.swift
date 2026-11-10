@@ -40,6 +40,7 @@ import SwiftInferCore
 /// Returns `nil` otherwise.
 public enum DomainInferrer {
 
+    /// A `DomainHint` when three or more `sites` all feed `pair`'s consumer the producer's output.
     public static func infer(
         pair: RoundTripPair,
         forwardSummary: FunctionSummary,

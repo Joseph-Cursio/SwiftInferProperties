@@ -63,6 +63,7 @@ public enum InteractiveTriage {
         var conformanceWrittenForTypes: Set<String>
     }
 
+    /// Prompts for each suggestion with no decision yet; returns the updated decisions and files written.
     public static func run(
         suggestions: [Suggestion],
         existingDecisions: Decisions,

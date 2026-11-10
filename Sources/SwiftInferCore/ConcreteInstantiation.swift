@@ -41,11 +41,6 @@ public enum ConcreteInstantiation {
         "LosslessStringConvertible", "ExpressibleByIntegerLiteral", "Any", "AnyObject",
     ]
 
-    /// The name to write in emitted source, or `nil` when no concrete instantiation can be
-    /// chosen. Returns `typeName` unchanged for a non-generic carrier.
-    ///
-    /// Composed constraints (`T: Hashable & Codable`) are split and each side checked, since
-    /// `Int` satisfying both is the same question asked twice.
     /// A nested type's spelling, where the generic arguments belong to the ENCLOSING type.
     ///
     /// `OrderedDictionary.Elements` must be written `OrderedDictionary<Int, Int>.Elements` —
@@ -78,6 +73,11 @@ public enum ConcreteInstantiation {
         return pieces.isEmpty ? nil : pieces.joined(separator: ".")
     }
 
+    /// The name to write in emitted source, or `nil` when no concrete instantiation can be
+    /// chosen. Returns `typeName` unchanged for a non-generic carrier.
+    ///
+    /// Composed constraints (`T: Hashable & Codable`) are split and each side checked, since
+    /// `Int` satisfying both is the same question asked twice.
     public static func rendered(
         typeName: String,
         genericParameters: [TypeDecl.GenericParameter]
@@ -96,9 +96,6 @@ public enum ConcreteInstantiation {
         return "\(typeName)<\(arguments.joined(separator: ", "))>"
     }
 
-    /// The reason a carrier could not be instantiated, phrased for the emitted comment so a
-    /// reader can act on it — it names the parameter and the constraint that blocked it,
-    /// not just the fact of failure.
     /// The decline reason for a qualified name, or `nil` when it renders.
     public static func declineReason(
         qualifiedTypeName: String,
@@ -117,6 +114,9 @@ public enum ConcreteInstantiation {
         return nil
     }
 
+    /// The reason a carrier could not be instantiated, phrased for the emitted comment so a
+    /// reader can act on it — it names the parameter and the constraint that blocked it,
+    /// not just the fact of failure.
     public static func declineReason(
         typeName: String,
         genericParameters: [TypeDecl.GenericParameter]

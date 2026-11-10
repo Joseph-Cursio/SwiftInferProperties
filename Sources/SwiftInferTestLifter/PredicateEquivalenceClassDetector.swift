@@ -37,6 +37,7 @@ import SwiftInferCore
 /// Returns `nil` otherwise.
 public enum PredicateEquivalenceClassDetector {
 
+    /// The two-class predicate equivalence-class hint for `candidate`, or `nil` when it does not qualify.
     public static func detect(
         candidate: PartitionCandidate,
         predicateSummary: FunctionSummary?,

@@ -129,8 +129,10 @@ public enum JSONArtifactStore<Artifact: JSONArtifact> {
         }
     }
 
+    /// The artifact's path relative to the package root, from `Artifact.conventionalRelativePath`.
     public static var conventionalRelativePath: String { Artifact.conventionalRelativePath }
 
+    /// Loads the artifact from `explicitPath` or the package root above `directory`, never throwing.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil,
@@ -155,6 +157,7 @@ public enum JSONArtifactStore<Artifact: JSONArtifact> {
         try data.write(to: path, options: .atomic)
     }
 
+    /// The artifact's conventional path under `packageRoot`.
     public static func defaultPath(for packageRoot: URL) -> URL {
         packageRoot.appendingPathComponent(Artifact.conventionalRelativePath)
     }

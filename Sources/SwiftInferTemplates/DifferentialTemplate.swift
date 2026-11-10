@@ -39,10 +39,12 @@ import SwiftInferCore
 /// when the fast path is unavailable.
 public enum DifferentialTemplate {
 
+    /// The `differential-equivalence` suggestion for `pair`, or `nil` when the template does not apply.
     public static func suggest(for pair: VariantPair) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: pair)
     }
 
+    /// The `differential-equivalence` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<VariantPair> {
         Constraint<VariantPair>(
             templateName: "differential-equivalence",

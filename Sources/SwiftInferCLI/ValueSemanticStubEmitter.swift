@@ -72,6 +72,7 @@ public enum ValueSemanticStubEmitter {
         )
     }
 
+    /// The standalone `ValueSemantic` copy-mutate-compare verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let cases = inputs.mutationMethods
             .map { "        case \($0)" }

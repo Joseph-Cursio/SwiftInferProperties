@@ -29,6 +29,7 @@ import SwiftSyntax
 /// nested inside `if let` / `guard let` shadowing.
 public enum AssertAfterTransformDetector {
 
+    /// Round-trips (`backward(forward(x)) == x`) asserted by `slice`, collapsed or across three lines.
     public static func detect(in slice: SlicedTestBody) -> [DetectedRoundTrip] {
         guard let assertion = slice.assertion else {
             return []

@@ -54,10 +54,12 @@ public enum HomomorphismTemplate {
     /// the *reason* this template wants them is the exactness note above.
     public static let integerCodomains: Set<String> = FixedWidthIntegerNames.names
 
+    /// The `homomorphism` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `homomorphism` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "homomorphism",
@@ -173,6 +175,7 @@ extension HomomorphismTemplate {
         "abs", "magnitude", "sign", "signum"
     ]
 
+    /// The `multiplicative-homomorphism` suggestion for `summary`, or `nil` when it does not apply.
     public static func suggestMultiplicative(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeMultiplicativeConstraint(), subject: summary)
     }

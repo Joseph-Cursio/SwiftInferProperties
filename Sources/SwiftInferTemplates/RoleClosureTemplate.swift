@@ -50,10 +50,12 @@ import SwiftInferCore
 /// posture as `guard-domain` (#443).
 public enum RoleClosureTemplate {
 
+    /// The `role-closure` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `role-closure` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "role-closure",

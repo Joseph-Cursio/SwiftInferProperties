@@ -141,6 +141,7 @@ public enum VerifyOutcome: Equatable, Sendable {
     // swiftlint:enable function_parameter_count
 }
 
+/// Turns a verifier subprocess's `VERIFY_*` markers and exit code into a `VerifyOutcome`.
 public enum VerifyResultParser {
 
     /// Parse a `VerifierSubprocess.Output` into a `VerifyOutcome`.

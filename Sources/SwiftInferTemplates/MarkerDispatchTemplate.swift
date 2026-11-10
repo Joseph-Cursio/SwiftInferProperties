@@ -34,10 +34,12 @@ import SwiftInferCore
 ///    rather than passing on nothing.
 public enum MarkerDispatchTemplate {
 
+    /// The `marker-dispatch` suggestion for `subject`, or `nil` when the template does not apply.
     public static func suggest(for subject: MarkerDispatchSubject) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: subject)
     }
 
+    /// The `marker-dispatch` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<MarkerDispatchSubject> {
         Constraint<MarkerDispatchSubject>(
             templateName: "marker-dispatch",

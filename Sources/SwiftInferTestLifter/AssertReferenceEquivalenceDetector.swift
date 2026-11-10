@@ -49,6 +49,7 @@ import SwiftSyntax
 /// the first as subject, and the emitted caveat says the direction is a guess.
 public enum AssertReferenceEquivalenceDetector {
 
+    /// Assertions in `slice` that a function equals a reference computation on the same input.
     public static func detect(in slice: SlicedTestBody) -> [DetectedReferenceEquivalence] {
         guard let assertion = slice.assertion,
               let (lhs, rhs) = equalityOperands(of: assertion) else {

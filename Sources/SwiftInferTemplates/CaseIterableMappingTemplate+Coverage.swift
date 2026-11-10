@@ -39,6 +39,7 @@ extension CaseIterableMappingTemplate {
         "none", "undefined", "misc", "miscellaneous",
     ]
 
+    /// The `caseiterable-case-coverage` suggestion for `summary` (enums from `shapesByName`), or `nil`.
     public static func coverageSuggestion(
         for summary: FunctionSummary,
         shapesByName: [String: TypeShape]
@@ -49,6 +50,7 @@ extension CaseIterableMappingTemplate {
         )
     }
 
+    /// The `caseiterable-case-coverage` template as a constraint, reading enums from `shapesByName`.
     public static func makeCoverageConstraint(
         shapesByName: [String: TypeShape]
     ) -> Constraint<FunctionSummary> {

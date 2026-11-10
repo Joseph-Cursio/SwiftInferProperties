@@ -168,6 +168,7 @@ public enum IndexStore {
 
     // MARK: - Load
 
+    /// Loads the SemanticIndex at `path`; a missing file yields an empty index stamped `nowTimestamp`.
     public static func load(
         from path: URL,
         nowTimestamp: String,

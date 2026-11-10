@@ -74,6 +74,7 @@ public enum ViewModelProtocolScanner {
         }
     }
 
+    /// Every protocol declared in the `.swift` files under `directory`, in sorted-path order.
     public static func scan(directory: URL) throws -> [ProtocolDecl] {
         let files = SwiftSourceFiles.sorted(in: directory)
         var result: [ProtocolDecl] = []
@@ -84,6 +85,7 @@ public enum ViewModelProtocolScanner {
         return result
     }
 
+    /// Every protocol declared in `source`, with its method and property requirements.
     public static func scan(source: String) -> [ProtocolDecl] {
         let tree = Parser.parse(source: source)
         let visitor = Visitor()

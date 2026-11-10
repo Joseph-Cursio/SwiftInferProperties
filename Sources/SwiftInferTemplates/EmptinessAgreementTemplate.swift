@@ -33,12 +33,15 @@ import SwiftInferCore
 /// belong to one type and take no arguments, so the law is a statement about one value.
 public enum EmptinessAgreementTemplate {
 
+    /// The name this template's suggestions carry: `emptiness-agreement`.
     public static let templateName = "emptiness-agreement"
 
+    /// The `emptiness-agreement` suggestion for `pair`, or `nil` when the template does not apply.
     public static func suggest(for pair: EmptinessAgreementPair) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: pair)
     }
 
+    /// The `emptiness-agreement` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<EmptinessAgreementPair> {
         Constraint<EmptinessAgreementPair>(
             templateName: "emptiness-agreement",

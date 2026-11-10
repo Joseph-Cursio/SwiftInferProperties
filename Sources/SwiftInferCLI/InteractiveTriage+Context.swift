@@ -16,9 +16,13 @@ public extension InteractiveTriage {
     /// parameter counts at 5; bundling keeps both `run` and
     /// `handleAccept` under that limit.
     struct Context {
+        /// Where the triage loop reads the user's `[A/s/n/?]` answers from.
         public let prompt: any PromptInput
+        /// Where prompts, accepted-stub paths and session messages are written.
         public let output: any DiscoverOutput
+        /// Where warnings go, kept off the `output` stream.
         public let diagnostics: any DiagnosticOutput
+        /// The package root accepted stubs are written under; `generatedRoot` defaults from it.
         public let outputDirectory: URL
 
         /// The directory holding `SwiftInfer/` and `SwiftInferRefactors/`.
@@ -30,7 +34,9 @@ public extension InteractiveTriage {
         /// before.
         public let generatedRoot: URL
 
+        /// When true, accept gestures print the would-be path and nothing is written.
         public let dryRun: Bool
+        /// Supplies the timestamp recorded on each triage decision.
         public let clock: @Sendable () -> Date
         /// Per-type RefactorBridge proposals keyed by type name, built
         /// by `RefactorBridgeOrchestrator.proposals(from:)` (M7.5b +
@@ -154,6 +160,7 @@ public extension InteractiveTriage {
         /// `SourceModuleResolver`; built once, from `packageRoot`.
         let sourceModules: SourceModuleResolver
 
+        /// Bundles the triage dependencies; the maps default to empty and `generatedRoot` to the legacy path.
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,

@@ -18,6 +18,7 @@ public enum DefensiveCopyDiscoverer {
         "duplicate", "duplicated", "mutableCopy", "deepCopy",
     ]
 
+    /// Classes in the corpus that declare a copy method, as defensive-copy candidates.
     public static func discover(
         typeDecls: [TypeDecl],
         functions: [FunctionSummary]

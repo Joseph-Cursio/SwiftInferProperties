@@ -20,6 +20,7 @@ public extension SwiftInferCommand.Discover {
         /// `var` so `replacingSuggestions(_:)` can narrow the set without rebuilding all
         /// fifteen stored properties — value semantics are unchanged.
         public var suggestions: [Suggestion]
+        /// The package root found above the scanned directory, or `nil` when there is none.
         public let packageRoot: URL?
 
         /// Skip markers in the scanned sources that matched nothing this run (#490).
@@ -170,6 +171,7 @@ public extension SwiftInferCommand.Discover {
         /// renderer so that no path can render suggestions without it. See `CoverageHeadline`.
         public let coverage: CoverageSummary
 
+        /// Builds a result from the visible suggestions, package root and side channels, most defaulting empty.
         public init(
             suggestions: [Suggestion],
             packageRoot: URL?,

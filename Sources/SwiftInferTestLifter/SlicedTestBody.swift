@@ -39,6 +39,7 @@ public struct SlicedTestBody {
     /// case.
     public let assertion: AssertionInvocation?
 
+    /// Builds a slice from its setup items, property region, parameterized values and anchor assertion.
     public init(
         setup: [CodeBlockItemSyntax],
         propertyRegion: [CodeBlockItemSyntax],
@@ -84,8 +85,10 @@ public struct ParameterizedValue {
     /// The literal's surface text (e.g. `"42"`, `"\"hello\""`).
     public let literalText: String
 
+    /// The literal's type, which picks the generator shape the lifted property suggests.
     public let kind: Kind
 
+    /// Builds a value from its optional binding name, literal text and literal kind.
     public init(bindingName: String?, literalText: String, kind: Kind) {
         self.bindingName = bindingName
         self.literalText = literalText
@@ -134,6 +137,7 @@ public struct AssertionInvocation {
         case requireMacro
     }
 
+    /// Which assertion was called: an `XCTAssert*` variant, `#expect` or `#require`.
     public let kind: Kind
 
     /// The argument expressions passed to the assertion. M1.3 reads
@@ -142,8 +146,10 @@ public struct AssertionInvocation {
     /// `XCTAssertTrue(...)` / `#expect(...)`.
     public let arguments: [ExprSyntax]
 
+    /// Where the assertion call appears in the test source.
     public let location: SwiftInferCore.SourceLocation
 
+    /// Builds an invocation from its assertion kind, argument expressions and source location.
     public init(
         kind: Kind,
         arguments: [ExprSyntax],

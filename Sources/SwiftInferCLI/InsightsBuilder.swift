@@ -1,24 +1,6 @@
 import Foundation
 import SwiftInferCore
 
-/// V1.143 — author-facing cross-type insights over the SemanticIndex.
-///
-/// Unlike `docc` (reader-facing, verified-only facts), `insights` opens a
-/// **design conversation with the author**: "these N types share an
-/// algebraic shape — consider unifying them." That flips the trust bar —
-/// inferred `Strong`/`Likely` rows are fair game because a human reviews
-/// before acting — but demands a tentative tone (a question, never a
-/// directive) and a `Why this might be wrong` line, because a shared
-/// *shape* is not a shared *purpose*.
-///
-/// **Read-only, index-only.** Algebraic structure isn't one index row; it's
-/// composed per type from the primitive `associativity` / `commutativity` /
-/// `identity-element` template rows. This builder derives a structure label
-/// per type and groups across types. It does NOT attempt the call-site
-/// "would slot into your merge pipeline" hint — that needs dataflow the
-/// index doesn't carry — but it does surface the *adoption gap* it can see
-/// (some types in a group already conform to a protocol, others don't).
-
 /// One type in a cross-type structure group.
 public struct InsightsMember: Equatable, Sendable {
     public let typeName: String
@@ -55,6 +37,23 @@ public struct InsightsGroup: Equatable, Sendable {
     }
 }
 
+/// V1.143 — author-facing cross-type insights over the SemanticIndex.
+///
+/// Unlike `docc` (reader-facing, verified-only facts), `insights` opens a
+/// **design conversation with the author**: "these N types share an
+/// algebraic shape — consider unifying them." That flips the trust bar —
+/// inferred `Strong`/`Likely` rows are fair game because a human reviews
+/// before acting — but demands a tentative tone (a question, never a
+/// directive) and a `Why this might be wrong` line, because a shared
+/// *shape* is not a shared *purpose*.
+///
+/// **Read-only, index-only.** Algebraic structure isn't one index row; it's
+/// composed per type from the primitive `associativity` / `commutativity` /
+/// `identity-element` template rows. This builder derives a structure label
+/// per type and groups across types. It does NOT attempt the call-site
+/// "would slot into your merge pipeline" hint — that needs dataflow the
+/// index doesn't carry — but it does surface the *adoption gap* it can see
+/// (some types in a group already conform to a protocol, others don't).
 public enum InsightsBuilder {
 
     /// The primitive template rows that compose into a binary-op structure.
@@ -118,6 +117,7 @@ public enum InsightsBuilder {
 
     // MARK: - Rendering
 
+    /// The `insights` report for `groups`, or a no-structure line naming the `minTypes` threshold.
     public static func render(_ groups: [InsightsGroup], minTypes: Int, includePossible: Bool) -> String {
         guard !groups.isEmpty else {
             let tierPhrase = includePossible ? "Possible-or-better" : "Strong/Likely"

@@ -24,6 +24,7 @@ extension SwiftInferCommand.Discover {
         try TargetDirectory.resolveScan(target: target, sources: sources)
     }
 
+    /// Resolves the scan directory, inferring it when neither flag is given, and runs `discover`.
     public func run() throws {
         // Infers the scope when neither flag is given, rather than erroring — the lint→infer
         // hop's first-attempt failure. Only `discover` does this; see

@@ -30,12 +30,14 @@ import SwiftSyntax
 /// per-rule (TestLifter territory), not a generic property.
 public enum RuleVisitorDiscoverer {
 
+    /// Lint-rule visitor candidates declared in one source string; `file` is recorded as their location.
     public static func discover(source: String, file: String) -> [RuleVisitorCandidate] {
         var table: [String: RawVisitorInfo] = [:]
         accumulate(source: source, file: file, into: &table)
         return assemble(table)
     }
 
+    /// Lint-rule visitor candidates declared in the Swift file at `file`.
     public static func discover(file: URL) throws -> [RuleVisitorCandidate] {
         let source = try String(contentsOf: file, encoding: .utf8)
         return discover(source: source, file: file.path)

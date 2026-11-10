@@ -31,12 +31,15 @@ import SwiftInferCore
 /// case was one.
 public enum EmptyRangeTemplate {
 
+    /// The name this template's suggestions carry: `empty-range`.
     public static let templateName = "empty-range"
 
+    /// The `empty-range` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `empty-range` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "empty-range",

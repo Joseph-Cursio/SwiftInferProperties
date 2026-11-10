@@ -14,8 +14,10 @@ import SwiftInferCore
 /// `record` is best-effort (write failure → warning).
 public enum VerifyCorpusStore {
 
+    /// The replay corpus's path relative to the package root: `.swiftinfer/verify-corpus.json`.
     public static let conventionalRelativePath = ".swiftinfer/verify-corpus.json"
 
+    /// The replay corpus's path under `packageRoot`.
     public static func defaultPath(for packageRoot: URL) -> URL {
         packageRoot.appendingPathComponent(conventionalRelativePath)
     }

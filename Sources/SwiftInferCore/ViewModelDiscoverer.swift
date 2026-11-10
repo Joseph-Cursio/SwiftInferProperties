@@ -27,12 +27,14 @@ import SwiftSyntax
 /// stays conservative + curated like the algebraic vocabulary lists.
 public enum ViewModelDiscoverer {
 
+    /// The MVVM view models (`@Observable` or `ObservableObject`) declared in one source string.
     public static func discover(source: String, file: String) -> [ViewModelCandidate] {
         var table: [String: RawTypeInfo] = [:]
         accumulate(source: source, file: file, into: &table)
         return assemble(table)
     }
 
+    /// The MVVM view models declared in the Swift file at `file`.
     public static func discover(file: URL) throws -> [ViewModelCandidate] {
         let source = try String(contentsOf: file, encoding: .utf8)
         return discover(source: source, file: file.path)

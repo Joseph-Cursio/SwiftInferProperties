@@ -50,6 +50,7 @@ public enum CodableRoundTripStubEmitter {
         }
     }
 
+    /// The codable-round-trip verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let imports = (["Foundation"] + inputs.extraImports)
             .map { "import \($0)" }

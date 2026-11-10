@@ -22,10 +22,12 @@ import SwiftInferCore
 /// compiles anywhere, fails until completed, and the file says SCAFFOLD rather than a law.
 public enum StructuralRoundTripTemplate {
 
+    /// The `structural-round-trip` suggestion for `subject`, or `nil` when the template does not apply.
     public static func suggest(for subject: StructuralRoundTripSubject) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: subject)
     }
 
+    /// The `structural-round-trip` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<StructuralRoundTripSubject> {
         Constraint<StructuralRoundTripSubject>(
             templateName: "structural-round-trip",

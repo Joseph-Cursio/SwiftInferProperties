@@ -323,6 +323,7 @@ public extension SwiftInferCommand {
 /// `PrintOutput`; tests use a recording sink so they can match the rendered
 /// text byte-for-byte.
 public protocol DiscoverOutput {
+    /// Emits one chunk of rendered `discover` output.
     func write(_ text: String)
 }
 
@@ -339,6 +340,7 @@ public struct PrintOutput: DiscoverOutput {
 /// reproducibility guarantee depends on stdout being a function of
 /// (target sources, vocabulary, config) only.
 public protocol DiagnosticOutput {
+    /// Emits one diagnostic line, out of band from the suggestion stream.
     func writeDiagnostic(_ text: String)
 }
 

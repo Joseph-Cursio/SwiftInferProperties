@@ -28,6 +28,7 @@ import SwiftSyntax
 /// surface (Equatable on the existing fields stays stable).
 public enum DomainCallSiteExtractor {
 
+    /// Every call to `consumer` in `slice`'s setup and property region, its first argument classified.
     public static func extract(consumer: String, in slice: SlicedTestBody) -> [DomainCallSite] {
         let visitor = CallSiteVisitor(consumer: consumer)
         for item in slice.setup {

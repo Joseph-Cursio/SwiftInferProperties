@@ -16,6 +16,7 @@ import SwiftInferCore
 /// harness (`OutputDeterminismVerifierEmitter`), joined in a later slice.
 public enum ConventionRoleInteractionAnalyzer {
 
+    /// `role`'s `outputDeterminism` interaction suggestion, or none when it has no output collaborator.
     public static func suggestions(
         for role: StatefulRole,
         firstSeenAt: Date

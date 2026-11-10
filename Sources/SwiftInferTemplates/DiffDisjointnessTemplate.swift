@@ -31,6 +31,7 @@ public enum DiffDisjointnessTemplate {
     /// carried payload.
     typealias Match = DiffDisjointnessMatch
 
+    /// The `diff-disjointness` suggestion for `summary` (return type from `shapesByName`), or `nil`.
     public static func suggest(
         for summary: FunctionSummary,
         shapesByName: [String: TypeShape]

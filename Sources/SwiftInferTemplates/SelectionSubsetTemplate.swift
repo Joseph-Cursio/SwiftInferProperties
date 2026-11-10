@@ -51,6 +51,7 @@ public enum SelectionSubsetTemplate {
     /// built from cannot drift apart.
     typealias Match = SelectionSubsetMatch
 
+    /// The `selection-subset` suggestion for `summary` (container from `shapesByName`), or `nil`.
     public static func suggest(
         for summary: FunctionSummary,
         shapesByName: [String: TypeShape]

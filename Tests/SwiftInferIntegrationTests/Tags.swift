@@ -30,5 +30,6 @@ import Testing
 /// V1.49.F subprocess integration tests in
 /// `VerifyPipelineIntegrationTests` carry this tag at the suite level.
 public extension Tag {
+    /// Marks tests that spawn a real `swift build` or verifier subprocess (slow: ~10–15s each).
     @Tag static var subprocess: Self
 }

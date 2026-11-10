@@ -13,6 +13,7 @@ import SwiftInferCore
 /// ends swapped.
 public extension LiftedTestEmitter {
 
+    /// A lifted property test asserting the measure `callee` returns `result >= 0` for drawn inputs.
     static func nonNegative(
         callee: CalleeReference,
         seed: SamplingSeed.Value,

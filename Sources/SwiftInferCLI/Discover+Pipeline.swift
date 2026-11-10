@@ -12,6 +12,7 @@ import SwiftInferTestLifter
 /// dispatch + the M2 vocabulary-path precedence helper live.
 extension SwiftInferCommand.Discover {
 
+    /// Runs the `discover` pipeline over `directory` and returns the tier-filtered, config-aware result.
     public static func collectVisibleSuggestions(
         directory: URL,
         diagnostics: any DiagnosticOutput,

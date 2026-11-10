@@ -25,6 +25,7 @@ import SwiftInferCore
 ///     stem (`isLoading` ⟺ `loadingData != nil`).
 public enum ViewModelInteractionAnalyzer {
 
+    /// Candidate interaction invariants in all five families, read off `candidate`'s MVVM shape.
     public static func analyze(_ candidate: ViewModelCandidate) -> [ViewModelInteractionCandidate] {
         var out: [ViewModelInteractionCandidate] = []
         out.append(contentsOf: idempotence(candidate))

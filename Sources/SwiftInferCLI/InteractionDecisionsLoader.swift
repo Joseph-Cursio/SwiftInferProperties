@@ -23,8 +23,10 @@ public enum InteractionDecisionsLoader {
         }
     }
 
+    /// The interaction decisions file's path relative to the package root.
     public static let conventionalRelativePath = InteractionDecisions.conventionalRelativePath
 
+    /// Loads interaction decisions from `explicitPath` or the package root above `directory`.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil
@@ -40,10 +42,12 @@ public enum InteractionDecisionsLoader {
         )
     }
 
+    /// Writes `decisions` to `path` as canonical JSON, creating `.swiftinfer/` if needed.
     public static func write(_ decisions: InteractionDecisions, to path: URL) throws {
         try Store.write(decisions, to: path)
     }
 
+    /// The interaction decisions file's path under `packageRoot`.
     public static func defaultPath(for packageRoot: URL) -> URL {
         Store.defaultPath(for: packageRoot)
     }

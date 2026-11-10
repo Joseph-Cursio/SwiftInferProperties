@@ -76,6 +76,7 @@ public enum ViewModelInvariantStubEmitter {
     static let sequenceCount = 500
     static let maxSteps = 12
 
+    /// The randomized-sequence state-invariant verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         [headerBlock(inputs), seededRNG, typeHelpers(inputs), harnessBlock(inputs)]
             .joined(separator: "\n\n")

@@ -12,12 +12,14 @@ import SwiftInferCore
 /// direction this checks, and the kit non-duplication check.
 public enum SetRelationModelLawTemplate {
 
+    /// The `set-relation-model-law` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: SetRelationModelPairing.SetRelationShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `set-relation-model-law` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint()
         -> Constraint<SetRelationModelPairing.SetRelationShape> {
         Constraint<SetRelationModelPairing.SetRelationShape>(

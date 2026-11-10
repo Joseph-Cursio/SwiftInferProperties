@@ -77,7 +77,9 @@ public enum ActionSequenceStubEmitter {
     /// `rawActions.dropFirst(suffixStart).prefix(prefixLength)` —
     /// nil defaults mean "no drop / no truncation."
     public static let pinSequenceEnvVar = "SWIFT_INFER_PIN_SEQUENCE"
+    /// Env var for the replayed slice's action count: the `prefix(prefixLength)` in single-sequence replay.
     public static let pinPrefixLengthEnvVar = "SWIFT_INFER_PIN_PREFIX_LENGTH"
+    /// Env var for how many leading actions replay drops: the `dropFirst(suffixStart)` in the slice.
     public static let pinSuffixStartEnvVar = "SWIFT_INFER_PIN_SUFFIX_START"
 
     // `Inputs` + `EmitError` are nested via extension in
