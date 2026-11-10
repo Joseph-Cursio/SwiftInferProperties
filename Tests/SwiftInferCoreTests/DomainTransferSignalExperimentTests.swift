@@ -84,18 +84,27 @@ struct DomainTransferSignalExperimentTests {
 
     // MARK: - The candidate rule
 
-    /// Whether the parameter's name appears anywhere in the returned expression.
+    /// Whether a function's first parameter shows up in its returned expression.
+    enum ParameterReach {
+        /// The parameter's name appears in the returned expression.
+        case reaches
+        /// It does not: the candidate shape.
+        case omitted
+    }
+
+    /// Whether the parameter's name appears anywhere in the returned expression, or `nil` when
+    /// the function has no named parameter or no result expression to look in.
     ///
     /// Textual containment on the trimmed description, which is generous to the
     /// rule: any mention counts, so a miss is a genuine absence rather than a
     /// parsing artefact.
-    static func parameterReachesReturnExpression(_ node: FunctionDeclSyntax) -> Bool? {
+    static func parameterReachesReturnExpression(_ node: FunctionDeclSyntax) -> ParameterReach? {
         guard let parameter = node.signature.parameterClause.parameters.first,
               let body = node.body else { return nil }
         let name = (parameter.secondName ?? parameter.firstName).text
         guard name != "_" else { return nil }
         guard let result = resultExpression(of: Array(body.statements)) else { return nil }
-        return result.trimmedDescription.contains(name)
+        return result.trimmedDescription.contains(name) ? .reaches : .omitted
     }
 
     /// The expression whose value the function returns — an explicit trailing
@@ -132,7 +141,7 @@ struct DomainTransferSignalExperimentTests {
                 guard isRefuted || isHeld else { continue }
                 guard let reaches = Self.parameterReachesReturnExpression(node) else { continue }
                 if isRefuted { seenRefuted.insert(name) } else { seenHeld.insert(name) }
-                guard !reaches else { continue }
+                guard reaches == .omitted else { continue }
                 if isRefuted { flaggedRefuted.insert(name) } else { flaggedHeld.insert(name) }
             }
         }

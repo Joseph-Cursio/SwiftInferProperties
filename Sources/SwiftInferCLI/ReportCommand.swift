@@ -5,9 +5,9 @@ import SwiftInferCore
 /// V1.149 — `swift-infer report`. A read-only, one-glance overview folding the
 /// SemanticIndex (algebraic + interaction), the measured-verify evidence, and
 /// the cross-type insights into a single status view. Reads only; never writes.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Report: AsyncParsableCommand {
+    struct Report: AsyncParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "report",

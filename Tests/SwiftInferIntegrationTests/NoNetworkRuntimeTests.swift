@@ -155,20 +155,16 @@ private final class NetworkInterceptor: URLProtocol {
         return capturedRequests.compactMap(\.url)
     }
 
-    // URLProtocol declares these as `class func`; subclasses must
-    // override using the same dispatch keyword. SwiftLint's
-    // `static_over_final_class` rule doesn't model the inherited-API
-    // constraint — silence per occurrence.
-    // swiftlint:disable:next static_over_final_class
-    override final class func canInit(with request: URLRequest) -> Bool {
+    // URLProtocol declares these as `class func`; `static` overrides them and
+    // seals the override, which a final class's members are anyway.
+    override static func canInit(with request: URLRequest) -> Bool {
         lock.lock()
         capturedRequests.append(request)
         lock.unlock()
         return true
     }
 
-    // swiftlint:disable:next static_over_final_class
-    override final class func canonicalRequest(for request: URLRequest) -> URLRequest {
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest {
         request
     }
 

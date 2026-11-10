@@ -26,7 +26,7 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: nil,
+            includePossible: .notGiven,
             explicitConfigPath: configPath,
             output: recording,
             diagnostics: diagnostics

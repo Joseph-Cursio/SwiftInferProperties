@@ -59,9 +59,9 @@ public struct QueryFilters: Equatable {
     }
 }
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Query: AsyncParsableCommand {
+    struct Query: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "query",
@@ -146,7 +146,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async {
+        public func run() {
             let (parsedSurface, surfaceWarning) = QuerySurface.parse(surface)
             let result = Self.runQuery(
                 directoryOverride: directory,
@@ -173,7 +173,7 @@ extension SwiftInferCommand {
         }
 
         /// Pure-function surface so unit tests can drive the query
-        /// path without the AsyncParsableCommand shell. V1.89 lint pass —
+        /// path without the ParsableCommand shell. V1.89 lint pass —
         /// the original 6 filter params were bundled into `QueryFilters`
         /// (which the function already constructed internally), dropping
         /// the param count from 8 → 4 and eliminating the

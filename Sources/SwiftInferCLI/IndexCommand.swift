@@ -120,9 +120,9 @@ private func indexSummaryLine(
         + "total entries \(merged.entries.count))"
 }
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Index: AsyncParsableCommand {
+    struct Index: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "index",
@@ -154,8 +154,7 @@ extension SwiftInferCommand {
         public var seeds: String?
 
         @Flag(
-            name: .long,
-            inversion: .prefixedNo,
+            exclusivity: .chooseLast,
             help: """
             Include `Possible` tier suggestions (score 20–39). When \
             building an index, this defaults ON via the Index pipeline \
@@ -164,7 +163,7 @@ extension SwiftInferCommand {
             to force Possible-tier suppression.
             """
         )
-        public var includePossible: Bool?
+        public var includePossible: IncludePossibleFlag?
 
         @Option(
             name: .long,
@@ -232,17 +231,18 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let directory = try TargetDirectory.resolve(target)
             // Default to includePossible=true for the index — the index
             // is a recall surface and users filter via
             // `swift-infer query --min-score`. Pass --no-include-possible
-            // to override (the flag is Bool? per the M2 plan's CLI > config
-            // > default precedence; explicit non-nil wins).
+            // to override (CLI > config > default precedence per the M2 plan;
+            // an explicit flag wins).
+            let possible = SettingOverride(includePossible, enabledBy: .includePossible)
             let (_, summary) = try Self.performIndex(
                 IndexInputs(
                     scanDirectory: directory,
-                    includePossible: includePossible ?? true,
+                    includePossible: possible.resolved(otherwise: true),
                     explicitVocabularyPath: vocabulary.map { URL(fileURLWithPath: $0) },
                     explicitConfigPath: config.map { URL(fileURLWithPath: $0) },
                     explicitTestDirPath: testDir.map { URL(fileURLWithPath: $0) },
@@ -276,7 +276,7 @@ extension SwiftInferCommand {
         ) throws -> (index: IndexStore.Index, summary: String) {
             let pipeline = try Discover.collectVisibleSuggestions(
                 directory: inputs.scanDirectory,
-                includePossible: inputs.includePossible,
+                includePossible: SettingOverride(inputs.includePossible),
                 explicitVocabularyPath: inputs.explicitVocabularyPath,
                 explicitConfigPath: inputs.explicitConfigPath,
                 explicitTestDirectory: inputs.explicitTestDirPath,

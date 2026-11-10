@@ -33,9 +33,9 @@ import SwiftInferCore
 /// records per the scoping rule. The bridge must be currently
 /// discoverable — accepting a hash that no longer corresponds to
 /// a live bridge errors out with `unknownBridgeIdentity`.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct AcceptBridge: AsyncParsableCommand {
+    struct AcceptBridge: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "accept-bridge",
@@ -90,7 +90,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             let directory = try TargetDirectory.resolve(target)
             try Self.run(

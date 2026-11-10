@@ -4,7 +4,7 @@ import Foundation
 // `VerifyCommand+AllFromIndex.swift` (which had hit SwiftLint's 400-line
 // file-length cap). These are the canonical Phase 2 measurement vocabulary
 // (`swift-infer verify --all-from-index` JSON stream).
-extension SwiftInferCommand.Verify {
+public extension SwiftInferCommand.Verify {
 
     // This CLI survey-output vocabulary intentionally mirrors Core's persistence enum
     // `VerifyEvidenceOutcome` (byte-identical raw values). They're kept as two types across the
@@ -14,7 +14,7 @@ extension SwiftInferCommand.Verify {
     /// V1.50.B classification — one of five outcomes per pick. Matches the
     /// v1.50 plan's five categories. Encoded as a string in the JSON output
     /// for human + machine readability.
-    public enum SurveyOutcome: String, Codable, Sendable {
+    enum SurveyOutcome: String, Codable, Sendable {
         case measuredBothPass = "measured-bothPass"
         case measuredEdgeCaseAdvisory = "measured-edgeCaseAdvisory"
         case measuredDefaultFails = "measured-defaultFails"
@@ -23,7 +23,7 @@ extension SwiftInferCommand.Verify {
     }
 
     /// V1.50.B JSON output record — one per pick.
-    public struct SurveyRecord: Codable, Sendable {
+    struct SurveyRecord: Codable, Sendable {
         public let identityHash: String
         public let templateName: String
         public let primaryFunctionName: String

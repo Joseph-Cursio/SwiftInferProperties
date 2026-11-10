@@ -267,11 +267,11 @@ public struct IndexedTypeShape: Codable, Sendable, Equatable {
 
 // MARK: - Conversion ↔ kit's TypeShape
 
-extension IndexedTypeShape {
+public extension IndexedTypeShape {
 
     /// Build a mirror from the kit's `TypeShape`. Element-wise map of
     /// kind + stored-member structs.
-    public init(from kitShape: TypeShape) {
+    init(from kitShape: TypeShape) {
         self.init(
             everyColumn: .required,
             name: kitShape.name,
@@ -306,7 +306,7 @@ extension IndexedTypeShape {
 
     /// Project back to the kit's `TypeShape` for
     /// `DerivationStrategist.strategy(for:)` consumption.
-    public func toKitShape() -> TypeShape {
+    func toKitShape() -> TypeShape {
         TypeShape(
             name: name,
             kind: kind.kitKind,

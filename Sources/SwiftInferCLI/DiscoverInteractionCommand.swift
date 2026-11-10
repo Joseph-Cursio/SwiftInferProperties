@@ -25,9 +25,9 @@ import SwiftInferTemplates
 /// (interaction-invariant suggestions with predicate + family
 /// fields). Separate subcommand keeps the boundaries clean —
 /// same posture as `discover-reducers` and `verify-interaction`.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct DiscoverInteraction: AsyncParsableCommand {
+    struct DiscoverInteraction: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "discover-interaction",
@@ -159,7 +159,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             try Self.run(
                 roots: TargetDirectory.resolveScanRoots(
@@ -227,7 +227,7 @@ extension SwiftInferCommand {
         /// comma-joined target list.
 
         /// V2.0 M4.E — pure-ish pipeline entry. Tests drive it
-        /// without going through the AsyncParsableCommand shell.
+        /// without going through the ParsableCommand shell.
         ///
         /// Pipeline steps:
         ///   1. Walk `Sources/<target>/` for reducer candidates

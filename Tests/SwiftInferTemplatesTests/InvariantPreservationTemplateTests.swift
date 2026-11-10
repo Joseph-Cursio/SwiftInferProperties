@@ -198,8 +198,8 @@ struct InvariantPreservationTemplateTests {
 
 // MARK: - Test helpers
 
-extension FunctionSummary {
-    fileprivate func withInvariantKeypath(_ keyPath: String?) -> FunctionSummary {
+private extension FunctionSummary {
+    func withInvariantKeypath(_ keyPath: String?) -> FunctionSummary {
         FunctionSummary(
             name: name,
             parameters: parameters,

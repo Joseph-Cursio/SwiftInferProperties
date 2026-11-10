@@ -8,8 +8,8 @@ extension SwiftInferCommand.Discover {
 
     static func resolvePipelineSetup(
         directory: URL,
-        includePossible: Bool?,
-        docstringAdvice: Bool?,
+        includePossible: SettingOverride,
+        docstringAdvice: SettingOverride,
         requireCorroboration: Bool = false,
         overrides: ExplicitOverrides,
         diagnostics: any DiagnosticOutput
@@ -22,11 +22,11 @@ extension SwiftInferCommand.Discover {
             diagnostics.writeDiagnostic("warning: \(warning)")
         }
         let effectiveIncludePossible =
-            includePossible ?? configResult.config.includePossible
+            includePossible.resolved(otherwise: configResult.config.includePossible)
         // Same CLI > config > default precedence as `includePossible`; the default
         // is `true` (see `Config.docstringAdvice`).
         let effectiveDocstringAdvice =
-            docstringAdvice ?? configResult.config.docstringAdvice
+            docstringAdvice.resolved(otherwise: configResult.config.docstringAdvice)
         let effectiveVocabularyPath = resolveVocabularyPath(
             cliOverride: overrides.vocabularyPath,
             configValue: configResult.config.vocabularyPath,

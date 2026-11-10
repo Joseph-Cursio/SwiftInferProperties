@@ -18,10 +18,10 @@ struct InactiveClausesTests {
                 .unsafeFlags(["-DFROM_FLAG"]),
             ]
             """)
-        #expect(conditions.isSet("SQLITE_ENABLE_FTS5") == true)
-        #expect(conditions.isSet("FROM_FLAG") == true)
-        #expect(conditions.isSet("COLLECTIONS_INTERNAL_CHECKS") == false)
-        #expect(conditions.isSet("FOUNDATION_FRAMEWORK") == false)
+        #expect(conditions.state(of: "SQLITE_ENABLE_FTS5") == .set)
+        #expect(conditions.state(of: "FROM_FLAG") == .set)
+        #expect(conditions.state(of: "COLLECTIONS_INTERNAL_CHECKS") == .unset)
+        #expect(conditions.state(of: "FOUNDATION_FRAMEWORK") == .unset)
     }
 
     @Test("platform, configuration and branch gates on a define")
@@ -36,10 +36,10 @@ struct InactiveClausesTests {
                 swiftSettings.append(.define("SQLITE_ENABLE_PREUPDATE_HOOK"))
             }
             """)
-        #expect(conditions.isSet("DATA_LEGACY_ABI") == true)
-        #expect(conditions.isSet("_GNU_SOURCE") == false)
-        #expect(conditions.isSet("RELEASE_ONLY") == false)
-        #expect(conditions.isSet("SQLITE_ENABLE_PREUPDATE_HOOK") == nil)
+        #expect(conditions.state(of: "DATA_LEGACY_ABI") == .set)
+        #expect(conditions.state(of: "_GNU_SOURCE") == .unset)
+        #expect(conditions.state(of: "RELEASE_ONLY") == .unset)
+        #expect(conditions.state(of: "SQLITE_ENABLE_PREUPDATE_HOOK") == .undecided)
     }
 
     @Test("default traits are set, closed over their own enabledTraits; other traits are not")
@@ -55,9 +55,9 @@ struct InactiveClausesTests {
                 .trait(name: "UnstableSortedCollections"),
             ]
             """)
-        #expect(conditions.isSet("Base") == true)
-        #expect(conditions.isSet("Implied") == true)
-        #expect(conditions.isSet("UnstableSortedCollections") == false)
+        #expect(conditions.state(of: "Base") == .set)
+        #expect(conditions.state(of: "Implied") == .set)
+        #expect(conditions.state(of: "UnstableSortedCollections") == .unset)
     }
 
     // MARK: - Scanning

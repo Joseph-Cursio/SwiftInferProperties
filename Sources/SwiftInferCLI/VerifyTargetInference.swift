@@ -87,16 +87,15 @@ enum VerifyTargetInference {
     /// is the harder case, where the convention **succeeds and is wrong**.
     private static func manifestMayRelocateTargets(packageRoot: URL) -> Bool {
         let key = packageRoot.standardizedFileURL.path
-        if let cached = relocationGateCache.value(forKey: key) { return cached }
-        let manifest = packageRoot.appendingPathComponent("Package.swift")
-        let text = (try? String(contentsOf: manifest, encoding: .utf8)) ?? ""
-        let answer = text.components(separatedBy: "\n").contains { line in
-            guard !line.contains(".package(") else { return false }
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            return trimmed.hasPrefix("path:") || trimmed.contains(", path:")
+        return relocationGateCache.value(forKey: key) {
+            let manifest = packageRoot.appendingPathComponent("Package.swift")
+            let text = (try? String(contentsOf: manifest, encoding: .utf8)) ?? ""
+            return text.components(separatedBy: "\n").contains { line in
+                guard !line.contains(".package(") else { return false }
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                return trimmed.hasPrefix("path:") || trimmed.contains(", path:")
+            }
         }
-        relocationGateCache.store(answer, forKey: key)
-        return answer
     }
 
     /// Memoised per package root, for the reason `TargetIsolation.DumpCache` records: this is
@@ -108,16 +107,18 @@ enum VerifyTargetInference {
         private let lock = NSLock()
         private var entries: [String: Bool] = [:]
 
-        func value(forKey key: String) -> Bool? {
+        /// The answer recorded for `key`, or `compute`'s, recorded on first use. `compute` runs
+        /// outside the lock, so two first callers may both compute; they agree.
+        func value(forKey key: String, computing compute: () -> Bool) -> Bool {
             lock.lock()
-            defer { lock.unlock() }
-            return entries[key]
-        }
-
-        func store(_ value: Bool, forKey key: String) {
-            lock.lock()
-            entries[key] = value
+            let cached = entries[key]
             lock.unlock()
+            if let cached { return cached }
+            let answer = compute()
+            lock.lock()
+            entries[key] = answer
+            lock.unlock()
+            return answer
         }
     }
 

@@ -37,7 +37,7 @@ public struct StateMachineMove: Sendable, Equatable {
     }
 }
 
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// A scaffold for `state-machine`'s round trip (#478): the two moves, named and spelled, and
     /// an `Issue.record` until a person supplies what the tool cannot.
@@ -65,7 +65,7 @@ extension LiftedTestEmitter {
     /// rows named a pair the code does not owe**, and the rule emitted at most one pair per type.
     /// #489 fixed that — 5 false pairs withdrawn, 3 true ones recovered — so a scaffold now names
     /// moves that genuinely undo each other.
-    public static func stateMachineScaffold(
+    static func stateMachineScaffold(
         carrier: String,
         forward: StateMachineMove,
         backward: StateMachineMove

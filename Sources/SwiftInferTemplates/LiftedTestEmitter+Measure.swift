@@ -11,9 +11,9 @@ import SwiftInferCore
 /// Unlike totality, a failure here is a **counterexample**, not a crash: the check shrinks to the
 /// input whose measure went negative — `capacity - used` past its boundary, `end - start` with the
 /// ends swapped.
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
-    public static func nonNegative(
+    static func nonNegative(
         callee: CalleeReference,
         seed: SamplingSeed.Value,
         generators: [String],

@@ -30,7 +30,7 @@ extension SwiftInferCommand {
     /// against either would manufacture exactly the over-confident claim this command exists to
     /// prevent. `CensusRun.zeroRowTemplates(against:)` takes the catalog as an argument so the
     /// reader supplies what they mean, and the zero stays attached to the list that produced it.
-    struct Census: AsyncParsableCommand {
+    struct Census: ParsableCommand {
 
         static let configuration = CommandConfiguration(
             commandName: "census",
@@ -68,7 +68,7 @@ extension SwiftInferCommand {
         @Option(help: "Override the working directory (defaults to the current one).")
         var directory: String?
 
-        func run() async throws {
+        func run() throws {
             let root = URL(fileURLWithPath: directory ?? ".").standardizedFileURL
             // An empty corpus list would survey nothing and print a table of zeros, which reads
             // exactly like a catalog in which nothing fires. Refusing is the same rule
@@ -143,7 +143,7 @@ extension SwiftInferCommand {
                 if purity?.covers(scanPath) != true { purity = PackagePurity.forJudging(directory: scanPath) }
                 let result = try Discover.collectVisibleSuggestions(
                     directory: scanPath,
-                    includePossible: includePossible,
+                    includePossible: SettingOverride(includePossible),
                     purity: purity,
                     diagnostics: SilentDiagnostics()
                 )

@@ -11,9 +11,9 @@ import SwiftInferCore
 /// Exit code is always 0 — drift is non-fatal per PRD §3 non-goals.
 /// CI dashboards tracking trends should grep stderr for
 /// `warning: drift:` rather than chase a non-zero code.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Drift: AsyncParsableCommand {
+    struct Drift: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "drift",
@@ -56,7 +56,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let directory = try TargetDirectory.resolve(target)
             let explicitVocabularyPath = vocabulary.map { URL(fileURLWithPath: $0) }
             let explicitConfigPath = config.map { URL(fileURLWithPath: $0) }

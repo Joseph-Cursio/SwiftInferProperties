@@ -55,9 +55,9 @@ struct MetricsLoadResult: Equatable {
 /// pairs them) is loaded and merged via `VerifyEvidenceLog.merge(_:)`,
 /// so the §17.2 verify-evidence cross-reference spans the whole corpus
 /// set, not just default walk-up mode.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Metrics: AsyncParsableCommand {
+    struct Metrics: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "metrics",
@@ -80,7 +80,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async {
+        public func run() {
             let aggregate = Self.loadAggregate(
                 directoryOverride: directory,
                 explicitPaths: decisions
@@ -101,7 +101,7 @@ extension SwiftInferCommand {
         }
 
         /// Pure-function aggregation surface so unit tests can drive
-        /// the loader path without the AsyncParsableCommand shell.
+        /// the loader path without the ParsableCommand shell.
         static func loadAggregate(
             directoryOverride: String?,
             explicitPaths: [String]

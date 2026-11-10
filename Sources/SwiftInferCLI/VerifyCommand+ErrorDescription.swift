@@ -9,9 +9,9 @@ import Foundation
 /// **Every message names a remedy, or says there is none.** That distinction is the point of
 /// several of these strings — `carrierNotEquatable` and `monotonicityDomainNotComparable` both
 /// exist to stop a reader being sent to write a `gen()` that cannot help.
-extension VerifyError {
+public extension VerifyError {
 
-    public var description: String {
+    var description: String {
         switch self {
         case let .suggestionNotFound(prefix, closest):
             let suffix = closest.isEmpty

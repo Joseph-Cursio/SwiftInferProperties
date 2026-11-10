@@ -10,9 +10,9 @@ import SwiftInferCore
 /// Non-invasive by default: writes to `.swiftinfer/docc/` (tool-owned), not
 /// the user's source tree. Point `--output` at a real `<Target>.docc/
 /// Extensions/` directory to integrate the pages into a DocC catalog.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Docc: AsyncParsableCommand {
+    struct Docc: AsyncParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "docc",

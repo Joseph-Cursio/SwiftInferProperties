@@ -26,9 +26,9 @@ struct MetricsInteractionLoaded {
     let warnings: [String]
 }
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct MetricsInteraction: AsyncParsableCommand {
+    struct MetricsInteraction: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "metrics-interaction",
@@ -56,7 +56,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let parsedFormat = try Self.parseFormat(format)
             let loaded = Self.loadDecisions(directoryOverride: directory, explicitPaths: decisions)
             let report = InteractionDecisionsAggregator.aggregate(loaded.decisions)

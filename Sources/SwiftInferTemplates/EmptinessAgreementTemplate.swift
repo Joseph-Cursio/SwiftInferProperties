@@ -118,6 +118,14 @@ public struct EmptinessAgreementPair: Sendable, Equatable {
 /// Finds `EmptinessAgreementPair`s among a scan's summaries.
 public enum EmptinessAgreementPairing {
 
+    /// Which count a paired predicate holds for.
+    public enum Polarity: Sendable, Equatable {
+        /// The predicate holds when the count is positive: `isNotEmpty`, `hasIssues`.
+        case holdsWhenPositive
+        /// The predicate holds when the count is zero: `isEmpty`.
+        case holdsWhenZero
+    }
+
     /// Every pair on one type: an argument-free `Bool` member and an argument-free signed-integer
     /// measure (`MeasureTemplate.isMeasure`) whose names agree — `has<Thing>` with a count naming
     /// the thing, `isEmpty` / `isNotEmpty` with `count`.
@@ -130,9 +138,10 @@ public enum EmptinessAgreementPairing {
             let measures = typeMembers.filter(MeasureTemplate.isMeasure)
             for predicate in predicates {
                 for measure in measures {
-                    if let positive = polarity(predicate: predicate.name, measure: measure.name) {
+                    if let polarity = polarity(predicate: predicate.name, measure: measure.name) {
                         pairs.append(EmptinessAgreementPair(
-                            predicate: predicate, measure: measure, holdsWhenPositive: positive
+                            predicate: predicate, measure: measure,
+                            holdsWhenPositive: polarity == .holdsWhenPositive
                         ))
                     }
                 }
@@ -141,19 +150,18 @@ public enum EmptinessAgreementPairing {
         return pairs
     }
 
-    /// `true` when the predicate holds for a positive count, `false` when it holds for zero, `nil`
-    /// when the names do not pair.
-    public static func polarity(predicate: String, measure: String) -> Bool? {
+    /// Which count the predicate holds for, or `nil` when the names do not pair.
+    public static func polarity(predicate: String, measure: String) -> Polarity? {
         switch predicate {
         case "isEmpty":
-            return measure == "count" ? false : nil
+            return measure == "count" ? .holdsWhenZero : nil
 
         case "isNotEmpty":
-            return measure == "count" ? true : nil
+            return measure == "count" ? .holdsWhenPositive : nil
 
         default:
             guard let subject = hasSubject(predicate) else { return nil }
-            return measure.lowercased().contains(subject.lowercased()) ? true : nil
+            return measure.lowercased().contains(subject.lowercased()) ? .holdsWhenPositive : nil
         }
     }
 

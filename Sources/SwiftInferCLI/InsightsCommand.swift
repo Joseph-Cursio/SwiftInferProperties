@@ -10,9 +10,9 @@ import SwiftInferCore
 /// Pull, not push: this is a report you run when you want a design review,
 /// not an every-build nag. Gated to `Strong`/`Likely` by default (the
 /// Daikon-trap guard); `--include-possible` widens it with a caveat.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Insights: AsyncParsableCommand {
+    struct Insights: AsyncParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "insights",

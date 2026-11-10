@@ -19,9 +19,9 @@ import SwiftInferCore
 /// `verify-interaction`); `drift-interaction` continues that
 /// pattern so the discover/verify/drift triplet has the same
 /// shape on both surfaces.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct DriftInteraction: AsyncParsableCommand {
+    struct DriftInteraction: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "drift-interaction",
@@ -63,7 +63,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let directory = try TargetDirectory.resolve(target)
             let explicitBaselinePath = baseline.map { URL(fileURLWithPath: $0) }
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)

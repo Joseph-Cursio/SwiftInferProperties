@@ -22,9 +22,9 @@ import SwiftInferCore
 /// path. Separate `verify-interaction` subcommand keeps the
 /// boundaries clean — same posture as `discover-reducers`
 /// (M1.A.3) vs `discover`.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct VerifyInteraction: AsyncParsableCommand {
+    struct VerifyInteraction: AsyncParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "verify-interaction",

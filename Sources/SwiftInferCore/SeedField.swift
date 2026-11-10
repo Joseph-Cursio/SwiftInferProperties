@@ -44,13 +44,13 @@ public enum SeedField: String, CodingKey, CaseIterable {
     case mutates
 }
 
-extension SeedManifest.Seed {
+public extension SeedManifest.Seed {
 
     /// Written out rather than synthesised — see `SeedField`. Optionals use `encodeIfPresent`, so a
     /// seed with no role is byte-identical to one written before that field existed, which is the
     /// property the producer maintains on its side and the reason no version bump accompanied
     /// `role`, `restriction` or `effect`.
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: SeedField.self)
         try container.encode(file, forKey: .file)
         try container.encode(line, forKey: .line)

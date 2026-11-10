@@ -8,14 +8,14 @@ import SwiftInferTemplates
 /// Extracted from `InteractiveTriage.swift` when that file reached SwiftLint's 400-line cap. The
 /// type is one bundle of stored properties and their reasoning, which is a clean seam: nothing
 /// here decides anything, and every consumer takes the whole `Context`.
-extension InteractiveTriage {
+public extension InteractiveTriage {
 
     /// Bundle of triage dependencies — keeps `run`'s parameter list
     /// short and lets sub-helpers share the same set without
     /// re-threading individual deps. SwiftLint also caps function
     /// parameter counts at 5; bundling keeps both `run` and
     /// `handleAccept` under that limit.
-    public struct Context {
+    struct Context {
         public let prompt: any PromptInput
         public let output: any DiscoverOutput
         public let diagnostics: any DiagnosticOutput

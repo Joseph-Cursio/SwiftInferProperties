@@ -2,7 +2,7 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
     /// `swift-infer scaffold-kit-suites` — write out the PropertyLawKit conformance laws
     /// your types already owe.
@@ -16,7 +16,7 @@ extension SwiftInferCommand {
     /// Read-only over your source; prints to stdout unless `--output` is given, and never
     /// writes into a build without being asked. Same posture as every other command here —
     /// the tool proposes, a human decides.
-    public struct ScaffoldKitSuites: AsyncParsableCommand {
+    struct ScaffoldKitSuites: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "scaffold-kit-suites",
@@ -51,7 +51,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let directory = try TargetDirectory.resolveScan(target: target, sources: sources)
             guard let moduleName = module ?? target else {
                 throw ValidationError(

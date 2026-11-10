@@ -55,7 +55,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         _ name: String,
         source: String = Self.source,
         manifest: SeedManifest?,
-        docstringAdvice: Bool? = nil,
+        docstringAdvice: SettingOverride = .notGiven,
         statsOnly: Bool = false
     ) throws -> String {
         let directory = try writeDPFixture(name: name, contents: source)

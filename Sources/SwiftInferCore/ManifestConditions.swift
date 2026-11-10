@@ -22,11 +22,11 @@ public struct ManifestConditions: Sendable, Equatable {
         self.unknown = unknown
     }
 
-    /// `true` / `false` when the manifest decides `name`, `nil` when it cannot.
-    public func isSet(_ name: String) -> Bool? {
-        if set.contains(name) { return true }
-        if unknown.contains(name) { return nil }
-        return false
+    /// `.set` / `.unset` when the manifest decides `name`, `.undecided` when it cannot.
+    public func state(of name: String) -> ConditionState {
+        if set.contains(name) { return .set }
+        if unknown.contains(name) { return .undecided }
+        return .unset
     }
 
     /// Reads `source`, a `Package.swift`: top-level `.define("X")` and `-DX` in `unsafeFlags`, filtered by
@@ -47,9 +47,9 @@ public struct ManifestConditions: Sendable, Equatable {
         var unknown: Set<String> = []
         for define in collector.defines {
             switch define.state(enabledTraits: traits) {
-            case true?: set.insert(define.name)
-            case nil: unknown.insert(define.name)
-            case false?: break
+            case .set: set.insert(define.name)
+            case .undecided: unknown.insert(define.name)
+            case .unset: break
             }
         }
         return Self(set: set, unknown: unknown.subtracting(set))
@@ -64,12 +64,12 @@ private struct ManifestDefine {
     let configuration: String?
     let traits: [String]?
 
-    func state(enabledTraits: Set<String>) -> Bool? {
-        if branched { return nil }
-        if let platforms, !platforms.contains("macOS") { return false }
-        if let configuration, configuration != "debug" { return false }
-        if let traits, enabledTraits.isDisjoint(with: traits) { return false }
-        return true
+    func state(enabledTraits: Set<String>) -> ConditionState {
+        if branched { return .undecided }
+        if let platforms, !platforms.contains("macOS") { return .unset }
+        if let configuration, configuration != "debug" { return .unset }
+        if let traits, enabledTraits.isDisjoint(with: traits) { return .unset }
+        return .set
     }
 }
 

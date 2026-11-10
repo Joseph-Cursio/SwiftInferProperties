@@ -17,7 +17,7 @@ extension SwiftInferCommand.Verify {
         indexPathOverride: String?,
         budgetString: String,
         workingDirectory: URL
-    ) async throws {
+    ) throws {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory
         let corpus = VerifyCorpusStore.load(packageRoot: packageRoot).corpus
         guard corpus.entries.isEmpty == false else {

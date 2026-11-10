@@ -20,9 +20,9 @@ import SwiftInferCore
 /// suggestion must be currently discoverable — accepting a hash
 /// that no longer corresponds to a live suggestion errors out
 /// with `unknownIdentity` (clear failure beats silent acceptance).
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct AcceptInteraction: AsyncParsableCommand {
+    struct AcceptInteraction: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "accept-interaction",
@@ -71,7 +71,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             let directory = try TargetDirectory.resolve(target)
             try Self.run(

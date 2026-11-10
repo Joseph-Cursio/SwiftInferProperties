@@ -16,14 +16,14 @@ public struct ScaffoldOutcome: Equatable {
     }
 }
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
     /// `swift-infer scaffold` — emit best-effort `gen()` stubs for types that
     /// can't be fully auto-derived. Slots PropertyLawCore can derive
     /// (raw / composite / nested / known value / typealias) are filled; the
     /// rest are left as `<#Generator<T>#>` placeholders for the developer.
     /// Read-only over source; writes only the opt-in scaffold file.
-    public struct Scaffold: AsyncParsableCommand {
+    struct Scaffold: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "scaffold",
@@ -56,7 +56,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let directory = try TargetDirectory.resolveScan(target: target, sources: sources)
             let outcome = try Self.scaffold(
                 directory: directory,

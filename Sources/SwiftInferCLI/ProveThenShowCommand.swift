@@ -31,9 +31,9 @@ import SwiftInferCore
 /// been able to honour since V1.149 (it passes `-Xswiftc -enable-testing` on
 /// every build). Nothing needed building; the capability was already there and
 /// the flag was suppressing it.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct ProveThenShow: AsyncParsableCommand {
+    struct ProveThenShow: AsyncParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "prove-then-show",
@@ -190,7 +190,7 @@ extension SwiftInferCommand {
                     Data("warning: unknown --surface '\(surface)'; using algebraic\n".utf8)
                 )
             }
-            try await runAlgebraic(survey: survey)
+            try runAlgebraic(survey: survey)
         }
 
         /// Pre-verify tier per identity hash, read back off the index written in step 1.
@@ -226,7 +226,7 @@ extension SwiftInferCommand {
             return tiers
         }
 
-        private func runAlgebraic(survey: ResolvedSurvey) async throws {
+        private func runAlgebraic(survey: ResolvedSurvey) throws {
             let workingDirectory = survey.directory
             let target = survey.target
 
@@ -265,7 +265,7 @@ extension SwiftInferCommand {
             // 2. Prove — run the survey quietly (no JSON stream); keep the
             //    live records (they carry the Unverifiable outcome that the
             //    persisted evidence collapses away).
-            let records = try await SwiftInferCommand.Verify.runAllFromIndex(
+            let records = try SwiftInferCommand.Verify.runAllFromIndex(
                 indexPathOverride: nil,
                 budgetString: budget,
                 workingDirectory: workingDirectory,

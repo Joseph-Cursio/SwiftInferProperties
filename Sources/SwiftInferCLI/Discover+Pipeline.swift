@@ -14,8 +14,8 @@ extension SwiftInferCommand.Discover {
 
     public static func collectVisibleSuggestions(
         directory: URL,
-        includePossible: Bool? = nil,
-        docstringAdvice: Bool? = nil,
+        includePossible: SettingOverride = .notGiven,
+        docstringAdvice: SettingOverride = .notGiven,
         explicitVocabularyPath: URL? = nil,
         explicitConfigPath: URL? = nil,
         explicitTestDirectory: URL? = nil,

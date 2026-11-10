@@ -36,7 +36,7 @@ import Testing
 struct AlgebraicSurveyCorpusMeasuredTests {
 
     @Test("curated corpus verifies six measured families (12 bothPass + 4 defaultFails)")
-    func measuredAlgebraicSplits() async throws {
+    func measuredAlgebraicSplits() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-survey-corpus")
             .appendingPathComponent(UUID().uuidString)
@@ -51,7 +51,7 @@ struct AlgebraicSurveyCorpusMeasuredTests {
 
         // Reindexes the corpus on demand, then surveys each pick by
         // path-depending on the corpus + importing its module.
-        try await SwiftInferCommand.Verify.runAllFromIndex(
+        try SwiftInferCommand.Verify.runAllFromIndex(
             indexPathOverride: nil,
             budgetString: "small",
             workingDirectory: root,

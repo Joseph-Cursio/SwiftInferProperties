@@ -3,13 +3,13 @@ import SwiftInferCore
 /// Stub emitters for `codable-round-trip`, `binary-idempotence` and `dual-style-consistency` —
 /// laws `verify` composes (`StrategistDispatchEmitter+CodableRoundTrip`, `+AlgebraicLaws`,
 /// `+DualStyle`) and the accept path never wrote. Each states the same law as its composer.
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// `decode(encode(x)) == x` through `JSONEncoder`/`JSONDecoder`. A codec that throws on a
     /// value it produced fails the law too: the property throws, and the check records it — the
     /// shape of the one real defect class this template has found (a decoder rejecting its own
     /// encoder's output).
-    public static func codableRoundTrip(typeName: String, seed: SamplingSeed.Value, generator: String) -> String {
+    static func codableRoundTrip(typeName: String, seed: SamplingSeed.Value, generator: String) -> String {
         let body = "let decoded = try JSONDecoder().decode(\(typeName).self, from: try JSONEncoder().encode(value)); "
             + "return decoded == value"
         return makeTestStub(
@@ -23,7 +23,7 @@ extension LiftedTestEmitter {
     }
 
     /// `op(x, x) == x` — combining a value with itself changes nothing (`union`, `max`, `merge`).
-    public static func binaryIdempotence(
+    static func binaryIdempotence(
         callee: CalleeReference,
         typeName: String,
         seed: SamplingSeed.Value,
@@ -49,7 +49,7 @@ extension LiftedTestEmitter {
     }
 
     /// The two halves of a dual-style pair: `sorted()` / `sort()`, or `union(_:)` / `formUnion(_:)`.
-    public struct DualStylePair: Sendable {
+    struct DualStylePair: Sendable {
         public let nonMutating: CalleeReference
         public let mutating: CalleeReference
         /// Whether each half takes one operand beside the receiver (the `union` shape).
@@ -70,7 +70,7 @@ extension LiftedTestEmitter {
     /// values — `union` and `symmetricDifference` coincide on disjoint sets — and two full-range
     /// draws almost never overlap. Planted on a fixture, a `union` rewritten as
     /// `symmetricDifference` passed this law until the draw was narrowed.
-    public static func dualStyleConsistency(
+    static func dualStyleConsistency(
         _ pair: DualStylePair,
         typeName: String,
         seed: SamplingSeed.Value,

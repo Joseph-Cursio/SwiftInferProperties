@@ -36,7 +36,7 @@ extension SwiftInferCommand.Verify {
         corpusModuleName: String? = nil,
         emitRegression: Bool = false,
         quiet: Bool = false
-    ) async throws -> [SurveyRecord] {
+    ) throws -> [SurveyRecord] {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
         let index = try loadIndex(
@@ -68,7 +68,7 @@ extension SwiftInferCommand.Verify {
             allShapes: index.typeShapes,
             sourceFileByTypeName: index.sourceFileByTypeName
         )
-        return await runParallelSurvey(
+        return runParallelSurvey(
             entries: entries,
             packageRoot: packageRoot,
             parallelism: parallelism,
@@ -149,7 +149,7 @@ extension SwiftInferCommand.Verify {
         config: SurveyConfig,
         quiet: Bool = false,
         persistEvidence: Bool = true
-    ) async -> [SurveyRecord] {
+    ) -> [SurveyRecord] {
         // `parallelism` no longer schedules concurrent BUILDS — see
         // `SharedVerifierPackage`. Every stub now lives in one package, so the four
         // dependencies are resolved and compiled once instead of once per

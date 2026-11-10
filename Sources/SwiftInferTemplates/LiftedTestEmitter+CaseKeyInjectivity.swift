@@ -18,7 +18,7 @@ import SwiftInferCore
 /// raw value would not compile for it. Every admitted type's description is injective (two
 /// distinct `Int`s never describe alike), so describing first decides distinctness exactly and
 /// compiles for all seven.
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// Emit a `@Test` asserting that `member` takes a distinct value on every case of `enumType`.
     ///
@@ -26,7 +26,7 @@ extension LiftedTestEmitter {
     ///   - enumType: the `CaseIterable` enum, qualified as a test must spell it.
     ///   - member: the zero-argument instance member — a computed property or a method; its
     ///     `isolation` becomes the test's global actor, since the loop reads it synchronously.
-    public static func caseKeyInjectivity(enumType: String, member: CalleeReference) -> String {
+    static func caseKeyInjectivity(enumType: String, member: CalleeReference) -> String {
         let key = member.call("$0")
         let actor = member.isolation.map { "@\($0) " } ?? ""
         let subject = "\(enumType).\(member.bareName)"

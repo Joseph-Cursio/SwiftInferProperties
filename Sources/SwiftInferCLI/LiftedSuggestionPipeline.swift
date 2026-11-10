@@ -39,7 +39,7 @@ public enum LiftedSuggestionPipeline {
     /// Tuple shape used by `promote(...)` to pair each input lifted record
     /// with its post-recovery `Suggestion`. Named so the `.map` closure
     /// stays under SwiftLint's 120-char line cap.
-    fileprivate typealias LiftedPair = (lifted: LiftedSuggestion, suggestion: Suggestion)
+    private typealias LiftedPair = (lifted: LiftedSuggestion, suggestion: Suggestion)
 
     /// Promote each LiftedSuggestion, apply GeneratorSelection,
     /// suppress entries whose key matches a TemplateEngine suggestion,

@@ -19,7 +19,7 @@ struct DiscoverPipelineVerifyEvidenceTests {
 
     private func collect(
         _ directory: URL,
-        includePossible: Bool? = nil,
+        includePossible: SettingOverride = .notGiven,
         evidence: [String: VerifyEvidence] = [:]
     ) throws -> [Suggestion] {
         try SwiftInferCommand.Discover.collectVisibleSuggestions(

@@ -23,7 +23,7 @@ import Testing
 struct AlgebraicLawsVerifyMeasuredTests {
 
     @Test("involution / binary-idempotence / (multiplicative-)homomorphism each verify bothPass")
-    func measuredLawsVerifyBothPass() async throws {
+    func measuredLawsVerifyBothPass() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("algebraic-laws-corpus")
             .appendingPathComponent(UUID().uuidString)
@@ -36,7 +36,7 @@ struct AlgebraicLawsVerifyMeasuredTests {
             into: parent
         )
 
-        try await SwiftInferCommand.Verify.runAllFromIndex(
+        try SwiftInferCommand.Verify.runAllFromIndex(
             indexPathOverride: nil,
             budgetString: "small",
             workingDirectory: root,

@@ -24,9 +24,9 @@ import SwiftInferCore
 /// `discover` / `drift` / `accept`. Nothing in those pipelines changes.
 /// Verified suggestions don't flow into `decisions.json` in v1.42 — the
 /// accept-flow integration is deferred to Phase 4 of the rollout.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct Verify: AsyncParsableCommand {
+    struct Verify: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "verify",
@@ -161,7 +161,7 @@ extension SwiftInferCommand {
         /// `Tests/Generated/`). `--no-emit-regression` / `--emit-regression`
         /// override per run.
         @Flag(
-            inversion: .prefixedNo,
+            exclusivity: .chooseLast,
             help: """
             Auto-generate a focused regression test from the minimal \
             counterexample when verify finds one. Written to \
@@ -169,7 +169,7 @@ extension SwiftInferCommand {
             --suggestion, off for --all-from-index.
             """
         )
-        public var emitRegression: Bool?
+        public var emitRegression: EmitRegressionFlag?
 
         /// V1.143.B — corpus-first regression gate. Re-checks every recorded
         /// counterexample in `.swiftinfer/verify-corpus.json` (re-verifying each
@@ -213,10 +213,11 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            let regression = SettingOverride(emitRegression, enabledBy: .emitRegression)
             if replayOnly {
-                try await Self.runReplayOnly(
+                try Self.runReplayOnly(
                     indexPathOverride: indexPath,
                     budgetString: budget,
                     workingDirectory: workingDirectory
@@ -229,7 +230,7 @@ extension SwiftInferCommand {
                         reason: "--suggestion and --all-from-index are mutually exclusive"
                     )
                 }
-                try await Self.runAllFromIndex(
+                try Self.runAllFromIndex(
                     persistEvidence: persistEvidence,
                     scanDependencies: scanDependencies,
                     indexPathOverride: indexPath,
@@ -238,7 +239,7 @@ extension SwiftInferCommand {
                     maxParallel: maxParallel,
                     templateFilter: template,
                     corpusModuleName: corpusModule,
-                    emitRegression: emitRegression ?? false
+                    emitRegression: regression.resolved(otherwise: false)
                 )
                 return
             }
@@ -252,7 +253,7 @@ extension SwiftInferCommand {
                 indexPathOverride: indexPath,
                 budgetString: budget,
                 workingDirectory: workingDirectory,
-                emitRegression: emitRegression ?? true,
+                emitRegression: regression.resolved(otherwise: true),
                 target: target
             )
             // `.rendered`, not the value itself — printing the struct compiles fine and emits a

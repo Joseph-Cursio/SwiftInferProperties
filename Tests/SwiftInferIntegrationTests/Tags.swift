@@ -29,6 +29,6 @@ import Testing
 /// All 21 V1.42.D / V1.44.E / V1.45.E / V1.46.D / V1.47.G / V1.48.H /
 /// V1.49.F subprocess integration tests in
 /// `VerifyPipelineIntegrationTests` carry this tag at the suite level.
-extension Tag {
-    @Tag public static var subprocess: Self
+public extension Tag {
+    @Tag static var subprocess: Self
 }

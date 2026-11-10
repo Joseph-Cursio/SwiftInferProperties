@@ -19,14 +19,14 @@ import SwiftSyntax
 /// reference in its own right, and so is a key-path subscript component's argument (`index`
 /// in `\.[index]`). Neither is answered `true` here, so a visitor that skips name-only
 /// positions still visits both.
-extension DeclReferenceExprSyntax {
+public extension DeclReferenceExprSyntax {
 
     /// Whether this is the name of a key-path property component: `name` in `\.name`,
     /// `\Job.name`, and both `owner` and `name` in `\.owner.name`.
     ///
     /// A subscript component's argument is not one. `index` in `\.[index]` is evaluated when
     /// the key path is formed, which makes it a read.
-    public var isKeyPathComponentName: Bool {
+    var isKeyPathComponentName: Bool {
         parent?.as(KeyPathPropertyComponentSyntax.self)?.declName.id == id
     }
 
@@ -38,14 +38,14 @@ extension DeclReferenceExprSyntax {
     /// even through `self`. A reader keyed on stored properties would want `self.name` kept, and
     /// `self?.name`, `self!.name` and `(self).name` with it; none exists yet, so that question is
     /// not answered here.
-    public var isMemberName: Bool {
+    var isMemberName: Bool {
         guard let member = parent?.as(MemberAccessExprSyntax.self) else { return false }
         return member.declName.id == id
     }
 
     /// Whether this is the name of a member access with no base at all: `red` in `.red`, whose
     /// type comes from the context.
-    public var isImplicitMemberName: Bool {
+    var isImplicitMemberName: Bool {
         guard let member = parent?.as(MemberAccessExprSyntax.self), member.declName.id == id else {
             return false
         }
@@ -55,7 +55,7 @@ extension DeclReferenceExprSyntax {
     /// Whether this is a name-only position: a key-path component's name or a member name. A
     /// visitor collecting references to bindings skips these and keeps every other
     /// `DeclReferenceExprSyntax`.
-    public var isNameOnlyPosition: Bool {
+    var isNameOnlyPosition: Bool {
         isKeyPathComponentName || isMemberName
     }
 }

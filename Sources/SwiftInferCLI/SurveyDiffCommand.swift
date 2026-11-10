@@ -7,9 +7,9 @@ import Foundation
 /// Read `RetainedSurveyRun`'s doc for why the retained artifact is the survey stream rather
 /// than `.swiftinfer/verify-evidence.json`, and `SurveyRunDiff`'s for why a change of decline
 /// *cause* inside one bucket is reported as loudly as a change of bucket.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct SurveyDiff: ParsableCommand {
+    struct SurveyDiff: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "survey-diff",

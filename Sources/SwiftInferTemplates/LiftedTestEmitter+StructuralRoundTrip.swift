@@ -1,6 +1,6 @@
 import SwiftInferCore
 
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// A scaffold for `structural-round-trip` (#646): the parser, named and spelled, and an
     /// `Issue.record` until a person writes the printer and the values.
@@ -13,7 +13,7 @@ extension LiftedTestEmitter {
     ///   - parser: the parse function, as a test spells a call to it.
     ///   - structure: the type it returns.
     ///   - isThrowing: whether the call needs `try`.
-    public static func structuralRoundTripScaffold(
+    static func structuralRoundTripScaffold(
         parser: CalleeReference,
         structure: String,
         isThrowing: Bool

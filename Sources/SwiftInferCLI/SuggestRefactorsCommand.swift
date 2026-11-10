@@ -19,9 +19,9 @@ public struct SuggestRefactorsOutcome: Equatable {
     public let clusterCount: Int
 }
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct SuggestRefactors: AsyncParsableCommand {
+    struct SuggestRefactors: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "suggest-refactors",
@@ -93,7 +93,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async {
+        public func run() {
             if speculative {
                 runSpeculative()
                 return
@@ -128,7 +128,7 @@ extension SwiftInferCommand {
         }
 
         /// Pure-function surface so unit tests can drive the subcommand
-        /// without the AsyncParsableCommand shell.
+        /// without the ParsableCommand shell.
         static func runSuggestRefactors(
             directoryOverride: String?,
             explicitIndexPath: String?,

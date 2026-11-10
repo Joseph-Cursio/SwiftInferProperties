@@ -10,9 +10,9 @@ import SwiftInferCore
 ///
 /// This is universal engine knowledge, not per-project data: it never reads
 /// or writes a project's `.swiftinfer/`.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct KnownProperties: AsyncParsableCommand {
+    struct KnownProperties: AsyncParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "known-properties",

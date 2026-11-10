@@ -71,7 +71,7 @@ struct HostBuildConfiguration: BuildConfiguration {
 
     func isCustomConditionSet(name: String) -> Bool {
         if name == "DEBUG" { return true }
-        return conditions?.isSet(name) ?? unknown
+        return conditions?.state(of: name).isSet(otherwise: unknown) ?? unknown
     }
 
     func hasFeature(name _: String) -> Bool { unknown }

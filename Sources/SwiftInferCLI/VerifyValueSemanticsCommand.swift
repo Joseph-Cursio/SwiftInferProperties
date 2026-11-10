@@ -2,14 +2,14 @@ import ArgumentParser
 import Foundation
 import SwiftInferCore
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
     /// `swift-infer verify-value-semantics` — discover value-semantics
     /// candidates under `Sources/<target>/` and verify each against the kit's
     /// copy-mutate-compare law, reporting **confirmed leaks with a minimal
     /// reproduction**. Slice 5a (self-contained packaging); see
     /// `docs/archive/valuesemantic-build-plan.md` §11.
-    public struct VerifyValueSemantics: AsyncParsableCommand {
+    struct VerifyValueSemantics: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "verify-value-semantics",
@@ -60,7 +60,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let directory = try TargetDirectory.resolveScan(target: target, sources: sources)
             // The module name labels the report and names the module the generated harness
             // builds. `--sources` has no module to read, so it takes the directory's name.

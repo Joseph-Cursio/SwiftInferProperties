@@ -13,7 +13,7 @@ public extension TemplateRegistry {
     /// shape; the M8.4.a CLI uses `discoverArtifacts` so it can thread
     /// the inverse pairs into the orchestrator without a second corpus
     /// scan.
-    public struct DiscoverArtifacts: Sendable {
+    struct DiscoverArtifacts: Sendable {
         public let suggestions: [Suggestion]
         public let inverseElementPairs: [InverseElementPair]
 

@@ -30,9 +30,9 @@ import SwiftInferTemplates
 ///     two stages, not one).
 /// Folding into `discover` later, if desired, is non-breaking — the
 /// hyphenated form can stay as an alias.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct DiscoverReducers: AsyncParsableCommand {
+    struct DiscoverReducers: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "discover-reducers",
@@ -79,14 +79,14 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let directory = try TargetDirectory.resolveScan(target: target, sources: sources)
             let rendered = try Self.runPipeline(directory: directory, pinRaw: reducer)
             print(rendered, terminator: "")
         }
 
         /// V2.0 M1.A — pure-ish pipeline entry. Tests drive it without
-        /// going through the AsyncParsableCommand shell. Returns the
+        /// going through the ParsableCommand shell. Returns the
         /// rendered summary string; the CLI's `run()` just prints it.
         ///
         /// V2.0 M1.C — extended with an optional `--reducer` pin

@@ -17,11 +17,11 @@ import SwiftInferTemplates
 /// infix + 8-hex-char SHA256 of the counterexample source).
 ///
 /// The pure-function engine lives in `ConvertCounterexampleEngine`;
-/// this struct is just the AsyncParsableCommand shell that reads
+/// this struct is just the ParsableCommand shell that reads
 /// `@Option` values and forwards them.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct ConvertCounterexample: AsyncParsableCommand {
+    struct ConvertCounterexample: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "convert-counterexample",
@@ -79,7 +79,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async throws {
+        public func run() throws {
             let args = ConvertCounterexampleEngine.Args(
                 template: template,
                 callee: callee,

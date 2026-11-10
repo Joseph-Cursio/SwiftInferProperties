@@ -9,14 +9,14 @@ import SwiftInferTestLifter
 /// Split out of `Discover+Pipeline.swift` when that file crossed SwiftLint's 400-line cap
 /// on 2026-08-01. The struct is the natural seam: it is a pure data record with no
 /// behaviour, so moving it leaves the pipeline file a list of stages and nothing else.
-extension SwiftInferCommand.Discover {
+public extension SwiftInferCommand.Discover {
 
     /// Tier-filtered + config-aware suggestion collection. Shared
     /// by `Discover.run` (renderer / interactive / update-baseline)
     /// and `DriftCommand.run` (M6.5) so the two subcommands stay
     /// in lockstep — anything `discover` would surface is what
     /// `drift` diffs against the baseline.
-    public struct PipelineResult {
+    struct PipelineResult {
         /// `var` so `replacingSuggestions(_:)` can narrow the set without rebuilding all
         /// fifteen stored properties — value semantics are unchanged.
         public var suggestions: [Suggestion]

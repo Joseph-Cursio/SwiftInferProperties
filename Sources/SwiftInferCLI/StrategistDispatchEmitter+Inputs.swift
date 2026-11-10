@@ -10,11 +10,11 @@ import SwiftInferCore
 /// is: a free function is applied directly, a mutating method needs a `var`
 /// copy, a self-returning method chains on the receiver. Getting this wrong
 /// does not produce a wrong verdict — it produces a stub that will not compile.
-extension StrategistDispatchEmitter {
+public extension StrategistDispatchEmitter {
 
     /// Inputs to the emitter — carrier + typeShape + template +
     /// per-template function call expressions.
-    public struct Inputs: Equatable, Sendable {
+    struct Inputs: Equatable, Sendable {
         /// Bound carrier name — already passed through
         /// `GenericBindingResolver.bound(_:)` so generic associated
         /// types are resolved before they reach the strategist.

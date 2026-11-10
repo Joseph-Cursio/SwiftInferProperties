@@ -33,9 +33,9 @@ import SwiftInferCore
 ///
 /// **Opt-in posture.** Same as `verify`: a separate human gesture
 /// from `discover` / `drift` / `accept`. Nothing else changes.
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
-    public struct AcceptCheck: AsyncParsableCommand {
+    struct AcceptCheck: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "accept-check",
@@ -94,7 +94,7 @@ extension SwiftInferCommand {
 
         public init() { /* no-op */ }
 
-        public func run() async {
+        public func run() {
             let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             let rendered = Self.runPipeline(
                 decisionsPathOverride: decisions,
@@ -107,7 +107,7 @@ extension SwiftInferCommand {
         }
 
         /// V1.72.A — pure-ish pipeline entry. Tests drive it without
-        /// going through the AsyncParsableCommand shell. Returns the
+        /// going through the ParsableCommand shell. Returns the
         /// rendered summary string; the CLI's `run()` just prints it.
         ///
         /// Pipeline steps in order:

@@ -7,10 +7,10 @@ import SwiftInferCore
 /// shape: draw the value, copy it, apply the mutator to the copy, and compare what it left. The
 /// seed names which argument that is (`SeedManifest.Seed.mutates`); the accept path turns it into
 /// `mutatedIndex`.
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// Which law to state over what a mutator leaves behind.
-    public enum MutatorLaw: Sendable, Equatable {
+    enum MutatorLaw: Sendable, Equatable {
         /// Two copies given the same inputs end equal — `var a = x; f(&a); var b = x; f(&b); a == b`.
         /// Tautological over a pure mutator, as `f(x) == f(x)` is over a pure function.
         case determinism
@@ -22,7 +22,7 @@ extension LiftedTestEmitter {
     }
 
     /// How a mutator law calls its subject.
-    public struct MutatorSubject: Sendable, Equatable {
+    struct MutatorSubject: Sendable, Equatable {
         public let callee: CalleeReference
         /// One generator per drawn argument, the receiver first for an instance method.
         public let generators: [String]
@@ -55,7 +55,7 @@ extension LiftedTestEmitter {
 
     /// The stub for `law` over `subject`, drawing one value per argument and mutating copies of
     /// the one the subject writes.
-    public static func mutatorLaw(_ law: MutatorLaw, subject: MutatorSubject, seed: SamplingSeed.Value) -> String {
+    static func mutatorLaw(_ law: MutatorLaw, subject: MutatorSubject, seed: SamplingSeed.Value) -> String {
         let callee = subject.callee
         let generators = subject.generators
         let mutatedIndex = subject.mutatedIndex

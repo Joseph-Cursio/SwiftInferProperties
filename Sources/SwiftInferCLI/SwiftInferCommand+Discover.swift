@@ -24,7 +24,7 @@ extension SwiftInferCommand.Discover {
         try TargetDirectory.resolveScan(target: target, sources: sources)
     }
 
-    public func run() async throws {
+    public func run() throws {
         // Infers the scope when neither flag is given, rather than erroring — the lint→infer
         // hop's first-attempt failure. Only `discover` does this; see
         // `TargetDirectory.resolveScanInferring` for why the other scanning commands keep the
@@ -40,7 +40,7 @@ extension SwiftInferCommand.Discover {
         let seedManifest = try seeds.map { try Self.loadSeedManifest(at: URL(fileURLWithPath: $0)) }
         try Self.run(
             directory: directory,
-            includePossible: includePossible,
+            includePossible: SettingOverride(includePossible, enabledBy: .includePossible),
             explicitVocabularyPath: explicitVocabularyPath,
             explicitConfigPath: explicitConfigPath,
             explicitTestDirectory: explicitTestDirPath,
@@ -48,7 +48,7 @@ extension SwiftInferCommand.Discover {
             packsOverride: packs,
             statsOnly: statsOnly,
             effectAnnotations: effectAnnotations,
-            docstringAdvice: docstringAdvice,
+            docstringAdvice: SettingOverride(docstringAdvice, enabledBy: .docstringAdvice),
             dryRun: dryRun,
             interactive: interactive,
             updateBaseline: updateBaseline,
@@ -63,15 +63,15 @@ extension SwiftInferCommand.Discover {
     /// Pure pipeline — exposed at the type level so tests exercise
     /// discovery without going through ArgumentParser or stdout.
     ///
-    /// Precedence per the M2 plan: CLI > config > defaults. A `nil`
-    /// `includePossible` means "no CLI flag passed; let config (or
-    /// the default) decide". A non-nil value wins over both. Same
+    /// Precedence per the M2 plan: CLI > config > defaults. A
+    /// `.notGiven` `includePossible` means "no CLI flag passed; let config
+    /// (or the default) decide". An explicit value wins over both. Same
     /// shape for `explicitVocabularyPath`: when nil, the CLI looks
     /// at `[discover].vocabularyPath` in config; when also unset
     /// there, falls back to the conventional walk-up location.
     public static func run(
         directory: URL,
-        includePossible: Bool? = nil,
+        includePossible: SettingOverride = .notGiven,
         explicitVocabularyPath: URL? = nil,
         explicitConfigPath: URL? = nil,
         explicitTestDirectory: URL? = nil,
@@ -79,7 +79,7 @@ extension SwiftInferCommand.Discover {
         packsOverride: String? = nil,
         statsOnly: Bool = false,
         effectAnnotations: Bool = false,
-        docstringAdvice: Bool? = nil,
+        docstringAdvice: SettingOverride = .notGiven,
         dryRun: Bool = false,
         interactive: Bool = false,
         updateBaseline: Bool = false,

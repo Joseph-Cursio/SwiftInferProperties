@@ -58,12 +58,12 @@ public struct SwiftInferCommand: AsyncParsableCommand {
     public init() { /* no-op */ }
 }
 
-extension SwiftInferCommand {
+public extension SwiftInferCommand {
 
     /// `swift-infer discover` — scan a target for inferred property
     /// candidates. M1.3 wires the idempotence template; M1.4 wires
     /// round-trip + cross-function pairing.
-    public struct Discover: AsyncParsableCommand {
+    struct Discover: ParsableCommand {
 
         public static let configuration = CommandConfiguration(
             commandName: "discover",
@@ -92,8 +92,7 @@ extension SwiftInferCommand {
         public var sources: String?
 
         @Flag(
-            name: .long,
-            inversion: .prefixedNo,
+            exclusivity: .chooseLast,
             help: """
             Also show the below-cut CONJECTURES — `round-trip`, \
             `idempotence`, `monotonicity` and the like, which a correct \
@@ -107,7 +106,7 @@ extension SwiftInferCommand {
             .swiftinfer/config.toml setting.
             """
         )
-        public var includePossible: Bool?
+        public var includePossible: IncludePossibleFlag?
 
         @Flag(
             name: .long,
@@ -203,8 +202,7 @@ extension SwiftInferCommand {
         public var effectAnnotations: Bool = false
 
         @Flag(
-            name: .long,
-            inversion: .prefixedNo,
+            exclusivity: .chooseLast,
             help: """
             Append a "Reference definitions from docstrings" advisory section. For \
             a documented function whose doc states a checkable contract, it pairs \
@@ -226,7 +224,7 @@ extension SwiftInferCommand {
             separate from property-test suggestions and never enters accept / verify.
             """
         )
-        public var docstringAdvice: Bool?
+        public var docstringAdvice: DocstringAdviceFlag?
 
         @Flag(
             name: .long,
