@@ -79,9 +79,9 @@ struct LiftedInversePairOrderingTests {
     func distinctPairsAreOrdered() {
         // The defect, stated directly: the first two differ only in the forward half's column, and
         // the old comparator answered false in both directions — equivalent, order unpinned.
-        let pairs = pairs
-        for (lhsIndex, lhs) in pairs.enumerated() {
-            for rhs in pairs.dropFirst(lhsIndex + 1) {
+        let candidates = pairs
+        for (lhsIndex, lhs) in candidates.enumerated() {
+            for rhs in candidates.dropFirst(lhsIndex + 1) {
                 let forward = InverseLiftedPairing.lessThan(lhs, rhs)
                 let backward = InverseLiftedPairing.lessThan(rhs, lhs)
                 #expect(forward != backward, "distinct pairs compared equivalent")

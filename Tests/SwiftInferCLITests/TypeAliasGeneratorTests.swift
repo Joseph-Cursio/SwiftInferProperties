@@ -53,8 +53,8 @@ struct TypeAliasGeneratorTests {
     @Test("an ambiguous bare alias still resolves inside the type that declares it")
     func scopedAliasResolves() throws {
         #expect(Self.ambiguous.typeAliases["Word"] == nil)
-        let shapes = TypeShapeBuilder.shapes(from: Self.ambiguous.typeDecls)
-        let generate = InteractiveTriage.projectTypeGenerator(types: shapes, aliases: Self.ambiguous.typeAliases)
+        let declShapes = TypeShapeBuilder.shapes(from: Self.ambiguous.typeDecls)
+        let generate = InteractiveTriage.projectTypeGenerator(types: declShapes, aliases: Self.ambiguous.typeAliases)
         let unsigned = try #require(generate("BigUInt"))
         #expect(unsigned.contains("BigUInt(words:"), "got: \(unsigned)")
         let signed = try #require(generate("BigInt"))

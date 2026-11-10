@@ -165,14 +165,14 @@ struct DiscoverDocstringAdviceTests {
 
     @Test("a comparator gets an ordering-key oracle — the SWO law can't say which ordering")
     func comparatorOrderingKey() throws {
-        let source = """
+        let fixture = """
         struct Entry { let size: Int; let name: String }
         /// Orders entries by size ascending, then by name in ascending lexicographic order.
         func precedes(_ lhs: Entry, _ rhs: Entry) -> Bool {
             lhs.size != rhs.size ? lhs.size < rhs.size : lhs.name.count < rhs.name.count
         }
         """
-        let directory = try writeDPFixture(name: "DocAdviceComparator", contents: source)
+        let directory = try writeDPFixture(name: "DocAdviceComparator", contents: fixture)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
@@ -199,7 +199,7 @@ struct DiscoverDocstringAdviceTests {
     /// which no tuple can be. The `Int`-returning neighbour is the control: its note is unchanged.
     @Test("a tuple-returning seed's reference oracle declares the tuple and says what it needs")
     func tupleReturningFallbackContract() throws {
-        let source = """
+        let fixture = """
         /// The clipped text never exceeds the byte budget.
         func clip(_ text: String, _ budget: Int) -> (text: String, didTruncate: Bool) {
             (String(text.prefix(budget)), text.count > budget)
@@ -208,7 +208,7 @@ struct DiscoverDocstringAdviceTests {
         /// Delay is capped at the ceiling and never negative.
         func backoffDelay(_ attempt: Int, _ ceiling: Int) -> Int { min(max(attempt * attempt, 0), ceiling) }
         """
-        let directory = try writeDPFixture(name: "DocAdviceTuple", contents: source)
+        let directory = try writeDPFixture(name: "DocAdviceTuple", contents: fixture)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(

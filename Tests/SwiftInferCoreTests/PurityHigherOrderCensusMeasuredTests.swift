@@ -107,11 +107,11 @@ struct PurityHigherOrderCensusMeasuredTests {
     /// wrong is which way the analyzer currently errs.
     @Test("a function-typed parameter does not qualify the verdict at all")
     func aFunctionTypedParameterIsInvisible() {
-        let conditional = "func f(_ xs: [Int], _ t: (Int) -> Int) -> [Int] { xs.map(t) }"
+        let conditionalSource = "func f(_ xs: [Int], _ t: (Int) -> Int) -> [Int] { xs.map(t) }"
         let unconditional = "func f(_ xs: [Int]) -> [Int] { xs.map { $0 } }"
-        #expect(Self.verdict(ofFirstFunctionIn: conditional) == .pure)
+        #expect(Self.verdict(ofFirstFunctionIn: conditionalSource) == .pure)
         #expect(
-            Self.verdict(ofFirstFunctionIn: conditional) == Self.verdict(ofFirstFunctionIn: unconditional),
+            Self.verdict(ofFirstFunctionIn: conditionalSource) == Self.verdict(ofFirstFunctionIn: unconditional),
             "the conditional and unconditional forms are indistinguishable in the verdict"
         )
     }

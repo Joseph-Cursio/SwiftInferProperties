@@ -50,8 +50,8 @@ struct StructuralRoundTripTemplateTests {
 
     /// `parse(_:) -> Self` parses into its own declaring type.
     @Test func selfResolvesToTheDeclaringType() throws {
-        let parser = Self.function("parse", on: "Netrc", returns: "Self")
-        let subject = try #require(StructuralRoundTripSubject.candidates(in: [parser]).first)
+        let netrcParser = Self.function("parse", on: "Netrc", returns: "Self")
+        let subject = try #require(StructuralRoundTripSubject.candidates(in: [netrcParser]).first)
         #expect(subject.structure == "Netrc")
     }
 
@@ -60,12 +60,12 @@ struct StructuralRoundTripTemplateTests {
     /// **A type something prints is `round-trip`'s and `normal-form`'s.** SwiftFormatRuleStudio's
     /// `SwiftFormatConfig.parse(_:) -> Self` has `serialized()`, and is not proposed.
     @Test func aTypeWithAPrinterIsLeftToTheRoundTripTemplates() {
-        let parser = Self.function("parse", on: "SwiftFormatConfig", returns: "Self")
+        let configParser = Self.function("parse", on: "SwiftFormatConfig", returns: "Self")
         let printer = Self.function(
             "serialized", on: "SwiftFormatConfig", isStatic: false, parameter: nil, returns: "String"
         )
-        #expect(StructuralRoundTripSubject.candidates(in: [parser, printer]).isEmpty)
-        #expect(StructuralRoundTripSubject.candidates(in: [parser]).count == 1)
+        #expect(StructuralRoundTripSubject.candidates(in: [configParser, printer]).isEmpty)
+        #expect(StructuralRoundTripSubject.candidates(in: [configParser]).count == 1)
     }
 
     @Test("a result with no layout of its own is declined", arguments: [

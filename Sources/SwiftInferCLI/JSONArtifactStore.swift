@@ -90,16 +90,16 @@ extension InteractionDecisions: JSONArtifact {
 /// Swift forbids static stored properties in a generic type regardless.
 enum CanonicalJSON {
     static let encoder: JSONEncoder = {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
-        return encoder
+        let configured = JSONEncoder()
+        configured.outputFormatting = [.prettyPrinted, .sortedKeys]
+        configured.dateEncodingStrategy = .iso8601
+        return configured
     }()
 
     static let decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return decoder
+        let configured = JSONDecoder()
+        configured.dateDecodingStrategy = .iso8601
+        return configured
     }()
 }
 

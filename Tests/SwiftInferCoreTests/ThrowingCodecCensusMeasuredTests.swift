@@ -70,15 +70,15 @@ struct ThrowingCodecCensusMeasuredTests {
     /// The type name enclosing a node, or `nil` at file scope.
     static func enclosingTypeName(of node: some SyntaxProtocol) -> String? {
         var current: Syntax? = Syntax(node).parent
-        while let node = current {
-            if let decl = node.as(StructDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(ClassDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(EnumDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(ActorDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(ExtensionDeclSyntax.self) {
+        while let ancestor = current {
+            if let decl = ancestor.as(StructDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(ClassDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(EnumDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(ActorDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(ExtensionDeclSyntax.self) {
                 return decl.extendedType.trimmedDescription
             }
-            current = node.parent
+            current = ancestor.parent
         }
         return nil
     }

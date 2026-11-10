@@ -228,7 +228,7 @@ public extension SwiftInferCommand {
 
         private func runAlgebraic(survey: ResolvedSurvey) throws {
             let workingDirectory = survey.directory
-            let target = survey.target
+            let surveyTarget = survey.target
 
             // 1. Index WITH Possible — the whole point is to test the
             //    low-confidence picks the default view hides.
@@ -239,7 +239,7 @@ public extension SwiftInferCommand {
             let scanDirectory = TargetIsolation.sourceDirectory(
                 packageRoot: SwiftInferCommand.Verify
                     .findPackageRoot(startingFrom: workingDirectory) ?? workingDirectory,
-                targetName: target
+                targetName: surveyTarget
             )
             _ = try SwiftInferCommand.Index.performIndex(
                 IndexInputs(
@@ -250,7 +250,7 @@ public extension SwiftInferCommand {
                     explicitTestDirPath: nil,
                     packsOverride: nil,
                     dryRun: false,
-                    targetName: target,
+                    targetName: surveyTarget,
                     workingDirectory: workingDirectory,
                     // Without this the dependency shape is never recorded, and a carrier
                     // the package does not declare declines `unsupported-carrier` — which
@@ -297,7 +297,7 @@ public extension SwiftInferCommand {
             survey: ResolvedSurvey
         ) {
             guard let retainRun else { return }
-            let target = survey.target
+            let surveyTarget = survey.target
             let packageRoot = SwiftInferCommand.Verify
                 .findPackageRoot(startingFrom: survey.directory) ?? survey.directory
             let run = RetainedSurveyRun.capturing(
@@ -308,8 +308,8 @@ public extension SwiftInferCommand {
                     // hand-type one, not the ability to say what an unusual arm was.
                     label: retainLabel
                         ?? survey.derivedLabel
-                        ?? "\(target) @ \(CorpusProvenance.describe(packageRoot))",
-                    target: target,
+                        ?? "\(surveyTarget) @ \(CorpusProvenance.describe(packageRoot))",
+                    target: surveyTarget,
                     packageRoot: packageRoot,
                     capturedAt: Date()
                 )

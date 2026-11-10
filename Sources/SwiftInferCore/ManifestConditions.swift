@@ -43,16 +43,16 @@ public struct ManifestConditions: Sendable, Equatable {
             grew = !Set(implied).isSubset(of: traits)
             traits.formUnion(implied)
         }
-        var set = traits
-        var unknown: Set<String> = []
+        var setNames = traits
+        var undecidedNames: Set<String> = []
         for define in collector.defines {
             switch define.state(enabledTraits: traits) {
-            case .set: set.insert(define.name)
-            case .undecided: unknown.insert(define.name)
+            case .set: setNames.insert(define.name)
+            case .undecided: undecidedNames.insert(define.name)
             case .unset: break
             }
         }
-        return Self(set: set, unknown: unknown.subtracting(set))
+        return Self(set: setNames, unknown: undecidedNames.subtracting(setNames))
     }
 }
 

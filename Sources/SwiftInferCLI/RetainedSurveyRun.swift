@@ -123,16 +123,12 @@ struct RetainedSurveyRun: Codable, Sendable {
         tiers: [String: Tier],
         context: Context
     ) -> Self {
-        let label = context.label
-        let target = context.target
-        let packageRoot = context.packageRoot
-        let capturedAt = context.capturedAt
-        return Self(
+        Self(
             schemaVersion: currentSchemaVersion,
-            label: label,
-            capturedAt: capturedAt,
-            target: target,
-            subjectRevision: CorpusProvenance.describe(packageRoot),
+            label: context.label,
+            capturedAt: context.capturedAt,
+            target: context.target,
+            subjectRevision: CorpusProvenance.describe(context.packageRoot),
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
             tiersByIdentity: tiers.mapValues { $0.rawValue },
             records: records

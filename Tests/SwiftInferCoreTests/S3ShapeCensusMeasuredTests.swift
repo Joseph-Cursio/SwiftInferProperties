@@ -185,7 +185,7 @@ struct S3ShapeCensusMeasuredTests {
                 .compactMap { $0 as? URL }
                 .filter { $0.pathExtension == "swift" && !Self.isExcluded($0) } ?? []
             // Two passes: the field index must exist before a return type can be looked up in it.
-            var scanned: [ScannedCorpus] = []
+            var scannedResults: [ScannedCorpus] = []
             var fieldsByType: [String: [PropertyLawCore.StoredMember]] = [:]
             for file in files {
                 guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
@@ -193,9 +193,9 @@ struct S3ShapeCensusMeasuredTests {
                 for decl in result.typeDecls where decl.storedMembers.isEmpty == false {
                     fieldsByType[decl.name, default: []].append(contentsOf: decl.storedMembers)
                 }
-                scanned.append(result)
+                scannedResults.append(result)
             }
-            for result in scanned {
+            for result in scannedResults {
                 for summary in result.summaries {
                     totalFunctions += 1
                     Self.classify(

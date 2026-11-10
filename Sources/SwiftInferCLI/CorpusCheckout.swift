@@ -117,11 +117,11 @@ struct CorpusStatus: Sendable {
     let pin: CorpusPin
 
     static func resolve(_ entry: CorpusManifest.Entry, repositoryRoot: URL) -> Self {
-        let checkout = CorpusCheckout.read(entry, repositoryRoot: repositoryRoot)
+        let entryCheckout = CorpusCheckout.read(entry, repositoryRoot: repositoryRoot)
         return Self(
             entry: entry,
-            checkout: checkout,
-            pin: CorpusPin.verdict(entry: entry, checkout: checkout)
+            checkout: entryCheckout,
+            pin: CorpusPin.verdict(entry: entry, checkout: entryCheckout)
         )
     }
 

@@ -68,39 +68,41 @@ public struct PackagePurity: Sendable {
     /// `forScan(of:)` with the parse injected, so a test can make the parses complete out of
     /// order and check the build order does not follow them.
     static func forScan(of directory: URL, parse: ([URL]) -> [SourceFileSyntax?]) -> Self {
-        let universe = ConstructionUniverse.universe(forScanOf: directory)
-        let members = universe.members
-        let parsed = parse(members.map(\.url))
-        var trees: [String: SourceFileSyntax] = [:]
+        let scanUniverse = ConstructionUniverse.universe(forScanOf: directory)
+        let universeMembers = scanUniverse.members
+        let parsed = parse(universeMembers.map(\.url))
+        var treesByKey: [String: SourceFileSyntax] = [:]
         var ordered: [SourceFileSyntax] = []
         var used: [String] = []
-        for (member, tree) in zip(members, parsed) {
+        for (member, tree) in zip(universeMembers, parsed) {
             // A universe file that cannot be read as strict UTF-8 cannot compile either, so it
             // declares no production type (the shared spec's amendment C); skipping it is not a
             // confident zero. A JUDGED file that cannot be read still throws — `FunctionScanner`
             // reads it again and reports the failure.
             guard let tree else { continue }
-            trees[member.key] = tree
+            treesByKey[member.key] = tree
             ordered.append(tree)
             used.append(member.relativePath)
         }
-        // In `members`' order, which is `ConstructionUniverse.buildOrder` — the shared order. The
+        // In `universeMembers`' order, which is `ConstructionUniverse.buildOrder` — the shared order. The
         // build walks every tree, so it gets the parse's stack (`LargeStackWorkers`).
         let facts = LargeStackWorkers.run { [ordered] in ConstructionFacts.build(from: ordered) }
         return Self(
-            root: universe.root,
+            root: scanUniverse.root,
             universe: used,
-            members: members.map(\.relativePath),
+            members: universeMembers.map(\.relativePath),
             coverage: Coverage(builtFor: directory),
             oracle: SoundPurity(constructionFacts: facts),
-            trees: trees
+            trees: treesByKey
         )
     }
 
     /// One source that is its own package — what a single-file scan is.
     public static func selfContained(_ tree: SourceFileSyntax) -> Self {
-        let oracle = SoundPurity(constructionFacts: .build(from: [tree]))
-        return Self(root: nil, universe: [], members: [], coverage: Coverage(builtFor: nil), oracle: oracle, trees: [:])
+        let purityOracle = SoundPurity(constructionFacts: .build(from: [tree]))
+        return Self(
+            root: nil, universe: [], members: [], coverage: Coverage(builtFor: nil), oracle: purityOracle, trees: [:]
+        )
     }
 
     /// No facts and no trees. **`internal`**: tests reach it through `@testable import`, and no

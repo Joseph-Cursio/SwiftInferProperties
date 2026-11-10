@@ -284,13 +284,13 @@ struct CatalogHealthCensusMeasuredTests {
             "pinned known zeros, re-checked at \(CorpusManifest.available.count):"
         )
         for name in Self.knownZeroRow.sorted() {
-            let rows = Self.rowsByTemplate[name] ?? 0
-            lines.append("  \(name): \(rows) row(s) — \(rows > 0 ? "RESOLVED — witnessed here" : "still unwitnessed")")
+            let hits = Self.rowsByTemplate[name] ?? 0
+            lines.append("  \(name): \(hits) row(s) — \(hits > 0 ? "RESOLVED — witnessed here" : "still unwitnessed")")
         }
         lines.append("")
         lines.append("distribution (ascending):")
-        for (name, rows) in Self.rowsByTemplate.sorted(by: { ($0.value, $0.key) < ($1.value, $1.key) }) {
-            lines.append("  \(String(rows).padding(toLength: 6, withPad: " ", startingAt: 0))\(name)")
+        for (name, rowCount) in Self.rowsByTemplate.sorted(by: { ($0.value, $0.key) < ($1.value, $1.key) }) {
+            lines.append("  \(String(rowCount).padding(toLength: 6, withPad: " ", startingAt: 0))\(name)")
         }
         print(lines.joined(separator: "\n"))
     }

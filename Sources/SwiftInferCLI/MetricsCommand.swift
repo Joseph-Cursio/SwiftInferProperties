@@ -138,26 +138,26 @@ public extension SwiftInferCommand {
                 // metric. A corpus missing a sibling is normal — skip it
                 // silently so each join is opt-in per corpus; a *present
                 // but malformed* sibling still warns.
-                let directory = url.deletingLastPathComponent()
-                let evidenceURL = directory.appendingPathComponent("verify-evidence.json")
+                let corpusDirectory = url.deletingLastPathComponent()
+                let evidenceURL = corpusDirectory.appendingPathComponent("verify-evidence.json")
                 if FileManager.default.fileExists(atPath: evidenceURL.path) {
                     let evidenceResult = VerifyEvidenceStore.load(
-                        startingFrom: directory,
+                        startingFrom: corpusDirectory,
                         explicitPath: evidenceURL
                     )
                     warnings.append(contentsOf: evidenceResult.warnings)
                     evidence = evidence.merge(evidenceResult.log)
                 }
-                let indexURL = directory.appendingPathComponent("index.json")
+                let indexURL = corpusDirectory.appendingPathComponent("index.json")
                 if FileManager.default.fileExists(atPath: indexURL.path) {
                     let indexLoad = IndexStore.load(from: indexURL, nowTimestamp: nowTimestamp())
                     warnings.append(contentsOf: indexLoad.warnings)
                     indexEntries.append(contentsOf: indexLoad.index.entries)
                 }
-                let outcomesURL = directory.appendingPathComponent("post-acceptance-outcomes.json")
+                let outcomesURL = corpusDirectory.appendingPathComponent("post-acceptance-outcomes.json")
                 if FileManager.default.fileExists(atPath: outcomesURL.path) {
                     let outcomesResult = PostAcceptanceOutcomesStore.load(
-                        startingFrom: directory,
+                        startingFrom: corpusDirectory,
                         explicitPath: outcomesURL
                     )
                     warnings.append(contentsOf: outcomesResult.warnings)

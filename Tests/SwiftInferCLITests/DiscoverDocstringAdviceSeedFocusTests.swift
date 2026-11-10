@@ -100,7 +100,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
     /// `Self` (the shape of `CappedList.stoppedEarly`). The linter cannot seed either.
     @Test("shapes the linter cannot seed are listed outside the focus")
     func unseededShapesTheLinterCannotSeedAreListed() throws {
-        let source = """
+        let fixture = """
         /// A folder name is valid when it is non-empty and contains no slash.
         func isValidName(_ name: String) -> Bool { !name.isEmpty && !name.contains("/") }
 
@@ -121,7 +121,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         """
         let text = try run(
             "DocAdviceUnseedableShapes",
-            source: source,
+            source: fixture,
             manifest: SeedManifest(seeds: [Self.seed("isValidName", line: 2)])
         )
 
@@ -166,7 +166,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
     /// drops any of it.
     @Test("--seeds splits the docstring advice but never drops any of it")
     func seedsSplitButNeverDropDocstringAdvice() throws {
-        let source = """
+        let fixture = """
         struct Ledger {
             /// A folder name is valid when it is non-empty and contains no slash.
             func isValidName(_ name: String) -> Bool { !name.isEmpty && !name.contains("/") }
@@ -178,10 +178,10 @@ struct DiscoverDocstringAdviceSeedFocusTests {
             func wholeUnits(_ balance: Double) -> Int { Int(balance.rounded()) }
         }
         """
-        let unseeded = try run("DocAdviceParityPlain", source: source, manifest: nil)
+        let unseeded = try run("DocAdviceParityPlain", source: fixture, manifest: nil)
         let seeded = try run(
             "DocAdviceParitySeeded",
-            source: source,
+            source: fixture,
             manifest: SeedManifest(seeds: [Self.seed("backoffDelay", line: 6)])
         )
 

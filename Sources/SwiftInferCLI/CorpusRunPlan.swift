@@ -97,7 +97,7 @@ struct CorpusRunPlan {
         // Checked before the checkout, deliberately: an app-shaped subject is unreachable by
         // this command whether or not it happens to be cloned, and "no checkout" would send
         // the reader to clone a repo that still would not survey.
-        guard let target = entry.target, entry.isSurveyable else {
+        guard let surveyTarget = entry.target, entry.isSurveyable else {
             throw ResolveError.notSurveyable(
                 id: entry.id, kind: entry.kind, sources: entry.sources?.joined(separator: " + ")
             )
@@ -113,7 +113,7 @@ struct CorpusRunPlan {
         case let .resolved(path, head, dirty):
             return Self(
                 directory: URL(fileURLWithPath: path),
-                target: target,
+                target: surveyTarget,
                 label: label(entry: entry, head: head, dirty: dirty, pin: status.pin),
                 warnings: warnings(entry: entry, pin: status.pin)
             )

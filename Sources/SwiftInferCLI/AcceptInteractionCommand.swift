@@ -101,7 +101,7 @@ public extension SwiftInferCommand {
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
             now: Date = Date()
         ) throws {
-            guard let decision = InteractionDecision(rawValue: request.decisionRaw) else {
+            guard let parsedDecision = InteractionDecision(rawValue: request.decisionRaw) else {
                 throw AcceptInteractionError.unknownDecision(raw: request.decisionRaw)
             }
             let suggestions = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
@@ -127,7 +127,7 @@ public extension SwiftInferCommand {
                 scoreAtDecision: matched.score,
                 tier: matched.tier,
                 reducerQualifiedName: matched.reducerQualifiedName,
-                decision: decision,
+                decision: parsedDecision,
                 timestamp: now
             )
             let updated = decisionsResult.decisions.upserting(record)
@@ -136,7 +136,7 @@ public extension SwiftInferCommand {
                 ?? InteractionDecisionsLoader.defaultPath(for: packageRoot)
             try InteractionDecisionsLoader.write(updated, to: path)
             output.write(
-                "Recorded \(decision.rawValue) for \(matched.family.rawValue) invariant "
+                "Recorded \(parsedDecision.rawValue) for \(matched.family.rawValue) invariant "
                     + "0x\(matched.identity.normalized) on \(matched.reducerQualifiedName)."
             )
         }

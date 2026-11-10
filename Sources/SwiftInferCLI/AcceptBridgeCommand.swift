@@ -153,7 +153,7 @@ public extension SwiftInferCommand {
             diagnostics: any DiagnosticOutput = PrintDiagnosticOutput(),
             now: Date = Date()
         ) throws {
-            let decision = try parseDecision(request.decisionRaw)
+            let parsedDecision = try parseDecision(request.decisionRaw)
             let normalizedHash = request.identity.uppercased()
             guard let matched = bridges.first(where: {
                 $0.identity.normalized == normalizedHash
@@ -179,7 +179,7 @@ public extension SwiftInferCommand {
                     scoreAtDecision: invariant.score,
                     tier: invariant.tier,
                     reducerQualifiedName: invariant.reducerQualifiedName,
-                    decision: decision,
+                    decision: parsedDecision,
                     timestamp: now
                 ))
             }
@@ -188,7 +188,7 @@ public extension SwiftInferCommand {
                 ?? InteractionDecisionsLoader.defaultPath(for: packageRoot)
             try InteractionDecisionsLoader.write(updated, to: path)
             output.write(renderSummary(
-                decision: decision,
+                decision: parsedDecision,
                 bridge: matched,
                 peerIndex: request.peerIndex,
                 recordedCount: invariantsToRecord.count
@@ -199,11 +199,11 @@ public extension SwiftInferCommand {
         /// `accepted` / `skipped` are explicitly rejected (bridge
         /// semantics imply conformance commitment per PRD §9.4).
         static func parseDecision(_ raw: String) throws -> InteractionDecision {
-            guard let decision = InteractionDecision(rawValue: raw) else {
+            guard let parsed = InteractionDecision(rawValue: raw) else {
                 throw AcceptBridgeError.unknownDecision(raw: raw)
             }
-            switch decision {
-            case .acceptedAsConformance, .rejected: return decision
+            switch parsed {
+            case .acceptedAsConformance, .rejected: return parsed
 
             case .accepted, .skipped:
                 throw AcceptBridgeError.nonBridgeDecision(raw: raw)
@@ -240,8 +240,8 @@ public extension SwiftInferCommand {
         ) -> String {
             let scopeText: String
             if let peerIndex {
-                let peer = bridge.peers[peerIndex - 1]
-                scopeText = "peer #\(peerIndex) (\(peer.kitProtocolName))"
+                let indexedPeer = bridge.peers[peerIndex - 1]
+                scopeText = "peer #\(peerIndex) (\(indexedPeer.kitProtocolName))"
             } else {
                 scopeText = "all \(bridge.peers.count) peers"
             }

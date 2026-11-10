@@ -33,9 +33,9 @@ struct DeclaringModuleImportTests {
 
     @Test("a name declared in two modules gets no import")
     func ambiguousNameIsLeftAlone() {
-        let harvested = ReceiverConstructionHarvester.Harvested(expression: "Ambiguous()", imports: [])
+        let ambiguous = ReceiverConstructionHarvester.Harvested(expression: "Ambiguous()", imports: [])
         let widened = ReceiverConstructionSource.addingDeclaringImports(
-            harvested, declaring: Self.declaring, in: ["A", "B"]
+            ambiguous, declaring: Self.declaring, in: ["A", "B"]
         )
         #expect(widened.imports.isEmpty)
     }

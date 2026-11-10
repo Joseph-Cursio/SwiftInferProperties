@@ -185,13 +185,13 @@ public extension SwiftInferCommand {
             limit: Int?,
             now: Date = Date()
         ) -> QueryOutcome {
-            let directory = URL(fileURLWithPath: directoryOverride ?? ".")
+            let startDirectory = URL(fileURLWithPath: directoryOverride ?? ".")
             let explicitPath = explicitIndexPath.map { URL(fileURLWithPath: $0) }
         // Injected via `now` so a test can pin it (SwiftProjectLint's
         // Non-Injected Nondeterminism rule). Only feeds `IndexStore.load`'s
         // `.empty(at:)` staleness fallback, so any stable value works.
-            let now = SwiftInferCommand.Index.isoTimestamp(from: now)
-            let resolvedPath = explicitPath ?? Self.resolveIndexPath(startingFrom: directory)
+            let nowTimestamp = SwiftInferCommand.Index.isoTimestamp(from: now)
+            let resolvedPath = explicitPath ?? Self.resolveIndexPath(startingFrom: startDirectory)
             guard let resolvedPath else {
                 return QueryOutcome(
                     rendered: "No .swiftinfer/index.json found. Run `swift-infer index --target <X>` to build one.\n",
@@ -199,7 +199,7 @@ public extension SwiftInferCommand {
                     matchedCount: 0
                 )
             }
-            let load = IndexStore.load(from: resolvedPath, nowTimestamp: now)
+            let load = IndexStore.load(from: resolvedPath, nowTimestamp: nowTimestamp)
 
             // Algebraic surface: included when --surface allows it AND no
             // interaction-only filter (--family) is active (algebraic rows

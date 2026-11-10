@@ -110,31 +110,31 @@ public struct LiftedTransformation: Sendable, Equatable {
         carrierKindResolver: CarrierKindResolver
     ) -> Self? {
         guard summary.isMutating,
-              let carrier = summary.containingTypeName else {
+              let carrierName = summary.containingTypeName else {
             return nil
         }
-        guard carrierKindResolver.classify(typeName: carrier) == .valueSemantic else {
+        guard carrierKindResolver.classify(typeName: carrierName) == .valueSemantic else {
             return nil
         }
         let selfBinding = Parameter(
             label: nil,
             internalName: "self",
-            typeText: carrier,
+            typeText: carrierName,
             isInout: false
         )
-        let liftedParameters = [selfBinding] + summary.parameters
+        let parameters = [selfBinding] + summary.parameters
         let labels = summary.parameters.map { ($0.label ?? "_") + ":" }.joined()
-        let rationale =
-            "Lifted from `mutating func \(carrier).\(summary.name)(\(labels))`. "
-            + "Property holds iff `\(carrier)` has value semantics — "
+        let explanation =
+            "Lifted from `mutating func \(carrierName).\(summary.name)(\(labels))`. "
+            + "Property holds iff `\(carrierName)` has value semantics — "
             + "`var copy = original; copy.\(summary.name)(...)` does not alias "
             + "original's state."
         return Self(
             originalSummary: summary,
-            carrier: carrier,
-            liftedParameters: liftedParameters,
-            liftedReturnType: carrier,
-            rationale: rationale
+            carrier: carrierName,
+            liftedParameters: parameters,
+            liftedReturnType: carrierName,
+            rationale: explanation
         )
     }
 

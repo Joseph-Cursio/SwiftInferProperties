@@ -75,19 +75,19 @@ enum CorpusManifest {
             return Loaded(available: [], absent: [], empty: [])
         }
 
-        var available: [Corpus] = []
-        var absent: [String] = []
+        var availableCorpora: [Corpus] = []
+        var absentCorpora: [String] = []
         var empty: [String] = []
         for entry in entries {
             guard let id = entry["id"] as? String else { continue }
             let roots = resolveRoots(entry)
-            guard !roots.isEmpty else { absent.append(id); continue }
+            guard !roots.isEmpty else { absentCorpora.append(id); continue }
             let counted = roots
                 .map { ($0, swiftFiles(under: $0)) }
                 .filter { $0.1 > 0 }
                 .sorted { $0.1 > $1.1 }
             guard let biggest = counted.first else { empty.append(id); continue }
-            available.append(
+            availableCorpora.append(
                 Corpus(
                     id: id,
                     kind: entry["kind"] as? String ?? "?",
@@ -97,8 +97,8 @@ enum CorpusManifest {
             )
         }
         return Loaded(
-            available: available.sorted { $0.id < $1.id },
-            absent: absent.sorted(),
+            available: availableCorpora.sorted { $0.id < $1.id },
+            absent: absentCorpora.sorted(),
             empty: empty.sorted()
         )
     }

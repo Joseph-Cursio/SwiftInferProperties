@@ -113,13 +113,13 @@ extension SoundnessArmProbeMeasuredTests {
         let output = String(data: data, encoding: .utf8) ?? ""
         guard output.contains("PROBE COMPLETED") else { return nil }
 
-        var readings: [String: String] = [:]
+        var parsedReadings: [String: String] = [:]
         for line in output.split(separator: "\n") {
             let parts = line.split(separator: "|", maxSplits: 1, omittingEmptySubsequences: false)
             guard parts.count == 2 else { continue }
-            readings[String(parts[0])] = String(parts[1])
+            parsedReadings[String(parts[0])] = String(parts[1])
         }
-        return readings
+        return parsedReadings
     }
 }
 

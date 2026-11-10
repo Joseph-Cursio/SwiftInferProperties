@@ -178,12 +178,12 @@ struct ConstructionUniverseNestedPackageTests {
 
     @Test("a file belongs to the nearest package above it, or to the root's own")
     func nearestPackageWins() {
-        let packages: Set<String> = ["A", "A/B"]
-        #expect(ConstructionUniverse.owningPackage(of: "A/B/Sources/X.swift", among: packages) == "A/B")
-        #expect(ConstructionUniverse.owningPackage(of: "A/Sources/X.swift", among: packages) == "A")
-        #expect(ConstructionUniverse.owningPackage(of: "AB/Sources/X.swift", among: packages) == nil)
-        #expect(ConstructionUniverse.owningPackage(of: "Sources/X.swift", among: packages) == nil)
-        #expect(ConstructionUniverse.owningPackage(of: "A", among: packages) == nil)
+        let packagePaths: Set<String> = ["A", "A/B"]
+        #expect(ConstructionUniverse.owningPackage(of: "A/B/Sources/X.swift", among: packagePaths) == "A/B")
+        #expect(ConstructionUniverse.owningPackage(of: "A/Sources/X.swift", among: packagePaths) == "A")
+        #expect(ConstructionUniverse.owningPackage(of: "AB/Sources/X.swift", among: packagePaths) == nil)
+        #expect(ConstructionUniverse.owningPackage(of: "Sources/X.swift", among: packagePaths) == nil)
+        #expect(ConstructionUniverse.owningPackage(of: "A", among: packagePaths) == nil)
     }
 }
 

@@ -121,12 +121,12 @@ public struct MarkerDispatchSubject: Sendable, Equatable {
     /// receiver to reach it would make the stub depend on state the law does not mention.
     public static func candidates(in summaries: [FunctionSummary]) -> [Self] {
         summaries.compactMap { chain in
-            guard let dispatch = chain.bodySignals.markerDispatch,
+            guard let markerDispatch = chain.bodySignals.markerDispatch,
                   isCallableWithoutReceiver(chain),
                   !chain.isAsync, !chain.isThrows, !chain.isMutating else {
                 return nil
             }
-            let front = summaries.first { candidate in
+            let fallbackFront = summaries.first { candidate in
                 candidate.containingTypeName == chain.containingTypeName
                     && candidate.bodySignals.fallbackDelegation?.fallbackName == chain.name
                     && candidate.returnTypeText == chain.returnTypeText
@@ -134,9 +134,9 @@ public struct MarkerDispatchSubject: Sendable, Equatable {
             }
             return Self(
                 chain: chain,
-                entry: front ?? chain,
-                dispatch: dispatch,
-                front: front?.bodySignals.fallbackDelegation
+                entry: fallbackFront ?? chain,
+                dispatch: markerDispatch,
+                front: fallbackFront?.bodySignals.fallbackDelegation
             )
         }
     }

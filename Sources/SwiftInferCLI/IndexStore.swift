@@ -248,8 +248,8 @@ public enum IndexStore {
             uniqueKeysWithValues: existing.entries.map { ($0.identityHash, $0) }
         )
         for fresh in freshEntries {
-            if let existing = byHash[fresh.identityHash] {
-                byHash[fresh.identityHash] = existing.updated(from: fresh)
+            if let previous = byHash[fresh.identityHash] {
+                byHash[fresh.identityHash] = previous.updated(from: fresh)
             } else {
                 byHash[fresh.identityHash] = fresh
             }

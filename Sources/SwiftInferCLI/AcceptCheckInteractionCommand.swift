@@ -269,10 +269,10 @@ public extension SwiftInferCommand {
             _ raw: String?
         ) throws -> InteractionInvariantFamily? {
             guard let raw else { return nil }
-            guard let family = InteractionInvariantFamily(rawValue: raw) else {
+            guard let parsed = InteractionInvariantFamily(rawValue: raw) else {
                 throw AcceptCheckInteractionError.unknownFamily(raw: raw)
             }
-            return family
+            return parsed
         }
 
         // MARK: - Rendering

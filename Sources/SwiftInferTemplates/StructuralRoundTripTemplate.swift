@@ -98,12 +98,12 @@ public struct StructuralRoundTripSubject: Sendable, Equatable {
             return FunctionPairing.transformationDomain(summary)
         })
         return summaries.compactMap { parser in
-            guard let structure = parsedStructure(of: parser, declared: declared),
-                  !printed.contains(structure),
+            guard let parsedStructureName = parsedStructure(of: parser, declared: declared),
+                  !printed.contains(parsedStructureName),
                   InputTotalityTemplate.suggest(for: parser) != nil else {
                 return nil
             }
-            return Self(parser: parser, structure: structure)
+            return Self(parser: parser, structure: parsedStructureName)
         }
     }
 

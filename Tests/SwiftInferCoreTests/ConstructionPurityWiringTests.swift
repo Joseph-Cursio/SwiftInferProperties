@@ -56,8 +56,8 @@ struct ConstructionPurityWiringTests {
         let source = "struct Item { let id = UUID() }\nfunc make() -> Item { Item() }"
         #expect(Self.verdict("make", in: FunctionScanner.scanCorpus(source: source, file: "One.swift")) == .refuted)
         let tree = Parser.parse(source: source)
-        let make = try #require(Self.function(named: "make", in: tree))
-        let witness = PackagePurity.selfContained(tree).oracle.inferrerRefutation(for: make)
+        let makeFunction = try #require(Self.function(named: "make", in: tree))
+        let witness = PackagePurity.selfContained(tree).oracle.inferrerRefutation(for: makeFunction)
         guard case .refutingConstruction(type: "Item", via: .storedProperty("id"), cause: _) = witness else {
             Issue.record("expected a construction witness through `Item.id`, got \(String(describing: witness))")
             return

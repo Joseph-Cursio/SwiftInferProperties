@@ -208,9 +208,9 @@ struct InactiveIfConfigCensusMeasuredTests {
             rowsByCondition[condition, default: 0] += 1
         }
         for (condition, count) in byCondition.sorted(by: { ($0.value, $1.key) > ($1.value, $0.key) }) {
-            let rows = rowsByCondition[condition] ?? 0
+            let rowCount = rowsByCondition[condition] ?? 0
             let label = "#if \(condition)".padding(toLength: 44, withPad: " ", startingAt: 0)
-            lines.append("  \(label)\(count) file(s)  \(rows) row(s)")
+            lines.append("  \(label)\(count) file(s)  \(rowCount) row(s)")
         }
 
         if !affected.isEmpty { lines += Self.breakdowns(of: affected) }
