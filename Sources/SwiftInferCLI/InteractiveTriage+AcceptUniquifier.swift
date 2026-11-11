@@ -7,7 +7,8 @@ extension InteractiveTriage {
     /// name, so the receiver is bound with `let` (or `var`) rather than constructed at every call, which is
     /// what `HeldReceiver` does for `determinism` and would make this law vacuous.
     ///
-    /// The receiver's construction is the one the package's own tests write, or `TrivialConstruction`
+    /// The receiver's construction is its reserving initializer over the drawn names when it has one
+    /// (`UniquifierReservation`), else the one the package's own tests write, or `TrivialConstruction`
     /// (`receiverExpression`). When the name does not enter through one `String` parameter, each argument is
     /// left as a placeholder naming `name`, and the stub does not compile until a reader builds it. A subject
     /// isolated to a global actor gets no stub for now: the check runs in a `@Sendable` closure off the actor.
@@ -31,7 +32,8 @@ extension InteractiveTriage {
         switch match.form {
         case .instance, .mutating:
             let type = evidence.qualifiedTypeName ?? suggestion.carrier ?? "Subject"
-            let construction = receiverExpression?(type) ?? "<#construct a \(type)#>"
+            let construction = match.reservation.map { reserving(type, $0) }
+                ?? receiverExpression?(type) ?? "<#construct a \(type)#>"
             binding = "\(match.form == .mutating ? "var" : "let") subject = \(construction)"
             call = callee.call(["subject"] + arguments)
 
@@ -49,5 +51,15 @@ extension InteractiveTriage {
             match: match
         )
         return LiftedTestEmitter.uniquifierLaw(stub, seed: SamplingSeed.derive(from: suggestion.identity))
+    }
+
+    /// `type` built through its reserving initializer from the drawn names, the domain its contract owes
+    /// distinct results over: `NodeIdAllocator(reserving: names)`.
+    private static func reserving(_ type: String, _ reservation: UniquifierReservation) -> String {
+        let arguments = zip(reservation.labels, reservation.types).map { label, parameterType in
+            let value = parameterType.filter { !$0.isWhitespace }.hasPrefix("Set") ? "Set(names)" : "names"
+            return label.map { "\($0): \(value)" } ?? value
+        }
+        return "\(type)(\(arguments.joined(separator: ", ")))"
     }
 }

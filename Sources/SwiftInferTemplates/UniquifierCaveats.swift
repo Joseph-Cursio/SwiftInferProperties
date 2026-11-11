@@ -15,6 +15,11 @@ enum UniquifierCaveats {
                 + "(`init(reserving:)`) owes distinct results only over names drawn with that reservation in "
                 + "mind; drawn independently, `A`, `A`, `A_1` can repeat `A_1` on correct code.",
         ]
+        if match.reservation != nil {
+            caveats[2] = "THE RECEIVER IS BUILT RESERVING THE DRAWN NAMES, through the initializer that takes "
+                + "them: its contract owes distinct results over the names it reserved. Built without them, "
+                + "`a`, `a`, `a_1` can repeat `a_1` on correct code."
+        }
         if match.shape.isMemoizing {
             caveats.insert(
                 "MEMOIZING: the body returns the id it stored for a key it has seen, so the law is equal keys "

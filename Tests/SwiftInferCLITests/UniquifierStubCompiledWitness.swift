@@ -73,6 +73,31 @@ final class UniquifierWitnessDefectiveNamer {
     }
 }
 
+/// A correct uniquifier whose contract owes distinct results over the names it reserved, shaped like
+/// SwiftUMLStudio's `NodeIdAllocator`: the stub builds it from the drawn names.
+struct UniquifierWitnessAllocator {
+    private var taken: Set<String>
+    private var issuedNames: Set<String> = []
+
+    init(reserving names: [String]) {
+        taken = Set(names)
+    }
+
+    mutating func issue(for name: String) -> String {
+        var nodeId = name
+        if issuedNames.contains(name) {
+            var counter = 1
+            repeat {
+                nodeId = "\(name)_\(counter)"
+                counter += 1
+            } while taken.contains(nodeId)
+        }
+        issuedNames.insert(name)
+        taken.insert(nodeId)
+        return nodeId
+    }
+}
+
 // The stubs accept writes for the subjects above, laid out as the written file is.
 
 struct UniquifierWitnessNamerFreshNameUniquifierTests {
@@ -204,6 +229,50 @@ struct UniquifierWitnessCaseNameUniquifierTests {
             Issue.record(
                 "uniquifierWitnessCaseName(for:taken:) issued one result twice: \(firstCollision(input) ?? "")"
             )
+        }
+    }
+}
+
+struct UniquifierWitnessAllocatorIssueUniquifierTests {
+
+    @Test func issue_issuesDistinctResults() async {
+        // A narrow alphabet on purpose (#692): the law fails only where one drawn name equals another
+        // plus the decoration, and a generator drawing realistic names never collides.
+        let firstCollision: @Sendable ([String]) -> String? = { names in
+            var subject = UniquifierWitnessAllocator(reserving: names)
+            var issued: [String: Int] = [:]
+            for (position, name) in names.enumerated() {
+                let result = String(describing: subject.issue(for: name))
+                if let earlier = issued[result] {
+                    return "calls \(earlier + 1) and \(position + 1), on \(names[earlier]) and \(name), "
+                        + "both returned \(result)"
+                }
+                issued[result] = position
+            }
+            return nil
+        }
+        let backend = SwiftPropertyBasedBackend()
+        let seed = Seed(
+            stateA: 0x7C9BE29EB0FACE3A,
+            stateB: 0x04EA97A6B5DF129E,
+            stateC: 0x562C71973C0DD97B,
+            stateD: 0xDFD7BB00A68D20D5
+        )
+        let result = await backend.check(
+            trials: 100,
+            seed: seed,
+            sample: { rng in
+                let dense = Bool.random(using: &rng)
+                let pool = dense ? ["a", "a_1", "b", "b_1"] : [
+                    "a", "a_0", "a_1", "a_2", "a_10", "a_11", "b", "b_0", "b_1", "b_2", "b_10", "b_11"
+                ]
+                let count = Int.random(in: dense ? 11 ... 24 : 1 ... 16, using: &rng)
+                return (0 ..< count).map { _ in pool.randomElement(using: &rng) ?? "a" }
+            },
+            property: { names in firstCollision(names) == nil }
+        )
+        if case let .failed(_, _, input, _) = result {
+            Issue.record("issue(for:) issued one result twice: \(firstCollision(input) ?? "")")
         }
     }
 }

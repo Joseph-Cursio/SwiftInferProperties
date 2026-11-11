@@ -34,7 +34,7 @@ struct UniquifierStubCompiledWitnessTests {
     }
 
     @Test("the witness holds the stub accept writes", arguments: [
-        "freshName", "id", "uniquifierWitnessCaseName", "uniqName",
+        "freshName", "id", "uniquifierWitnessCaseName", "uniqName", "issue",
     ])
     func theWitnessHoldsTheAcceptWrittenStub(name: String) throws {
         let witness = try Self.witnessText()

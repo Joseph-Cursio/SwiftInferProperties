@@ -237,4 +237,34 @@ struct UniquifierTemplateTests {
         let match = try #require(suggestions(source).first?.match?.uniquifierMatch)
         #expect(match.shape.isMemoizing)
     }
+
+    /// SwiftUMLStudio's `NodeIdAllocator`: its law holds only over the names it reserved, so the match carries
+    /// the reserving initializer and the stub builds the receiver from the drawn names (#692, condition 5).
+    @Test("an initializer that reserves names is carried, so the stub can build the receiver from them")
+    func reservingInitializerIsCarried() throws {
+        let source = """
+        struct NodeIdAllocator {
+            private var taken: Set<String>
+            private var issuedNames: Set<String> = []
+            init(reserving names: [String]) { taken = Set(names) }
+            mutating func issue(for name: String) -> String {
+                var nodeId = name
+                if issuedNames.contains(name) {
+                    var counter = 1
+                    repeat {
+                        nodeId = "\\(name)_\\(counter)"
+                        counter += 1
+                    } while taken.contains(nodeId)
+                }
+                issuedNames.insert(name)
+                taken.insert(nodeId)
+                return nodeId
+            }
+        }
+        """
+        let found = try #require(suggestions(source).first)
+        let reservation = found.match?.uniquifierMatch?.reservation
+        #expect(reservation == UniquifierReservation(labels: ["reserving"], types: ["[String]"]))
+        #expect(found.explainability.whyMightBeWrong.contains { $0.hasPrefix("THE RECEIVER IS BUILT RESERVING") })
+    }
 }

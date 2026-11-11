@@ -88,7 +88,8 @@ public enum UniquifierTemplate {
             shape: shape,
             form: form,
             parameterTypes: summary.parameters.map(\.typeText),
-            nameParameter: nameParameter
+            nameParameter: nameParameter,
+            reservation: summary.containingTypeName.flatMap { owners.reservations[$0] }
         )
     }
 
