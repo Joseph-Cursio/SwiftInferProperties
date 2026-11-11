@@ -19,6 +19,9 @@ public enum UniquifierDecoration: Sendable, Equatable {
 public struct UniquifierShape: Sendable, Equatable {
     /// The stored collections the body tests a candidate against, `self.` removed: `uniqElementNames`.
     public let testedBases: [String]
+    /// The full chains of those tests: `sharedState.uniqueNames`, where `testedBases` holds `sharedState`.
+    /// A sibling's write is compared against these, so two members of one shared object stay apart.
+    public let testedChains: [String]
     /// How a repeated name is decorated.
     public let decoration: UniquifierDecoration
     /// What a leading `guard … else { return "…" }` returns for every input it rejects, or `nil`.
@@ -37,6 +40,7 @@ public struct UniquifierShape: Sendable, Equatable {
     /// Creates a shape.
     public init(
         testedBases: [String],
+        testedChains: [String],
         decoration: UniquifierDecoration,
         sentinel: String?,
         isMemoizing: Bool,
@@ -45,6 +49,7 @@ public struct UniquifierShape: Sendable, Equatable {
         writeLine: Int
     ) {
         self.testedBases = testedBases
+        self.testedChains = testedChains
         self.decoration = decoration
         self.sentinel = sentinel
         self.isMemoizing = isMemoizing

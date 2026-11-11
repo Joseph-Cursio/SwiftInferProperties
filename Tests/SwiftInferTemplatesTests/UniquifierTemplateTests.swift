@@ -193,4 +193,48 @@ struct UniquifierTemplateTests {
         #expect(suggestions(async).isEmpty)
         #expect(suggestions(value).isEmpty)
     }
+
+    /// swift-syntax's `BasicMacroExpansionContext`: `detach` writes `sharedState.detachedNodes`, a member of the
+    /// object whose `uniqueNames` `makeUniqueName` tests. Two members of one object are two states.
+    @Test("a sibling writing another member of a shared state object is not a setup call")
+    func sharedStateMembersStayApart() throws {
+        let source = """
+        public class BasicMacroExpansionContext {
+            private var sharedState: SharedState
+            public func detach(_ node: Node) -> Node {
+                sharedState.detachedNodes[node.id] = node
+                return node
+            }
+            public func makeUniqueName(_ providedName: String) -> TokenSyntax {
+                let uniqueIndex = sharedState.uniqueNames[providedName, default: 0]
+                sharedState.uniqueNames[providedName] = uniqueIndex + 1
+                return TokenSyntax(.identifier("\\(providedName.count)\\(providedName)fMu\\(uniqueIndex)_"))
+            }
+        }
+        """
+        #expect(try reason("makeUniqueName", in: source) == nil)
+        #expect(suggestions(source).count == 1)
+    }
+
+    /// swiftlang's `PropertyListSerializer.id(of:)`: the stored id comes back inside a literal, and that is
+    /// still the memoizing early return. The plain law is false on it.
+    @Test("an early return of the stored id inside a literal reads as memoizing")
+    func memoizingReturnInsideALiteral() throws {
+        let source = """
+        final class PropertyListSerializer {
+            var objsToIds = [SerializedObjectRef: String]()
+            func id(of object: any PropertyListSerializable) -> String {
+                let serObjRef = SerializedObjectRef(object)
+                if let id = objsToIds[serObjRef] {
+                    return "\\"\\(id)\\""
+                }
+                let id = object.objectID ?? "OBJ_\\(objsToIds.count + 1)"
+                objsToIds[serObjRef] = id
+                return "\\"\\(id)\\""
+            }
+        }
+        """
+        let match = try #require(suggestions(source).first?.match?.uniquifierMatch)
+        #expect(match.shape.isMemoizing)
+    }
 }

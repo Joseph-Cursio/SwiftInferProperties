@@ -22,24 +22,22 @@ extension UniquifierBody {
         }
     }
 
-    /// The stored state the body writes and removes from.
+    /// The stored chains the body writes and removes from.
     func stateWrites() -> StateWrites {
         var written: Set<String> = []
         var removed: Set<String> = []
         for node in nodes {
             if let call = node.as(FunctionCallExprSyntax.self), case let (name, chain)? = Self.calledMember(call) {
-                let base = Self.base(of: chain)
-                guard isStored(base) else { continue }
-                if Self.writeCalls.contains(name) { written.insert(base) }
-                if Self.removeCalls.contains(name) { removed.insert(base) }
+                guard isStored(Self.base(of: chain)) else { continue }
+                if Self.writeCalls.contains(name) { written.insert(chain) }
+                if Self.removeCalls.contains(name) { removed.insert(chain) }
             } else if let elements = node.as(SequenceExprSyntax.self).map({ Array($0.elements) }),
                       let target = Self.assignmentTarget(elements), isStored(Self.base(of: target)) {
-                let base = Self.base(of: target)
                 if elements.count == 3, elements[0].is(SubscriptCallExprSyntax.self),
                    elements[2].is(NilLiteralExprSyntax.self) {
-                    removed.insert(base)
+                    removed.insert(target)
                 } else {
-                    written.insert(base)
+                    written.insert(target)
                 }
             }
         }

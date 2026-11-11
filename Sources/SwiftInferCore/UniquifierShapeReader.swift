@@ -44,6 +44,7 @@ public enum UniquifierShapeReader {
         let testedBases = Set(tests.map(\.base)).filter(body.isStored)
         return UniquifierShape(
             testedBases: testedBases.sorted(),
+            testedChains: Set(tests.map(\.chain)).filter { body.isStored(UniquifierBody.base(of: $0)) }.sorted(),
             decoration: decoration(tied: tied, retests: retests, body: body),
             sentinel: sentinel(of: body),
             isMemoizing: isMemoizing(body, testedBases: testedBases),
@@ -120,7 +121,8 @@ public enum UniquifierShapeReader {
         return literal.trimmedDescription
     }
 
-    /// `if let id = byKey[key] { return id }` on a tested base: a stored id returned for a seen key.
+    /// `if let id = byKey[key] { return id }` on a tested base: a stored id returned for a seen key, bare or
+    /// inside what is returned.
     private static func isMemoizing(_ body: UniquifierBody, testedBases: Set<String>) -> Bool {
         body.nodes.contains { node in
             guard let branch = node.as(IfExprSyntax.self) else { return false }
@@ -134,8 +136,10 @@ public enum UniquifierShapeReader {
                       testedBases.contains(table) else {
                     continue
                 }
+                // `return id`, or the id inside what is returned: `return "\"\(id)\""`.
                 let returnsBinding = branch.body.statements.contains { statement in
-                    statement.item.as(ReturnStmtSyntax.self)?.expression.flatMap(UniquifierBody.chain) == name
+                    guard let returned = statement.item.as(ReturnStmtSyntax.self)?.expression else { return false }
+                    return UniquifierBody.freeNames(in: returned).contains(name)
                 }
                 if returnsBinding { return true }
             }

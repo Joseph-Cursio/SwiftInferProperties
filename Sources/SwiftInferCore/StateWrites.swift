@@ -6,9 +6,10 @@
 /// anything, and without it the plain law is false on correct code. A sibling that removes from it hands
 /// released names out again.
 public struct StateWrites: Sendable, Equatable {
-    /// Stored names the body appends to, inserts into, assigns or increments, `self.` removed.
+    /// Stored chains the body appends to, inserts into, assigns or increments, `self.` removed:
+    /// `sharedState.detachedNodes` for `sharedState.detachedNodes[k] = v`.
     public let written: Set<String>
-    /// Stored names the body removes from: `remove…`, `subtract`, `popFirst`, or `t[k] = nil`.
+    /// Stored chains the body removes from: `remove…`, `subtract`, `popFirst`, or `t[k] = nil`.
     public let removed: Set<String>
 
     /// Creates the record.

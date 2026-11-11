@@ -107,23 +107,30 @@ public enum UniquifierTemplate {
     /// Why a gated `summary` is declined, or `nil` when it is not.
     public static func declineReason(for summary: FunctionSummary, siblings: [FunctionSummary]) -> String? {
         guard let shape = summary.bodySignals.uniquifierShape else { return nil }
-        let tested = Set(shape.testedBases)
-        if let own = summary.bodySignals.stateWrites, let state = own.removed.intersection(tested).min() {
+        let tested = shape.testedChains
+        if let own = summary.bodySignals.stateWrites, let state = overlap(own.removed, tested) {
             return "RECYCLING: `\(summary.name)` itself removes from `\(state)`, so a released name is issued again"
         }
         guard summary.containingTypeName != nil else { return nil }
         for sibling in siblings where sibling.location != summary.location && !sibling.isStatic {
             guard let writes = sibling.bodySignals.stateWrites else { continue }
-            if let state = writes.removed.intersection(tested).min() {
+            if let state = overlap(writes.removed, tested) {
                 return "RECYCLING: `\(sibling.name)` removes from `\(state)`, so a released name is issued again"
             }
-            if sibling.bodySignals.uniquifierShape == nil,
-               let state = writes.written.intersection(tested).min() {
+            if sibling.bodySignals.uniquifierShape == nil, let state = overlap(writes.written, tested) {
                 return "SETUP: `\(sibling.name)` writes `\(state)`, which `\(summary.name)` tests, so the law may "
                     + "hold only after that call"
             }
         }
         return nil
+    }
+
+    /// The first written chain that is a tested chain, or holds one or lies inside one: `taken` and `taken`,
+    /// `state` and `state.names`. Two members of one object, `state.names` and `state.nodes`, do not overlap.
+    static func overlap(_ written: Set<String>, _ tested: [String]) -> String? {
+        written.sorted().first { chain in
+            tested.contains { $0 == chain || $0.hasPrefix(chain + ".") || chain.hasPrefix($0 + ".") }
+        }
     }
 
     static func makeConstraint(match: UniquifierMatch) -> Constraint<FunctionSummary> {
