@@ -53,6 +53,15 @@ public enum UniquifierShapeReader {
         )
     }
 
+    /// `[T]`, `Array`, `Set`, `Dictionary`, `OrderedSet`, `OrderedDictionary` or `ContiguousArray`: a type an
+    /// `inout` parameter can carry a uniquifier's state in.
+    public static func isCollectionType(_ type: String) -> Bool {
+        let kind = type.drop { $0 == " " }
+        if kind.hasPrefix("["), kind.hasSuffix("]") { return true }
+        let head = kind.prefix { $0 != "<" && $0 != " " }
+        return UniquifierBody.collectionTypes.contains(String(head.split(separator: ".").last ?? head))
+    }
+
     /// The stored state `function` writes and removes from.
     public static func stateWrites(of function: FunctionDeclSyntax) -> StateWrites {
         UniquifierBody(function: function)?.stateWrites() ?? .empty

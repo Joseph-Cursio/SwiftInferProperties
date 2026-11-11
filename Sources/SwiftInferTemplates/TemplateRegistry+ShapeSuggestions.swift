@@ -27,5 +27,6 @@ extension TemplateRegistry {
             inheritedTypesByName: context.inheritedTypesByName,
             into: &collector
         )
+        collectUniquifierSuggestions(summaries: summaries, typeDecls: typeDecls, into: &collector)
     }
 }

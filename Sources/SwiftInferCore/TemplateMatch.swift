@@ -194,6 +194,9 @@ public enum TemplateMatch: Sendable, Equatable {
     /// `marker-dispatch` — the keyword table, and the lookup a test must step around to reach it.
     case markerDispatch(MarkerDispatchMatch)
 
+    /// `uniquifier` — the body's shape, where the state lives, and which parameter carries a name.
+    case uniquifier(UniquifierMatch)
+
     /// The `GuardDomain` this match carries, or `nil` for any other template.
     ///
     /// Present so a writer reads one accessor rather than spelling a `switch` with three
@@ -222,6 +225,12 @@ public enum TemplateMatch: Sendable, Equatable {
 
     public var markerDispatchMatch: MarkerDispatchMatch? {
         guard case .markerDispatch(let match) = self else { return nil }
+        return match
+    }
+
+    /// The `UniquifierMatch` this match carries, or `nil` for any other template.
+    public var uniquifierMatch: UniquifierMatch? {
+        guard case .uniquifier(let match) = self else { return nil }
         return match
     }
 }

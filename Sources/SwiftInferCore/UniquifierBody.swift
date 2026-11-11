@@ -110,11 +110,7 @@ struct UniquifierBody {
     }
 
     private static func isInoutCollection(_ type: String) -> Bool {
-        guard type.hasPrefix("inout ") else { return false }
-        let kind = type.dropFirst("inout ".count).drop { $0 == " " }
-        if kind.hasPrefix("["), kind.hasSuffix("]") { return true }
-        let head = kind.prefix { $0 != "<" && $0 != " " }
-        return collectionTypes.contains(String(head.split(separator: ".").last ?? head))
+        type.hasPrefix("inout ") && UniquifierShapeReader.isCollectionType(String(type.dropFirst("inout ".count)))
     }
 
     private static func declaredNames(in nodes: [Syntax]) -> Set<String> {
