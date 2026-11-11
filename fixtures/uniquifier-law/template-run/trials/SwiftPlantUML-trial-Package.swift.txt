@@ -1,0 +1,39 @@
+// swift-tools-version: 6.1
+// TRIAL MANIFEST (not upstream): the 0.8.1 manifest moved to tools 6.1 so the test target can take
+// PropertyLawKit 4.10.0, to run swift-infer's uniquifier stub against PlantUMLContext.uniqName.
+import PackageDescription
+
+let package = Package(
+    name: "SwiftPlantUML",
+    platforms: [.macOS(.v14)],
+    products: [
+        .library(name: "SwiftPlantUMLFramework", targets: ["SwiftPlantUMLFramework"]),
+        .executable(name: "swiftplantuml", targets: ["swiftplantuml"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/jpsim/SourceKitten", from: "0.31.1"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "1.0.1")),
+        .package(url: "https://github.com/SwiftyBeaver/SwiftyBeaver.git", exact: "1.9.5"),
+        .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws.git", exact: "4.10.0"),
+    ],
+    targets: [
+        .executableTarget(
+            name: "swiftplantuml",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "SwiftPlantUMLFramework",
+                .product(name: "SwiftyBeaver", package: "SwiftyBeaver"),
+            ]
+        ),
+        .target(
+            name: "SwiftPlantUMLFramework",
+            dependencies: [.product(name: "SourceKittenFramework", package: "SourceKitten")]
+        ),
+        .testTarget(
+            name: "SwiftPlantUMLFrameworkTests",
+            dependencies: ["SwiftPlantUMLFramework", .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")],
+            resources: [.copy("TestData")]
+        ),
+    ],
+    swiftLanguageModes: [.v5]
+)

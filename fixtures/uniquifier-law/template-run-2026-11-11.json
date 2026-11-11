@@ -1,0 +1,1605 @@
+[
+  {
+    "censusRevision" : "eea6466787e6eb9b2220ef5b629f12a1f0ee6c4b",
+    "files" : 844,
+    "group" : "decision",
+    "name" : "swift-infer-core",
+    "revision" : "e68fb21f30401456149ca57a8feb589826897a25",
+    "root" : "~\/xcode_projects\/SwiftInferProperties",
+    "rows" : [
+      {
+        "file" : "Sources\/SwiftInferCLI\/ViewModelActionEnumEmitter.swift",
+        "form" : "inout(1: Set<String>)",
+        "function" : "uniqueCaseName",
+        "group" : "decision",
+        "inDiscover" : true,
+        "line" : 157,
+        "memoizing" : false,
+        "owner" : "ViewModelActionEnumEmitter",
+        "score" : 35,
+        "status" : "proposed",
+        "subject" : "swift-infer-core",
+        "testedBases" : [
+          "taken"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "9c9a9fabd886519f81fd768b3feb79dd9de25641",
+    "files" : 132,
+    "group" : "decision",
+    "name" : "swift-format",
+    "revision" : "b15dd59fad21f1770cdc888b1ca6e2937490001a",
+    "root" : "~\/GitHub_projects\/swift-format",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "0d8cf958b4b66a0473ec6e6986eb9da462171da9",
+    "files" : 182,
+    "group" : "decision",
+    "name" : "grdb",
+    "revision" : "0d8cf958b4b66a0473ec6e6986eb9da462171da9",
+    "root" : "~\/GitHub_projects\/GRDB.swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "f96b909e1a9e469620bc5037c1e24e00153f376f",
+    "files" : 615,
+    "group" : "decision",
+    "name" : "swift-collections",
+    "revision" : "98ef3c98609a1e31b7e157b5b619579001a789d6",
+    "root" : "~\/GitHub_projects\/swift-collections",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "4a71c31565fff8a05f89aafa959e06fc902c7abc",
+    "files" : 486,
+    "group" : "decision",
+    "name" : "swift-syntax",
+    "revision" : "0f7a57c5888ccd0bd599e5b8b6fb928b9641f1b8",
+    "root" : "~\/GitHub_projects\/swift-syntax",
+    "rows" : [
+      {
+        "file" : "Sources\/SwiftCompilerPluginMessageHandling\/PluginMacroExpansionContext.swift",
+        "form" : "instance",
+        "function" : "makeUniqueName",
+        "group" : "decision",
+        "inDiscover" : true,
+        "line" : 334,
+        "memoizing" : false,
+        "nameParameter" : 0,
+        "owner" : "PluginMacroExpansionContext",
+        "score" : 35,
+        "status" : "proposed",
+        "subject" : "swift-syntax",
+        "testedBases" : [
+          "uniqueNames"
+        ]
+      },
+      {
+        "file" : "Sources\/SwiftSyntaxMacroExpansion\/BasicMacroExpansionContext.swift",
+        "form" : "instance",
+        "function" : "makeUniqueName",
+        "group" : "decision",
+        "inDiscover" : true,
+        "line" : 155,
+        "memoizing" : false,
+        "nameParameter" : 0,
+        "owner" : "BasicMacroExpansionContext",
+        "score" : 35,
+        "status" : "proposed",
+        "subject" : "swift-syntax",
+        "testedBases" : [
+          "sharedState"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "8c063f043d94c120d0f8d6303ef4fc7918e3561d",
+    "files" : 331,
+    "group" : "decision",
+    "name" : "swift-nio",
+    "revision" : "d09ffc8ad6437bc278897279e33150d8e39ee3d5",
+    "root" : "~\/GitHub_projects\/swift-nio",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "d274b839a3c44a3f436aede221b75506ad363ed2",
+    "files" : 648,
+    "group" : "decision",
+    "name" : "swift-package-manager",
+    "revision" : "778e5678bafe61e2ae74aa49a03f26e0bf6c6216",
+    "root" : "~\/GitHub_projects\/swift-package-manager",
+    "rows" : [
+      {
+        "file" : "Sources\/Commands\/Utilities\/DOTManifestSerializer.swift",
+        "form" : "mutating",
+        "function" : "label",
+        "group" : "decision",
+        "inDiscover" : true,
+        "line" : 29,
+        "memoizing" : false,
+        "owner" : "DOTManifestSerializer",
+        "score" : 25,
+        "status" : "proposed",
+        "subject" : "swift-package-manager",
+        "testedBases" : [
+          "kindCounter"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "899af71c0256d0ad181e3b7eb3453c1065d928a5",
+    "files" : 36,
+    "group" : "decision",
+    "name" : "swift-numerics",
+    "revision" : "dc02281e1b23d2fffd3e1f4ba425608c3ff79151",
+    "root" : "~\/github_projects\/swift-numerics",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "5b7143f8e291dee0e14c118fd0212487f0b37af5",
+    "files" : 29,
+    "group" : "decision",
+    "name" : "swift-algorithms",
+    "revision" : "5b7143f8e291dee0e14c118fd0212487f0b37af5",
+    "root" : "~\/github_projects\/swift-algorithms",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "efd239f0055b3d6b6cc122a786c46a0ea8d0235b",
+    "files" : 105,
+    "group" : "decision",
+    "name" : "swift-argument-parser",
+    "revision" : "efd239f0055b3d6b6cc122a786c46a0ea8d0235b",
+    "root" : "~\/GitHub_projects\/swift-argument-parser",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "aadd9259be076a86a7e7918b938751d69dfe1198",
+    "files" : 375,
+    "group" : "decision",
+    "name" : "swift-foundation",
+    "revision" : "a211bea22b6fa5b041c37592aaf50c7b3db5c354",
+    "root" : "~\/GitHub_projects\/swift-foundation",
+    "rows" : [
+      {
+        "file" : "Sources\/FoundationEssentials\/NotificationCenter\/NotificationCenter.swift",
+        "form" : "mutating",
+        "function" : "insert",
+        "group" : "decision",
+        "inDiscover" : false,
+        "line" : 34,
+        "memoizing" : false,
+        "owner" : "AutoDictionary",
+        "reason" : "RECYCLING: `remove` removes from `storage`, so a released name is issued again",
+        "status" : "declined",
+        "subject" : "swift-foundation",
+        "testedBases" : [
+          "storage"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "e739e65153fd564ac1cb9f4140d7130e7d099e16",
+    "files" : 1196,
+    "group" : "decision",
+    "name" : "swiftlang-swift",
+    "revision" : "4f0569be1aa010d9915bf7a7c015c87e760e5444",
+    "root" : "~\/GitHub_projects\/swift",
+    "rows" : [
+      {
+        "file" : "utils\/swift-dev-utils\/Sources\/CrashReduce\/Cleanup.swift",
+        "function" : "withCompletionTokensReplaced",
+        "group" : "decision",
+        "inDiscover" : false,
+        "line" : 55,
+        "memoizing" : false,
+        "owner" : "Code",
+        "status" : "no-state",
+        "subject" : "swiftlang-swift",
+        "testedBases" : [
+
+        ]
+      },
+      {
+        "file" : "utils\/swift-dev-utils\/Sources\/SwiftXcodeGen\/Xcodeproj\/XcodeProjectModelSerialization.swift",
+        "form" : "instance",
+        "function" : "id",
+        "group" : "decision",
+        "inDiscover" : true,
+        "line" : 476,
+        "memoizing" : true,
+        "owner" : "PropertyListSerializer",
+        "score" : 25,
+        "status" : "proposed",
+        "subject" : "swiftlang-swift",
+        "testedBases" : [
+          "objsToIds"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "41923397b3034b375dd1486139448eb1bc38ff22",
+    "files" : 119,
+    "group" : "decision",
+    "name" : "harmonize",
+    "revision" : "41923397b3034b375dd1486139448eb1bc38ff22",
+    "root" : "~\/GitHub_projects\/Harmonize",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "eec21fbb23f225b05c53ac7271113c0ae005d08b",
+    "files" : 642,
+    "group" : "decision",
+    "name" : "swift-project-lint",
+    "revision" : "6a231cda6e1618fc1089c86461ae65617fddc0b2",
+    "root" : "~\/xcode_projects\/SwiftProjectLint",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "9e774fb84293658d9d0c4620f8cfcff26a8bfbb5",
+    "files" : 212,
+    "group" : "decision",
+    "name" : "swift-property-laws",
+    "revision" : "023704e8d7e6028af6e1f1aec3b66e584566ae15",
+    "root" : "~\/xcode_projects\/SwiftPropertyLaws",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "f5014fb0f11f0893529ce21e3bff9c2e52fccddd",
+    "files" : 47,
+    "group" : "decision",
+    "name" : "swift-effect-inference",
+    "revision" : "5e981ca78ade1d6e5940525a5381f53c8876f4be",
+    "root" : "~\/xcode_projects\/SwiftEffectInference",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "3c861967fabcd06012638476d99204ce3ff80049",
+    "files" : 28,
+    "group" : "decision",
+    "name" : "maccloud-client-ios",
+    "revision" : "3c861967fabcd06012638476d99204ce3ff80049",
+    "root" : "~\/xcode_projects\/MacCloud_client_iOS",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "8b99ba71977798c3278eac65a4f8e3937b9d7dee",
+    "files" : 252,
+    "group" : "decision",
+    "name" : "swiftlint-rule-studio",
+    "revision" : "77cc79299cc1a74380888c97ea272f3e7f1c6505",
+    "root" : "~\/xcode_projects\/SwiftLintRuleStudio",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "149526de878e9d6ee388b3ab9eec3b22c6cba3ec",
+    "files" : 65,
+    "group" : "decision",
+    "name" : "swiftformat-rule-studio",
+    "revision" : "5cea6a7e02088a2967801dd4ee1017a57feb36d3",
+    "root" : "~\/xcode_projects\/SwiftFormatRuleStudio",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "eea6466787e6eb9b2220ef5b629f12a1f0ee6c4b",
+    "files" : 3,
+    "group" : "decision",
+    "name" : "planted-defect-arm",
+    "revision" : "614dadddc59c8a108c6ced1f1ac09718235a0a58",
+    "root" : "~\/xcode_projects\/SwiftInferProperties\/fixtures\/planted-defect-arm",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "eea6466787e6eb9b2220ef5b629f12a1f0ee6c4b",
+    "files" : 2,
+    "group" : "decision",
+    "name" : "cycle27-surface",
+    "revision" : "614dadddc59c8a108c6ced1f1ac09718235a0a58",
+    "root" : "~\/xcode_projects\/SwiftInferProperties\/fixtures\/cycle27-surface",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "eea6466787e6eb9b2220ef5b629f12a1f0ee6c4b",
+    "files" : 5,
+    "group" : "decision",
+    "name" : "leaderboard-sort",
+    "revision" : "614dadddc59c8a108c6ced1f1ac09718235a0a58",
+    "root" : "~\/xcode_projects\/SwiftInferProperties\/fixtures\/leaderboard-sort",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "73e31b105524b23669d3f569587217f505d27054",
+    "files" : 28,
+    "group" : "decision",
+    "name" : "LintStudioUI",
+    "revision" : "abcff420253a7ae4bf7e0f8316a207ac3e9a81cb",
+    "root" : "~\/xcode_projects\/LintStudioUI",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "a7376fd798f6366becc5da434a7eac4fcfe61633",
+    "files" : 58,
+    "group" : "decision",
+    "name" : "MacCloud_client_MacOS",
+    "revision" : "9424f4f22582e581382ff05968a6d59949724cd7",
+    "root" : "~\/xcode_projects\/MacCloud_client_MacOS",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "51c91cf076bdc2635f30cb621f0f79b8b33a422f",
+    "files" : 31,
+    "group" : "decision",
+    "name" : "MacCloud_server",
+    "revision" : "b0a1495afbb8048f150d857123b459474568b86f",
+    "root" : "~\/xcode_projects\/MacCloud_server",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "3b8ff81648c2dff6d5cf82044a5c481e0b965c9e",
+    "files" : 64,
+    "group" : "decision",
+    "name" : "pbt-book",
+    "revision" : "3e76194a82719ad6fa8c129cbee21e5c554f562d",
+    "root" : "~\/xcode_projects\/pbt-book",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "0ea4b2270037c6db35df88e7dbd0879930071360",
+    "files" : 16,
+    "group" : "decision",
+    "name" : "pbt-workbook-corpus",
+    "revision" : "6df265001a4fa65909308cd89085cc828a59809d",
+    "root" : "~\/xcode_projects\/pbt-workbook-corpus",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "79e6c81380fe19a830cd31d9014e8c96499964a0",
+    "files" : 6,
+    "group" : "decision",
+    "name" : "pbt-workbook-grader",
+    "revision" : "79e6c81380fe19a830cd31d9014e8c96499964a0",
+    "root" : "~\/xcode_projects\/pbt-workbook-grader",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "0e0779528f4427b3cd27f0e205aba2a4dab768f8",
+    "files" : 7,
+    "group" : "decision",
+    "name" : "pbt-workbook-sampler",
+    "revision" : "0e0779528f4427b3cd27f0e205aba2a4dab768f8",
+    "root" : "~\/xcode_projects\/pbt-workbook-sampler",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "959937ed90f425fadde215d1ade6e9141b1a8a5a",
+    "files" : 4,
+    "group" : "decision",
+    "name" : "pbt-workbook",
+    "revision" : "959937ed90f425fadde215d1ade6e9141b1a8a5a",
+    "root" : "~\/xcode_projects\/pbt-workbook",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "697484273556ace4b6ac19fc22d8e042fbed46e8",
+    "files" : 511,
+    "group" : "decision",
+    "name" : "SwiftAssist",
+    "revision" : "8e1bc8d34cc2f2ae5f7eda88fe248b5cbc2a57c6",
+    "root" : "~\/xcode_projects\/SwiftAssist",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "c21171e2109e0edb60a032ed9655b0939392746b",
+    "files" : 48,
+    "group" : "decision",
+    "name" : "SwiftCloneDetector",
+    "revision" : "e03e865e67202559f48ea899961800403c855988",
+    "root" : "~\/xcode_projects\/SwiftCloneDetector",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "5863dadc9a6da422a8939710858d588d3dd001c9",
+    "files" : 30,
+    "group" : "decision",
+    "name" : "SwiftIdempotency",
+    "revision" : "adf8d18eb6667f4424f40d5bb0af604007abe6fd",
+    "root" : "~\/xcode_projects\/SwiftIdempotency",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "7789bde63dddc94a2e0c12266da91598ba6259d5",
+    "files" : 47,
+    "group" : "decision",
+    "name" : "SwiftLintRuleStudioTeam",
+    "revision" : "7789bde63dddc94a2e0c12266da91598ba6259d5",
+    "root" : "~\/xcode_projects\/SwiftLintRuleStudioTeam",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "2a6d0d59440b96fcf2882fa3ce2f69fff07eba38",
+    "files" : 110,
+    "group" : "decision",
+    "name" : "SwiftMarkdownWiki",
+    "revision" : "51b789e2518533cabb3b96f5c4f9a735a18e505a",
+    "root" : "~\/xcode_projects\/SwiftMarkdownWiki",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "c6c82e3de1c27a72bcab2b5325d51f52e2e6b6a0",
+    "files" : 227,
+    "group" : "decision",
+    "name" : "SwiftUMLStudio",
+    "revision" : "9ad7631c887d9869974e393fc4a133a17e7a56f6",
+    "root" : "~\/xcode_projects\/SwiftUMLStudio",
+    "rows" : [
+      {
+        "file" : "SwiftUMLBridge\/Sources\/SwiftUMLBridgeFramework\/Emitters\/DiagramIdentifiers.swift",
+        "form" : "mutating",
+        "function" : "id",
+        "group" : "decision",
+        "inDiscover" : true,
+        "line" : 31,
+        "memoizing" : true,
+        "owner" : "DiagramIdentifiers",
+        "score" : 25,
+        "status" : "proposed",
+        "subject" : "SwiftUMLStudio",
+        "testedBases" : [
+          "byKey",
+          "taken"
+        ]
+      },
+      {
+        "file" : "SwiftUMLBridge\/Sources\/SwiftUMLBridgeFramework\/Model\/DiagramContext.swift",
+        "form" : "instance",
+        "function" : "uniqName",
+        "group" : "decision",
+        "inDiscover" : false,
+        "line" : 291,
+        "memoizing" : false,
+        "owner" : "DiagramContext",
+        "reason" : "SETUP: `reserveIdentifiers` writes `takenIdentifiers`, which `uniqName` tests, so the law may hold only after that call",
+        "status" : "declined",
+        "subject" : "SwiftUMLStudio",
+        "testedBases" : [
+          "takenIdentifiers",
+          "uniqElementNames"
+        ]
+      },
+      {
+        "file" : "SwiftUMLBridge\/Sources\/SwiftUMLBridgeFramework\/Model\/LayoutGraphBuilder+PendingEdge.swift",
+        "form" : "mutating",
+        "function" : "issue",
+        "group" : "decision",
+        "inDiscover" : true,
+        "line" : 48,
+        "memoizing" : false,
+        "nameParameter" : 0,
+        "owner" : "LayoutGraphBuilder.NodeIdAllocator",
+        "score" : 25,
+        "status" : "proposed",
+        "subject" : "SwiftUMLStudio",
+        "testedBases" : [
+          "issuedNames",
+          "taken"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "a597cf5bbe693793bfe96e3ce703b74b87c981b8",
+    "files" : 54,
+    "group" : "unmet",
+    "name" : "Euclid",
+    "revision" : "a123b1cbbb5b7aab49a8b57e12783f7bd39f0cac",
+    "root" : "~\/github_projects\/Euclid",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "f14e4a4922a0317d49caca1545c6946c6ef22bd8",
+    "files" : 586,
+    "group" : "unmet",
+    "name" : "swift-docc",
+    "revision" : "1167e3db3ef1c34089bfd7bc1ee64415e39c8291",
+    "root" : "~\/github_projects\/swift-docc",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "41a79a6a175db7da4e238d2f9b42b1c88accc3f8",
+    "files" : 190,
+    "group" : "unmet",
+    "name" : "OpenAPIKit",
+    "revision" : "0e81e36d25d72d78b6e556d350b2f1b1ffd5dc21",
+    "root" : "~\/github_projects\/OpenAPIKit",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "373c40c23640063b65c76465d934ecf76b3b190a",
+    "files" : 87,
+    "group" : "unmet",
+    "name" : "jwt-kit",
+    "revision" : "2fb935a14b08258764388f7b01a819f9525dd248",
+    "root" : "~\/github_projects\/jwt-kit",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "1b452c2996c677d8e435bf0b766fc927176d8c77",
+    "files" : 43,
+    "group" : "unmet",
+    "name" : "swift-system",
+    "revision" : "c3b7f2a48e9109ca937da868c3ea959159103f05",
+    "root" : "~\/github_projects\/swift-system",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+    "files" : 0,
+    "group" : "wide",
+    "name" : "aider",
+    "revision" : "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+    "root" : "~\/github_projects\/aider",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "3494b7c1d4e08be98bbb2244fd55ca5a029ff4a2",
+    "files" : 56,
+    "group" : "wide",
+    "name" : "Alamofire",
+    "revision" : "bda9ed57d72988a3a2ada33d824583541f86eac6",
+    "root" : "~\/github_projects\/Alamofire",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "ff989f1e137c7a37d15855b83f78427c4bea2ce1",
+    "files" : 1044,
+    "group" : "wide",
+    "name" : "algoliasearch-client-swift",
+    "revision" : "ca1aa32c08418e88f84ab72897247621592056d3",
+    "root" : "~\/github_projects\/algoliasearch-client-swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "862808b2070cd908cb04f9aafe7de83d35f81b05",
+    "files" : 5,
+    "group" : "wide",
+    "name" : "AnyCodable",
+    "revision" : "862808b2070cd908cb04f9aafe7de83d35f81b05",
+    "root" : "~\/github_projects\/AnyCodable",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "9fd8728931062467cae259de8b1dea5a7a1c06eb",
+    "files" : 141,
+    "group" : "wide",
+    "name" : "apollo-ios",
+    "revision" : "75e10a8b29a530e654398f3caceea4bc3c54a4dd",
+    "root" : "~\/github_projects\/apollo-ios",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "f95c908967e98c68c5ce3fd61a7974e7e869e303",
+    "files" : 76,
+    "group" : "wide",
+    "name" : "async-http-client",
+    "revision" : "d2dfb39bcb0fafd1834ec6e6334c1755360f856e",
+    "root" : "~\/github_projects\/async-http-client",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "63feef7820abb1a8fb08587d7da56bb0b7db8751",
+    "files" : 28,
+    "group" : "wide",
+    "name" : "BigInt",
+    "revision" : "96fb3b174cb919b57de3edbb6ab7bb4a775137af",
+    "root" : "~\/github_projects\/BigInt",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "96a7610ca165e027b24710fc2f04c9ba8d2ce0e6",
+    "files" : 41,
+    "group" : "wide",
+    "name" : "CombineExt",
+    "revision" : "96a7610ca165e027b24710fc2f04c9ba8d2ce0e6",
+    "root" : "~\/github_projects\/CombineExt",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "1bc70312762383b5a918b17b02d9ffe1a1af4116",
+    "files" : 630,
+    "group" : "wide",
+    "name" : "exhaust",
+    "revision" : "66f476875ec6f9958ffc8d4d5014cbbec77effec",
+    "root" : "~\/github_projects\/exhaust",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "3fdead0f6459d7d3480d12c514ae27da31974a41",
+    "files" : 3281,
+    "group" : "wide",
+    "name" : "FHIRModels",
+    "revision" : "d3abe06ad46ffc5609c0b96cdfdaaca9f636e360",
+    "root" : "~\/github_projects\/FHIRModels",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "6f8844284df4f797d2a81721511d053357d97b56",
+    "files" : 123,
+    "group" : "wide",
+    "name" : "fluent-kit",
+    "revision" : "6f8844284df4f797d2a81721511d053357d97b56",
+    "root" : "~\/github_projects\/fluent-kit",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "b2db3033fbf67a97b54d25d6dac2df8a029b26b1",
+    "files" : 408,
+    "group" : "wide",
+    "name" : "IceCubesApp",
+    "revision" : "98098b9c4b5928f89f338203193c2bf40ab7f38c",
+    "root" : "~\/github_projects\/IceCubesApp",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "441ead7772cc391e2a0cc8318292bc4aaa8c3a6d",
+    "files" : 58,
+    "group" : "wide",
+    "name" : "indexstore-db",
+    "revision" : "0390867818c28241af4650eb4ef29af5669335a3",
+    "root" : "~\/github_projects\/indexstore-db",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "e0c7eebc5a4465a3c4680764f26b7a61f567cdaf",
+    "files" : 14,
+    "group" : "wide",
+    "name" : "KeychainAccess",
+    "revision" : "e0c7eebc5a4465a3c4680764f26b7a61f567cdaf",
+    "root" : "~\/github_projects\/KeychainAccess",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "0b5a9e490d68fb08728fb1bb9187d40439a9d52d",
+    "files" : 147,
+    "group" : "wide",
+    "name" : "Kingfisher",
+    "revision" : "7406a99571034568b6ca4ba875c01842607e03d9",
+    "root" : "~\/github_projects\/Kingfisher",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "8384dfbc429a5b3748e51d2744cbaad9ecb7a6fe",
+    "files" : 303,
+    "group" : "wide",
+    "name" : "lottie-ios",
+    "revision" : "1fb4d7d5b45b0e81239c0c0cab95136a10153762",
+    "root" : "~\/github_projects\/lottie-ios",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "880a3ba79a782319007d956a458a8378ad18c582",
+    "files" : 10,
+    "group" : "wide",
+    "name" : "Mastermind",
+    "revision" : "4433024e193fc75f4dde5e2d34f22f7b5199fcf0",
+    "root" : "~\/github_projects\/Mastermind",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "24c26671a2f0fc26b53c9fa2410c97987fb0f05a",
+    "files" : 41,
+    "group" : "wide",
+    "name" : "Moya",
+    "revision" : "24c26671a2f0fc26b53c9fa2410c97987fb0f05a",
+    "root" : "~\/github_projects\/Moya",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "727f75d91a0f7501d08d938966d17e6728b76a2a",
+    "files" : 72,
+    "group" : "wide",
+    "name" : "Nimble",
+    "revision" : "727f75d91a0f7501d08d938966d17e6728b76a2a",
+    "root" : "~\/github_projects\/Nimble",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "a532be89be9a30ec003e4ba0974a52a88d26fc6d",
+    "files" : 220,
+    "group" : "wide",
+    "name" : "OpenAI",
+    "revision" : "8baf4aaf00d87c6bb58e73b85107b7864cea11d4",
+    "root" : "~\/github_projects\/OpenAI",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "1ada76dc2334fc6d37880635b3f0d10cc3b40a16",
+    "files" : 489,
+    "group" : "wide",
+    "name" : "opentelemetry-swift",
+    "revision" : "ab386f43ccd5ab4584a802fb24fbd7a965b315a2",
+    "root" : "~\/github_projects\/opentelemetry-swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "00f4b15c0941e137bf90de712b6fb643c9f0880a",
+    "files" : 62,
+    "group" : "wide",
+    "name" : "pkl-swift",
+    "revision" : "b1fafe691224fb248a8ce66fdbe7682e4290eae9",
+    "root" : "~\/github_projects\/pkl-swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "a61b4cb0e848f1889dc6b81415594a6075704126",
+    "files" : 149,
+    "group" : "wide",
+    "name" : "postgres-nio",
+    "revision" : "89e7ae8b280a992abc8baa4d3db12f39d43f2f63",
+    "root" : "~\/github_projects\/postgres-nio",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "2b4547b230e94d84320724fd6df65e418b058be2",
+    "files" : 53,
+    "group" : "wide",
+    "name" : "Quick",
+    "revision" : "2b4547b230e94d84320724fd6df65e418b058be2",
+    "root" : "~\/github_projects\/Quick",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "3e33f90c1bcd3cdea25bdb49bd4a594a50c3ab84",
+    "files" : 822,
+    "group" : "wide",
+    "name" : "RxSwift",
+    "revision" : "3e33f90c1bcd3cdea25bdb49bd4a594a50c3ab84",
+    "root" : "~\/github_projects\/RxSwift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "250529bec615066185ff328984855101820fcbee",
+    "files" : 42,
+    "group" : "wide",
+    "name" : "SnapKit",
+    "revision" : "250529bec615066185ff328984855101820fcbee",
+    "root" : "~\/github_projects\/SnapKit",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "1d9969e7740456bb6f2c1ce950bf64a021c7b4aa",
+    "files" : 107,
+    "group" : "wide",
+    "name" : "soto-core",
+    "revision" : "ec2b3a73b1aca26b17c47701426902cf241ebfbd",
+    "root" : "~\/github_projects\/soto-core",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "a463483aba304581bad19a0d96d80091af3c8b52",
+    "files" : 345,
+    "group" : "wide",
+    "name" : "sourcekit-lsp",
+    "revision" : "395089a9ee9f52fb4189819159050bdf3e48ae91",
+    "root" : "~\/github_projects\/sourcekit-lsp",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "25cb523c8fd47fceb936f6a63b6b231f9705dcc5",
+    "files" : 320,
+    "group" : "wide",
+    "name" : "supabase-swift",
+    "revision" : "7f56af4b5aeb165cb3f8a007fe5ea26d508a005f",
+    "root" : "~\/github_projects\/supabase-swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "ed87dda717392ce07eb0cdc706596e0a1180581f",
+    "files" : 45,
+    "group" : "wide",
+    "name" : "SwaggerParser",
+    "revision" : "cffa88e7d0ebfe761f7c34c31873e48c5fe0929d",
+    "root" : "~\/github_projects\/SwaggerParser",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "3b6410f7dee09eb33cdd26260c5fd47fda19b0e2",
+    "files" : 23,
+    "group" : "wide",
+    "name" : "swift-asn1",
+    "revision" : "917b472dbe53ba699cbb0495f9a95a084bc6364d",
+    "root" : "~\/github_projects\/swift-asn1",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "11645b8feb9081ecf0f27b6f4d0821bd550fed01",
+    "files" : 89,
+    "group" : "wide",
+    "name" : "swift-async-algorithms",
+    "revision" : "cbde9aed744bc058974e6bd5c0367ca55a6bf97c",
+    "root" : "~\/github_projects\/swift-async-algorithms",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "bc30c67cf0c4479633621ad7950d71494a07390f",
+    "files" : 20,
+    "group" : "wide",
+    "name" : "swift-atomics",
+    "revision" : "bc30c67cf0c4479633621ad7950d71494a07390f",
+    "root" : "~\/github_projects\/swift-atomics",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "d18360e63624019bddf418de28d83007acd60956",
+    "files" : 28,
+    "group" : "wide",
+    "name" : "swift-aws-lambda-events",
+    "revision" : "d18360e63624019bddf418de28d83007acd60956",
+    "root" : "~\/github_projects\/swift-aws-lambda-events",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "c8aece90ea05f9866bd392a5bf13b5cae56c0e03",
+    "files" : 116,
+    "group" : "wide",
+    "name" : "swift-certificates",
+    "revision" : "84f03fafeca28c19f5fc4b528df3d22ce8896bd7",
+    "root" : "~\/github_projects\/swift-certificates",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "377da4061db10d26337a71bb279c506bb951f50f",
+    "files" : 682,
+    "group" : "wide",
+    "name" : "swift-composable-architecture",
+    "revision" : "bb175b544d019c7f23a2e41ae29d8c70592aeb58",
+    "root" : "~\/github_projects\/swift-composable-architecture",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "ceb6593dd4e8c6920c00760bfcb682bcb8ce9c42",
+    "files" : 66,
+    "group" : "wide",
+    "name" : "swift-configuration",
+    "revision" : "5aa8bdb1ddd11de51cb30b0ba575f4b05a9a169d",
+    "root" : "~\/github_projects\/swift-configuration",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "da9d28d69ebe3894b18376c8f2395c2f37b8448f",
+    "files" : 181,
+    "group" : "wide",
+    "name" : "swift-crypto",
+    "revision" : "57de8e7cb840b1a608f0cc2221d8f2bda117606c",
+    "root" : "~\/github_projects\/swift-crypto",
+    "rows" : [
+      {
+        "file" : "Sources\/CryptoExtras\/ARC\/ARCCredential.swift",
+        "function" : "update",
+        "group" : "wide",
+        "inDiscover" : false,
+        "line" : 80,
+        "memoizing" : false,
+        "owner" : "ARC.PresentationState",
+        "status" : "no-state",
+        "subject" : "swift-crypto",
+        "testedBases" : [
+          "state"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "c1f9484553d29afb981b95458b37c1c3d3e1bcd7",
+    "files" : 58,
+    "group" : "wide",
+    "name" : "swift-docc-symbolkit",
+    "revision" : "e9a4c0f2ddad22ec3e7d1dc8d49061b5bd8a42ea",
+    "root" : "~\/github_projects\/swift-docc-symbolkit",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "bff4b6903cdc99dda49649dd52f46c11cfd3ed50",
+    "files" : 21,
+    "group" : "wide",
+    "name" : "swift-http-types",
+    "revision" : "379731fb1dde8c628c129892bdc5b597b1571402",
+    "root" : "~\/github_projects\/swift-http-types",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "75e3df1d7b664ef3c96595de36c243b98599b3bc",
+    "files" : 94,
+    "group" : "wide",
+    "name" : "swift-markdown",
+    "revision" : "392b73b858efe3dacec0e8a91c6e7fd19af0bb98",
+    "root" : "~\/github_projects\/swift-markdown",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "39d49cf22abab58a07f02bb76808b5d2839b294a",
+    "files" : 228,
+    "group" : "wide",
+    "name" : "swift-openapi-generator",
+    "revision" : "75962579db43e88440bbad021c74570f0955d1fd",
+    "root" : "~\/github_projects\/swift-openapi-generator",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "9e53df53e043b53046a371b31aaf0a1e26eef946",
+    "files" : 74,
+    "group" : "wide",
+    "name" : "swift-openapi-runtime",
+    "revision" : "76720b809fa0d4c68d7518db81c75d9fb371f169",
+    "root" : "~\/github_projects\/swift-openapi-runtime",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "7d405e77a7b729390ed1d9a66e1f80a707fd03c4",
+    "files" : 35,
+    "group" : "wide",
+    "name" : "swift-property-based",
+    "revision" : "7ab835398e560e07a238e10d566ef4781d2a9020",
+    "root" : "~\/github_projects\/swift-property-based",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "87d0393435df31637c947d42f340b811049539c6",
+    "files" : 289,
+    "group" : "wide",
+    "name" : "swift-protobuf",
+    "revision" : "61e40fbe39c7b40e48dec12ac96f73521372f34e",
+    "root" : "~\/github_projects\/swift-protobuf",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "a0ae212ebf6eab5f754c3129608bc5557637e605",
+    "files" : 52,
+    "group" : "wide",
+    "name" : "swift-sdk",
+    "revision" : "68300d7130f95a031284177c89e1e32fe32e7d82",
+    "root" : "~\/github_projects\/swift-sdk",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "1a025bed06a6bd2da85db4171d0acd4fb8b6afbb",
+    "files" : 15,
+    "group" : "wide",
+    "name" : "swift-service-lifecycle",
+    "revision" : "65771b62e716c4518f745c43873ea496d3ddece1",
+    "root" : "~\/github_projects\/swift-service-lifecycle",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "c7d68ca20cd7d09d93ad3bd939704d202244f58e",
+    "files" : 215,
+    "group" : "wide",
+    "name" : "swift-testing",
+    "revision" : "a01e6f66d9082be168708c36b81c7ab101885b7f",
+    "root" : "~\/github_projects\/swift-testing",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "ec4691d9e813a1d3358e82917326b56b0a71d3c9",
+    "files" : 573,
+    "group" : "wide",
+    "name" : "SwiftLint",
+    "revision" : "ec4691d9e813a1d3358e82917326b56b0a71d3c9",
+    "root" : "~\/github_projects\/SwiftLint",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "60a1531d35830f6bb9b2979a04238552e2cf6e29",
+    "files" : 359,
+    "group" : "wide",
+    "name" : "SwiftPackageIndex-Server",
+    "revision" : "5e1f6dfcb58f55f3b04a1607c10c57df7297c8d9",
+    "root" : "~\/github_projects\/SwiftPackageIndex-Server",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "0f5875ec7d4f1ef9ff98079babed44ccf3437fd6",
+    "files" : 37,
+    "group" : "wide",
+    "name" : "SwiftPlantUML",
+    "revision" : "0f5875ec7d4f1ef9ff98079babed44ccf3437fd6",
+    "root" : "~\/github_projects\/SwiftPlantUML",
+    "rows" : [
+      {
+        "file" : "Sources\/SwiftPlantUMLFramework\/Internal\/PlantUMLContext.swift",
+        "form" : "instance",
+        "function" : "uniqName",
+        "group" : "wide",
+        "inDiscover" : true,
+        "line" : 85,
+        "memoizing" : false,
+        "owner" : "PlantUMLContext",
+        "score" : 35,
+        "status" : "proposed",
+        "subject" : "SwiftPlantUML",
+        "testedBases" : [
+          "uniqElementNames"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "3d2544101a03f22b2217d464dc7d359eeb86e159",
+    "files" : 5,
+    "group" : "wide",
+    "name" : "SwiftyJSON",
+    "revision" : "3d2544101a03f22b2217d464dc7d359eeb86e159",
+    "root" : "~\/github_projects\/SwiftyJSON",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "7d541adbdfcbe77848f7d4566bd730ddec85730c",
+    "files" : 6,
+    "group" : "wide",
+    "name" : "TestableView",
+    "revision" : "7d541adbdfcbe77848f7d4566bd730ddec85730c",
+    "root" : "~\/github_projects\/TestableView",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "38c47ccb1dd6dad7b1c0b6027907b6a359063106",
+    "files" : 223,
+    "group" : "wide",
+    "name" : "vapor",
+    "revision" : "0f2a8ee9f38b2589c066b604de3e3168ed54c82d",
+    "root" : "~\/github_projects\/vapor",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "55373fc4e4e60ec26d7cabef23d875582ad2f316",
+    "files" : 132,
+    "group" : "wide",
+    "name" : "ViewInspector",
+    "revision" : "4d5e732cb5f49d8d819262acaab783efca172e0b",
+    "root" : "~\/github_projects\/ViewInspector",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "8445e778451c7e44237b90281bde622d764b0084",
+    "files" : 79,
+    "group" : "wide",
+    "name" : "XcodeGen",
+    "revision" : "783a19e863ff906e042d061aa0a1d569d3c52ffa",
+    "root" : "~\/github_projects\/XcodeGen",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "4e227e5e1102cf8edf8084c00b74d15afc564728",
+    "files" : 118,
+    "group" : "wide",
+    "name" : "XcodeProj",
+    "revision" : "5d313c99fbb3871a6faeeca97ed13ee6f832ad06",
+    "root" : "~\/github_projects\/XcodeProj",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "df801bc4f158f107035d2e14f6d0d8d31eb31ddb",
+    "files" : 23,
+    "group" : "wide",
+    "name" : "Yams",
+    "revision" : "df801bc4f158f107035d2e14f6d0d8d31eb31ddb",
+    "root" : "~\/github_projects\/Yams",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "0c7f00c16e64d12550ec3f49ce0633a3b20deab6",
+    "files" : 0,
+    "group" : "wide",
+    "name" : "Checkout",
+    "revision" : "",
+    "root" : "~\/xcode_projects\/Checkout",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "df5c7f8a2a47ef48d2c6799dd759b48c7a0611c7",
+    "files" : 0,
+    "group" : "wide",
+    "name" : "Hudson_ProSwiftUI_1_1",
+    "revision" : "",
+    "root" : "~\/xcode_projects\/Hudson_ProSwiftUI_1_1",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "0806106c27df99018d302d9eaaea2ae105cddf10",
+    "files" : 0,
+    "group" : "wide",
+    "name" : "Hummingbird",
+    "revision" : "",
+    "root" : "~\/xcode_projects\/Hummingbird",
+    "rows" : [
+
+    ]
+  },
+  {
+    "files" : 0,
+    "group" : "wide",
+    "name" : "IdempotencySpike",
+    "revision" : "",
+    "root" : "~\/xcode_projects\/IdempotencySpike",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "2e302a3fe59d41fdbe92e76be8b265b012244f0e",
+    "files" : 0,
+    "group" : "wide",
+    "name" : "muter-upstream",
+    "revision" : "",
+    "root" : "~\/xcode_projects\/muter-upstream",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "ae446f9142c5be08a88b8452f015ed1e5284bca4",
+    "files" : 0,
+    "group" : "wide",
+    "name" : "Sitrep",
+    "revision" : "",
+    "root" : "~\/xcode_projects\/Sitrep",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "8abd464310c7e052c481f74e52dcd05da5f915d1",
+    "files" : 0,
+    "group" : "wide",
+    "name" : "swift-aws-lambda-runtime",
+    "revision" : "",
+    "root" : "~\/xcode_projects\/swift-aws-lambda-runtime",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "a2fd371565891dfe9291dd1c0b3ffc4f00fe67f8",
+    "files" : 141,
+    "group" : "wide",
+    "name" : "SwiftCompilerFlagStudio",
+    "revision" : "a2fd371565891dfe9291dd1c0b3ffc4f00fe67f8",
+    "root" : "~\/xcode_projects\/SwiftCompilerFlagStudio",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "af38f174a6c3992d6ac9628480e63648f00b83be",
+    "files" : 320,
+    "group" : "wide",
+    "name" : "SwiftMutator",
+    "revision" : "4174e2cf27f141013c01e8ba921ceac268034ae0",
+    "root" : "~\/xcode_projects\/SwiftMutator",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "92efb78b73a8b665ee74bacfb0f1f5b17bbe1b38",
+    "files" : 28,
+    "group" : "layout",
+    "name" : "lukilabs__dagre-swift",
+    "revision" : "92efb78b73a8b665ee74bacfb0f1f5b17bbe1b38",
+    "root" : "~\/github_projects\/graph-layout-corpus\/lukilabs__dagre-swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "32f8042e3509a4819f00ff9cd46e829ec2b26da0",
+    "files" : 411,
+    "group" : "layout",
+    "name" : "lukilabs__elk-swift",
+    "revision" : "32f8042e3509a4819f00ff9cd46e829ec2b26da0",
+    "root" : "~\/github_projects\/graph-layout-corpus\/lukilabs__elk-swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "6a23a29e91af8f5b3e9fc09945332ca193bd69ec",
+    "files" : 90,
+    "group" : "layout",
+    "name" : "lukilabs__beautiful-mermaid-swift",
+    "revision" : "6a23a29e91af8f5b3e9fc09945332ca193bd69ec",
+    "root" : "~\/github_projects\/graph-layout-corpus\/lukilabs__beautiful-mermaid-swift",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "64c19fbddf5604122b01563b3ab727dbadf0ee95",
+    "files" : 186,
+    "group" : "layout",
+    "name" : "2389-research__MermaidKit",
+    "revision" : "64c19fbddf5604122b01563b3ab727dbadf0ee95",
+    "root" : "~\/github_projects\/graph-layout-corpus\/2389-research__MermaidKit",
+    "rows" : [
+      {
+        "file" : "Sources\/MermaidLayout\/DOTParser.swift",
+        "form" : "instance",
+        "function" : "registerCluster",
+        "group" : "layout",
+        "inDiscover" : true,
+        "line" : 415,
+        "memoizing" : false,
+        "nameParameter" : 0,
+        "owner" : "DOTParserImpl",
+        "score" : 25,
+        "status" : "proposed",
+        "subject" : "2389-research__MermaidKit",
+        "testedBases" : [
+          "subgraphs"
+        ]
+      },
+      {
+        "file" : "Sources\/MermaidLayout\/MermaidParser.swift",
+        "form" : "inout(1: [String: Flowchart.Subgraph])",
+        "function" : "openSubgraph",
+        "group" : "layout",
+        "inDiscover" : true,
+        "line" : 977,
+        "memoizing" : false,
+        "owner" : "MermaidParser",
+        "score" : 25,
+        "status" : "proposed",
+        "subject" : "2389-research__MermaidKit",
+        "testedBases" : [
+          "subgraphs"
+        ]
+      }
+    ]
+  },
+  {
+    "censusRevision" : "ee4b50bc15ad6e9b9f88bc320f2c42ba9a55a804",
+    "files" : 68,
+    "group" : "layout",
+    "name" : "Australware__swift-mermaid",
+    "revision" : "ee4b50bc15ad6e9b9f88bc320f2c42ba9a55a804",
+    "root" : "~\/github_projects\/graph-layout-corpus\/Australware__swift-mermaid",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "4aba72560eafae0f778666d0bc08376737dacd9a",
+    "files" : 34,
+    "group" : "layout",
+    "name" : "nmandica__DirectedGraph",
+    "revision" : "4aba72560eafae0f778666d0bc08376737dacd9a",
+    "root" : "~\/github_projects\/graph-layout-corpus\/nmandica__DirectedGraph",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "538588ebc739e945826c0ba8b4309a630ea0a61a",
+    "files" : 82,
+    "group" : "layout",
+    "name" : "1amageek__swift-flow",
+    "revision" : "538588ebc739e945826c0ba8b4309a630ea0a61a",
+    "root" : "~\/github_projects\/graph-layout-corpus\/1amageek__swift-flow",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "3515701fad73d3c6f8722bd65c22ef0813dc11a0",
+    "files" : 70,
+    "group" : "layout",
+    "name" : "aaurelions__SwiftFlow",
+    "revision" : "3515701fad73d3c6f8722bd65c22ef0813dc11a0",
+    "root" : "~\/github_projects\/graph-layout-corpus\/aaurelions__SwiftFlow",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "53b93b0560d89d3e97acdb6b020e9ef73054a83d",
+    "files" : 91,
+    "group" : "layout",
+    "name" : "yahirvitelugardo__Graffle",
+    "revision" : "53b93b0560d89d3e97acdb6b020e9ef73054a83d",
+    "root" : "~\/github_projects\/graph-layout-corpus\/yahirvitelugardo__Graffle",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "083fb3cf0c32b5e83adf4432eb3b0fc742789fa5",
+    "files" : 11,
+    "group" : "layout",
+    "name" : "Vithanco__SwiftGraphvizLayout",
+    "revision" : "083fb3cf0c32b5e83adf4432eb3b0fc742789fa5",
+    "root" : "~\/github_projects\/graph-layout-corpus\/Vithanco__SwiftGraphvizLayout",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "86c7dde938409df1bb3d8ef8bb75133d74d3e9a7",
+    "files" : 8,
+    "group" : "layout",
+    "name" : "Ryu0118__swift-module-graph",
+    "revision" : "86c7dde938409df1bb3d8ef8bb75133d74d3e9a7",
+    "root" : "~\/github_projects\/graph-layout-corpus\/Ryu0118__swift-module-graph",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "47ad8ac436a4f342145f3a3a612736d91e4882cd",
+    "files" : 34,
+    "group" : "layout",
+    "name" : "getyourguide__spmgraph",
+    "revision" : "47ad8ac436a4f342145f3a3a612736d91e4882cd",
+    "root" : "~\/github_projects\/graph-layout-corpus\/getyourguide__spmgraph",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "6c89d4be7c90bdaea7feecf979f9ccab947c3188",
+    "files" : 62,
+    "group" : "layout",
+    "name" : "simonbs__dependency-graph",
+    "revision" : "6c89d4be7c90bdaea7feecf979f9ccab947c3188",
+    "root" : "~\/github_projects\/graph-layout-corpus\/simonbs__dependency-graph",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "01aaa140dbcccabfcea90b04d099439cae2dd118",
+    "files" : 17,
+    "group" : "layout",
+    "name" : "leejungyeob__TuistSpider",
+    "revision" : "01aaa140dbcccabfcea90b04d099439cae2dd118",
+    "root" : "~\/github_projects\/graph-layout-corpus\/leejungyeob__TuistSpider",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "f93a3430a4fedd6872907fb0939180efb11d352a",
+    "files" : 18,
+    "group" : "layout",
+    "name" : "GlitchLoom__SwiftDependencyGraphExplorer",
+    "revision" : "f93a3430a4fedd6872907fb0939180efb11d352a",
+    "root" : "~\/github_projects\/graph-layout-corpus\/GlitchLoom__SwiftDependencyGraphExplorer",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "d783a2c9fe3a02c507fd7ec398b61fe07632caf2",
+    "files" : 13,
+    "group" : "layout",
+    "name" : "swift-compositions__swift-package-graph",
+    "revision" : "d783a2c9fe3a02c507fd7ec398b61fe07632caf2",
+    "root" : "~\/github_projects\/graph-layout-corpus\/swift-compositions__swift-package-graph",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "9255de96fd57c7d28bb7876616a8a0ddb3b8aa5a",
+    "files" : 38,
+    "group" : "layout",
+    "name" : "poolcamacho__Maple",
+    "revision" : "9255de96fd57c7d28bb7876616a8a0ddb3b8aa5a",
+    "root" : "~\/github_projects\/graph-layout-corpus\/poolcamacho__Maple",
+    "rows" : [
+
+    ]
+  },
+  {
+    "censusRevision" : "1197ce47afd1b765f4d4b3bf7016bc4e11ef773d",
+    "files" : 9,
+    "group" : "layout",
+    "name" : "tengla__GitGraphRender",
+    "revision" : "1197ce47afd1b765f4d4b3bf7016bc4e11ef773d",
+    "root" : "~\/github_projects\/graph-layout-corpus\/tengla__GitGraphRender",
+    "rows" : [
+
+    ]
+  }
+]
