@@ -1,0 +1,572 @@
+{
+ "rows": [
+  {
+   "id": "M013",
+   "class": "GEOMETRY",
+   "what_changes": "One library component \"Core\" with interface \"API\" (centerX 100, width 140): both rects x=\"30.0\" become x=\"170.0\", and the interface text x=\"40.0\" becomes x=\"180.0\". The box moves right by its full width.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "originX = centerX + width/2 changes only the number that format() prints with \"%.1f\". That output is digits, a sign and a point (at worst nan or inf), never markup. No id or url(#...) is touched: the only reference is the edge's url(#arrow), and its id=\"arrow\" target comes from arrowMarkerDefs, which is emitted unconditionally."
+  },
+  {
+   "id": "M014",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: originX = 100 - 140*2 = -180, so both rects go from x=\"30.0\" to x=\"-180.0\" and the interface text from x=\"40.0\" to x=\"-170.0\".",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "width is always at least minBoxWidth 140, so width*2 never equals width/2 and the output always changes. Only a formatted numeric attribute changes. The XML structure and the arrow id/reference pair are untouched."
+  },
+  {
+   "id": "M015",
+   "class": "GEOMETRY",
+   "what_changes": "Same input (centerY 63, height 66): originY goes from 30 to 96. Rect y=\"30.0\" becomes \"96.0\", stereotype text y 42.0 becomes 108.0, name text y 54.0 becomes 120.0, and interface text y 81.0 becomes 147.0.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only coordinates derived from originY change, all printed through format(\"%.1f\"). Neither law can see a numeric change: no element, attribute, id or reference is added or removed."
+  },
+  {
+   "id": "M016",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: originY = 63 - 132 = -69. Rects get y=\"-69.0\", the stereotype and name texts get y -57.0 and -45.0, and the interface text gets y -18.0.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "height is always positive (at least header 30 + padding 10), so the output always changes, but only in numbers. A negative coordinate is still a well-formed attribute value. No reference is involved."
+  },
+  {
+   "id": "M017",
+   "class": "STRUCTURE",
+   "what_changes": "Every component loses its header-band element <rect x=\"30.0\" y=\"30.0\" width=\"140.0\" height=\"30.0\" fill=\"#e6e8ef\" stroke=\"#444\" stroke-width=\"1.2\" rx=\"4\"/>. Only the body rect and the texts remain.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "The removal leaves `[boxRect(...),\\n ]`, which is legal Swift with its trailing comma. It drops one whole self-closed <rect/> line from the array, and what remains is still balanced, well-formed XML. The removed rect carries no id, so no reference can lose its target."
+  },
+  {
+   "id": "M019",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: the stereotype text (\u00ablibrary\u00bb) goes from y=\"42.0\" (originY + 12) to y=\"18.0\" (originY - 12), above the box.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only the y number of one <text> changes, printed through format(). The structure, the escaping and the ids/references are unchanged."
+  },
+  {
+   "id": "M021",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: the name text \"Core\" goes from y=\"54.0\" (originY + 24) to y=\"6.0\" (originY - 24).",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "A single numeric attribute changes. Neither well-formedness nor reference resolution depends on it."
+  },
+  {
+   "id": "M022",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: interfaceY goes from 30+30+10 = 70 to 30-30+10 = 10, so the \"API\" text goes from y=\"81.0\" to y=\"21.0\". With no provided interfaces the output is unchanged.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "interfaceY only feeds the y coordinate of the interface <text> elements. Whenever a component has an interface, the output differs only in that number."
+  },
+  {
+   "id": "M023",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: interfaceY goes from 70 to 30+30-10 = 50, so the \"API\" text goes from y=\"81.0\" to y=\"61.0\". With no interfaces the output is unchanged.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only the formatted y coordinate of interface texts moves. The markup and the references are untouched."
+  },
+  {
+   "id": "M025",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: the \"API\" interface text goes from x=\"40.0\" (originX + 10) to x=\"20.0\" (originX - 10), outside the box's left edge.",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only one numeric attribute per interface line changes, and it is reached only when providedInterfaces is non-empty. No structural or reference effect."
+  },
+  {
+   "id": "M026",
+   "class": "GEOMETRY",
+   "what_changes": "Same input: the \"API\" interface text goes from y=\"81.0\" (interfaceY + 11) to y=\"59.0\" (interfaceY - 11).",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only the y number of interface <text> elements changes, through format(). It cannot make the XML malformed or leave a dangling #id."
+  },
+  {
+   "id": "M047",
+   "class": "GEOMETRY",
+   "what_changes": "node posX=100,width=80: leftX 60 -> 140, so the body/header/square-off rects' x=\"60.0\" become x=\"140.0\", separator x1/x2 shift, compartment text x 70.0 -> 150.0",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "leftX feeds only fmt(...) attribute values (String(format:\"%.1f\") yields digits, '-', '.', or nan/inf), so only numbers change; renderNode emits no url(#)/href references, and no element or id is added or removed."
+  },
+  {
+   "id": "M048",
+   "class": "GEOMETRY",
+   "what_changes": "node posX=100,width=80: leftX 60 -> -60, rect x=\"60.0\" -> x=\"-60.0\", item text x 70.0 -> -50.0",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Same leftX value as M047, computed as posX - width*2; it reaches the output only through fmt-formatted numeric attributes, so markup structure and references are untouched."
+  },
+  {
+   "id": "M049",
+   "class": "GEOMETRY",
+   "what_changes": "node posY=100,height=60: topY 70 -> 130, rect y=\"70.0\" -> y=\"130.0\", stereotype text y 84.0 -> 144.0, name y 98.0 -> 158.0",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "topY flows only into fmt-formatted y coordinates (rects, square-off rect, texts, separator lines, item texts); no text or element or reference changes."
+  },
+  {
+   "id": "M050",
+   "class": "GEOMETRY",
+   "what_changes": "node posY=100,height=60: topY 70 -> -20, rect y=\"70.0\" -> y=\"-20.0\", stereotype text y 84.0 -> -6.0",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "topY computed as posY - height*2 instead of /2; it is consumed only as numeric attribute values through fmt, so only coordinates move."
+  },
+  {
+   "id": "M051",
+   "class": "STRUCTURE",
+   "what_changes": "node with compartments and height 60: the square-off <rect ... height=\"4.0\" fill=\"#4A90D9\"/> disappears; a node with no compartments and height 30 gains one",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Negating the guard toggles emission of one self-closed <rect/> whose attributes are fmt numbers and a constant headerFill colour; adding or dropping a complete empty element keeps the document well-formed, and the rect carries no id or reference."
+  },
+  {
+   "id": "M052",
+   "class": "STRUCTURE",
+   "what_changes": "node with no compartments and height 60 (or compartments and height 30): the square-off <rect .../> is no longer emitted",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "With && the rect appears only when both conditions hold; LayoutNode's height and compartments are public and the layout engine gives empty-compartment nodes height >= 50, so the rect is dropped on reachable input. The removed element is a complete self-closed <rect/> with no id or reference."
+  },
+  {
+   "id": "M053",
+   "class": "STRUCTURE",
+   "what_changes": "node with no compartments and height 60: the square-off <rect .../> vanishes; a node with no compartments and height 30 gains it",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Flipping > to < changes when the empty-compartment branch fires, so one self-closed <rect/> appears or vanishes; it is well-formed either way and references nothing."
+  },
+  {
+   "id": "M054",
+   "class": "STRUCTURE",
+   "what_changes": "node with no compartments and height exactly 36: a square-off <rect y=topY+32 height=\"4.0\" .../> is now emitted where none was",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only the boundary height == headerHeight (36) with empty compartments differs. The layout engine never produces it (it clamps height to >= 50), but render accepts any LayoutGraph with public height, so it is reachable directly. The added element is a complete <rect/> with no id or reference."
+  },
+  {
+   "id": "M055",
+   "class": "GEOMETRY",
+   "what_changes": "topY=70: stereotype label <text y=\"84.0\"> -> <text y=\"56.0\">",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "stereotypeY is used only as the fmt-formatted y attribute of the stereotype <text>; only that number changes."
+  },
+  {
+   "id": "M056",
+   "class": "GEOMETRY",
+   "what_changes": "node posY=100,height=80 (topY=60): the bold name <text> goes from y=\"88.0\" to y=\"32.0\"; nothing else changes",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "In renderNode, nameY is used only as the name label's y attribute, and it goes through fmt(\"%.1f\"). That can only print digits, '-', '.', nan or inf, so the markup and the escaped label stay well-formed. No url(#)/href or id is involved."
+  },
+  {
+   "id": "M057",
+   "class": "GEOMETRY",
+   "what_changes": "node topY=60, headerH=36, one compartment with one item: the separator <line> goes from y1/y2=\"96.0\" to \"24.0\" and the item <text> from y=\"120.0\" to \"48.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "currentY is the running y of the compartment separator lines and item texts. Changing its start shifts every compartment's y numbers by -2*headerH and nothing else: same elements, same escaped text, numbers printed through fmt. It is reachable only when a node has a compartment with items; otherwise the output is unchanged. It cannot touch markers or ids."
+  },
+  {
+   "id": "M058",
+   "class": "GEOMETRY",
+   "what_changes": "cluster posX=200,width=100: the cluster <rect> goes from x=\"150.0\" to x=\"250.0\" and its label <text> from x=\"160.0\" to x=\"260.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "leftX in renderCluster feeds only the rect's x and the label's x (leftX+padding), both through fmt. Clusters are a public field of LayoutGraph, so this is reachable. Only coordinates move, and there are no references."
+  },
+  {
+   "id": "M059",
+   "class": "GEOMETRY",
+   "what_changes": "cluster posX=200,width=100: the cluster <rect> goes from x=\"150.0\" to x=\"0.0\" and the label <text> from x=\"160.0\" to x=\"10.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "width/2 becomes width*2, which changes only the leftX number used for the rect x and the label x. fmt keeps any Double, including nan or inf, well-formed inside the attribute quotes. There are no url/href/id changes."
+  },
+  {
+   "id": "M060",
+   "class": "GEOMETRY",
+   "what_changes": "cluster posY=100,height=60: the cluster <rect> goes from y=\"70.0\" to y=\"130.0\" and the label <text> from y=\"86.0\" to y=\"146.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "topY in renderCluster feeds only the rect's y and the label's y (topY+16) through fmt. Only numbers in the output change."
+  },
+  {
+   "id": "M061",
+   "class": "GEOMETRY",
+   "what_changes": "cluster posY=100,height=60: the cluster <rect> goes from y=\"70.0\" to y=\"-20.0\" and the label <text> from y=\"86.0\" to y=\"-4.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "height/2 becomes height*2, which changes only the topY number used for two y attributes. A negative coordinate is still a well-formed attribute value, and no references are involved."
+  },
+  {
+   "id": "M062",
+   "class": "STYLE",
+   "what_changes": "cluster id \"A\" (scalar sum 65): fill, stroke and the label fill go from hsl(65, 55%, 60%) to hsl(0, 55%, 60%). Every cluster becomes hue 0, red",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "For hash>=0, (hash*360+360)%360 is always 0, so only the cluster colour string changes. An id whose original hue is already 0 (e.g. the empty string) is unchanged. The hue is an Int printed as digits, so the markup stays well-formed. hash*360 is a checked multiply and could trap only for hash > Int.max/360, which needs about 2.3e10 maximal scalars in one module name. That is not practically reachable, and a trap would be a crash, not malformed output."
+  },
+  {
+   "id": "M063",
+   "class": "STYLE",
+   "what_changes": "cluster id \"A\" (65): the colour goes from hsl(65, 55%, 60%) to hsl(-295, 55%, 60%), the same angle mod 360, so it renders the same colour but the text differs",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Swift's % truncates, so ((hash%360)-360)%360 equals (hash%360)-360 for a nonzero remainder (a hue in -359...-1), and 0 when the remainder is 0. Only the hue number inside the colour string changes. A leading '-' is legal in an attribute value, and there are no references."
+  },
+  {
+   "id": "M064",
+   "class": "STYLE",
+   "what_changes": "cluster id \"A\" (65): the colour goes from hsl(65, 55%, 60%) to hsl(153000, 55%, 60%), which is 0 mod 360, so every cluster renders red",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "(r+360)*360 with r in 0...359 is a multiple of 360 between 129600 and 258840. It cannot overflow, and its only effect is the hue text in the fill, stroke and label fill colour strings. It prints as plain digits, so the XML stays well-formed. No ids or references are touched."
+  },
+  {
+   "id": "M075",
+   "class": "GEOMETRY",
+   "what_changes": "single .start node (width 28): <circle ... r=\"14.0\"> becomes r=\"56.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "node.width/2 -> node.width*2 only changes the Double passed as radius to renderCircle, which goes through fmt (%.1f) into the r attribute. Any Double, including negative, inf or nan, formats as plain ASCII inside a quoted attribute, so the markup and its ids and references cannot change."
+  },
+  {
+   "id": "M076",
+   "class": "GEOMETRY",
+   "what_changes": "single .end node (width 28): the outer white circle's r=\"14.0\" becomes r=\"56.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "This changes only the outer ring radius of the .end node, a number formatted through fmt into r. No element, attribute, id or reference changes."
+  },
+  {
+   "id": "M078",
+   "class": "GEOMETRY",
+   "what_changes": "single .end node (width 28): the inner filled circle's r=\"9.0\" (28/2-5) becomes r=\"51.0\" (28*2-5)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only the inner radius Double changes. A negative or non-finite result still formats as a plain token inside the quoted r attribute."
+  },
+  {
+   "id": "M079",
+   "class": "GEOMETRY",
+   "what_changes": "single .end node (width 28): the inner circle's r=\"9.0\" becomes r=\"19.0\" (28/2+5)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only the inner radius number of the .end node changes. The structure, ids and url(#act-arrow) references are untouched."
+  },
+  {
+   "id": "M083",
+   "class": "GEOMETRY",
+   "what_changes": "single .action node at row 0 (centerX 140, width 170): <rect x=\"55.0\"> becomes x=\"225.0\" (centerX + width/2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "leftX only feeds fmt into the rect's x attribute, so only a coordinate changes. No markup, id or href is affected."
+  },
+  {
+   "id": "M084",
+   "class": "GEOMETRY",
+   "what_changes": "single .action node at row 0: <rect x=\"55.0\"> becomes x=\"-200.0\" (140 - 170*2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "This changes only the rect's x coordinate. A negative number is still well-formed attribute text."
+  },
+  {
+   "id": "M085",
+   "class": "GEOMETRY",
+   "what_changes": "single .action node at row 0 (centerY 82, height 44): <rect y=\"60.0\"> becomes y=\"104.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "topY only feeds fmt into the rect's y attribute, so it is a coordinate change only."
+  },
+  {
+   "id": "M086",
+   "class": "GEOMETRY",
+   "what_changes": "single .action node at row 0: <rect y=\"60.0\"> becomes y=\"-6.0\" (82 - 44*2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "This changes only the rect's y coordinate. The output keeps the same elements, attributes, ids and references."
+  },
+  {
+   "id": "M087",
+   "class": "GEOMETRY",
+   "what_changes": "single .decision node at row 0 (center 140,90; width 180): points \"140.0,60.0 230.0,90.0 140.0,120.0 50.0,90.0\" become \"140.0,60.0 500.0,90.0 140.0,120.0 -220.0,90.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "halfW only shifts the right and left diamond vertices in the polygon points string, which is built from fmt numbers, commas and spaces. Only path numbers change."
+  },
+  {
+   "id": "M088",
+   "class": "GEOMETRY",
+   "what_changes": "single .decision node at row 0 (height 60): points \"140.0,60.0 ... 140.0,120.0 ...\" become \"140.0,-30.0 ... 140.0,210.0 ...\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "halfH only moves the top and bottom vertices in the polygon points attribute, so only point coordinates change."
+  },
+  {
+   "id": "M089",
+   "class": "GEOMETRY",
+   "what_changes": "single .fork node at row 0 (centerX 140, width 120): <rect x=\"80.0\"> becomes x=\"200.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderBar's leftX only feeds the rect's x attribute through fmt, so it is a coordinate change only."
+  },
+  {
+   "id": "M090",
+   "class": "GEOMETRY",
+   "what_changes": "single .fork node at row 0: <rect x=\"80.0\"> becomes x=\"-100.0\" (140 - 120*2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "This changes only the bar's x coordinate. A negative value is still a well-formed attribute value."
+  },
+  {
+   "id": "M091",
+   "class": "GEOMETRY",
+   "what_changes": "single .fork node at row 0 (centerY 64, height 8): <rect y=\"60.0\"> becomes y=\"68.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderBar's topY only feeds the rect's y attribute, so it is a coordinate change only."
+  },
+  {
+   "id": "M092",
+   "class": "GEOMETRY",
+   "what_changes": "single .fork node at row 0: <rect y=\"60.0\"> becomes y=\"48.0\" (64 - 8*2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "This changes only the bar's y coordinate. No element, id or reference is affected."
+  },
+  {
+   "id": "M094",
+   "class": "STRUCTURE",
+   "what_changes": "Graph with one .action node (id 0, no .start) and a self-loop edge 0->0: original emits a dashed <path d=\"M 225.0 82.0 L 255.0 82.0 L 255.0 82.0 L 225.0 82.0\" ... stroke-dasharray=\"4,3\" .../>; mutant emits <line x1=\"140.0\" y1=\"104.0\" x2=\"140.0\" y2=\"60.0\" .../> instead",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Only the equality case flips: target.centerY == source.centerY now routes to renderForwardEdge instead of renderBackEdge, so a <path> with stroke-dasharray becomes a <line> (and a label's <text> moves). centerY = 40 + row*92 + height/2 + 20, so equality needs the same row and same node height: a self-loop (which the public ActivityGraph init accepts, and which forwardEdges drops as a back edge), or an edge between same-kind nodes in one row (e.g. a graph with no .start node, where every row is 0). Both branches emit well-formed self-closing elements whose only reference is url(#act-arrow), and renderFromLayout always writes <marker id=\"act-arrow\"> in <defs>. So neither law can see it."
+  },
+  {
+   "id": "M096",
+   "class": "GEOMETRY",
+   "what_changes": "start(id0) -> action(id1), edge 0->1: line y1 goes from 88.0 (74+14) to 60.0 (74-14)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "startY = source.centerY - source.height/2 moves the forward edge's start from the source's bottom to its top. The only output change is the number printed by fmt(\"%.1f\"), plus the midY of a labeled edge. Element structure and the url(#act-arrow) reference are unchanged, and the marker id is always defined."
+  },
+  {
+   "id": "M097",
+   "class": "GEOMETRY",
+   "what_changes": "start(id0) -> action(id1): line y1 goes from 88.0 (74+28/2) to 130.0 (74+28*2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "source.height*2 instead of /2 changes only the numeric y1 (and a labeled edge's midY). It is still numeric text in an attribute, the same elements are emitted, and the url(#act-arrow) target always exists."
+  },
+  {
+   "id": "M098",
+   "class": "GEOMETRY",
+   "what_changes": "start(id0) -> action(id1, centerY 174): line y2 goes from 152.0 (174-22) to 196.0 (174+22)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "endY now lands at the target's bottom instead of its top. Only the y2 coordinate changes (and midY when the edge is labeled). No structural or reference change, so both laws pass."
+  },
+  {
+   "id": "M099",
+   "class": "GEOMETRY",
+   "what_changes": "start(id0) -> action(id1, centerY 174, height 44): line y2 goes from 152.0 to 86.0 (174-44*2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "target.height*2 changes only the numeric y2 (and a labeled edge's midY). Well-formedness and the always-defined #act-arrow reference are unaffected."
+  },
+  {
+   "id": "M101",
+   "class": "GEOMETRY",
+   "what_changes": "start(id0) -> action(id1) with edge label \"true\", both at centerX 140: the label <text> x goes from 140.0 to 0.0",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "midX = (startX - endX)/2 moves the label's x. It runs only on labeled forward edges, which the public ActivityEdge(label:) and the builder's branch labels reach. Only a number changes, the label text is still xmlEscaped, and there is no reference in the <text>."
+  },
+  {
+   "id": "M102",
+   "class": "GEOMETRY",
+   "what_changes": "same labeled edge, startX = endX = 140: the label <text> x goes from 140.0 to 560.0",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "(startX+endX)*2 changes only the numeric x of the label <text>. Same elements, no reference involved."
+  },
+  {
+   "id": "M103",
+   "class": "GEOMETRY",
+   "what_changes": "labeled start(id0) -> action(id1), startY 88, endY 152: the label <text> y goes from 116.0 to -36.0",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "(startY - endY)/2 - 4 changes only the label's y. A negative coordinate is still numeric attribute text, and nothing structural or referential changes."
+  },
+  {
+   "id": "M104",
+   "class": "GEOMETRY",
+   "what_changes": "same labeled edge: the label <text> y goes from 116.0 to 476.0 ((88+152)*2-4)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Multiplication instead of division changes only the label's numeric y, so neither law is affected."
+  },
+  {
+   "id": "M105",
+   "class": "GEOMETRY",
+   "what_changes": "same labeled edge: the label <text> y goes from 116.0 to 124.0 (the label sits 4 below the midpoint instead of 4 above)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "The -4 offset becomes +4, so only the numeric y of the label changes. The structure and references are unchanged."
+  },
+  {
+   "id": "M106",
+   "class": "GEOMETRY",
+   "what_changes": "start(id0) <-> action(id1), back edge 1->0: path goes from \"M 225.0 174.0 L 255.0 174.0 L 255.0 74.0 L 154.0 74.0\" to \"M 55.0 174.0 L 184.0 174.0 L 184.0 74.0 L 154.0 74.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "startX = source.centerX - source.width/2 starts the back edge at the source's left side. Through max() it also shifts detourX, and a label's x. Only numbers in the d attribute change. The <path> keeps its url(#act-arrow) marker, which is always defined."
+  },
+  {
+   "id": "M107",
+   "class": "GEOMETRY",
+   "what_changes": "same back edge 1->0: path goes from \"M 225.0 174.0 L 255.0 174.0 ...\" to \"M 480.0 174.0 L 510.0 174.0 L 510.0 74.0 L 154.0 74.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "source.width*2 pushes startX, and through max() detourX, far right. Only path coordinates (and a label's x) change. The output is still well-formed and the marker reference resolves."
+  },
+  {
+   "id": "M108",
+   "class": "GEOMETRY",
+   "what_changes": "same back edge 1->0: the final path point goes from \"L 154.0 74.0\" to \"L 126.0 74.0\" (detourX stays 255 because startX 225 dominates)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "endX = target.centerX - target.width/2 lands the arrow on the target's left edge. Only path coordinates change, and possibly detourX when endX was the max. No structural or reference effect."
+  },
+  {
+   "id": "M109",
+   "class": "GEOMETRY",
+   "what_changes": "same back edge 1->0: the final path point goes from \"L 154.0 74.0\" to \"L 196.0 74.0\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "target.width*2 changes the endX coordinate, and detourX whenever endX is the max. Only numbers change."
+  },
+  {
+   "id": "M110",
+   "class": "GEOMETRY",
+   "what_changes": "same back edge 1->0: path goes from \"... L 255.0 174.0 L 255.0 74.0 ...\" to \"... L 195.0 174.0 L 195.0 74.0 ...\"",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "detourX = max(startX, endX) - 30 puts the detour inside the nodes instead of 30 to the right of them. It shifts the path's middle points and a label's x, only as numbers. The element set and the always-defined #act-arrow reference are unchanged."
+  },
+  {
+   "id": "M113",
+   "class": "GEOMETRY",
+   "what_changes": "participant centerX=120: the box's <rect x=\"60.0\"> becomes <rect x=\"180.0\"> (leftX = centerX + 60 instead of centerX - 60), top and bottom boxes alike",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderParticipantBox line 185: leftX only feeds fmt(leftX) in the rect's x attribute. fmt is String(format: \"%.1f\"), which gives a digit string or nan/inf, so the markup stays well formed. The function emits no reference and no id."
+  },
+  {
+   "id": "M114",
+   "class": "GEOMETRY",
+   "what_changes": "participant centerX=120: <rect x=\"60.0\"> becomes <rect x=\"-120.0\"> (centerX - 120*2 instead of centerX - 120/2)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Same expression as M113. Only the numeric x of the participant rect changes. Width, text and element structure are untouched, and the box holds no references or ids."
+  },
+  {
+   "id": "M115",
+   "class": "STYLE",
+   "what_changes": "a sync message A->B (isAsync=false): marker-end=\"url(#seq-arrow)\" becomes marker-end=\"url(#seq-arrow-open)\"; async messages flip the other way. The arrowhead switches between the filled triangle and the open stroked chevron",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderMessage line 204: markerId is used only in marker-end=\"url(#\u2026)\" on the path or line. renderFromLayout always emits both <marker id=\"seq-arrow\"> and <marker id=\"seq-arrow-open\"> in <defs>, so either name resolves. The only visible effect is the arrowhead's fill or stroke. No attribute appears or vanishes."
+  },
+  {
+   "id": "M116",
+   "class": "STYLE",
+   "what_changes": "a sync message: its <line \u2026 stroke-width=\"1.2\" marker-end=\u2026> gains stroke-dasharray=\"4,3\" (solid becomes dashed); an async message loses it (dashed becomes solid)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderMessage line 205: dashArray is either empty or the well-formed attribute ` stroke-dasharray=\"4,3\"`, placed between stroke-width and marker-end. No duplicate attribute is possible, because the line and path carry no other stroke-dasharray. The only effect is the dash pattern: the attribute is toggled, but nothing else changes."
+  },
+  {
+   "id": "M117",
+   "class": "STRUCTURE",
+   "what_changes": "message fromX=120,toX=300: <line x1=\"120.0\" \u2026 x2=\"300.0\"\u2026/> plus a text-anchor=\"middle\" label becomes a self-call loop <path d=\"M 120.0 \u2026 L 150.0 \u2026\"/> with an un-anchored label at x=154.0. A real self-call (fromX==toX) becomes a zero-length <line> instead",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderMessage line 210: negating the condition swaps which branch runs. Each branch emits a different element (path vs line) with different attributes. Both branches are well formed, escape the label the same way, and reference url(#markerId), which always names a defined marker."
+  },
+  {
+   "id": "M118",
+   "class": "STRUCTURE",
+   "what_changes": "a self-call fromX=toX=100: the loop <path d=\"M 100.0 \u2026 L 130.0 \u2026\"/> becomes a zero-length <line x1=\"100.0\" \u2026 x2=\"100.0\"/> with a centred label (abs(100+100)=200 is not < 1)",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "With |fromX + toX| < 1, the branch is chosen by the sum, not the difference. For non-negative columns, self-calls (other than at x=0) now fall to the straight-line branch, and opposite-signed pairs like -50/50 fall into the loop branch. The element type changes. Both branches emit well-formed markup and a url(#markerId) that resolves."
+  },
+  {
+   "id": "M119",
+   "class": "STRUCTURE",
+   "what_changes": "hand-built layout message fromX=0,toX=1: <line x1=\"0.0\" \u2026 x2=\"1.0\"/> becomes the loop <path d=\"M 0.0 \u2026 L 30.0 \u2026\"/>. Every other gap is unchanged",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "`<` becomes `<=`, which differs only when |fromX - toX| == 1 exactly. computeLayout never produces that: its x values are 120+180k or the leftMargin 30, so gaps are multiples of 90. The law generator never produces it either (columns 0/100/200). The public renderFromLayout accepts any SequenceMessage, though, so a gap of 1 is an accepted input and flips line to path. Both branches are well formed and reference a defined marker."
+  },
+  {
+   "id": "M120",
+   "class": "STRUCTURE",
+   "what_changes": "message fromX=120,toX=300: the <line> becomes the loop <path>; a self-call fromX=toX the other way, the loop <path> becomes a zero-length <line>",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "`<` becomes `>`, which swaps the branches for every gap except exactly 1, where both conditions are false. The element type (path vs line) and its attributes change. Each branch is well formed and its url(#markerId) names a marker that is always defined."
+  },
+  {
+   "id": "M121",
+   "class": "GEOMETRY",
+   "what_changes": "message fromX=120,toX=300: the label <text x=\"210.0\"> becomes <text x=\"-90.0\">",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderMessage line 228: labelX feeds only the straight-line branch's label x through fmt. Only that number changes. The label text, its escaping and the line's marker reference are untouched. With toX=0 the value is unchanged, but other inputs move it."
+  },
+  {
+   "id": "M122",
+   "class": "GEOMETRY",
+   "what_changes": "message fromX=120,toX=300: the label <text x=\"210.0\"> becomes <text x=\"840.0\">",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Same expression as M121: (fromX+toX)*2 instead of /2 changes only the numeric x of the message label. It stays a %.1f number, so the markup is unchanged and no reference or id is involved."
+  },
+  {
+   "id": "M123",
+   "class": "GEOMETRY",
+   "what_changes": "unresolved note \"Unresolved: run()\" (17 chars) at centerX=180: width=\"119.0\" x=\"120.5\" becomes width=\"100.0\" x=\"130.0\". Notes of 14 chars or fewer are unchanged, since both give the floor of 100",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderNote line 238: noteWidth = max(count/7, 100) instead of max(count*7, 100). This only lowers the rect's width and shifts its x for texts of 15+ characters, so every note is 100 wide. The note text and its escaping are unchanged. A note emits no reference or id."
+  },
+  {
+   "id": "M124",
+   "class": "GEOMETRY",
+   "what_changes": "note \"Unresolved: run()\" at centerX=180 (noteWidth 119): <rect x=\"120.5\"> becomes <rect x=\"239.5\">",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "renderNote line 240: leftX feeds only the note rect's x via fmt. One number changes. The y, width, text and structure do not, and the note carries no references."
+  },
+  {
+   "id": "M125",
+   "class": "GEOMETRY",
+   "what_changes": "note \"Unresolved: run()\" at centerX=180 (noteWidth 119): <rect x=\"120.5\"> becomes <rect x=\"-58.0\">",
+   "law1_could_see": false,
+   "law2_could_see": false,
+   "reason": "Same expression as M124: centerX - noteWidth*2 instead of /2 changes only the rect's numeric x attribute. The document's shape, text and references are untouched."
+  }
+ ]
+}

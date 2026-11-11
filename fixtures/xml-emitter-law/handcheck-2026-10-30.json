@@ -1,0 +1,337 @@
+{
+ "groups": [
+  {
+   "repo": "SwiftLint",
+   "revision": "ec4691d9e813a1d3358e82917326b56b0a71d3c9",
+   "rows": [
+    {
+     "id": "SwiftLint:Source/SwiftLintFramework/Reporters/CheckstyleReporter.swift:12",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "generateReport([StyleViolation(ruleDescription: <identifier \"colon\">, location: Location(file: nil), reason: \"\\u{0001}\")]) returns, on line 4: <error line=\"0\" column=\"0\" severity=\"warning\" message=\"\\u{0001}\" source=\"swiftlint.rules.colon\"/>. The raw U+0001 is copied into the attribute, because escapedForXML only rewrites & \" ' > <. The judges' witness is exact. Run end to end with the shipping build: swiftlint 0.65.1 with only the default rules, run on a Swift file that compiles (swiftc -typecheck exits 0), `// TODO: ESC[1mbold ESC[0m later` + `let y = 2`. The default-on `todo` rule writes `message=\"TODOs should be resolved (^[[1mbold^[[0m later)\"` with raw U+001B. A custom_rules `message: \"Avoid print\\x01\"` gives `message=\"Avoid print^A\"` the same way.",
+     "parser_error": "XMLParser.parse() == false. The first parseErrorOccurred is NSXMLParserErrorDomain code 9 (invalidCharacterError) at line 4, col 58. The final parserError is code 111, libxml2's user-stop raised after the abort. xmllint reports `parser error : invalid character in attribute value`. The ESC run in the shipping build fails the same way: code 9 at line 5, col 84.",
+     "executed": true,
+     "execution_note": "Two runs. (2) A scratch harness compiled with swiftc. It holds CheckstyleReporter.swift, String+XML.swift and Reporter.swift (the protocol) verbatim from the census revision. Other parts are trimmed: StyleViolation.swift (minus the SourceKittenFramework import), ViolationSeverity (minus the macro attribute and InlinableOptionType), Location (the URL init and Comparable only), Array.group(by:) and URL+SwiftLint lines 1-92, plus a three-field RuleDescription shim. A plain-reason control parses true. Also the shipping Homebrew swiftlint 0.65.1. The census revision is 0.65.1-21-gec4691d9e, and no commit since the tag touches the reporters, String+XML, StyleViolation, Location, TodoRule or CustomRules (a2ed9e3a9 only moved URL+SwiftLint.swift, with no change). Option (1) was not used: SwiftLintFramework builds swift-syntax 605-prerelease from source plus a macro target and about 250 rule files, well past 6 minutes at -j 4, and the reporter is an internal struct. Files: <scratch>/handcheck/SwiftLint/harness/run-output.txt and .../SwiftLint/e2e/default-checkstyle.xml",
+     "contract_allows": "yes",
+     "contract_reason": "StyleViolation.reason is an unrestricted String, documented only as 'The justification for this violation'. The reporter promises 'Checkstyle XML', and its own code escapes the reason, so the reason is meant to be arbitrary text. Nothing guards out control characters, and no sentinel applies.",
+     "reachable": "yes",
+     "reachability_reason": "The rule `todo` is on by default and copies up to 30 characters of comment text after TODO/FIXME into the reason. swiftc accepts C0 controls inside comments (it rejects them only in literals), so code that compiles and lints cleanly otherwise reaches the bug. A pasted ANSI escape is one way. User-written custom_rules `message` strings (for example colour escapes) reach it too. File paths with control characters reach the escaped `name` attribute the same way. Reproduced end to end with the shipping 0.65.1 binary.",
+     "upstream_head_same": "yes",
+     "upstream_note": "realm/SwiftLint main HEAD is ec4691d9e813a1d3358e82917326b56b0a71d3c9, the census revision itself. The blobs on main match: CheckstyleReporter.swift 47f9f0a1 and String+XML.swift a6d7e490. A related closed issue, #968 ('Checkstyle Reporter: message is not allowed to contain `<`'), was fixed by PR #979, which added escapedForXML. That fix never handled characters XML 1.0 forbids outright. No issue or PR about control characters was found. Several gh searches hit the rate limit once and were retried.",
+     "existing_report": "",
+     "upstream_owner_repo": "realm/SwiftLint",
+     "recommendation": "file",
+     "summary": "Confirmed by running the code. A reason or path holding a C0 control (U+0001, or U+001B from an ANSI escape) passes through escapedForXML unchanged, and XMLParser rejects the Checkstyle report (code 9, invalid character). The shipping swiftlint 0.65.1 does the same with only the default rules on a Swift file that compiles and has a control character in a TODO comment. File one upstream issue for all three XML reporters: escapedForXML has to drop or replace characters XML 1.0 forbids, since even a character reference such as &#1; is not allowed."
+    },
+    {
+     "id": "SwiftLint:Source/SwiftLintFramework/Reporters/GitLabJUnitReporter.swift:9",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "Both halves hold. (a) RuleDescription(identifier: \"a<b\") with Location(file: nil) gives line 3: <testcase name='warning: a<b in &lt;nopath&gt;'>, and the body has `Rule: a<b`. `rule = violation.ruleIdentifier` is never escaped. The judges rendered the path as `<nopath>`, but the real output escapes it as `&lt;nopath&gt;`; the defect is the raw `<` from the identifier. Close variants a&b and it's also fail. (b) reason \"\\u{0001}\" gives `Reason: \\u{0001}` inside <failure> on line 6. The shipping build reproduces both. swiftlint 0.65.1 with custom_rules key \"a<b\" and message \"Avoid print\" gives <testcase name='warning: a<b in custom.swift:1'>. With only the default rules, a TODO comment holding ESC gives `Reason: TODOs should be resolved (^[[1mbold^[[0m later)`.",
+     "parser_error": "(a) parse() == false. The first error is code 38 (lessThanSymbolInAttributeError) at line 3, col 28; xmllint reports \"Unescaped '<' not allowed in attributes values\". a&b fails with code 23 (EntityRef: expecting ';') and it's with code 65 (attributes construct error). (b) parse() == false. The first error is code 9 (invalidCharacterError) at line 6, col 9; xmllint reports 'PCDATA invalid Char value 1'. The final parserError is always code 111 (user-stop).",
+     "executed": true,
+     "execution_note": "Two runs. The same swiftc scratch harness, with GitLabJUnitReporter.swift, String+XML.swift and URL+SwiftLint.swift (relativeDisplayPath, lines 1-92) verbatim from the census revision. A plain-reason control parses true. Also the shipping Homebrew swiftlint 0.65.1, whose reporter code is unchanged up to the census revision (0.65.1-21-gec4691d9e), run with custom_rules configs and with only the default rules. The package build was skipped for the reason given in the Checkstyle row. Files: <scratch>/handcheck/SwiftLint/e2e/customlt-gitlab.xml and .../SwiftLint/e2e/default-gitlab.xml",
+     "contract_allows": "yes",
+     "contract_reason": "The control-character half is plainly allowed, because reason is an unrestricted String. The identifier half is less clear. RuleDescription.identifier says it 'should' be lowercase snake_case, which built-in rules follow. But custom-rule identifiers are the user's YAML keys and are never checked (CustomRulesConfiguration builds RegexConfiguration(identifier: key) directly). The sibling CheckstyleReporter escapes the identifier, so the authors themselves treated it as text that needs escaping.",
+     "reachable": "yes",
+     "reachability_reason": "The reason half is reached through the default `todo` rule on source that compiles, and through custom_rules messages; both were reproduced with the shipping 0.65.1. The identifier half is reached by any custom_rules key holding < & or ', which loads silently and was reproduced end to end. Such a key is rare in practice.",
+     "upstream_head_same": "yes",
+     "upstream_note": "realm/SwiftLint main HEAD is ec4691d9e, the census revision, and GitLabJUnitReporter.swift on main is the same blob, 17ad7d84. The reporter came in with PR #3177 and never escaped `rule`. Searches for gitlab, junit reporter, xml escape and invalid xml found no report. The only related issue, #968, is closed and covered `<` in Checkstyle messages.",
+     "existing_report": "",
+     "upstream_owner_repo": "realm/SwiftLint",
+     "recommendation": "file",
+     "summary": "Confirmed by running the code. GitLabJUnitReporter puts ruleIdentifier into a single-quoted attribute and into element text without escaping. A custom-rule key such as a<b, a&b or it's makes the report malformed (code 38/23/65), and so does a C0 control in the reason (code 9). Both halves reproduce with the shipping swiftlint 0.65.1, the control-character half with only the default rules. Report it in the same upstream issue as the escapedForXML control-character gap, with the one-line fix `rule.escapedForXML()`."
+    },
+    {
+     "id": "SwiftLint:Source/SwiftLintFramework/Reporters/JUnitReporter.swift:11",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "generateReport([StyleViolation(<any description>, location: Location(file: nil), reason: \"\\u{0001}\")]) returns, on line 5: <failure message='\\u{0001}'>Warning:Line:0</failure>. The judges' witness is exact. The file name takes the same path: Location(file: /tmp/a\\u{0001}b.swift) gives name='/tmp/a\\u{0001}b.swift'. Run with the shipping build: swiftlint 0.65.1 with only the default rules, on `// TODO: ESC[1mbold ESC[0m later` + `let y = 2` (compiles), gives <failure message='TODOs should be resolved (^[[1mbold^[[0m later)'>Warning:Line:1</failure>.",
+     "parser_error": "XMLParser.parse() == false. The first parseErrorOccurred is code 9 (invalidCharacterError) at line 5, col 22, and the final parserError is code 111 (user-stop). xmllint reports 'parser error : invalid character in attribute value'. The shipping build's TODO/ESC output fails with code 9 at line 8, col 48.",
+     "executed": true,
+     "execution_note": "Two runs. The same swiftc scratch harness, with JUnitReporter.swift and String+XML.swift verbatim from the census revision; a plain-reason control parses true. Also the shipping Homebrew swiftlint 0.65.1 (reporter code unchanged up to 0.65.1-21-gec4691d9e) with --reporter junit, using only the default rules and using custom_rules. The package build was skipped for the reason given in the Checkstyle row. Files: <scratch>/handcheck/SwiftLint/harness/run-output.txt and .../SwiftLint/e2e/default-junit.xml",
+     "contract_allows": "yes",
+     "contract_reason": "StyleViolation.reason and Location.file are unrestricted. The reporter promises 'JUnit XML' and escapes both fields itself, so it expects arbitrary text. No guard or sentinel excludes control characters.",
+     "reachable": "yes",
+     "reachability_reason": "The default-on `todo` rule copies comment text, which swiftc allows to hold C0 controls, into the reason. custom_rules messages and file paths are also inputs. The bug reproduces with the shipping 0.65.1 and only the default rules, on code that compiles. This is the reporter CI systems consume (Jenkins, Azure, GitLab), and there a malformed report fails the parse or the report is dropped.",
+     "upstream_head_same": "yes",
+     "upstream_note": "realm/SwiftLint main HEAD is ec4691d9e, the census revision. JUnitReporter.swift on main is the same blob (5b1ed980), and so is String+XML.swift (a6d7e490). Searches turned up only issue #6161 (test count, closed) and issue #968 (Checkstyle `<`, closed, fixed by PR #979); neither covers characters XML forbids.",
+     "existing_report": "",
+     "upstream_owner_repo": "realm/SwiftLint",
+     "recommendation": "file",
+     "summary": "Confirmed by running the code. A C0 control in the reason, or in the file path, goes through escapedForXML unchanged into a single-quoted attribute, and XMLParser rejects the JUnit report (code 9). The shipping swiftlint 0.65.1 reproduces it with only the default rules, through a TODO comment holding ESC. It has the same root cause as the Checkstyle and GitLab rows, so file one upstream issue against escapedForXML."
+    }
+   ]
+  },
+  {
+   "repo": "swift-foundation",
+   "revision": "a211bea22b6fa5b041c37592aaf50c7b3db5c354",
+   "rows": [
+    {
+     "id": "swift-foundation:Sources/FoundationEssentials/PropertyList/XMLPlistEncodingFormat.swift:732",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "The judges' exact input, Writer().serializePlist(.string(\"\\u{1}\")), run on the census revision's text, returns `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n<!DOCTYPE plist ...>\\n<plist version=\"1.0\">\\n<string>\\u{1}</string>\\n</plist>\\n`, with U+0001 written raw. Through the public API: PropertyListEncoder with outputFormat = .xml, encoding [\"key\": \"\\u{1}\"], gives `<dict>\\n\\t<key>key</key>\\n\\t<string>\\u{1}</string>\\n</dict>`. Dictionary keys go through appendEscaped too, so [\"k\\u{1}\": \"v\"] gives `<key>k\\u{1}</key>`. A Codable struct with a String field set to \"\\u{1B}[0m\" also gives malformed output. The top-level form is refused by encode(_:), but encode(_:configuration:) returns the judges' exact bytes. A sweep of U+0000 to U+0020 plus U+007F, U+0085, U+FFFD, U+FFFE, U+FFFF and U+1FFFE through the shipping encoder found: U+0000 throws (the guard); XMLParser rejects 30 outputs, namely U+0001 to U+0008, U+000B, U+000C, U+000E to U+001F, U+FFFE and U+FFFF; it accepts tab, LF, CR, U+0020, U+007F, U+0085, U+FFFD and U+1FFFE. That is exactly the set XML 1.0's Char production forbids, less the guarded NUL. Controls for comparison: `a<b&c` is escaped as `a&lt;b&amp;c` and parses.",
+     "parser_error": "XMLParser(data:).parse() returns false. The first error reported to the delegate is NSXMLParserErrorDomain code 9 (invalidCharacterError), at line 6, column 10, inside <string> for the dictionary-value witness. The final parserError is NSXMLParserErrorDomain code 111. U+FFFE, U+FFFF, U+001B and U+000B fail the same way. Writing the character as a reference (&#1;) does not help: XMLParser rejects that with code 9 as well.",
+     "executed": true,
+     "execution_note": "Two independent runs, both compiled with swiftc on macOS 27.2 (Swift 6.4.2). The package was not built, because FoundationEssentials needs swift-foundation-icu, swift-collections and swift-syntax, which would take well over 6 minutes. (3) The shipping macOS Foundation PropertyListEncoder with the .xml format. Its NUL-guard error text, 'Property list strings cannot contain embedded null characters in XML format.', matches the census revision's appendEscaped word for word, so this is the same writer. (2) A verbatim extraction from git show a211bea2: XMLPlistEncodingFormat.swift lines 597-1055 (Reference and Writer) and 1090-1124 (Hashable, Comparable and string extensions), plus verbatim copies of PlistEncodingReference and PlistWriting, XMLPlistTag with its tag byte constants, the UInt8 constants and _plistNull. Shims were written only for Calendar.sufficientlyProlepticISO8601Calendar, the internal ISO8601 format(_:appendingTimeZoneOffset:) and Data.withBufferView, which only the date and data arms use, and the witness never reaches them. The extraction reproduces the judges' output byte for byte. PropertyListSerialization (CFPropertyListCreateData) writes the same raw bytes, but it is a separate CF writer with a different NUL error message (code 3851, '...for XML or OpenStep format'), so it is not counted as reaching this unit. Scratch files are in <scratch>/handcheck/swift-foundation/{shipping,verbatim}.",
+     "contract_allows": "yes",
+     "contract_reason": "Any Swift String is a legal property-list string value. The binary format writes it, and PropertyListDecoder reads the XML output back unchanged (the round trip returned true). PropertyListEncoder.encode documents only non-conforming floats and errors thrown by values as failures. The writer's one guard is the NUL sentinel, which throws CocoaError .propertyListWriteInvalid and is excluded by the law. That guard came from swift-foundation PR #2039, whose stated rationale is 'The XML spec explicitly forbids NUL bytes'. The same spec forbids the other 29 C0 controls and U+FFFE/U+FFFF, and nothing guards those. The reader's own TODO in XMLPlistScanner.parseCDSect_pl at the census revision says control characters are 'supposed to be rejected'. The judges' top-level .string form is refused by encode(_:) (the fragment check at PlistEncoder.swift 155-170), but encode(_:configuration:) at lines 205-209 has no such check and admits it.",
+     "reachable": "yes",
+     "reachability_reason": "Any app that calls PropertyListEncoder with the .xml format on a Codable String it does not control produces malformed XML: a label a user types, a pasted string carrying ESC, VT or FF, a file name, or text carrying U+FFFF. This was shown with a plain Codable struct (Settings(windowTitle: \"\\u{1B}]0;x\\u{7}\")) and with a [String: String] dictionary, including a dictionary key. No precondition or validation sits between Codable input and appendEscaped other than the NUL check. Apple's own reader accepts the output, which hides the defect inside the ecosystem. Any standard XML consumer (XMLParser/libxml2) rejects it.",
+     "upstream_head_same": "yes",
+     "upstream_note": "swiftlang/swift-foundation main at aff1e7f (2026-10-30), read via gh api contents. XMLPlistEncodingFormat.swift is identical to the census revision except for a new #if !hasFeature(Embedded) wrapper. appendEscaped(_ str:) still escapes only < > & and throws only on 0x00. Related: PR #2039 (merged 2026-06-15, kperryua) added the NUL rejection only, and declined to change deserialization. #2239 (open) is a generic third-party benchmark compliance report that links a dashboard and names no specific case. A search for control characters, invalid characters or escaping in XML plists found no issue or PR.",
+     "upstream_owner_repo": "swiftlang/swift-foundation",
+     "existing_report": "",
+     "recommendation": "file",
+     "summary": "The witness holds. Run on the census text verbatim and through the shipping macOS PropertyListEncoder, Writer.serializePlist writes any XML-forbidden character other than NUL raw: U+0001-U+0008, U+000B, U+000C, U+000E-U+001F, U+FFFE and U+FFFF, 30 code points in all, in <string> and <key> alike. XMLParser rejects the output with invalidCharacterError (code 9; final parserError 111). The input is an ordinary Codable String and upstream main is unchanged, so this is a reachable defect and a natural follow-up to PR #2039, whose stated rationale (the XML spec forbids the character) covers these code points too. One caveat for the report: XML 1.0 cannot escape these characters, so the only fix is to throw as for NUL, which changes behaviour for callers who now round-trip such strings through PropertyListDecoder."
+    }
+   ]
+  },
+  {
+   "repo": "2389-research__MermaidKit",
+   "revision": "64c19fbddf5604122b01563b3ab727dbadf0ee95",
+   "rows": [
+    {
+     "id": "2389-research__MermaidKit:Sources/MermaidLayout/SVGRenderer.swift:14",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "I ran the judges' witness as stated. SVGRenderer.svg(RenderScene(size: CGSize(width: 10, height: 10), background: DiagramColor(red: 1, green: 1, blue: 1), elements: [.text(.init(string: \"\\u{0001}\", center: .zero, fontSize: 12, color: DiagramColor(red: 0, green: 0, blue: 0)))])) returns `<text x=\"0\" y=\"0\" font-size=\"12\" font-weight=\"400\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"rgba(0, 0, 0, 1)\">\\u{01}</text>`, with the raw C0 control U+0001 in it. With string \"<\\u{301}\" (one Character, and that Character is not \"<\", so escape's switch falls to default) the output is `...fill=\"rgba(0, 0, 0, 1)\"><\\u{301}</text>`, a raw '<' followed by a combining acute. Close variants also hold: \"&\\u{301}\" gives a raw `&\\u{301}`, and \"\\u{FFFE}\" gives a raw U+FFFE. The controls behave: tab is emitted and parses, and \"<a & b>\" becomes `&lt;a &amp; b&gt;`, which parses. End to end through the public parser, ASCII-only Mermaid source `flowchart LR\\n  A[\"a <&#769; b\"] --> B[ok]`, run through MermaidParser.parse, RenderScene.from and SVGRenderer.svg, gives `<text ...>a <\\u{301} b</text>`. `A[\"a &amp;&#769; b\"]` gives `a &\\u{301} b`. A raw ESC or backspace in a quoted flowchart label, or a raw U+0001 in a sequenceDiagram message, reaches the SVG unchanged.",
+     "parser_error": "For U+0001, XMLParser.parse() returns false. parserError reads NSXMLParserErrorDomain code 111, and the first parseErrorOccurred is code 9, 'PCDATA invalid Char value 1' (line 3, col 125). For \"<\\u{301}\": code 68, 'StartTag: invalid element name' (line 3, col 126). For \"&\\u{301}\": code 68, 'xmlParseEntityRef: no name'. For U+FFFE: code 9, 'Char 0xFFFE out of allowed range'. The end-to-end cases give the same errors: code 68 'StartTag: invalid element name' for `<&#769;`, and code 9 'PCDATA invalid Char value 27' for a raw ESC.",
+     "executed": true,
+     "execution_note": "Built and run. Exported the census revision with `git archive` into scratch/src. Copied Sources/MermaidLayout verbatim (diff -r identical) into a scratch harness package; its manifest holds only the MermaidLayout target plus a Witness executable, dropping the trait-gated Silica/Cairo deps so nothing was fetched. Built with `swift build -j 4` (Xcode 27, Swift 6.4.2). Called SVGRenderer.svg directly on the judges' scenes, and also end to end via MermaidParser.parse, RenderScene.from(_:theme:measure:) and SVGRenderer.svg. That is the same pipeline MermaidRender's public MermaidRenderer.svg(source:theme:) runs, minus its theme mapping. Judged with Foundation's XMLParser, plus a delegate to capture the first libxml2 message. Harness: <scratch>/handcheck/2389-research__MermaidKit/harness/Sources/Witness/main.swift; output: <scratch>/handcheck/2389-research__MermaidKit/witness_output.txt",
+     "contract_allows": "yes",
+     "contract_reason": "svg(_:) is public, has no precondition, and takes any RenderScene. RenderScene.Text.string is any String: its doc only says a lowered scene holds no line break, and the type is Codable so that scenes can cross process boundaries. The enum's doc promises a standalone document 'any browser or vector tool can open'. escape's doc says it works 'so labels can't break the doc', and the body breaks that on both inputs. There is no guard sentinel. The parser's own `referenced(_:)` refuses control characters and noncharacters because 'SVG can't hold them', which shows the authors consider such output out of contract. They guarded only one route in.",
+     "reachable": "yes",
+     "reachability_reason": "Users type Mermaid source, and it reaches the unit through MermaidRenderer.svg(source:theme:), the README's documented SVG export. I reproduced this end to end with ASCII-only source. A flowchart label `\"a <&#769; b\"` (or `&amp;&#769;`) has its numeric reference decoded by MermaidParser.labelText to U+0301, which lands right after '<' or '&'. That makes a single grapheme cluster, which escape passes raw. Raw C0 controls (ESC or backspace pasted into a quoted flowchart label, or U+0001 in a sequence message) also pass straight through. The parser blocks only the `&#1;` reference route. VT and FF are split into lines, so they do not reach the unit, and pie labels do not decode references.",
+     "upstream_head_same": "yes",
+     "upstream_note": "Default branch `main` is at 046d49e (Release v2.10.1, 2026-10-30), 11 commits ahead of the census revision and 0 behind. Sources/MermaidLayout/SVGRenderer.swift there is byte-identical to the census revision; it was last touched in 04054ef on 2026-07-17. Neither MermaidParser.swift nor RenderScene.swift is among the files changed since the census revision, so the end-to-end route is unchanged too. Searched issues and PRs for escape, control character, malformed SVG, invalid character, combining, escape label, special characters and SVGRenderer, and found no report. The nearest is merged PR #90, 'Labels read character references as a browser does', which added the decoding that makes the `<&#769;` route reachable.",
+     "upstream_owner_repo": "2389-research/MermaidKit",
+     "existing_report": "",
+     "recommendation": "file",
+     "summary": "Confirmed by running it. SVGRenderer.escape works on whole Characters and only swaps the five predefined entities. So C0 controls and noncharacters such as U+FFFE pass into <text> raw, and a '<' or '&' followed by a combining mark is a different Character and passes unescaped. XMLParser rejects all of these, against the doc's claim that labels can't break the doc. The input is reachable from plain ASCII Mermaid source (`A[\"a <&#769; b\"]`) through the public parse \u2192 scene \u2192 SVG pipeline, and the defect is unchanged on the default branch."
+    }
+   ]
+  },
+  {
+   "repo": "Australware__swift-mermaid",
+   "revision": "ee4b50bc15ad6e9b9f88bc320f2c42ba9a55a804",
+   "rows": [
+    {
+     "id": "Australware__swift-mermaid:Sources/Mermaid/Core/SVGRenderer.swift:8",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "Ran the judges' witness exactly as given: MermaidScene(size: 100x40, backgroundColor: nil, elements: [.text(\"\\u{0001}\", origin: .zero, font: FontSpec(), color: CGColor(r0 g0 b0 a1), anchor: .start)]).svgString(). Output line: `<text x=\"0\" y=\"0\" font-family=\"Helvetica, 'Helvetica Neue', Helvetica, Arial, sans-serif\" font-size=\"16\" fill=\"#000000\" text-anchor=\"start\" dominant-baseline=\"alphabetic\">\\u{0001}</text>`. The raw U+0001 is emitted because escapeText (SVGRenderer.swift) maps only & < > and appends every other Character unchanged. The same character also arrives through the public parse-and-render path from user-typed source: Mermaid.render(\"flowchart LR\\n  A[a\\u{0001}b] --> B[ok]\").svgString() emits `dominant-baseline=\"alphabetic\">a\\u{0001}b</text>`. These also give malformed output: ESC (U+001B) in a flowchart label, U+FFFE in a flowchart label, BEL (U+0007) in a sequence message and U+0001 in a pie title. The control input `A[a & b < c]` parses (true), with `a &amp; b &lt; c`.",
+     "parser_error": "XMLParser(data: Data(svg.utf8)).parse() returns false. parserError is NSXMLParserErrorDomain code 111 (libxml stop). The first error, captured by the delegate's parseErrorOccurred, is code 9 (NSXMLParserInvalidCharacterError), 'PCDATA invalid Char value 1', at line 2, col 172: the U+0001 inside <text>. The render-path variants fail the same way: 'PCDATA invalid Char value 27' for ESC, 'Char 0xFFFE out of allowed range', and 'PCDATA invalid Char value 7' for BEL.",
+     "executed": true,
+     "execution_note": "Package built. The census revision was exported with `git -C <root> archive ee4b50bc | tar -x` into <scratch>/src. A separate executable package at <scratch>/witness depends on it by path and was built with `swift build -j 4` (about 8s). It calls the public MermaidScene.svgString() and Mermaid.render(_:) and judges each output in-process with Foundation's XMLParser, with a delegate that records the first error. Source: <scratch>/handcheck/Australware__swift-mermaid/witness/Sources/Witness/main.swift. Output: <scratch>/handcheck/Australware__swift-mermaid/witness-output.txt and witness-errors.txt in the same directory.",
+     "contract_allows": "yes",
+     "contract_reason": "MermaidElement.text takes an unconstrained public String, and MermaidScene has a public memberwise init. svgString() is documented as 'A standalone SVG document' with no precondition on text content. Mermaid.render(_ source: String) documents only three throws: unsupported type, parse error and layout error. No parser, preprocessor or TextMeasure.splitHardLines step rejects or strips C0 controls other than \\n and \\r. No guard returns a sentinel. The README and spec name svgString() as the HTML/PDF export path and promise byte-stable SVG.",
+     "reachable": "yes",
+     "reachability_reason": "Executed end to end. A control character typed or pasted into a diagram label in Mermaid source (the contents of a ```mermaid fenced block, which a user writes) reaches svgString() unchanged. Witnessed through flowchart node labels (U+0001, ESC from pasted terminal text, U+FFFE), a sequence message (BEL) and a pie title (U+0001). Such characters are uncommon in hand-written diagrams but not filtered anywhere. The result is a document that every XML consumer rejects as a whole: a standalone .svg file, which VisualSmokeTests writes to disk, or an XML/SVG renderer.",
+     "upstream_head_same": "yes",
+     "upstream_note": "Default branch is `main`, and its head is ee4b50bc15ad6e9b9f88bc320f2c42ba9a55a804 (2026-08-27), the census revision itself. The default branch's Sources/Mermaid/Core/SVGRenderer.swift, read through `gh api .../contents`, is byte-identical to the census copy. The repo has one issue/PR in total (#1 'Add state diagram support', closed). `gh search issues` for escape, 'control character' and svg returns nothing.",
+     "upstream_owner_repo": "Australware/swift-mermaid",
+     "existing_report": "",
+     "recommendation": "file",
+     "summary": "Confirmed by running it: escapeText escapes only & < >, so any C0 control other than tab, LF and CR, or U+FFFE/U+FFFF, in a text element goes into the SVG raw. XMLParser then rejects the whole document with 'PCDATA invalid Char value N' (code 9). The input reaches svgString() through the public Mermaid.render path from user-typed diagram labels (flowchart, sequence, pie), and the default branch still holds the same code. It is a reachable, low-severity defect worth an upstream issue: drop or replace XML-forbidden characters in escapeText, and so in escapeAttr too."
+    }
+   ]
+  },
+  {
+   "repo": "lukilabs__beautiful-mermaid-swift",
+   "revision": "6a23a29e91af8f5b3e9fc09945332ca193bd69ec",
+   "rows": [
+    {
+     "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_class_renderer.swift:21",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "renderClassSvg(diagram /* Animal{+String name; +eat() void}, Dog, Animal<|--Dog 'extends' */, DiagramColors(bg: \"#FFFFFF\", fg: \"#27272A\"), \"A&B\") -> line 5 of the SVG: `text { font-family: 'A&B', system-ui, sans-serif; }` inside <style>, a bare `&`. The same diagram with the default font \"Inter\" parses. Variants that also hold: font \"A<B\" gives `font-family: 'A<B'`; colors.bg = \"\\\"\" gives `<svg ... style=\"--bg:\";--fg:#27272A;background:var(--bg)\">`.",
+     "parser_error": "XMLParser.parse() = false. First parseErrorOccurred: NSXMLParserErrorDomain 23 (EntityRef: expecting ';') at line 5, col 27. After the run, parserError reports 111 (parser stopped). font \"A<B\": code 68 at 5:27. bg \"\\\"\": code 65 at 1:101.",
+     "executed": true,
+     "execution_note": "Option (1) was tried first: git archive export, elk-swift 1.0.2 exported from the corpus checkout, and a wrapper package built with `swift build -j 4`. This session's permission classifier refused that build. So option (2): src_class_renderer.swift, and every helper it calls, were taken verbatim with `git show 6a23a29e:<path>`. The helpers are src_theme, src_styles, src_text_metrics, src_multiline_utils, src_index's DiagramColors, the src_class_parser type declarations, and src_class_layout's CLS. Only `import ElkSwift` was dropped, and a stub supplies ElkSwift.version. Coordinates were hand-set in place of the ELK layout, which supplies numbers only. Compiled with swiftc (Apple Swift 6.4.2) and judged with Foundation XMLParser; a delegate captured the first error. Files: <scratch>/verbatim/, <scratch>/driver/main.swift, output in <scratch>/witness-output.txt.",
+     "contract_allows": "yes",
+     "contract_reason": "`font` is a free String. The original documents it as 'Font family for all text. Default: Inter' (beautiful-mermaid src/types.ts:150) and restricts no characters; CSS accepts any quoted family name. The colors.bg variant is outside the contract: bg is documented as a color for --bg, and no CSS color contains a `\"`.",
+     "reachable": "unknown",
+     "reachability_reason": "No caller in the package sets a font or a non-hex color. The README's SVG entry, MermaidRenderer.renderSVG(source:theme:) at ImageRenderer.swift:57-71, builds RenderOptions from `_hex(BMColor)` (#RRGGBB) and never sets font, so the font is always \"Inter\". Mermaid source cannot set it either, because `%%` directive lines are filtered out. Only a direct caller of the public renderMermaidSVG(_:RenderOptions) or renderClassSvg that passes a family name containing & or < reaches it, and real family names rarely contain either.",
+     "upstream_head_same": "yes",
+     "upstream_owner_repo": "lukilabs/beautiful-mermaid-swift",
+     "upstream_note": "Default branch main is at 6a23a29e91, the census revision itself (pushed 2026-04-27). src_theme.swift:286 still interpolates `\\(font)` raw, and :304 does the same for --bg. The TypeScript original lukilabs/beautiful-mermaid src/theme.ts:266 has the same line. A search of upstream issues and PRs (#1-#7; 'escape', 'font', 'xml') found no report.",
+     "existing_report": "",
+     "recommendation": "mention-only",
+     "summary": "Confirmed by running the verbatim code. The shared buildStyleBlock writes the font into <style> character data unescaped, so a family name holding & or < is rejected by XMLParser. The `@import` line just above it does escape its `&` as `&amp;`. Every value the class renderer itself emits is escaped. Because no in-package or documented caller sets a font or a non-hex color, the defect is real but latent. One fix in original_src_theme.buildStyleBlock and svgOpenTag would cover all five rows."
+    },
+    {
+     "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_er_renderer.swift:21",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "Keys: renderErSvg on CUSTOMER{string name} / ORDER, where the attribute is built with the public maker original_src_er_types.makeAttribute(type: \"string\", name: \"name\", keys: [\"<PK\"]). Line 31 is `<text x=\"59.855000000000004\" y=\"88.0\" text-anchor=\"middle\" dy=\"0.35em\" font-size=\"9.0\" font-weight=\"600\" fill=\"var(--_text-sec)\"><PK</text>`; _renderAttribute joins attr.keys unescaped. Cardinality: cardinality1 = \"a\\\"b\" gives line 24 `<polyline class=\"er-relationship\" ... data-cardinality1=\"a\"b\" ...`. Font: \"A&B\" gives line 5 `text { font-family: 'A&B', system-ui, sans-serif; }`. The baseline (keys [\"PK\"], cardinality \"one\", font Inter) parses.",
+     "parser_error": "keys [\"<PK\"]: parse() = false, first error NSXMLParserErrorDomain 68 at line 31, col 135. cardinality1 a\"b: code 65 at 24:101. font A&B: code 23 (EntityRef: expecting ';') at 5:27. In each case the final parserError is 111 (parser stopped).",
+     "executed": true,
+     "execution_note": "Option (1) was tried first: an exported package and wrapper built with `swift build -j 4`. The session's permission classifier refused it. So option (2): src_er_renderer.swift, src_er_types.swift (the public makers), the src_er_parser type declarations (lines 1-76) and the shared helpers (src_theme, src_styles, src_text_metrics, src_multiline_utils, src_index DiagramColors) were copied verbatim with `git show 6a23a29e:<path>`. Only `import ElkSwift` was dropped, with a stub ElkSwift.version. Entity positions were hand-set instead of computed by the ELK layout. Compiled with swiftc (Swift 6.4.2) and judged with Foundation XMLParser. Output in <scratch>/witness-output.txt.",
+     "contract_allows": "yes",
+     "contract_reason": "Yes only for the font variant: `font` is a documented free family-name String. The row's own keys and cardinality witnesses are outside the contract. The original types keys as Array<'PK' | 'FK' | 'UK'> and Cardinality as 'one' | 'zero-one' | 'many' | 'zero-many' (beautiful-mermaid src/er/types.ts:30,42). The Swift port only widened both to String.",
+     "reachable": "unknown",
+     "reachability_reason": "Keys and cardinality are not reachable from Mermaid source. _parseAttribute keeps a token only if it uppercases to PK, FK or UK, and _parseCardinality returns only the four union values. They are reached only by a Swift caller that builds an ErAttribute or ErRelationship by hand with makeAttribute/makeRelationship, or that mutates the public vars. The font variant is reached only by a direct caller of renderMermaidSVG/renderErSvg that sets RenderOptions.font, and no in-package or README caller does.",
+     "upstream_head_same": "yes",
+     "upstream_owner_repo": "lukilabs/beautiful-mermaid-swift",
+     "upstream_note": "main HEAD is 6a23a29e91, the census revision. src_er_renderer.swift:154 still interpolates attr.keys raw, :189 still writes data-cardinality1 raw, and src_theme.swift:286 still writes the font raw. No upstream issue or PR covers any of them.",
+     "existing_report": "",
+     "recommendation": "mention-only",
+     "summary": "All three witnesses hold when the verbatim code is run: the unescaped keys badge, the unescaped data-cardinality attributes and the shared font line. The keys and cardinality inputs are outside the original's declared union types and can never come out of the parser, so they are latent. The font one is the shared buildStyleBlock defect, also latent. Labels, types, names and comments are all escaped."
+    },
+    {
+     "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_renderer.swift:60",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "renderSvg(graph /* A[Box] --> B[Other] */, DiagramColors(bg: \"#FFFFFF\", fg: \"#27272A\"), \"A&B\") -> line 4: `text { font-family: 'A&B', system-ui, sans-serif; }`. colors.bg = \"a\\\"b\" gives line 1 `<svg ... style=\"--bg:a\"b;--fg:#27272A;background:var(--bg)\">`. The baseline, including linkStyle 0 stroke:#f00, parses. Extra variant, not the judges' witness: a node label \"a\\u{0001}b\" passes escapeXml unchanged.",
+     "parser_error": "font A&B: parse() = false, first error NSXMLParserErrorDomain 23 (EntityRef: expecting ';') at line 4, col 27. bg a\"b: code 65 at 1:102. The final parserError is 111 in both. Extra label with U+0001: code 9 (invalid character) at 29:42.",
+     "executed": true,
+     "execution_note": "Option (1) was tried first, an exported package built with `swift build -j 4`; the session's permission classifier refused it. So option (2): src_renderer.swift and its helpers were copied verbatim with `git show 6a23a29e:<path>`. The helpers are src_theme, src_styles, src_text_metrics, src_multiline_utils, the src_layout payload structs (lines 11-37 and 419-428) and src_index DiagramColors. Only `import ElkSwift` was dropped. Stubs: ElkSwift.version, and a PositionedGraph holding only width, height and flowchartNodes/Edges/Groups, the only members _extractSvgGraphModel reads. Coordinates were hand-set. Compiled with swiftc (Swift 6.4.2) and judged with XMLParser. The extra control-character label was set directly; its path through parseMermaid was traced, not run.",
+     "contract_allows": "yes",
+     "contract_reason": "font is a documented free family-name String (original src/types.ts:150), so the font variant is in contract. The bg variant is outside it, since bg is documented as a CSS color.",
+     "reachable": "unknown",
+     "reachability_reason": "The README's SVG path (MermaidRenderer.renderSVG) always passes font \"Inter\" and #RRGGBB colors, and Mermaid source cannot set either (`%%` lines are filtered). Only a direct caller of renderMermaidSVG(_:RenderOptions) or renderSvg reaches the font defect. The extra control-character variant can come from Mermaid source text (`A[a<U+0001>b]` matches the node-shape regex `.+?`), but such characters are rare in real diagrams.",
+     "upstream_head_same": "yes",
+     "upstream_owner_repo": "lukilabs/beautiful-mermaid-swift",
+     "upstream_note": "main HEAD is 6a23a29e91, the census revision. src_theme.swift:286 and :304 are unchanged, and multiline_utils.escapeXml still does not filter C0 controls. No upstream issue or PR covers either.",
+     "existing_report": "",
+     "recommendation": "mention-only",
+     "summary": "Confirmed: the flowchart renderer escapes every node, edge and group value it writes, but the shared style block and svg tag interpolate font and colors raw. No in-package or documented caller sets them, so the defect is latent. A related variant does come from source text: XML-forbidden C0 control characters in labels pass through escapeXml. It is rare and worth mentioning alongside the same fix."
+    },
+    {
+     "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_renderer.swift:60",
+     "flag": "refs_dangle",
+     "witness_holds": true,
+     "witness": "Source line `style A fill:url(#missing)`: the verbatim _parseStyleProps gives [\"fill\": \"url(#missing)\"], and renderSvg (A[Box] --> B[Other]) emits `<rect x=\"40.0\" y=\"40.0\" width=\"80.0\" height=\"36.0\" rx=\"0\" ry=\"0\" fill=\"url(#missing)\" stroke=\"var(--_node-stroke)\" stroke-width=\"0.75\" />`. References: url(#arrowhead), url(#missing); no href or xlink:href. ids: arrowhead, arrowhead-start. Dangling: missing. Control: with `linkStyle 0 stroke:#f00` the generated url(#arrowhead-23f00) finds id=\"arrowhead-23f00\".",
+     "parser_error": "url(#missing) names no id in the result. The document itself is well-formed (XMLParser.parse() = true).",
+     "executed": true,
+     "execution_note": "Option (2), because the session's permission classifier refused option (1)'s `swift build`. src_renderer.swift and its helpers were copied verbatim from 6a23a29e, plus the _parseStyleProps body (src_parser.swift:434-448), also verbatim. The node's inlineStyle was fed from that parse. The path from parseMermaid's `style` branch to mergeNodeStyle and then layout's _resolveInlineStyle into the node's inlineStyle was traced, not run. References and ids were listed with regexes over the output.",
+     "contract_allows": "no",
+     "contract_reason": "The input is legal Mermaid: the README says the `style` directive is supported. But the unit's contract for it is to copy the author's CSS value through verbatim, as mermaid.js does. Law 2 assumes every reference in the result is one the emitter made, and that does not hold for an author-supplied url(#id). Such a reference may legitimately name a gradient or pattern in the host page around an inline SVG, so the renderer cannot honour law 2 without dropping valid styles.",
+     "reachable": "yes",
+     "reachability_reason": "Any diagram author can write `style A fill:url(#x)` in Mermaid source, and it reaches the output through the documented MermaidRenderer.renderSVG path.",
+     "upstream_head_same": "yes",
+     "upstream_owner_repo": "lukilabs/beautiful-mermaid-swift",
+     "upstream_note": "main HEAD is 6a23a29e91. src_renderer.swift:316 still passes inlineStyle[\"fill\"] through _escapeAttr unchanged; this is intended pass-through, not a regression.",
+     "existing_report": "",
+     "recommendation": "do-not-file",
+     "summary": "The dangling reference reproduces, but it is the diagram author's own CSS copied through, not a reference the renderer made. Every reference the unit generates resolves to a sibling <defs> id: arrowhead, arrowhead-start, and the per-colour arrowhead-<suffix> and arrowhead-start-<suffix> built from the same _markerSuffix. Law 2 therefore holds for the unit's own references and over-claims on pass-through styles."
+    },
+    {
+     "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_sequence_renderer.swift:14",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "renderSequenceSvg(diagram /* participant Alice, actor Bob, Alice->>Bob: hi */, DiagramColors(bg: \"#FFFFFF\", fg: \"#27272A\"), \"A&B\") -> line 4: `text { font-family: 'A&B', system-ui, sans-serif; }`. Alice's type from original_src_sequence_types.makeActor(id: \"Alice\", label: \"Alice\", type: \"a\\\"b\") gives line 34 `<g class=\"actor\" data-id=\"Alice\" data-label=\"Alice\" data-type=\"a\"b\">`. colors.bg = \"x\\\"\" gives line 1 `<svg ... style=\"--bg:x\";--fg:#27272A;background:var(--bg)\">`. The baseline parses.",
+     "parser_error": "font A&B: parse() = false, first error NSXMLParserErrorDomain 23 (EntityRef: expecting ';') at line 4, col 27. actor.type a\"b: code 65 at 34:66. bg x\": code 65 at 1:102. The final parserError is 111 in each.",
+     "executed": true,
+     "execution_note": "Option (1) (`swift build -j 4` of the exported package) was refused by the session's permission classifier. So option (2): src_sequence_renderer.swift, src_sequence_types.swift (the makers), the src_sequence_parser type declarations (lines 1-130) and the shared helpers were copied verbatim from 6a23a29e. Only `import ElkSwift` was dropped, with a stub ElkSwift.version. Actor, lifeline and message coordinates were hand-set instead of computed by layoutSequenceDiagram. Compiled with swiftc (Swift 6.4.2) and judged with XMLParser.",
+     "contract_allows": "yes",
+     "contract_reason": "Yes only for the font variant: the font is a documented free family-name String. actor.type is outside the contract. The original types it 'participant' | 'actor' (beautiful-mermaid src/sequence/types.ts:24,83), and the Swift maker's default is \"participant\". bg is documented as a CSS color.",
+     "reachable": "unknown",
+     "reachability_reason": "actor.type cannot come from source: the parser regex `^(participant|actor)\\s+...` yields only those two words, and msg.lineStyle and arrowHead, also written raw, are fixed values. Only a Swift caller using makeActor with another type reaches it. The font is reached only by a direct renderMermaidSVG/renderSequenceSvg caller that sets RenderOptions.font, and none exists in the package or README.",
+     "upstream_head_same": "yes",
+     "upstream_owner_repo": "lukilabs/beautiful-mermaid-swift",
+     "upstream_note": "main HEAD is 6a23a29e91, the census revision. src_sequence_renderer.swift:82 still writes `data-type=\"\\(type)\"` raw, and src_theme.swift:286 the font. Open issue #6 ('Sequence diagram defects and missing syntax') does not mention escaping.",
+     "existing_report": "",
+     "recommendation": "mention-only",
+     "summary": "All three witnesses hold on the verbatim code. data-type, data-line-style and data-arrow-head skip escapeAttr, which every neighbouring attribute uses, and the shared style block writes the font raw. None of these values can come from Mermaid source, and no in-package or documented caller sets a font or color. The defect is real but latent."
+    },
+    {
+     "id": "lukilabs__beautiful-mermaid-swift:Sources/BeautifulMermaidSwift/Mermaid/src_xychart_renderer.swift:31",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "renderXYChartSvg(chart /* title Sales, x-axis [jan, feb, mar], y 0..100, bar [10,50,90], line [20,40,80] */, DiagramColors(bg: \"#FFFFFF\", fg: \"#27272A\"), \"A&B\") -> line 4: `text { font-family: 'A&B', system-ui, sans-serif; }`. With xAxis.ticks[0].textAnchor = \"\\\"\", line 259 is `<text x=\"100.0\" y=\"318.0\" text-anchor=\"\"\" font-size=\"12.0\" font-weight=\"400\" dy=\"0.35em\" class=\"xychart-label\">jan</text>`. The baseline parses, both static and interactive.",
+     "parser_error": "font A&B: parse() = false, first error NSXMLParserErrorDomain 23 (EntityRef: expecting ';') at line 4, col 27. textAnchor \": code 65 at 259:41. The final parserError is 111 in both.",
+     "executed": true,
+     "execution_note": "Option (1) (`swift build -j 4` of the exported package) was refused by the session's permission classifier. So option (2): src_xychart_renderer.swift, src_xychart_types.swift, src_xychart_colors.swift and the shared helpers (src_theme, src_styles, src_text_metrics, src_multiline_utils, src_index DiagramColors) were copied verbatim from 6a23a29e. Only `import ElkSwift` was dropped. The PositionedXYChart was hand-built with the public init in place of layoutXYChart. Compiled with swiftc (Swift 6.4.2) and judged with XMLParser.",
+     "contract_allows": "yes",
+     "contract_reason": "Yes only for the font variant: the font is a documented free family-name String. textAnchor is outside the contract. The Swift type itself documents it (`public var textAnchor: String // \"start\", \"middle\", \"end\"`), and the original types it 'start' | 'middle' | 'end' (beautiful-mermaid src/xychart/types.ts:110).",
+     "reachable": "unknown",
+     "reachability_reason": "textAnchor is only ever set by layoutXYChart, to the literals \"end\" and \"middle\" (src_xychart_layout.swift:88,169,178,312); only a caller that mutates the public var reaches the witness. The font is reached only by a direct renderMermaidSVG/renderXYChartSvg caller that sets RenderOptions.font. The documented MermaidRenderer.renderSVG never sets it.",
+     "upstream_head_same": "yes",
+     "upstream_owner_repo": "lukilabs/beautiful-mermaid-swift",
+     "upstream_note": "main HEAD is 6a23a29e91, the census revision. src_xychart_renderer.swift:175 and :182 still interpolate tick.textAnchor raw, and src_theme.swift:286 the font. No upstream issue or PR covers it.",
+     "existing_report": "",
+     "recommendation": "mention-only",
+     "summary": "Both witnesses hold on the verbatim code. Every label, title and legend value goes through _escapeXml, but the shared style block writes the font raw, and text-anchor is interpolated without escaping. textAnchor is a documented three-value field set only by the layout, and no in-package or documented caller sets a font. Both are latent; the font one is the same buildStyleBlock defect as the other four rows."
+    }
+   ]
+  },
+  {
+   "repo": "yahirvitelugardo__Graffle",
+   "revision": "53b93b0560d89d3e97acdb6b020e9ef73054a83d",
+   "rows": [
+    {
+     "id": "yahirvitelugardo__Graffle:Sources/Graffle/SVGExport.swift:98",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "var d = Drawing(); d.layers = [Layer(name: \"a\\u{1}b\")]; SVGExport.svg(for: d, bounds: CGRect(x:0,y:0,width:100,height:100)), which runs Writer.document. Output line 4: <g id=\"layer-1947f983\" data-name=\"a<U+0001>b\"> (the raw 0x01 byte is in the file, per xxd). Control: Layer(name: \"Layer 1\") parses true. Two more inputs fail the same way. Shape(kind: .rectangle, text: \"x\\u{1}y\") gives <tspan ... xml:space=\"preserve\">x<U+0001>y</tspan>, because NSLayoutManager line breaking keeps U+0001. Connector(text: \"a\\u{1}b\") gives the same through label(), which does no layout. Correction: a form feed in shape text does NOT survive, because layout trims it as a newline. U+0001 or another C0 control does survive.",
+     "parser_error": "XMLParser.parse() == false. The delegate's first parseErrorOccurred is NSXMLParserErrorDomain Code=9, 'invalid character in attribute value' at line 4, column 36. The final parserError is Code=111. For the tspan variant it is Code=9, 'PCDATA invalid Char value 1' at line 7, column 180. xmllint agrees: 'invalid character in attribute value'.",
+     "executed": true,
+     "execution_note": "Option 1. I exported the census revision with git archive into scratch and added a scratch XCTest target to the copied Package.swift with @testable import Graffle. The package's only target is an AppKit executable. I built with swift build -j 4 (Xcode toolchain swiftlang-6.4.2) and ran swift test on the target. Each test called the internal SVGExport.svg(for:bounds:), whose only body is Writer(drawing:).document(bounds:). I judged the output with Foundation XMLParser plus a delegate, and checked it with xmllint.",
+     "contract_allows": "yes",
+     "contract_reason": "Layer.name, Shape.text and Connector.text are plain Strings, and nothing in the types or docs restricts them. The doc comment says the unit 'Writes a Drawing as an SVG 1.1 document'. The author's own self-test (AppDelegate.swift ~1267, 'SVG export is well-formed ... and escaped text') asserts XMLDocument well-formedness. The unit has no guard or sentinel path for names or text. escape() is plainly meant to make arbitrary text safe, but it handles only & < > \".",
+     "reachable": "yes",
+     "reachability_reason": "Traced, not driven through the UI. A layer is renamed through SidebarView.commitRename, then CanvasView.renameLayer, which trims only whitespace. Shape and connector text come verbatim from the NSTextField's stringValue in CanvasView.endEditing (lines 1352-1364). So a pasted control character is stored unfiltered, and it also survives a save and reload of the Codable document. CanvasView.svgData (line 2507) feeds the drawing straight to SVGExport. The app's own SVGImport parses data-name with XMLDocument, so it would reject the app's own export. The input is unusual: it needs a pasted or file-borne C0 control, not a keyboard-typed one.",
+     "upstream_owner_repo": "yahirvitelugardo/graffle",
+     "upstream_head_same": "yes",
+     "upstream_note": "The default branch is main, and its head is 53b93b0 (2026-10-23), the census revision itself. gh api contents of Sources/Graffle/SVGExport.swift on main diff byte-identical to the census file. gh search issues for 'SVG', 'control character' and 'escape' returned nothing.",
+     "existing_report": "",
+     "recommendation": "file",
+     "summary": "Confirmed by execution. SVGExport.escape replaces only & < > \", so a C0 control character in a layer name, shape text or connector label reaches the data-name attribute or a <tspan>. XMLParser rejects the result (Code 9, 'invalid character in attribute value' / 'PCDATA invalid Char value 1'), as does xmllint. This contradicts the doc comment, the author's own well-formedness self-test, and the app's own SVGImport. Users can reach it by pasting text into the rename field or the canvas text editor. The default branch is unchanged and no issue covers it. It is low severity but a real defect."
+    }
+   ]
+  },
+  {
+   "repo": "XcodeProj",
+   "revision": "5d313c99fbb3871a6faeeca97ed13ee6f832ad06",
+   "rows": [
+    {
+     "id": "XcodeProj:Sources/XcodeProj/Extensions/AEXML+XcodeFormat.swift:5",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "The judges' witness, run as stated: AEXMLDocument() with addChild(AEXMLElement(name: \"a\", value: \"\\u{0001}\")), then .xmlXcodeFormat. Output: \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<a>\\n>\\n\\u{01}</a>\\n\". It holds a raw U+0001, because AEXML 4.7.3's String.xmlEscaped maps only & < > ' \" \\n \\r \\t. The control <a> with value \"x\" parses true. The second half also holds: AEXMLElement(name: \"a b\") gives \"<a b>\\n</a b>\". Corrected to the shape real callers use: every XcodeProj caller passes value: nil and puts user data in attributes, and that path fails the same way. (1) XCWorkspaceData.rawContents with a FileRef at .group(\"a\\u{1}b.swift\") gives `location = \"group:a\\u{01}b.swift\"`. (2) A Scheme > LaunchAction > EnvironmentVariables tree built by XCScheme.EnvironmentVariable.xmlElement(from:) with value \"\\u{1B}[31m$ \" gives `value = \"\\u{1B}[31m$ \"`. Both controls (\"ab.swift\") parse true.",
+     "parser_error": "XMLParser.parse() returns false in all five failing cases. parserError is code 111 (libxml2's stop code). The first error, caught through parser(_:parseErrorOccurred:), is NSXMLParserErrorDomain code 9 (invalidCharacter): \"PCDATA invalid Char value 1\" at line 4 col 1 for the judges' text-value form. The attribute forms (U+0001 in an attribute, the workspace FileRef, the scheme's U+001B) give code 9, \"invalid character in attribute value\". The name \"a b\" gives code 41, \"Specification mandates value for attribute b\", at line 2 col 5.",
+     "executed": true,
+     "execution_note": "Option (2). Building the exported package with `swift build -j 4` was refused by this session's permission classifier, because it would fetch and build the dependencies. Instead, AEXML+XcodeFormat.swift was taken byte-for-byte from `git show 5d313c99:` (checked with diff). AEXML 4.7.3 at pin dd9206de was read read-only with gh api: Element.swift, Options.swift and Error.swift verbatim, and Document.swift without its parse initializers, which call AEXMLParser and are not on the write path. The witnesses also use XcodeProj's own builders, copied verbatim: XCWorkspaceDataElementLocationType.description, XCWorkspaceDataFileRef.xmlElement, the body of XCWorkspaceData.rawContents, and XCScheme.EnvironmentVariable.xmlElement and xmlElement(from:). Everything was compiled with swiftc 6.4.2 (AEXML as its own module, as in the package) and run. Output was judged with the macOS Foundation XMLParser. The scheme witness builds the Scheme and LaunchAction wrapper elements by hand in the nesting XCScheme.getAEXMLDocument uses.",
+     "contract_allows": "yes",
+     "contract_reason": "The control-character half is allowed. xmlXcodeFormat is internal and has no doc comment. It renders whatever AEXMLDocument it is given. Its public entry points pass plain String properties straight into attribute values: XCScheme.write and dataRepresentation, XCWorkspaceData.write and dataRepresentation, and XCBreakpointList.write. The strings include EnvironmentVariable.value, ExecutionAction.scriptText, CommandLineArgument and workspace file paths, and no type or doc excludes control characters. The element-name half (\"a b\") is NOT allowed in practice. AEXML documents name as an \"XML Element name\", and every XcodeProj caller passes a literal name (\"FileRef\", \"Group\", \"EnvironmentVariable\" and so on), so an invalid name is a caller error.",
+     "reachable": "yes",
+     "reachability_reason": "Reachable through attribute values, though not in the judges' exact form. A grep at the census revision finds no AEXMLElement built with a non-nil value, so the text-value branch is unused, and all element names are literals. But user-typed strings reach attribute values: an environment-variable value, a pre/post-action scriptText, or a file path in a workspace FileRef. Tools such as XcodeGen pass YAML-typed strings into these fields; upstream issue #530 is an XcodeGen pre-action script reaching this writer. In YAML double-quoted strings, \\e and \\x01 are valid escapes. The result is a .xcscheme or .xcworkspacedata that XMLParser rejects, so XcodeProj's own reader (AEXMLDocument(xml:), backed by XMLParser) cannot load back the file it just wrote. Such characters are rare in real values. Note that no XML 1.0 encoding exists for them at all (&#1; is also forbidden), so a fix has to reject or strip them, not escape them.",
+     "upstream_head_same": "yes",
+     "upstream_note": "tuist/XcodeProj main at 948280a1 (2026-10-30): Sources/XcodeProj/Extensions/AEXML+XcodeFormat.swift is byte-identical to the census revision (diff empty). Package.swift still requires AEXML .upToNextMinor(from: \"4.7.3\"), and Package.resolved pins dd9206de (4.7.3), which is AEXML's newest tag. String.xmlEscaped on AEXML's default branch (master) is unchanged, with the same seven replacements. A side observation: the unused text-value branch emits a stray \">\\n\" before the value (`<a>\\n>\\nx</a>`). That is well-formed but wrong content, and no caller reaches it.",
+     "upstream_owner_repo": "tuist/XcodeProj",
+     "existing_report": "None found. Searches of tuist/XcodeProj for \"control character\", \"invalid character xml\", \"xmlEscaped\", \"xcscheme escape\", \"illegal character scheme\", \"AEXML escape\", \"escape\", \"special characters\" and \"malformed xml\" returned nothing on point. The nearest is #530 (closed), about newlines in XcodeGen pre-action scripts. The remaining searches hit the GitHub search rate limit: \"environment variable xml\", \"unicode scheme\", \"workspace path character\" and \"xmlXcodeFormat\". On tadija/AEXML, #22 \"Escaping special characters\" (closed) and #61 \"AEXMLElement writes attributes unescaped\" (closed) cover & < > and attribute escaping, not XML 1.0-forbidden control characters.",
+     "recommendation": "file",
+     "summary": "Confirmed by running the unit's verbatim source. xmlXcodeFormat copies XML 1.0-forbidden control characters (U+0001, U+001B and others) through AEXML's xmlEscaped untouched, and XMLParser rejects the result with code 9 (invalid character). The judges' text-value witness holds but uses a branch no caller reaches. The reachable form is an attribute value: an environment-variable value, scriptText or workspace file path given to XCScheme.write or XCWorkspaceData.write. That form fails identically and is unchanged on main. The element-name half (\"a b\") is also malformed but is a caller error the contract does not allow, so it should not be part of an issue."
+    }
+   ]
+  },
+  {
+   "repo": "soto-core",
+   "revision": "ec2b3a73b1aca26b17c47701426902cf241ebfbd",
+   "rows": [
+    {
+     "id": "soto-core:Sources/SotoXML/XML.swift:203",
+     "flag": "body_disagrees",
+     "witness_holds": true,
+     "witness": "Judges' witness run verbatim: e = XML.Element(name: \"r\"); e.addAttribute(.attribute(withName: \"k\", stringValue: \"&\")); XML.Document(rootElement: e).xmlString -> `<?xml version=\"1.0\" encoding=\"UTF-8\"?><r k=\"&\"></r>`. Close variants that also hold: stringValue \"a\\\"b\" -> `<r k=\"a\"b\">`; \"<\" -> `<r k=\"<\">`; d.version = \"1\\\"0\" -> `<?xml version=\"1\"0\" encoding=\"UTF-8\"?><r></r>`; d.characterEncoding = \"UTF\\\"8\" -> `encoding=\"UTF\"8\"`; e.addChild(.comment(stringValue: \"a--b\")) -> `<r><!--a--b--></r>`. Parse then re-serialise (the only in-package source of attribute nodes): `<r k=\"a&amp;b\"></r>` decodes to k = \"a&b\" and comes back as `<r k=\"a&b\"></r>`. On the real request path (AWSHTTPRequest .restxml: XMLEncoder -> addNamespace -> Document(rootElement:).xmlString), a String field holding U+0001 gives `<Comment>a\\u{1}b</Comment>`; U+FFFE does the same. Controls `k=\"ab\"`, comment \"a-b\" and text `a & b < c > d \" e` (written as `&amp; &lt; &gt;`) all parse.",
+     "parser_error": "XMLParser.parse() returns false and parserError is NSXMLParserErrorDomain 111 in every failing case. The first delegate error for each: k=\"&\" -> 68 `xmlParseEntityRef: no name` (col 52); a\"b -> 65 `attributes construct error`; < -> 38 `Unescaped '<' not allowed in attributes values`; version 1\"0 -> 96 `Malformed declaration expecting version`; encoding UTF\"8 -> 32 `Unsupported encoding UTF`; comment a--b -> 80 `Double hyphen within comment`; round trip k=\"a&b\" -> 23 `EntityRef: expecting ';'`; request path U+0001 -> 9 `PCDATA invalid Char value 1`; U+FFFE -> 9 `Char 0xFFFE out of allowed range`.",
+     "executed": true,
+     "execution_note": "Route (2). This session's permission classifier refused `swift build -j 4` of the package exported with `git archive` (that build fetches and builds external dependencies). So Sources/SotoXML/XML.swift and XMLEncoder.swift were copied verbatim from `git show ec2b3a73:` into the scratch directory and compiled with swiftc (Apple Swift 6.4.2). The only change: XML.swift leaves out the five Expat-backed parse entry points (Document.init(data:), Document.init(string:), Element.init(xmlString:), Element.init(xmlData:), Element.parse), which the witness does not call. For the round-trip case, Foundation's XMLParser stands in for Expat's start-element callback, and the node is built as XML.swift:256-258 builds it. Foundation's XMLParser judged every output. Script: <scratch>/handcheck/soto-core/script/main.swift; output: <scratch>/handcheck/soto-core/witness-output.txt",
+     "contract_allows": "yes",
+     "contract_reason": "For the attribute witness, yes. XML.Node.attribute(withName:stringValue:) takes any String, and nothing says the value must already be escaped. The type's own parser stores the decoded value in stringValue (Expat turns &amp; into &, XML.swift:258), and text nodes are escaped on output (xmlEncode). So stringValue holds unescaped text, and a raw & is an ordinary value. The header says the type mirrors Foundation's XML classes, and Foundation's XMLNode writes the same attribute as k=\"a&amp;&quot;&lt;b\". The two other judge witnesses are weaker. version = 1\"0 is not an XML version number, so the contract does not allow it. A comment holding \"--\" is unclear: XML forbids it, and Foundation's XMLNode also writes it raw.",
+     "reachable": "no",
+     "reachability_reason": "SotoXML is not a library product. SotoCore imports it `internal`. A gh code search finds it imported outside soto-core's Sources only by soto-core's own tests and benchmark and by soto's IntegrationTests. Inside the package, attribute nodes come only from Element.parse. XMLEncoder never creates attributes or comments, and nothing sets version or characterEncoding. Document.xmlString has two production call sites. AWSHTTPRequest (.restxml) writes encoder output plus a constant model xmlns. S3Middleware.getBucketLocationResponseFixup re-serialises a parsed S3 LocationConstraint whose only attribute is the xmlns URI, and a comment parsed from well-formed XML cannot hold \"--\". The parse-then-re-serialise break therefore needs an S3 endpoint that sends an escaped character in an attribute on LocationConstraint. A separate Law-1 failure is reachable: a user string holding a character XML 1.0 forbids (U+0001, U+FFFE), for example an S3 DeleteObjects key or a tag value, passes through xmlEncode raw. XML 1.0 cannot carry such a character even as a character reference, so AWS rejects the body whatever soto does, and the only loss is a clear client-side error.",
+     "upstream_head_same": "yes",
+     "upstream_note": "The default branch is main, and its HEAD is the census revision itself (ec2b3a73, committed 2026-10-20). Sources/SotoXML/XML.swift fetched with `gh api .../contents` is byte-identical to the census copy. Its last change is da0b8bac (2026-02-20, FoundationEssentials). gh search found nothing relevant in soto-core issues or PRs (escape, xmlString, malformed xml, XML attribute, control character) or in soto issues (MalformedXML, xml escape, xml attribute, control character).",
+     "upstream_owner_repo": "soto-project/soto-core",
+     "existing_report": "",
+     "recommendation": "mention-only",
+     "summary": "Document.xmlString writes attribute values, namespace values, version, encoding and comment text without escaping. The judges' witness gives `<r k=\"&\"></r>`, which XMLParser rejects (68, xmlParseEntityRef: no name), and version `1\"0` and comment `a--b` also fail. The attribute case is a real departure from the Foundation classes the file says it mirrors, and it breaks parse-then-re-serialise of `k=\"a&amp;b\"`. But SotoXML is internal to SotoCore, and no production caller creates attributes, comments or a version, so it is mention-only. The only reachable Law-1 failure, a forbidden control character in a request string, is one AWS would reject anyway."
+    }
+   ]
+  }
+ ]
+}

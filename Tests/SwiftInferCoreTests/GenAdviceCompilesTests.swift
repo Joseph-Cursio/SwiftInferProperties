@@ -56,7 +56,7 @@ struct GenAdviceCompilesTests {
         var repoRoot = URL(fileURLWithPath: #filePath)
         for _ in 0 ..< 4 { repoRoot = repoRoot.deletingLastPathComponent() }
         let todoReason = repoRoot
-            .appendingPathComponent("SwiftPropertyLaws/Sources/PropertyLawCore/TodoReason.swift")
+            .appendingPathComponent("SwiftPropertyLaws/Sources/PropertyLawCore/DerivationStrategist+TodoReason.swift")
         guard let kitText = try? String(contentsOf: todoReason, encoding: .utf8) else {
             let unavailable = "SwiftPropertyLaws checkout not found at \(todoReason.path) — the "
                 + "prescribed signature could not be checked against the kit. UNAVAILABLE, "

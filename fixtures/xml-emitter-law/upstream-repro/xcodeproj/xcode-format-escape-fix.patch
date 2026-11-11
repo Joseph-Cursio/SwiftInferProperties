@@ -1,0 +1,44 @@
+diff --git a/Sources/XcodeProj/Extensions/AEXML+XcodeFormat.swift b/Sources/XcodeProj/Extensions/AEXML+XcodeFormat.swift
+index 85f5bf9..ee6a686 100644
+--- a/Sources/XcodeProj/Extensions/AEXML+XcodeFormat.swift
++++ b/Sources/XcodeProj/Extensions/AEXML+XcodeFormat.swift
+@@ -124,7 +124,7 @@ extension AEXMLElement {
+         func print(key: String, value: String) {
+             xml += "\n"
+             xml += indent(withDepth: parentsCount)
+-            xml += "\(key) = \"\(value.xmlEscaped)\""
++            xml += "\(key) = \"\(value.xcodeFormatEscaped)\""
+         }
+ 
+         if !attributes.isEmpty {
+@@ -156,7 +156,7 @@ extension AEXMLElement {
+                 // insert string value and close element
+                 xml += ">\n"
+                 xml += indent(withDepth: parentsCount - 1)
+-                xml += ">\n\(string.xmlEscaped)"
++                xml += ">\n\(string.xcodeFormatEscaped)"
+             }
+         }
+ 
+@@ -190,3 +190,21 @@ extension AEXMLElement {
+         return indent
+     }
+ }
++
++extension String {
++    /// `xmlEscaped`, with U+FFFD in place of each character XML 1.0 cannot hold at all, even as a reference:
++    /// a C0 control other than tab, line feed and carriage return, U+FFFE or U+FFFF. A file holding one is not
++    /// well-formed, so neither XcodeProj nor any other XML reader can load it.
++    fileprivate var xcodeFormatEscaped: String {
++        var scalars = String.UnicodeScalarView()
++        for scalar in xmlEscaped.unicodeScalars {
++            switch scalar {
++            case "\u{0}"..."\u{8}", "\u{B}", "\u{C}", "\u{E}"..."\u{1F}", "\u{FFFE}", "\u{FFFF}":
++                scalars.append("\u{FFFD}")
++            default:
++                scalars.append(scalar)
++            }
++        }
++        return String(scalars)
++    }
++}

@@ -177,8 +177,10 @@ public extension LiftedTestEmitter {
 
     /// TestLifter M4.4 — emit a `Gen<T>` expression for a mock-inferred
     /// generator synthesized from observed test construction sites.
-    /// Mirrors `MemberwiseEmitter`'s `zip(...).map { Type(...) }` shape
-    /// for parameterized constructors and falls back to
+    /// Follows `MemberwiseEmitter`'s `zip(...).map { Type(...) }` shape
+    /// for parameterized constructors, though not its layout: the `.map` is
+    /// baked at column 12 here, where the kit's `ExpressionLayout` rule puts
+    /// it at column 0 and leaves the column to the caller. It falls back to
     /// `Gen<Type> { _ in Type() }` for the empty-constructor case
     /// (where `MemberwiseEmitter`'s ≥1-member precondition would trip).
     /// Each argument's `swiftTypeName` is resolved against the kit's

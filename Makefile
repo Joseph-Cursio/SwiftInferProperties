@@ -186,6 +186,14 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 # §8 outcome, the label join's refusals and the calibration check. Its kill arm's checks cover the plan,
 # the suite filters and the reduced-suite and flake rules against a scripted suite; its runner controls
 # build an export and stay out of here. No compiler, ~0.1s.
+#
+# #668's XML emitter census joined after it: the pass's controls (the witness's four renderers at `9ad7631` and
+# `SVGRenderer` at `e36da59`, verbatim apart from elided lines, and one synthetic source per cue and per rule each
+# review round's audit broke), the literal view, the packets, every §8 outcome for both laws, the judge files and
+# the judge workflow's constants, the label join's refusals and the calibration check. Its kill arm's checks cover
+# the F5 sites, the control and H-mutant patches, the derived-test parser and skip regex, the reduced-suite and flake
+# rules against a scripted suite, the counterexample kept and the watchdog; its runner controls build an export and
+# stay out of here. No compiler, ~1.5s.
 	@python3 scripts/measurement.py --self-test
 	@python3 scripts/reference_oracle_scaffold_census.py --self-test
 	@python3 scripts/reference_oracle_scaffold_rows.py --self-test
@@ -200,6 +208,8 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 	@python3 scripts/layering_kill_arm.py --self-test
 	@python3 scripts/uniquifier_census.py --self-test
 	@python3 scripts/uniquifier_kill_arm.py --self-test
+	@python3 scripts/xml_emitter_census.py --self-test
+	@python3 scripts/xml_emitter_kill_arm.py --self-test
 
 test-fast: lint measurement-selftest ## SwiftLint + measurement guard + every non-subprocess, non-perf test (~35s)
 	@start=$$(date +%s); \

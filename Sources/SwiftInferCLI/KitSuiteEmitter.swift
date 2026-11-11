@@ -274,6 +274,35 @@ public enum KitSuiteEmitter {
         return name.isEmpty ? "\u{0}" : String(name)
     }
 
+    /// `generator` with its continuation lines moved so its closing line sits at column 12,
+    /// under the `using:` it follows in `liveBlock`.
+    ///
+    /// Swift's multi-line literal does not re-indent interpolated text, so a kit expression
+    /// that spans lines lands wherever its own text puts it. Through SwiftPropertyLaws 4.11
+    /// `MemberwiseEmitter` baked its `.map` at column 12 for exactly this splice, and the kit's
+    /// `ExpressionLayout` rule then moved every continuation to columns relative to the
+    /// expression's own first line, with its closing line at 0: placed unchanged, a `.map`
+    /// would land at column 0 inside the suite. Anchoring on the closing line handles both,
+    /// so this emitter does not depend on which kit resolves: under the old rule a memberwise
+    /// generator does not move, and under the new one everything moves 12. A `Gen.oneOf(`
+    /// list's `)` sits at column 0 under both, so it moves 12 under both.
+    ///
+    /// One shape stays wrong under the old kit, as it was before this placement: a memberwise
+    /// generator whose member is a multi-line `Gen.oneOf(`. Its closing `.map` is already at
+    /// 12, so nothing moves, and the inner list keeps its cases at 4 and its `)` at 0, because
+    /// that kit mixed its two conventions in one expression. Under the new kit it lands right.
+    /// Once the package requires a kit with `ExpressionLayout`, this can become
+    /// `ExpressionLayout.indentingContinuationLines(of: generator, by: 12)`.
+    static func placedUnderUsing(_ generator: String) -> String {
+        var lines = generator.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard let closing = lines.dropFirst().last(where: { !$0.isEmpty }) else { return generator }
+        let shift = String(repeating: " ", count: max(0, 12 - closing.prefix { $0 == " " }.count))
+        for index in lines.indices.dropFirst() where !lines[index].isEmpty {
+            lines[index] = shift + lines[index]
+        }
+        return lines.joined(separator: "\n")
+    }
+
     // MARK: - Blocks
 
     /// `carrierName` is the name to WRITE — `Deque<Int>` where `finding.typeName` is
@@ -296,7 +325,7 @@ public enum KitSuiteEmitter {
                 func \(functionName(finding.typeName, conformance))() async throws {
                     let results = try await check\(conformance)PropertyLaws(
                         for: \(carrierName).self,
-                        using: \(generator)\(options(conformance, isCaseIterable: isCaseIterable))
+                        using: \(placedUnderUsing(generator))\(options(conformance, isCaseIterable: isCaseIterable))
                     )
                     // Strict-tier only, matching `EnforcementMode.default` — which the kit
                     // already enforces by throwing. A blanket `allSatisfy { .passed }` is
