@@ -136,7 +136,7 @@ Two findings the diff surfaced:
 > **Item 6's ✅ was WRONG — corrected 2026-08-12 at `a3959f0`, and FIXED the same day (§8.1). See §8.** The commit it
 > cites, `c7b7626`, added `ViewModelVerifyEvidence.swift` and two test files and **no
 > production call site**; nothing in `Sources/` has ever called the recorder. The live
-> chain (`VerifyInteractionCommand.swift:197` → `ViewModelVerifyInteractionSurvey.runLive`
+> chain (`SwiftInferCommand.VerifyInteraction.swift:197` → `ViewModelVerifyInteractionSurvey.runLive`
 > → print) contains zero evidence writes, so promotion is still render-level and item 6's
 > own text below — "Promotion is currently render-level" — remained true the whole time.
 > **The older detail was right and the newer summary was wrong**, the reverse of the stale-

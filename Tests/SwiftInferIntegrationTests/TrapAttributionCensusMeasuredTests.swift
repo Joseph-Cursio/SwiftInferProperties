@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// The census behind `docs/measurements/interaction-trap-attribution-census.md`:
@@ -55,7 +54,7 @@ struct TrapAttributionCensusMeasuredTests {
         Corpus(fixture: "biconditional-verify-corpus", module: "BiconditionalVerifyCorpus", family: "biconditional"),
         Corpus(fixture: "refint-verify-corpus", module: "RefintVerifyCorpus", family: "referential-integrity"),
         Corpus(fixture: "determinism-verify-corpus", module: "DeterminismVerifyCorpus", family: "determinism"),
-        Corpus(fixture: "idempotence-survey-corpus", module: "IdempotenceSurveyCorpus", family: "idempotence")
+        Corpus(fixture: "idempotence-survey-corpus", module: "IdempotenceSurveyCorpus", family: "idempotence"),
     ]
 
     @Test("census: attribute every measured refutation across the interaction corpora")
@@ -123,8 +122,8 @@ struct TrapAttributionCensusMeasuredTests {
         return try await VerifyInteractionSurvey.run(
             target: corpus.module,
             familyFilter: corpus.family,
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
     }
 

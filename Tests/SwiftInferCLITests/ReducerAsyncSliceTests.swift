@@ -49,7 +49,7 @@ struct ReducerAsyncSliceTests {
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-07-11T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_783_764_000) // 2026-07-11T10:00:00Z
         )
     }
 
@@ -88,7 +88,7 @@ struct ReducerAsyncSliceTests {
             .stateActionReturnsState: "state = await Counter.reduce(state, action)",
             .inoutStateActionReturnsVoid: "await Counter.reduce(&state, action)",
             .stateActionReturnsStateAndEffect: "let (newState, _) = await Counter.reduce(state, action)",
-            .inoutStateActionReturnsEffect: "_ = await Counter.reduce(&state, action)"
+            .inoutStateActionReturnsEffect: "_ = await Counter.reduce(&state, action)",
         ]
         for (shape, expected) in byShape {
             let step = ActionSequenceStubEmitter.makeApplyStep(

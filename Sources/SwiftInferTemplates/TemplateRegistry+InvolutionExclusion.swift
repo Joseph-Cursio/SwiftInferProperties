@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 public extension TemplateRegistry {

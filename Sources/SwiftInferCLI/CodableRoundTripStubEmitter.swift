@@ -1,5 +1,3 @@
-import Foundation
-
 /// Emits a standalone verifier for the **codable-round-trip** law — the measured
 /// half of `CodableRoundTripTemplate`.
 ///
@@ -50,6 +48,7 @@ public enum CodableRoundTripStubEmitter {
         }
     }
 
+    /// The codable-round-trip verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let imports = (["Foundation"] + inputs.extraImports)
             .map { "import \($0)" }

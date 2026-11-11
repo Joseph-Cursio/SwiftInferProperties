@@ -28,7 +28,7 @@ struct CaseKeyInjectivityStubTests {
                 inheritedTypes: ["String", "CaseIterable"],
                 hasUserGen: false,
                 enumCases: ["forceTry", "magicNumber", "fatView"].map { EnumCase(name: $0) }
-            )
+            ),
         ]
     }
 

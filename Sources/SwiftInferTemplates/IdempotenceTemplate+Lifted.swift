@@ -30,9 +30,9 @@ extension IdempotenceTemplate {
     /// emitted explainability block. Behavior preserved bit-for-bit.
     public static func suggest(
         forLifted lifted: LiftedTransformation,
+        carrierKindResolver: CarrierKindResolver,
         vocabulary: Vocabulary = .empty,
-        inheritedTypesByName: [String: Set<String>] = [:],
-        carrierKindResolver: CarrierKindResolver
+        inheritedTypesByName: [String: Set<String>] = [:]
     ) -> Suggestion? {
         ConstraintRunner.suggest(
             constraint: makeLiftedConstraint(
@@ -101,7 +101,7 @@ extension IdempotenceTemplate {
             "Property holds iff `\(lifted.carrier)` has value semantics — a "
                 + "broken copy-on-write implementation or a class-typed stored "
                 + "property would invalidate the lift even though the type "
-                + "passed the structural admission gate."
+                + "passed the structural admission gate.",
         ]
     }
 
@@ -302,31 +302,5 @@ extension IdempotenceTemplate {
             returnsSelfType: false,
             genericParameters: summary.genericParameters
         )
-    }
-
-    private static func makeLiftedExplainability(
-        for lifted: LiftedTransformation,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let evidence = makeLiftedEvidence(lifted)
-        whySuggested.append(
-            "\(evidence.displayName) \(evidence.signature) — "
-                + "\(evidence.location)"
-        )
-        whySuggested.append(lifted.rationale)
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer V1.19 does not verify protocol conformance — "
-                + "confirm before applying.",
-            "Property holds iff `\(lifted.carrier)` has value semantics — a "
-                + "broken copy-on-write implementation or a class-typed stored "
-                + "property would invalidate the lift even though the type "
-                + "passed the structural admission gate."
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }
 }

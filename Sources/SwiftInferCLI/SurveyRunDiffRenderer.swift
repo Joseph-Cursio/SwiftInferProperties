@@ -75,7 +75,7 @@ enum SurveyRunDiffRenderer {
         let causeOnly = rows.filter(\.isCauseOnly).count
         var lines = [
             "CHANGED — \(rows.count) row(s), of which \(causeOnly) kept the same bucket and "
-                + "changed only the cause"
+                + "changed only the cause",
         ]
         // Cause-only rows lead, because they are the ones a bucket-count comparison cannot
         // see and are therefore the reason this tool exists.

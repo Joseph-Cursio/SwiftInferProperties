@@ -99,7 +99,7 @@ public enum StreamConsumption {
         "skip",
         "lex",
         "eat",
-        "munch"
+        "munch",
     ]
 
     /// Nouns that mark a carrier as a **position in a stream**. Matched as a
@@ -124,7 +124,7 @@ public enum StreamConsumption {
         "tokenizer",
         "consumer",
         "parser",
-        "iterator"
+        "iterator",
     ]
 
     /// Verbs exempt from the tier-2 carrier gate: they move a stream position
@@ -140,7 +140,7 @@ public enum StreamConsumption {
         "restore",
         "seek",
         "rollback",
-        "clear"
+        "clear",
     ]
 
     /// Lowercased camelCase tokens of `name`.

@@ -43,12 +43,18 @@ public enum InteractionBridgeInteractiveTriage {
     /// V1.108 — input bundle for the bridge-triage session.
     /// Mirrors v1.98's `InteractionInteractiveTriage.Inputs` shape.
     public struct Inputs {
+        /// Where the bridge-triage loop reads the user's choices from.
         public let prompt: any PromptInput
+        /// Where bridge prompts and session messages are written.
         public let output: any DiscoverOutput
+        /// Where warnings, such as decisions-load problems, are written.
         public let diagnostics: any DiagnosticOutput
+        /// When true, choices are recorded in memory but the decisions file is not written.
         public let dryRun: Bool
+        /// The timestamp stamped on every decision recorded this session.
         public let now: Date
 
+        /// Bundles the bridge-triage session's I/O; `now` defaults to the current date.
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
@@ -72,8 +78,8 @@ public enum InteractionBridgeInteractiveTriage {
     public static func run(
         bridges: [BridgeSuggestion],
         packageRoot: URL,
-        explicitDecisionsPath: URL? = nil,
-        inputs: Inputs
+        inputs: Inputs,
+        explicitDecisionsPath: URL? = nil
     ) throws -> InteractionDecisions {
         let load = InteractionDecisionsLoader.load(
             startingFrom: packageRoot,

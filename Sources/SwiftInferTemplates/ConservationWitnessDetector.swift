@@ -3,6 +3,128 @@ import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
 
+/// V2.0 M4.B — extracts Conservation witnesses from one member
+/// block. Pure; testable in isolation.
+enum ConservationWitnessExtractor {
+
+    /// Count-shape recognition: the aggregate name must contain
+    /// `count` (case-insensitive). Covers `count`, `itemCount`,
+    /// `numEntries`-via-pluralization is NOT covered yet — only
+    /// names containing the literal substring `count`. Recalibrate
+    /// after the first calibration cycle if real corpora show
+    /// different naming.
+    static func nameLooksLikeCount(_ name: String) -> Bool {
+        name.lowercased().contains("count")
+    }
+
+    /// Integer-type recognition. Matches `Int`, `UInt`, `Int8`,
+    /// `Int16`, `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32`,
+    /// `UInt64`, and their `Swift.`-prefixed equivalents. Floating-
+    /// point types (`Double` / `Float` / `Float80`) and arbitrary-
+    /// precision types are *not* count-shaped per PRD §5.2.
+    static func typeLooksLikeIntegerCount(_ type: String) -> Bool {
+        let trimmed = type.trimmingCharacters(in: .whitespaces)
+        // Both spellings of the same ten types; the `Swift.`-qualified half was a
+        // hand-written mirror of the bare half, which is a transformation rather
+        // than a curation — `swiftQualified` derives it.
+        return FixedWidthIntegerNames.names.contains(trimmed)
+            || FixedWidthIntegerNames.swiftQualified.contains(trimmed)
+    }
+
+    /// Returns the element type if `type` is an array literal `[T]`,
+    /// nil otherwise. Matches the bracket-wrapped form only — explicit
+    /// `Array<T>` is intentionally deferred (the bracket form is the
+    /// idiomatic Swift convention; calibration can widen if needed).
+    static func arrayElementType(_ type: String) -> String? {
+        let trimmed = type.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]") else { return nil }
+        // Reject dictionary literal `[K: V]` — contains a top-level colon.
+        let inner = String(trimmed.dropFirst().dropLast())
+            .trimmingCharacters(in: .whitespaces)
+        var depth = 0
+        for char in inner {
+            switch char {
+            case "<", "(", "[": depth += 1
+            case ">", ")", "]": depth -= 1
+            case ":" where depth == 0: return nil
+            default: break
+            }
+        }
+        return inner
+    }
+
+    /// Extract every (count-shaped aggregate, array collection) pair
+    /// from `memberBlock`. Pairs by Cartesian product — if a State
+    /// has 2 count-shaped properties and 3 array properties, we emit
+    /// 6 witnesses. Calibration may tighten this (e.g. require
+    /// name-prefix matches like `itemCount` ↔ `items`).
+    static func extract(from memberBlock: MemberBlockSyntax) -> [ConservationWitness] {
+        let (aggregates, collections) = classifyMembers(memberBlock)
+        var witnesses: [ConservationWitness] = []
+        for aggregate in aggregates {
+            for collection in collections {
+                witnesses.append(ConservationWitness(
+                    aggregatePropertyName: aggregate.name,
+                    aggregateTypeName: aggregate.typeText,
+                    collectionPropertyName: collection.name,
+                    elementTypeName: collection.elementTypeText
+                ))
+            }
+        }
+        return witnesses
+    }
+
+    /// Walk a member block once, returning each stored property
+    /// classified as an aggregate (count-shaped + integer) or a
+    /// collection (array literal). Skips computed / static / class
+    /// properties. Extracted from `extract(from:)` to keep the
+    /// outer function under SwiftLint's cyclomatic-complexity cap.
+    private static func classifyMembers(
+        _ memberBlock: MemberBlockSyntax
+    ) -> (
+        aggregates: [(name: String, typeText: String)],
+        collections: [(name: String, elementTypeText: String)]
+    ) {
+        var aggregates: [(name: String, typeText: String)] = []
+        var collections: [(name: String, elementTypeText: String)] = []
+        for member in memberBlock.members {
+            guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
+            let modifiers = varDecl.modifiers.map(\.name.text)
+            if modifiers.contains("static") || modifiers.contains("class") { continue }
+            for binding in varDecl.bindings {
+                classifyBinding(
+                    binding,
+                    aggregates: &aggregates,
+                    collections: &collections
+                )
+            }
+        }
+        return (aggregates, collections)
+    }
+
+    /// Classify one binding (one identifier in a `var x: T` decl).
+    /// Drops computed properties + bindings without an explicit
+    /// type annotation, then routes the typed binding into either
+    /// the aggregate or collection bucket. Pure; mutates the
+    /// supplied accumulators.
+    private static func classifyBinding(
+        _ binding: PatternBindingSyntax,
+        aggregates: inout [(name: String, typeText: String)],
+        collections: inout [(name: String, elementTypeText: String)]
+    ) {
+        if binding.accessorBlock != nil { return }
+        guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { return }
+        guard let typeAnnotation = binding.typeAnnotation else { return }
+        let typeText = typeAnnotation.type.trimmedDescription
+        let name = identifier.identifier.text
+        if nameLooksLikeCount(name), typeLooksLikeIntegerCount(typeText) {
+            aggregates.append((name, typeText))
+        } else if let element = arrayElementType(typeText) {
+            collections.append((name, element))
+        }
+    }
+}
+
 /// V2.0 M4.B — SwiftSyntax pass detecting Conservation witnesses
 /// (stored count-shaped aggregate paired with an array collection)
 /// inside a named State struct.
@@ -122,128 +244,6 @@ public enum ConservationWitnessDetector {
             guard typeStack.count >= targetComponents.count else { return false }
             let suffix = typeStack.suffix(targetComponents.count)
             return Array(suffix) == targetComponents
-        }
-    }
-}
-
-/// V2.0 M4.B — extracts Conservation witnesses from one member
-/// block. Pure; testable in isolation.
-enum ConservationWitnessExtractor {
-
-    /// Count-shape recognition: the aggregate name must contain
-    /// `count` (case-insensitive). Covers `count`, `itemCount`,
-    /// `numEntries`-via-pluralization is NOT covered yet — only
-    /// names containing the literal substring `count`. Recalibrate
-    /// after the first calibration cycle if real corpora show
-    /// different naming.
-    static func nameLooksLikeCount(_ name: String) -> Bool {
-        name.lowercased().contains("count")
-    }
-
-    /// Integer-type recognition. Matches `Int`, `UInt`, `Int8`,
-    /// `Int16`, `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32`,
-    /// `UInt64`, and their `Swift.`-prefixed equivalents. Floating-
-    /// point types (`Double` / `Float` / `Float80`) and arbitrary-
-    /// precision types are *not* count-shaped per PRD §5.2.
-    static func typeLooksLikeIntegerCount(_ type: String) -> Bool {
-        let trimmed = type.trimmingCharacters(in: .whitespaces)
-        // Both spellings of the same ten types; the `Swift.`-qualified half was a
-        // hand-written mirror of the bare half, which is a transformation rather
-        // than a curation — `swiftQualified` derives it.
-        return FixedWidthIntegerNames.names.contains(trimmed)
-            || FixedWidthIntegerNames.swiftQualified.contains(trimmed)
-    }
-
-    /// Returns the element type if `type` is an array literal `[T]`,
-    /// nil otherwise. Matches the bracket-wrapped form only — explicit
-    /// `Array<T>` is intentionally deferred (the bracket form is the
-    /// idiomatic Swift convention; calibration can widen if needed).
-    static func arrayElementType(_ type: String) -> String? {
-        let trimmed = type.trimmingCharacters(in: .whitespaces)
-        guard trimmed.hasPrefix("["), trimmed.hasSuffix("]") else { return nil }
-        // Reject dictionary literal `[K: V]` — contains a top-level colon.
-        let inner = String(trimmed.dropFirst().dropLast())
-            .trimmingCharacters(in: .whitespaces)
-        var depth = 0
-        for char in inner {
-            switch char {
-            case "<", "(", "[": depth += 1
-            case ">", ")", "]": depth -= 1
-            case ":" where depth == 0: return nil
-            default: break
-            }
-        }
-        return inner
-    }
-
-    /// Extract every (count-shaped aggregate, array collection) pair
-    /// from `memberBlock`. Pairs by Cartesian product — if a State
-    /// has 2 count-shaped properties and 3 array properties, we emit
-    /// 6 witnesses. Calibration may tighten this (e.g. require
-    /// name-prefix matches like `itemCount` ↔ `items`).
-    static func extract(from memberBlock: MemberBlockSyntax) -> [ConservationWitness] {
-        let (aggregates, collections) = classifyMembers(memberBlock)
-        var witnesses: [ConservationWitness] = []
-        for aggregate in aggregates {
-            for collection in collections {
-                witnesses.append(ConservationWitness(
-                    aggregatePropertyName: aggregate.name,
-                    aggregateTypeName: aggregate.typeText,
-                    collectionPropertyName: collection.name,
-                    elementTypeName: collection.elementTypeText
-                ))
-            }
-        }
-        return witnesses
-    }
-
-    /// Walk a member block once, returning each stored property
-    /// classified as an aggregate (count-shaped + integer) or a
-    /// collection (array literal). Skips computed / static / class
-    /// properties. Extracted from `extract(from:)` to keep the
-    /// outer function under SwiftLint's cyclomatic-complexity cap.
-    private static func classifyMembers(
-        _ memberBlock: MemberBlockSyntax
-    ) -> (
-        aggregates: [(name: String, typeText: String)],
-        collections: [(name: String, elementTypeText: String)]
-    ) {
-        var aggregates: [(name: String, typeText: String)] = []
-        var collections: [(name: String, elementTypeText: String)] = []
-        for member in memberBlock.members {
-            guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
-            let modifiers = varDecl.modifiers.map(\.name.text)
-            if modifiers.contains("static") || modifiers.contains("class") { continue }
-            for binding in varDecl.bindings {
-                classifyBinding(
-                    binding,
-                    aggregates: &aggregates,
-                    collections: &collections
-                )
-            }
-        }
-        return (aggregates, collections)
-    }
-
-    /// Classify one binding (one identifier in a `var x: T` decl).
-    /// Drops computed properties + bindings without an explicit
-    /// type annotation, then routes the typed binding into either
-    /// the aggregate or collection bucket. Pure; mutates the
-    /// supplied accumulators.
-    private static func classifyBinding(
-        _ binding: PatternBindingSyntax,
-        aggregates: inout [(name: String, typeText: String)],
-        collections: inout [(name: String, elementTypeText: String)]
-    ) {
-        if binding.accessorBlock != nil { return }
-        guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { return }
-        guard let typeAnnotation = binding.typeAnnotation else { return }
-        let typeText = typeAnnotation.type.trimmedDescription
-        let name = identifier.identifier.text
-        if nameLooksLikeCount(name), typeLooksLikeIntegerCount(typeText) {
-            aggregates.append((name, typeText))
-        } else if let element = arrayElementType(typeText) {
-            collections.append((name, element))
         }
     }
 }

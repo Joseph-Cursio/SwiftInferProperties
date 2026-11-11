@@ -2,6 +2,139 @@ import PropertyLawCore
 @testable import SwiftInferCore
 import Testing
 
+@Suite("LiftedTransformation — V1.19.A corpus-wide derive() + signal kind")
+struct LiftedTransformationDeriveTests {
+
+    private func summary(
+        _ name: String,
+        params: [(label: String?, type: String)] = [],
+        returnType: String? = "Void",
+        isMutating: Bool = true,
+        containingType: String? = "Counter",
+        line: Int = 1,
+        file: String = "Test.swift"
+    ) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: params.enumerated().map { index, parameter in
+                Parameter(
+                    label: parameter.label,
+                    internalName: "p\(index)",
+                    typeText: parameter.type,
+                    isInout: false
+                )
+            },
+            returnTypeText: returnType,
+            isThrows: false,
+            isAsync: false,
+            isMutating: isMutating,
+            isStatic: false,
+            location: SourceLocation(file: file, line: line, column: 1),
+            containingTypeName: containingType,
+            bodySignals: .empty
+        )
+    }
+
+    private func valueSemanticResolver(carrier: String = "Counter") -> CarrierKindResolver {
+        CarrierKindResolver(typeDecls: [
+            TypeDecl(
+                name: carrier,
+                kind: .struct,
+                inheritedTypes: [],
+                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+                storedMembers: [StoredMember(name: "value", typeName: "Int")]
+            ),
+        ])
+    }
+
+    @Test("derive() returns lifts for every value-semantic mutating summary")
+    func deriveReturnsAdmittedLifts() {
+        let summaries = [
+            summary("touch"),
+            summary("increment", params: [(label: "by", type: "Int")]),
+            summary("snapshot", returnType: "Int", isMutating: false),
+            summary("classMethod", containingType: "Service"),
+        ]
+        // Mix value-semantic resolver with one class TypeDecl so the
+        // class-containing mutating summary classifies as referenceType.
+        let mixedResolver = CarrierKindResolver(typeDecls: [
+            TypeDecl(
+                name: "Counter",
+                kind: .struct,
+                inheritedTypes: [],
+                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+                storedMembers: [StoredMember(name: "value", typeName: "Int")]
+            ),
+            TypeDecl(
+                name: "Service",
+                kind: TypeDecl.Kind.class,
+                inheritedTypes: [],
+                location: SourceLocation(file: "Test.swift", line: 1, column: 1)
+            ),
+        ])
+        let lifts = LiftedTransformation.derive(
+            from: summaries,
+            carrierKindResolver: mixedResolver
+        )
+        // Two admitted: touch + increment; snapshot is non-mutating;
+        // classMethod has reference-type carrier.
+        #expect(lifts.count == 2)
+        #expect(lifts.contains { $0.originalSummary.name == "touch" })
+        #expect(lifts.contains { $0.originalSummary.name == "increment" })
+    }
+
+    @Test("derive() returns empty list when the corpus has no admissible mutators")
+    func deriveEmptyOnEmptyAdmission() {
+        let resolver = valueSemanticResolver()
+        let summaries = [
+            summary("snapshot", returnType: "Int", isMutating: false),
+            summary("topLevel", containingType: nil),
+        ]
+        #expect(LiftedTransformation.derive(from: summaries, carrierKindResolver: resolver).isEmpty)
+    }
+
+    @Test("derive() returns lifts in source-order (file then line)")
+    func deriveIsSourceOrdered() {
+        let resolver = valueSemanticResolver()
+        let summaries = [
+            summary("late", line: 60),
+            summary("early", line: 10),
+            summary("middle", line: 30),
+        ]
+        let lifts = LiftedTransformation.derive(
+            from: summaries,
+            carrierKindResolver: resolver
+        )
+        #expect(lifts.map(\.originalSummary.name) == ["early", "middle", "late"])
+    }
+
+    @Test("derive() is stable across files in alphabetical path order")
+    func deriveStableAcrossFiles() {
+        let resolver = valueSemanticResolver()
+        let summaries = [
+            summary("zMethod", line: 10, file: "Z.swift"),
+            summary("aMethod", line: 100, file: "A.swift"),
+        ]
+        let lifts = LiftedTransformation.derive(
+            from: summaries,
+            carrierKindResolver: resolver
+        )
+        #expect(lifts.map(\.originalSummary.name) == ["aMethod", "zMethod"])
+    }
+
+    @Test("Signal.Kind.liftedFromMutation case exists and renders +10 detail line")
+    func liftedFromMutationSignal() {
+        let signal = Signal(
+            kind: .liftedFromMutation,
+            weight: 10,
+            detail: "Lifted from mutating method"
+        )
+        #expect(signal.kind == .liftedFromMutation)
+        #expect(signal.weight == 10)
+        #expect(signal.formattedLine.contains("(+10)"))
+    }
+}
+
 @Suite("LiftedTransformation — V1.19.A admission gate + shadow-form derivation")
 struct LiftedTransformationTests {
 
@@ -210,138 +343,5 @@ struct LiftedTransformationTests {
             carrierKindResolver: resolver
         ))
         #expect(lifted.rationale.contains("Counter.absorb(_:)"))
-    }
-}
-
-@Suite("LiftedTransformation — V1.19.A corpus-wide derive() + signal kind")
-struct LiftedTransformationDeriveTests {
-
-    private func summary(
-        _ name: String,
-        params: [(label: String?, type: String)] = [],
-        returnType: String? = "Void",
-        isMutating: Bool = true,
-        containingType: String? = "Counter",
-        line: Int = 1,
-        file: String = "Test.swift"
-    ) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: params.enumerated().map { index, parameter in
-                Parameter(
-                    label: parameter.label,
-                    internalName: "p\(index)",
-                    typeText: parameter.type,
-                    isInout: false
-                )
-            },
-            returnTypeText: returnType,
-            isThrows: false,
-            isAsync: false,
-            isMutating: isMutating,
-            isStatic: false,
-            location: SourceLocation(file: file, line: line, column: 1),
-            containingTypeName: containingType,
-            bodySignals: .empty
-        )
-    }
-
-    private func valueSemanticResolver(carrier: String = "Counter") -> CarrierKindResolver {
-        CarrierKindResolver(typeDecls: [
-            TypeDecl(
-                name: carrier,
-                kind: .struct,
-                inheritedTypes: [],
-                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-                storedMembers: [StoredMember(name: "value", typeName: "Int")]
-            )
-        ])
-    }
-
-    @Test("derive() returns lifts for every value-semantic mutating summary")
-    func deriveReturnsAdmittedLifts() {
-        let summaries = [
-            summary("touch"),
-            summary("increment", params: [(label: "by", type: "Int")]),
-            summary("snapshot", returnType: "Int", isMutating: false),
-            summary("classMethod", containingType: "Service")
-        ]
-        // Mix value-semantic resolver with one class TypeDecl so the
-        // class-containing mutating summary classifies as referenceType.
-        let mixedResolver = CarrierKindResolver(typeDecls: [
-            TypeDecl(
-                name: "Counter",
-                kind: .struct,
-                inheritedTypes: [],
-                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-                storedMembers: [StoredMember(name: "value", typeName: "Int")]
-            ),
-            TypeDecl(
-                name: "Service",
-                kind: TypeDecl.Kind.class,
-                inheritedTypes: [],
-                location: SourceLocation(file: "Test.swift", line: 1, column: 1)
-            )
-        ])
-        let lifts = LiftedTransformation.derive(
-            from: summaries,
-            carrierKindResolver: mixedResolver
-        )
-        // Two admitted: touch + increment; snapshot is non-mutating;
-        // classMethod has reference-type carrier.
-        #expect(lifts.count == 2)
-        #expect(lifts.contains { $0.originalSummary.name == "touch" })
-        #expect(lifts.contains { $0.originalSummary.name == "increment" })
-    }
-
-    @Test("derive() returns empty list when the corpus has no admissible mutators")
-    func deriveEmptyOnEmptyAdmission() {
-        let resolver = valueSemanticResolver()
-        let summaries = [
-            summary("snapshot", returnType: "Int", isMutating: false),
-            summary("topLevel", containingType: nil)
-        ]
-        #expect(LiftedTransformation.derive(from: summaries, carrierKindResolver: resolver).isEmpty)
-    }
-
-    @Test("derive() returns lifts in source-order (file then line)")
-    func deriveIsSourceOrdered() {
-        let resolver = valueSemanticResolver()
-        let summaries = [
-            summary("late", line: 60),
-            summary("early", line: 10),
-            summary("middle", line: 30)
-        ]
-        let lifts = LiftedTransformation.derive(
-            from: summaries,
-            carrierKindResolver: resolver
-        )
-        #expect(lifts.map(\.originalSummary.name) == ["early", "middle", "late"])
-    }
-
-    @Test("derive() is stable across files in alphabetical path order")
-    func deriveStableAcrossFiles() {
-        let resolver = valueSemanticResolver()
-        let summaries = [
-            summary("zMethod", line: 10, file: "Z.swift"),
-            summary("aMethod", line: 100, file: "A.swift")
-        ]
-        let lifts = LiftedTransformation.derive(
-            from: summaries,
-            carrierKindResolver: resolver
-        )
-        #expect(lifts.map(\.originalSummary.name) == ["aMethod", "zMethod"])
-    }
-
-    @Test("Signal.Kind.liftedFromMutation case exists and renders +10 detail line")
-    func liftedFromMutationSignal() {
-        let signal = Signal(
-            kind: .liftedFromMutation,
-            weight: 10,
-            detail: "Lifted from mutating method"
-        )
-        #expect(signal.kind == .liftedFromMutation)
-        #expect(signal.weight == 10)
-        #expect(signal.formattedLine.contains("(+10)"))
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 
+/// Renders a `VerifyOutcome` as the human-readable report `swift-infer verify` prints.
 public enum VerifyResultRenderer {
 
     /// Context the renderer needs to produce a human-readable line.
@@ -47,7 +48,7 @@ public enum VerifyResultRenderer {
         "Complex(0, 0)",
         "Complex(-0.0, 0)",
         "Complex(greatestFiniteMagnitude, 0)",
-        "Complex(leastNonzeroMagnitude, 0)"
+        "Complex(leastNonzeroMagnitude, 0)",
     ]
 
     /// Render the outcome as a multi-line user-facing string. V1.44.D
@@ -111,7 +112,7 @@ public enum VerifyResultRenderer {
             "⚠ verify holds for finite domain; edge-case advisory: "
                 + "\(shape.subjectLine(context: context)),",
             "    default pass \(defaultTrials)/\(defaultTrials), "
-                + "edge pass failed at trial \(edge.trial) on \(edgeTag):"
+                + "edge pass failed at trial \(edge.trial) on \(edgeTag):",
         ]
         let values = shape.valueLines(
             input: edge.input,
@@ -129,7 +130,7 @@ public enum VerifyResultRenderer {
         let shape = renderShape(for: context)
         var lines = [
             "✗ verify fails: \(shape.subjectLine(context: context)), "
-                + "counterexample at trial \(detail.trial) (default pass):"
+                + "counterexample at trial \(detail.trial) (default pass):",
         ] + shape.valueLines(
             input: detail.input,
             forward: detail.forwardResult,

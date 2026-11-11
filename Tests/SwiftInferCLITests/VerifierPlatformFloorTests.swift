@@ -3,6 +3,33 @@ import Testing
 
 @testable import SwiftInferCLI
 
+/// The rule has two implementations and the survey runs the one that was NOT fixed first.
+///
+/// `VerifierWorkdir.macOSPlatformLine` serves the per-suggestion workdir;
+/// `SharedVerifierPackage.platformLine` serves `verify --all-from-index`, and so
+/// `prove-then-show`. Fixing only the former moved **0 of 129 rows** on swift-format — an A/B
+/// whose arms were byte-identical, because the fix was in a path the survey never calls.
+///
+/// These arms exist so a future change cannot repair one copy and leave the other, which is
+/// the failure that cost a full 12-minute survey to detect.
+@Suite("Verifier platform floor — both implementations agree")
+struct VerifierPlatformFloorParityTests {
+
+    @Test("both platform-line producers floor at the kit version for a low corpus")
+    func bothProducersFloorAtKit() {
+        // The shared-package producer is private, so it is exercised through the helper both
+        // copies now route to. The parity that matters is that neither has its own arithmetic.
+        #expect(VerifierWorkdir.atLeastKitFloor("13.0") == VerifierWorkdir.kitMacOSFloor)
+        #expect(VerifierWorkdir.macOSPlatformLine(userPackage: nil)
+            == ".macOS(\"\(VerifierWorkdir.kitMacOSFloor)\")")
+    }
+
+    @Test("neither producer clamps a corpus that is above the kit floor")
+    func neitherProducerClamps() {
+        #expect(VerifierWorkdir.atLeastKitFloor("26.0") == "26.0")
+    }
+}
+
 /// The verifier's generated manifest must declare a macOS floor that satisfies **both** the
 /// corpus and `PropertyLawKit`.
 ///
@@ -78,32 +105,5 @@ struct VerifierPlatformFloorTests {
             + "VerifierWorkdir.kitMacOSFloor says \(VerifierWorkdir.kitMacOSFloor). A floor "
             + "below the kit's real one sends every pick on every corpus to build-failed."
         #expect(declared == VerifierWorkdir.kitMacOSFloor, Comment(rawValue: drifted))
-    }
-}
-
-/// The rule has two implementations and the survey runs the one that was NOT fixed first.
-///
-/// `VerifierWorkdir.macOSPlatformLine` serves the per-suggestion workdir;
-/// `SharedVerifierPackage.platformLine` serves `verify --all-from-index`, and so
-/// `prove-then-show`. Fixing only the former moved **0 of 129 rows** on swift-format — an A/B
-/// whose arms were byte-identical, because the fix was in a path the survey never calls.
-///
-/// These arms exist so a future change cannot repair one copy and leave the other, which is
-/// the failure that cost a full 12-minute survey to detect.
-@Suite("Verifier platform floor — both implementations agree")
-struct VerifierPlatformFloorParityTests {
-
-    @Test("both platform-line producers floor at the kit version for a low corpus")
-    func bothProducersFloorAtKit() {
-        // The shared-package producer is private, so it is exercised through the helper both
-        // copies now route to. The parity that matters is that neither has its own arithmetic.
-        #expect(VerifierWorkdir.atLeastKitFloor("13.0") == VerifierWorkdir.kitMacOSFloor)
-        #expect(VerifierWorkdir.macOSPlatformLine(userPackage: nil)
-            == ".macOS(\"\(VerifierWorkdir.kitMacOSFloor)\")")
-    }
-
-    @Test("neither producer clamps a corpus that is above the kit floor")
-    func neitherProducerClamps() {
-        #expect(VerifierWorkdir.atLeastKitFloor("26.0") == "26.0")
     }
 }

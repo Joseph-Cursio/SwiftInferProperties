@@ -26,9 +26,9 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: nil,
-            explicitConfigPath: configPath,
             output: recording,
+            includePossible: .notGiven,
+            explicitConfigPath: configPath,
             diagnostics: diagnostics
         )
         // `process: String -> String` fires idempotence only (String dropped
@@ -57,9 +57,9 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             explicitConfigPath: configPath,
-            output: recording,
             diagnostics: diagnostics
         )
         #expect(recording.text.contains("(Possible)"))
@@ -85,9 +85,9 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             explicitConfigPath: configPath,
-            output: recording,
             diagnostics: diagnostics
         )
         #expect(recording.body == "0 suggestions.")
@@ -160,9 +160,9 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             explicitVocabularyPath: cliVocabPath,
             explicitConfigPath: configPath,
-            output: recording,
             diagnostics: diagnostics
         )
         // CLI vocab includes sanitizeXML → project-vocab signal fires.
@@ -210,8 +210,8 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: true,
             output: recording,
+            includePossible: true,
             diagnostics: diagnostics
         )
         // 30 type-symmetry + (-30) anti-commutativity = 0 → suppressed.
@@ -235,8 +235,8 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            explicitVocabularyPath: vocabularyPath,
             output: recording,
+            explicitVocabularyPath: vocabularyPath,
             diagnostics: diagnostics
         )
         #expect(recording.text.contains("Template: commutativity"))
@@ -261,8 +261,8 @@ struct DiscoverPipelineConfigTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            explicitConfigPath: configPath,
             output: recording,
+            explicitConfigPath: configPath,
             diagnostics: diagnostics
         )
         // Defaults → Possible tier hidden → 0 suggestions.

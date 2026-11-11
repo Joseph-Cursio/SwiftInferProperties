@@ -11,13 +11,13 @@ struct ReportRendererTests {
         SemanticIndexEntry(
             identityHash: "0x\(template)\(tier)",
             templateName: template,
-            typeName: "T",
             score: 50,
             tier: tier,
             primaryFunctionName: "f(_:_:)",
             location: "/x.swift:1",
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            typeName: "T"
         )
     }
 
@@ -30,11 +30,11 @@ struct ReportRendererTests {
             actionTypeName: "Action",
             predicate: "p",
             location: "/r.swift:1",
-            moduleName: nil,
             score: 40,
             tier: tier,
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            moduleName: nil
         )
     }
 
@@ -69,24 +69,24 @@ struct ReportRendererTests {
             entries: [
                 algebraic("commutativity", tier: "Verified"),
                 algebraic("commutativity", tier: "Likely"),
-                algebraic("round-trip", tier: "Strong")
+                algebraic("round-trip", tier: "Strong"),
             ],
             interactionEntries: [
                 interaction("idempotence", tier: "Likely"),
                 interaction("idempotence", tier: "Possible"),
-                interaction("cardinality", tier: "Possible")
+                interaction("cardinality", tier: "Possible"),
             ]
         )
         let log = VerifyEvidenceLog(records: [
             evidence(.measuredBothPass),
             evidence(.measuredDefaultFails),
-            evidence(.architecturalCoveragePending)
+            evidence(.architecturalCoveragePending),
         ])
         let groups = [
             InsightsGroup(structure: "commutative monoid", members: [
                 InsightsMember(typeName: "Config", operationName: "merge(_:_:)", tier: "Strong", conforms: false),
-                InsightsMember(typeName: "EventLog", operationName: "+(_:_:)", tier: "Strong", conforms: false)
-            ])
+                InsightsMember(typeName: "EventLog", operationName: "+(_:_:)", tier: "Strong", conforms: false),
+            ]),
         ]
         let out = ReportRenderer.render(index: index, evidence: log, insights: groups)
 

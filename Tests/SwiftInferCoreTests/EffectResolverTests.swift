@@ -1,7 +1,6 @@
 import Foundation
 import SwiftEffectInference
 @testable import SwiftInferCore
-import SwiftSyntax
 import Testing
 
 /// `EffectResolver` — cross-file, body-derived effects (`--resolve-effects`).
@@ -24,7 +23,7 @@ struct EffectResolverTests {
                 /// @lint.effect non_idempotent
                 static func unlabelled(_ alpha: String) -> String { alpha }
             }
-            """
+            """,
         ]) { directory in
             let scanned = try FunctionScanner.scanCorpus(directory: directory).summaries
             var table = EffectSymbolTable()
@@ -59,7 +58,7 @@ struct EffectResolverTests {
                 }
                 static func canonical(_ text: String) -> String { text }
             }
-            """
+            """,
         ]) { directory in
             let scanned = try FunctionScanner.scanCorpus(directory: directory).summaries
             let resolved = EffectResolver.resolve(summaries: scanned, in: directory)
@@ -87,7 +86,7 @@ struct EffectResolverTests {
                 // absence, which is the whole reason the filter exists.
                 static func increment(_ value: Int) -> Int { helper(value) + 1 }
             }
-            """
+            """,
         ]) { directory in
             let scanned = try FunctionScanner.scanCorpus(directory: directory).summaries
             let resolved = EffectResolver.resolve(summaries: scanned, in: directory)
@@ -109,7 +108,7 @@ struct EffectResolverTests {
                     return text
                 }
             }
-            """
+            """,
         ]) { directory in
             let scanned = try FunctionScanner.scanCorpus(directory: directory).summaries
             let resolved = EffectResolver.resolve(summaries: scanned, in: directory)
@@ -130,7 +129,7 @@ struct EffectResolverTests {
                 static func alpha(_ text: String) -> String { beta(text) }
                 static func beta(_ text: String) -> String { text }
             }
-            """
+            """,
         ]) { directory in
             let scanned = try FunctionScanner.scanCorpus(directory: directory).summaries
             let resolved = EffectResolver.resolve(summaries: scanned, in: directory)

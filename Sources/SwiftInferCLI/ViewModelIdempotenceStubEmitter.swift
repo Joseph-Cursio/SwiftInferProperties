@@ -1,5 +1,3 @@
-import Foundation
-
 /// PROTOTYPE — emits a standalone verifier that checks a view-model action
 /// is idempotent at the State level. Construct the view model, apply the
 /// action, snapshot every State field, apply it *again with the same
@@ -73,6 +71,7 @@ public enum ViewModelIdempotenceStubEmitter {
         }
     }
 
+    /// The view-model action idempotence verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let imports = (["Foundation"] + inputs.extraImports)
             .map { "import \($0)" }

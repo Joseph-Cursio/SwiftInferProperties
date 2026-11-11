@@ -91,7 +91,7 @@ struct SeedFocusTests {
             SeedManifest.Seed(
                 file: "Upload.swift", line: 73, symbol: "uploadRemainingChunks",
                 kind: .extractableKernel
-            )
+            ),
         ])
 
         let suggestions = SeedFocus.filter([], to: manifest)

@@ -23,9 +23,11 @@ public enum InteractionPostAcceptanceOutcomesStore {
         }
     }
 
+    /// The outcomes log's path relative to the package root.
     public static let conventionalRelativePath =
         ".swiftinfer/interaction-post-acceptance-outcomes.json"
 
+    /// Loads the outcomes log from `explicitPath` or the package root above `directory`; missing is empty.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil
@@ -43,6 +45,7 @@ public enum InteractionPostAcceptanceOutcomesStore {
         return parse(at: path, packageRoot: packageRoot)
     }
 
+    /// Writes `log` to `path` as canonical JSON, creating `.swiftinfer/` if needed.
     public static func write(
         _ log: InteractionPostAcceptanceOutcomeLog,
         to path: URL
@@ -55,6 +58,7 @@ public enum InteractionPostAcceptanceOutcomesStore {
         try data.write(to: path, options: .atomic)
     }
 
+    /// The outcomes log's path under `packageRoot`.
     public static func defaultPath(for packageRoot: URL) -> URL {
         packageRoot.appendingPathComponent(conventionalRelativePath)
     }
@@ -81,7 +85,7 @@ public enum InteractionPostAcceptanceOutcomesStore {
                 log: .empty,
                 warnings: [
                     "could not parse interaction-post-acceptance-outcomes "
-                        + "at \(path.path): \(error)"
+                        + "at \(path.path): \(error)",
                 ],
                 packageRoot: packageRoot
             )
@@ -90,7 +94,7 @@ public enum InteractionPostAcceptanceOutcomesStore {
                 log: .empty,
                 warnings: [
                     "could not read interaction-post-acceptance-outcomes "
-                        + "at \(path.path): \(error.localizedDescription)"
+                        + "at \(path.path): \(error.localizedDescription)",
                 ],
                 packageRoot: packageRoot
             )

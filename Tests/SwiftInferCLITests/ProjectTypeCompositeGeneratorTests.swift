@@ -21,7 +21,7 @@ struct ProjectTypeCompositeGeneratorTests {
                 hasUserGen: false,
                 storedMembers: [StoredMember(name: "cents", typeName: "Int")]
             ),
-            TypeShape(name: "Session", kind: .class, inheritedTypes: [], hasUserGen: false)
+            TypeShape(name: "Session", kind: .class, inheritedTypes: [], hasUserGen: false),
         ])(typeName)
     }
 

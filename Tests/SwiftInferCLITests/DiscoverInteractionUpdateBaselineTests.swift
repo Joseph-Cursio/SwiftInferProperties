@@ -8,12 +8,24 @@ import Testing
 // Verified only so the persisted snapshot matches what
 // `InteractionDriftDetector` would warn against on the next run.
 
+/// V1.89 — appending DiscoverOutput sink. Unlike `DPRecordingOutput`
+/// (which overwrites on each write), this preserves the full call
+/// sequence so tests can assert against both the baseline-write
+/// status line AND the renderer output when --update-baseline is set.
+private final class UpdateBaselineRecordingOutput: DiscoverOutput, @unchecked Sendable {
+    var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
 @Suite("DiscoverInteraction — V1.89 --update-baseline writeout")
 struct DiscoverInteractionUpdateBaselineTests {
 
     private typealias Command = SwiftInferCommand.DiscoverInteraction
 
-    private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+    private let firstSeenAt = Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
 
     // MARK: - Flag parsing
 
@@ -22,7 +34,7 @@ struct DiscoverInteractionUpdateBaselineTests {
         let parsed = try Command.parse([
             "--target", "MyApp",
             "--update-baseline",
-            "--dry-run"
+            "--dry-run",
         ])
         #expect(parsed.updateBaseline == true)
         #expect(parsed.dryRun == true)
@@ -46,7 +58,7 @@ struct DiscoverInteractionUpdateBaselineTests {
             makeSuggestion(tier: .verified, predicate: "state.b == 2"),
             makeSuggestion(tier: .likely, predicate: "state.c == 3"),
             makeSuggestion(tier: .possible, predicate: "state.d == 4"),
-            makeSuggestion(tier: .suppressed, predicate: "state.e == 5")
+            makeSuggestion(tier: .suppressed, predicate: "state.e == 5"),
         ]
         let output = UpdateBaselineRecordingOutput()
         try Command.runUpdateBaseline(
@@ -134,7 +146,7 @@ struct DiscoverInteractionUpdateBaselineTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = [
             makeSuggestion(tier: .possible, predicate: "state.a == 1"),
-            makeSuggestion(tier: .likely, predicate: "state.b == 2")
+            makeSuggestion(tier: .likely, predicate: "state.b == 2"),
         ]
         let output = UpdateBaselineRecordingOutput()
         try Command.runUpdateBaseline(
@@ -173,11 +185,11 @@ struct DiscoverInteractionUpdateBaselineTests {
         let output = UpdateBaselineRecordingOutput()
         try Command.run(
             target: "MyApp",
+            workingDirectory: directory,
+            output: output,
             includePossible: true,
             updateBaseline: true,
             dryRun: false,
-            workingDirectory: directory,
-            output: output,
             firstSeenAt: firstSeenAt
         )
         let combined = output.lines.joined(separator: "\n")
@@ -241,17 +253,5 @@ struct DiscoverInteractionUpdateBaselineTests {
         let dir = directory.appendingPathComponent(relativePath)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         try Data(contents.utf8).write(to: dir.appendingPathComponent(name))
-    }
-}
-
-/// V1.89 — appending DiscoverOutput sink. Unlike `DPRecordingOutput`
-/// (which overwrites on each write), this preserves the full call
-/// sequence so tests can assert against both the baseline-write
-/// status line AND the renderer output when --update-baseline is set.
-private final class UpdateBaselineRecordingOutput: DiscoverOutput, @unchecked Sendable {
-    var lines: [String] = []
-
-    func write(_ text: String) {
-        lines.append(text)
     }
 }

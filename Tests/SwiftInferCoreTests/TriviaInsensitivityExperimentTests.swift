@@ -1,5 +1,3 @@
-import Foundation
-import PropertyLawKit
 @testable import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
@@ -144,7 +142,7 @@ struct TriviaInsensitivityExperimentTests {
             let original = Self.structure(FunctionScanner.scan(source: source, file: name))
             for (label, rewriter) in [
                 ("inflated", TriviaInflater() as SyntaxRewriter),
-                ("comments-stripped", CommentStripper())
+                ("comments-stripped", CommentStripper()),
             ] {
                 let rewrittenSource = Self.rewritten(source, by: rewriter)
                 let after = Self.structure(FunctionScanner.scan(source: rewrittenSource, file: name))
@@ -172,7 +170,7 @@ struct TriviaInsensitivityExperimentTests {
             ))
             for (label, rewriter) in [
                 ("inflated", TriviaInflater() as SyntaxRewriter),
-                ("comments-stripped", CommentStripper())
+                ("comments-stripped", CommentStripper()),
             ] {
                 let rewrittenSource = Self.rewritten(source, by: rewriter)
                 let after = Self.shapeProjection(TypeShapeBuilder.shapes(
@@ -199,7 +197,7 @@ struct TriviaInsensitivityExperimentTests {
                 candidate.typeName,
                 candidate.inheritedTypes.joined(separator: ","),
                 candidate.visitedNodeTypes.joined(separator: ","),
-                candidate.emittedRuleNames.joined(separator: ",")
+                candidate.emittedRuleNames.joined(separator: ","),
             ].joined(separator: "|"))
         }
     }
@@ -214,7 +212,7 @@ struct TriviaInsensitivityExperimentTests {
             let original = Self.visitorProjection(RuleVisitorDiscoverer.discover(source: source, file: name))
             for (label, rewriter) in [
                 ("inflated", TriviaInflater() as SyntaxRewriter),
-                ("comments-stripped", CommentStripper())
+                ("comments-stripped", CommentStripper()),
             ] {
                 let after = Self.visitorProjection(
                     RuleVisitorDiscoverer.discover(source: Self.rewritten(source, by: rewriter), file: name)
@@ -299,7 +297,7 @@ struct TriviaInsensitivityExperimentTests {
             let originalTokens = parsed.tokens(viewMode: .sourceAccurate).map(\.text)
             for (label, rewriter) in [
                 ("inflated", TriviaInflater() as SyntaxRewriter),
-                ("comments-stripped", CommentStripper())
+                ("comments-stripped", CommentStripper()),
             ] {
                 let reparsed = Parser.parse(source: Self.rewritten(source, by: rewriter))
                 let after = reparsed.tokens(viewMode: .sourceAccurate).map(\.text)

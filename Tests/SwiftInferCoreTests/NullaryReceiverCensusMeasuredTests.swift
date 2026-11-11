@@ -5,6 +5,56 @@ import SwiftParser
 import SwiftSyntax
 import Testing
 
+/// The same question asked of the **template itself** rather than of a model of it.
+///
+/// `FunctionScanner` produces the summaries `TemplateRegistry` sees, and `IdempotenceTemplate`
+/// decides. A nullary instance method that it suggests, and that `idempotentStub` then drops
+/// because `paramType` finds no parameter, is a law the pipeline proposes and cannot write.
+@Suite("Census — laws idempotence proposes and the emitter cannot write", .serialized)
+struct NullaryReceiverEmissionLossMeasuredTests {
+
+    @Test("count the laws lost between suggestion and emission")
+    func countLostLaws() {
+        var suggested = 0
+        var nullaryLost = 0
+        var examples: [String] = []
+
+        for corpus in CorpusManifest.available {
+            let files = FileManager.default
+                .enumerator(at: corpus.primaryRoot, includingPropertiesForKeys: nil)?
+                .compactMap { $0 as? URL }
+                .filter {
+                    $0.pathExtension == "swift"
+                        && !NullaryReceiverCensusMeasuredTests.isExcluded($0)
+                } ?? []
+            for file in files {
+                guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
+                let scanned = FunctionScanner.scanCorpus(source: source, file: file.lastPathComponent)
+                for summary in scanned.summaries {
+                    guard IdempotenceTemplate.suggest(for: summary) != nil else { continue }
+                    suggested += 1
+                    // `idempotentStub` reads its carrier from the first PARAMETER. A nullary
+                    // subject has none, so the guard fails and the law is never written.
+                    guard summary.parameters.isEmpty else { continue }
+                    nullaryLost += 1
+                    if examples.count < 8 {
+                        examples.append("\(corpus.id): \(summary.containingTypeName ?? "?").\(summary.name)()")
+                    }
+                }
+            }
+        }
+
+        let share = suggested == 0 ? 0.0 : Double(nullaryLost) / Double(suggested) * 100
+        print("\n=== EMISSION LOSS (#456) ===")
+        print("idempotence suggestions      : \(suggested)")
+        print("…nullary, so carrier is lost : \(nullaryLost)  (\(String(format: "%.1f", share))%)")
+        for example in examples { print("    \(example)") }
+        print("=== END ===\n")
+
+        #expect(suggested > 10, "a census finding almost no suggestions reports a silent zero")
+    }
+}
+
 /// **How many laws are lost because the carrier is read from a parameter that does not exist?**
 ///
 /// #456: `shellEscapeForVariableName() -> Self` is a nullary instance method whose idempotence is
@@ -161,55 +211,5 @@ struct NullaryReceiverCensusMeasuredTests {
         let collector = Collector(viewMode: .sourceAccurate)
         collector.walk(Parser.parse(source: source))
         #expect(collector.tally.nullaryInstance == 0)
-    }
-}
-
-/// The same question asked of the **template itself** rather than of a model of it.
-///
-/// `FunctionScanner` produces the summaries `TemplateRegistry` sees, and `IdempotenceTemplate`
-/// decides. A nullary instance method that it suggests, and that `idempotentStub` then drops
-/// because `paramType` finds no parameter, is a law the pipeline proposes and cannot write.
-@Suite("Census — laws idempotence proposes and the emitter cannot write", .serialized)
-struct NullaryReceiverEmissionLossMeasuredTests {
-
-    @Test("count the laws lost between suggestion and emission")
-    func countLostLaws() {
-        var suggested = 0
-        var nullaryLost = 0
-        var examples: [String] = []
-
-        for corpus in CorpusManifest.available {
-            let files = FileManager.default
-                .enumerator(at: corpus.primaryRoot, includingPropertiesForKeys: nil)?
-                .compactMap { $0 as? URL }
-                .filter {
-                    $0.pathExtension == "swift"
-                        && !NullaryReceiverCensusMeasuredTests.isExcluded($0)
-                } ?? []
-            for file in files {
-                guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
-                let scanned = FunctionScanner.scanCorpus(source: source, file: file.lastPathComponent)
-                for summary in scanned.summaries {
-                    guard IdempotenceTemplate.suggest(for: summary) != nil else { continue }
-                    suggested += 1
-                    // `idempotentStub` reads its carrier from the first PARAMETER. A nullary
-                    // subject has none, so the guard fails and the law is never written.
-                    guard summary.parameters.isEmpty else { continue }
-                    nullaryLost += 1
-                    if examples.count < 8 {
-                        examples.append("\(corpus.id): \(summary.containingTypeName ?? "?").\(summary.name)()")
-                    }
-                }
-            }
-        }
-
-        let share = suggested == 0 ? 0.0 : Double(nullaryLost) / Double(suggested) * 100
-        print("\n=== EMISSION LOSS (#456) ===")
-        print("idempotence suggestions      : \(suggested)")
-        print("…nullary, so carrier is lost : \(nullaryLost)  (\(String(format: "%.1f", share))%)")
-        for example in examples { print("    \(example)") }
-        print("=== END ===\n")
-
-        #expect(suggested > 10, "a census finding almost no suggestions reports a silent zero")
     }
 }

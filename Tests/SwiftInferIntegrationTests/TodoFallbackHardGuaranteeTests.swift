@@ -65,7 +65,7 @@ struct TodoFallbackHardGuaranteeTests {
                 "Generator: .derivedMemberwise",
                 "Generator: .derivedCaseIterable",
                 "Generator: .derivedRawRepresentable",
-                "Generator: .registered"
+                "Generator: .registered",
             ] {
                 #expect(
                     !rendered.contains(forbidden),

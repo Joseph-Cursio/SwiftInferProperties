@@ -1,5 +1,4 @@
 import Foundation
-import PropertyLawCore
 
 // Curated generator recipes for **SwiftSyntax node carriers**.
 //
@@ -129,7 +128,7 @@ extension StrategistDispatchEmitter {
         "actor Store { private var items: [Int] = []; func add(_ x: Int) { items.append(x) } }",
         "enum E: String, CaseIterable { case a, b }",
         "final class VM: ObservableObject { @Published var count = 0 }",
-        "func f<T: Equatable>(_ v: T) -> T where T: Hashable { v }"
+        "func f<T: Equatable>(_ v: T) -> T where T: Hashable { v }",
     ]
 
     private static let structCorpus = [
@@ -138,7 +137,7 @@ extension StrategistDispatchEmitter {
         "struct ContentView: View { var body: some View { Text(\"hi\") } }",
         "struct Wrapper<T: Equatable>: Codable where T: Hashable { let value: T }",
         "@MainActor struct Flagged { @State private var on = false }",
-        "struct Nested { struct Inner { let a: Int }; var inner = Inner(a: 1) }"
+        "struct Nested { struct Inner { let a: Int }; var inner = Inner(a: 1) }",
     ]
 
     private static let classCorpus = [
@@ -146,7 +145,7 @@ extension StrategistDispatchEmitter {
         "final class Model: ObservableObject { @Published var count = 0 }",
         "@MainActor final class VM { var items: [Int] = [] }",
         "class Generic<T> where T: Sendable { var value: T? }",
-        "open class Base { open func run() {} }"
+        "open class Base { open func run() {} }",
     ]
 
     private static let funcCorpus = [
@@ -155,7 +154,7 @@ extension StrategistDispatchEmitter {
         "@objc private func h() async -> [Int] { [] }",
         "func generic<T: Equatable>(_ v: T) -> T where T: Hashable { v }",
         "func inoutParam(_ x: inout Int) { x += 1 }",
-        "func trailing() { withLock { doWork() } }"
+        "func trailing() { withLock { doWork() } }",
     ]
 
     /// Bodies, for `CodeBlockSyntax`. The empty body and the `for` loop are the
@@ -165,7 +164,7 @@ extension StrategistDispatchEmitter {
         "func g() { let a = 1; print(a) }",
         "func h() { if true { return } else { } }",
         "func i() { for x in 0 ..< 10 { _ = x } }",
-        "func j() { do { try run() } catch { } }"
+        "func j() { do { try run() } catch { } }",
     ]
 
     private static let varCorpus = [
@@ -174,7 +173,7 @@ extension StrategistDispatchEmitter {
         "@State private var c = false",
         "let (d, e) = (1, 2)",
         "var f: Int { 42 }",
-        "lazy var g: [String] = []"
+        "lazy var g: [String] = []",
     ]
 
     /// Accessor blocks specifically — every spelling the grammar admits,
@@ -186,7 +185,7 @@ extension StrategistDispatchEmitter {
         "var b: Int { get { 1 } set { } }",
         "var c: Int { get async throws { 1 } }",
         "var d: Int = 0 { didSet { } }",
-        "var e: Int = 0 { willSet { } }"
+        "var e: Int = 0 { willSet { } }",
     ]
 
     /// Includes an *unattributed* declaration on purpose: `AttributeListSyntax`
@@ -196,7 +195,7 @@ extension StrategistDispatchEmitter {
         "func plain() {}",
         "@objc func f() {}",
         "@available(macOS 14, *) @MainActor func g() {}",
-        "@discardableResult @inlinable func h() -> Int { 0 }"
+        "@discardableResult @inlinable func h() -> Int { 0 }",
     ]
 
     private static let callCorpus = [
@@ -207,7 +206,7 @@ extension StrategistDispatchEmitter {
         "foo { $0 + 1 }",
         "Button(\"Tap\") { action() }",
         "Array<Int>()",
-        "x.map { $0 }.filter { $0 > 0 }"
+        "x.map { $0 }.filter { $0 > 0 }",
     ]
 
     /// Payload-carrying and raw-valued forms alongside the empty one, since a
@@ -219,7 +218,7 @@ extension StrategistDispatchEmitter {
     private static let enumCorpus = [
         "enum E {}",
         "enum F: String, CaseIterable { case a, b }",
-        "enum G<T> { case some(T), none }"
+        "enum G<T> { case some(T), none }",
     ]
 
     private static let closureCorpus = [
@@ -227,7 +226,7 @@ extension StrategistDispatchEmitter {
         "{ x in x }",
         "{ (a: Int, b: Int) -> Int in a + b }",
         "{ [weak self] in self?.run() }",
-        "{ $0 + $1 }"
+        "{ $0 + $1 }",
     ]
 
     // MARK: - Navigation
@@ -314,6 +313,6 @@ extension StrategistDispatchEmitter {
         "TokenSyntax": parsedRecipe(
             carrier: "TokenSyntax", sources: funcCorpus,
             navigation: firstItem(as: "FunctionDeclSyntax") + ".name"
-        )
+        ),
     ]
 }

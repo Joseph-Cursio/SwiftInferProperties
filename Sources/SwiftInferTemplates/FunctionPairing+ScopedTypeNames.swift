@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Resolving a bare type name to the type it names in the function's own scope, before pairing.

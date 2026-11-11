@@ -1,5 +1,3 @@
-import Foundation
-
 /// The **caveat** half of `CuratedStdlibCatalog` — plausible-looking NON-properties,
 /// documented and never asserted true. `StdlibAnchor` turns a matching caveat into a
 /// "why this might be wrong" line on a discovered candidate.
@@ -77,7 +75,7 @@ extension CuratedStdlibCatalog {
                 + "order, or round-tripping through an ordered carrier, is false while "
                 + "usually appearing to pass.",
             template: "round-trip"
-        )
+        ),
     ]
 
     // NOT added, and recorded so it is not re-proposed: "`sort()` is not stable". That was

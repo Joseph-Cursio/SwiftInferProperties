@@ -158,8 +158,8 @@ struct DiscoverCLIVerifySuppressionTests {
         let vetoed = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: target,
-            includePossible: true,
             output: vetoed,
+            includePossible: true,
             diagnostics: DPRecordingDiagnosticOutput()
         )
         // `.suppressed` is dropped unconditionally — `--include-possible`
@@ -189,8 +189,8 @@ struct DiscoverCLIVerifySuppressionTests {
         let possible = try #require(
             try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: target,
-                includePossible: true,
-                diagnostics: DPRecordingDiagnosticOutput()
+                diagnostics: DPRecordingDiagnosticOutput(),
+                includePossible: true
             )
             .suggestions.first { $0.templateName == "idempotence" }
         )

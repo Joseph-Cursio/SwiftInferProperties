@@ -213,7 +213,7 @@ extension ReducerDiscoverer {
             "String", "Character",
             "Swift.Bool",
             "Swift.Double", "Swift.Float",
-            "Swift.String", "Swift.Character"
+            "Swift.String", "Swift.Character",
         ])
 
     // MARK: - Cycle 109 — nested State/Action qualification (Blocker A)

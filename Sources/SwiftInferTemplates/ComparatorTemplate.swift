@@ -14,10 +14,12 @@ import SwiftInferCore
 /// claim an example cannot make and a generator can.
 public enum ComparatorTemplate {
 
+    /// The `comparator` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `comparator` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "comparator",
@@ -53,7 +55,7 @@ public enum ComparatorTemplate {
     static let orderingNameStems: [String] = [
         "lessthan", "greaterthan", "precede", "follow", "before", "after",
         "orderedbefore", "orderedascending", "ascending", "descending",
-        "compare", "sort", "rank", "outrank", "earlier", "later", "priorit"
+        "compare", "sort", "rank", "outrank", "earlier", "later", "priorit",
     ]
 
     /// Whether the name carries ordering evidence. `sortCandidates` → yes (`sort`);
@@ -74,7 +76,7 @@ public enum ComparatorTemplate {
                 weight: 40,
                 detail: "`\(summary.name)` is `(T, T) -> Bool` with both operands positional "
                     + "— the shape `sorted(by:)` takes, and it owes a strict weak ordering"
-            )
+            ),
         ]
         if !hasOrderingName(summary.name) {
             signals.append(
@@ -164,7 +166,7 @@ public enum ComparatorTemplate {
                 + "before files, no file may end up before a folder.",
             "A locale-sensitive comparison (`localizedCaseInsensitiveCompare`, `localizedCompare`) is "
                 + "not a fixed ordering — it varies by locale, so the property must pin the locale or "
-                + "it will pass on your machine and fail on someone else's."
+                + "it will pass on your machine and fail on someone else's.",
         ]
     }
 }

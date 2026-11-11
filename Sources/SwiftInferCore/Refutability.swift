@@ -1,5 +1,3 @@
-import Foundation
-
 /// **No filter may take a run to zero refutable laws.**
 ///
 /// A law is *refutable* when there exists an implementation of its subject — type-correct and
@@ -41,7 +39,7 @@ public enum Refutability {
         "determinism",
         // The same law over what a pure mutator leaves behind: two copies given the same inputs end
         // equal. Synthesized beside it for a `pure-mutator` seed, and just as unable to fail.
-        "mutator-determinism"
+        "mutator-determinism",
     ]
 
     /// Whether this suggestion's law could ever fail against a wrong implementation.
@@ -130,7 +128,7 @@ public enum Refutability {
         // is the law that stays true when the fidelity claim
         // `print(parse(s)) == s` is legitimately false, which is exactly why
         // it needs to be visible below the cut.
-        "normal-form"
+        "normal-form",
     ]
 
     /// Whether a correct implementation is *guaranteed* to satisfy this suggestion's law.
@@ -169,7 +167,7 @@ public enum Refutability {
         // exception: a comparator that is not a strict weak ordering can fail it today.
         "sorted-output",
         // The law IS the keyword table the body dispatches on. See `MarkerDispatch`.
-        "marker-dispatch"
+        "marker-dispatch",
     ]
 
     /// Whether a pass tells the reader nothing about today's behaviour, because the law was read

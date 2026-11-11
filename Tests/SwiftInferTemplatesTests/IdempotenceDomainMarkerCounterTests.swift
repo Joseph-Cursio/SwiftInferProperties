@@ -17,6 +17,41 @@ import Testing
 //   curated verb (+40)           : +40 + 30 = +70 → Likely
 //   curated verb + counter       : +70 - 15 = +55 → Likely (preserved)
 
+@Suite("IdempotenceTemplate — V1.15.1 end-to-end discover() integration")
+struct IdempotenceDomainMarkerDiscoverTests {
+
+    @Test("V1.15.1 — `minimumCapacity(forScale:)` no longer surfaces in discover()")
+    func hashTableIdempotenceSuppressedEndToEnd() {
+        let summary = makeSummary(name: "minimumCapacity", label: "forScale")
+        let suggestions = TemplateRegistry.discover(in: [summary], typeDecls: [])
+        let idempotenceCount = suggestions.filter { $0.templateName == "idempotence" }.count
+        #expect(idempotenceCount == 0, "Domain-marker labeled idempotence should not surface")
+    }
+
+    @Test("V1.15.1 — non-domain idempotence still surfaces")
+    func nonDomainIdempotenceStillSurfaces() {
+        let summary = makeSummary(name: "process", label: "value")
+        let suggestions = TemplateRegistry.discover(in: [summary], typeDecls: [])
+        let idempotence = suggestions.first { $0.templateName == "idempotence" }
+        #expect(idempotence != nil, "Non-domain-marker (T) -> T should still surface")
+    }
+
+    private func makeSummary(name: String, label: String?) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [Parameter(label: label, internalName: "x", typeText: "Int", isInout: false)],
+            returnTypeText: "Int",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+    }
+}
+
 @Suite("IdempotenceTemplate — V1.15.1 domain-marker counter-signal")
 struct IdempotenceDomainMarkerCounterTests {
 
@@ -188,44 +223,9 @@ struct IdempotenceDomainMarkerCounterTests {
                     internalName: "x",
                     typeText: paramType,
                     isInout: false
-                )
+                ),
             ],
             returnTypeText: returnType,
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-            containingTypeName: nil,
-            bodySignals: .empty
-        )
-    }
-}
-
-@Suite("IdempotenceTemplate — V1.15.1 end-to-end discover() integration")
-struct IdempotenceDomainMarkerDiscoverTests {
-
-    @Test("V1.15.1 — `minimumCapacity(forScale:)` no longer surfaces in discover()")
-    func hashTableIdempotenceSuppressedEndToEnd() {
-        let summary = makeSummary(name: "minimumCapacity", label: "forScale")
-        let suggestions = TemplateRegistry.discover(in: [summary], typeDecls: [])
-        let idempotenceCount = suggestions.filter { $0.templateName == "idempotence" }.count
-        #expect(idempotenceCount == 0, "Domain-marker labeled idempotence should not surface")
-    }
-
-    @Test("V1.15.1 — non-domain idempotence still surfaces")
-    func nonDomainIdempotenceStillSurfaces() {
-        let summary = makeSummary(name: "process", label: "value")
-        let suggestions = TemplateRegistry.discover(in: [summary], typeDecls: [])
-        let idempotence = suggestions.first { $0.templateName == "idempotence" }
-        #expect(idempotence != nil, "Non-domain-marker (T) -> T should still surface")
-    }
-
-    private func makeSummary(name: String, label: String?) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: [Parameter(label: label, internalName: "x", typeText: "Int", isInout: false)],
-            returnTypeText: "Int",
             isThrows: false,
             isAsync: false,
             isMutating: false,

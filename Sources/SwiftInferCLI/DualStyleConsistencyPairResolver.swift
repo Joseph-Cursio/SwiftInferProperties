@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.48.B — resolves the verifier call expressions for a
@@ -35,6 +34,7 @@ public enum DualStyleConsistencyPairResolver {
         }
     }
 
+    /// Known non-mutating/mutating spelling pairs, such as `sorted()`/`sort` and `union`/`formUnion`.
     public static let curated: [Pair] = [
         // V1.48.B initial 3 entries (Collection family; 0-arg variants).
         Pair(nonMutating: "sorted()", mutating: "sort"),
@@ -54,7 +54,7 @@ public enum DualStyleConsistencyPairResolver {
         Pair(nonMutating: "subtracting(_:)", mutating: "subtract"),
         // OrderedDictionary.merge family — non-mutating `merging`
         // returns a new dictionary; mutating `merge` updates in place.
-        Pair(nonMutating: "merging(_:uniquingKeysWith:)", mutating: "merge")
+        Pair(nonMutating: "merging(_:uniquingKeysWith:)", mutating: "merge"),
     ]
 
     /// Resolution result. Carries the pair of expressions the V1.48.A

@@ -31,12 +31,15 @@ import SwiftInferCore
 /// case was one.
 public enum EmptyRangeTemplate {
 
+    /// The name this template's suggestions carry: `empty-range`.
     public static let templateName = "empty-range"
 
+    /// The `empty-range` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `empty-range` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "empty-range",
@@ -84,7 +87,7 @@ public enum EmptyRangeTemplate {
                 weight: 15,
                 detail: "Labelled `from:` / `to:` — Swift's exclusive end, so `\(summary.name)(from: v, "
                     + "to: v)` selects nothing"
-            )
+            ),
         ]
     }
 
@@ -95,7 +98,7 @@ public enum EmptyRangeTemplate {
                 + "nearly everything, an inclusive comparison on both ends selects `v` itself.",
             "`to:` IS EXCLUSIVE BY SWIFT'S CONVENTION (`stride(from:to:by:)`; the inclusive form is "
                 + "`through:`). If this function means an inclusive end, the law fails correctly — "
-                + "rename the label to `through:` rather than suppressing the law."
+                + "rename the label to `through:` rather than suppressing the law.",
         ]
     }
 }

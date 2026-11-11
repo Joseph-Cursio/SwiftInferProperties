@@ -1,5 +1,3 @@
-import Foundation
-
 /// PROTOTYPE (SwiftSyntax lint-rule visitor carrier) — one detected
 /// `SyntaxVisitor` subclass that accumulates findings as it walks an AST.
 /// Recognised structurally: a `class` declaring at least one

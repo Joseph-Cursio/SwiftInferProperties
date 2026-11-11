@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.102 (cycle-99 calibration helper) — render
 /// `InteractionDecisionsAggregator.Report` to markdown / plain-text
 /// for `metrics-interaction` stdout + direct paste into the cycle-N
@@ -186,17 +184,17 @@ public enum InteractionMetricsRenderer {
         }
     }
 
-    fileprivate static func leftPad(_ value: String, _ width: Int) -> String {
+    private static func leftPad(_ value: String, _ width: Int) -> String {
         if value.count >= width { return value }
         return value + String(repeating: " ", count: width - value.count)
     }
 
-    fileprivate static func rightPad(_ value: String, _ width: Int) -> String {
+    private static func rightPad(_ value: String, _ width: Int) -> String {
         if value.count >= width { return value }
         return String(repeating: " ", count: width - value.count) + value
     }
 
-    fileprivate static func formatRate(
+    private static func formatRate(
         _ rate: Double?,
         flagAbove threshold: Double? = nil
     ) -> String {

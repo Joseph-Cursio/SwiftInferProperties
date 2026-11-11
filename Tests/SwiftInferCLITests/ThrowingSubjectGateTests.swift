@@ -1,7 +1,6 @@
 import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// **A law that splices a bare call to a `throws` subject cannot be spelled**, so it is not written.
@@ -23,7 +22,7 @@ struct ThrowingSubjectGateTests {
                     location: SourceLocation(file: "CoreDataModelExtractor.swift", line: 50, column: 5),
                     parameterTypeNames: ["URL"],
                     qualifiedTypeName: "CoreDataModelExtractor"
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),

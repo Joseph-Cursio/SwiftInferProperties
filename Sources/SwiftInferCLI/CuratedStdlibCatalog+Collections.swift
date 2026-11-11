@@ -1,5 +1,3 @@
-import Foundation
-
 /// swift-collections (`apple/swift-collections`) laws. Each type inherits the
 /// standard-library shapes from Appendix A via protocol refinement, plus a
 /// family-specific law the inherited rows don't reach (Deque's double-ended
@@ -29,7 +27,7 @@ extension CuratedStdlibCatalog {
             "let arr = randArr(); var d = Deque(arr); let x = randInt(); d.prepend(x); "
                 + "let head = d.removeFirst(); return head == x && Array(d) == arr",
             template: "ended-access-round-trip", imports: ["DequeModule"]
-        )
+        ),
     ]
 
     // MARK: - OrderedSet / OrderedDictionary (OrderedCollections)
@@ -61,7 +59,7 @@ extension CuratedStdlibCatalog {
             "var d = OrderedDictionary<Int, Int>(); for (key, value) in randDict() { d[key] = value }; "
                 + "return d.mapValues { $0 } == d",
             template: "functor-identity", imports: ["OrderedCollections"]
-        )
+        ),
     ]
 
     // MARK: - BitSet (BitCollections) — full SetAlgebra
@@ -89,7 +87,7 @@ extension CuratedStdlibCatalog {
             "let a = BitSet(randArr().map { $0 & 63 }), b = BitSet(randArr().map { $0 & 63 }); "
                 + "return a.union(a.intersection(b)) == a",
             witnesses: "SetAlgebra", imports: ["BitCollections"]
-        )
+        ),
     ]
 
     // MARK: - TreeSet / TreeDictionary (HashTreeCollections) — persistent CHAMP
@@ -113,7 +111,7 @@ extension CuratedStdlibCatalog {
             "var d = TreeDictionary<Int, Int>(); for (key, value) in randDict() { d[key] = value }; "
                 + "return d.mapValues { $0 } == d",
             template: "functor-identity", imports: ["HashTreeCollections"]
-        )
+        ),
     ]
 
     // MARK: - Heap (HeapModule) — model-based (no protocol row applies)
@@ -132,7 +130,7 @@ extension CuratedStdlibCatalog {
             "let arr = randArr(); if arr.isEmpty { return true }; let heap = Heap(arr); "
                 + "return heap.min == arr.min() && heap.max == arr.max()",
             imports: ["HeapModule"]
-        )
+        ),
     ]
 
     static let collectionsLaws: [CuratedEntry] =

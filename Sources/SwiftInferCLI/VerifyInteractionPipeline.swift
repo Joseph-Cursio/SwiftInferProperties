@@ -1,6 +1,5 @@
 import Foundation
 import SwiftInferCore
-import SwiftInferTestLifter
 
 /// V2.0 M3.C → M3.E — orchestration glue for the in-process
 /// interaction verify path. Threads M1's reducer discovery → M1.C's
@@ -39,19 +38,19 @@ public enum VerifyInteractionPipeline {
     /// Equatable State), not a missing tag.
     public static func runPipeline(
         target: String,
+        workingDirectory: URL,
         pinRaw: String? = nil,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
-        traceMining: TraceMiningOptions = .off,
-        workingDirectory: URL
+        traceMining: TraceMiningOptions = .off
     ) throws -> String {
         let seeded = try resolveEmitAndSeed(
             target: target,
+            workingDirectory: workingDirectory,
             pinRaw: pinRaw,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
-            traceMining: traceMining,
-            workingDirectory: workingDirectory
+            traceMining: traceMining
         )
         let candidate = seeded.candidate
         let stubSource = seeded.stubSource
@@ -116,18 +115,18 @@ public enum VerifyInteractionPipeline {
     public static func runWithInvariant(
         target: String,
         invariant: InteractionInvariantSuggestion,
+        workingDirectory: URL,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
-        persistEvidence: Bool = true,
-        workingDirectory: URL
+        persistEvidence: Bool = true
     ) throws -> InteractionVerifyOutcomeParser.Result {
         let seeded = try resolveEmitAndSeed(
             target: target,
+            workingDirectory: workingDirectory,
             pinRaw: invariant.reducerQualifiedName,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
-            invariant: invariant,
-            workingDirectory: workingDirectory
+            invariant: invariant
         )
         let candidate = seeded.candidate
         let stubSource = seeded.stubSource
@@ -313,7 +312,7 @@ public enum VerifyInteractionPipeline {
             "  State: \(candidate.stateTypeName)",
             "  Action: \(candidate.actionTypeName)",
             "",
-            "  Outcome: \(result.outcome.rawValue)"
+            "  Outcome: \(result.outcome.rawValue)",
         ]
         var lines = header
         if let totalRuns = result.totalRuns, let clean = result.cleanRuns {

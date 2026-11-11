@@ -37,15 +37,15 @@ struct StreamConsumptionVetoTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "offset", typeName: "Int")]
-            )
+            ),
         ])
     }
 
-    private func lifted(method: String, carrier: String) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    private func lifted(method: String, carrier: String) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             summary(method, carrier: carrier),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     // MARK: - Tokenizer
@@ -76,22 +76,22 @@ struct StreamConsumptionVetoTests {
     // MARK: - Tier 1 — consuming verb, any carrier
 
     @Test("tier 1: consuming verbs veto on a carrier with no stream noun at all")
-    func consumingVerbsVetoOnNeutralCarrier() {
+    func consumingVerbsVetoOnNeutralCarrier() throws {
         for name in [
             "advance", "advanceToEndOfLine", "advanceIfOpeningRawStringDelimiter",
             "lexNumber", "lexUnknown", "tryLexEditorPlaceholder",
-            "skipSingle", "skipUntilEndOfLine", "eatWhitespace", "munchDigits"
+            "skipSingle", "skipUntilEndOfLine", "eatWhitespace", "munchDigits",
         ] {
             #expect(StreamConsumption.isConsumingVerb(name), "expected \(name) consuming")
             let signal = IdempotenceTemplate.streamConsumptionVeto(
-                forLifted: lifted(method: name, carrier: "PlainStruct")
+                forLifted: try lifted(method: name, carrier: "PlainStruct")
             )
             #expect(signal?.isVeto == true, "expected veto for \(name)")
         }
     }
 
     @Test("tier 1 precision: peek / take / scan are deliberately NOT consuming verbs")
-    func deliberateOmissionsDoNotVeto() {
+    func deliberateOmissionsDoNotVeto() throws {
         // `peek` is the defining NON-consuming lookahead operation; `take` is
         // the `Option::take` idiom, which nils the storage and so IS
         // idempotent on the second call; `scan` reads both ways. All three
@@ -104,10 +104,10 @@ struct StreamConsumptionVetoTests {
             // lifted shadow IS idempotent. Same for two nio siblings and
             // swift-collections' `consumeAll()` — four true laws tier 1 cost
             // before the demotion. Tier 2 still catches consume-on-a-cursor.
-            "consumeAllowLocalEndpointReuse", "consumeAll", "consumeDisableAutoRead"
+            "consumeAllowLocalEndpointReuse", "consumeAll", "consumeDisableAutoRead",
         ] {
             #expect(!StreamConsumption.isConsumingVerb(name), "expected \(name) NOT consuming")
-            #expect(IdempotenceTemplate.streamConsumptionVeto(
+            #expect(try IdempotenceTemplate.streamConsumptionVeto(
                 forLifted: lifted(method: name, carrier: "PlainStruct")
             ) == nil)
         }
@@ -128,11 +128,11 @@ struct StreamConsumptionVetoTests {
             ("atStartOfGetSetAccessor", "Parser.Lookahead"),
             ("atStartOfExpression", "TokenConsumer"),
             ("atBinaryOperatorArgument", "TokenConsumer"),
-            ("isAtModuleSelector", "TokenConsumer")
+            ("isAtModuleSelector", "TokenConsumer"),
         ]
         for (method, carrier) in cases {
             let signal = IdempotenceTemplate.streamConsumptionVeto(
-                forLifted: lifted(method: method, carrier: carrier)
+                forLifted: try lifted(method: method, carrier: carrier)
             )
             let veto = try #require(signal, "expected veto for \(carrier).\(method)")
             #expect(veto.isVeto)
@@ -145,34 +145,34 @@ struct StreamConsumptionVetoTests {
         for carrier in [
             "Lexer.Cursor", "Lexer.Cursor.Position", "Parser.Lookahead",
             "TokenConsumer", "SourceReader", "ByteStream", "JSONTokenizer",
-            "SimpleScanner", "BucketIterator"
+            "SimpleScanner", "BucketIterator",
         ] {
             #expect(StreamConsumption.isStreamCarrier(carrier), "expected \(carrier) stream-shaped")
         }
     }
 
     @Test("tier 2 precision: container and accumulator carriers are NOT stream-shaped")
-    func nonStreamCarriersDoNotVeto() {
+    func nonStreamCarriersDoNotVeto() throws {
         // `Buffer` is a container, not a position; `Builder` is an
         // accumulator — a different non-idempotence family this veto must not
         // silently claim. `Parse` is not `Parser`.
         for carrier in [
             "RingBuffer", "FrameBuffer", "RequestBuilder", "OrderedDictionary",
-            "ParseResult", "LexemeStore", "PlainStruct"
+            "ParseResult", "LexemeStore", "PlainStruct",
         ] {
             #expect(!StreamConsumption.isStreamCarrier(carrier), "expected \(carrier) NOT stream-shaped")
-            #expect(IdempotenceTemplate.streamConsumptionVeto(
+            #expect(try IdempotenceTemplate.streamConsumptionVeto(
                 forLifted: lifted(method: "normalize", carrier: carrier)
             ) == nil)
         }
     }
 
     @Test("restoring verbs keep their idempotence claim despite a stream carrier")
-    func restoringVerbsAreExempt() {
+    func restoringVerbsAreExempt() throws {
         // `reset` / `rewind` move a position to a FIXED POINT, so
         // `f(f(s)) == f(s)` genuinely holds — the veto would cost a true law.
         for name in ["reset", "rewind", "restore", "seek", "rollback", "clear", "resetToStart"] {
-            #expect(IdempotenceTemplate.streamConsumptionVeto(
+            #expect(try IdempotenceTemplate.streamConsumptionVeto(
                 forLifted: lifted(method: name, carrier: "Lexer.Cursor")
             ) == nil, "expected \(name) exempt")
         }
@@ -237,14 +237,14 @@ struct StreamConsumptionVetoTests {
         ("canParseAsGenericArgumentList", "Parser.Lookahead"),
         ("canParseIntegerLiteral", "Parser.Lookahead"),
         ("canParseGenericArgument", "Parser.Lookahead"),
-        ("consumeGenericArguments", "Parser.Lookahead")
+        ("consumeGenericArguments", "Parser.Lookahead"),
     ]
 
     @Test("all 52 consuming SwiftParser subjects are suppressed end to end")
-    func swiftParserSubjectsAreSuppressed() {
+    func swiftParserSubjectsAreSuppressed() throws {
         for (method, carrier) in Self.swiftParserSubjects {
             let suggestion = IdempotenceTemplate.suggest(
-                forLifted: lifted(method: method, carrier: carrier),
+                forLifted: try lifted(method: method, carrier: carrier),
                 carrierKindResolver: valueSemanticResolver(carrier: carrier)
             )
             #expect(suggestion == nil, "expected \(carrier).\(method) suppressed")
@@ -252,12 +252,12 @@ struct StreamConsumptionVetoTests {
     }
 
     @Test("recorded residue: RegexLiteralLexemes.Builder.recordOpenSlash is NOT caught")
-    func accumulatorResidueIsPinned() {
+    func accumulatorResidueIsPinned() throws {
         // The 53rd subject. Non-idempotent because it APPENDS — the
         // accumulator family, not stream consumption. Pinned so the veto's
         // boundary is visible in the suite rather than discovered later, and
         // so a future accumulator veto has a named starting case.
-        let residue = lifted(
+        let residue = try lifted(
             method: "recordOpenSlash",
             carrier: "RegexLiteralLexemes.Builder"
         )
@@ -265,11 +265,11 @@ struct StreamConsumptionVetoTests {
     }
 
     @Test("a genuinely idempotent mutator on a neutral carrier still surfaces")
-    func trueIdempotencePositiveSurvives() {
+    func trueIdempotencePositiveSurvives() throws {
         // The control the whole veto has to not break: `normalize` on a
         // non-stream carrier is the curated-verb Strong case.
         let suggestion = IdempotenceTemplate.suggest(
-            forLifted: lifted(method: "normalize", carrier: "PlainStruct"),
+            forLifted: try lifted(method: "normalize", carrier: "PlainStruct"),
             carrierKindResolver: valueSemanticResolver(carrier: "PlainStruct")
         )
         #expect(suggestion != nil)
@@ -278,11 +278,11 @@ struct StreamConsumptionVetoTests {
     // MARK: - Chaining with the IteratorProtocol veto
 
     @Test("an IteratorProtocol carrier renders ONE veto bullet, not two")
-    func vetoesChainRatherThanStack() {
+    func vetoesChainRatherThanStack() throws {
         // `BucketIterator.advance()` satisfies both the V1.21.A name fallback
         // and this veto's carrier tier. `liftedCarrierVetoes` chains them, so
         // the reader sees one reason.
-        let candidate = lifted(method: "advance", carrier: "BucketIterator")
+        let candidate = try lifted(method: "advance", carrier: "BucketIterator")
         let signals = IdempotenceTemplate.liftedAccumulatedSignals(
             for: candidate,
             vocabulary: .empty,

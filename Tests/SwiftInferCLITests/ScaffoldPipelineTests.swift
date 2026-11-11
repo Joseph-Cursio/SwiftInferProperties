@@ -15,7 +15,7 @@ struct ScaffoldPipelineTests {
                     let id: Int
                     let widget: Widget
                 }
-                """
+                """,
         ])
         defer { try? FileManager.default.removeItem(atPath: dir) }
 
@@ -41,7 +41,7 @@ struct ScaffoldPipelineTests {
                     let customer: Customer
                     let token: Widget
                 }
-                """
+                """,
         ])
         defer { try? FileManager.default.removeItem(atPath: dir) }
 
@@ -83,7 +83,7 @@ struct ScaffoldPipelineTests {
                         self.ref = ref
                     }
                 }
-                """
+                """,
         ])
         defer { try? FileManager.default.removeItem(atPath: dir) }
 
@@ -106,7 +106,7 @@ struct ScaffoldPipelineTests {
                     case circle(radius: Int)
                     case tagged(Widget)
                 }
-                """
+                """,
         ])
         defer { try? FileManager.default.removeItem(atPath: dir) }
 
@@ -145,7 +145,7 @@ struct ScaffoldPipelineTests {
                     position: 0, argumentLabel: "index",
                     pattern: .intRange(low: 1, high: 10),
                     siteCount: 3, suggestedGenerator: "Gen.int(in: 1...10)"
-                )
+                ),
             ]
         )
         // The observed bound refines the leaf instead of the default int gen.
@@ -160,7 +160,7 @@ struct ScaffoldPipelineTests {
             typeName: "Pair",
             argumentSpec: [
                 .init(label: "a", swiftTypeName: "Int", observedLiterals: []),
-                .init(label: "b", swiftTypeName: "Bool", observedLiterals: [])
+                .init(label: "b", swiftTypeName: "Bool", observedLiterals: []),
             ],
             siteCount: 3
         )

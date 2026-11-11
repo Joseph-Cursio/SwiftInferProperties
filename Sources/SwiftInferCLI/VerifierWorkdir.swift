@@ -1,5 +1,37 @@
 import Foundation
 
+/// V2.0 M3.E.2 — selects which dependency shape `VerifierWorkdir`
+/// renders into the synthesized package's `Package.swift`. Hoisted to
+/// file scope so it doesn't increase nesting depth past SwiftLint's
+/// 1-level cap on `VerifierWorkdir` (already nested inside the
+/// `SwiftInferCommand` extension hierarchy).
+///
+/// - `algebraic`: the v1.42+ shape — swift-numerics + swift-collections
+///   + swift-property-based + SwiftPropertyLaws@2.1.0 + PropertyLawComplex.
+///   Used by `verify` for round-trip / idempotence / commutativity /
+///   associativity / dual-style / monotonicity templates.
+/// - `interaction`: the V2.0 M3 shape — swift-property-based +
+///   SwiftPropertyLaws@2.2.0 + PropertyLawKit. Used by
+///   `verify-interaction` for the action-sequence stub M3.B emits.
+public enum WorkdirMode: String, Sendable, Equatable, Codable, CaseIterable {
+    case algebraic
+    case interaction
+    /// Cycle 122 (Phase A) — the interaction shape plus
+    /// swift-composable-architecture (so the co-compiled corpus reducer +
+    /// the stub's `import ComposableArchitecture` resolve). Paired with
+    /// `Inputs.inlinedSources` (direct source inclusion); no user-package
+    /// path dependency.
+    case interactionTCA = "interaction-tca"
+    /// The interaction shape plus Spotify's Mobius (MobiusCore) — so the
+    /// co-compiled `(Model, Event) -> Next<Model, Effect>` reducer + the
+    /// stub's `import MobiusCore` resolve. Same direct-source-inclusion
+    /// model as `.interactionTCA`. Pinned to an unreleased `master`
+    /// revision: the tagged releases (0.5–0.7) don't compile under the
+    /// current Swift toolchain; `master` HEAD does. Revisit when Spotify
+    /// cuts a toolchain-compatible release.
+    case interactionMobius = "interaction-mobius"
+}
+
 /// V1.42.C.3 — synthesizes the throwaway SwiftPM verifier package + spawns
 /// `swift build` and the resulting binary. Two cooperating types:
 ///
@@ -259,7 +291,7 @@ public enum VerifierWorkdir {
                 // OC recipes in `StrategistDispatchEmitter.curatedOCRecipe`.
                 ".package(url: \"https://github.com/apple/swift-collections.git\", from: \"1.0.0\")",
                 swiftPropertyBasedDependencyLine,
-                swiftPropertyLawsDependencyLine
+                swiftPropertyLawsDependencyLine,
             ]
             // swift-syntax, **only when the corpus already depends on it**.
             //
@@ -298,7 +330,7 @@ public enum VerifierWorkdir {
             // the kit's own dep graph.
             entries = [
                 swiftPropertyBasedDependencyLine,
-                swiftPropertyLawsDependencyLine
+                swiftPropertyLawsDependencyLine,
             ]
 
         case .interactionTCA:
@@ -311,7 +343,7 @@ public enum VerifierWorkdir {
                 swiftPropertyLawsDependencyLine,
                 ".package(url: "
                     + "\"https://github.com/pointfreeco/swift-composable-architecture.git\", "
-                    + "from: \"1.15.0\")"
+                    + "from: \"1.15.0\")",
             ]
 
         case .interactionMobius:
@@ -321,7 +353,7 @@ public enum VerifierWorkdir {
                 swiftPropertyBasedDependencyLine,
                 swiftPropertyLawsDependencyLine,
                 ".package(url: \"https://github.com/spotify/Mobius.swift.git\", "
-                    + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")"
+                    + "revision: \"74baa7e07b86ae4c2673204a92230db397b8a6ae\")",
             ]
         }
         // #169 — a corpus that IS one of the packages above arrives with the
@@ -348,36 +380,4 @@ public enum VerifierWorkdir {
             .replacingOccurrences(of: "\"", with: "\\\"")
         return "\"\(escaped)\""
     }
-}
-
-/// V2.0 M3.E.2 — selects which dependency shape `VerifierWorkdir`
-/// renders into the synthesized package's `Package.swift`. Hoisted to
-/// file scope so it doesn't increase nesting depth past SwiftLint's
-/// 1-level cap on `VerifierWorkdir` (already nested inside the
-/// `SwiftInferCommand` extension hierarchy).
-///
-/// - `algebraic`: the v1.42+ shape — swift-numerics + swift-collections
-///   + swift-property-based + SwiftPropertyLaws@2.1.0 + PropertyLawComplex.
-///   Used by `verify` for round-trip / idempotence / commutativity /
-///   associativity / dual-style / monotonicity templates.
-/// - `interaction`: the V2.0 M3 shape — swift-property-based +
-///   SwiftPropertyLaws@2.2.0 + PropertyLawKit. Used by
-///   `verify-interaction` for the action-sequence stub M3.B emits.
-public enum WorkdirMode: String, Sendable, Equatable, Codable, CaseIterable {
-    case algebraic
-    case interaction
-    /// Cycle 122 (Phase A) — the interaction shape plus
-    /// swift-composable-architecture (so the co-compiled corpus reducer +
-    /// the stub's `import ComposableArchitecture` resolve). Paired with
-    /// `Inputs.inlinedSources` (direct source inclusion); no user-package
-    /// path dependency.
-    case interactionTCA = "interaction-tca"
-    /// The interaction shape plus Spotify's Mobius (MobiusCore) — so the
-    /// co-compiled `(Model, Event) -> Next<Model, Effect>` reducer + the
-    /// stub's `import MobiusCore` resolve. Same direct-source-inclusion
-    /// model as `.interactionTCA`. Pinned to an unreleased `master`
-    /// revision: the tagged releases (0.5–0.7) don't compile under the
-    /// current Swift toolchain; `master` HEAD does. Revisit when Spotify
-    /// cuts a toolchain-compatible release.
-    case interactionMobius = "interaction-mobius"
 }

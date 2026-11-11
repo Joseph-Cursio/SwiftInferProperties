@@ -1,5 +1,4 @@
 import SwiftInferCore
-import SwiftInferTemplates
 import SwiftInferTestLifter
 
 // M10.3 — the domain-inference pass of the lifted-suggestion pipeline.

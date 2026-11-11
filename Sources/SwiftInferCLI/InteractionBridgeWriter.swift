@@ -35,7 +35,7 @@ public enum InteractionBridgeWriter {
             "// State: \(bridge.stateTypeName)",
             "// Family: \(peer.family.rawValue)",
             "// Conformance: \(peer.kitProtocolName)",
-            "// Contributing invariants:"
+            "// Contributing invariants:",
         ]
         for invariant in peer.invariants {
             lines.append("//   - \(invariant.predicate)")
@@ -118,7 +118,7 @@ public enum InteractionBridgeWriter {
             "    static func invariantHolds(in state: State) -> Bool {",
             "        \(peer.conjoinedPredicate)",
             "    }",
-            "}"
+            "}",
         ]
     }
 
@@ -140,7 +140,7 @@ public enum InteractionBridgeWriter {
             "    typealias State = \(bridge.stateTypeName)",
             "    typealias Action = \(actionType)",
             "    static let idempotentActions: Set<\(actionType)> = [\(cases)]",
-            "}"
+            "}",
         ]
     }
 }

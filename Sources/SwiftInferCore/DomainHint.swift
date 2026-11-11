@@ -1,3 +1,81 @@
+/// TestLifter M16.0 — provenance discriminator on `DomainHint` so the
+/// renderer + accept-flow can distinguish M10's round-trip-pair surface
+/// from M16's general consumer-producer chain surface without re-
+/// parsing the hint's `(forwardName, reverseName, producerName)` triple.
+///
+/// Default is `.roundTripPair` — every M10 call site stays correct
+/// without modification (M16 plan §"M16 ships" item 1; back-compat
+/// invariant per item 6).
+public enum HintOrigin: Sendable, Equatable {
+
+    /// M10's `DomainInferrer` surface — the hint was emitted because a
+    /// known M5 round-trip pair `(forward, reverse)` had every reverse-
+    /// side test site receiving `forward(...)` output. Generator
+    /// override (`Gen<T>.map(forward)`) applies when not vetoed.
+    case roundTripPair
+
+    /// TestLifter M16's `ConsumerProducerChainDetector` surface — the
+    /// hint was emitted because some consumer in the corpus had every
+    /// observed call-site argument being the same producer's output,
+    /// outside the M5 round-trip-pair set. Comment-only advisory; no
+    /// generator override (M10 owns that surface end-to-end per the
+    /// M16 plan's "M16 explicitly defers" §).
+    case consumerProducerChain
+}
+
+/// Reasons the M10.2 inferrer can mark a domain hint's producer as
+/// ineligible for the `Gen<T>.map(producer)` generator override. Per
+/// M10 plan OD #2/#3/#4, hitting any of these surfaces the hint as a
+/// comment-only advisory (no generator substitution) — the
+/// `swift-property-based` runner cannot shrink through `try!` / `await`,
+/// `Gen<_>.map(_:)` is unary, and a non-generatable producer-arg type
+/// has no path to a `Gen<T>` source.
+public enum ProducerVetoReason: Sendable, Equatable {
+
+    /// Producer is `throws`. Substituting `Gen<T>.map(throwingProducer)`
+    /// would emit code that can't compile (or can't shrink) under the
+    /// `swift-property-based` runner.
+    case producerThrows
+
+    /// Producer is `async`. `Gen<T>.map(_:)` is a synchronous
+    /// transformation; substituting an async producer breaks the runner.
+    case producerAsync
+
+    /// Producer takes more than one argument. `Gen<T>.map(_:)` is unary;
+    /// partial-application is fragile (the corpus may show variation in
+    /// the second argument that the user expects to remain configurable).
+    /// Defer to the future v1.1+ Option A expansion if real corpora show
+    /// value in this case.
+    case producerMultiArg
+
+    /// Producer's single argument type is not auto-generatable per the
+    /// M3+ `DerivationStrategist` strategy table (the strategist returns
+    /// `.todo` or `.userGen`). The user can resolve `.userGen` cases by
+    /// providing `static func gen()` themselves and re-running discover;
+    /// the hint will then re-fire without the veto.
+    case producerArgNotGeneratable
+
+    /// TestLifter M16.2 — user-facing reason text surfaced in the
+    /// consumer-producer chain explainability block + the M16.3 accept-
+    /// flow comment-only writeout. Mirrors `PredicateVetoReason.advisoryReason`'s
+    /// shape.
+    public var advisoryReason: String {
+        switch self {
+        case .producerThrows:
+            return "producer throws — Gen<T>.map cannot apply throwing functions"
+
+        case .producerAsync:
+            return "producer is async — Gen<T>.map is synchronous"
+
+        case .producerMultiArg:
+            return "producer takes multiple arguments — Gen<T>.map is unary"
+
+        case .producerArgNotGeneratable:
+            return "producer's argument type isn't auto-generatable"
+        }
+    }
+}
+
 /// TestLifter M10.0 — inferred-domain hint attached to a `MockGenerator`
 /// when the test corpus shows a reverse-side function's argument is
 /// uniformly the forward-side function's output. Surfaces the pattern
@@ -84,83 +162,5 @@ public struct DomainHint: Sendable, Equatable {
         self.producerVeto = producerVeto
         self.suggestedGenerator = suggestedGenerator
         self.origin = origin
-    }
-}
-
-/// TestLifter M16.0 — provenance discriminator on `DomainHint` so the
-/// renderer + accept-flow can distinguish M10's round-trip-pair surface
-/// from M16's general consumer-producer chain surface without re-
-/// parsing the hint's `(forwardName, reverseName, producerName)` triple.
-///
-/// Default is `.roundTripPair` — every M10 call site stays correct
-/// without modification (M16 plan §"M16 ships" item 1; back-compat
-/// invariant per item 6).
-public enum HintOrigin: Sendable, Equatable {
-
-    /// M10's `DomainInferrer` surface — the hint was emitted because a
-    /// known M5 round-trip pair `(forward, reverse)` had every reverse-
-    /// side test site receiving `forward(...)` output. Generator
-    /// override (`Gen<T>.map(forward)`) applies when not vetoed.
-    case roundTripPair
-
-    /// TestLifter M16's `ConsumerProducerChainDetector` surface — the
-    /// hint was emitted because some consumer in the corpus had every
-    /// observed call-site argument being the same producer's output,
-    /// outside the M5 round-trip-pair set. Comment-only advisory; no
-    /// generator override (M10 owns that surface end-to-end per the
-    /// M16 plan's "M16 explicitly defers" §).
-    case consumerProducerChain
-}
-
-/// Reasons the M10.2 inferrer can mark a domain hint's producer as
-/// ineligible for the `Gen<T>.map(producer)` generator override. Per
-/// M10 plan OD #2/#3/#4, hitting any of these surfaces the hint as a
-/// comment-only advisory (no generator substitution) — the
-/// `swift-property-based` runner cannot shrink through `try!` / `await`,
-/// `Gen<_>.map(_:)` is unary, and a non-generatable producer-arg type
-/// has no path to a `Gen<T>` source.
-public enum ProducerVetoReason: Sendable, Equatable {
-
-    /// Producer is `throws`. Substituting `Gen<T>.map(throwingProducer)`
-    /// would emit code that can't compile (or can't shrink) under the
-    /// `swift-property-based` runner.
-    case producerThrows
-
-    /// Producer is `async`. `Gen<T>.map(_:)` is a synchronous
-    /// transformation; substituting an async producer breaks the runner.
-    case producerAsync
-
-    /// Producer takes more than one argument. `Gen<T>.map(_:)` is unary;
-    /// partial-application is fragile (the corpus may show variation in
-    /// the second argument that the user expects to remain configurable).
-    /// Defer to the future v1.1+ Option A expansion if real corpora show
-    /// value in this case.
-    case producerMultiArg
-
-    /// Producer's single argument type is not auto-generatable per the
-    /// M3+ `DerivationStrategist` strategy table (the strategist returns
-    /// `.todo` or `.userGen`). The user can resolve `.userGen` cases by
-    /// providing `static func gen()` themselves and re-running discover;
-    /// the hint will then re-fire without the veto.
-    case producerArgNotGeneratable
-
-    /// TestLifter M16.2 — user-facing reason text surfaced in the
-    /// consumer-producer chain explainability block + the M16.3 accept-
-    /// flow comment-only writeout. Mirrors `PredicateVetoReason.advisoryReason`'s
-    /// shape.
-    public var advisoryReason: String {
-        switch self {
-        case .producerThrows:
-            return "producer throws — Gen<T>.map cannot apply throwing functions"
-
-        case .producerAsync:
-            return "producer is async — Gen<T>.map is synchronous"
-
-        case .producerMultiArg:
-            return "producer takes multiple arguments — Gen<T>.map is unary"
-
-        case .producerArgNotGeneratable:
-            return "producer's argument type isn't auto-generatable"
-        }
     }
 }

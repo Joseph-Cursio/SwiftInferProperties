@@ -57,7 +57,7 @@ public enum VerifierSubprocess {
     public static func runSwiftBuild(workdir: URL, product: String? = nil) throws -> Output {
         var arguments = [
             "swift", "build", "--package-path", workdir.path,
-            "-Xswiftc", "-enable-testing"
+            "-Xswiftc", "-enable-testing",
         ]
         if let product {
             arguments.append(contentsOf: ["--product", product])
@@ -252,7 +252,7 @@ public enum VerifierSubprocess {
             developerURL
                 .appendingPathComponent("Platforms/MacOSX.platform/Developer/Library/Frameworks"),
             // `<Xcode>/Contents/Developer` → `<Xcode>/Contents/SharedFrameworks`
-            developerURL.deletingLastPathComponent().appendingPathComponent("SharedFrameworks")
+            developerURL.deletingLastPathComponent().appendingPathComponent("SharedFrameworks"),
         ]
         for dir in candidates
         where FileManager.default.fileExists(
@@ -328,7 +328,7 @@ public enum VerifierSubprocess {
         let drained = DispatchGroup()
         for (handle, box) in [
             (stdoutPipe.fileHandleForReading, stdoutBox),
-            (stderrPipe.fileHandleForReading, stderrBox)
+            (stderrPipe.fileHandleForReading, stderrBox),
         ] {
             DispatchQueue.global(qos: .userInitiated).async(group: drained) {
                 box.append(handle.readDataToEndOfFile())

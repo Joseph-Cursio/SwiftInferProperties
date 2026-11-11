@@ -1,5 +1,22 @@
-import Foundation
 import SwiftEffectInference
+
+/// Every key a seed's `effect` object carries.
+///
+/// Top-level and `CaseIterable` for the same reason `SeedField` is: `SeedFieldParity` has to
+/// enumerate it. **The nested object needed its own entry because the guard did not reach it** —
+/// `SeedFieldParity` walked `Seed`'s keys, `effect` was one key, and its sub-object was never
+/// opened. `anchor` arrived upstream on 2026-08-06 and was silent here for exactly the same reason
+/// `restriction` had been silent at the top level three days earlier: the same defect class, one
+/// level down, hours after the guard meant to end it. A guard that stops at the first level of a
+/// nested document only guards the first level.
+public enum SeedEffectField: String, CodingKey, CaseIterable {
+    case declared
+    case resolved
+    case provenance
+    case depth
+    case anchor
+    case reason
+}
 
 /// The effect-lattice position a linter resolved for a seeded symbol.
 ///
@@ -196,22 +213,4 @@ public struct SeedEffect: Codable, Sendable, Equatable {
         try container.encodeIfPresent(anchor, forKey: .anchor)
         try container.encodeIfPresent(reason, forKey: .reason)
     }
-}
-
-/// Every key a seed's `effect` object carries.
-///
-/// Top-level and `CaseIterable` for the same reason `SeedField` is: `SeedFieldParity` has to
-/// enumerate it. **The nested object needed its own entry because the guard did not reach it** —
-/// `SeedFieldParity` walked `Seed`'s keys, `effect` was one key, and its sub-object was never
-/// opened. `anchor` arrived upstream on 2026-08-06 and was silent here for exactly the same reason
-/// `restriction` had been silent at the top level three days earlier: the same defect class, one
-/// level down, hours after the guard meant to end it. A guard that stops at the first level of a
-/// nested document only guards the first level.
-public enum SeedEffectField: String, CodingKey, CaseIterable {
-    case declared
-    case resolved
-    case provenance
-    case depth
-    case anchor
-    case reason
 }

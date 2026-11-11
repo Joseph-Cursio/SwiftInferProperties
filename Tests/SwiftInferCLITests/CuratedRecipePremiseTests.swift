@@ -50,7 +50,7 @@ struct CuratedRecipePremiseTests {
         "Int?",
         "[String: Int]",
         "Set<Int>",
-        "[Int?]"
+        "[Int?]",
     ]
 
     private static let curatedCarriers =

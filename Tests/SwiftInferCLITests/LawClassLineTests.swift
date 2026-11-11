@@ -31,7 +31,7 @@ struct LawClassLineTests {
                     displayName: "f(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "F.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -100,7 +100,7 @@ struct LawClassLineTests {
     /// all. This test caught exactly that when the class was added.
     @Test("every template classifies as Refutability says", arguments: [
         "idempotence", "input-totality", "predicate", "monotonicity",
-        "guard-domain", "commutativity", "role-closure", "filter-subset", "determinism"
+        "guard-domain", "commutativity", "role-closure", "filter-subset", "determinism",
     ])
     func theLineAgreesWithRefutability(template: String) {
         let suggestion = Self.suggestion(template: template)

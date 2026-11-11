@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 import SwiftInferCore
 import SwiftInferTemplates
@@ -102,21 +101,6 @@ extension InteractiveTriage {
               DerivationStrategist.composedGenerator(forTypeName: typeName) == nil
         else { return nil }
         return DerivationStrategist.composedGenerator(forTypeName: typeName, resolve: resolve)?.expression
-    }
-
-    /// Why the resolver produced no generator for `typeName`, in one sentence.
-    ///
-    /// **Built from the SAME resolver that just returned `nil`**, so the explanation cannot
-    /// describe a different derivation from the one that failed. `resolutionFailure` is the
-    /// kit's own account of its `nil` paths (v4.7.0), and `.noStrategy` carries the strategist's
-    /// sentence verbatim rather than a paraphrase.
-    static func generatorFailureReason(for context: Context) -> (String) -> String? {
-        // The same universe `customGenerator(for:)` resolves over, so a reason never describes a
-        // derivation other than the one that ran.
-        generatorFailureReason(
-            types: presentedShapes(typeShapesByName: context.typeShapesByName, visible: context.testVisibleTypeNames),
-            aliases: context.typeAliases
-        )
     }
 
     static func generatorFailureReason(types: [TypeShape], aliases: [String: String] = [:]) -> (String) -> String? {

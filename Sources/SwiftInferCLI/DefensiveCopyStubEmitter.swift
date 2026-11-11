@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// PROTOTYPE — emits a verifier that checks a defensive-copy candidate against
@@ -35,6 +34,7 @@ public enum DefensiveCopyStubEmitter {
         }
     }
 
+    /// Emitter inputs for an `Equatable` candidate's zero-argument mutators, or `nil` when gated out.
     public static func inputs(
         for candidate: DefensiveCopyCandidate,
         moduleName: String,
@@ -54,6 +54,7 @@ public enum DefensiveCopyStubEmitter {
         )
     }
 
+    /// The `DefensiveCopy` verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let cases = inputs.mutationMethods
             .map { "        case \($0)" }

@@ -55,7 +55,7 @@ struct StableIdentityStubEmitterTests {
             StableIdentityStubEmitter.inputs(
                 for: candidate(surface: [
                     MutationMethod(name: "rename", isMutating: false, parameterCount: 0),
-                    MutationMethod(name: "set", isMutating: false, parameterCount: 2)
+                    MutationMethod(name: "set", isMutating: false, parameterCount: 2),
                 ]),
                 moduleName: "Corpus"
             )

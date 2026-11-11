@@ -27,8 +27,8 @@ struct BindingActionCorpusTests {
 
         let (candidate, stub) = try VerifyInteractionPipeline.resolveAndEmit(
             target: "TCABindingActionCorpus",
-            pinRaw: "Settings.body",
-            workingDirectory: root
+            workingDirectory: root,
+            pinRaw: "Settings.body"
         )
         #expect(candidate.qualifiedName == "Settings.body")
 

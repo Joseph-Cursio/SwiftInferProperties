@@ -10,8 +10,8 @@ import Testing
 struct VerifyCorpusTests {
 
     private static func entry(
-        identity: String = "ABCDEF0123456789",
         counterexample: String,
+        identity: String = "ABCDEF0123456789",
         shrunk: String? = nil
     ) -> VerifyCorpusEntry {
         VerifyCorpusEntry(
@@ -47,8 +47,8 @@ struct VerifyCorpusTests {
     @Test("entries(for:) filters by identity")
     func entriesForIdentity() {
         let corpus = VerifyCorpus.empty
-            .adding(Self.entry(identity: "AAAA", counterexample: "1"))
-            .adding(Self.entry(identity: "BBBB", counterexample: "2"))
+            .adding(Self.entry(counterexample: "1", identity: "AAAA"))
+            .adding(Self.entry(counterexample: "2", identity: "BBBB"))
         #expect(corpus.entries(for: "AAAA").count == 1)
         #expect(corpus.entries(for: "AAAA").first?.counterexample == "1")
         #expect(corpus.entries(for: "CCCC").isEmpty)
@@ -102,7 +102,7 @@ struct VerifyCorpusTests {
             [
                 Self.entry(counterexample: "1"),
                 Self.entry(counterexample: "2"),
-                Self.entry(counterexample: "1") // dup of the first
+                Self.entry(counterexample: "1"), // dup of the first
             ],
             packageRoot: root
         )

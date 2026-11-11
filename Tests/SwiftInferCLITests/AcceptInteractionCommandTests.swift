@@ -8,6 +8,14 @@ import Testing
 // identity hash, then verifies the decision lands in
 // `.swiftinfer/interaction-decisions.json`.
 
+private final class AIRecordingOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
 @Suite("AcceptInteraction — V2.0 accept-flow recorder")
 struct AcceptInteractionCommandTests {
 
@@ -123,13 +131,5 @@ struct AcceptInteractionCommandTests {
         #expect(decisions.records.count == 1)
         #expect(decisions.records[0].identityHash == first.identity.normalized)
         #expect(decisions.records[0].decision == .accepted)
-    }
-}
-
-private final class AIRecordingOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-
-    func write(_ text: String) {
-        lines.append(text)
     }
 }

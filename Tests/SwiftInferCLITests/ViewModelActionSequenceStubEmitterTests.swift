@@ -11,11 +11,11 @@ private func vmAction(
     ViewModelAction(
         name: name,
         parameterTypes: parameters.map(\.typeText),
-        firstParameterLabel: parameters.first?.label,
-        parameters: parameters,
         isAsync: isAsync,
         isThrows: isThrows,
-        mutatesStateDirectly: true
+        mutatesStateDirectly: true,
+        firstParameterLabel: parameters.first?.label,
+        parameters: parameters
     )
 }
 
@@ -74,7 +74,7 @@ struct ViewModelActionSequenceStubEmitterTests {
             predicate: "probe.count >= 0",
             actions: [
                 vmAction("reset"),
-                vmAction("setCount", [.init(label: nil, typeText: "Int")])
+                vmAction("setCount", [.init(label: nil, typeText: "Int")]),
             ]
         )
         let source = try ViewModelActionSequenceStubEmitter.emit(inputs)
@@ -95,7 +95,7 @@ struct ViewModelActionSequenceStubEmitterTests {
             predicate: "true",
             actions: [
                 vmAction("clear"),
-                vmAction("add", [.init(label: nil, typeText: "Item")])
+                vmAction("add", [.init(label: nil, typeText: "Item")]),
             ]
         )
         let source = try ViewModelActionSequenceStubEmitter.emit(inputs)

@@ -30,7 +30,7 @@ struct VocabularyLoaderMarkerTableTests {
         #expect(result.warnings.isEmpty)
         #expect(result.vocabulary.markerPairs == [
             MarkerPair(positive: "Open", negative: "Closed"),
-            MarkerPair(positive: "Active", negative: "Inactive")
+            MarkerPair(positive: "Active", negative: "Inactive"),
         ])
     }
 
@@ -104,7 +104,7 @@ struct VocabularyLoaderMarkerTableTests {
         #expect(result.warnings.isEmpty)
         #expect(result.vocabulary.markerSets == [
             MarkerSet(name: "Sizes", markers: ["small", "medium", "large"]),
-            MarkerSet(name: "Seasons", markers: ["spring", "summer", "fall", "winter"])
+            MarkerSet(name: "Seasons", markers: ["spring", "summer", "fall", "winter"]),
         ])
     }
 

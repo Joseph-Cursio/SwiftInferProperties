@@ -24,9 +24,9 @@ struct GuardDomainStubTests {
         _ name: String,
         parameters: [Parameter],
         returns: String?,
+        domain: GuardDomain,
         owner: String? = "Parser",
-        isStatic: Bool = true,
-        domain: GuardDomain
+        isStatic: Bool = true
     ) -> FunctionSummary {
         FunctionSummary(
             name: name,
@@ -39,10 +39,10 @@ struct GuardDomainStubTests {
             location: SourceLocation(file: "Parser.swift", line: 8, column: 5),
             containingTypeName: owner,
             bodySignals: BodySignals(
-                guardDomain: domain,
                 hasNonDeterministicCall: false,
                 hasSelfComposition: false,
-                nonDeterministicAPIsDetected: []
+                nonDeterministicAPIsDetected: [],
+                guardDomain: domain
             )
         )
     }
@@ -128,13 +128,13 @@ struct GuardDomainStubTests {
                 "parse",
                 parameters: [Self.param("from", "String", "source")],
                 returns: "(frontMatter: Self, body: String)",
-                owner: "FrontMatter",
                 domain: GuardDomain(
                     condition: "source.hasPrefix(\"---\")",
                     returnedExpression: "(Self(), source)",
                     parameterName: "source",
                     firesWhenConditionHolds: false
-                )
+                ),
+                owner: "FrontMatter"
             )
         )
         let stub = try #require(InteractiveTriage.entailedTemplateStub(for: suggestion, customGenerator: nil))
@@ -152,14 +152,14 @@ struct GuardDomainStubTests {
                 "formatDropping",
                 parameters: [Self.param(nil, "Order", "order")],
                 returns: "String",
-                owner: "Formatter",
-                isStatic: false,
                 domain: GuardDomain(
                     condition: "!order.lineItems.isEmpty",
                     returnedExpression: "\"\\(order.id)\"",
                     parameterName: "order",
                     firesWhenConditionHolds: false
-                )
+                ),
+                owner: "Formatter",
+                isStatic: false
             )
         )
         let stub = try #require(InteractiveTriage.entailedTemplateStub(for: suggestion, customGenerator: nil))
@@ -181,14 +181,14 @@ struct GuardDomainStubTests {
                 "merged",
                 parameters: [Self.param("with", "Bag", "other")],
                 returns: "Bag",
-                owner: "Bag",
-                isStatic: false,
                 domain: GuardDomain(
                     condition: "self.items.isEmpty",
                     returnedExpression: "other",
                     parameterName: "other",
                     firesWhenConditionHolds: true
-                )
+                ),
+                owner: "Bag",
+                isStatic: false
             )
         )
         let stub = try #require(

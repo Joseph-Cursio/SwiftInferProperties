@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 // V1.109 (cycle-103c) — tests for the --interactive-bridges flag
@@ -24,7 +23,7 @@ struct DiscoverInteractionBridgesFlagTests {
     @Test func interactiveBridgesFlagSetsTrue() throws {
         let parsed = try Command.parse([
             "--target", "MyApp",
-            "--interactive-bridges"
+            "--interactive-bridges",
         ])
         #expect(parsed.interactiveBridges == true)
     }
@@ -35,7 +34,7 @@ struct DiscoverInteractionBridgesFlagTests {
             "--reducer", "Inbox.body",
             "--include-possible",
             "--interactive-bridges",
-            "--dry-run"
+            "--dry-run",
         ])
         #expect(parsed.interactiveBridges == true)
         #expect(parsed.dryRun == true)

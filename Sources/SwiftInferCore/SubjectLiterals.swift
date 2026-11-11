@@ -2,6 +2,18 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
+/// Plain string literals, in source order.
+private final class LiteralCollector: SyntaxVisitor {
+    private(set) var found: [String] = []
+
+    override func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+        if let value = node.representedLiteralValue, !value.isEmpty, value.count <= SubjectLiterals.maxLength {
+            found.append(value)
+        }
+        return .skipChildren
+    }
+}
+
 /// The string literals in a subject's own body — the tokens its generator should also draw.
 ///
 /// A parser traps on its own delimiters and an escaper's false laws live in its own entities, and
@@ -53,17 +65,5 @@ public enum SubjectLiterals {
         }
         var seen: Set<String> = []
         return Array(found.filter { seen.insert($0).inserted }.prefix(cap))
-    }
-}
-
-/// Plain string literals, in source order.
-private final class LiteralCollector: SyntaxVisitor {
-    private(set) var found: [String] = []
-
-    override func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-        if let value = node.representedLiteralValue, !value.isEmpty, value.count <= SubjectLiterals.maxLength {
-            found.append(value)
-        }
-        return .skipChildren
     }
 }

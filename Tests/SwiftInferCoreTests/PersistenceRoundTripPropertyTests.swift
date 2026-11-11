@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 import SwiftInferCore
 import Testing
 
@@ -92,14 +92,14 @@ struct PersistenceRoundTripPropertyTests {
         Gen.lowercaseLetter.string(of: 1...10),
         Gen<Int>.int(in: 1...9_999),
         Gen.lowercaseLetter.string(of: 1...10),
-        Gen.element(of: seedKinds)
+        Gen.element(of: seedKinds).compactMap(\.self)
     ).map { file, line, symbol, kind in
         SeedManifest.Seed(
             file: file + ".swift",
             line: line,
             symbol: symbol,
             rule: "Pure Function Property-Test Candidate",
-            kind: kind!
+            kind: kind
         )
     }
 
@@ -119,22 +119,22 @@ struct PersistenceRoundTripPropertyTests {
     /// cannot hide behind a default value on the way back in.
     private static let indexEntryGen = zip(
         Gen<Int>.int(in: 0...120),
-        Gen.element(of: Tier.allCases).map { $0!.label },
-        Gen.element(of: [true, false]).map { $0! },
-        Gen.element(of: [true, false]).map { $0! }
+        Gen.element(of: Tier.allCases).compactMap { $0?.label },
+        Gen.element(of: [true, false]).compactMap(\.self),
+        Gen.element(of: [true, false]).compactMap(\.self)
     ).map { score, tier, flagA, flagB in
         SemanticIndexEntry(
             identityHash: "ABCDEF0123456789",
             templateName: "idempotence",
-            typeName: "Carrier",
             score: score,
             tier: tier,
             primaryFunctionName: "normalize",
             location: "Carrier.swift:12",
-            decision: "accepted",
-            decisionAt: "2026-07-26T00:00:00Z",
             firstSeenAt: "2026-07-01T00:00:00Z",
             lastSeenAt: "2026-07-26T00:00:00Z",
+            typeName: "Carrier",
+            decision: "accepted",
+            decisionAt: "2026-07-26T00:00:00Z",
             typeShape: nil,
             secondaryFunctionName: "denormalize",
             carrierTypeName: "Carrier",
@@ -170,13 +170,13 @@ struct PersistenceRoundTripPropertyTests {
         let entry = SemanticIndexEntry(
             identityHash: "ABCDEF0123456789",
             templateName: "idempotence",
-            typeName: "Carrier",
             score: 80,
             tier: "Strong",
             primaryFunctionName: "normalize",
             location: "Carrier.swift:12",
             firstSeenAt: "2026-07-01T00:00:00Z",
             lastSeenAt: "2026-07-26T00:00:00Z",
+            typeName: "Carrier",
             isInstanceMethod: true,
             isMutatingMethod: true,
             isNullary: true,

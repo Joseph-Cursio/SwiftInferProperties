@@ -124,7 +124,7 @@ The item 40 question, asked of item 33: of these 26 over-claims, how many are
 A zero, and it looks like item 40's result — an unchecked claim with no measured
 victims. **It is not, and the reason matters more than the number.**
 
-Here is a real call site, in `Discover+Pipeline.swift`:
+Here is a real call site, in `SwiftInferCommand.Discover+Pipeline.swift`:
 
 ```swift
 diagnostic: { diagnostics.writeDiagnostic($0) }

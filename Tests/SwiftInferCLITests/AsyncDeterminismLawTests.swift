@@ -21,9 +21,9 @@ struct AsyncDeterminismLawTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            seedManifest: manifest,
-            output: recording
+            seedManifest: manifest
         )
         #expect(recording.text.contains("Template: determinism"))
         #expect(recording.text.contains("fetchLabel(_:)"))
@@ -41,9 +41,9 @@ struct AsyncDeterminismLawTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            seedManifest: manifest,
-            output: recording
+            seedManifest: manifest
         )
         #expect(recording.text.contains("Template: determinism") == false)
     }

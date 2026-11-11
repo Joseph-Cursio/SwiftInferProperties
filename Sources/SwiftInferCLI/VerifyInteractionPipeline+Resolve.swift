@@ -27,19 +27,19 @@ extension VerifyInteractionPipeline {
     /// two-element contract (many tests destructure it).
     public static func resolveAndEmit(
         target: String,
+        workingDirectory: URL,
         pinRaw: String? = nil,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
-        invariant: InteractionInvariantSuggestion? = nil,
-        workingDirectory: URL
+        invariant: InteractionInvariantSuggestion? = nil
     ) throws -> (candidate: ReducerCandidate, stubSource: String) {
         let seeded = try resolveEmitAndSeed(
             target: target,
+            workingDirectory: workingDirectory,
             pinRaw: pinRaw,
             sequenceCount: sequenceCount,
             userModuleName: userModuleName,
-            invariant: invariant,
-            workingDirectory: workingDirectory
+            invariant: invariant
         )
         return (seeded.candidate, seeded.stubSource)
     }
@@ -66,12 +66,12 @@ extension VerifyInteractionPipeline {
     /// stub), so this never changes behavior for the un-mined path.
     static func resolveEmitAndSeed(
         target: String,
+        workingDirectory: URL,
         pinRaw: String? = nil,
         sequenceCount: Int = ActionSequenceStubEmitter.defaultSequenceCount,
         userModuleName: String? = nil,
         invariant: InteractionInvariantSuggestion? = nil,
-        traceMining: TraceMiningOptions = .off,
-        workingDirectory: URL
+        traceMining: TraceMiningOptions = .off
     ) throws -> SeededEmission {
         let matched = try resolveCandidate(
             target: target,

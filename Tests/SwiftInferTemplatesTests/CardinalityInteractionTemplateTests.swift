@@ -43,11 +43,11 @@ struct CardinalityInteractionTemplateTests {
     ) -> CardinalityWitness {
         CardinalityWitness(fields: fields ?? [
             field(name: "activeSheet"),
-            field(name: "activeAlert")
+            field(name: "activeAlert"),
         ])
     }
 
-    private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+    private let firstSeenAt = Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
 
     // MARK: - analyze
 
@@ -93,7 +93,7 @@ struct CardinalityInteractionTemplateTests {
             candidate: candidate(),
             witness: witness(fields: [
                 field(name: "isShowingSheet", kind: .boolFlag),
-                field(name: "isPresentingDetail", kind: .boolFlag)
+                field(name: "isPresentingDetail", kind: .boolFlag),
             ]),
             firstSeenAt: firstSeenAt
         )
@@ -108,7 +108,7 @@ struct CardinalityInteractionTemplateTests {
             candidate: candidate(),
             witness: witness(fields: [
                 field(name: "activeSheet"),
-                field(name: "isFullScreenPresenting", kind: .boolFlag)
+                field(name: "isFullScreenPresenting", kind: .boolFlag),
             ]),
             firstSeenAt: firstSeenAt
         )

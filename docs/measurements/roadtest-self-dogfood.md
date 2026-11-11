@@ -644,11 +644,11 @@ and decision-recording path:
 
 ```
 VerifyInteractionPipeline+Evidence.swift:69      Date()   ← stamps VerifyEvidence.capturedAt
-VerifyCommand+AllFromIndex+Persist.swift:16      Date()   ← persists verify evidence
+SwiftInferCommand.Verify+AllFromIndex+Persist.swift:16      Date()   ← persists verify evidence
 ViewModelVerifyEvidence.swift:39                 Date()   ← same, MVVM path
 OutputDeterminismVerifyEvidence.swift:36         Date()   ← same, output-determinism path
 InteractiveTriage.swift:132                      Date()   ← stamps DecisionRecord.timestamp
-MetricsCommand.swift:229                         Date()   ← the aggregation that CALLS merge
+SwiftInferCommand.Metrics.swift:229                         Date()   ← the aggregation that CALLS merge
 ```
 
 Those are **exactly** the fields whose ties make `merge` non-commutative — F1, the finding this whole

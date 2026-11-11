@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// The curated inverse-name vocabulary `RoundTripTemplate` scores against, and
 /// the one sub-family of it that owes a disclosure.
 ///
@@ -62,7 +60,7 @@ extension RoundTripTemplate {
         ("push", "pop"),
         ("insert", "remove"),
         ("open", "close"),
-        ("lock", "unlock")
+        ("lock", "unlock"),
     ]
 
     /// The verbs whose round trip runs through a **store** — a file, a

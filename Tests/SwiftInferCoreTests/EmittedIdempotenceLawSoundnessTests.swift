@@ -57,7 +57,7 @@ struct EmittedIdempotenceLawSoundnessTests {
             ("absoluteValue", { value in abs(value) }),
             ("clampToNonNegative", { value in max(0, value) }),
             ("constantZero", { _ in 0 }),
-            ("signum", { value in value == 0 ? 0 : (value > 0 ? 1 : -1) })
+            ("signum", { value in value == 0 ? 0 : (value > 0 ? 1 : -1) }),
         ]
         for entry in corpus {
             let result = await Self.checkIdempotence(of: entry.transform)
@@ -71,7 +71,7 @@ struct EmittedIdempotenceLawSoundnessTests {
         let corpus: [(name: String, transform: @Sendable (Int) -> Int)] = [
             ("increment", { value in value &+ 1 }),
             ("double", { value in value &* 2 }),
-            ("negate", { value in 0 &- value })
+            ("negate", { value in 0 &- value }),
         ]
         for entry in corpus {
             let result = await Self.checkIdempotence(of: entry.transform)

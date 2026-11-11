@@ -19,7 +19,7 @@ struct LiftedSuggestionRecoveryTests {
         let lifted = LiftedSuggestion.roundTrip(from: detection)
         let summaries = LiftedSuggestionRecovery.summariesByName([
             makeFreeFunction(name: "encode", paramType: "Int", returnType: "String"),
-            makeFreeFunction(name: "decode", paramType: "String", returnType: "Int")
+            makeFreeFunction(name: "decode", paramType: "String", returnType: "Int"),
         ])
 
         let suggestion = LiftedSuggestionRecovery.recover(lifted, summariesByName: summaries)
@@ -108,7 +108,7 @@ struct LiftedSuggestionRecoveryTests {
                 name: "merge",
                 parameters: [
                     .init(label: "_", internalName: "a", typeText: "Int", isInout: false),
-                    .init(label: "_", internalName: "b", typeText: "Int", isInout: false)
+                    .init(label: "_", internalName: "b", typeText: "Int", isInout: false),
                 ],
                 returnTypeText: "Int",
                 isThrows: false,
@@ -118,7 +118,7 @@ struct LiftedSuggestionRecoveryTests {
                 location: SourceLocation(file: "Merge.swift", line: 1, column: 1),
                 containingTypeName: nil,
                 bodySignals: .empty
-            )
+            ),
         ])
 
         let suggestion = LiftedSuggestionRecovery.recover(lifted, summariesByName: summaries)
@@ -144,7 +144,7 @@ struct LiftedSuggestionRecoveryTests {
                 containingType: "Doc",
                 paramTypes: ["Doc"],
                 returnType: "Doc"
-            )
+            ),
         ])
 
         let suggestion = LiftedSuggestionRecovery.recover(lifted, summariesByName: summaries)
@@ -168,7 +168,7 @@ struct LiftedSuggestionRecoveryTests {
                 name: "normalize",
                 parameters: [
                     .init(label: "_", internalName: "a", typeText: "Int", isInout: false),
-                    .init(label: "_", internalName: "b", typeText: "Int", isInout: false)
+                    .init(label: "_", internalName: "b", typeText: "Int", isInout: false),
                 ],
                 returnTypeText: "Int",
                 isThrows: false,
@@ -178,7 +178,7 @@ struct LiftedSuggestionRecoveryTests {
                 location: SourceLocation(file: "X.swift", line: 1, column: 1),
                 containingTypeName: nil,
                 bodySignals: .empty
-            )
+            ),
         ])
 
         let suggestion = LiftedSuggestionRecovery.recover(lifted, summariesByName: summaries)
@@ -221,7 +221,7 @@ struct LiftedSuggestionRecoveryTests {
             makeFreeFunction(name: "normalize", paramType: "String", returnType: "String"),
             // This second `normalize` (different containing type, different sig)
             // would win if the index policy were "last-wins" — assert it doesn't.
-            makeInstanceMethod(name: "normalize", containingType: "Doc", paramTypes: [], returnType: "Doc")
+            makeInstanceMethod(name: "normalize", containingType: "Doc", paramTypes: [], returnType: "Doc"),
         ])
         // First-match: the free-function String shape wins.
         #expect(summaries["normalize"]?.containingTypeName == nil)

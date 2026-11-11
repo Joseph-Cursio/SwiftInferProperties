@@ -42,12 +42,12 @@ struct NClassEquivalenceClassDetectorVetoTests {
         }
         return PartitionCandidate(
             predicateName: "size",
+            outlierSiteCount: 0,
             markerPair: nil,
             markerSet: Self.sizesMarkerSet,
             positiveSites: [],
             negativeSites: [],
-            nClassBucketsByMarker: buckets,
-            outlierSiteCount: 0
+            nClassBucketsByMarker: buckets
         )
     }
 

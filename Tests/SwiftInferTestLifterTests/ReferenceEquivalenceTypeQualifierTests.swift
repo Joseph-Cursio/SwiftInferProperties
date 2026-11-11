@@ -21,7 +21,7 @@ import Testing
 @Suite("Reference equivalence — type qualifiers are not inputs")
 struct ReferenceEquivalenceTypeQualifierTests {
 
-    private static func detect(in source: String) -> [DetectedReferenceEquivalence] {
+    static func detect(in source: String) -> [DetectedReferenceEquivalence] {
         AssertReferenceEquivalenceDetector.detect(in: SlicerTestHelper.sliceFirstBody(in: source))
     }
 

@@ -42,7 +42,7 @@ struct DiscoverMutatorLawsTests {
 
     private static let addToConfig = summary(name: "add", parameters: [
         Parameter(label: nil, internalName: "name", typeText: "String", isInout: false),
-        Parameter(label: "to", internalName: "config", typeText: "Config", isInout: true)
+        Parameter(label: "to", internalName: "config", typeText: "Config", isInout: true),
     ])
 
     private static let bump = summary(
@@ -58,7 +58,7 @@ struct DiscoverMutatorLawsTests {
             SeedManifest.Seed(
                 file: "Migrations.swift", line: 4, symbol: summary.name, kind: .pureMutator,
                 requires: requires, mutates: summary.isMutating ? "self" : "config"
-            )
+            ),
         ])
         return SwiftInferCommand.Discover.synthesizeMutatorLaws(
             for: manifest, summaries: [summary], covered: covered, diagnostics: SilentDiagnostics()
@@ -93,7 +93,7 @@ struct DiscoverMutatorLawsTests {
         summary(name: "f", parameters: [inoutC], returnType: "Int"),
         summary(name: "f", parameters: [inoutC], isAsync: true),
         summary(name: "f", parameters: [inoutC, inoutC]),
-        summary(name: "f", parameters: [plainC])
+        summary(name: "f", parameters: [plainC]),
     ]
 
     @Test("not a mutator: a returned value, async, or two values written", arguments: notMutators)
@@ -141,7 +141,7 @@ struct DiscoverMutatorLawsTests {
             SeedManifest.Seed(
                 file: "Migrations.swift", line: 4, symbol: "wrap",
                 requires: SeedRequirement(equatable: ["Wrapper"])
-            )
+            ),
         ])
         let law = try #require(SwiftInferCommand.Discover.synthesizeGenericLaws(
             for: manifest, summaries: [wrap], covered: [], diagnostics: SilentDiagnostics()

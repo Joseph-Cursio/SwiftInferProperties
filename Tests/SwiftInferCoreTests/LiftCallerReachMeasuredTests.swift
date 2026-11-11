@@ -1,8 +1,4 @@
-import Foundation
 import Testing
-
-@testable import SwiftInferCore
-@testable import SwiftInferTemplates
 
 /// **Can the tool name the caller a `private`-subject law should be lifted to?**
 ///

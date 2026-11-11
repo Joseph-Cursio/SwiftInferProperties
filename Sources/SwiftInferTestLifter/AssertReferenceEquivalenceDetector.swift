@@ -1,6 +1,36 @@
 import SwiftInferCore
 import SwiftSyntax
 
+/// A detected "this function agrees with that reference computation" assertion.
+public struct DetectedReferenceEquivalence: Sendable, Equatable {
+
+    /// The implementation under test — a counterexample is its bug.
+    public let subjectCallee: String
+    /// The computation it is being checked against.
+    public let referenceCallee: String
+    /// The identifier both sides read.
+    public let sharedInput: String
+    /// Whether the subject/reference split was determined structurally (one
+    /// side a method on the input, the other taking it as an argument) rather
+    /// than by falling back to source order.
+    public let directionIsCertain: Bool
+    public let location: SwiftInferCore.SourceLocation
+
+    public init(
+        subjectCallee: String,
+        referenceCallee: String,
+        sharedInput: String,
+        directionIsCertain: Bool,
+        location: SwiftInferCore.SourceLocation
+    ) {
+        self.subjectCallee = subjectCallee
+        self.referenceCallee = referenceCallee
+        self.sharedInput = sharedInput
+        self.directionIsCertain = directionIsCertain
+        self.location = location
+    }
+}
+
 /// A test asserting that a function agrees with a **reference computation** —
 /// the test-side half of the differential / oracle family.
 ///
@@ -49,6 +79,7 @@ import SwiftSyntax
 /// the first as subject, and the emitted caveat says the direction is a guess.
 public enum AssertReferenceEquivalenceDetector {
 
+    /// Assertions in `slice` that a function equals a reference computation on the same input.
     public static func detect(in slice: SlicedTestBody) -> [DetectedReferenceEquivalence] {
         guard let assertion = slice.assertion,
               let (lhs, rhs) = equalityOperands(of: assertion) else {
@@ -90,7 +121,7 @@ public enum AssertReferenceEquivalenceDetector {
                 sharedInput: shared,
                 directionIsCertain: subject.takesInputAsArgument && reference.isMethodOnInput,
                 location: assertion.location
-            )
+            ),
         ]
     }
 
@@ -222,35 +253,5 @@ public enum AssertReferenceEquivalenceDetector {
             return (right, left)
         }
         return (left, right)
-    }
-}
-
-/// A detected "this function agrees with that reference computation" assertion.
-public struct DetectedReferenceEquivalence: Sendable, Equatable {
-
-    /// The implementation under test — a counterexample is its bug.
-    public let subjectCallee: String
-    /// The computation it is being checked against.
-    public let referenceCallee: String
-    /// The identifier both sides read.
-    public let sharedInput: String
-    /// Whether the subject/reference split was determined structurally (one
-    /// side a method on the input, the other taking it as an argument) rather
-    /// than by falling back to source order.
-    public let directionIsCertain: Bool
-    public let location: SwiftInferCore.SourceLocation
-
-    public init(
-        subjectCallee: String,
-        referenceCallee: String,
-        sharedInput: String,
-        directionIsCertain: Bool,
-        location: SwiftInferCore.SourceLocation
-    ) {
-        self.subjectCallee = subjectCallee
-        self.referenceCallee = referenceCallee
-        self.sharedInput = sharedInput
-        self.directionIsCertain = directionIsCertain
-        self.location = location
     }
 }

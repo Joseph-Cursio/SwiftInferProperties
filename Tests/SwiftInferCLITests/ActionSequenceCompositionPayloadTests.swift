@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -116,7 +115,7 @@ struct ActionSequenceCompositionPayloadTests {
             resolvedBinding: [
                 ResolvedBindingField(fieldName: "flag", valueType: "Bool"),
                 ResolvedBindingField(fieldName: "count", valueType: "Int"),
-                ResolvedBindingField(fieldName: "ratio", valueType: "Double")
+                ResolvedBindingField(fieldName: "ratio", valueType: "Double"),
             ]
         )
         #expect(
@@ -138,7 +137,7 @@ struct ActionSequenceCompositionPayloadTests {
                     ResolvedBindingField(fieldName: "tags", valueType: "[String]"),
                     ResolvedBindingField(fieldName: "attrs", valueType: "[String: Int]"),
                     ResolvedBindingField(fieldName: "big", valueType: "Int64"),
-                    ResolvedBindingField(fieldName: "ratio", valueType: "Float")
+                    ResolvedBindingField(fieldName: "ratio", valueType: "Float"),
                 ]
             ),
             action: "Form.Action"
@@ -158,7 +157,7 @@ struct ActionSequenceCompositionPayloadTests {
                 payloadTypes: ["BindingAction<State>"],
                 resolvedBinding: [
                     ResolvedBindingField(fieldName: "custom", valueType: "MyStruct"),
-                    ResolvedBindingField(fieldName: "text", valueType: "String")
+                    ResolvedBindingField(fieldName: "text", valueType: "String"),
                 ]
             ),
             action: "Form.Action"
@@ -199,7 +198,7 @@ struct ActionSequenceCompositionPayloadTests {
                     idType: "UUID",
                     childActionValue: "Row.Action.increment"
                 )
-            )
+            ),
         ])
         let constructible = Set(ActionSequenceStubEmitter.constructibleCases(reducer).map(\.name))
         #expect(constructible.contains("rows"))
@@ -228,7 +227,7 @@ struct ActionSequenceCompositionPayloadTests {
         let reducer = candidate([
             ActionCaseInfo(name: "tapped"),
             ActionCaseInfo(name: "alert", payloadTypes: ["PresentationAction<Alert>"]),
-            ActionCaseInfo(name: "updated", payloadTypes: ["User"])  // still excluded
+            ActionCaseInfo(name: "updated", payloadTypes: ["User"]),  // still excluded
         ])
         let constructible = Set(ActionSequenceStubEmitter.constructibleCases(reducer).map(\.name))
         #expect(constructible.contains("alert"))

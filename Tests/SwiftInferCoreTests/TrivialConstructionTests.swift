@@ -18,7 +18,7 @@ struct TrivialConstructionTests {
         final class Defaulted { init(limit: Int = 3, names: [String], parent: Defaulted?) {} }
         final class Hidden { private init(values: [Int]) {} }
         final class Plain { var count = 0 }
-        """
+        """,
     ])
 
     private func build(_ name: String) -> String? {

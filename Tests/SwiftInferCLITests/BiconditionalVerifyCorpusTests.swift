@@ -40,7 +40,7 @@ struct BiconditionalVerifyCorpusTests {
             "StaleFeature.body state.isLoading == (state.data != nil)",
             // cycle 142 — literal-inferred Bool + inverse-drift false positive.
             "FeedFeature.body state.isRefreshing == (state.feed != nil)",
-            "PendingFeature.body state.isFetchingMore == (state.nextPage != nil)"
+            "PendingFeature.body state.isFetchingMore == (state.nextPage != nil)",
         ]
         #expect(found == expected)
 

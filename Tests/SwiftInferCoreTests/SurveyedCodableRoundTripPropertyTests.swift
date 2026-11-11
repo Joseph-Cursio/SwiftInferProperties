@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCore
 import Testing
 
@@ -33,7 +33,7 @@ struct SurveyedCodableRoundTripPropertyTests {
     private static let wordGen = Gen.element(of: [
         "encode", "decode", "push", "pop", "", "a", "Valid", "Invalid", "read_write"
     ])
-    .map { $0! }
+    .compactMap(\.self)
 
     @Test("InversePair round-trips, forward and reverse kept distinct")
     func inversePairRoundTrips() async {
@@ -67,15 +67,15 @@ struct SurveyedCodableRoundTripPropertyTests {
 
     private static let roleGen = Gen.element(of: [
         SeedRole.comparator, .predicate, .transform, .reducer, .partition, .normalizer,
-        .unrecognised("totally-unknown"), .unrecognised("")
+        .unrecognised("totally-unknown"), .unrecognised(""),
     ])
-    .map { $0! }
+    .compactMap(\.self)
 
     private static let restrictionGen = Gen.element(of: [
         SeedRestriction.declaration, .enclosingType,
-        .unrecognised("nonsense"), .unrecognised("")
+        .unrecognised("nonsense"), .unrecognised(""),
     ])
-    .map { $0! }
+    .compactMap(\.self)
 
     @Test("every SeedRole round-trips, known case or unrecognised")
     func seedRoleRoundTrips() async {
@@ -107,14 +107,14 @@ struct SurveyedCodableRoundTripPropertyTests {
     private static let tierGen = Gen.element(of: [
         SeedEffect.Tier.pure, .idempotent, .observational, .externallyIdempotent, .nonIdempotent
     ])
-    .map { $0! }
+    .compactMap(\.self)
 
     @Test("SeedEffect round-trips across tiers and lenient optionals")
     func seedEffectRoundTrips() async {
         await propertyCheck(
             input: Self.tierGen,
             Self.tierGen,
-            Gen.element(of: [nil, 0, 1, 7] as [Int?]).map { $0! }
+            Gen.element(of: [nil, 0, 1, 7] as [Int?]).compactMap(\.self)
         ) { declared, resolved, depth in
             let effect = SeedEffect(
                 declared: declared,

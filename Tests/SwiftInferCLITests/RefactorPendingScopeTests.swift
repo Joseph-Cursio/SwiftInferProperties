@@ -90,11 +90,11 @@ struct RefactorPendingScopeTests {
         let seeds = [
             seed("Packages/Config/Sources/Config/Loader.swift", "parse"),
             seed("Packages/Config/Sources/Config/Writer.swift", "render"),
-            seed("Packages/Models/Sources/Models/Rule.swift", "key")
+            seed("Packages/Models/Sources/Models/Rule.swift", "key"),
         ]
         let configScope: Set<String> = [
             "/p/Packages/Config/Sources/Config/Loader.swift",
-            "/p/Packages/Config/Sources/Config/Writer.swift"
+            "/p/Packages/Config/Sources/Config/Writer.swift",
         ]
         let modelsScope: Set<String> = ["/p/Packages/Models/Sources/Models/Rule.swift"]
 

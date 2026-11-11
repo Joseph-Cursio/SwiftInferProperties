@@ -109,9 +109,9 @@ public enum IndexStore {
         public var sourceFileByTypeName: [String: String]
 
         public init(
-            schemaVersion: Int = IndexStore.currentSchemaVersion,
             updatedAt: String,
             entries: [SemanticIndexEntry],
+            schemaVersion: Int = IndexStore.currentSchemaVersion,
             typeShapes: [String: IndexedTypeShape] = [:],
             interactionEntries: [InteractionIndexEntry] = [],
             sourceFileByTypeName: [String: String] = [:]
@@ -168,6 +168,7 @@ public enum IndexStore {
 
     // MARK: - Load
 
+    /// Loads the SemanticIndex at `path`; a missing file yields an empty index stamped `nowTimestamp`.
     public static func load(
         from path: URL,
         nowTimestamp: String,
@@ -248,8 +249,8 @@ public enum IndexStore {
             uniqueKeysWithValues: existing.entries.map { ($0.identityHash, $0) }
         )
         for fresh in freshEntries {
-            if let existing = byHash[fresh.identityHash] {
-                byHash[fresh.identityHash] = existing.updated(from: fresh)
+            if let previous = byHash[fresh.identityHash] {
+                byHash[fresh.identityHash] = previous.updated(from: fresh)
             } else {
                 byHash[fresh.identityHash] = fresh
             }
@@ -268,9 +269,9 @@ public enum IndexStore {
         var mergedSourceFiles = existing.sourceFileByTypeName
         mergedSourceFiles.merge(freshSourceFiles) { _, fresh in fresh }
         return Index(
-            schemaVersion: existing.schemaVersion,
             updatedAt: runTimestamp,
             entries: Array(merged),
+            schemaVersion: existing.schemaVersion,
             typeShapes: mergedShapes,
             interactionEntries: existing.interactionEntries,
             sourceFileByTypeName: mergedSourceFiles

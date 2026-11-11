@@ -38,7 +38,7 @@ struct ReplacementChainClassifierTests {
         // The witness is a real counterexample, checked against the chain itself.
         let steps = [
             ReplacementChainClassifier.Step(pattern: "&", replacement: "&amp;"),
-            ReplacementChainClassifier.Step(pattern: "<", replacement: "&lt;")
+            ReplacementChainClassifier.Step(pattern: "<", replacement: "&lt;"),
         ]
         let once = ReplacementChainClassifier.apply(steps, to: witness)
         #expect(ReplacementChainClassifier.apply(steps, to: once) != once)
@@ -61,7 +61,7 @@ struct ReplacementChainClassifierTests {
             // `x → y → z`: an output contains a LATER pattern, rewritten later in the same pass.
             #"t.replacingOccurrences(of: "x", with: "y").replacingOccurrences(of: "y", with: "z")"#,
             // `safeAlias`-style: whitespace and punctuation to underscores.
-            #"t.replacingOccurrences(of: "-", with: "_").replacingOccurrences(of: " ", with: "_")"#
+            #"t.replacingOccurrences(of: "-", with: "_").replacingOccurrences(of: " ", with: "_")"#,
           ])
     func idempotentChainsStayQuiet(body: String) throws {
         #expect(try shape(function(body)) == .notExtending)
@@ -70,7 +70,7 @@ struct ReplacementChainClassifierTests {
     @Test("a chain that is not the whole body, or not on the parameter, is not read",
           arguments: [
             #"t.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "&", with: "&amp;")"#,
-            #"String(t.reversed()).replacingOccurrences(of: "&", with: "&amp;")"#
+            #"String(t.reversed()).replacingOccurrences(of: "&", with: "&amp;")"#,
           ])
     func onlyAPureChainOnTheInput(body: String) throws {
         #expect(try shape(function(body)) == .notExtending)
@@ -113,7 +113,7 @@ struct ReplacementChainClassifierTests {
             AnchorCase(#"self.replacingOccurrences(of: "&", with: "&amp;")"#, root: nil, isRead: true),
             AnchorCase(#"self.replacingOccurrences(of: "&", with: "&amp;")"#, root: "t", isRead: false),
             // Another identifier is neither `self` nor the parameter.
-            AnchorCase(#"other.replacingOccurrences(of: "&", with: "&amp;")"#, root: nil, isRead: false)
+            AnchorCase(#"other.replacingOccurrences(of: "&", with: "&amp;")"#, root: nil, isRead: false),
           ])
     func chainIsAnchoredToItsRoot(anchor: AnchorCase) throws {
         let parsed = Parser.parse(source: anchor.source).statements.first?.item.as(ExprSyntax.self)

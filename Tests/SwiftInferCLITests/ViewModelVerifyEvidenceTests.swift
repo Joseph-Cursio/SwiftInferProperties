@@ -39,7 +39,7 @@ struct ViewModelVerifyEvidenceTests {
             for: suggestion(),
             outcome: .defaultFails(
                 trial: 0, input: "", forwardResult: "",
-                inverseResult: "", shrunk: nil, shrinkSteps: 0
+                inverseResult: ""
             )
         )
         #expect(fail.outcome == .measuredDefaultFails)

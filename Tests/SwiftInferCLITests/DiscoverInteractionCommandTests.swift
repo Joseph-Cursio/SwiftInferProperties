@@ -13,7 +13,7 @@ struct DiscoverInteractionCommandTests {
 
     private typealias Command = SwiftInferCommand.DiscoverInteraction
 
-    private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+    private let firstSeenAt = Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
 
     // MARK: - CLI registration + argument parsing
 
@@ -60,7 +60,7 @@ struct DiscoverInteractionCommandTests {
         let parsed = try Command.parse([
             "--target", "MyApp",
             "--reducer", "Inbox.body",
-            "--include-possible"
+            "--include-possible",
         ])
         #expect(parsed.target == ["MyApp"])
         #expect(parsed.reducer == "Inbox.body")
@@ -79,7 +79,7 @@ struct DiscoverInteractionCommandTests {
     func filterPassesThroughWithoutPin() throws {
         let candidates = [
             candidate(functionName: "reduceA"),
-            candidate(functionName: "reduceB")
+            candidate(functionName: "reduceB"),
         ]
         let filtered = try Command.filterCandidates(candidates, pinRaw: nil)
         #expect(filtered.count == 2)
@@ -89,7 +89,7 @@ struct DiscoverInteractionCommandTests {
     func filterByPin() throws {
         let candidates = [
             candidate(functionName: "reduceA"),
-            candidate(functionName: "reduceB", enclosingTypeName: "Inbox")
+            candidate(functionName: "reduceB", enclosingTypeName: "Inbox"),
         ]
         let filtered = try Command.filterCandidates(candidates, pinRaw: "Inbox.reduceB")
         #expect(filtered.count == 1)
@@ -127,8 +127,8 @@ struct DiscoverInteractionCommandTests {
         )
         let rendered = try Command.runPipeline(
             target: "MyApp",
-            includePossible: true,
             workingDirectory: directory,
+            includePossible: true,
             firstSeenAt: firstSeenAt
         )
         #expect(rendered.contains("Family:    conservation"))
@@ -156,8 +156,8 @@ struct DiscoverInteractionCommandTests {
         )
         let rendered = try Command.runPipeline(
             target: "MyApp",
-            includePossible: true,
             workingDirectory: directory,
+            includePossible: true,
             firstSeenAt: firstSeenAt
         )
         #expect(rendered.contains("Family:    idempotence"))
@@ -248,8 +248,8 @@ struct DiscoverInteractionCommandTests {
         )
         let rendered = try Command.runPipeline(
             target: "MyApp",
-            includePossible: true,
             workingDirectory: directory,
+            includePossible: true,
             firstSeenAt: firstSeenAt
         )
         #expect(rendered.contains("0 interaction-invariant suggestions"))

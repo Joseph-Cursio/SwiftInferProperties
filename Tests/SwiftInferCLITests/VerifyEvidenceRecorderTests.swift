@@ -40,7 +40,7 @@ struct VerifyEvidenceRecorderTests {
         let (outcome, detail) = VerifyEvidenceRecorder.evidence(
             for: .defaultFails(
                 trial: 7, input: "a", forwardResult: "b",
-                inverseResult: "c", shrunk: nil, shrinkSteps: 0
+                inverseResult: "c"
             )
         )
         #expect(outcome == .measuredDefaultFails)
@@ -63,7 +63,7 @@ struct VerifyEvidenceRecorderTests {
             (.measuredEdgeCaseAdvisory, .measuredEdgeCaseAdvisory),
             (.measuredDefaultFails, .measuredDefaultFails),
             (.measuredError, .measuredError),
-            (.architecturalCoveragePending, .architecturalCoveragePending)
+            (.architecturalCoveragePending, .architecturalCoveragePending),
         ]
         for (survey, expected) in pairs {
             #expect(VerifyEvidenceRecorder.evidenceOutcome(for: survey) == expected)
@@ -153,7 +153,7 @@ struct VerifyEvidenceRecorderTests {
         let warnings = VerifyEvidenceRecorder.recordBatch(
             [
                 makeEvidence(identity: "AAA1111111111111", outcome: .measuredBothPass),
-                makeEvidence(identity: "BBB2222222222222", outcome: .measuredDefaultFails)
+                makeEvidence(identity: "BBB2222222222222", outcome: .measuredDefaultFails),
             ],
             packageRoot: directory
         )

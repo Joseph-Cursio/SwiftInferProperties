@@ -56,7 +56,7 @@ struct AccessCaveatJoinCollisionTests {
                     displayName: "encode(to:)",
                     signature: "(Encoder) throws -> Void",
                     location: SourceLocation(file: file, line: line, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -119,7 +119,7 @@ struct AccessCaveatJoinCollisionTests {
             Self.suggestion(line: 518, identity: "a"),
             Self.suggestion(line: 563, identity: "b"),
             Self.suggestion(line: 13_718, identity: "c"),
-            Self.suggestion(line: 15_051, identity: "d")
+            Self.suggestion(line: 15_051, identity: "d"),
         ]
 
         let result = SwiftInferCommand.Discover.withAccessRestrictionCaveats(
@@ -147,7 +147,7 @@ struct AccessCaveatJoinCollisionTests {
                     displayName: "encode(to:)",
                     signature: "(Encoder) throws -> Void",
                     location: SourceLocation(file: Self.file, line: 0, column: 0)
-                )
+                ),
             ],
             score: lifted.score,
             generator: lifted.generator,

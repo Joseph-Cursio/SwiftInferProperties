@@ -19,7 +19,7 @@ struct UnverifiableCauseTests {
             ("unsupported-pair: encode(_:)", .unsupportedPair),
             ("not-a-candidate: no test can name the subject: it is `private`", .subjectNotVisible),
             ("instance-method-shape-not-supported", .instanceMethodShape),
-            ("monotonicity-domain-not-comparable: Money", .monotonicityDomainNotComparable)
+            ("monotonicity-domain-not-comparable: Money", .monotonicityDomainNotComparable),
         ]
     )
     func classifies(detail: String, expected: UnverifiableCause) {
@@ -97,7 +97,7 @@ struct UnverifiableCauseTests {
         // the failure mode one level along from the one being fixed.
         let details: [String?] = [
             "unsupported-template: predicate", "unsupported-carrier: X",
-            "totally-unknown-detail", nil
+            "totally-unknown-detail", nil,
         ]
         let rendered = GenHookHint.lines(details: details).joined(separator: "\n")
         let counted = rendered
@@ -130,8 +130,8 @@ struct UnverifiableCauseTests {
             .deletingLastPathComponent()  // Tests
             .deletingLastPathComponent()  // repo root
         let producers = [
-            "Sources/SwiftInferCLI/VerifyCommand+AllFromIndexRecords.swift",
-            "Sources/SwiftInferCLI/VerifyCommand+ArchitecturalPendingDetail.swift"
+            "Sources/SwiftInferCLI/SwiftInferCommand.Verify+AllFromIndexRecords.swift",
+            "Sources/SwiftInferCLI/SwiftInferCommand.Verify+ArchitecturalPendingDetail.swift",
         ]
         let corpus = try producers
             .map { try String(contentsOf: root.appendingPathComponent($0), encoding: .utf8) }

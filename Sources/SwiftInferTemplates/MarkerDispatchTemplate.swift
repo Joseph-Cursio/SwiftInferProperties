@@ -1,5 +1,52 @@
 import SwiftInferCore
 
+/// A dispatch chain and the function a test calls to reach it — the chain itself, or the front
+/// that consults a lookup first.
+public struct MarkerDispatchSubject: Sendable, Equatable {
+    public let chain: FunctionSummary
+    public let entry: FunctionSummary
+    public let dispatch: MarkerDispatch
+    public let front: FallbackDelegation?
+
+    public init(chain: FunctionSummary, entry: FunctionSummary, dispatch: MarkerDispatch, front: FallbackDelegation?) {
+        self.chain = chain
+        self.entry = entry
+        self.dispatch = dispatch
+        self.front = front
+    }
+
+    /// Every chain a test can call without a receiver, entered through its front when a sibling
+    /// on the same type is `primary(for: x) ?? chain(for: x)`.
+    ///
+    /// Instance methods are declined: the table is a function of its argument, and drawing a
+    /// receiver to reach it would make the stub depend on state the law does not mention.
+    public static func candidates(in summaries: [FunctionSummary]) -> [Self] {
+        summaries.compactMap { chain in
+            guard let markerDispatch = chain.bodySignals.markerDispatch,
+                  isCallableWithoutReceiver(chain),
+                  !chain.isAsync, !chain.isThrows, !chain.isMutating else {
+                return nil
+            }
+            let fallbackFront = summaries.first { candidate in
+                candidate.containingTypeName == chain.containingTypeName
+                    && candidate.bodySignals.fallbackDelegation?.fallbackName == chain.name
+                    && candidate.returnTypeText == chain.returnTypeText
+                    && isCallableWithoutReceiver(candidate)
+            }
+            return Self(
+                chain: chain,
+                entry: fallbackFront ?? chain,
+                dispatch: markerDispatch,
+                front: fallbackFront?.bodySignals.fallbackDelegation
+            )
+        }
+    }
+
+    private static func isCallableWithoutReceiver(_ summary: FunctionSummary) -> Bool {
+        summary.isStatic || summary.containingTypeName == nil
+    }
+}
+
 /// The **marker-dispatch** law: a `String -> E` function written as a keyword table dispatches
 /// every marker to its row's case (SwiftInferProperties#644).
 ///
@@ -34,10 +81,12 @@ import SwiftInferCore
 ///    rather than passing on nothing.
 public enum MarkerDispatchTemplate {
 
+    /// The `marker-dispatch` suggestion for `subject`, or `nil` when the template does not apply.
     public static func suggest(for subject: MarkerDispatchSubject) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: subject)
     }
 
+    /// The `marker-dispatch` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<MarkerDispatchSubject> {
         Constraint<MarkerDispatchSubject>(
             templateName: "marker-dispatch",
@@ -79,7 +128,7 @@ public enum MarkerDispatchTemplate {
                 + "EDIT — a `||` turned `&&`, a marker dropped or misspelled, two rows reordered — and "
                 + "it holds of the code it was read from.",
             "IT SAYS NOTHING ABOUT A NAME WITH NO MARKER: those fall through to the last return, "
-                + "which this law does not check."
+                + "which this law does not check.",
         ]
         let shadowed = subject.dispatch.probes().shadowed
         if !shadowed.isEmpty {
@@ -96,53 +145,6 @@ public enum MarkerDispatchTemplate {
             )
         }
         return caveats
-    }
-}
-
-/// A dispatch chain and the function a test calls to reach it — the chain itself, or the front
-/// that consults a lookup first.
-public struct MarkerDispatchSubject: Sendable, Equatable {
-    public let chain: FunctionSummary
-    public let entry: FunctionSummary
-    public let dispatch: MarkerDispatch
-    public let front: FallbackDelegation?
-
-    public init(chain: FunctionSummary, entry: FunctionSummary, dispatch: MarkerDispatch, front: FallbackDelegation?) {
-        self.chain = chain
-        self.entry = entry
-        self.dispatch = dispatch
-        self.front = front
-    }
-
-    /// Every chain a test can call without a receiver, entered through its front when a sibling
-    /// on the same type is `primary(for: x) ?? chain(for: x)`.
-    ///
-    /// Instance methods are declined: the table is a function of its argument, and drawing a
-    /// receiver to reach it would make the stub depend on state the law does not mention.
-    public static func candidates(in summaries: [FunctionSummary]) -> [Self] {
-        summaries.compactMap { chain in
-            guard let dispatch = chain.bodySignals.markerDispatch,
-                  isCallableWithoutReceiver(chain),
-                  !chain.isAsync, !chain.isThrows, !chain.isMutating else {
-                return nil
-            }
-            let front = summaries.first { candidate in
-                candidate.containingTypeName == chain.containingTypeName
-                    && candidate.bodySignals.fallbackDelegation?.fallbackName == chain.name
-                    && candidate.returnTypeText == chain.returnTypeText
-                    && isCallableWithoutReceiver(candidate)
-            }
-            return Self(
-                chain: chain,
-                entry: front ?? chain,
-                dispatch: dispatch,
-                front: front?.bodySignals.fallbackDelegation
-            )
-        }
-    }
-
-    private static func isCallableWithoutReceiver(_ summary: FunctionSummary) -> Bool {
-        summary.isStatic || summary.containingTypeName == nil
     }
 }
 

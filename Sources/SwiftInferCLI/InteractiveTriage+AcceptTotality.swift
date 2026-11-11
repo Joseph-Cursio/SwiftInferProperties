@@ -121,7 +121,7 @@ extension InteractiveTriage {
               let predicate = CalleeReference(evidence: suggestion.evidence[0]),
               let measure = CalleeReference(evidence: suggestion.evidence[1]),
               let typeName = suggestion.evidence[0].qualifiedTypeName,
-              let positive = EmptinessAgreementPairing.polarity(
+              let polarity = EmptinessAgreementPairing.polarity(
                   predicate: predicate.bareName, measure: measure.bareName
               ) else {
             return nil
@@ -129,7 +129,7 @@ extension InteractiveTriage {
         return LiftedTestEmitter.emptinessAgreement(
             predicate: predicate,
             measure: measure,
-            holdsWhenPositive: positive,
+            holdsWhenPositive: polarity == .holdsWhenPositive,
             carrier: (typeName, chooseGenerator(for: suggestion, typeName: typeName, customGenerator: customGenerator)),
             seed: SamplingSeed.derive(from: suggestion.identity)
         )
@@ -259,8 +259,8 @@ extension InteractiveTriage {
                 range: range,
                 seed: seed,
                 generators: generators,
-                argumentTypes: argumentTypes,
-                failureLabel: "\(label) left its documented range \(range.lower)...\(range.upper)"
+                failureLabel: "\(label) left its documented range \(range.lower)...\(range.upper)",
+                argumentTypes: argumentTypes
             )
 
         case .sortedBy(let ordering):
@@ -269,8 +269,8 @@ extension InteractiveTriage {
                 ordering: ordering,
                 seed: seed,
                 generators: generators,
-                argumentTypes: argumentTypes,
-                failureLabel: "\(label) returned a result out of its comparator's order"
+                failureLabel: "\(label) returned a result out of its comparator's order",
+                argumentTypes: argumentTypes
             )
 
         case .independentOfInputOrder(let ordering):
@@ -279,8 +279,8 @@ extension InteractiveTriage {
                 ordering: ordering,
                 seed: seed,
                 generators: generators,
-                argumentTypes: argumentTypes,
-                failureLabel: "\(label) returned another order for the same input reversed"
+                failureLabel: "\(label) returned another order for the same input reversed",
+                argumentTypes: argumentTypes
             )
         }
     }

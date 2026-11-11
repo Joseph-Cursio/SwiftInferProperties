@@ -24,17 +24,17 @@ struct CommutativityConstraintEquivalenceTests {
 
     private static func binarySummary(
         name: String,
+        containingType: String,
         lhsType: String = "Int",
         rhsType: String = "Int",
         returnType: String = "Int",
-        containingType: String,
         bodySignals: BodySignals = .empty
     ) -> FunctionSummary {
         FunctionSummary(
             name: name,
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: lhsType, isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: rhsType, isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: rhsType, isInout: false),
             ],
             returnTypeText: returnType,
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,
@@ -53,21 +53,30 @@ struct CommutativityConstraintEquivalenceTests {
         return [
             ("merge", binarySummary(name: "merge", containingType: "Bag")),
             ("subtract", binarySummary(name: "subtract", containingType: "Math")),
-            ("voidReturn", binarySummary(name: "combine", returnType: "Void", containingType: "Foo")),
+            ("voidReturn", binarySummary(name: "combine", containingType: "Foo", returnType: "Void")),
             ("paramMismatch", binarySummary(
-                name: "combine", rhsType: "String", returnType: "String", containingType: "Foo"
+                name: "combine",
+                containingType: "Foo",
+                rhsType: "String",
+                returnType: "String"
             )),
             ("nonDeterministic", binarySummary(
                 name: "combine", containingType: "Foo", bodySignals: nonDeterministic
             )),
             ("bareShape", binarySummary(
-                name: "someUserOp", lhsType: "BigInt", rhsType: "BigInt",
-                returnType: "BigInt", containingType: "BigInt"
+                name: "someUserOp",
+                containingType: "BigInt",
+                lhsType: "BigInt",
+                rhsType: "BigInt",
+                returnType: "BigInt"
             )),
             ("fpStorage", binarySummary(
-                name: "add", lhsType: "Double", rhsType: "Double",
-                returnType: "Double", containingType: "Math"
-            ))
+                name: "add",
+                containingType: "Math",
+                lhsType: "Double",
+                rhsType: "Double",
+                returnType: "Double"
+            )),
         ]
     }
 
@@ -102,7 +111,7 @@ struct CommutativityConstraintEquivalenceTests {
             name: "blarp",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Int", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Int", isInout: false),
             ],
             returnTypeText: "Int",
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,
@@ -127,7 +136,7 @@ struct CommutativityConstraintEquivalenceTests {
             name: "+",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "MyInt", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "MyInt", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "MyInt", isInout: false),
             ],
             returnTypeText: "MyInt",
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,
@@ -150,7 +159,7 @@ struct CommutativityConstraintEquivalenceTests {
             name: "add",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "Double", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "Double", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "Double", isInout: false),
             ],
             returnTypeText: "Double",
             isThrows: false, isAsync: false, isMutating: false, isStatic: false,

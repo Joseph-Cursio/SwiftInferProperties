@@ -6,6 +6,26 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// Top-level function declarations, for addressing a probe's subject.
+private final class OwnershipFunctionFinder: SyntaxVisitor {
+    private(set) var found: [FunctionDeclSyntax] = []
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        found.append(node)
+        return .visitChildren
+    }
+}
+
+/// Closure literals, for the asymmetry control.
+private final class OwnershipClosureFinder: SyntaxVisitor {
+    private(set) var found: [ClosureExprSyntax] = []
+
+    override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
+        found.append(node)
+        return .visitChildren
+    }
+}
+
 /// **Phase 0.7 of `docs/plans/declaration-claims-plan.md`: do `consuming` and
 /// `borrowing` carry purity evidence in this analyzer, or is the population zero?**
 ///
@@ -78,7 +98,7 @@ struct OwnershipPremiseCensusMeasuredTests {
             """),
         ("control: plain value param", "func f(_ value: Int) -> Int { value + 1 }"),
         ("control: marker in body", "func f(_ value: Int) -> Int { print(value); return value }"),
-        ("control: force unwrap", "func f(_ value: Int?) -> Int { value! }")
+        ("control: force unwrap", "func f(_ value: Int?) -> Int { value! }"),
     ]
 
     /// **The premise, asserted.** No ownership or `inout` shape may refute — if one
@@ -212,25 +232,5 @@ struct OwnershipPremiseCensusMeasuredTests {
             PurityRefutationCensusMeasuredTests.corpus.count > 2_000,
             "corpus is \(PurityRefutationCensusMeasuredTests.corpus.count) — the population figure has no denominator"
         )
-    }
-}
-
-/// Top-level function declarations, for addressing a probe's subject.
-private final class OwnershipFunctionFinder: SyntaxVisitor {
-    private(set) var found: [FunctionDeclSyntax] = []
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        found.append(node)
-        return .visitChildren
-    }
-}
-
-/// Closure literals, for the asymmetry control.
-private final class OwnershipClosureFinder: SyntaxVisitor {
-    private(set) var found: [ClosureExprSyntax] = []
-
-    override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
-        found.append(node)
-        return .visitChildren
     }
 }

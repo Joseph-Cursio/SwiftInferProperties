@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// The focus set is scoped to the files this run actually scanned.
@@ -49,9 +48,9 @@ struct DiscoverSeedScopeTests {
         let manifest = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 

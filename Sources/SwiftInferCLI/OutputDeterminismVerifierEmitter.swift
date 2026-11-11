@@ -18,6 +18,7 @@ import SwiftInferCore
 /// isn't recordable, or a dependency can't be faked.
 public enum OutputDeterminismVerifierEmitter {
 
+    /// The `outputDeterminism` verifier for `role`, or `nil` if its output or a dependency can't be faked.
     public static func emit(
         role: StatefulRole,
         outputProtocol: ViewModelProtocolScanner.ProtocolDecl,

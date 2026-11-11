@@ -1,7 +1,40 @@
 import Foundation
 import SwiftInferCLI
-import SwiftInferCore
 import Testing
+
+// MARK: - Timing PromptInput
+
+/// `PromptInput` that records the wall-clock time of its first
+/// `readLine()` call and answers `n` (skip) thereafter to drive the
+/// triage loop to completion without writing files.
+private final class TimingPromptInput: PromptInput, @unchecked Sendable {
+
+    private let lock = NSLock()
+    private var firstAt: Date?
+
+    func readLine() -> String? {
+        lock.lock()
+        if firstAt == nil { firstAt = Date() }
+        lock.unlock()
+        return "n"
+    }
+
+    func firstPromptTimestamp() -> Date? {
+        lock.lock()
+        defer { lock.unlock() }
+        return firstAt
+    }
+}
+
+// MARK: - Silent stubs
+
+private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
+    func write(_: String) { /* no-op */ }
+}
+
+private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
 
 /// PRD §13 row 5 — `swift-infer discover --interactive` must
 /// reach the first prompt in < 1s after process start. The row had
@@ -35,9 +68,9 @@ struct InteractiveFirstPromptPerformanceTests {
         let start = Date()
         try SwiftInferCommand.Discover.run(
             directory: target,
+            output: SilentOutput(),
             interactive: true,
             promptInput: prompt,
-            output: SilentOutput(),
             diagnostics: SilentDiagnosticOutput()
         )
         let firstPromptAt = try #require(
@@ -101,38 +134,4 @@ struct InteractiveFirstPromptPerformanceTests {
     private func formatted(_ seconds: Double) -> String {
         String(format: "%.3f", seconds)
     }
-}
-
-// MARK: - Timing PromptInput
-
-/// `PromptInput` that records the wall-clock time of its first
-/// `readLine()` call and answers `n` (skip) thereafter to drive the
-/// triage loop to completion without writing files.
-private final class TimingPromptInput: PromptInput, @unchecked Sendable {
-
-    private let lock = NSLock()
-    private var firstAt: Date?
-
-    func readLine() -> String? {
-        lock.lock()
-        if firstAt == nil { firstAt = Date() }
-        lock.unlock()
-        return "n"
-    }
-
-    func firstPromptTimestamp() -> Date? {
-        lock.lock()
-        defer { lock.unlock() }
-        return firstAt
-    }
-}
-
-// MARK: - Silent stubs
-
-private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_: String) { /* no-op */ }
-}
-
-private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

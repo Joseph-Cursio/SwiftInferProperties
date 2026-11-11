@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCore
 import Testing
 
@@ -36,7 +36,7 @@ struct ResolvedSpellingPropertyTests {
         "CardinalityFieldKind",
         "KindResolver",
         "String",
-        "Wrapper"
+        "Wrapper",
     ]
 
     private static let bareNames = ["Kind", "StoredMember", "Inner", "Wrapper", "Unknown", "String"]
@@ -45,16 +45,16 @@ struct ResolvedSpellingPropertyTests {
     /// dictionary, nested collection, generic.
     private static let shapes = [
         "%@", "%@?", "[%@]", "[%@]?", "[String: %@]", "[[%@]]",
-        "Array<%@>", "Set<%@>", "%@??", "[%@: %@]"
+        "Array<%@>", "Set<%@>", "%@??", "[%@: %@]",
     ]
 
     private static let spellingGen = zip(
-        Gen.element(of: shapes).map { $0! },
-        Gen.element(of: bareNames).map { $0! }
+        Gen.element(of: shapes).compactMap(\.self),
+        Gen.element(of: bareNames).compactMap(\.self)
     ).map { shape, name in shape.replacingOccurrences(of: "%@", with: name) }
 
     private static let enclosingGen = Gen.element(of: ["Outer", "Outer.Inner", "Wrapper", "Elsewhere"])
-        .map { $0! }
+        .compactMap(\.self)
 
     // MARK: - Laws
 
@@ -128,7 +128,8 @@ struct ResolvedSpellingPropertyTests {
     /// the rewriter from both sides: it qualifies what it knows and nothing else.
     @Test("unknown identifiers are left alone")
     func unknownIdentifiersAreUntouched() async {
-        await propertyCheck(input: Gen.element(of: Self.shapes).map { $0! }, Self.enclosingGen) { shape, enclosing in
+        let shapeGen = Gen.element(of: Self.shapes).compactMap(\.self)
+        await propertyCheck(input: shapeGen, Self.enclosingGen) { shape, enclosing in
             let spelling = shape.replacingOccurrences(of: "%@", with: "TotallyExternal")
             #expect(
                 TypeShapeBuilder.resolvedSpelling(
@@ -190,7 +191,7 @@ struct ResolvedSpellingPropertyTests {
             ("[CardinalityFieldKind: Kind]", "[CardinalityFieldKind: Outer.Kind]"),
             ("[Kind: KindResolver]", "[Outer.Kind: KindResolver]"),
             ("Array<KindResolver>?", "Array<KindResolver>?"),
-            ("[Kind]", "[Outer.Kind]")
+            ("[Kind]", "[Outer.Kind]"),
         ]
         for (input, expected) in mixed {
             #expect(
@@ -213,7 +214,7 @@ struct ResolvedSpellingPropertyTests {
         let cases = [
             ("[Outer.Kind: Kind]", "[Outer.Kind: Outer.Kind]"),
             ("[Outer.Inner.Kind]", "[Outer.Inner.Kind]"),
-            ("[String: Outer.StoredMember]", "[String: Outer.StoredMember]")
+            ("[String: Outer.StoredMember]", "[String: Outer.StoredMember]"),
         ]
         for (input, expected) in cases {
             #expect(
@@ -236,7 +237,7 @@ struct ResolvedSpellingPropertyTests {
             ("[StoredMember]?", "[Outer.StoredMember]?"),
             ("[String: Kind]", "[String: Outer.Kind]"),
             ("[[StoredMember]]", "[[Outer.StoredMember]]"),
-            ("Array<Kind>", "Array<Outer.Kind>")
+            ("Array<Kind>", "Array<Outer.Kind>"),
         ]
         for (input, expected) in cases {
             #expect(

@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
@@ -38,7 +37,7 @@ struct InvolutionIdempotenceExclusionTests {
     func contradictedIdempotenceIsRemoved() {
         let input = [
             suggestion(template: "involution", file: "Mesh.swift", line: 10),
-            suggestion(template: "idempotence", file: "Mesh.swift", line: 10)
+            suggestion(template: "idempotence", file: "Mesh.swift", line: 10),
         ]
 
         let kept = TemplateRegistry.applyInvolutionIdempotenceExclusion(to: input)
@@ -50,7 +49,7 @@ struct InvolutionIdempotenceExclusionTests {
     func unrelatedIdempotenceSurvives() {
         let input = [
             suggestion(template: "involution", file: "Mesh.swift", line: 10),
-            suggestion(template: "idempotence", file: "Mesh.swift", line: 99)
+            suggestion(template: "idempotence", file: "Mesh.swift", line: 99),
         ]
 
         let kept = TemplateRegistry.applyInvolutionIdempotenceExclusion(to: input)
@@ -62,7 +61,7 @@ struct InvolutionIdempotenceExclusionTests {
     func sameNameDifferentFileSurvives() {
         let input = [
             suggestion(template: "involution", file: "Mesh.swift", line: 10),
-            suggestion(template: "idempotence", file: "Vertex.swift", line: 10)
+            suggestion(template: "idempotence", file: "Vertex.swift", line: 10),
         ]
 
         let kept = TemplateRegistry.applyInvolutionIdempotenceExclusion(to: input)
@@ -74,7 +73,7 @@ struct InvolutionIdempotenceExclusionTests {
     func involutionIsNeverTheCasualty() {
         let input = [
             suggestion(template: "idempotence", file: "Mesh.swift", line: 10),
-            suggestion(template: "involution", file: "Mesh.swift", line: 10)
+            suggestion(template: "involution", file: "Mesh.swift", line: 10),
         ]
 
         let kept = TemplateRegistry.applyInvolutionIdempotenceExclusion(to: input)
@@ -86,7 +85,7 @@ struct InvolutionIdempotenceExclusionTests {
     func noInvolutionMeansNoChange() {
         let input = [
             suggestion(template: "idempotence", file: "Mesh.swift", line: 10),
-            suggestion(template: "predicate", file: "Mesh.swift", line: 20)
+            suggestion(template: "predicate", file: "Mesh.swift", line: 20),
         ]
 
         let kept = TemplateRegistry.applyInvolutionIdempotenceExclusion(to: input)

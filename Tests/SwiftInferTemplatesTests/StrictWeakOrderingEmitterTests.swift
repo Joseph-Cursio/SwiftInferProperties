@@ -27,7 +27,7 @@ struct StrictWeakOrderingEmitterTests {
         (
             "Gen<Character>.letterOrNumber.string(of: 0...8)",
             "Gen<String?>.element(of: [\"a\", \"b\", \"c\"] as [String]).map { $0! }"
-        )
+        ),
     ])
     func aLeafIsNarrowed(wide: String, dense: String) {
         #expect(LiftedTestEmitter.tieDense(wide) == dense)

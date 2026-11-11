@@ -1,7 +1,6 @@
 import PropertyLawCore
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// `UnequatableResultGate` — a law that compares two RESULTS is not written over a scanned type
@@ -28,7 +27,7 @@ struct UnequatableResultGateTests {
         )
     }
 
-    static func reason(_ result: String, owner: String? = "Fixer", in scan: Scan) -> String? {
+    static func reason(_ result: String, in scan: Scan, owner: String? = "Fixer") -> String? {
         UnequatableResultGate.declineReason(
             display: "fix(_:)",
             returnTypeText: result,
@@ -66,13 +65,13 @@ struct UnequatableResultGateTests {
     /// `Inner` written inside `Outer` is `Outer.Inner` in the scan's keys.
     @Test func aBareNestedSpellingIsResolvedThroughTheUniverse() throws {
         let scan = Self.scan(["Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}"])
-        let reason = try #require(Self.reason("[Inner]", owner: "Outer", in: scan))
+        let reason = try #require(Self.reason("[Inner]", in: scan, owner: "Outer"))
         #expect(reason.contains("makes Outer.Inner Equatable"))
     }
 
     @Test func selfIsJudgedAsTheOwner() throws {
         let scan = Self.scan(["Counter.swift": "struct Counter { var count: Int }"])
-        let reason = try #require(Self.reason("Self?", owner: "Counter", in: scan))
+        let reason = try #require(Self.reason("Self?", in: scan, owner: "Counter"))
         #expect(reason.contains("returns Self?"))
         #expect(reason.contains("makes Counter Equatable"))
     }
@@ -82,7 +81,7 @@ struct UnequatableResultGateTests {
     @Test func aConformanceDeclaredInAnotherFileCounts() {
         let scan = Self.scan([
             "FixResult.swift": "struct FixResult { let text: String }",
-            "FixResult+Equatable.swift": "extension FixResult: Equatable {}"
+            "FixResult+Equatable.swift": "extension FixResult: Equatable {}",
         ])
         #expect(scan.shapes["FixResult"]?.inheritedTypes.isEmpty == true, "the shape alone cannot see it")
         #expect(Self.reason("FixResult", in: scan) == nil)
@@ -103,21 +102,21 @@ struct UnequatableResultGateTests {
     @Test func aConformanceRecordedUnderTheBareNestedNameCounts() {
         let scan = Self.scan([
             "Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}",
-            "Inner+Equatable.swift": "typealias Inner = Outer.Inner\nextension Inner: Equatable {}"
+            "Inner+Equatable.swift": "typealias Inner = Outer.Inner\nextension Inner: Equatable {}",
         ])
         #expect(scan.inherited["Inner"]?.contains("Equatable") == true)
         #expect(scan.inherited["Outer.Inner"] == nil)
-        #expect(Self.reason("Inner", owner: "Outer", in: scan) == nil)
+        #expect(Self.reason("Inner", in: scan, owner: "Outer") == nil)
     }
 
     /// The qualified extension needs no bare read: the index records it under `Outer.Inner`.
     @Test func aConformanceOnTheQualifiedExtensionCounts() {
         let scan = Self.scan([
             "Outer.swift": "struct Outer {\n    struct Inner { let x: Int }\n}",
-            "Inner+Equatable.swift": "extension Outer.Inner: Equatable {}"
+            "Inner+Equatable.swift": "extension Outer.Inner: Equatable {}",
         ])
         #expect(scan.inherited["Outer.Inner"]?.contains("Equatable") == true)
-        #expect(Self.reason("[Inner]", owner: "Outer", in: scan) == nil)
+        #expect(Self.reason("[Inner]", in: scan, owner: "Outer") == nil)
     }
 
     /// Swift synthesises `Equatable` for an enum without payloads; no declaration says so.
@@ -131,7 +130,7 @@ struct UnequatableResultGateTests {
         "struct Result: AdditiveArithmetic { var cents: Int }",
         "final class Result: NSObject {}",
         "protocol Amount: AdditiveArithmetic {}\nstruct Result: Amount { var cents: Int }",
-        "struct Result: Hashable & Codable { let raw: Int }"
+        "struct Result: Hashable & Codable { let raw: Int }",
     ])
     func aChainLeavingTheScanIsNotDeclined(source: String) {
         let scan = Self.scan(["Result.swift": source])
@@ -143,7 +142,7 @@ struct UnequatableResultGateTests {
     @Test("a chain of known non-Equatable names still declines", arguments: [
         "struct Result: Sendable, Codable { let raw: Int }",
         "class Base {}\nfinal class Result: Base {}",
-        "protocol Labelled: CustomStringConvertible {}\nstruct Result: Labelled { var description: String }"
+        "protocol Labelled: CustomStringConvertible {}\nstruct Result: Labelled { var description: String }",
     ])
     func aChainOfKnownNamesDeclines(source: String) {
         let scan = Self.scan(["Result.swift": source])

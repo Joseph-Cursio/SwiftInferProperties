@@ -1,5 +1,3 @@
-import Foundation
-
 /// Every key a seed carries — the coding keys for `SeedManifest.Seed`, and the **one** place this
 /// build's read-field set is written down.
 ///
@@ -29,40 +27,6 @@ public enum ManifestField: String, CodingKey, CaseIterable {
     case version
     case seeds
     case skippedPackages
-}
-
-public enum SeedField: String, CodingKey, CaseIterable {
-    case file
-    case line
-    case symbol
-    case rule
-    case kind
-    case role
-    case restriction
-    case effect
-    case requires
-    case mutates
-}
-
-extension SeedManifest.Seed {
-
-    /// Written out rather than synthesised — see `SeedField`. Optionals use `encodeIfPresent`, so a
-    /// seed with no role is byte-identical to one written before that field existed, which is the
-    /// property the producer maintains on its side and the reason no version bump accompanied
-    /// `role`, `restriction` or `effect`.
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: SeedField.self)
-        try container.encode(file, forKey: .file)
-        try container.encode(line, forKey: .line)
-        try container.encode(symbol, forKey: .symbol)
-        try container.encode(rule, forKey: .rule)
-        try container.encode(kind, forKey: .kind)
-        try container.encodeIfPresent(role, forKey: .role)
-        try container.encodeIfPresent(restriction, forKey: .restriction)
-        try container.encodeIfPresent(effect, forKey: .effect)
-        try container.encodeIfPresent(requires, forKey: .requires)
-        try container.encodeIfPresent(mutates, forKey: .mutates)
-    }
 }
 
 /// Which manifest fields this build reads — the consumer half of the schema contract.
@@ -101,7 +65,7 @@ public enum SeedFieldParity {
     public static var knownNestedFields: [String: Set<String>] {
         [
             SeedField.effect.stringValue: Set(SeedEffectField.allCases.map(\.stringValue)),
-            SeedField.requires.stringValue: Set(SeedRequirementField.allCases.map(\.stringValue))
+            SeedField.requires.stringValue: Set(SeedRequirementField.allCases.map(\.stringValue)),
         ]
     }
 
@@ -112,5 +76,39 @@ public enum SeedFieldParity {
     public static func unreadFields(under holder: String, emitted: Set<String>) -> Set<String> {
         guard let known = knownNestedFields[holder] else { return [] }
         return emitted.subtracting(known)
+    }
+}
+
+public enum SeedField: String, CodingKey, CaseIterable {
+    case file
+    case line
+    case symbol
+    case rule
+    case kind
+    case role
+    case restriction
+    case effect
+    case requires
+    case mutates
+}
+
+public extension SeedManifest.Seed {
+
+    /// Written out rather than synthesised — see `SeedField`. Optionals use `encodeIfPresent`, so a
+    /// seed with no role is byte-identical to one written before that field existed, which is the
+    /// property the producer maintains on its side and the reason no version bump accompanied
+    /// `role`, `restriction` or `effect`.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: SeedField.self)
+        try container.encode(file, forKey: .file)
+        try container.encode(line, forKey: .line)
+        try container.encode(symbol, forKey: .symbol)
+        try container.encode(rule, forKey: .rule)
+        try container.encode(kind, forKey: .kind)
+        try container.encodeIfPresent(role, forKey: .role)
+        try container.encodeIfPresent(restriction, forKey: .restriction)
+        try container.encodeIfPresent(effect, forKey: .effect)
+        try container.encodeIfPresent(requires, forKey: .requires)
+        try container.encodeIfPresent(mutates, forKey: .mutates)
     }
 }

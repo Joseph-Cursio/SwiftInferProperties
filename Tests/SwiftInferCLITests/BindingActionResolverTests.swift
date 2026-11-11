@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -39,12 +38,12 @@ struct BindingActionResolverTests {
         let reducer = candidate(
             cases: [
                 ActionCaseInfo(name: "submitTapped"),
-                ActionCaseInfo(name: "binding", payloadTypes: ["BindingAction<State>"])
+                ActionCaseInfo(name: "binding", payloadTypes: ["BindingAction<State>"]),
             ],
             fields: [
                 StateFieldInfo(name: "text", typeName: "String"),
                 StateFieldInfo(name: "flag", typeName: "Bool"),
-                StateFieldInfo(name: "count", typeName: "Int")
+                StateFieldInfo(name: "count", typeName: "Int"),
             ]
         )
         let enriched = BindingActionResolver.resolve(reducer)
@@ -66,7 +65,7 @@ struct BindingActionResolverTests {
                 StateFieldInfo(name: "focus", typeName: "Field?"),
                 StateFieldInfo(name: "tags", typeName: "[String]"),
                 // A non-Optional custom struct still gates (no canned literal).
-                StateFieldInfo(name: "syncUp", typeName: "SyncUp")
+                StateFieldInfo(name: "syncUp", typeName: "SyncUp"),
             ]
         ))
         #expect(enriched.actionCases[0].resolvedBinding?.map(\.fieldName) == ["text", "focus", "tags"])

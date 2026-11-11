@@ -13,11 +13,11 @@ struct LiftedConformanceEmitterTests {
             whySuggested: [
                 "merge(_:_:) (Money, Money) -> Money — Sources/Money.swift:14",
                 "Type-symmetry signature: (T, T) -> T (T = Money) (+30)",
-                "Curated commutativity verb match: 'merge' (+40)"
+                "Curated commutativity verb match: 'merge' (+40)",
             ],
             whyMightBeWrong: [
                 "User-supplied combine witness must satisfy associativity.",
-                "SwiftInfer does not run the laws — `swift package protolawcheck` does."
+                "SwiftInfer does not run the laws — `swift package protolawcheck` does.",
             ]
         )
         let source = LiftedConformanceEmitter.semigroup(
@@ -68,11 +68,11 @@ struct LiftedConformanceEmitterTests {
         let explainability = ExplainabilityBlock(
             whySuggested: [
                 "merge(_:_:) (Tally, Tally) -> Tally — Sources/Tally.swift:8",
-                "Identity element: Tally.empty (+30)"
+                "Identity element: Tally.empty (+30)",
             ],
             whyMightBeWrong: [
                 "Identity element must satisfy `combine(a, .empty) == a == combine(.empty, a)`.",
-                "SwiftInfer does not verify the law — apply the conformance and run the kit's check."
+                "SwiftInfer does not verify the law — apply the conformance and run the kit's check.",
             ]
         )
         let source = LiftedConformanceEmitter.monoid(

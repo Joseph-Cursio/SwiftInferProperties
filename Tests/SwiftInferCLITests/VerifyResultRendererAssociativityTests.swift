@@ -31,9 +31,7 @@ struct VerifyResultRendererAssociativityTests {
                 trial: 0,
                 input: "(5, 2, 3)",
                 forwardResult: "6",
-                inverseResult: "-4",
-                shrunk: nil,
-                shrinkSteps: 0
+                inverseResult: "-4"
             ),
             context: Self.intContext
         )

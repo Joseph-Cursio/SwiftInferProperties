@@ -4,7 +4,7 @@ import Testing
 @Suite("AssertAfterDoubleApplyDetector — explicit + collapsed idempotence (M2.1)")
 struct AssertAfterDoubleApplyDetectorTests {
 
-    private static func detect(in source: String) -> [DetectedIdempotence] {
+    static func detect(in source: String) -> [DetectedIdempotence] {
         let slice = SlicerTestHelper.sliceFirstBody(in: source)
         return AssertAfterDoubleApplyDetector.detect(in: slice)
     }

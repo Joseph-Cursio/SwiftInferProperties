@@ -11,7 +11,7 @@ import Testing
 @Suite("InteractionInvariantBridge — V2.0 M9 aggregator")
 struct InteractionInvariantBridgeTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-15T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_778_846_400) // 2026-05-15T12:00:00Z
 
     private func suggestion(
         family: InteractionInvariantFamily,
@@ -46,7 +46,7 @@ struct InteractionInvariantBridgeTests {
     func belowThresholdNoBridge() {
         let suggestions = [
             suggestion(family: .cardinality, reducerQualifiedName: "Inbox.body", predicate: "p1"),
-            suggestion(family: .conservation, reducerQualifiedName: "Inbox.body", predicate: "p2")
+            suggestion(family: .conservation, reducerQualifiedName: "Inbox.body", predicate: "p2"),
         ]
         let bridges = InteractionInvariantBridge.bridges(from: suggestions, now: now)
         #expect(bridges.isEmpty)
@@ -57,7 +57,7 @@ struct InteractionInvariantBridgeTests {
         let suggestions = [
             suggestion(family: .cardinality, reducerQualifiedName: "Inbox.body", predicate: "p1"),
             suggestion(family: .conservation, reducerQualifiedName: "Inbox.body", predicate: "p2"),
-            suggestion(family: .biconditional, reducerQualifiedName: "Inbox.body", predicate: "p3")
+            suggestion(family: .biconditional, reducerQualifiedName: "Inbox.body", predicate: "p3"),
         ]
         let bridges = InteractionInvariantBridge.bridges(from: suggestions, now: now)
         #expect(bridges.count == 1)
@@ -75,7 +75,7 @@ struct InteractionInvariantBridgeTests {
                 reducerQualifiedName: "Inbox.body",
                 predicate: "p3",
                 tier: .possible
-            )
+            ),
         ]
         let bridges = InteractionInvariantBridge.bridges(from: suggestions, now: now)
         #expect(bridges.isEmpty)
@@ -91,7 +91,7 @@ struct InteractionInvariantBridgeTests {
                 reducerQualifiedName: "Inbox.body",
                 predicate: "p3",
                 tier: .verified
-            )
+            ),
         ]
         let bridges = InteractionInvariantBridge.bridges(from: suggestions, now: now)
         #expect(bridges.count == 1)
@@ -120,7 +120,7 @@ struct InteractionInvariantBridgeTests {
         let suggestions = [
             suggestion(family: .conservation, reducerQualifiedName: "Inbox.body", predicate: "c1"),
             suggestion(family: .biconditional, reducerQualifiedName: "Inbox.body", predicate: "b1"),
-            suggestion(family: .cardinality, reducerQualifiedName: "Inbox.body", predicate: "card1")
+            suggestion(family: .cardinality, reducerQualifiedName: "Inbox.body", predicate: "card1"),
         ]
         let bridges = InteractionInvariantBridge.bridges(from: suggestions, now: now)
         #expect(bridges.count == 1)
@@ -136,7 +136,7 @@ struct InteractionInvariantBridgeTests {
             suggestion(family: .cardinality, reducerQualifiedName: "Inbox.body", predicate: "i1"),
             suggestion(family: .conservation, reducerQualifiedName: "Inbox.body", predicate: "i2"),
             // Settings has only 1 Strong invariant → below threshold
-            suggestion(family: .cardinality, reducerQualifiedName: "Settings.body", predicate: "s1")
+            suggestion(family: .cardinality, reducerQualifiedName: "Settings.body", predicate: "s1"),
         ]
         let bridges = InteractionInvariantBridge.bridges(from: suggestions, now: now)
         // Inbox has 2 strong; threshold is 3 → no bridge.
@@ -150,7 +150,7 @@ struct InteractionInvariantBridgeTests {
         for family in [
             InteractionInvariantFamily.cardinality,
             .conservation,
-            .biconditional
+            .biconditional,
         ] {
             suggestions.append(suggestion(
                 family: family,
@@ -177,7 +177,7 @@ struct InteractionInvariantBridgeTests {
         let suggestions = [
             suggestion(family: .cardinality, reducerQualifiedName: "Inbox.body", predicate: "p1"),
             suggestion(family: .conservation, reducerQualifiedName: "Inbox.body", predicate: "p2"),
-            suggestion(family: .biconditional, reducerQualifiedName: "Inbox.body", predicate: "p3")
+            suggestion(family: .biconditional, reducerQualifiedName: "Inbox.body", predicate: "p3"),
         ]
         let first = InteractionInvariantBridge.bridges(from: suggestions, now: now)
         let second = InteractionInvariantBridge.bridges(from: suggestions, now: now)
@@ -189,7 +189,7 @@ struct InteractionInvariantBridgeTests {
         let base = [
             suggestion(family: .cardinality, reducerQualifiedName: "Inbox.body", predicate: "p1"),
             suggestion(family: .conservation, reducerQualifiedName: "Inbox.body", predicate: "p2"),
-            suggestion(family: .biconditional, reducerQualifiedName: "Inbox.body", predicate: "p3")
+            suggestion(family: .biconditional, reducerQualifiedName: "Inbox.body", predicate: "p3"),
         ]
         let reordered = Array(base.reversed())
         let baseBridge = InteractionInvariantBridge.bridges(from: base, now: now).first

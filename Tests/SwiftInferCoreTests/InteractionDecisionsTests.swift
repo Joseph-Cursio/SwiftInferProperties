@@ -8,8 +8,8 @@ import Testing
 @Suite("InteractionDecisions — V2.0 accept-flow data model")
 struct InteractionDecisionsTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-15T12:00:00Z")!
-    private let later = ISO8601DateFormatter().date(from: "2026-05-15T13:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_778_846_400) // 2026-05-15T12:00:00Z
+    private let later = Date(timeIntervalSince1970: 1_778_850_000) // 2026-05-15T13:00:00Z
 
     private func record(
         identity: String = "DEADBEEFCAFEFACE",
@@ -78,7 +78,7 @@ struct InteractionDecisionsTests {
         let decisions = InteractionDecisions(records: [
             record(identity: "AAAAAAAAAAAAAAAA"),
             record(identity: "BBBBBBBBBBBBBBBB", decision: .rejected),
-            record(identity: "CCCCCCCCCCCCCCCC", decision: .acceptedAsConformance)
+            record(identity: "CCCCCCCCCCCCCCCC", decision: .acceptedAsConformance),
         ])
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

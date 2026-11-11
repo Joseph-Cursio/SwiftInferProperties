@@ -39,7 +39,7 @@ struct DocstringAdvisorTests {
     @Test("a cue inside a longer word is not a cue", arguments: [
         "The shortest hop distance, or nil when it reaches none.",
         "Shown whenever the message is set.",
-        "It swaps the selected element, which reorders the tail."
+        "It swaps the selected element, which reorders the tail.",
     ])
     func aSubstringMatchIsNotAContract(doc: String) {
         #expect(DocstringAdvisor.isContract(doc) == false)
@@ -59,7 +59,7 @@ struct DocstringAdvisorTests {
         "The function called after visiting ``ReturnStmtSyntax`` and its descendants.",
         "The function called after visiting ``YieldStmtSyntax`` and its descendants.",
         "Configuration specific to the ``ConvertService``.",
-        "Use this when the call point allows the use of ``URL/ParseStrategy``."
+        "Use this when the call point allows the use of ``URL/ParseStrategy``.",
     ])
     func aCueInsideADocCLinkIsNotACue(doc: String) {
         #expect(DocstringAdvisor.isContract(doc) == false)
@@ -83,7 +83,7 @@ struct DocstringAdvisorTests {
         "Strip a single generic-parameter list from a textual type name.",
         "Splits a camelCase name into its constituent words.",
         "Escape a string for safe inclusion as a Swift string literal.",
-        "Render SVG from a pre-computed sequence layout."
+        "Render SVG from a pre-computed sequence layout.",
     ])
     func transformationVerbsAreContracts(doc: String) {
         #expect(DocstringAdvisor.isContract(doc))
@@ -100,7 +100,7 @@ struct DocstringAdvisorTests {
     @Test("a ranking is an ordering claim", arguments: [
         "Candidates that would change code, ranked by impact (files, then findings).",
         "The magnitude this report ranks by.",
-        "The top-ranked skill match for the request, or nil if none matched."
+        "The top-ranked skill match for the request, or nil if none matched.",
     ])
     func rankingIsAContract(doc: String) {
         #expect(DocstringAdvisor.isContract(doc))
@@ -112,7 +112,7 @@ struct DocstringAdvisorTests {
     @Test("the noun and the adjective are not ordering claims", arguments: [
         "The rank of this dashboard.",
         "A convenience helper used by the ranking loop.",
-        "Trust weight for post-search re-ranking (higher = more trusted)."
+        "Trust weight for post-search re-ranking (higher = more trusted).",
     ])
     func rankAsNounOrAdjectiveIsNotAContract(doc: String) {
         #expect(DocstringAdvisor.isContract(doc) == false)

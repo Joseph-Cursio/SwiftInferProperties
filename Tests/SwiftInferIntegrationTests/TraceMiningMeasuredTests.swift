@@ -41,8 +41,8 @@ struct TraceMiningMeasuredTests {
         // seeded from a self-contained `TestStore(initialState:)` (Slice 3c).
         let seeded = try VerifyInteractionPipeline.resolveEmitAndSeed(
             target: "TraceMiningCorpus",
-            pinRaw: "TraceFeature.body",
-            workingDirectory: root
+            workingDirectory: root,
+            pinRaw: "TraceFeature.body"
         )
         #expect(seeded.seedTraceCount == 1)
         #expect(seeded.stubSource.contains("(TraceFeature.State(), [.adjust(0), .reset]),"))

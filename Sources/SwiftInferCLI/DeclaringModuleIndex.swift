@@ -14,16 +14,6 @@ import Foundation
 /// name", and an ambiguous answer (two modules) is never used.
 enum DeclaringModuleIndex {
 
-    static func index(root: URL) -> [String: Set<String>] {
-        var modules: [String: Set<String>] = [:]
-        for (module, text) in sourceFiles(under: root) {
-            for name in declaredNames(in: text) {
-                modules[name, default: []].insert(module)
-            }
-        }
-        return modules
-    }
-
     /// Every Swift file under a `Sources/<Module>/` directory beneath `root`, with its module —
     /// skipping build products, checkouts, tests and generated stubs.
     static func sourceFiles(under root: URL) -> [(module: String, text: String)] {

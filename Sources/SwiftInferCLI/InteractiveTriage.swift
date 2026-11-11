@@ -1,7 +1,5 @@
 import Foundation
-import PropertyLawCore
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// `swift-infer discover --interactive` triage orchestrator (M6.4 +
 /// M7.5 RefactorBridge extension). Walks each surviving suggestion,
@@ -63,6 +61,7 @@ public enum InteractiveTriage {
         var conformanceWrittenForTypes: Set<String>
     }
 
+    /// Prompts for each suggestion with no decision yet; returns the updated decisions and files written.
     public static func run(
         suggestions: [Suggestion],
         existingDecisions: Decisions,

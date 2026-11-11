@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCore
 import Testing
 
@@ -23,10 +23,10 @@ struct SurveyedIdempotencePropertyTests {
 
     private static let identifiers = [
         "Complex<Double>", "Array<Int>", "Foo", "", "T",
-        "exp(_:)", "merge(_:)", "isLoading", "hasShownAlert", "Optional<Int>?", "String?"
+        "exp(_:)", "merge(_:)", "isLoading", "hasShownAlert", "Optional<Int>?", "String?",
     ]
 
-    private static let nameGen = Gen.element(of: identifiers).map { $0! }
+    private static let nameGen = Gen.element(of: identifiers).compactMap(\.self)
 
     // MARK: - The laws that genuinely hold
 
@@ -71,7 +71,7 @@ struct SurveyedIdempotencePropertyTests {
     @Test("ViewModelNameHeuristics.stripOptional is idempotent")
     func stripOptionalIsIdempotent() async {
         let optionals = Self.identifiers + ["Int??", "String!", "Foo?!", "Bar!!"]
-        await propertyCheck(input: Gen.element(of: optionals).map { $0! }) { type in
+        await propertyCheck(input: Gen.element(of: optionals).compactMap(\.self)) { type in
             let once = ViewModelNameHeuristics.stripOptional(type)
             #expect(ViewModelNameHeuristics.stripOptional(once) == once)
             #expect(!once.hasSuffix("?") && !once.hasSuffix("!"))
@@ -90,17 +90,17 @@ struct SurveyedIdempotencePropertyTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: "idempotence",
-            typeName: "Foo",
             score: score,
             tier: score >= 70 ? "Strong" : "Likely",
             primaryFunctionName: "normalize(_:)",
             location: "/Module.swift:1",
             firstSeenAt: firstSeen,
-            lastSeenAt: "2026-08-08T00:00:00Z"
+            lastSeenAt: "2026-08-08T00:00:00Z",
+            typeName: "Foo"
         )
     }
 
-    private static let scoreGen = Gen.element(of: [20, 35, 50, 70, 90]).map { $0! }
+    private static let scoreGen = Gen.element(of: [20, 35, 50, 70, 90]).compactMap(\.self)
 
     @Test("SemanticIndexEntry.updated(from:) is idempotent")
     func semanticEntryUpdateIsIdempotent() async {

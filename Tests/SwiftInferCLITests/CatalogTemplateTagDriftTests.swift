@@ -1,5 +1,4 @@
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// **The drift guard the catalog's own doc claimed it already had.**
@@ -85,7 +84,7 @@ struct CatalogTemplateTagDriftTests {
             "Same as the `Optional` row above.",
         "Optional|monad right identity":
             "`flatMap` monad laws have no template. Identity ships; the monad laws need "
-            + "a generated function returning the carrier."
+            + "a generated function returning the carrier.",
     ]
 
     private static func key(_ entry: CuratedEntry) -> String { "\(entry.type)|\(entry.structure)" }
@@ -147,7 +146,7 @@ struct CatalogTemplateTagDriftTests {
     static let tagsInUse: Set<String> = [
         "associativity", "binary-idempotence", "commutativity", "ended-access-round-trip",
         "functor-identity", "homomorphism", "idempotence", "identity-element",
-        "involution", "multiplicative-homomorphism", "round-trip"
+        "involution", "multiplicative-homomorphism", "round-trip",
     ]
 
     @Test("Tags are drawn from a pinned set — a typo would never fire")

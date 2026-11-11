@@ -58,7 +58,7 @@ struct ParsePrintInverseNameTests {
             ("parse", "unparse"),
             ("parse", "render"),
             ("parse", "description"),
-            ("tokenize", "join")
+            ("tokenize", "join"),
         ] {
             let suggestion = try #require(
                 RoundTripTemplate.suggest(for: pair(forward, reverse)),

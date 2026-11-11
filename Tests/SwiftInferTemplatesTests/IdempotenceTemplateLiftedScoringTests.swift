@@ -16,7 +16,7 @@ struct IdempotenceTemplateLiftedScoringTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 
@@ -43,25 +43,25 @@ struct IdempotenceTemplateLiftedScoringTests {
     private func liftedNoParam(
         _ name: String = "removeAll",
         carrier: String = "Bag"
-    ) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    ) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             mutator(name, carrier: carrier),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     private func liftedParamMatchesCarrier(
         _ name: String = "formUnion",
         carrier: String = "Bag"
-    ) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    ) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             mutator(
                 name,
                 params: [Parameter(label: nil, internalName: "p0", typeText: carrier, isInout: false)],
                 carrier: carrier
             ),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     // MARK: - Score signals
@@ -82,8 +82,8 @@ struct IdempotenceTemplateLiftedScoringTests {
         let vocab = Vocabulary(idempotenceVerbs: ["sanitizeXML"])
         let suggestion = try #require(IdempotenceTemplate.suggest(
             forLifted: liftedNoParam("sanitizeXML"),
-            vocabulary: vocab,
-            carrierKindResolver: valueSemanticResolver()
+            carrierKindResolver: valueSemanticResolver(),
+            vocabulary: vocab
         ))
         #expect(suggestion.score.total == 85)
     }
@@ -140,7 +140,7 @@ struct IdempotenceTemplateLiftedScoringTests {
     // MARK: - Vetoes
 
     @Test("Non-deterministic body in original mutating method vetoes")
-    func nonDeterministicVetoes() {
+    func nonDeterministicVetoes() throws {
         let resolver = valueSemanticResolver()
         let summaryWithVeto = mutator(
             "removeAll",
@@ -150,7 +150,7 @@ struct IdempotenceTemplateLiftedScoringTests {
                 nonDeterministicAPIsDetected: ["Date.init"]
             )
         )
-        let lifted = LiftedTransformation.lift(summaryWithVeto, carrierKindResolver: resolver)!
+        let lifted = try #require(LiftedTransformation.lift(summaryWithVeto, carrierKindResolver: resolver))
         #expect(IdempotenceTemplate.suggest(
             forLifted: lifted,
             carrierKindResolver: resolver
@@ -158,7 +158,7 @@ struct IdempotenceTemplateLiftedScoringTests {
     }
 
     @Test("SetAlgebra-conforming carrier with formUnion lift is vetoed by protocol coverage")
-    func setAlgebraCarrierVetoes() {
+    func setAlgebraCarrierVetoes() throws {
         let setAlgebraDecl = TypeDecl(
             name: "Bag",
             kind: .struct,
@@ -168,19 +168,19 @@ struct IdempotenceTemplateLiftedScoringTests {
         )
         let resolver = CarrierKindResolver(typeDecls: [setAlgebraDecl])
         let inheritedTypesByName = ProtocolCoverageMap.inheritedTypesIndex(from: [setAlgebraDecl])
-        let lifted = LiftedTransformation.lift(
+        let lifted = try #require(LiftedTransformation.lift(
             mutator(
                 "formUnion",
                 params: [Parameter(label: nil, internalName: "p0", typeText: "Bag", isInout: false)]
             ),
             carrierKindResolver: resolver
-        )!
+        ))
         // SetAlgebra-shape veto fires because `formUnion` is in
         // SetAlgebraShape.binaryOps + carrier conforms to SetAlgebra.
         #expect(IdempotenceTemplate.suggest(
             forLifted: lifted,
-            inheritedTypesByName: inheritedTypesByName,
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            inheritedTypesByName: inheritedTypesByName
         ) == nil)
     }
 

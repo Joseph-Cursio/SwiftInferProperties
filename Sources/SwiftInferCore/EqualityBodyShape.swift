@@ -1,74 +1,5 @@
 import SwiftSyntax
 
-/// What a hand-written `static func == ` actually *does*, read off its body.
-///
-/// ## Why this is the signal worth having
-///
-/// `fixtures/equatable-signal/README.md` set out to test whether an `Equatable`
-/// conformance justifies a property test, and its measured conclusion names this
-/// exact thing as the replacement: *"conformance does not predict refutability. What
-/// predicts it is the **shape of the `==` body**, which is also syntactic and also
-/// cheap."* Nothing read the body until now — `SequenceViewModelLawTemplate` shipped
-/// using "declares a custom `==`" as a proxy for it, with the residual hazard written
-/// into a caveat that asked the reader to go open the body themselves.
-///
-/// ## The three shapes, and the real bodies that define them
-///
-/// Taken from swift-collections, which is where the fixture's three measured
-/// projection bugs live:
-///
-/// - **`Deque`** — a count guard, a referential fast path, then
-///   `return left.elementsEqual(right)`. The result expression **is** the
-///   sequence comparison, so a law of the form `(a == b) == a.elementsEqual(b)`
-///   restates it and cannot fail on it.
-/// - **`BitArray`** — `guard left._count == right._count else { return false }`
-///   then `return left._storage == right._storage`. A **projection** onto two
-///   stored fields, and the fixture's headline case: correct only while an
-///   invariant `==` does not itself enforce keeps holding.
-/// - **`OrderedSet`** — `left._elements == right._elements`. A projection onto one.
-///
-/// The guard's fields count toward the projection, because the answer genuinely
-/// depends on them — `BitArray` reads `_count` and `_storage`, and reporting only
-/// the latter would misdescribe what equality means for that type.
-public enum EqualityBodyShape: Sendable, Equatable {
-
-    /// The result expression is the element-wise sequence comparison —
-    /// `left.elementsEqual(right)`, or `Array(left) == Array(right)`.
-    ///
-    /// Consumers stating a law *about* the sequence view must treat this as a
-    /// refutability problem: the law reduces to `X == X` on everything but the
-    /// guards.
-    case sequenceComparison(callee: String)
-
-    /// The result compares a subset of stored members — `lhs.a == rhs.a && …`.
-    /// Member names in source order, deduplicated, guards included.
-    ///
-    /// **This is the refutable shape**, and the one three real bugs were found in.
-    /// A projection is still an equivalence relation however wrong it is, so the
-    /// `Equatable` laws pass and only a model law can see the defect.
-    case storedFieldProjection(members: [String])
-
-    /// The result compares two values through the same conversion —
-    /// `Set(left) == Set(right)`. Every bit of information the conversion discards
-    /// is information `==` has stopped distinguishing, which is exactly the
-    /// fixture's `UnorderedMutantSet`.
-    case conversionComparison(via: String)
-
-    /// A body this classifier does not model. Never evidence for anything.
-    case unclassified
-
-    /// Conversions that preserve the element sequence, so `Array(a) == Array(b)` is
-    /// the sequence comparison rather than a lossy conversion.
-    static let sequencePreservingConversions: Set<String> = [
-        "Array", "ContiguousArray", "ArraySlice"
-    ]
-
-    /// Sequence-comparison callees. Deliberately tiny: each is a stdlib method whose
-    /// documented meaning is element-wise ordered comparison, so no type can
-    /// reinterpret it. `starts(with:)` is absent on purpose — it is a prefix test.
-    static let sequenceComparisonCallees: Set<String> = ["elementsEqual"]
-}
-
 /// Classifies an `==` body. Pure syntax, no semantic resolution.
 public enum EqualityBodyClassifier {
 
@@ -392,4 +323,73 @@ public enum EqualityBodyClassifier {
         var seen: Set<String> = []
         return names.filter { seen.insert($0).inserted }
     }
+}
+
+/// What a hand-written `static func == ` actually *does*, read off its body.
+///
+/// ## Why this is the signal worth having
+///
+/// `fixtures/equatable-signal/README.md` set out to test whether an `Equatable`
+/// conformance justifies a property test, and its measured conclusion names this
+/// exact thing as the replacement: *"conformance does not predict refutability. What
+/// predicts it is the **shape of the `==` body**, which is also syntactic and also
+/// cheap."* Nothing read the body until now — `SequenceViewModelLawTemplate` shipped
+/// using "declares a custom `==`" as a proxy for it, with the residual hazard written
+/// into a caveat that asked the reader to go open the body themselves.
+///
+/// ## The three shapes, and the real bodies that define them
+///
+/// Taken from swift-collections, which is where the fixture's three measured
+/// projection bugs live:
+///
+/// - **`Deque`** — a count guard, a referential fast path, then
+///   `return left.elementsEqual(right)`. The result expression **is** the
+///   sequence comparison, so a law of the form `(a == b) == a.elementsEqual(b)`
+///   restates it and cannot fail on it.
+/// - **`BitArray`** — `guard left._count == right._count else { return false }`
+///   then `return left._storage == right._storage`. A **projection** onto two
+///   stored fields, and the fixture's headline case: correct only while an
+///   invariant `==` does not itself enforce keeps holding.
+/// - **`OrderedSet`** — `left._elements == right._elements`. A projection onto one.
+///
+/// The guard's fields count toward the projection, because the answer genuinely
+/// depends on them — `BitArray` reads `_count` and `_storage`, and reporting only
+/// the latter would misdescribe what equality means for that type.
+public enum EqualityBodyShape: Sendable, Equatable {
+
+    /// The result expression is the element-wise sequence comparison —
+    /// `left.elementsEqual(right)`, or `Array(left) == Array(right)`.
+    ///
+    /// Consumers stating a law *about* the sequence view must treat this as a
+    /// refutability problem: the law reduces to `X == X` on everything but the
+    /// guards.
+    case sequenceComparison(callee: String)
+
+    /// The result compares a subset of stored members — `lhs.a == rhs.a && …`.
+    /// Member names in source order, deduplicated, guards included.
+    ///
+    /// **This is the refutable shape**, and the one three real bugs were found in.
+    /// A projection is still an equivalence relation however wrong it is, so the
+    /// `Equatable` laws pass and only a model law can see the defect.
+    case storedFieldProjection(members: [String])
+
+    /// The result compares two values through the same conversion —
+    /// `Set(left) == Set(right)`. Every bit of information the conversion discards
+    /// is information `==` has stopped distinguishing, which is exactly the
+    /// fixture's `UnorderedMutantSet`.
+    case conversionComparison(via: String)
+
+    /// A body this classifier does not model. Never evidence for anything.
+    case unclassified
+
+    /// Conversions that preserve the element sequence, so `Array(a) == Array(b)` is
+    /// the sequence comparison rather than a lossy conversion.
+    static let sequencePreservingConversions: Set<String> = [
+        "Array", "ContiguousArray", "ArraySlice"
+    ]
+
+    /// Sequence-comparison callees. Deliberately tiny: each is a stdlib method whose
+    /// documented meaning is element-wise ordered comparison, so no type can
+    /// reinterpret it. `starts(with:)` is absent on purpose — it is a prefix test.
+    static let sequenceComparisonCallees: Set<String> = ["elementsEqual"]
 }

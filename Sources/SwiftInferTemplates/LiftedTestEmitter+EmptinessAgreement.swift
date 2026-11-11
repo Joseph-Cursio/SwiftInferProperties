@@ -1,6 +1,6 @@
 import SwiftInferCore
 
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// `value.predicate == (value.measure > 0)` — or `== 0` for an emptiness predicate — over one
     /// value drawn from `carrier.generator`, of type `carrier.typeName`. See
@@ -8,7 +8,7 @@ extension LiftedTestEmitter {
     ///
     /// Both members are read off the same drawn value inside the property closure, hopped onto the
     /// subject's actor when it has one, so a MainActor-default carrier's members are reachable.
-    public static func emptinessAgreement(
+    static func emptinessAgreement(
         predicate: CalleeReference,
         measure: CalleeReference,
         holdsWhenPositive: Bool,

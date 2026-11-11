@@ -1,4 +1,3 @@
-import PropertyLawCore
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -31,13 +30,13 @@ struct DifferentialVerifySupportTests {
         SemanticIndexEntry(
             identityHash: "0xDIFF0001",
             templateName: "differential-equivalence",
-            typeName: carrier,
             score: 80,
             tier: "Strong",
             primaryFunctionName: primary,
             location: "/Module.swift:1",
             firstSeenAt: "2026-08-08T00:00:00Z",
             lastSeenAt: "2026-08-08T00:00:00Z",
+            typeName: carrier,
             secondaryFunctionName: secondary
         )
     }

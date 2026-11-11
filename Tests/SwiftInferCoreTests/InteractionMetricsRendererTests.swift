@@ -8,7 +8,7 @@ import Testing
 @Suite("InteractionMetricsRenderer — V1.102 markdown + plain rendering")
 struct InteractionMetricsRendererTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-17T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_779_019_200) // 2026-05-17T12:00:00Z
 
     private func record(
         identity: String,
@@ -49,7 +49,7 @@ struct InteractionMetricsRendererTests {
         let report = InteractionDecisionsAggregator.aggregate(InteractionDecisions(records: [
             record(identity: "A", family: .cardinality, decision: .accepted),
             record(identity: "B", family: .cardinality, decision: .accepted),
-            record(identity: "C", family: .cardinality, decision: .rejected)
+            record(identity: "C", family: .cardinality, decision: .rejected),
         ]))
         let rendered = InteractionMetricsRenderer.render(
             report,
@@ -80,7 +80,7 @@ struct InteractionMetricsRendererTests {
             record(identity: "B", family: .biconditional, decision: .skipped),
             record(identity: "C", family: .biconditional, decision: .skipped),
             record(identity: "D", family: .biconditional, decision: .skipped),
-            record(identity: "E", family: .biconditional, decision: .skipped)
+            record(identity: "E", family: .biconditional, decision: .skipped),
         ]))
         let rendered = InteractionMetricsRenderer.render(
             report,
@@ -109,7 +109,7 @@ struct InteractionMetricsRendererTests {
         var records = [
             record(identity: "A", family: .biconditional, decision: .skipped),
             record(identity: "B", family: .biconditional, decision: .skipped),
-            record(identity: "C", family: .biconditional, decision: .skipped)
+            record(identity: "C", family: .biconditional, decision: .skipped),
         ]
         for name in ["D", "E", "F", "G", "H", "I", "J"] {
             records.append(record(identity: name, family: .biconditional, decision: .accepted))

@@ -3,6 +3,21 @@ import Testing
 
 @testable import SwiftInferCore
 
+/// A seeded generator, so the shuffles above are the same on every run.
+private struct SplitMix64: RandomNumberGenerator {
+    private var state: UInt64
+
+    init(seed: UInt64) { state = seed }
+
+    mutating func next() -> UInt64 {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var value = state
+        value = (value ^ (value >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        value = (value ^ (value >> 27)) &* 0x94D0_49BB_1331_11EB
+        return value ^ (value >> 31)
+    }
+}
+
 /// **The construction universe's manifest reader and order, held to the cases file both consumers
 /// share.**
 ///
@@ -121,20 +136,5 @@ struct ConstructionUniverseCasesTests {
         #expect(finder != order)
         #expect(caseless != order)
         #expect(perComponent != order)
-    }
-}
-
-/// A seeded generator, so the shuffles above are the same on every run.
-private struct SplitMix64: RandomNumberGenerator {
-    private var state: UInt64
-
-    init(seed: UInt64) { state = seed }
-
-    mutating func next() -> UInt64 {
-        state &+= 0x9E37_79B9_7F4A_7C15
-        var value = state
-        value = (value ^ (value >> 30)) &* 0xBF58_476D_1CE4_E5B9
-        value = (value ^ (value >> 27)) &* 0x94D0_49BB_1331_11EB
-        return value ^ (value >> 31)
     }
 }

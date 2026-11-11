@@ -42,7 +42,7 @@ struct InheritedIsolationPostPassTests {
                     location: SourceLocation(file: "F.swift", line: 4, column: 1),
                     qualifiedTypeName: carrier,
                     globalActor: globalActor
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -119,7 +119,7 @@ struct InheritedIsolationPostPassTests {
             [Self.suggestion(carrier: "EditorPane")],
             typeDecls: [
                 Self.decl("Pane", .protocol, ["View"]),
-                Self.decl("EditorPane", .struct, ["Pane"])
+                Self.decl("EditorPane", .struct, ["Pane"]),
             ]
         )
         #expect(Self.actor(of: result[0]) == "MainActor")
@@ -137,7 +137,7 @@ struct InheritedIsolationPostPassTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("Sources/SwiftInferCLI/Discover+PipelineAssembly.swift")
+            .appendingPathComponent("Sources/SwiftInferCLI/SwiftInferCommand.Discover+PipelineAssembly.swift")
         let source = try String(contentsOf: assembly, encoding: .utf8)
         #expect(source.contains("withInheritedIsolation("))
     }

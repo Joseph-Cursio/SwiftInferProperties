@@ -39,8 +39,8 @@ struct ProtocolPrinterPairingTests {
     }
 
     private func printer(
-        _ name: String = "description",
         on carrier: String,
+        named name: String = "description",
         returns: String = "String"
     ) -> FunctionSummary {
         FunctionSummary(
@@ -100,7 +100,7 @@ struct ProtocolPrinterPairingTests {
         // would pair every `X -> Concrete` against every `Protocol -> X` in the
         // corpus. Scoped to printers, one extra shape is admitted and no more.
         for name in ["render", "serialize", "toString", "text", "formatted"] {
-            let notAPrinter = printer(name, on: "SyntaxProtocol")
+            let notAPrinter = printer(on: "SyntaxProtocol", named: name)
             #expect(
                 FunctionPairing.candidates(
                     in: [parseFn(returns: "SourceFileSyntax"), notAPrinter],
@@ -113,11 +113,11 @@ struct ProtocolPrinterPairingTests {
 
     @Test("isPrinterHalf accepts exactly the two CustomStringConvertible names")
     func printerHalfRecognition() {
-        #expect(FunctionPairing.isPrinterHalf(printer("description", on: "P")))
-        #expect(FunctionPairing.isPrinterHalf(printer("debugDescription", on: "P")))
+        #expect(FunctionPairing.isPrinterHalf(printer(on: "P", named: "description")))
+        #expect(FunctionPairing.isPrinterHalf(printer(on: "P", named: "debugDescription")))
         // Not printers: wrong name, wrong return, static, parameterised.
-        #expect(!FunctionPairing.isPrinterHalf(printer("summary", on: "P")))
-        #expect(!FunctionPairing.isPrinterHalf(printer("description", on: "P", returns: "Data")))
+        #expect(!FunctionPairing.isPrinterHalf(printer(on: "P", named: "summary")))
+        #expect(!FunctionPairing.isPrinterHalf(printer(on: "P", named: "description", returns: "Data")))
         #expect(!FunctionPairing.isPrinterHalf(parseFn(returns: "String")))
     }
 
@@ -141,7 +141,7 @@ struct ProtocolPrinterPairingTests {
         // `conforms` is for.
         let summaries = [
             parseFn(returns: "SyntaxProtocol", carrier: "SyntaxProtocol"),
-            printer(on: "SyntaxProtocol")
+            printer(on: "SyntaxProtocol"),
         ]
         let strict = FunctionPairing.candidates(in: summaries)
         let withIdentityConformance = FunctionPairing.candidates(

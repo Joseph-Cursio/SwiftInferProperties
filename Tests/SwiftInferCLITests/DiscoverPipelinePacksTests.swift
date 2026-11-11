@@ -120,7 +120,7 @@ struct DiscoverPipelinePacksTests {
 
     // MARK: - Helpers
 
-    /// `resolveTemplateFilter` is private to `Discover+Pipeline.swift`,
+    /// `resolveTemplateFilter` is private to `SwiftInferCommand.Discover+Pipeline.swift`,
     /// so we exercise it indirectly via the resolveTemplateFilter
     /// behavior surface that's reachable through `TemplatePack`. The
     /// `invokeResolver` helper reimplements the public-facing contract

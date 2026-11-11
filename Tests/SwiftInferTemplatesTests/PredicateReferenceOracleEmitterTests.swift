@@ -8,10 +8,10 @@ struct PredicateReferenceOracleEmitterTests {
     private static let seed = SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4)
 
     private static func argument(
-        label: String? = nil,
         name: String,
         type: String,
-        generator: String
+        generator: String,
+        label: String? = nil
     ) -> LiftedTestEmitter.ReferenceOracleArgument {
         .init(
             parameter: Parameter(label: label, internalName: name, typeText: type, isInout: false),
@@ -44,7 +44,7 @@ struct PredicateReferenceOracleEmitterTests {
     func labelledParameter() {
         let source = LiftedTestEmitter.referenceOracle(
             funcName: "accepts",
-            arguments: [Self.argument(label: "code", name: "value", type: "String", generator: "Gen<String>.string()")],
+            arguments: [Self.argument(name: "value", type: "String", generator: "Gen<String>.string()", label: "code")],
             returnTypeText: "Bool",
             docComment: "Accepts a code when it is exactly six uppercase letters.",
             seed: Self.seed
@@ -77,8 +77,8 @@ struct PredicateReferenceOracleEmitterTests {
         let source = LiftedTestEmitter.referenceOracle(
             funcName: "canReach",
             arguments: [
-                Self.argument(label: "from", name: "origin", type: "Int", generator: "Gen<Int>.int()"),
-                Self.argument(label: "to", name: "target", type: "Int", generator: "Gen<Int>.int()")
+                Self.argument(name: "origin", type: "Int", generator: "Gen<Int>.int()", label: "from"),
+                Self.argument(name: "target", type: "Int", generator: "Gen<Int>.int()", label: "to"),
             ],
             returnTypeText: "Bool",
             docComment: "Reachable when the target is within range of the origin.",
@@ -108,7 +108,7 @@ struct PredicateReferenceOracleEmitterTests {
             funcName: "roundToPlaces",
             arguments: [
                 Self.argument(name: "value", type: "Double", generator: "Gen<Double>.double()"),
-                Self.argument(label: "places", name: "places", type: "Int", generator: "Gen<Int>.int()")
+                Self.argument(name: "places", type: "Int", generator: "Gen<Int>.int()", label: "places"),
             ],
             returnTypeText: "Double",
             docComment: "Rounds to the nearest multiple; negative places treated as zero.",
@@ -136,7 +136,7 @@ struct PredicateReferenceOracleEmitterTests {
             funcName: "clip",
             arguments: [
                 Self.argument(name: "text", type: "String", generator: "Gen<String>.string()"),
-                Self.argument(name: "budget", type: "Int", generator: "Gen<Int>.int()")
+                Self.argument(name: "budget", type: "Int", generator: "Gen<Int>.int()"),
             ],
             returnTypeText: "(text: String, didTruncate: Bool)",
             docComment: "The result never exceeds the byte budget.",
@@ -170,7 +170,7 @@ struct PredicateReferenceOracleEmitterTests {
     @Test("fallback contract: a tuple shape with no `==` says the comparison cannot compile", arguments: [
         ("(Int, (Int, Int))", "itself a tuple"),
         ("Swift.Optional<(Int, Int)>", "inside an Optional or a collection"),
-        ("(Int, Int, Int, Int, Int, Int, Int)", "at most six")
+        ("(Int, Int, Int, Int, Int, Int, Int)", "at most six"),
     ])
     func tupleShapeWithNoEquality(returnTypeText: String, obstacle: String) {
         let note = Self.note(forReturnType: returnTypeText)
@@ -185,7 +185,7 @@ struct PredicateReferenceOracleEmitterTests {
     /// that is true.
     @Test("fallback contract: an implicitly unwrapped or `sending` tuple gets the element-wise note", arguments: [
         "(Int, Int)!",
-        "sending (Int, Int)"
+        "sending (Int, Int)",
     ])
     func tupleSpelledAnotherWay(returnTypeText: String) {
         #expect(Self.note(forReturnType: returnTypeText).hasPrefix(

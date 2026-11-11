@@ -132,8 +132,8 @@ struct TestLifterHardGuaranteeTests {
 
         let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: HGSilentDiagnosticOutput()
+            diagnostics: HGSilentDiagnosticOutput(),
+            includePossible: true
         )
         // Snapshot the source tree before accepting — the §16 #1
         // contract is that the only files that appear are under

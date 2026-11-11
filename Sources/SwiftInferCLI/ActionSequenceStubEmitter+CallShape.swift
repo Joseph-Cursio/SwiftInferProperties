@@ -35,7 +35,7 @@ extension ActionSequenceStubEmitter {
         if isMobius {
             return [
                 "let next = \(awaitPrefix)\(reducerCall)(state, action)",
-                "if let mobiusModel = next.model { state = mobiusModel }"
+                "if let mobiusModel = next.model { state = mobiusModel }",
             ]
         }
         switch shape {
@@ -48,7 +48,7 @@ extension ActionSequenceStubEmitter {
         case .stateActionReturnsStateAndEffect:
             return [
                 "let (newState, _) = \(awaitPrefix)\(reducerCall)(state, action)",
-                "state = newState"
+                "state = newState",
             ]
 
         case .inoutStateActionReturnsEffect:

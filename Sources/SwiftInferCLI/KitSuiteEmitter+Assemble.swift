@@ -1,5 +1,3 @@
-import Foundation
-
 /// File assembly for `KitSuiteEmitter`, split out for the 400-line cap.
 extension KitSuiteEmitter {
 

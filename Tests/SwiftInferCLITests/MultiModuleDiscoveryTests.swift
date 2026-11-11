@@ -20,7 +20,7 @@ struct MultiModuleDiscoveryTests {
             .appendingPathComponent("multi-module-discovery-corpus")
     }()
 
-    static let fixedDate = ISO8601DateFormatter().date(from: "2026-07-04T10:00:00Z")!
+    static let fixedDate = Date(timeIntervalSince1970: 1_783_159_200) // 2026-07-04T10:00:00Z
 
     @Test("two modules with a same-named reducer both surface (module tagging beats dedupe)")
     func twoModulesBothSurface() throws {
@@ -40,8 +40,8 @@ struct MultiModuleDiscoveryTests {
     func modulePinDisambiguates() throws {
         let suggestions = try SwiftInferCommand.DiscoverInteraction.collectSuggestions(
             targets: ["Alpha", "Beta"],
-            pinRaw: "Beta.CounterReducer.reduce",
             workingDirectory: Self.corpusRoot,
+            pinRaw: "Beta.CounterReducer.reduce",
             firstSeenAt: Self.fixedDate
         )
         #expect(suggestions.isEmpty == false)

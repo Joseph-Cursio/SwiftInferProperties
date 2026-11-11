@@ -48,8 +48,8 @@ struct RefIntVerifyCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "RefIntVerifyCorpus",
             familyFilter: "referential-integrity",
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
 
         // Cycle 143 — widened to 5 reducers: + PlaylistFeature
@@ -74,8 +74,8 @@ struct RefIntVerifyCorpusMeasuredTests {
         // score-neutral).
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "RefIntVerifyCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         #expect(discovered.contains("(Verified)"))
         #expect(discovered.contains("state.books.contains"))        // Library survives ([T] array)

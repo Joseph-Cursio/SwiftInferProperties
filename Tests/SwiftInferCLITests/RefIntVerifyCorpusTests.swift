@@ -48,7 +48,7 @@ struct RefIntVerifyCorpusTests {
             "PlaylistFeature.body state.selectedTrackID == nil"
                 + " || state.tracks.contains { $0.id == state.selectedTrackID }",
             "GalleryFeature.body state.selectedPhotoID == nil"
-                + " || state.photos.contains { $0.id == state.selectedPhotoID }"
+                + " || state.photos.contains { $0.id == state.selectedPhotoID }",
         ]
         #expect(found == expected)
 

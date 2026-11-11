@@ -31,7 +31,7 @@ struct VocabularyTests {
         let vocab = try decode(json)
         #expect(vocab.inversePairs == [
             InversePair(forward: "enqueue", reverse: "dequeue"),
-            InversePair(forward: "activate", reverse: "deactivate")
+            InversePair(forward: "activate", reverse: "deactivate"),
         ])
         #expect(vocab.idempotenceVerbs == ["sanitizeXML", "rewritePath"])
         #expect(vocab.commutativityVerbs == ["unionGraphs"])
@@ -211,7 +211,7 @@ struct VocabularyTests {
                     positive: "Open", negative: "Closed",
                     positiveSynonyms: ["Active"],
                     negativeSynonyms: ["Inactive"]
-                )
+                ),
             ],
             markerSets: [
                 MarkerSet(name: "Sizes", markers: ["small", "medium", "large"])

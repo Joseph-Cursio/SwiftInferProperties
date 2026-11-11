@@ -1,6 +1,4 @@
 import PropertyLawCore
-@testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// `UnequatableResultGate` judges only the types whose `==` comparing two results actually needs —
@@ -40,7 +38,7 @@ struct UnequatableResultGateOperandTests {
         "UnsafePointer<FixResult>",
         "ProbeTagged<ProbeUser, Int>",
         "Handle<FixResult>",
-        "[Handle<FixResult>]"
+        "[Handle<FixResult>]",
     ])
     func aNonWrappingGenericArgumentIsNotJudged(result: String) {
         #expect(UnequatableResultGateTests.reason(result, in: Self.scan) == nil)
@@ -55,7 +53,7 @@ struct UnequatableResultGateOperandTests {
         "Result<FixResult, Never>",
         "[[FixResult]]?",
         "(label: FixResult, count: Int)",
-        "ContiguousArray<FixResult>"
+        "ContiguousArray<FixResult>",
     ])
     func aWrappedArgumentIsStillJudged(result: String) throws {
         let reason = try #require(UnequatableResultGateTests.reason(result, in: Self.scan))
@@ -95,19 +93,19 @@ struct UnequatableResultGateOperandTests {
     /// an enum whose cases are all payload-free is `Equatable` (`swiftc`). Declining an enum with
     /// no captured case would withdraw this stub, which compiles.
     @Test func anEnumWhoseCasesSitInsideAnIfConfigIsLetThrough() throws {
-        let scan = UnequatableResultGateTests.scan([
+        let scanned = UnequatableResultGateTests.scan([
             "Platform.swift": "enum Platform {\n#if os(macOS)\n    case mac\n#else\n    case other\n#endif\n}"
         ])
-        let shape = try #require(scan.shapes["Platform"])
+        let shape = try #require(scanned.shapes["Platform"])
         #expect(shape.enumCases.isEmpty, "the scan cannot see the cases")
-        #expect(UnequatableResultGateTests.reason("Platform", in: scan) == nil)
+        #expect(UnequatableResultGateTests.reason("Platform", in: scanned) == nil)
     }
 
     /// So a caseless enum is let through too, though Swift gives it no `==`: the scan cannot tell it
     /// from the one above, and a function returning an uninhabited type never returns, so there is
     /// no real subject to lose.
     @Test func aCaselessEnumIsLetThroughBecauseItLooksTheSame() {
-        let scan = UnequatableResultGateTests.scan(["Namespace.swift": "enum Namespace {}"])
-        #expect(UnequatableResultGateTests.reason("Namespace?", in: scan) == nil)
+        let scanned = UnequatableResultGateTests.scan(["Namespace.swift": "enum Namespace {}"])
+        #expect(UnequatableResultGateTests.reason("Namespace?", in: scanned) == nil)
     }
 }

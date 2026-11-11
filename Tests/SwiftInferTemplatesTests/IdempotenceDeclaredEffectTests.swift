@@ -16,11 +16,11 @@ struct IdempotenceDeclaredEffectTests {
     /// adds +5 — the band the 2026-08-04 survey measured 13 false laws in.
     @Test("@Idempotent lifts a shape-only candidate out of hiding (30 → 45)")
     func declaredIdempotentPromotes() {
-        let bare = makeIdempotenceSummary(name: "process", paramType: "String", returnType: "String")
+        let bare = makeIdempotenceSummary(name: "process", returnType: "String", paramType: "String")
         let annotated = makeIdempotenceSummary(
             name: "process",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             declaredEffect: .idempotent
         )
         #expect(IdempotenceTemplate.suggest(for: bare)?.score.tier == .possible)
@@ -42,11 +42,11 @@ struct IdempotenceDeclaredEffectTests {
     /// which satisfies the owner's definition and fails composition at trial 0.
     @Test("The declared claim scores BELOW a curated verb — it claims a weaker property")
     func weakerThanCuratedVerb() {
-        let byName = makeIdempotenceSummary(name: "normalize", paramType: "String", returnType: "String")
+        let byName = makeIdempotenceSummary(name: "normalize", returnType: "String", paramType: "String")
         let byAnnotation = makeIdempotenceSummary(
             name: "process",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             declaredEffect: .idempotent
         )
         let nameScore = IdempotenceTemplate.suggest(for: byName)?.score.total
@@ -61,9 +61,10 @@ struct IdempotenceDeclaredEffectTests {
     @Test("@NonIdempotent suppresses the suggestion entirely")
     func declaredNonIdempotentVetoes() {
         let summary = makeIdempotenceSummary(
-            name: "normalize",                       // curated verb, +40 — still vetoed
-            paramType: "String",
+            name: "normalize",
             returnType: "String",
+            // curated verb, +40 — still vetoed
+            paramType: "String",
             declaredEffect: .nonIdempotent
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
@@ -77,8 +78,8 @@ struct IdempotenceDeclaredEffectTests {
         for key in [String?.some("requestID"), nil] {
             let summary = makeIdempotenceSummary(
                 name: "charge",
-                paramType: "Payment",
                 returnType: "Payment",
+                paramType: "Payment",
                 declaredEffect: .externallyIdempotent(keyParameter: key)
             )
             #expect(IdempotenceTemplate.suggest(for: summary) == nil)
@@ -89,14 +90,14 @@ struct IdempotenceDeclaredEffectTests {
 
     @Test("@Observational and @Pure move the score in NEITHER direction")
     func orthogonalTiersAreSilent() {
-        let bare = makeIdempotenceSummary(name: "process", paramType: "String", returnType: "String")
+        let bare = makeIdempotenceSummary(name: "process", returnType: "String", paramType: "String")
         let baseline = IdempotenceTemplate.suggest(for: bare)?.score.total
 
         for effect in [Effect.observational, .pure] {
             let summary = makeIdempotenceSummary(
                 name: "process",
-                paramType: "String",
                 returnType: "String",
+                paramType: "String",
                 declaredEffect: effect
             )
             let suggestion = IdempotenceTemplate.suggest(for: summary)
@@ -112,7 +113,7 @@ struct IdempotenceDeclaredEffectTests {
 
     @Test("No annotation changes nothing — the overwhelmingly common case")
     func absentClaimIsInert() {
-        let summary = makeIdempotenceSummary(name: "process", paramType: "String", returnType: "String")
+        let summary = makeIdempotenceSummary(name: "process", returnType: "String", paramType: "String")
         #expect(summary.declaredEffect == nil)
         #expect(IdempotenceTemplate.declaredEffectSignal(for: summary) == nil)
     }
@@ -126,8 +127,8 @@ struct IdempotenceDeclaredEffectTests {
         // shape-matched candidate, it never conjures one.
         let summary = makeIdempotenceSummary(
             name: "process",
-            paramType: "String",
             returnType: "Int",
+            paramType: "String",
             declaredEffect: .idempotent
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)

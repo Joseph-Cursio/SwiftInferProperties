@@ -23,10 +23,12 @@ import SwiftInferCore
 /// one that manufactures a tautology and calls it a property.
 public enum PredicateTemplate {
 
+    /// The `predicate` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `predicate` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "predicate",
@@ -58,7 +60,7 @@ public enum PredicateTemplate {
                         weight: 20,
                         detail: "`\(summary.name)` classifies its inputs — it must be TOTAL over "
                             + "them, and it must agree with a reference definition only you can state"
-                    )
+                    ),
                 ]
             },
             evidence: { [$0.inferenceEvidence] },
@@ -156,7 +158,7 @@ public enum PredicateTemplate {
                 + "it. The counterexample lives in the collisions, and you have to generate them on "
                 + "purpose.",
             "If you cannot state the reference definition in one true English sentence, that is not a "
-                + "reason to skip the property — it is a finding about the function."
+                + "reason to skip the property — it is a finding about the function.",
         ]
     }
 }

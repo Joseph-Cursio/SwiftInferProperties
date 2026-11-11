@@ -31,7 +31,7 @@ struct RoundTripEndomorphismCounterTests {
     @Test("a shape-only same-type pair is suppressed", arguments: [
         ("sanitizeForFileName", "stripGenericParameters"),
         ("bareTypeName", "stripParameterLabels"),
-        ("quoted", "excerpt")
+        ("quoted", "excerpt"),
     ])
     func shapeOnlySameTypePairSuppressed(forward: String, reverse: String) {
         let pair = makeRoundTripPair(

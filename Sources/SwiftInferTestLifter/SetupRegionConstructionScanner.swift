@@ -1,75 +1,5 @@
 import SwiftSyntax
 
-/// TestLifter M4.1 — corpus-wide aggregation of `T(...)` constructor
-/// expressions found across every test method body.
-///
-/// Walks every method body in `[TestMethodSummary]` looking for
-/// `FunctionCallExpr`s whose called expression is a bare type-shaped
-/// identifier (`Doc(...)`, `Author()`, etc. — same UpperCamelCase
-/// recognition rule M4.0's `SetupRegionTypeAnnotationScanner` uses for
-/// bare-constructor bindings). Each match contributes one *site* to a
-/// per-`(typeName, shape)` accumulator; the M4.3 `MockGeneratorSynthesizer`
-/// then queries the accumulator to find types with `siteCount ≥ 3`
-/// that have a single dominant shape (the §13 mock-synthesis bar).
-///
-/// **Argument-shape fingerprinting** treats labels as a set, not a list.
-/// `Doc(title: "x", count: 3)` and `Doc(count: 5, title: "y")` collapse
-/// to the same shape via stable label-then-kind sort at fingerprint
-/// time. `Doc(title:)` and `Doc(title:author:)` produce two distinct
-/// shapes (different label *sets*) and therefore two distinct entries
-/// in the record. Constructor calls with non-literal arguments
-/// (`Doc(title: makeName())`) are skipped — the mock synthesizer needs
-/// fingerprintable kinds, and `makeName()` is opaque.
-///
-/// **Pure function** over its inputs. No FunctionSummary lookup, no
-/// semantic resolution, no I/O. The §13 perf budget for record
-/// construction is < 100ms on the synthetic 100-test-file corpus
-/// (one extra SyntaxVisitor pass per body, linear in body size).
-public enum SetupRegionConstructionScanner {
-
-    /// Build a `ConstructionRecord` aggregating every `T(...)` call
-    /// site found across the supplied test methods. Order-independent —
-    /// the same set of test methods produces the same record entries
-    /// (the entries' internal `observedLiterals` rows preserve
-    /// per-site visit order, but the entry list itself is sorted by
-    /// `(typeName, sortedLabels)` for stability).
-    public static func record(over methods: [TestMethodSummary]) -> ConstructionRecord {
-        var accumulator: [Key: Bucket] = [:]
-        for method in methods {
-            let visitor = ConstructionVisitor(viewMode: .sourceAccurate)
-            visitor.walk(method.body)
-            for site in visitor.sites {
-                let key = Key(typeName: site.typeName, shape: site.shape)
-                if accumulator[key] == nil {
-                    accumulator[key] = Bucket(shape: site.shape, sites: [])
-                }
-                accumulator[key]?.sites.append(site.literals)
-            }
-        }
-        let entries = accumulator
-            .map { key, bucket in
-                ConstructionRecordEntry(
-                    typeName: key.typeName,
-                    shape: bucket.shape,
-                    siteCount: bucket.sites.count,
-                    observedLiterals: bucket.sites
-                )
-            }
-            .sorted(by: byTypeNameThenShapeLabel)
-        return ConstructionRecord(entries: entries)
-    }
-
-    private struct Key: Hashable {
-        let typeName: String
-        let shape: ConstructionShape
-    }
-
-    private struct Bucket {
-        let shape: ConstructionShape
-        var sites: [[String]]
-    }
-}
-
 // MARK: - Public types
 
 /// Argument-shape fingerprint for one constructor call. Label-order-
@@ -268,6 +198,76 @@ private final class ConstructionVisitor: SyntaxVisitor {
     }
 }
 
+/// TestLifter M4.1 — corpus-wide aggregation of `T(...)` constructor
+/// expressions found across every test method body.
+///
+/// Walks every method body in `[TestMethodSummary]` looking for
+/// `FunctionCallExpr`s whose called expression is a bare type-shaped
+/// identifier (`Doc(...)`, `Author()`, etc. — same UpperCamelCase
+/// recognition rule M4.0's `SetupRegionTypeAnnotationScanner` uses for
+/// bare-constructor bindings). Each match contributes one *site* to a
+/// per-`(typeName, shape)` accumulator; the M4.3 `MockGeneratorSynthesizer`
+/// then queries the accumulator to find types with `siteCount ≥ 3`
+/// that have a single dominant shape (the §13 mock-synthesis bar).
+///
+/// **Argument-shape fingerprinting** treats labels as a set, not a list.
+/// `Doc(title: "x", count: 3)` and `Doc(count: 5, title: "y")` collapse
+/// to the same shape via stable label-then-kind sort at fingerprint
+/// time. `Doc(title:)` and `Doc(title:author:)` produce two distinct
+/// shapes (different label *sets*) and therefore two distinct entries
+/// in the record. Constructor calls with non-literal arguments
+/// (`Doc(title: makeName())`) are skipped — the mock synthesizer needs
+/// fingerprintable kinds, and `makeName()` is opaque.
+///
+/// **Pure function** over its inputs. No FunctionSummary lookup, no
+/// semantic resolution, no I/O. The §13 perf budget for record
+/// construction is < 100ms on the synthetic 100-test-file corpus
+/// (one extra SyntaxVisitor pass per body, linear in body size).
+public enum SetupRegionConstructionScanner {
+
+    /// Build a `ConstructionRecord` aggregating every `T(...)` call
+    /// site found across the supplied test methods. Order-independent —
+    /// the same set of test methods produces the same record entries
+    /// (the entries' internal `observedLiterals` rows preserve
+    /// per-site visit order, but the entry list itself is sorted by
+    /// `(typeName, sortedLabels)` for stability).
+    public static func record(over methods: [TestMethodSummary]) -> ConstructionRecord {
+        var accumulator: [Key: Bucket] = [:]
+        for method in methods {
+            let visitor = ConstructionVisitor(viewMode: .sourceAccurate)
+            visitor.walk(method.body)
+            for site in visitor.sites {
+                let key = Key(typeName: site.typeName, shape: site.shape)
+                if accumulator[key] == nil {
+                    accumulator[key] = Bucket(shape: site.shape, sites: [])
+                }
+                accumulator[key]?.sites.append(site.literals)
+            }
+        }
+        let entries = accumulator
+            .map { key, bucket in
+                ConstructionRecordEntry(
+                    typeName: key.typeName,
+                    shape: bucket.shape,
+                    siteCount: bucket.sites.count,
+                    observedLiterals: bucket.sites
+                )
+            }
+            .sorted(by: byTypeNameThenShapeLabel)
+        return ConstructionRecord(entries: entries)
+    }
+
+    private struct Key: Hashable {
+        let typeName: String
+        let shape: ConstructionShape
+    }
+
+    private struct Bucket {
+        let shape: ConstructionShape
+        var sites: [[String]]
+    }
+}
+
 // MARK: - Sort key for ParameterizedValue.Kind
 
 private extension ParameterizedValue.Kind {
@@ -280,20 +280,5 @@ private extension ParameterizedValue.Kind {
         case .integer: return 2
         case .string:  return 3
         }
-    }
-}
-
-extension SetupRegionConstructionScanner {
-
-    /// Type name ascending, canonical label key ascending as the tiebreak.
-    ///
-    /// The tiebreak is the whole point here: entries are keyed on
-    /// `(typeName, shape)`, so every type with more than one construction shape
-    /// produces a tie on the first key by construction.
-    static func byTypeNameThenShapeLabel(
-        _ lhs: ConstructionRecordEntry, _ rhs: ConstructionRecordEntry
-    ) -> Bool {
-        (lhs.typeName, lhs.shape.canonicalLabelKey)
-            < (rhs.typeName, rhs.shape.canonicalLabelKey)
     }
 }

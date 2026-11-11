@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // v1.141 — shared shrink-phase emitters for the strategist-routed verify

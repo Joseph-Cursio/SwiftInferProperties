@@ -1,6 +1,42 @@
 import SwiftInferCore
 import SwiftSyntax
 
+/// Output of `AssertSymmetryDetector.detect(in:)`. M2.3 wraps it in a
+/// `LiftedSuggestion` whose cross-validation key matches
+/// `CommutativityTemplate`'s production-side key for the same callee.
+public struct DetectedCommutativity: Equatable, Sendable {
+
+    /// The callee name for `f`. Source surface name; member-access call
+    /// sites surface the *member* name (e.g. `set.union(other)` →
+    /// `"union"`).
+    public let calleeName: String
+
+    /// The first argument's identifier name as written in the
+    /// detector's "lhs" call site (the lexically-first call in
+    /// collapsed form, or the lhs binding's init in explicit form).
+    /// `f(a, b) == f(b, a)` → `leftArgName = "a"`.
+    public let leftArgName: String
+
+    /// The second argument's identifier name as written in the
+    /// detector's "lhs" call site. `f(a, b) == f(b, a)` →
+    /// `rightArgName = "b"`.
+    public let rightArgName: String
+
+    public let assertionLocation: SwiftInferCore.SourceLocation
+
+    public init(
+        calleeName: String,
+        leftArgName: String,
+        rightArgName: String,
+        assertionLocation: SwiftInferCore.SourceLocation
+    ) {
+        self.calleeName = calleeName
+        self.leftArgName = leftArgName
+        self.rightArgName = rightArgName
+        self.assertionLocation = assertionLocation
+    }
+}
+
 /// PRD §7.3 "Assert-Symmetry → commutativity" detector. Runs against
 /// the **property region** of a sliced test (not the raw body),
 /// mirroring `AssertAfterTransformDetector` and
@@ -37,6 +73,7 @@ import SwiftSyntax
 /// plan's open decision #6); receivers swapping mid-chain.
 public enum AssertSymmetryDetector {
 
+    /// Commutativity (`f(a, b) == f(b, a)`) asserted by `slice`, collapsed or across three lines.
     public static func detect(in slice: SlicedTestBody) -> [DetectedCommutativity] {
         guard let assertion = slice.assertion else {
             return []
@@ -199,41 +236,5 @@ public enum AssertSymmetryDetector {
         let calleeName: String
         let leftArgName: String
         let rightArgName: String
-    }
-}
-
-/// Output of `AssertSymmetryDetector.detect(in:)`. M2.3 wraps it in a
-/// `LiftedSuggestion` whose cross-validation key matches
-/// `CommutativityTemplate`'s production-side key for the same callee.
-public struct DetectedCommutativity: Equatable, Sendable {
-
-    /// The callee name for `f`. Source surface name; member-access call
-    /// sites surface the *member* name (e.g. `set.union(other)` →
-    /// `"union"`).
-    public let calleeName: String
-
-    /// The first argument's identifier name as written in the
-    /// detector's "lhs" call site (the lexically-first call in
-    /// collapsed form, or the lhs binding's init in explicit form).
-    /// `f(a, b) == f(b, a)` → `leftArgName = "a"`.
-    public let leftArgName: String
-
-    /// The second argument's identifier name as written in the
-    /// detector's "lhs" call site. `f(a, b) == f(b, a)` →
-    /// `rightArgName = "b"`.
-    public let rightArgName: String
-
-    public let assertionLocation: SwiftInferCore.SourceLocation
-
-    public init(
-        calleeName: String,
-        leftArgName: String,
-        rightArgName: String,
-        assertionLocation: SwiftInferCore.SourceLocation
-    ) {
-        self.calleeName = calleeName
-        self.leftArgName = leftArgName
-        self.rightArgName = rightArgName
-        self.assertionLocation = assertionLocation
     }
 }

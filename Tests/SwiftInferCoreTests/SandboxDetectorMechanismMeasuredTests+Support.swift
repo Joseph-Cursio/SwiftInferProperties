@@ -1,78 +1,5 @@
 import Foundation
 
-/// The probe, its profiles, and the source scan for
-/// `SandboxDetectorMechanismMeasuredTests`. Split out only for the 400-line file cap;
-/// the reasoning that governs both lives in that suite's header.
-extension SandboxDetectorMechanismMeasuredTests {
-
-    // MARK: - The source scan
-
-    /// Spellings that would make §6.5's *"the interposition hook is in place"* true.
-    /// `DYLD_LIBRARY_PATH` is deliberately **not** here — it is the positive control,
-    /// and conflating the search path with the hook is the error being pinned.
-    static let hookNeedles = ["DYLD_INSERT_LIBRARIES", "__interpose", "dlopen(", "dlsym("]
-
-    static let packageRoot = PurityRefutationCensusMeasuredTests.packageRoot
-
-    /// This suite's own two files, excluded by name.
-    ///
-    /// **A guard for an absence has to spell the thing that is absent**, so both files
-    /// below contain every needle in their prose and would report themselves forever.
-    /// `DocCitationTests` solved the identical problem the identical way — by name
-    /// (`selfDescribingFiles`) rather than by a "is it inside a comment" rule, because
-    /// the spelling is prose here as often as it is code.
-    ///
-    /// It cost the first run of this suite four false hits, which is the cheapest
-    /// possible demonstration that the scan reaches the files it claims to.
-    static let selfDescribingFiles: Set<String> = [
-        "SandboxDetectorMechanismMeasuredTests.swift",
-        "SandboxDetectorMechanismMeasuredTests+Support.swift"
-    ]
-
-    /// Occurrence counts for every needle plus the control, over `Sources/` and
-    /// `Tests/`. Counted rather than existence-checked so the control can assert a
-    /// number greater than zero and the needles a number equal to it.
-    static func scanSwiftSources() throws -> [String: Int] {
-        var counts = [String: Int](uniqueKeysWithValues: (hookNeedles + ["DYLD_LIBRARY_PATH"]).map { ($0, 0) })
-
-        for root in ["Sources", "Tests"] {
-            let directory = packageRoot.appendingPathComponent(root)
-            for file in swiftFiles(under: directory)
-            where !selfDescribingFiles.contains(file.lastPathComponent) {
-                let text = try String(contentsOf: file, encoding: .utf8)
-                for needle in counts.keys where text.contains(needle) {
-                    counts[needle, default: 0] += 1
-                }
-            }
-        }
-        return counts
-    }
-
-    /// A non-Swift source file under `Sources/` — what an interposing dylib would need.
-    /// Resource files carry no compiler behaviour, so only compilable extensions count.
-    static func nonSwiftSourceFiles() -> [String] {
-        let compilable: Set<String> = ["c", "m", "mm", "cc", "cpp", "h", "hpp", "s"]
-        let sources = packageRoot.appendingPathComponent("Sources")
-        guard let walker = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil) else {
-            return []
-        }
-        return walker.compactMap { element in
-            guard let url = element as? URL, compilable.contains(url.pathExtension.lowercased()) else { return nil }
-            return url.lastPathComponent
-        }
-    }
-
-    private static func swiftFiles(under directory: URL) -> [URL] {
-        guard let walker = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil) else {
-            return []
-        }
-        return walker.compactMap { element in
-            guard let url = element as? URL, url.pathExtension == "swift" else { return nil }
-            return url
-        }
-    }
-}
-
 // MARK: - The probe's vocabulary
 
 /// A failure in the harness itself, never a finding. Kept distinct from a denial so a
@@ -116,6 +43,79 @@ enum Probe {
         let completed: Bool
 
         subscript(step: Step) -> Outcome? { outcomes[step] }
+    }
+}
+
+/// The probe, its profiles, and the source scan for
+/// `SandboxDetectorMechanismMeasuredTests`. Split out only for the 400-line file cap;
+/// the reasoning that governs both lives in that suite's header.
+extension SandboxDetectorMechanismMeasuredTests {
+
+    // MARK: - The source scan
+
+    /// Spellings that would make §6.5's *"the interposition hook is in place"* true.
+    /// `DYLD_LIBRARY_PATH` is deliberately **not** here — it is the positive control,
+    /// and conflating the search path with the hook is the error being pinned.
+    static let hookNeedles = ["DYLD_INSERT_LIBRARIES", "__interpose", "dlopen(", "dlsym("]
+
+    static let packageRoot = PurityRefutationCensusMeasuredTests.packageRoot
+
+    /// This suite's own two files, excluded by name.
+    ///
+    /// **A guard for an absence has to spell the thing that is absent**, so both files
+    /// below contain every needle in their prose and would report themselves forever.
+    /// `DocCitationTests` solved the identical problem the identical way — by name
+    /// (`selfDescribingFiles`) rather than by a "is it inside a comment" rule, because
+    /// the spelling is prose here as often as it is code.
+    ///
+    /// It cost the first run of this suite four false hits, which is the cheapest
+    /// possible demonstration that the scan reaches the files it claims to.
+    static let selfDescribingFiles: Set<String> = [
+        "SandboxDetectorMechanismMeasuredTests.swift",
+        "SandboxDetectorMechanismMeasuredTests+Support.swift",
+    ]
+
+    /// Occurrence counts for every needle plus the control, over `Sources/` and
+    /// `Tests/`. Counted rather than existence-checked so the control can assert a
+    /// number greater than zero and the needles a number equal to it.
+    static func scanSwiftSources() throws -> [String: Int] {
+        var counts = [String: Int](uniqueKeysWithValues: (hookNeedles + ["DYLD_LIBRARY_PATH"]).map { ($0, 0) })
+
+        for root in ["Sources", "Tests"] {
+            let directory = packageRoot.appendingPathComponent(root)
+            for file in swiftFiles(under: directory)
+            where !selfDescribingFiles.contains(file.lastPathComponent) {
+                let text = try String(contentsOf: file, encoding: .utf8)
+                for needle in counts.keys where text.contains(needle) {
+                    counts[needle, default: 0] += 1
+                }
+            }
+        }
+        return counts
+    }
+
+    /// A non-Swift source file under `Sources/` — what an interposing dylib would need.
+    /// Resource files carry no compiler behaviour, so only compilable extensions count.
+    static func nonSwiftSourceFiles() -> [String] {
+        let compilable: Set<String> = ["c", "m", "mm", "cc", "cpp", "h", "hpp", "s"]
+        let sources = packageRoot.appendingPathComponent("Sources")
+        guard let walker = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil) else {
+            return []
+        }
+        return walker.compactMap { element in
+            guard let url = element as? URL, compilable.contains(url.pathExtension.lowercased()) else { return nil }
+            return url.lastPathComponent
+        }
+    }
+
+    private static func swiftFiles(under directory: URL) -> [URL] {
+        guard let walker = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil) else {
+            return []
+        }
+        return walker.compactMap { element in
+            guard let url = element as? URL, url.pathExtension == "swift" else { return nil }
+            return url
+        }
     }
 }
 

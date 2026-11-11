@@ -1,95 +1,3 @@
-import Foundation
-
-/// PROTOTYPE (SwiftUI MVVM carrier) — one detected `@Observable` /
-/// `ObservableObject` view model, modelled as a reducer-in-disguise:
-///
-///   | Reducer            | ViewModel                                  |
-///   |--------------------|--------------------------------------------|
-///   | `State`            | the stored properties (`stateFields`)      |
-///   | `Action` alphabet  | the state-mutating methods (`actions`)     |
-///   | `reduce(into:_:)`  | each method body mutating `self`           |
-///
-/// This is the discovery shape the v2.0 interaction-invariant families
-/// (idempotence / cardinality / biconditional / referential-integrity /
-/// conservation) need to fire on MVVM code — `ReducerDiscoverer` only
-/// recognises reducer *signatures* (TCA / Elm / ReSwift / Mobius /
-/// Workflow), so an `@Observable` class with `func selectAll()` etc.
-/// currently yields zero candidates. The candidate captures enough to
-/// (a) render the action alphabet for a human, and (b) feed a future
-/// witness strategy that constructs the view model and drives its
-/// methods as the action sequence.
-public struct ViewModelCandidate: Sendable, Equatable {
-
-    /// `<path>:<line>` of the type declaration — same click-target UX as
-    /// `ReducerCandidate.location`.
-    public let location: SourceLocation
-
-    /// The view model type name (`"ViolationInspectorViewModel"`).
-    public let typeName: String
-
-    /// How observability was detected — `@Observable` macro vs
-    /// `: ObservableObject` conformance.
-    public let observability: ViewModelObservability
-
-    /// The stored instance properties that form the observable State —
-    /// the surface the interaction invariants reason about. Excludes
-    /// `static` props, computed props, `@ObservationIgnored` plumbing, and
-    /// injected dependencies (see `excludedFields`).
-    public let stateFields: [ViewModelStateField]
-
-    /// Stored properties deliberately excluded from State, with the reason
-    /// — `@ObservationIgnored` plumbing / transient control flags, or
-    /// injected dependencies (existential / `*Protocol`-typed services,
-    /// `AnyCancellable` bags). Surfaced for transparency so a human can
-    /// see what was filtered and why.
-    public let excludedFields: [ViewModelExcludedField]
-
-    /// The action alphabet — instance methods that mutate State, either
-    /// directly (assign a State field / call a mutator on one) or
-    /// transitively (call another action). Sorted by name for stable
-    /// output.
-    public let actions: [ViewModelAction]
-
-    /// Whether the view model can be constructed with `Type()` — the
-    /// prerequisite for *verifying* an invariant (the verifier must build
-    /// an instance to drive its actions). `.requiresArguments` when a
-    /// stored property has no default / no-arg initializer (typically an
-    /// injected dependency), which gates verify the way the refint
-    /// `Identifiable` gate skips non-verifiable refint candidates.
-    public let constructibility: ViewModelConstructibility
-
-    /// The first declared initializer's parameters (label + type), or `[]`
-    /// when the view model has only the synthesized `init()`. Drives
-    /// dependency-faking construction — the verifier calls the init,
-    /// passing a synthesized no-op fake for each protocol dependency.
-    public let initParameters: [ViewModelInitParameter]
-
-    public init(
-        location: SourceLocation,
-        typeName: String,
-        observability: ViewModelObservability,
-        stateFields: [ViewModelStateField],
-        excludedFields: [ViewModelExcludedField] = [],
-        actions: [ViewModelAction],
-        constructibility: ViewModelConstructibility = .zeroArgument,
-        initParameters: [ViewModelInitParameter] = []
-    ) {
-        self.location = location
-        self.typeName = typeName
-        self.observability = observability
-        self.stateFields = stateFields
-        self.excludedFields = excludedFields
-        self.actions = actions
-        self.constructibility = constructibility
-        self.initParameters = initParameters
-    }
-
-    /// `true` when `Type()` constructs the view model — verify-ready.
-    public var isZeroArgConstructible: Bool {
-        constructibility == .zeroArgument
-    }
-}
-
 /// Whether a view model is constructible with no arguments — the verify
 /// gate. `.requiresArguments` carries the stored-field names that lack a
 /// default (usually injected dependencies), for a clear skip disclosure.
@@ -241,11 +149,11 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
     public init(
         name: String,
         parameterTypes: [String],
-        firstParameterLabel: String? = nil,
-        parameters: [ViewModelActionParameter] = [],
         isAsync: Bool,
         isThrows: Bool,
         mutatesStateDirectly: Bool,
+        firstParameterLabel: String? = nil,
+        parameters: [ViewModelActionParameter] = [],
         isClockDeterministic: Bool = false
     ) {
         self.name = name
@@ -283,5 +191,95 @@ public struct ViewModelAction: Sendable, Equatable, Codable {
     /// Rendered `name(Type, Type)` / `name()` action signature for output.
     public var signature: String {
         "\(name)(\(parameterTypes.joined(separator: ", ")))"
+    }
+}
+
+/// PROTOTYPE (SwiftUI MVVM carrier) — one detected `@Observable` /
+/// `ObservableObject` view model, modelled as a reducer-in-disguise:
+///
+///   | Reducer            | ViewModel                                  |
+///   |--------------------|--------------------------------------------|
+///   | `State`            | the stored properties (`stateFields`)      |
+///   | `Action` alphabet  | the state-mutating methods (`actions`)     |
+///   | `reduce(into:_:)`  | each method body mutating `self`           |
+///
+/// This is the discovery shape the v2.0 interaction-invariant families
+/// (idempotence / cardinality / biconditional / referential-integrity /
+/// conservation) need to fire on MVVM code — `ReducerDiscoverer` only
+/// recognises reducer *signatures* (TCA / Elm / ReSwift / Mobius /
+/// Workflow), so an `@Observable` class with `func selectAll()` etc.
+/// currently yields zero candidates. The candidate captures enough to
+/// (a) render the action alphabet for a human, and (b) feed a future
+/// witness strategy that constructs the view model and drives its
+/// methods as the action sequence.
+public struct ViewModelCandidate: Sendable, Equatable {
+
+    /// `<path>:<line>` of the type declaration — same click-target UX as
+    /// `ReducerCandidate.location`.
+    public let location: SourceLocation
+
+    /// The view model type name (`"ViolationInspectorViewModel"`).
+    public let typeName: String
+
+    /// How observability was detected — `@Observable` macro vs
+    /// `: ObservableObject` conformance.
+    public let observability: ViewModelObservability
+
+    /// The stored instance properties that form the observable State —
+    /// the surface the interaction invariants reason about. Excludes
+    /// `static` props, computed props, `@ObservationIgnored` plumbing, and
+    /// injected dependencies (see `excludedFields`).
+    public let stateFields: [ViewModelStateField]
+
+    /// Stored properties deliberately excluded from State, with the reason
+    /// — `@ObservationIgnored` plumbing / transient control flags, or
+    /// injected dependencies (existential / `*Protocol`-typed services,
+    /// `AnyCancellable` bags). Surfaced for transparency so a human can
+    /// see what was filtered and why.
+    public let excludedFields: [ViewModelExcludedField]
+
+    /// The action alphabet — instance methods that mutate State, either
+    /// directly (assign a State field / call a mutator on one) or
+    /// transitively (call another action). Sorted by name for stable
+    /// output.
+    public let actions: [ViewModelAction]
+
+    /// Whether the view model can be constructed with `Type()` — the
+    /// prerequisite for *verifying* an invariant (the verifier must build
+    /// an instance to drive its actions). `.requiresArguments` when a
+    /// stored property has no default / no-arg initializer (typically an
+    /// injected dependency), which gates verify the way the refint
+    /// `Identifiable` gate skips non-verifiable refint candidates.
+    public let constructibility: ViewModelConstructibility
+
+    /// The first declared initializer's parameters (label + type), or `[]`
+    /// when the view model has only the synthesized `init()`. Drives
+    /// dependency-faking construction — the verifier calls the init,
+    /// passing a synthesized no-op fake for each protocol dependency.
+    public let initParameters: [ViewModelInitParameter]
+
+    public init(
+        location: SourceLocation,
+        typeName: String,
+        observability: ViewModelObservability,
+        stateFields: [ViewModelStateField],
+        actions: [ViewModelAction],
+        excludedFields: [ViewModelExcludedField] = [],
+        constructibility: ViewModelConstructibility = .zeroArgument,
+        initParameters: [ViewModelInitParameter] = []
+    ) {
+        self.location = location
+        self.typeName = typeName
+        self.observability = observability
+        self.stateFields = stateFields
+        self.excludedFields = excludedFields
+        self.actions = actions
+        self.constructibility = constructibility
+        self.initParameters = initParameters
+    }
+
+    /// `true` when `Type()` constructs the view model — verify-ready.
+    public var isZeroArgConstructible: Bool {
+        constructibility == .zeroArgument
     }
 }

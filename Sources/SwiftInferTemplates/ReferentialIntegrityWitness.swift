@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M6 — one detected Referential Integrity witness inside a
 /// reducer's State struct: a "selected ID" Optional field paired
 /// with a collection whose elements the selection is supposed to

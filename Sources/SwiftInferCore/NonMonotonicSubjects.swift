@@ -1,5 +1,3 @@
-import Foundation
-
 /// Subjects for which `monotonicity` is **definitionally false** — a hash, or a
 /// mathematical function that is not order-preserving.
 ///

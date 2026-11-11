@@ -302,6 +302,6 @@ public enum DocstringAdvisor {
         // different word. See the note above for the measurement that chose these and rejected
         // inverting the gate instead.
         "translate", "render", "extract", "strip", "expand", "format", "escape",
-        "split", "derive", "resolve"
+        "split", "derive", "resolve",
     ]
 }

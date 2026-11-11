@@ -1,4 +1,5 @@
-import Foundation
+// swiftlint:disable:next unused_import - EPERM needs it; the analyzer misses that
+import Darwin
 import Testing
 
 /// **Can §6.3's soundness arm be built from what this toolchain already has?**

@@ -62,7 +62,7 @@ struct CaseIterableMappingTemplateTests {
                 "PatternCategory", cases: ["codeQuality", "performance", "other"], inherits: ["CaseIterable"]
             ),
             "Severity": enumShape("Severity", cases: ["error", "warning", "info"], inherits: ["CaseIterable"]),
-            "Config": TypeShape(name: "Config", kind: .struct, inheritedTypes: [], hasUserGen: false)
+            "Config": TypeShape(name: "Config", kind: .struct, inheritedTypes: [], hasUserGen: false),
         ]
     }
 
@@ -227,7 +227,7 @@ struct CaseIterableMappingTemplateTests {
         let shapesWithSink = [
             "PatternCategory": enumShape(
                 "PatternCategory", cases: ["codeQuality", "other"], inherits: ["CaseIterable"]
-            )
+            ),
         ]
         let suggestion = CaseIterableMappingTemplate.coverageSuggestion(
             for: mapping("normalized", returns: "PatternCategory", on: "PatternCategory"),
@@ -284,7 +284,7 @@ struct CaseIterableMappingTemplateTests {
         "at most one of the two laws fires for any member",
         arguments: [
             ("suppressionKey", "String"), ("category", "PatternCategory"),
-            ("severity", "Severity"), ("descriptionText", "String")
+            ("severity", "Severity"), ("descriptionText", "String"),
         ]
     )
     func lawsAreMutuallyExclusive(name: String, returns: String) {

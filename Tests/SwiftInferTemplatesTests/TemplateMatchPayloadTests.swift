@@ -40,10 +40,10 @@ struct TemplateMatchPayloadTests {
             location: Self.loc,
             containingTypeName: owner,
             bodySignals: BodySignals(
-                guardDomain: guardDomain,
                 hasNonDeterministicCall: false,
                 hasSelfComposition: false,
-                nonDeterministicAPIsDetected: []
+                nonDeterministicAPIsDetected: [],
+                guardDomain: guardDomain
             )
         )
     }
@@ -140,7 +140,7 @@ struct TemplateMatchPayloadTests {
                 hasUserGen: false,
                 storedMembers: [StoredMember(name: "configs", typeName: "[DiscoveredConfig]")],
                 hasUserInit: false
-            )
+            ),
         ]
         let suggestion = try #require(
             SelectionSubsetTemplate.suggest(
@@ -176,10 +176,10 @@ struct TemplateMatchPayloadTests {
                 hasUserGen: false,
                 storedMembers: [
                     StoredMember(name: "added", typeName: "[Line]"),
-                    StoredMember(name: "removed", typeName: "[Line]")
+                    StoredMember(name: "removed", typeName: "[Line]"),
                 ],
                 hasUserInit: false
-            )
+            ),
         ]
         let suggestion = try #require(
             DiffDisjointnessTemplate.suggest(
@@ -224,8 +224,8 @@ struct TemplateMatchPayloadTests {
         let shape = PartitionShape(
             typeName: "ChunkPlan",
             tiler: tiler,
-            tilerForm: .range,
-            progress: progress
+            progress: progress,
+            tilerForm: .range
         )
         let suggestion = try #require(PartitionTemplate.suggest(for: shape))
         guard case .partition(let match) = try #require(suggestion.match) else {
@@ -253,8 +253,8 @@ struct TemplateMatchPayloadTests {
                 returns: "[UInt8]",
                 owner: "ChunkPlan"
             ),
-            tilerForm: .slice,
-            progress: nil
+            progress: nil,
+            tilerForm: .slice
         )
         let suggestion = try #require(PartitionTemplate.suggest(for: shape))
         guard case .partition(let match) = try #require(suggestion.match) else {

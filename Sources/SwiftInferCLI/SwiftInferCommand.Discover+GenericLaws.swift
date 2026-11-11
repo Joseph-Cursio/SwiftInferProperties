@@ -1,0 +1,311 @@
+import SwiftInferCore
+import SwiftInferTemplates
+
+/// Seed-driven generic laws for `swift-infer discover --seeds`.
+///
+/// The lint seed set (any pure function) is broader than the discover templates'
+/// pattern-matched set (idempotence / round-trip / algebraic shapes). For a
+/// seeded function that no template matched, this synthesizes the one law that
+/// holds for *every* pure function — **determinism**, `f(x) == f(x)` — so the
+/// `--seeds` focus always produces something actionable for a clean seed.
+///
+/// Determinism can't be inferred from a signature (any function "could" be
+/// deterministic); it's the lint seed (external evidence of purity) that
+/// justifies the law. That's why this lives outside the template engine and is
+/// emitted only on the seeds path.
+extension SwiftInferCommand.Discover {
+
+    /// Synthesizes determinism suggestions for seeded functions not already
+    /// covered by a (focused) template suggestion.
+    static func synthesizeGenericLaws(
+        for manifest: SeedManifest,
+        summaries: [FunctionSummary],
+        covered: [Suggestion],
+        diagnostics: any DiagnosticOutput,
+        restrictedFunctions: [RestrictedFunction] = []
+    ) -> [Suggestion] {
+        let seedKeys = Set(manifest.seeds.map { genericLawKey(file: $0.file, symbol: $0.symbol) })
+        guard !seedKeys.isEmpty else { return [] }
+
+        // Functions a focused suggestion already speaks to — don't duplicate.
+        let coveredKeys = Set(covered.flatMap { suggestion in
+            suggestion.evidence.map {
+                genericLawKey(file: $0.location.file, symbol: functionBaseName($0.displayName))
+            }
+        })
+
+        // **A restricted function is in `summaries` too**, and it is met there first. Since privacy
+        // stopped gating the scan, every access-restricted function enters `corpus.summaries` as
+        // well as `restrictedFunctions` — so the loop below synthesized its law with no restriction,
+        // `seen` then skipped it in the restricted loop, and the law went out with neither the
+        // remedy caveat nor the signal the stub's `Access:` header reads. Joined on the exact
+        // coordinate, as `withAccessRestrictionCaveats` joins, so a namesake cannot lend its
+        // verdict. Measured on SwiftMarkdownWiki once calls were qualified: 13 determinism stubs
+        // failed with "inaccessible due to 'private' protection level" and no header (#465).
+        let restrictionByCoordinate = Dictionary(
+            restrictedFunctions.map { (coordinate(of: $0.summary.location), $0.restriction) }
+        ) { first, _ in first }
+        let requirements = seedRequirements(in: manifest)
+        var synthesized: [Suggestion] = []
+        var seen: Set<String> = []
+        for summary in summaries {
+            let key = genericLawKey(file: summary.location.file, symbol: summary.name)
+            guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
+            guard qualifiesForDeterminism(summary) else { continue }
+            seen.insert(key)
+            let restriction = restrictionByCoordinate[coordinate(of: summary.location)]
+            synthesized.append(determinismSuggestion(
+                for: summary, accessRestriction: restriction, requirement: requirements[key]
+            ))
+        }
+
+        // A seed naming a function the scan set aside is an explicit request from a producer that
+        // has already examined it. The scan is right that no external test can *call* it — but the
+        // answer to that is to say so, not to drop the reader's best candidate without a word.
+        //
+        // `restricted.restriction` has already been reconciled against the manifest's own
+        // `restriction` field by `SeedRestrictionResolver`, upstream at the scan. It is done there
+        // rather than here because this is one of *three* consumers of that remedy —
+        // `withAccessRestrictionCaveats` and `SpeculativeWidening` are the others — and fixing the
+        // one in front of you is how the computed-property arm of the original defect survived its
+        // own fix for an afternoon.
+        for restricted in restrictedFunctions {
+            let summary = restricted.summary
+            let key = genericLawKey(file: summary.location.file, symbol: summary.name)
+            guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
+            guard qualifiesForDeterminism(summary) else { continue }
+            seen.insert(key)
+            synthesized.append(determinismSuggestion(
+                for: summary, accessRestriction: restricted.restriction, requirement: requirements[key]
+            ))
+            diagnostics.writeDiagnostic(
+                "note: seeded function `\(summary.name)` "
+                    + "(\(summary.location)) is not reachable from a "
+                    + "test as written — \(restricted.restriction.remedy)"
+            )
+        }
+
+        if synthesized.isEmpty == false {
+            diagnostics.writeDiagnostic(
+                "synthesized \(synthesized.count) generic determinism law(s) for seeded functions"
+            )
+        }
+        return synthesized
+    }
+
+    /// A seeded function earns the determinism law when it takes inputs and returns a value. The
+    /// lint seed is what vouches for purity; these are the shape requirements for *writing* the law.
+    ///
+    /// **Instance methods qualify.** They used to be refused here — "an instance method could read
+    /// mutable `self`" — which was the same blanket refusal the producing linter made, in the same
+    /// words, and it is redundant twice over. The seed is the purity claim: a producer that
+    /// analyses what a method reads from `self` has already answered the objection, and this end
+    /// has no way to re-litigate it anyway. And the law is self-falsifying — as its own "why this
+    /// might be wrong" says, a hidden state read "would falsify it, which is exactly what the test
+    /// catches." Refusing to *write* a law because it might fail is refusing to test.
+    ///
+    /// The cost of the old gate was concrete: in an app almost all logic is instance methods, so
+    /// every seed the linter handed over was discarded here, and the pipeline reported nothing.
+    ///
+    /// **Throwing functions qualify** — the identical mistake, un-fixed until the SwiftLintRuleStudio
+    /// road-test hit it: a seeded throwing pure function (`serialize(_:) throws -> String`) fell
+    /// through and earned *nothing*, a confident zero, while a non-throwing sibling got the floor.
+    /// A pure function is deterministic whether or not it throws. The emitted stub handles the throw
+    /// soundly by comparing `try? f(x)` on both sides (`LiftedTestEmitter.deterministic(isThrows:)`),
+    /// so an input in the throwing domain collapses to `nil == nil` and only a *value* difference —
+    /// the hidden nondeterminism this law exists to catch — can falsify it. No false positives.
+    ///
+    /// **Tuple results qualify**, whatever their shape, and so do throwing ones. Over a tuple of
+    /// two to six `Equatable` elements the non-throwing law compiles through the standard
+    /// library's tuple `==`; a throwing tuple subject's `(try? f(x)) == (try? f(x))` does not,
+    /// because a tuple cannot conform to `Equatable` and so its `Optional` has no `==`. That is
+    /// declined at **accept** (`InteractiveTriage.determinismResultDeclineReason`), not here: the
+    /// law is tautological, so withholding its stub costs no refutable law, whereas withholding
+    /// the law would also take the docstring advice's reference-oracle scaffold, which draws its
+    /// seed from it — and would repeat the confident zero the throws relaxation above reversed.
+    ///
+    /// **Async relaxation (collections/async workplan Phase 4):** an `async`
+    /// function qualifies only when it carries the clock-determinism claim
+    /// (`/// @lint.determinism clock_deterministic` / `@ClockDeterministic`)
+    /// — the conjunction posture SwiftEffectInference's annotation
+    /// documents. Purity can't vouch for an async function (async refutes
+    /// `.pure` by contract), so the user-declared claim substitutes for the
+    /// seed's purity justification, and the emitted determinism law is
+    /// exactly the check that falsifies a wrong claim. Bare async stays
+    /// vetoed.
+    private static func qualifiesForDeterminism(_ summary: FunctionSummary) -> Bool {
+        guard let returnType = summary.returnTypeText, returnType != "Void", returnType != "()" else {
+            return false
+        }
+        guard summary.parameters.isEmpty == false else { return false }
+        if summary.isAsync {
+            guard summary.isClockDeterministic else { return false }
+        }
+        return true
+    }
+
+    /// The determinism law for `summary`.
+    ///
+    /// `accessRestriction` is non-nil when the scan set the function aside as uncallable from an
+    /// external test and only a seed rescued it. The law is still worth stating — the reader asked
+    /// for it, and it is the right law — but it cannot be *run* until the access is widened, so the
+    /// caveat leads with the remedy rather than leaving them to discover it at verify time.
+    private static func determinismSuggestion(
+        for summary: FunctionSummary,
+        accessRestriction: AccessRestriction? = nil,
+        requirement: SeedRequirement? = nil
+    ) -> Suggestion {
+        let evidence = makeEvidence(for: summary)
+        let signal = summary.isAsync
+            ? Signal(
+                kind: .deterministicPurity,
+                weight: 30,
+                detail: "Clock-deterministic-annotated async function — deterministic "
+                    + "given an injected Clock: f(x) == f(x) awaited twice"
+            )
+            : Signal(
+                kind: .deterministicPurity,
+                weight: 30,
+                detail: "Lint-seeded pure function — a pure function is deterministic: f(x) == f(x)"
+            )
+        let resultShape = TupleResultShape(signature: evidence.signature)
+        // A seed that names the conformance it is waiting on says it better than the generic
+        // sentence: which types, and that the compiler will synthesize them. A tuple result is
+        // never remedied by the producer, so the tuple sentences are never the ones replaced.
+        let resultCaveat = requirement?.caveat ?? equatableCaveat(for: resultShape, isThrows: summary.isThrows)
+        let whyMightBeWrong = [
+            summary.isAsync
+                ? "Holds only if time is genuinely injected — a wall-clock read, Task.sleep "
+                    + "on the continuous clock, or any await on shared mutable state would "
+                    + "falsify the @ClockDeterministic claim, which is exactly what the test catches."
+                : "Holds only if the function is genuinely pure — a hidden global read or "
+                    + "nondeterministic dependency would falsify it, which is exactly what the test catches.",
+            resultCaveat,
+        ]
+        let throwsCaveat = summary.isThrows && resultShape.involvesTuple == false ? [Self.tryOnBothSidesCaveat] : []
+        // Same opening as `withAccessRestrictionCaveats`, verbatim and deliberately: a reader
+        // grepping their output for the remedy should not have to know whether the law they are
+        // looking at came from a template or from this fallback.
+        let caveats = (accessRestriction.map { restriction in
+            ["NO TEST CAN RUN THIS LAW AS WRITTEN: \(restriction.remedy)"] + whyMightBeWrong
+        } ?? whyMightBeWrong) + throwsCaveat
+        return Suggestion(
+            templateName: "determinism",
+            evidence: [evidence],
+            score: Score(advisorySignals: [signal] + accessBlockerSignals(for: accessRestriction)),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(
+                whySuggested: ["\(evidence.displayName) \(evidence.signature)", signal.formattedLine],
+                whyMightBeWrong: caveats
+            ),
+            identity: SuggestionIdentity(
+                canonicalInput: "determinism|" + canonicalInput(for: summary, evidence: evidence)
+            ),
+            carrier: summary.containingTypeName
+        )
+    }
+
+    /// What the result type needs for `f(x) == f(x)` to compile — or, when nothing would make it,
+    /// that no stub is written and why.
+    ///
+    /// **"The return type must be Equatable" is false for a tuple twice over**: a tuple never is,
+    /// yet the law over one compiles through the standard library's tuple `==`; and for a throwing
+    /// subject every element being `Equatable` is still not enough, because the law compares two
+    /// `Optional`s of the tuple. So a 2…6 tuple gets the element-wise sentence, and a shape no `==`
+    /// exists for — a throwing tuple among them — gets ONLY the reason no stub is written, which is
+    /// the reason `accept` gives (`InteractiveTriage.determinismResultDeclineReason`). Telling a
+    /// reader which elements to make `Equatable` "for the law to compile", beside a sentence saying
+    /// nothing will, was the contradiction `DeterminismTupleWordingTests` now pins whole.
+    ///
+    /// Every other result keeps the sentence it always had, byte for byte. Caveats are not part of
+    /// the suggestion's identity (`canonicalInput`), so no decision record moves.
+    private static func equatableCaveat(for resultShape: TupleResultShape, isThrows: Bool) -> String {
+        if let obstacle = resultShape.equalityObstacle {
+            return noStubCaveat(because: "the function returns \(obstacle)")
+        }
+        guard resultShape.involvesTuple else {
+            return "The return type must be Equatable for the law to compile."
+        }
+        guard isThrows == false else {
+            return noStubCaveat(
+                because: "the function throws and returns a tuple, so the law would compare `try? f(x)` on "
+                    + "both sides — two Optionals of the tuple — and an Optional has `==` only when its "
+                    + "payload conforms to Equatable, which a tuple cannot"
+            )
+        }
+        return "Every element of the returned tuple must be Equatable for the law to compile — "
+            + "\(TupleResultShape.elementwiseEqualityClause)."
+    }
+
+    private static func noStubCaveat(because reason: String) -> String {
+        "No stub can state this law, so accepting it records the decision without writing a file: \(reason)."
+    }
+
+    /// How a throwing subject's law handles the throw. Only for a result the spelling does not
+    /// involve a tuple in: over any tuple the `try?` form is never written, and `equatableCaveat`
+    /// has already said so.
+    private static let tryOnBothSidesCaveat = "The function throws, so the law compares `try? f(x)` on both "
+        + "sides: an input in the throwing domain collapses to `nil == nil` (never a false alarm), and only "
+        + "a value difference on a non-throwing input falsifies it."
+
+    /// The access signal a template row gets from `withAccessRestrictionCaveats`, for a law that
+    /// pass never sees.
+    ///
+    /// **The prose caveat was copied here verbatim and the signal was not.** The stub file's
+    /// `Access:` header and `StructuralBlocker` both key on `.subjectNotVisibleToTests`, not on
+    /// caveat text — so a `private` member's determinism stub failed to compile with no
+    /// explanation, the defect #428 fixed for every template row (#465). Weight 0, as there: the
+    /// tier is unchanged, because the remedy is to lift or widen and demoting would hide it.
+    static func accessBlockerSignals(for restriction: AccessRestriction?) -> [Signal] {
+        guard let restriction, blocksEveryTest(restriction) else { return [] }
+        let detail = "no test can name the subject: \(restriction.remedy)"
+        return [Signal(kind: .subjectNotVisibleToTests, weight: 0, detail: detail)]
+    }
+
+    /// The renderer's `Evidence` row: the templates' own `inferenceEvidence`, not a copy of it.
+    ///
+    /// **The copy that used to live here kept the display name, signature and location and
+    /// dropped every fact about the declaring type** — `qualifiedTypeName`, `isInstanceMethod`,
+    /// `globalActor`, `isMutatingMethod`, `isComputedProperty`. Those are what `CalleeReference`
+    /// qualifies a call and draws a receiver from, so no determinism stub for a type member
+    /// could compile (#465). The display name and signature are byte-identical to the copy's,
+    /// so no suggestion identity moves.
+    private static func makeEvidence(for summary: FunctionSummary) -> Evidence {
+        summary.inferenceEvidence
+    }
+
+    static func canonicalInput(for summary: FunctionSummary, evidence: Evidence) -> String {
+        let owner = summary.containingTypeName.map { "\($0)." } ?? ""
+        return "\(owner)\(evidence.displayName)|\(evidence.signature)"
+    }
+
+    /// What each seed is still waiting on, by join key — the producer's `requires`, for the caveat
+    /// a synthesized law leads with. See `SeedRequirement`.
+    static func seedRequirements(in manifest: SeedManifest) -> [String: SeedRequirement] {
+        Dictionary(
+            manifest.seeds.compactMap { seed in
+                seed.requires.map { (genericLawKey(file: seed.file, symbol: seed.symbol), $0) }
+            }
+        ) { first, _ in first }
+    }
+
+    /// The bare function name from an evidence display name: `add(_:_:)` → `add`.
+    /// Internal (not private) so the docstring-advice pass shares the exact same
+    /// function-keying — the two must agree or advice would attach to the wrong
+    /// suggestion set.
+    static func functionBaseName(_ displayName: String) -> String {
+        guard let paren = displayName.firstIndex(of: "(") else { return displayName }
+        return String(displayName[..<paren])
+    }
+
+    /// `(file basename, symbol)` join key — robust to relative-vs-absolute path
+    /// spellings between the linter and the scanner. Internal (see
+    /// `functionBaseName`) so the docstring-advice pass keys identically.
+    ///
+    /// Delegates to `SymbolJoinKey` rather than spelling the formula, because
+    /// `SwiftInferTemplates` now keys restricted-function rescue on the same rule and
+    /// the two sides must agree exactly.
+    static func genericLawKey(file: String, symbol: String) -> String {
+        SymbolJoinKey.make(file: file, symbol: symbol)
+    }
+}

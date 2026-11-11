@@ -54,13 +54,15 @@ public enum EquivalenceRelationTemplate {
         // `areEqual(_:_:)` rather than `isEqual(to:)`.
         "areequal",
         "areequivalent",
-        "aresame"
+        "aresame",
     ]
 
+    /// The `equivalence-relation` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `equivalence-relation` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "equivalence-relation",
@@ -72,7 +74,7 @@ public enum EquivalenceRelationTemplate {
                         weight: 40,
                         detail: "`\(summary.name)` is a named equality over two operands of the "
                             + "same type — it owes reflexivity, symmetry, and transitivity"
-                    )
+                    ),
                 ]
             },
             evidence: { [$0.inferenceEvidence] },
@@ -178,7 +180,7 @@ public enum EquivalenceRelationTemplate {
             "If the type is also `Equatable` / `Hashable`, this relation must AGREE with `==` and be "
                 + "CONSISTENT with `hashValue`: two values this method calls equal must have the same "
                 + "hash, or a `Set` / `Dictionary` built on them will silently lose elements. A "
-                + "hand-rolled equality that disagrees with the synthesized `==` is a latent bug."
+                + "hand-rolled equality that disagrees with the synthesized `==` is a latent bug.",
         ]
     }
 }

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **boolean-valued model law** — a set relation must agree with the membership
@@ -12,12 +11,14 @@ import SwiftInferCore
 /// direction this checks, and the kit non-duplication check.
 public enum SetRelationModelLawTemplate {
 
+    /// The `set-relation-model-law` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: SetRelationModelPairing.SetRelationShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `set-relation-model-law` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint()
         -> Constraint<SetRelationModelPairing.SetRelationShape> {
         Constraint<SetRelationModelPairing.SetRelationShape>(
@@ -55,7 +56,7 @@ public enum SetRelationModelLawTemplate {
                 weight: 30,
                 detail: "Set-relation shape: (\(shape.typeName)) -> Bool, with `contains` "
                     + "supplying the characteristic function to hold the answer to"
-            )
+            ),
         ]
         if shape.siblingRelationCount >= 3 {
             signals.append(Signal(
@@ -74,7 +75,7 @@ public enum SetRelationModelLawTemplate {
         [
             "Abstraction function: \(shape.typeName).contains(_:) -> Bool at "
                 + "\(shape.membership.location) — the "
-                + "relation claims something about membership, so membership is what can check it"
+                + "relation claims something about membership, so membership is what can check it",
         ]
     }
 
@@ -99,7 +100,7 @@ public enum SetRelationModelLawTemplate {
                 + "vacuously green.",
             "The kit's `checkSetAlgebraPropertyLaws` does NOT subsume this. Its 15 laws relate "
                 + "the operations to each other and mention `isSubset` / `isDisjoint` / "
-                + "`isSuperset` zero times."
+                + "`isSuperset` zero times.",
         ]
     }
 
@@ -116,7 +117,7 @@ public enum SetRelationModelLawTemplate {
                     + "loses twice: the guard rarely holds, and when it does `x` misses both "
                     + "operands. Build the operands and `x` from one small shared alphabet and "
                     + "include the boundary values, or the suite is green having checked nothing."
-            )
+            ),
         ]
     }
 

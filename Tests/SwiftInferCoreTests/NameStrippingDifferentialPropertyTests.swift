@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCore
 import Testing
 
@@ -52,7 +52,7 @@ struct NameStrippingDifferentialPropertyTests {
         ("CarrierKindResolver", CarrierKindResolver.strippingGenericParameters),
         ("OrderSensitiveCarrierNames", OrderSensitiveCarrierNames.strippingGenericParameters),
         ("FloatingPointStorageNames", FloatingPointStorageNames.strippingGenericParameters),
-        ("ProtocolCoverageMap", ProtocolCoverageMap.strippingGenericParameters)
+        ("ProtocolCoverageMap", ProtocolCoverageMap.strippingGenericParameters),
     ]
 
     /// The reference side of the differential law. Arbitrary among four claimed
@@ -83,12 +83,12 @@ struct NameStrippingDifferentialPropertyTests {
         "<%@>",
         "%@<",
         "%@<>",
-        "%@ <Double>"
+        "%@ <Double>",
     ]
 
     private static let nameGen = zip(
-        Gen.element(of: shapes).map { $0! },
-        Gen.element(of: baseNames).map { $0! }
+        Gen.element(of: shapes).compactMap(\.self),
+        Gen.element(of: baseNames).compactMap(\.self)
     ).map { shape, name in shape.replacingOccurrences(of: "%@", with: name) }
 
     // MARK: - Laws
@@ -176,7 +176,7 @@ struct NameStrippingDifferentialPropertyTests {
     /// untouched — the tool must not mangle `Int`, `Foo`, or `""`.
     @Test("a name with no angle bracket is returned unchanged")
     func namesWithoutGenericsAreUntouched() async {
-        await propertyCheck(input: Gen.element(of: Self.baseNames).map { $0! }) { name in
+        await propertyCheck(input: Gen.element(of: Self.baseNames).compactMap(\.self)) { name in
             guard !name.contains("<") else { return }
             for implementation in Self.implementations {
                 #expect(

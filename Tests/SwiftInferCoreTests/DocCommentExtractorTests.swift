@@ -10,7 +10,7 @@ struct DocCommentExtractorTests {
     func singleLine() {
         let trivia = Trivia(pieces: [
             .docLineComment("/// Returns the nearest multiple of 5."),
-            .newlines(1)
+            .newlines(1),
         ])
         #expect(DocCommentExtractor.docComment(from: trivia) == "Returns the nearest multiple of 5.")
     }
@@ -21,7 +21,7 @@ struct DocCommentExtractorTests {
             .docLineComment("/// Rounds to the nearest multiple of 5,"),
             .newlines(1),
             .docLineComment("/// with ties going upward."),
-            .newlines(1)
+            .newlines(1),
         ])
         #expect(
             DocCommentExtractor.docComment(from: trivia)
@@ -33,7 +33,7 @@ struct DocCommentExtractorTests {
     func blockDoc() {
         let trivia = Trivia(pieces: [
             .docBlockComment("/**\n * Orders widgets rank-first.\n * Ties break by name.\n */"),
-            .newlines(1)
+            .newlines(1),
         ])
         #expect(
             DocCommentExtractor.docComment(from: trivia)
@@ -51,7 +51,7 @@ struct DocCommentExtractorTests {
     func ordinaryComment() {
         let trivia = Trivia(pieces: [
             .lineComment("// TODO: revisit"),
-            .newlines(1)
+            .newlines(1),
         ])
         #expect(DocCommentExtractor.docComment(from: trivia) == nil)
     }
@@ -62,7 +62,7 @@ struct DocCommentExtractorTests {
         // something above, not this function.
         let trivia = Trivia(pieces: [
             .docLineComment("/// Note about the previous declaration."),
-            .newlines(2)
+            .newlines(2),
         ])
         #expect(DocCommentExtractor.docComment(from: trivia) == nil)
     }
@@ -75,7 +75,7 @@ struct DocCommentExtractorTests {
             .lineComment("// MARK: - Rounding"),
             .newlines(2),
             .docLineComment("/// Returns the nearest multiple."),
-            .newlines(1)
+            .newlines(1),
         ])
         #expect(DocCommentExtractor.docComment(from: trivia) == "Returns the nearest multiple.")
     }

@@ -47,8 +47,8 @@ struct IdempotenceWitnessGateWiringTests {
         let result = try VerifyInteractionPipeline.runWithInvariant(
             target: "MyApp",
             invariant: invariant,
-            persistEvidence: false,
-            workingDirectory: root
+            workingDirectory: root,
+            persistEvidence: false
         )
 
         // The gate's disclosed skip — proof it fired pre-build. A build-fail

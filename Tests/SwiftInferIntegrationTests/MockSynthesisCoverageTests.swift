@@ -1,9 +1,13 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
+
+// MARK: - Test doubles
+
+private struct SilentCovDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
 
 /// PRD §13 numerical acceptance for TestLifter M4.3 — verbatim:
 ///
@@ -31,8 +35,8 @@ struct MockSynthesisCoverageTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentCovDiagnostics()
+            diagnostics: SilentCovDiagnostics(),
+            includePossible: true
         )
 
         // Round-trip lifted suggestions, one per type — 10 types
@@ -128,10 +132,4 @@ struct MockSynthesisCoverageTests {
             )
         }
     }
-}
-
-// MARK: - Test doubles
-
-private struct SilentCovDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

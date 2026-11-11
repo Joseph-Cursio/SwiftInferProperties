@@ -54,7 +54,7 @@ extension InversePairTemplate {
             evidence: { pair in
                 [
                     Self.makeLiftedEvidence(pair.forward, role: "forward"),
-                    Self.makeLiftedEvidence(pair.reverse, role: "reverse")
+                    Self.makeLiftedEvidence(pair.reverse, role: "reverse"),
                 ]
             },
             identity: Self.makeLiftedIdentity(for:),
@@ -71,7 +71,7 @@ extension InversePairTemplate {
     ) -> [Signal] {
         var signals: [Signal] = [
             liftedTypeShapeSignal(for: pair),
-            liftedNamingSignal(for: pair)
+            liftedNamingSignal(for: pair),
         ]
         if let carrier = carrierKindResolver.carrierKindSignal(
             forContainingTypeName: pair.forward.carrier
@@ -98,7 +98,7 @@ extension InversePairTemplate {
                 + "may fail at sampling time.",
             "Property holds iff `\(pair.forward.carrier)` has value semantics "
                 + "— the lift's `var copy = original; copy.<add>(...)` does "
-                + "not alias original's state."
+                + "not alias original's state.",
         ]
     }
 
@@ -166,40 +166,5 @@ extension InversePairTemplate {
             location: lifted.originalSummary.location,
             genericParameters: lifted.originalSummary.genericParameters
         )
-    }
-
-    private static func makeLiftedExplainability(
-        for pair: LiftedInversePair,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let forwardEvidence = makeLiftedEvidence(pair.forward, role: "forward")
-        let reverseEvidence = makeLiftedEvidence(pair.reverse, role: "reverse")
-        whySuggested.append(
-            "\(forwardEvidence.displayName) \(forwardEvidence.signature)"
-                + " — \(forwardEvidence.location)"
-        )
-        whySuggested.append(
-            "\(reverseEvidence.displayName) \(reverseEvidence.signature)"
-                + " — \(reverseEvidence.location)"
-        )
-        whySuggested.append(pair.forward.rationale)
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "X must conform to Equatable for the property body to compile — "
-                + "the assertion compares \(pair.forward.carrier) values that "
-                + "depend on X equality semantics.",
-            "Property holds iff the two mutating siblings are functional "
-                + "inverses on the lifted shadows: removing the just-added `x` "
-                + "fully undoes the addition. Implementations with hidden "
-                + "ordering, multiset semantics, or capacity-bounded behavior "
-                + "may fail at sampling time.",
-            "Property holds iff `\(pair.forward.carrier)` has value semantics "
-                + "— the lift's `var copy = original; copy.<add>(...)` does "
-                + "not alias original's state."
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }
 }

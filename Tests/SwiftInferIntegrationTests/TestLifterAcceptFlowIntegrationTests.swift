@@ -1,9 +1,38 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
+
+// MARK: - Test doubles
+
+private struct SilentDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+    var text: String { lines.joined(separator: "\n") }
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
+private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
+    private var remaining: [String]
+
+    init(scriptedLines: [String]) {
+        self.remaining = scriptedLines
+    }
+    func readLine() -> String? {
+        guard !remaining.isEmpty else { return nil }
+        return remaining.removeFirst()
+    }
+}
 
 /// TestLifter M3.3 acceptance — accepting a lifted-promoted suggestion
 /// in `swift-infer discover --interactive` writes a peer test stub to
@@ -22,8 +51,8 @@ struct TestLifterAcceptFlowIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         #expect(lifted.liftedOrigin?.testMethodName == "testRoundTrip")
@@ -63,8 +92,8 @@ struct TestLifterAcceptFlowIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
 
@@ -107,8 +136,8 @@ struct TestLifterAcceptFlowIntegrationTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
 
@@ -169,36 +198,5 @@ struct TestLifterAcceptFlowIntegrationTests {
             atomically: true,
             encoding: .utf8
         )
-    }
-}
-
-// MARK: - Test doubles
-
-private struct SilentDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class RecordingOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
-    }
-}
-
-private final class ScriptedPromptInput: PromptInput, @unchecked Sendable {
-    private var remaining: [String]
-
-    init(scriptedLines: [String]) {
-        self.remaining = scriptedLines
-    }
-    func readLine() -> String? {
-        guard !remaining.isEmpty else { return nil }
-        return remaining.removeFirst()
     }
 }

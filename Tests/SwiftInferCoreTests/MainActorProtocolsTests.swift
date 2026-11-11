@@ -1,4 +1,3 @@
-import Foundation
 import Testing
 
 @testable import SwiftInferCore
@@ -42,7 +41,7 @@ struct MainActorProtocolsTests {
         let conferring = MainActorProtocols.conferring(in: [
             decl("Pane", .protocol, ["View"]),
             decl("SplitPane", .protocol, ["Pane"]),
-            decl("EditorPane", .protocol, ["SplitPane"])
+            decl("EditorPane", .protocol, ["SplitPane"]),
         ])
         #expect(conferring.isSuperset(of: ["Pane", "SplitPane", "EditorPane"]))
     }
@@ -54,7 +53,7 @@ struct MainActorProtocolsTests {
         let leafFirst = MainActorProtocols.conferring(in: [
             decl("EditorPane", .protocol, ["SplitPane"]),
             decl("SplitPane", .protocol, ["Pane"]),
-            decl("Pane", .protocol, ["View"])
+            decl("Pane", .protocol, ["View"]),
         ])
         #expect(leafFirst.isSuperset(of: ["Pane", "SplitPane", "EditorPane"]))
     }
@@ -65,7 +64,7 @@ struct MainActorProtocolsTests {
     func aCycleRefusesRatherThanHangs() {
         let conferring = MainActorProtocols.conferring(in: [
             decl("Alpha", .protocol, ["Beta"]),
-            decl("Beta", .protocol, ["Alpha"])
+            decl("Beta", .protocol, ["Alpha"]),
         ])
         #expect(conferring.contains("Alpha") == false)
         #expect(conferring.contains("Beta") == false)
@@ -87,7 +86,7 @@ struct MainActorProtocolsTests {
     func conformerIsIsolated() {
         let typeDecls = [
             decl("Pane", .protocol, ["View"]),
-            decl("EditorPane", .struct, ["Pane"])
+            decl("EditorPane", .struct, ["Pane"]),
         ]
         let conferring = MainActorProtocols.conferring(in: typeDecls)
         #expect(
@@ -117,7 +116,7 @@ struct MainActorProtocolsTests {
     func extensionConformanceCounts() {
         let typeDecls = [
             decl("Sidebar", .struct, []),
-            decl("Sidebar", .extension, ["View"])
+            decl("Sidebar", .extension, ["View"]),
         ]
         #expect(
             MainActorProtocols.isolation(
@@ -132,7 +131,7 @@ struct MainActorProtocolsTests {
     func genericConformanceMatchesBaseName() {
         let typeDecls = [
             decl("Box", .protocol, ["View"]),
-            decl("Wrapper", .struct, ["Box<Int>"])
+            decl("Wrapper", .struct, ["Box<Int>"]),
         ]
         #expect(
             MainActorProtocols.isolation(

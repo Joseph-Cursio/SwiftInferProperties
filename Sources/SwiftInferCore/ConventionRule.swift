@@ -33,8 +33,8 @@ public struct ConventionRule: Sendable, Equatable {
     public init(
         paradigm: Paradigm,
         nameSuffixes: [String],
-        conformanceSuffixes: [String] = [],
-        outputCollaboratorNames: [String]
+        outputCollaboratorNames: [String],
+        conformanceSuffixes: [String] = []
     ) {
         self.paradigm = paradigm
         self.nameSuffixes = nameSuffixes
@@ -60,14 +60,14 @@ public struct ConventionRule: Sendable, Equatable {
         Self(
             paradigm: .mvp,
             nameSuffixes: ["Presenter"],
-            conformanceSuffixes: ["Presenting", "PresenterInput", "PresenterProtocol"],
-            outputCollaboratorNames: ["view"]
+            outputCollaboratorNames: ["view"],
+            conformanceSuffixes: ["Presenting", "PresenterInput", "PresenterProtocol"]
         ),
         Self(
             paradigm: .viper,
             nameSuffixes: ["Interactor"],
-            conformanceSuffixes: ["InteractorInput", "InteractorProtocol"],
-            outputCollaboratorNames: ["presenter", "output"]
-        )
+            outputCollaboratorNames: ["presenter", "output"],
+            conformanceSuffixes: ["InteractorInput", "InteractorProtocol"]
+        ),
     ]
 }

@@ -1,6 +1,5 @@
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// **A reason exactly when no stub.** `deterministicStub` writes from `SubjectCallPlan` and
@@ -26,7 +25,7 @@ struct SubjectCallPlanBothSidesTests {
         ("struct Host {\n    mutating func f(_ value: Int) -> Int { value }\n}", "f"),
         ("enum Host {\n    static func f(_ value: Int) throws -> (Int, Int) { (value, value) }\n}", "f"),
         ("enum Host {\n    static var f: Int { 3 }\n}", "f"),
-        ("func f(_ value: Int) -> Int { value }", "f")
+        ("func f(_ value: Int) -> Int { value }", "f"),
     ]
 
     static func suggestion(for evidence: Evidence) -> Suggestion {

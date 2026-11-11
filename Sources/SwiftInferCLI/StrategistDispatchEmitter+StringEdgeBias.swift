@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 
 // V1.150 — edge-biased String carrier generator.

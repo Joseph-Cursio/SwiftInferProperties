@@ -1,4 +1,3 @@
-import PropertyLawCore
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -67,7 +66,7 @@ struct ResultGateEqualitySourcesTests {
         ("@SwiftData.Model\nfinal class Item {}", true),
         ("@MainActor @Observable\nfinal class Item {}", false),
         ("@available(macOS 14, *)\nstruct Item {}", false),
-        ("@frozen public struct Item {}", false)
+        ("@frozen public struct Item {}", false),
     ])
     func anAttributeThatMayBeAMacroIsCollected(source: String, collected: Bool) {
         #expect(Self.outside(source).contains("Item") == collected)
@@ -93,7 +92,7 @@ struct ResultGateEqualitySourcesTests {
         "class Base { static func == (lhs: Base, rhs: Base) -> Bool { true } }\nfinal class Result: Base {}",
         "protocol Measured: CustomStringConvertible {}\n"
             + "extension Measured { static func == (lhs: Self, rhs: Self) -> Bool { true } }\n"
-            + "struct Result: Measured { var description: String }"
+            + "struct Result: Measured { var description: String }",
     ])
     func aChainLinkWithAHandWrittenOperatorLetsTheResultThrough(source: String) {
         #expect(Self.reason("Result", in: source) == nil)
@@ -102,7 +101,7 @@ struct ResultGateEqualitySourcesTests {
     /// The control: the same shapes with no `==` anywhere still decline.
     @Test("with no operator the chain still declines", arguments: [
         "class Base {}\nfinal class Result: Base {}",
-        "protocol Measured: CustomStringConvertible {}\nstruct Result: Measured { var description: String }"
+        "protocol Measured: CustomStringConvertible {}\nstruct Result: Measured { var description: String }",
     ])
     func withNoOperatorTheChainStillDeclines(source: String) {
         #expect(Self.reason("Result", in: source)?.contains("makes Result Equatable") == true)

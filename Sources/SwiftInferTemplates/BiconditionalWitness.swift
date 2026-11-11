@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M7 — one detected Biconditional / iff witness: a Bool flag
 /// paired with an Optional field whose presence should track the
 /// flag (PRD §5.6).

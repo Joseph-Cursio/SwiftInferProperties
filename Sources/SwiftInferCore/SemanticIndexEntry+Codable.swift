@@ -1,5 +1,3 @@
-import Foundation
-
 /// `SemanticIndexEntry`'s `Codable` conformance, split out when the file hit
 /// SwiftLint's 400-line cap.
 ///
@@ -41,6 +39,7 @@ extension SemanticIndexEntry {
         case subjectFingerprint
     }
 
+    /// Decodes an entry, tolerating files written before the fields added after v1.33.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.identityHash = try container.decode(String.self, forKey: .identityHash)
@@ -84,6 +83,7 @@ extension SemanticIndexEntry {
             try container.decodeIfPresent(String.self, forKey: .subjectFingerprint)
     }
 
+    /// Encodes every stored property, omitting optional fields that are `nil`.
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(identityHash, forKey: .identityHash)

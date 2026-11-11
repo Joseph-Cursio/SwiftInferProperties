@@ -25,14 +25,14 @@ struct CompositionTemplateMonotoneBoundedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
     }
 
     private func liftedAdvance(
         paramLabel: String?,
         carrier: String = "BucketIterator"
-    ) -> LiftedTransformation {
+    ) throws -> LiftedTransformation {
         let summary = FunctionSummary(
             name: "advance",
             parameters: [
@@ -41,7 +41,7 @@ struct CompositionTemplateMonotoneBoundedTests {
                     internalName: "target",
                     typeText: "Int",
                     isInout: false
-                )
+                ),
             ],
             returnTypeText: "Void",
             isThrows: false,
@@ -52,28 +52,28 @@ struct CompositionTemplateMonotoneBoundedTests {
             containingTypeName: carrier,
             bodySignals: .empty
         )
-        return LiftedTransformation.lift(
+        return try #require(LiftedTransformation.lift(
             summary,
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     // MARK: - V1.29.C — veto fires on each curated label
 
     @Test("V1.29.C — 'advance(until: Int)' fires full veto (Suppressed)")
-    func untilLabelFiresVeto() {
+    func untilLabelFiresVeto() throws {
         let suggestion = CompositionTemplate.suggest(
-            forLifted: liftedAdvance(paramLabel: "until"),
+            forLifted: try liftedAdvance(paramLabel: "until"),
             carrierKindResolver: valueSemanticResolver()
         )
         #expect(suggestion == nil, "monotone-bounded 'until' should fire full veto (Suppressed)")
     }
 
     @Test("V1.29.C — all curated labels fire full veto (until, to, at, upTo, before, through)")
-    func allCuratedLabelsFireVeto() {
+    func allCuratedLabelsFireVeto() throws {
         for label in CompositionTemplate.monotoneBoundedLabels {
             let suggestion = CompositionTemplate.suggest(
-                forLifted: liftedAdvance(paramLabel: label),
+                forLifted: try liftedAdvance(paramLabel: label),
                 carrierKindResolver: valueSemanticResolver()
             )
             #expect(
@@ -86,24 +86,24 @@ struct CompositionTemplateMonotoneBoundedTests {
     // MARK: - Dogfood (BigInt) — positional/shift label full veto
 
     @Test("Positional 'shiftedBy:' label fires full veto (Suppressed) — BigInt decrement(shiftedBy:)")
-    func shiftedByLabelFiresVeto() {
+    func shiftedByLabelFiresVeto() throws {
         // Reproduces the attaswift/BigInt dogfood false positive:
         // `decrement(shiftedBy: Int)` surfaced as composition Strong (85),
         // but `shiftedBy:` names a digit POSITION, not an addend, so
         // `op(s, a).op(s, b) ≠ op(s, a + b)`. The verb here is `advance`
         // (curated, +40) so only the label distinguishes the veto.
         let suggestion = CompositionTemplate.suggest(
-            forLifted: liftedAdvance(paramLabel: "shiftedBy"),
+            forLifted: try liftedAdvance(paramLabel: "shiftedBy"),
             carrierKindResolver: valueSemanticResolver()
         )
         #expect(suggestion == nil, "positional 'shiftedBy' should fire full veto (Suppressed)")
     }
 
     @Test("All positional-shift labels fire full veto")
-    func allPositionalShiftLabelsFireVeto() {
+    func allPositionalShiftLabelsFireVeto() throws {
         for label in CompositionTemplate.positionalShiftLabels {
             let suggestion = CompositionTemplate.suggest(
-                forLifted: liftedAdvance(paramLabel: label),
+                forLifted: try liftedAdvance(paramLabel: label),
                 carrierKindResolver: valueSemanticResolver()
             )
             #expect(
@@ -125,7 +125,7 @@ struct CompositionTemplateMonotoneBoundedTests {
         paramLabel: String?,
         type: String = "CGFloat",
         carrier: String = "GraphLayoutEngine"
-    ) -> LiftedTransformation {
+    ) throws -> LiftedTransformation {
         let summary = FunctionSummary(
             name: "step",
             parameters: [
@@ -134,7 +134,7 @@ struct CompositionTemplateMonotoneBoundedTests {
                     internalName: "temperature",
                     typeText: type,
                     isInout: false
-                )
+                ),
             ],
             returnTypeText: "Void",
             isThrows: false,
@@ -145,26 +145,26 @@ struct CompositionTemplateMonotoneBoundedTests {
             containingTypeName: carrier,
             bodySignals: .empty
         )
-        return LiftedTransformation.lift(
+        return try #require(LiftedTransformation.lift(
             summary,
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     @Test("Simulation-control 'temperature:' fires full veto (Suppressed) — GraphLayoutEngine.step(temperature:)")
-    func temperatureLabelFiresVeto() {
+    func temperatureLabelFiresVeto() throws {
         let suggestion = CompositionTemplate.suggest(
-            forLifted: liftedStep(paramLabel: "temperature"),
+            forLifted: try liftedStep(paramLabel: "temperature"),
             carrierKindResolver: valueSemanticResolver(carrier: "GraphLayoutEngine")
         )
         #expect(suggestion == nil, "simulation-control 'temperature' should fire full veto (Suppressed)")
     }
 
     @Test("All simulation-control labels fire full veto")
-    func allSimulationControlLabelsFireVeto() {
+    func allSimulationControlLabelsFireVeto() throws {
         for label in CompositionTemplate.simulationControlLabels {
             let suggestion = CompositionTemplate.suggest(
-                forLifted: liftedStep(paramLabel: label),
+                forLifted: try liftedStep(paramLabel: label),
                 carrierKindResolver: valueSemanticResolver(carrier: "GraphLayoutEngine")
             )
             #expect(
@@ -221,14 +221,14 @@ struct CompositionTemplateMonotoneBoundedTests {
     // MARK: - Cycle-17 / cycle-25 BucketIterator.advance(until:) end-to-end
 
     @Test("V1.29.C — cycle-25 #36 BucketIterator.advance(until:) is now Suppressed")
-    func cycle25BucketIteratorEndToEnd() {
+    func cycle25BucketIteratorEndToEnd() throws {
         // Reproduces the cycle-25 V1.28.C pick #36: lifted form
         // (BucketIterator, Int) -> BucketIterator on `advance(until:)`.
         // V1.21.B previously demoted Strong (85) → Likely (60); V1.29.C
         // now suppresses outright (full veto). 4-cycle-stable-reject
         // (cycles 17 + 20 + 23 + 25) justifies the promotion.
         let suggestion = CompositionTemplate.suggest(
-            forLifted: liftedAdvance(paramLabel: "until", carrier: "BucketIterator"),
+            forLifted: try liftedAdvance(paramLabel: "until", carrier: "BucketIterator"),
             carrierKindResolver: valueSemanticResolver(carrier: "BucketIterator")
         )
         #expect(suggestion == nil)

@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 
 /// V2.0 M8.D.3 — binary-search shrinker over the M8.D.2 pin-sequence
 /// + prefix-length env-var primitive. Given a failing sequence index
@@ -161,7 +160,7 @@ public enum InteractionShrinker {
             let env = [
                 ActionSequenceStubEmitter.pinSequenceEnvVar: "\(sequenceIndex)",
                 ActionSequenceStubEmitter.pinSuffixStartEnvVar: "\(suffixStart)",
-                ActionSequenceStubEmitter.pinPrefixLengthEnvVar: "\(prefixLength)"
+                ActionSequenceStubEmitter.pinPrefixLengthEnvVar: "\(prefixLength)",
             ]
             do {
                 let output = try VerifierSubprocess.runVerifierBinary(

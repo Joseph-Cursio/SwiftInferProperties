@@ -49,7 +49,7 @@ struct CensusRunTests {
     func denominatorRoundTrips() throws {
         let original = Self.run([
             Self.member("swiftlang-swift", rows: ["idempotence": 398]),
-            Self.member("swift-nio", rows: ["idempotence": 12, "round-trip": 3])
+            Self.member("swift-nio", rows: ["idempotence": 12, "round-trip": 3]),
         ])
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("census-\(UUID().uuidString).json")
@@ -86,7 +86,7 @@ struct CensusRunTests {
     func rowsSumAcrossCorpora() {
         let census = Self.run([
             Self.member("one", rows: ["idempotence": 3, "round-trip": 1]),
-            Self.member("two", rows: ["idempotence": 4])
+            Self.member("two", rows: ["idempotence": 4]),
         ])
         #expect(census.rowsByTemplate == ["idempotence": 7, "round-trip": 1])
         #expect(census.corpora.map(\.total) == [4, 4])
@@ -101,7 +101,7 @@ struct CensusRunTests {
     func caveatsAreStoredNotJustPrinted() throws {
         let original = Self.run([
             Self.member("dirty-one", rows: ["idempotence": 1], dirty: true),
-            Self.member("untracked", rows: [:], revision: nil, pin: "uncheckable")
+            Self.member("untracked", rows: [:], revision: nil, pin: "uncheckable"),
         ])
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("census-\(UUID().uuidString).json")
@@ -123,7 +123,7 @@ struct CensusRunTests {
         let text = CensusRenderer.render(
             Self.run([
                 Self.member("swift-nio", rows: ["idempotence": 12]),
-                Self.member("swift-syntax", rows: ["round-trip": 5])
+                Self.member("swift-syntax", rows: ["round-trip": 5]),
             ]),
             wroteTo: nil
         )
@@ -155,7 +155,7 @@ struct CensusRunTests {
         let text = CensusRenderer.render(
             Self.run([
                 Self.member("umbrella-target", rows: [:]),
-                Self.member("real-code", rows: ["idempotence": 12])
+                Self.member("real-code", rows: ["idempotence": 12]),
             ]),
             wroteTo: nil
         )
@@ -203,7 +203,7 @@ struct CensusRunTests {
             CorpusPin.atPin(dirty: false).token,
             CorpusPin.atPin(dirty: true).token,
             CorpusPin.movedOff(head: "a", pinned: "b", dirty: false).token,
-            CorpusPin.movedOff(head: "a", pinned: "b", dirty: true).token
+            CorpusPin.movedOff(head: "a", pinned: "b", dirty: true).token,
         ]
         #expect(Set(tokens).count == tokens.count, "two states sharing a token: \(tokens)")
         #expect(tokens.allSatisfy { !$0.contains(" ") }, "a token with a space is a sentence")

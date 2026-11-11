@@ -19,7 +19,7 @@ import Testing
 struct CodableRoundTripLiveSurveyMeasuredTests {
 
     @Test("the live --all-from-index survey verifies the codable-round-trip picks")
-    func measuredLiveSurvey() async throws {
+    func measuredLiveSurvey() throws {
         let parent = FileManager.default.temporaryDirectory
             .appendingPathComponent("codable-roundtrip-live-corpus")
             .appendingPathComponent(UUID().uuidString)
@@ -32,7 +32,7 @@ struct CodableRoundTripLiveSurveyMeasuredTests {
             into: parent
         )
 
-        try await SwiftInferCommand.Verify.runAllFromIndex(
+        try SwiftInferCommand.Verify.runAllFromIndex(
             indexPathOverride: nil,
             budgetString: "small",
             workingDirectory: root,

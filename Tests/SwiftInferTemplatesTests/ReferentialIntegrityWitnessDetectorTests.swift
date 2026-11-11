@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferTemplates
 import Testing
 
@@ -91,7 +90,7 @@ struct ReferentialIntegrityWitnessDetectorTests {
         })
         #expect(pairs == [
             "selectedItemID→items",
-            "selectedUserID→users"
+            "selectedUserID→users",
         ])
     }
 

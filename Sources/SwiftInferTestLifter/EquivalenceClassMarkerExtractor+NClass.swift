@@ -1,6 +1,50 @@
 import SwiftInferCore
 import SwiftSyntax
 
+/// One classified test method ready for N-class partition aggregation.
+/// Mirrors M11.1's `Classification` shape with N-class-specific outlier
+/// reasons (marker-set-based assertion shape, case-literal mismatch).
+public enum NClassClassification: Sendable, Equatable {
+
+    case matched(predicateName: String, marker: String)
+
+    case outlier(predicateName: String?, reason: NClassOutlierReason)
+
+    var routingPredicateName: String? {
+        switch self {
+        case .matched(let name, _): return name
+        case .outlier(let name, _): return name
+        }
+    }
+}
+
+/// Why an N-class marker-bearing test method failed to become a
+/// matched site. Surfaced for diagnostics; the M13.2 detector treats any
+/// outlier as a partition-kill signal regardless of reason (PRD §3.5
+/// conservative bias).
+public enum NClassOutlierReason: Sendable, Equatable {
+
+    /// Method's name carried multiple markers from the same marker set
+    /// (e.g. `testSmallLarge_*` against `MarkerSet(markers: ["Small", "Medium", "Large"])`).
+    /// Treated as outlier rather than double-counting to either bucket.
+    case ambiguousMarker
+
+    /// Slicer found no recognized terminal assertion in the method body.
+    case noTerminalAssertion
+
+    /// Terminal assertion was recognized but didn't match the
+    /// `XCTAssertEqual(predicate(x), .case)` (or `#expect(predicate(x) == .case)`)
+    /// N-class shape — e.g. plain `XCTAssertTrue`, multi-arg comparisons,
+    /// or no `==` infix.
+    case nonEqualityAssertion
+
+    /// Assertion shape matched but the case literal didn't match the
+    /// bucket marker (case-insensitive identifier comparison per M13
+    /// plan OD #4). E.g. `testSmall_x` body asserts
+    /// `XCTAssertEqual(size(x), .medium)`.
+    case caseLiteralMismatch
+}
+
 /// TestLifter M13.2 — N-class classify pass that complements the M11.1
 /// two-class pass in `EquivalenceClassMarkerExtractor.swift`. Recognizes
 /// the `XCTAssertEqual(predicate(x), .case)` (or
@@ -127,48 +171,4 @@ extension EquivalenceClassMarkerExtractor {
               member.base == nil else { return nil }
         return member.declName.baseName.text
     }
-}
-
-/// One classified test method ready for N-class partition aggregation.
-/// Mirrors M11.1's `Classification` shape with N-class-specific outlier
-/// reasons (marker-set-based assertion shape, case-literal mismatch).
-public enum NClassClassification: Sendable, Equatable {
-
-    case matched(predicateName: String, marker: String)
-
-    case outlier(predicateName: String?, reason: NClassOutlierReason)
-
-    var routingPredicateName: String? {
-        switch self {
-        case .matched(let name, _): return name
-        case .outlier(let name, _): return name
-        }
-    }
-}
-
-/// Why an N-class marker-bearing test method failed to become a
-/// matched site. Surfaced for diagnostics; the M13.2 detector treats any
-/// outlier as a partition-kill signal regardless of reason (PRD §3.5
-/// conservative bias).
-public enum NClassOutlierReason: Sendable, Equatable {
-
-    /// Method's name carried multiple markers from the same marker set
-    /// (e.g. `testSmallLarge_*` against `MarkerSet(markers: ["Small", "Medium", "Large"])`).
-    /// Treated as outlier rather than double-counting to either bucket.
-    case ambiguousMarker
-
-    /// Slicer found no recognized terminal assertion in the method body.
-    case noTerminalAssertion
-
-    /// Terminal assertion was recognized but didn't match the
-    /// `XCTAssertEqual(predicate(x), .case)` (or `#expect(predicate(x) == .case)`)
-    /// N-class shape — e.g. plain `XCTAssertTrue`, multi-arg comparisons,
-    /// or no `==` infix.
-    case nonEqualityAssertion
-
-    /// Assertion shape matched but the case literal didn't match the
-    /// bucket marker (case-insensitive identifier comparison per M13
-    /// plan OD #4). E.g. `testSmall_x` body asserts
-    /// `XCTAssertEqual(size(x), .medium)`.
-    case caseLiteralMismatch
 }

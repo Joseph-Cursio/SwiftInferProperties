@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -53,7 +52,7 @@ struct DiscoverDisplayOrderTests {
             suggestion(template: "predicate", score: 20, identity: "p2"),
             suggestion(template: "idempotence", score: 80, identity: "i1"),
             suggestion(template: "predicate", score: 20, identity: "p3"),
-            suggestion(template: "differential-equivalence", score: 80, identity: "d1")
+            suggestion(template: "differential-equivalence", score: 80, identity: "d1"),
         ]
         let ordered = produced.sorted(by: SwiftInferCommand.Discover.strongestFirst)
         #expect(ordered.prefix(2).allSatisfy { $0.score.total == 80 })
@@ -91,7 +90,7 @@ struct DiscoverDisplayOrderTests {
     func owedLawIsStillSurfaced() {
         let produced = [
             suggestion(template: "idempotence", score: 80, identity: "i1"),
-            suggestion(template: "predicate", score: 20, identity: "p1")
+            suggestion(template: "predicate", score: 20, identity: "p1"),
         ]
         let ordered = produced.sorted(by: SwiftInferCommand.Discover.strongestFirst)
         #expect(ordered.count == 2)

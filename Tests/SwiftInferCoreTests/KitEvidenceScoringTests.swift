@@ -18,7 +18,7 @@ struct KitEvidenceScoringTests {
                     displayName: "normalize(_:)",
                     signature: "(\(carrier)) -> \(carrier)",
                     location: SourceLocation(file: "F.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: score, detail: "d")]),
             generator: .m1Placeholder,
@@ -34,7 +34,7 @@ struct KitEvidenceScoringTests {
             KitLawOutcome(
                 typeName: type, law: "Hashable.equalityConsistency",
                 outcome: .failed, tier: .strict, counterexample: "(Ann,200) vs (Bob,200)"
-            )
+            ),
         ])
     }
 
@@ -60,7 +60,7 @@ struct KitEvidenceScoringTests {
     func confirmedIsScoreNeutral() {
         let log = KitEvidenceLog(outcomes: [
             KitLawOutcome(typeName: "Widget", law: "Equatable.reflexivity", outcome: .passed, tier: .strict),
-            KitLawOutcome(typeName: "Widget", law: "Hashable.equalityConsistency", outcome: .passed, tier: .strict)
+            KitLawOutcome(typeName: "Widget", law: "Hashable.equalityConsistency", outcome: .passed, tier: .strict),
         ])
         let graded = KitEvidenceScoring.applied(to: [suggestion(carrier: "Widget")], evidence: log)
         #expect(graded.first?.score.total == 85, "confirmation is provenance, not a boost")
@@ -111,7 +111,7 @@ struct KitEvidenceScoringTests {
             KitLawOutcome(
                 typeName: "Widget", law: "Hashable.equalityConsistency",
                 outcome: .expectedViolation, tier: .strict
-            )
+            ),
         ])
         let input = [suggestion(carrier: "Widget")]
         #expect(KitEvidenceScoring.applied(to: input, evidence: log) == input)

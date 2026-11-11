@@ -34,7 +34,7 @@ struct DeterminismAccessSignalTests {
         let manifest = SeedManifest(seeds: [
             SeedManifest.Seed(
                 file: "Tokenizer.swift", line: 54, symbol: "tokenizeLine", kind: .restrictedFunction
-            )
+            ),
         ])
         let laws = SwiftInferCommand.Discover.synthesizeGenericLaws(
             for: manifest,

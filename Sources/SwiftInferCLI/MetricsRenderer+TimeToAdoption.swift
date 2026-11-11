@@ -132,7 +132,7 @@ extension MetricsRenderer {
                 String(row.count),
                 formatDuration(row.minSeconds),
                 formatDuration(row.medianSeconds),
-                formatDuration(row.maxSeconds)
+                formatDuration(row.maxSeconds),
             ].map { metricsLeftPad($0, width: 6) }
             lines.append("  | \(template) | \(cells[0]) | \(cells[1]) | \(cells[2]) | \(cells[3]) |")
         }

@@ -1,8 +1,55 @@
-import Foundation
 import SwiftEffectInference
 import SwiftSyntax
 
-@testable import SwiftInferCore
+// MARK: - The collector
+
+/// Every name a body calls, plus the names it declares locally.
+///
+/// **Scoped to call expressions on purpose.** A bare `x.count` also runs a
+/// getter this leaf cannot see, and admitting property reads would widen the
+/// population by an amount this census does not measure. Every number here is
+/// therefore a *lower* bound on item 30's exposure, and the suite header says so
+/// where it matters.
+final class CensusCalleeCollector: SyntaxVisitor {
+
+    private(set) var callees: Set<PurityAllowlistCensusMeasuredTests.Callee> = []
+    private(set) var nestedFunctionNames: Set<String> = []
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        nestedFunctionNames.insert(node.name.text)
+        return .visitChildren
+    }
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        if let callee = Self.callee(of: node.calledExpression) { callees.insert(callee) }
+        return .visitChildren
+    }
+
+    /// The name and shape of a call's callee, unwrapping the spellings that
+    /// wrap one: `Foo<Bar>(…)`, `(foo)(…)`, `foo?.bar(…)`, `foo!.bar(…)`.
+    static func callee(of expression: ExprSyntax) -> PurityAllowlistCensusMeasuredTests.Callee? {
+        if let reference = expression.as(DeclReferenceExprSyntax.self) {
+            return .init(name: reference.baseName.text, shape: .free)
+        }
+        if let member = expression.as(MemberAccessExprSyntax.self) {
+            return .init(name: member.declName.baseName.text, shape: .member)
+        }
+        if let specialized = expression.as(GenericSpecializationExprSyntax.self) {
+            return callee(of: specialized.expression)
+        }
+        if let tuple = expression.as(TupleExprSyntax.self), tuple.elements.count == 1,
+           let only = tuple.elements.first {
+            return callee(of: only.expression)
+        }
+        if let optional = expression.as(OptionalChainingExprSyntax.self) {
+            return callee(of: optional.expression)
+        }
+        if let forced = expression.as(ForceUnwrapExprSyntax.self) {
+            return callee(of: forced.expression)
+        }
+        return nil
+    }
+}
 
 /// The callee taxonomy, the collector, and the seed-set arithmetic for
 /// `PurityAllowlistCensusMeasuredTests`. Split out only for the 400-line file
@@ -141,55 +188,5 @@ extension PurityAllowlistCensusMeasuredTests {
             if decile > 0, sizes[decile] == nil { sizes[decile] = picked }
         }
         return (1...10).map { (decile: $0 * 10, size: sizes[$0]) }
-    }
-}
-
-// MARK: - The collector
-
-/// Every name a body calls, plus the names it declares locally.
-///
-/// **Scoped to call expressions on purpose.** A bare `x.count` also runs a
-/// getter this leaf cannot see, and admitting property reads would widen the
-/// population by an amount this census does not measure. Every number here is
-/// therefore a *lower* bound on item 30's exposure, and the suite header says so
-/// where it matters.
-final class CensusCalleeCollector: SyntaxVisitor {
-
-    private(set) var callees: Set<PurityAllowlistCensusMeasuredTests.Callee> = []
-    private(set) var nestedFunctionNames: Set<String> = []
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        nestedFunctionNames.insert(node.name.text)
-        return .visitChildren
-    }
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        if let callee = Self.callee(of: node.calledExpression) { callees.insert(callee) }
-        return .visitChildren
-    }
-
-    /// The name and shape of a call's callee, unwrapping the spellings that
-    /// wrap one: `Foo<Bar>(…)`, `(foo)(…)`, `foo?.bar(…)`, `foo!.bar(…)`.
-    static func callee(of expression: ExprSyntax) -> PurityAllowlistCensusMeasuredTests.Callee? {
-        if let reference = expression.as(DeclReferenceExprSyntax.self) {
-            return .init(name: reference.baseName.text, shape: .free)
-        }
-        if let member = expression.as(MemberAccessExprSyntax.self) {
-            return .init(name: member.declName.baseName.text, shape: .member)
-        }
-        if let specialized = expression.as(GenericSpecializationExprSyntax.self) {
-            return callee(of: specialized.expression)
-        }
-        if let tuple = expression.as(TupleExprSyntax.self), tuple.elements.count == 1,
-           let only = tuple.elements.first {
-            return callee(of: only.expression)
-        }
-        if let optional = expression.as(OptionalChainingExprSyntax.self) {
-            return callee(of: optional.expression)
-        }
-        if let forced = expression.as(ForceUnwrapExprSyntax.self) {
-            return callee(of: forced.expression)
-        }
-        return nil
     }
 }

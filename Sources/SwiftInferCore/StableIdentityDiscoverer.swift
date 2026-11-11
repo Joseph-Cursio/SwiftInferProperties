@@ -11,6 +11,7 @@ import Foundation
 /// surface) can't drift and is not surfaced.
 public enum StableIdentityDiscoverer {
 
+    /// `Hashable` classes with a mutation surface: the candidates whose identity could drift.
     public static func discover(
         typeDecls: [TypeDecl],
         functions: [FunctionSummary]

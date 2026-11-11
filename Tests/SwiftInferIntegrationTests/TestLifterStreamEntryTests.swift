@@ -1,9 +1,14 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
+
+/// No-op diagnostic sink — the stream-entry tests don't care about the
+/// warning stream from ConfigLoader / VocabularyLoader because the
+/// fixture directories don't carry config files.
+private struct SilentDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
 
 /// TestLifter M3.2 acceptance — lifted suggestions whose callee has no
 /// matching production-side function enter the visible `discover`
@@ -30,8 +35,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         // Promoted lifted Suggestion carries +50 `.testBodyPattern` per PRD §4.1.
@@ -58,8 +63,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
@@ -76,8 +81,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
         #expect(lifted.score.signals.contains { $0.kind == .testBodyPattern && $0.weight == 80 })
@@ -99,8 +104,8 @@ struct TestLifterStreamEntryTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let roundTripEntries = result.suggestions.filter { $0.templateName == "round-trip" }
         #expect(roundTripEntries.count == 1)
@@ -221,11 +226,4 @@ struct TestLifterStreamEntryTests {
             encoding: .utf8
         )
     }
-}
-
-/// No-op diagnostic sink — the stream-entry tests don't care about the
-/// warning stream from ConfigLoader / VocabularyLoader because the
-/// fixture directories don't carry config files.
-private struct SilentDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

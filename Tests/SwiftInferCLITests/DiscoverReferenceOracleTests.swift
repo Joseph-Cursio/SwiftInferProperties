@@ -122,7 +122,7 @@ struct DiscoverReferenceOracleTests {
 
     static let symbols = [
         "isValidQuantity", "scaled", "total", "count", "parse", "label", "smallest", "advance", "twice",
-        "report", "doubledArea", "record", "doubled", "tally", "normalized"
+        "report", "doubledArea", "record", "doubled", "tally", "normalized",
     ]
 
     /// The full advisory block for the fixture, every function seeded.
@@ -132,10 +132,10 @@ struct DiscoverReferenceOracleTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
             seedManifest: SeedManifest(seeds: symbols.map { .init(file: "Source.swift", line: 1, symbol: $0) }),
-            output: recording,
             diagnostics: SilentDiagnostics()
         )
         return (DiscoverDocstringAdviceSeedFocusTests.mainBlock(of: recording.text), directory)

@@ -31,7 +31,7 @@ enum ViewModelVerifyInteractionSurvey {
             ("referential-integrity", ViewModelRefintResolver.resolve(candidate)?.predicate),
             ("cardinality", ViewModelCardinalityResolver.resolve(candidate)),
             ("biconditional", ViewModelBiconditionalResolver.resolve(candidate)),
-            ("conservation", ViewModelConservationResolver.resolve(candidate))
+            ("conservation", ViewModelConservationResolver.resolve(candidate)),
         ]
         return raw.compactMap { family, predicate in
             predicate.map { (family, $0) }
@@ -44,9 +44,9 @@ enum ViewModelVerifyInteractionSurvey {
     static func run(
         candidates: [ViewModelCandidate],
         sourceFiles: [CorpusPackager.SourceFile],
-        userModuleName: String? = nil,
         workdir: URL,
-        runner: ViewModelVerifyInteractionPipeline.VerifyRunner
+        runner: ViewModelVerifyInteractionPipeline.VerifyRunner,
+        userModuleName: String? = nil
     ) -> [Entry] {
         var entries: [Entry] = []
         for candidate in candidates.sorted(by: { $0.typeName < $1.typeName }) {
@@ -55,9 +55,9 @@ enum ViewModelVerifyInteractionSurvey {
                     candidate: candidate,
                     predicate: predicate,
                     sourceFiles: sourceFiles,
-                    userModuleName: userModuleName,
                     workdir: workdir,
-                    runner: runner
+                    runner: runner,
+                    userModuleName: userModuleName
                 )
                 entries.append(Entry(typeName: candidate.typeName, family: family, result: result))
             }
@@ -99,9 +99,9 @@ enum ViewModelVerifyInteractionSurvey {
         let entries = run(
             candidates: candidates,
             sourceFiles: [],
-            userModuleName: userModuleName,
             workdir: workdir,
-            runner: runner ?? ViewModelVerifyInteractionPipeline.importedRunner(userPackage: userPackage)
+            runner: runner ?? ViewModelVerifyInteractionPipeline.importedRunner(userPackage: userPackage),
+            userModuleName: userModuleName
         )
         // The fold-back this survey existed without until 2026-08-12: persist
         // what was measured so `discover-interaction` re-tiers it. Without this

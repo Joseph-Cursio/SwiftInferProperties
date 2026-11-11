@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The block that shows a law **execution refuted**, on stdout, where a reader is looking.
@@ -64,7 +63,7 @@ enum RefutationRenderer {
             "These are NOT suggestions and are not proposed again: each was run and failed. A "
                 + "refutation is either a real defect in the subject or a false conjecture "
                 + "about correct code — read the counterexample and decide which.",
-            ""
+            "",
         ] + refuted.sorted { $0.templateName < $1.templateName }.flatMap(entry))
             .joined(separator: "\n")
     }
@@ -85,7 +84,7 @@ enum RefutationRenderer {
             "  ✗ \(suggestion.templateName)  \(subject)\(location)",
             "    \(detail)",
             "    Identity: \(suggestion.identity.display)",
-            ""
+            "",
         ]
     }
 }

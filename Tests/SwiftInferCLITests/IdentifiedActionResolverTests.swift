@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -41,7 +40,7 @@ struct IdentifiedActionResolverTests {
             carrierKind: .tca,
             actionCases: [
                 ActionCaseInfo(name: "addButtonTapped"),
-                ActionCaseInfo(name: "rows", payloadTypes: [payload])
+                ActionCaseInfo(name: "rows", payloadTypes: [payload]),
             ]
         )
         _ = childCandidates
@@ -69,7 +68,7 @@ struct IdentifiedActionResolverTests {
     func resolvesUUIDChild() {
         let row = child("Row", idType: "UUID", cases: [
             ActionCaseInfo(name: "increment"),
-            ActionCaseInfo(name: "setText", payloadTypes: ["String"])
+            ActionCaseInfo(name: "setText", payloadTypes: ["String"]),
         ])
         let enriched = IdentifiedActionResolver.resolve(
             parent("IdentifiedActionOf<Row>", childCandidates: [row]),
@@ -205,7 +204,7 @@ struct IdentifiedActionResolverTests {
         // The payload-free base case is picked; no recursion.
         let nested = child("Nested", idType: "UUID", cases: [
             ActionCaseInfo(name: "addRow"),
-            ActionCaseInfo(name: "rows", payloadTypes: ["IdentifiedActionOf<Nested>"])
+            ActionCaseInfo(name: "rows", payloadTypes: ["IdentifiedActionOf<Nested>"]),
         ])
         #expect(
             IdentifiedActionResolver.childActionValue(for: nested, among: [nested], depth: 0)

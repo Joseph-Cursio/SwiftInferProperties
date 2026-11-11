@@ -15,7 +15,7 @@
 > `0d10011f`; nothing built or run.** **The seam did not move.** `PBTSeedsFormatter`, the
 > `PBTSeed*` models and `Sources/CLI` are untouched, so the v2 schema, the seven-rule `seedKinds`
 > map, the three `role:`-passing visitors and the `pbt-seeds` CLI surface all hold; the consumer
-> side (`SeedManifest.swift`, `SeedField.swift`, `Discover+Seeds.swift`, the parity fixture) is
+> side (`SeedManifest.swift`, `SeedField.swift`, `SwiftInferCommand.Discover+Seeds.swift`, the parity fixture) is
 > also unchanged `79d4baab..16216624`. **Both repos still pin SEI `1b62e764`** — root manifest
 > and both nested SEI-consuming packages. What did move:
 > - **`RuleIdentifier` 212 → 213 cases (211 selectable)**: `wideReachThrough` (`f1cde1bd`,
@@ -919,7 +919,7 @@ gate, and a redirect into `.pbt/seeds.json` must not abort under a threshold.
 
 ## The hand-off, read from the consumer side
 
-Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` in full; the short version:
+Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/SwiftInferCommand.Discover+Seeds.swift` in full; the short version:
 
 - **A seed focuses, it does not extend.** Discovery scans the whole target and *then* narrows to
   seeded functions. An empty manifest focuses to **zero**, not to all. A missing or malformed file is
@@ -1088,7 +1088,7 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
 
 | question | file |
 |---|---|
-| the manifest schema, seed kinds, dropped-seed detection | `SwiftProjectLint/Sources/Core/Export/PBTSeedsFormatter.swift` |
+| the manifest schema, seed kinds, dropped-seed detection | `SwiftProjectLint/Sources/Core/Export/PBTSeedManifest.swift`, `PBTSeed.swift` (the schema) and `PBTSeedsFormatter.swift` |
 | the effect tier, its provenance, and why both travel | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/PBTSeedEffect.swift` |
 | which rules exist at all, and the count nothing tests | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/RuleIdentifier.swift` |
 | what a role is and why these six | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/PBTSeedRole.swift` |
@@ -1098,7 +1098,7 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift` 
 | the kernel motivating case, with its two real bugs | `SwiftProjectLint/Docs/rules/extractable-total-kernel.md` |
 | policing the cure vs detecting the disease | `SwiftProjectLint/Docs/design/primitive-bypassing-domain-type-rule-design.md` |
 | the format wiring and the exit-gate bypass | `SwiftProjectLint/Sources/CLI/OutputFormat.swift`, `SwiftProjectLintCLI.swift` |
-| consumer side of the same hop | `SwiftInferProperties/Sources/SwiftInferCLI/Discover+Seeds.swift`, `SeedManifest.swift`, `SeedRole.swift` ⚠ **2026-09-23: the latter two live in `Sources/SwiftInferCore/`, not beside `Discover+Seeds.swift`** |
+| consumer side of the same hop | `SwiftInferProperties/Sources/SwiftInferCLI/SwiftInferCommand.Discover+Seeds.swift`, `SeedManifest.swift`, `SeedRole.swift` ⚠ **2026-09-23: the latter two live in `Sources/SwiftInferCore/`, not beside `SwiftInferCommand.Discover+Seeds.swift`** |
 | which fields this consumer reads, and the guard that says so | `SwiftInferProperties/Sources/SwiftInferCore/SeedField.swift` (`SeedFieldParity`) + `SwiftInferProperties/Tests/SwiftInferCoreTests/SeedFieldParityTests.swift` + `SwiftInferProperties/fixtures/seed-manifest-parity/` |
 | what `restriction` corrects, and the one disagreement it is allowed to settle | `SwiftInferProperties/Sources/SwiftInferCore/SeedRestriction.swift`, `SeedRestrictionResolver.swift` |
 | why the declaration's own `private` is **not** tested first | `SwiftInferProperties/Sources/SwiftInferCore/FunctionScannerVisitor+AccessRestriction.swift`, `RestrictedFunction.swift` |

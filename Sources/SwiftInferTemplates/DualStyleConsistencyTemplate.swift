@@ -103,7 +103,7 @@ public enum DualStyleConsistencyTemplate {
             evidence: { pair in
                 [
                     pair.mutatingMember.inferenceEvidence,
-                    pair.nonMutatingMember.inferenceEvidence
+                    pair.nonMutatingMember.inferenceEvidence,
                 ]
             },
             identity: Self.makeIdentity(for:),
@@ -120,7 +120,7 @@ public enum DualStyleConsistencyTemplate {
     ) -> [Signal] {
         var signals: [Signal] = [
             typeShapeSignal(for: pair),
-            namingPairSignal(for: pair)
+            namingPairSignal(for: pair),
         ]
         if let covered = assumedKitCoverage(
             for: pair, inheritedTypesByName: inheritedTypesByName
@@ -148,7 +148,7 @@ public enum DualStyleConsistencyTemplate {
                 + "counterpart of the mutating member — i.e. both implementations "
                 + "describe the same logical operation. A sibling pair with the "
                 + "matching name shape but divergent semantics will fail at "
-                + "sampling time."
+                + "sampling time.",
         ]
     }
 
@@ -204,38 +204,5 @@ public enum DualStyleConsistencyTemplate {
         Signal.nonDeterministicVeto(
             acrossBodiesOf: [pair.mutatingMember, pair.nonMutatingMember]
         ) { "Non-deterministic API in dual-style pair body: \($0)" }
-    }
-
-    // MARK: - Suggestion construction
-
-    private static func makeExplainability(
-        for pair: DualStylePair,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let mutEvidence = pair.mutatingMember.inferenceEvidence
-        let nonMutEvidence = pair.nonMutatingMember.inferenceEvidence
-        whySuggested.append(
-            "\(mutEvidence.displayName) \(mutEvidence.signature)"
-                + " — \(mutEvidence.location)"
-        )
-        whySuggested.append(
-            "\(nonMutEvidence.displayName) \(nonMutEvidence.signature)"
-                + " — \(nonMutEvidence.location)"
-        )
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "T must conform to Equatable for the emitted property to compile. "
-                + "SwiftInfer V1.18 does not verify protocol conformance — "
-                + "confirm before applying.",
-            "Property assumes the non-mutating member is the value-returning "
-                + "counterpart of the mutating member — i.e. both implementations "
-                + "describe the same logical operation. A sibling pair with the "
-                + "matching name shape but divergent semantics will fail at "
-                + "sampling time."
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }
 }

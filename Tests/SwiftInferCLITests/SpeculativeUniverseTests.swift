@@ -76,7 +76,7 @@ struct SpeculativeUniverseTests {
                 public static func canonicalize(_ item: Item) -> Item { Item(n: abs(item.n)) }
                 private static func helper(_ x: Int) -> Int { x }
             }
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let proposals = try Self.proposals(for: root)
@@ -113,7 +113,7 @@ struct SpeculativeUniverseTests {
         public func merge(_ lhs: Item, _ rhs: Item) -> Item { Item(n: max(lhs.n, rhs.n)) }
         private func clamp(_ value: Int) -> Int { min(max(value, 0), 100) }
         public func clamped(_ value: Int) -> Int { clamp(value) }
-        """
+        """,
     ]
 
     /// The over-refuting namesake: `Examples/` is production by the shared rule, and its `Item`
@@ -141,7 +141,7 @@ struct SpeculativeUniverseTests {
             "Tests/LibTests/LibTests.swift": "struct LibTests {}",
             "Demo/Package.swift": "// swift-tools-version: 5.9\n",
             "Demo/Sources/Demo/main.swift": "print(2)",
-            "Sources/Lib/Lib.swift": "public func f() -> Int { 1 }"
+            "Sources/Lib/Lib.swift": "public func f() -> Int { 1 }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let outside = SpeculativeRefactorRunner.universeOutsideSources(of: root)

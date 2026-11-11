@@ -1,8 +1,5 @@
-import Foundation
 import SwiftEffectInference
 import Testing
-
-@testable import SwiftInferCore
 
 /// The standing verdict for `PurityAllowlistCensusMeasuredTests`, asserted
 /// rather than described so it cannot drift. Exact counts and the tree they were

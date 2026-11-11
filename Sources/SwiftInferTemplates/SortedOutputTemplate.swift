@@ -30,10 +30,12 @@ import SwiftInferCore
 /// unsorted — which is a defect, and the one the `comparator` template exists to find.
 public enum SortedOutputTemplate {
 
+    /// The `sorted-output` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `sorted-output` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "sorted-output",
@@ -72,7 +74,7 @@ public enum SortedOutputTemplate {
                 kind: .typeSymmetrySignature,
                 weight: 40,
                 detail: "the body sorts it: \(subject) is ordered by \(describe(ordering.keys))"
-            )
+            ),
         ]
         if let doc = summary.docComment, statesAnOrdering(doc) {
             signals.append(Signal(
@@ -112,7 +114,7 @@ public enum SortedOutputTemplate {
                 + "when elements share values — two findings in one rule, one rule in several files "
                 + "— and a wide alphabet almost never draws that. Narrow the alphabet of whatever "
                 + "the result is grouped or keyed by: on `ImpactReport.from`, a dropped key passed "
-                + "100 trials at the default generator and failed with three values per key."
+                + "100 trials at the default generator and failed with three values per key.",
         ]
     }
 }

@@ -23,7 +23,7 @@ extension ConstructionPurityWiringTests {
                 public let name: String
                 public var sample: Item { Item(title: name) }
             }
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -60,7 +60,7 @@ extension ConstructionPurityWiringTests {
             }
             """,
             "Sources/Lib/Item.swift": Self.item,
-            "Sources/Model/Other.swift": "public struct Other: Equatable { public let n: Int }"
+            "Sources/Model/Other.swift": "public struct Other: Equatable { public let n: Int }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -77,7 +77,7 @@ extension ConstructionPurityWiringTests {
         let root = try Self.makePackage([
             "Sources/Lib/Item.swift": Self.item,
             "Sources/Lib/Make.swift": Self.make,
-            "Sources/Empty/README.md": "no Swift here"
+            "Sources/Empty/README.md": "no Swift here",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(PackagePurity.forJudging(directory: root.appendingPathComponent("Sources/Empty")) == nil)

@@ -1,6 +1,5 @@
 import Foundation
 import PropertyLawCore
-@testable import SwiftInferCLI
 import SwiftInferCore
 @testable import SwiftInferTemplates
 import SwiftParser
@@ -40,7 +39,7 @@ struct DelegationGateCensusMeasuredTests {
     @Test("the gate as shipped against a gate that resolves the target")
     func compareShippedAndPreciseGates() throws {
         let root = URL(
-            fileURLWithPath: ProcessInfo.processInfo.environment["SWIFT_INFER_DELEGATION_CENSUS"]!
+            fileURLWithPath: try #require(ProcessInfo.processInfo.environment["SWIFT_INFER_DELEGATION_CENSUS"])
         )
         let artifacts = try TemplateRegistry.discoverArtifacts(in: root)
         let shapes = TypeShapeBuilder.shapes(from: artifacts.typeDecls)

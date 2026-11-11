@@ -41,14 +41,14 @@ struct SeedEffectResolverTests {
     }
 
     private func manifest(
-        symbol: String = "confirmOrder",
-        effect: SeedEffect?
+        effect: SeedEffect?,
+        symbol: String = "confirmOrder"
     ) -> SeedManifest {
         SeedManifest(seeds: [
             SeedManifest.Seed(
                 file: "Orders.swift", line: 11, symbol: symbol,
                 rule: "Idempotency Violation", kind: .idempotency, effect: effect
-            )
+            ),
         ])
     }
 

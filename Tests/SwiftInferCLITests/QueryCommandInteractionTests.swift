@@ -18,13 +18,13 @@ struct QueryCommandInteractionTests {
         actionTypeName: "Action",
         predicate: "reduce(reduce(s, .dismiss), .dismiss) == reduce(s, .dismiss)",
         location: "/nav.swift:10",
-        moduleName: "Nav",
         score: 40,
         tier: "Likely",
-        decision: nil,
-        decisionAt: nil,
         firstSeenAt: "2026-06-13T00:00:00Z",
-        lastSeenAt: "2026-06-13T12:00:00Z"
+        lastSeenAt: "2026-06-13T12:00:00Z",
+        moduleName: "Nav",
+        decision: nil,
+        decisionAt: nil
     )
 
     private static let refint = InteractionIndexEntry(
@@ -35,25 +35,25 @@ struct QueryCommandInteractionTests {
         actionTypeName: "Action",
         predicate: "state.selectedID == nil || state.items.contains { $0.id == state.selectedID }",
         location: "/library.swift:20",
-        moduleName: nil,
         score: 30,
         tier: "Possible",
-        decision: "accepted",
-        decisionAt: "2026-06-14T01:00:00Z",
         firstSeenAt: "2026-06-13T00:00:00Z",
-        lastSeenAt: "2026-06-14T01:00:00Z"
+        lastSeenAt: "2026-06-14T01:00:00Z",
+        moduleName: nil,
+        decision: "accepted",
+        decisionAt: "2026-06-14T01:00:00Z"
     )
 
     private static let algebraic = SemanticIndexEntry(
         identityHash: "0x0000000000000001",
         templateName: "round-trip",
-        typeName: "Codec",
         score: 85,
         tier: "Strong",
         primaryFunctionName: "encode(_:)",
         location: "/Codec.swift:10",
         firstSeenAt: "2026-06-10T00:00:00Z",
-        lastSeenAt: "2026-06-13T12:00:00Z"
+        lastSeenAt: "2026-06-13T12:00:00Z",
+        typeName: "Codec"
     )
 
     private static let bothEntries = [idem, refint]

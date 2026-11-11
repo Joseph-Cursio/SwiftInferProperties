@@ -39,7 +39,7 @@ struct WireFormatRawValueTests {
             "idempotence-lifted", "dual-style-consistency", "monotonicity", "involution",
             "binary-idempotence", "homomorphism", "multiplicative-homomorphism", "measure-non-negativity",
             "role-postcondition", "differential-equivalence", "predicate", "inverse-pair",
-            "identity-element", "composition", "invariant-preservation", "replay-idempotence"
+            "identity-element", "composition", "invariant-preservation", "replay-idempotence",
         ])
     }
 
@@ -66,7 +66,7 @@ struct WireFormatRawValueTests {
     @Test func interactionInvariantFamily() {
         #expect(InteractionInvariantFamily.allCases.map(\.rawValue) == [
             "conservation", "idempotence", "cardinality", "referential-integrity", "biconditional",
-            "determinism", "unknown-action-is-no-op", "output-determinism"
+            "determinism", "unknown-action-is-no-op", "output-determinism",
         ])
     }
 

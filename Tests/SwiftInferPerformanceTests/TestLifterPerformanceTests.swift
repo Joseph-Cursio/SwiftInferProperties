@@ -3,6 +3,14 @@ import SwiftInferCLI
 import SwiftInferTestLifter
 import Testing
 
+/// Silent diagnostic sink for the M3.4 pipeline-budget test —
+/// suppresses ConfigLoader / VocabularyLoader warnings the synthetic
+/// fixtures would surface, since they're unrelated to perf
+/// measurement.
+private struct SilentPerfDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// PRD §13 performance budget enforcement for TestLifter — the
 /// "TestLifter parse of 100 test files" row mandates `< 3 seconds wall`.
 /// A regression test failure blocks release per PRD §13 conventions.
@@ -92,8 +100,8 @@ struct TestLifterPerformanceTests {
         let elapsed = try measureWall {
             pipelineResult = try SwiftInferCommand.Discover.collectVisibleSuggestions(
                 directory: directory,
-                includePossible: true,
-                diagnostics: SilentPerfDiagnostics()
+                diagnostics: SilentPerfDiagnostics(),
+                includePossible: true
             )
         }
         // V1.6.1 patch — flake-resistant 6.0s budget (cycle-3 priority #7).
@@ -151,7 +159,7 @@ struct TestLifterPerformanceTests {
             nonDetectableMethod(),
             "}",
             "",
-            swiftTestingRoundTripDecl(index: index)
+            swiftTestingRoundTripDecl(index: index),
         ].filter { !$0.isEmpty }.joined(separator: "\n\n")
         return """
         import XCTest
@@ -267,12 +275,4 @@ struct TestLifterPerformanceTests {
     private func formatted(_ seconds: Double) -> String {
         String(format: "%.3f", seconds)
     }
-}
-
-/// Silent diagnostic sink for the M3.4 pipeline-budget test —
-/// suppresses ConfigLoader / VocabularyLoader warnings the synthetic
-/// fixtures would surface, since they're unrelated to perf
-/// measurement.
-private struct SilentPerfDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

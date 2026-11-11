@@ -92,7 +92,7 @@ struct RoundTripPairingEvidenceCensusTests {
     @Test("dump every round-trip suggestion with its pairing evidence")
     func dump() throws {
         let environment = ProcessInfo.processInfo.environment
-        let output = URL(fileURLWithPath: environment["SWIFT_INFER_PAIRING_CENSUS"]!)
+        let output = URL(fileURLWithPath: try #require(environment["SWIFT_INFER_PAIRING_CENSUS"]))
         var all: [Row] = []
         for corpus in CorpusManifest.available {
             all += Self.rows(corpus: corpus.id, root: corpus.primaryRoot)

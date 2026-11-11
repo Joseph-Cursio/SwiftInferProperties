@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V2.0 M6 — Referential Integrity interaction-template family. PRD §5.5.
@@ -51,7 +50,7 @@ public enum ReferentialIntegrityInteractionTemplate: InteractionTemplateFamily {
                 + "integrity candidate (PRD §5.5).",
             "Reducer-shaped signature (\(candidate.signatureShape.rawValue)) — "
                 + "verifier asserts the selection points to an extant element "
-                + "at each action step."
+                + "at each action step.",
         ]
     }
 
@@ -77,7 +76,7 @@ public enum ReferentialIntegrityInteractionTemplate: InteractionTemplateFamily {
                 + "as an automatic veto.",
             "Initial-state invariant may not hold if `State.init()` sets "
                 + "`\(witness.selectedPropertyName)` to a non-nil value with "
-                + "`\(witness.collectionPropertyName)` empty."
+                + "`\(witness.collectionPropertyName)` empty.",
         ]
     }
 }

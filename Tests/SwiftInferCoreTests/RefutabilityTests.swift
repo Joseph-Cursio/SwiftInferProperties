@@ -1,4 +1,3 @@
-import Foundation
 import Testing
 
 @testable import SwiftInferCore
@@ -134,7 +133,7 @@ struct RefutabilityTests {
         // Shape-entailed roles plus the strong-role names (the name IS the contract).
         for template in [
             "predicate", "comparator", "partition", "state-machine",
-            "filter-subset", "selection-subset", "diff-disjointness"
+            "filter-subset", "selection-subset", "diff-disjointness",
         ] {
             #expect(Refutability.isWorthSurfacingBelowCut(suggestion(template: template)), "\(template)")
         }

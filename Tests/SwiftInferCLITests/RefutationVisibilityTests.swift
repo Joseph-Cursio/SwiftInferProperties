@@ -3,6 +3,16 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Collects what `renderAndWrite` produced, so the assertions are about real rendered output
+/// rather than about a helper that only the test calls.
+private final class CapturingDiscoverOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var written = ""
+
+    func write(_ text: String) {
+        written = text
+    }
+}
+
 /// Guards the refutation surface added 2026-08-13.
 ///
 /// `verifyDisproven` is a correct full veto, so a refuted pick lands at `.suppressed` and is
@@ -30,7 +40,7 @@ struct RefutationVisibilityTests {
                     displayName: subject,
                     signature: "(String) -> Self",
                     location: SourceLocation(file: "/tmp/Config.swift", line: 61, column: 5)
-                )
+                ),
             ],
             score: Score(signals: signals),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -69,7 +79,7 @@ struct RefutationVisibilityTests {
                     kind: .protocolCoveredProperty,
                     weight: Signal.vetoWeight,
                     detail: "kit covers this"
-                )
+                ),
             ]
         )
         #expect(coverageVetoed.score.tier == .suppressed)
@@ -130,8 +140,8 @@ struct RefutationVisibilityTests {
                 visible: [],
                 statsOnly: statsOnly,
                 evidenceByIdentity: [:],
-                refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])],
-                output: output
+                output: output,
+                refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])]
             )
             #expect(
                 output.written.contains("REFUTED BY MEASUREMENT"),
@@ -149,8 +159,8 @@ struct RefutationVisibilityTests {
             visible: [],
             statsOnly: false,
             evidenceByIdentity: [:],
-            refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])],
-            output: output
+            output: output,
+            refutedLaws: [suggestion(template: "round-trip", signals: [disprovenSignal])]
         )
         #expect(output.written.contains("REFUTED BY MEASUREMENT"))
     }
@@ -161,8 +171,11 @@ struct RefutationVisibilityTests {
         // every clean run, and clean runs are the common case.
         let withEmpty = CapturingDiscoverOutput()
         SwiftInferCommand.Discover.renderAndWrite(
-            visible: [], statsOnly: false, evidenceByIdentity: [:],
-            refutedLaws: [], output: withEmpty
+            visible: [],
+            statsOnly: false,
+            evidenceByIdentity: [:],
+            output: withEmpty,
+            refutedLaws: []
         )
         let withDefault = CapturingDiscoverOutput()
         SwiftInferCommand.Discover.renderAndWrite(
@@ -170,15 +183,5 @@ struct RefutationVisibilityTests {
         )
         #expect(withEmpty.written == withDefault.written)
         #expect(!withEmpty.written.contains("REFUTED"))
-    }
-}
-
-/// Collects what `renderAndWrite` produced, so the assertions are about real rendered output
-/// rather than about a helper that only the test calls.
-private final class CapturingDiscoverOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var written = ""
-
-    func write(_ text: String) {
-        written = text
     }
 }

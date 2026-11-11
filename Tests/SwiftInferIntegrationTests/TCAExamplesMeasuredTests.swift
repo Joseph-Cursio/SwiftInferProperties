@@ -52,8 +52,8 @@ struct TCAExamplesMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "TCAExamplesCorpus",
             familyFilter: "determinism",
-            sequenceCount: 64,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 64
         )
         #expect(summary.contains("Identities: 6 (--family determinism)"))
         #expect(summary.contains("6 measured-bothPass"))
@@ -65,8 +65,8 @@ struct TCAExamplesMeasuredTests {
 
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "TCAExamplesCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         let blocks = discovered.components(separatedBy: "[Interaction-Invariant Suggestion]")
         func determinismBlock(reducer: String) -> String? {
@@ -80,7 +80,7 @@ struct TCAExamplesMeasuredTests {
             "BindingBasics",
             "AlertAndConfirmationDialog",
             "Timers",
-            "Nested"
+            "Nested",
         ] {
             #expect(
                 determinismBlock(reducer: reducer)?.contains("(Verified)") == true,

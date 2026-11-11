@@ -1,5 +1,58 @@
 import Foundation
 
+/// V2.0 M4.A — the five interaction-invariant families from PRD §5.
+/// All five ship in the enum at M4.A; the *templates* that fire on
+/// each family ship across M4–M7:
+///
+///   - `conservation` — M4 (lifted from v1). Stored aggregate that
+///     should equal the recomputation from a contributing collection.
+///   - `idempotence` — M4 (lifted from v1). Applying-twice an Action
+///     case equals applying-once.
+///   - `cardinality` — M5. At most one transient-presentation flag
+///     active.
+///   - `referentialIntegrity` — M6. Selected ID exists in extant
+///     collection.
+///   - `biconditional` — M7. Two State fields that should be
+///     either both-set or both-unset.
+///
+/// Raw values are stable strings so downstream consumers (the
+/// `discover-interaction` render path, the §17 metrics arc once
+/// schema v4 ships) can key on them.
+public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, CaseIterable {
+    case conservation
+    case idempotence
+    case cardinality
+    case referentialIntegrity = "referential-integrity"
+    case biconditional
+    /// A `.redux`-family reducer's paradigm-distinctive purity guarantee:
+    /// `reduce(s, a) == reduce(s, a)` for the same inputs. Unlike the other
+    /// families this is not a State-shape predicate but a two-call
+    /// comparison (mirrors `idempotence`'s post-loop double-apply), and it
+    /// is genuinely falsifiable at runtime — a hidden `Date()` / `UUID()` /
+    /// `.random()` makes the two calls differ, which static purity analysis
+    /// cannot catch.
+    case determinism
+    /// A `.redux`-family reducer with an *open* Action alphabet (a protocol
+    /// `Action` à la ReSwift, or String/opaque dispatch — `hasClosedActionAlphabet`
+    /// is false): an action the reducer does not recognise should fall through to
+    /// the default branch and leave State unchanged — `reduce(s, unknown) ==
+    /// s`. Measured by minting a fresh probe type conforming to the open
+    /// alphabet and asserting the reducer leaves State untouched. Closed Swift
+    /// enums are exhaustive, so no "unknown" is representable and the family
+    /// never fires on them.
+    case unknownActionIsNoOp = "unknown-action-is-no-op"
+    /// A convention role's (VIPER interactor / MVP presenter) paradigm-
+    /// distinctive guarantee: given the same input, the role's calls to its
+    /// output protocol are deterministic. Unlike the other families this is
+    /// neither a State-shape predicate nor a reducer property — it's verified
+    /// by a dedicated harness (`OutputDeterminismVerifierEmitter`) that runs the
+    /// role twice with a *recording* fake for the output collaborator and
+    /// compares the recorded call logs. A hidden `Date()` / `UUID()` /
+    /// `.random()` in the output path makes the two logs differ. Discovered off
+    /// `ConventionRoleDiscoverer` roles, not the reducer template engine.
+    case outputDeterminism = "output-determinism"
+}
+
 /// V2.0 M4.A — one inferred interaction-invariant candidate. The
 /// output unit of the M4+ template engine and the input unit for
 /// every downstream stage (M4.D embeds the predicate into M3.B's
@@ -159,115 +212,5 @@ public struct InteractionInvariantSuggestion: Sendable, Equatable, Codable {
         predicate: String
     ) -> String {
         "\(family.rawValue)::\(reducerQualifiedName)::\(predicate)"
-    }
-}
-
-/// V2.0 M4.A — the five interaction-invariant families from PRD §5.
-/// All five ship in the enum at M4.A; the *templates* that fire on
-/// each family ship across M4–M7:
-///
-///   - `conservation` — M4 (lifted from v1). Stored aggregate that
-///     should equal the recomputation from a contributing collection.
-///   - `idempotence` — M4 (lifted from v1). Applying-twice an Action
-///     case equals applying-once.
-///   - `cardinality` — M5. At most one transient-presentation flag
-///     active.
-///   - `referentialIntegrity` — M6. Selected ID exists in extant
-///     collection.
-///   - `biconditional` — M7. Two State fields that should be
-///     either both-set or both-unset.
-///
-/// Raw values are stable strings so downstream consumers (the
-/// `discover-interaction` render path, the §17 metrics arc once
-/// schema v4 ships) can key on them.
-public enum InteractionInvariantFamily: String, Sendable, Equatable, Codable, CaseIterable {
-    case conservation
-    case idempotence
-    case cardinality
-    case referentialIntegrity = "referential-integrity"
-    case biconditional
-    /// A `.redux`-family reducer's paradigm-distinctive purity guarantee:
-    /// `reduce(s, a) == reduce(s, a)` for the same inputs. Unlike the other
-    /// families this is not a State-shape predicate but a two-call
-    /// comparison (mirrors `idempotence`'s post-loop double-apply), and it
-    /// is genuinely falsifiable at runtime — a hidden `Date()` / `UUID()` /
-    /// `.random()` makes the two calls differ, which static purity analysis
-    /// cannot catch.
-    case determinism
-    /// A `.redux`-family reducer with an *open* Action alphabet (a protocol
-    /// `Action` à la ReSwift, or String/opaque dispatch — `hasClosedActionAlphabet`
-    /// is false): an action the reducer does not recognise should fall through to
-    /// the default branch and leave State unchanged — `reduce(s, unknown) ==
-    /// s`. Measured by minting a fresh probe type conforming to the open
-    /// alphabet and asserting the reducer leaves State untouched. Closed Swift
-    /// enums are exhaustive, so no "unknown" is representable and the family
-    /// never fires on them.
-    case unknownActionIsNoOp = "unknown-action-is-no-op"
-    /// A convention role's (VIPER interactor / MVP presenter) paradigm-
-    /// distinctive guarantee: given the same input, the role's calls to its
-    /// output protocol are deterministic. Unlike the other families this is
-    /// neither a State-shape predicate nor a reducer property — it's verified
-    /// by a dedicated harness (`OutputDeterminismVerifierEmitter`) that runs the
-    /// role twice with a *recording* fake for the output collaborator and
-    /// compares the recorded call logs. A hidden `Date()` / `UUID()` /
-    /// `.random()` in the output path makes the two logs differ. Discovered off
-    /// `ConventionRoleDiscoverer` roles, not the reducer template engine.
-    case outputDeterminism = "output-determinism"
-}
-
-public extension InteractionInvariantFamily {
-
-    /// V2.0 Finding G — the SwiftProjectLint refactor lint a family
-    /// cross-references, or `nil` if the family carries no re-home.
-    ///
-    /// Finding G (cycle 104) established that Cardinality and
-    /// Biconditional detect a **representable illegal state** — a
-    /// SwiftSyntax-AST smell that SwiftProjectLint already lints
-    /// (`mutually-exclusive-presentation-state`, `flag-optional-pair-state`).
-    /// The detector is *not* wrong: the State shape it matches is real.
-    /// But the inferred *invariant* holds at only 33–50% acceptance as a
-    /// runtime property (the corpus showed the predicate can be false at
-    /// rest for orthogonal fields, or enforced at a presentation layer the
-    /// generated test doesn't model), so the generated test can false-fail
-    /// without a real bug.
-    ///
-    /// Per the cycle-104 decision we **keep emitting the property** (a
-    /// failing test may still surface a genuine unguarded illegal state —
-    /// the detector can't tell the two apart) but **never promote it past
-    /// `.possible`** and cross-reference the lint in the suggestion's
-    /// "why this might be wrong" block. This property is the single source
-    /// of both the cross-reference rule name *and* the promotion gate:
-    /// a non-nil value means "pin at `.possible`, do not promote." Any
-    /// future interaction-suggestion score→tier promotion path must
-    /// consult it.
-    var swiftProjectLintDeferral: String? {
-        switch self {
-        case .cardinality:
-            return "mutually-exclusive-presentation-state"
-
-        case .biconditional:
-            return "flag-optional-pair-state"
-
-        case .conservation, .idempotence, .referentialIntegrity, .determinism,
-             .unknownActionIsNoOp, .outputDeterminism:
-            return nil
-        }
-    }
-
-    /// The score → tier mapping for this family, honoring the Finding-G
-    /// promotion gate (cycle 107 / cycle 112). A family carrying a
-    /// `swiftProjectLintDeferral` (cardinality + biconditional) is
-    /// **clamped to `.possible` regardless of score** — it detects a
-    /// representable-illegal-state refactor smell, not a high-precision
-    /// runtime property, so it must never promote off `.possible` even
-    /// when a score signal (template scoring *or* a verify-evidence fold)
-    /// would otherwise lift it.
-    ///
-    /// Single source of truth: both template emission
-    /// (`InteractionTemplateFamily.tierFor`) and the verify-evidence
-    /// re-grade (`InteractionVerifyEvidenceScoring`) route through here,
-    /// so the gate can't be bypassed on one path and not the other.
-    func tier(forScore score: Int) -> Tier {
-        swiftProjectLintDeferral == nil ? Tier(score: score) : .possible
     }
 }

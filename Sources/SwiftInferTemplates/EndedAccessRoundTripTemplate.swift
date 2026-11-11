@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// **Same-end access round-trip** — adding at one end and removing from that end returns
@@ -11,12 +10,14 @@ import SwiftInferCore
 /// forced the second.
 public enum EndedAccessRoundTripTemplate {
 
+    /// The `ended-access-round-trip` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: EndedAccessPairing.EndedAccessShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `ended-access-round-trip` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<EndedAccessPairing.EndedAccessShape> {
         Constraint<EndedAccessPairing.EndedAccessShape>(
             templateName: "ended-access-round-trip",
@@ -52,7 +53,7 @@ public enum EndedAccessRoundTripTemplate {
                 detail: "Mutating add/remove pair on \(shape.typeName): "
                     + "`\(shape.addition.name)(\(shape.elementTypeText))` against "
                     + "`\(shape.removal.name)() -> \(shape.removal.returnTypeText ?? "?")`"
-            )
+            ),
         ]
     }
 
@@ -62,7 +63,7 @@ public enum EndedAccessRoundTripTemplate {
         [
             "From the `known-properties` [reference] rows — the stack/queue/deque laws the "
                 + "catalog already verifies on stdlib types but that no template could "
-                + "transfer to a carrier of your own until now"
+                + "transfer to a carrier of your own until now",
         ]
     }
 
@@ -82,7 +83,7 @@ public enum EndedAccessRoundTripTemplate {
                 + "`\(shape.removal.name)` says which end. A carrier that reinterprets it — "
                 + "returning a minimum, a most-recently-used entry, or a random element — "
                 + "does not owe this law, and the failure would be a finding about the name "
-                + "rather than about the code."
+                + "rather than about the code.",
         ]
         if shape.removalIsOptional {
             caveats.append(
@@ -116,7 +117,7 @@ public enum EndedAccessRoundTripTemplate {
                     + "whatever capacity boundary forces a reallocation or a wrap-around. "
                     + "Draw those deliberately — a uniform size distribution will miss all "
                     + "three and report green."
-            )
+            ),
         ]
     }
 

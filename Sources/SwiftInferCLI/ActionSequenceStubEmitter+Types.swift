@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // V2.0 M8.A — `ActionSequenceStubEmitter.Inputs` + `EmitError` lifted
@@ -6,9 +5,9 @@ import SwiftInferCore
 // under SwiftLint's `type_body_length` cap as M8 adds the effect-
 // discard arms. Pure relocation — no behavior change.
 
-extension ActionSequenceStubEmitter {
+public extension ActionSequenceStubEmitter {
 
-    public struct Inputs: Sendable, Equatable {
+    struct Inputs: Sendable, Equatable {
         public let candidate: ReducerCandidate
         public let userModuleName: String
         public let sequenceCount: Int
@@ -73,7 +72,7 @@ extension ActionSequenceStubEmitter {
     /// `State()`) plus the case expressions *minus* the leading dot
     /// (`"dismiss"`, `"select(0)"`, `"setColor(color: 0)"`). The selector
     /// guarantees each element compiles against the Action alphabet.
-    public struct SeedTrace: Sendable, Equatable {
+    struct SeedTrace: Sendable, Equatable {
         public let initialState: String?
         public let actions: [String]
 
@@ -83,7 +82,7 @@ extension ActionSequenceStubEmitter {
         }
     }
 
-    public enum EmitError: Error, CustomStringConvertible, Equatable {
+    enum EmitError: Error, CustomStringConvertible, Equatable {
         case unsupportedShape(ReducerSignatureShape)
         case unsupportedCarrier(ReducerCarrierKind)
         case unsupportedFamily(InteractionInvariantFamily)

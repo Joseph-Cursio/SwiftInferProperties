@@ -1876,9 +1876,9 @@ question is the false-positive rate, which the cold walk should measure before d
 needs a stricter contract bar than `///`.
 
 Repos touched (SwiftInferProperties main): `FunctionSummary.swift`, `FunctionScannerVisitor+Summary.swift`,
-`DocCommentExtractor.swift` (new), `DocstringAdvisor.swift` (new), `Discover+GenericLaws.swift`
+`DocCommentExtractor.swift` (new), `DocstringAdvisor.swift` (new), `SwiftInferCommand.Discover+GenericLaws.swift`
 (two helpers `private`→internal for shared keying), `SwiftInferCommand.swift` (flag),
-`Discover+Render.swift`, `Discover+DocstringAdvice.swift` (new), `DocstringAdvisoryRenderer.swift`
+`SwiftInferCommand.Discover+Render.swift`, `SwiftInferCommand.Discover+DocstringAdvice.swift` (new), `DocstringAdvisoryRenderer.swift`
 (new). Book tie-in: §2.4.2, Appendix C road-test note, Ch15 §15.3.3.
 
 ---
@@ -2018,7 +2018,7 @@ reader's outcome* came back 3/3 in both arms (see Walk 11 below): sufficient but
 diligent LLM reader. Walk 11 also surfaced the round-trip subdomain-suppression gap.
 
 Repos touched (SwiftInferProperties main): `LiftedTestEmitter+PredicateReference.swift` (new emitter),
-`Discover+DocstringAdvice.swift` + `DocstringAdvisoryRenderer.swift` (wiring), + two test files.
+`SwiftInferCommand.Discover+DocstringAdvice.swift` + `DocstringAdvisoryRenderer.swift` (wiring), + two test files.
 Builds on B23 (which points at the docstring) and composes with B24 (which clears the false algebra so
 the predicate is what the reader is left with).
 

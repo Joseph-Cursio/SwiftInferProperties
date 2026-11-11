@@ -74,7 +74,7 @@ struct IdempotenceCorpusMeasuredTests {
             moduleName: "IdempotenceCorpus",
             sourceFiles: [
                 .init(name: "Counter.swift", contents: Self.counterSource),
-                .init(name: "Settings.swift", contents: Self.settingsSource)
+                .init(name: "Settings.swift", contents: Self.settingsSource),
             ],
             into: parent
         )

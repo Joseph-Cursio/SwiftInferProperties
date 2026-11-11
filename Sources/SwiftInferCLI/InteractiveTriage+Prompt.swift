@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// Prompt rendering + input parsing for the `[A/B/B'/s/n/?]` triage
 /// loop. Extracted from the main `InteractiveTriage` body to keep the
 /// orchestrator under SwiftLint's 250-line type-body cap after

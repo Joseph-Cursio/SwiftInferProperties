@@ -94,9 +94,9 @@ public enum DualStylePairing {
         guard !mutatingMembers.isEmpty else { return [] }
         // Group non-mutating members by containing type for O(N+M) pairing.
         var nonMutatingByContainer: [String: [FunctionSummary]] = [:]
-        for summary in summaries
-        where !summary.isMutating && summary.containingTypeName != nil {
-            nonMutatingByContainer[summary.containingTypeName!, default: []].append(summary)
+        for summary in summaries where !summary.isMutating {
+            guard let container = summary.containingTypeName else { continue }
+            nonMutatingByContainer[container, default: []].append(summary)
         }
         var pairs: [DualStylePair] = []
         for mutatingMember in mutatingMembers {

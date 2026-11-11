@@ -4,6 +4,16 @@ import SwiftInferCore
 import SwiftInferTemplates
 import Testing
 
+// MARK: - Silent stubs for the M6.6 perf re-check
+
+private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
+    func write(_: String) { /* no-op */ }
+}
+
+private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
 /// PRD §13 performance budget integration suite.
 ///
 /// The hard target is `swift-infer discover` on a 50-file module in
@@ -331,14 +341,4 @@ struct PerformanceTests {
     private func formatted(_ seconds: Double) -> String {
         String(format: "%.3f", seconds)
     }
-}
-
-// MARK: - Silent stubs for the M6.6 perf re-check
-
-private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_: String) { /* no-op */ }
-}
-
-private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

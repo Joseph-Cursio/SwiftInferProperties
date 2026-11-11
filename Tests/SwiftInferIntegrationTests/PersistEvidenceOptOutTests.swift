@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// #129 — a survey must be able to run without rewriting the file it is being compared

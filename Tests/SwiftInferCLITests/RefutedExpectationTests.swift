@@ -3,6 +3,79 @@ import Foundation
 import SwiftInferCore
 import Testing
 
+/// The interaction fold — built once the deferral's premise was re-read.
+///
+/// The deferral said the trap-attribution census measured "a 0-of-10 subject-code rate ...
+/// the opposite of the algebraic base rate". That was a misreading:
+/// `docs/measurements/interaction-trap-attribution-census.md` defines `.invariantCheck` as
+/// *"the property is genuinely refuted"* and `.subjectCode` as the subject's own trap, so
+/// **10 of 10 `.invariantCheck`, 0 `.subjectCode`** means zero harness artifacts — the
+/// refutations are all genuine. That is a reason to surface them, not to defer them.
+///
+/// What the census does leave open is whether an MVVM/VIPER carrier could produce a
+/// subject-code trap the parser conflates. `TrapOrigin` already answers that per run, so
+/// the fold consults it rather than waiting for a corpus.
+@Suite("Refuted expectation — the interaction surface's attribution clause")
+struct RefutedExpectationAttributionTests {
+
+    @Test("a genuine property violation states a fork")
+    func propertyViolationQualifies() {
+        #expect(
+            RefutedExpectation.statesAFork(
+                tier: .likely, hasCounterexample: true,
+                coverage: .full, attribution: .propertyViolation
+            )
+        )
+    }
+
+    /// The subject falling over is not the property failing.
+    @Test("a subject trap never reaches read-these-first")
+    func subjectTrapDisqualifies() {
+        #expect(
+            !RefutedExpectation.statesAFork(
+                tier: .strong, hasCounterexample: true,
+                coverage: .full, attribution: .subjectTrap
+            )
+        )
+    }
+
+    /// The census's own rule: absence of the marker never convicts the subject, but it is
+    /// not evidence of a property violation either. `unknown` is its own answer.
+    @Test("an unattributable trap is not promoted")
+    func unknownAttributionDisqualifies() {
+        #expect(
+            !RefutedExpectation.statesAFork(
+                tier: .strong, hasCounterexample: true,
+                coverage: .full, attribution: .unknown
+            )
+        )
+    }
+
+    /// **The arm-4 guard.** A clause that rejected everything would make the fold green and
+    /// useless, and the algebraic surface must keep working — it passes `.notApplicable`.
+    @Test("the algebraic surface is unaffected by the new clause")
+    func algebraicSurfaceStillQualifies() {
+        #expect(
+            RefutedExpectation.statesAFork(
+                tier: .likely, hasCounterexample: true,
+                coverage: .notApplicable, attribution: .notApplicable
+            )
+        )
+    }
+
+    /// Partial coverage still disqualifies even a genuine violation: relaxed exploration
+    /// can false-fail from the action space it excluded.
+    @Test("partial coverage still disqualifies a genuine violation")
+    func partialCoverageBeatsAttribution() {
+        #expect(
+            !RefutedExpectation.statesAFork(
+                tier: .strong, hasCounterexample: true,
+                coverage: .partial, attribution: .propertyViolation
+            )
+        )
+    }
+}
+
 /// The EXPECTED TO HOLD verdict — a **visibility** class, never a claim about the code.
 ///
 /// `docs/plans/suspected-defect-verdict-scope.md` §11 measured that no static signal
@@ -112,7 +185,7 @@ struct RefutedExpectationTests {
                 Self.record(
                     hash: "0xB2", template: "commutativity", carrier: "PathSegment",
                     outcome: .measuredDefaultFails, counterexample: "(\"a\",\"b\")"
-                )
+                ),
             ],
             tiers: ["0xA1": .likely, "0xB2": .likely]
         )
@@ -140,7 +213,7 @@ struct RefutedExpectationTests {
                 Self.record(
                     hash: "0xA1", template: "commutativity", carrier: "PathSegment",
                     outcome: .measuredDefaultFails, counterexample: "(\"a\",\"b\")"
-                )
+                ),
             ],
             tiers: ["0xA1": .likely]
         )
@@ -167,7 +240,7 @@ struct RefutedExpectationTests {
                 Self.record(
                     hash: "0xC3", template: "idempotence", carrier: "SumSummary",
                     outcome: .measuredDefaultFails, counterexample: "x"
-                )
+                ),
             ],
             tiers: ["0xC3": .possible]
         )
@@ -183,7 +256,7 @@ struct RefutedExpectationTests {
             Self.record(
                 hash: "0xD4", template: "commutativity", carrier: "Decisions",
                 outcome: .measuredDefaultFails, counterexample: "x"
-            )
+            ),
         ])
         #expect(!rendered.contains("EXPECTED TO HOLD"))
         #expect(rendered.contains("DISPROVEN"))
@@ -198,83 +271,10 @@ struct RefutedExpectationTests {
                 hash: "0x2", template: "round-trip", carrier: "B",
                 outcome: .architecturalCoveragePending
             ),
-            Self.record(hash: "0x3", template: "predicate", carrier: "C", outcome: .measuredError)
+            Self.record(hash: "0x3", template: "predicate", carrier: "C", outcome: .measuredError),
         ])
         #expect(rendered.contains("PROVEN"))
         #expect(rendered.contains("UNVERIFIABLE"))
         #expect(rendered.contains("INCONCLUSIVE"))
-    }
-}
-
-/// The interaction fold — built once the deferral's premise was re-read.
-///
-/// The deferral said the trap-attribution census measured "a 0-of-10 subject-code rate ...
-/// the opposite of the algebraic base rate". That was a misreading:
-/// `docs/measurements/interaction-trap-attribution-census.md` defines `.invariantCheck` as
-/// *"the property is genuinely refuted"* and `.subjectCode` as the subject's own trap, so
-/// **10 of 10 `.invariantCheck`, 0 `.subjectCode`** means zero harness artifacts — the
-/// refutations are all genuine. That is a reason to surface them, not to defer them.
-///
-/// What the census does leave open is whether an MVVM/VIPER carrier could produce a
-/// subject-code trap the parser conflates. `TrapOrigin` already answers that per run, so
-/// the fold consults it rather than waiting for a corpus.
-@Suite("Refuted expectation — the interaction surface's attribution clause")
-struct RefutedExpectationAttributionTests {
-
-    @Test("a genuine property violation states a fork")
-    func propertyViolationQualifies() {
-        #expect(
-            RefutedExpectation.statesAFork(
-                tier: .likely, hasCounterexample: true,
-                coverage: .full, attribution: .propertyViolation
-            )
-        )
-    }
-
-    /// The subject falling over is not the property failing.
-    @Test("a subject trap never reaches read-these-first")
-    func subjectTrapDisqualifies() {
-        #expect(
-            !RefutedExpectation.statesAFork(
-                tier: .strong, hasCounterexample: true,
-                coverage: .full, attribution: .subjectTrap
-            )
-        )
-    }
-
-    /// The census's own rule: absence of the marker never convicts the subject, but it is
-    /// not evidence of a property violation either. `unknown` is its own answer.
-    @Test("an unattributable trap is not promoted")
-    func unknownAttributionDisqualifies() {
-        #expect(
-            !RefutedExpectation.statesAFork(
-                tier: .strong, hasCounterexample: true,
-                coverage: .full, attribution: .unknown
-            )
-        )
-    }
-
-    /// **The arm-4 guard.** A clause that rejected everything would make the fold green and
-    /// useless, and the algebraic surface must keep working — it passes `.notApplicable`.
-    @Test("the algebraic surface is unaffected by the new clause")
-    func algebraicSurfaceStillQualifies() {
-        #expect(
-            RefutedExpectation.statesAFork(
-                tier: .likely, hasCounterexample: true,
-                coverage: .notApplicable, attribution: .notApplicable
-            )
-        )
-    }
-
-    /// Partial coverage still disqualifies even a genuine violation: relaxed exploration
-    /// can false-fail from the action space it excluded.
-    @Test("partial coverage still disqualifies a genuine violation")
-    func partialCoverageBeatsAttribution() {
-        #expect(
-            !RefutedExpectation.statesAFork(
-                tier: .strong, hasCounterexample: true,
-                coverage: .partial, attribution: .propertyViolation
-            )
-        )
     }
 }

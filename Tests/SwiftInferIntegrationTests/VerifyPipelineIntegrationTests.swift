@@ -1,6 +1,4 @@
-import Foundation
 import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// V1.42.D — end-to-end verify-pipeline integration tests (round-trip

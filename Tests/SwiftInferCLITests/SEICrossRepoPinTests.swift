@@ -108,7 +108,7 @@ struct SEICrossRepoPinTests {
     private static let swiftProjectLintManifests = [
         "Package.swift",
         "Packages/SwiftProjectLintVisitors/Package.swift",
-        "Packages/SwiftProjectLintIdempotencyRules/Package.swift"
+        "Packages/SwiftProjectLintIdempotencyRules/Package.swift",
     ]
 
     /// The revision a manifest pins SEI to.

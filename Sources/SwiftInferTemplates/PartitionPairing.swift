@@ -53,8 +53,8 @@ public struct PartitionShape: Sendable, Equatable {
     public init(
         typeName: String,
         tiler: FunctionSummary,
-        tilerForm: TilerForm = .range,
-        progress: FunctionSummary?
+        progress: FunctionSummary?,
+        tilerForm: TilerForm = .range
     ) {
         self.typeName = typeName
         self.tiler = tiler
@@ -92,8 +92,8 @@ public enum PartitionPairing {
             return PartitionShape(
                 typeName: type,
                 tiler: tiler,
-                tilerForm: form,
-                progress: members.first(where: isProgress)
+                progress: members.first(where: isProgress),
+                tilerForm: form
             )
         }
     }
@@ -103,11 +103,6 @@ public enum PartitionPairing {
         if isRangeTiler(summary) { return .range }
         if isSliceTiler(summary) { return .slice }
         return nil
-    }
-
-    /// Kept for callers that only need the boolean.
-    static func isTiler(_ summary: FunctionSummary) -> Bool {
-        tilerForm(of: summary) != nil
     }
 
     /// `(Int) -> Range<Int>` — one integer parameter in, a half-open integer range out.

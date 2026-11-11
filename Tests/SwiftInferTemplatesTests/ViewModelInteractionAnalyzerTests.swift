@@ -52,7 +52,7 @@ struct ViewModelInteractionAnalyzerTests {
         let result = ViewModelInteractionAnalyzer.analyze(
             candidate(state: [
                 ("selectedID", "UUID?"),
-                ("items", "[Item]")
+                ("items", "[Item]"),
             ])
         )
         let refint = result.filter { $0.family == .referentialIntegrity }
@@ -65,7 +65,7 @@ struct ViewModelInteractionAnalyzerTests {
         let result = ViewModelInteractionAnalyzer.analyze(
             candidate(state: [
                 ("itemCount", "Int"),
-                ("items", "[Item]")
+                ("items", "[Item]"),
             ])
         )
         #expect(result.contains { $0.family == .conservation && $0.subjects == ["itemCount"] })
@@ -77,7 +77,7 @@ struct ViewModelInteractionAnalyzerTests {
             candidate(state: [
                 ("activeSheet", "SheetRoute?"),
                 ("activeAlert", "AlertRoute?"),
-                ("title", "String")
+                ("title", "String"),
             ])
         )
         let cardinality = result.filter { $0.family == .cardinality }
@@ -90,7 +90,7 @@ struct ViewModelInteractionAnalyzerTests {
         let result = ViewModelInteractionAnalyzer.analyze(
             candidate(state: [
                 ("isLoading", "Bool"),
-                ("loadingTask", "Task<Void, Never>?")
+                ("loadingTask", "Task<Void, Never>?"),
             ])
         )
         #expect(result.contains {
@@ -127,7 +127,7 @@ struct ViewModelInteractionAnalyzerTests {
             candidate(state: [
                 ("isAnalyzing", "Bool"),
                 ("showSuppressedOnly", "Bool"),
-                ("currentWorkspace", "Workspace?")
+                ("currentWorkspace", "Workspace?"),
             ])
         )
         #expect(!families(result).contains(.cardinality))

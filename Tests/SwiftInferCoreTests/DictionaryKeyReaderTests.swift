@@ -77,7 +77,7 @@ struct DictionaryKeyReaderTests {
         "let d = [String: Int](); return d.map { (key, value) in S(k: key, n: value) }",
         "var d = Dictionary<String, Int>(); return d.map { entry in S(k: entry.key, n: entry.value) }",
         "var d: Dictionary<String, Int> = .init(); return d.compactMap { S(k: $0.key, n: $0.value) }",
-        "let d: [String: Int] = [:]; return d.map { (k: $0.key, n: $0.value) }"
+        "let d: [String: Int] = [:]; return d.map { (k: $0.key, n: $0.value) }",
     ])
     func everySpelling(body: String) throws {
         let ordering = try #require(read("func f(_ xs: [R]) -> [S] { \(body).sorted { $0.n < $1.n } }"))
@@ -95,7 +95,7 @@ struct DictionaryKeyReaderTests {
         // The key reaches an unlabelled argument.
         "let d: [String: Int] = [:]; return d.map { S($0.key, n: $0.value) }",
         // A computed key, not the key.
-        "let d: [String: Int] = [:]; return d.map { S(k: $0.key.lowercased(), n: $0.value) }"
+        "let d: [String: Int] = [:]; return d.map { S(k: $0.key.lowercased(), n: $0.value) }",
     ])
     func declined(body: String) throws {
         let ordering = try #require(read("func f(_ xs: [R]) -> [S] { \(body).sorted { $0.n < $1.n } }"))

@@ -1,5 +1,3 @@
-import Foundation
-
 /// The input bundle shared by the seeded algebraic stub emitters.
 ///
 /// `AssociativityStubEmitter`, `CommutativityStubEmitter` and

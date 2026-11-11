@@ -41,8 +41,8 @@ struct CardinalityVerifyCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "CardinalityVerifyCorpus",
             familyFilter: "cardinality",
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
 
         // Cycle 141 — widened to 5 reducers: + SheetRouterFeature
@@ -70,8 +70,8 @@ struct CardinalityVerifyCorpusMeasuredTests {
         // Payoff: discover folds the evidence through the cycle-135 overrule.
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "CardinalityVerifyCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         // Full-coverage bothPasses overrule the pin → Verified, with the
         // disclosure: RouterFeature (Bool indicator) + SheetRouterFeature

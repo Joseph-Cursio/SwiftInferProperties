@@ -17,7 +17,7 @@ struct MarkerDispatchTemplateTests {
         rows: [
             MarkerRow(literal: "comment", test: .contains, result: ".comments"),
             MarkerRow(literal: "doc", test: .contains, result: ".comments"),
-            MarkerRow(literal: "sort", test: .contains, result: ".organization")
+            MarkerRow(literal: "sort", test: .contains, result: ".organization"),
         ],
         isCaseInsensitive: true
     )
@@ -39,11 +39,11 @@ struct MarkerDispatchTemplateTests {
             location: SourceLocation(file: "FormatRuleClassifier.swift", line: 16, column: 5),
             containingTypeName: "FormatRuleClassifier",
             bodySignals: BodySignals(
-                markerDispatch: dispatch,
-                fallbackDelegation: delegation,
                 hasNonDeterministicCall: false,
                 hasSelfComposition: false,
-                nonDeterministicAPIsDetected: []
+                nonDeterministicAPIsDetected: [],
+                markerDispatch: dispatch,
+                fallbackDelegation: delegation
             )
         )
     }

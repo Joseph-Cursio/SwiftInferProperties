@@ -43,8 +43,8 @@ struct IdempotenceSurveyCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "IdempotenceSurveyCorpus",
             familyFilter: "idempotence",
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
 
         #expect(summary.contains("Identities: 13 (--family idempotence)"))
@@ -64,8 +64,8 @@ struct IdempotenceSurveyCorpusMeasuredTests {
         // false positive suppressed (absent from the stream).
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "IdempotenceSurveyCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         #expect(discovered.contains("(Verified)"))
         #expect(!discovered.contains(".setBadge"))      // defaultFails → suppressed

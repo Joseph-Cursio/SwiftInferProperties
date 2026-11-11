@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.45.A carrier — Double two-pass commutativity emission. Mirrors
 // `IdempotenceStubEmitter+NonComplex.swift`'s `composeDoubleSource`
 // but for the `f(a, b) ≈ f(b, a)` shape: each trial draws two values;

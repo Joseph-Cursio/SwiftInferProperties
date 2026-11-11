@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 import SwiftInferCore
 
@@ -86,6 +85,7 @@ public enum ViewModelActionSequenceStubEmitter {
         }
     }
 
+    /// The materialized-enum action-sequence verifier for `inputs`; throws when it cannot be generated.
     public static func emit(_ inputs: Inputs) throws -> String {
         let lifted = ViewModelActionEnumEmitter.emit(
             typeName: inputs.typeName,
@@ -119,7 +119,7 @@ public enum ViewModelActionSequenceStubEmitter {
                     "        let generator = ActionSequenceFactory.actionSequence(",
                     "            forCaseIterable: \(lifted.enumName).self,",
                     "            length: \(length)",
-                    "        )"
+                    "        )",
                 ],
                 excludedNonConstructible: []
             )
@@ -214,7 +214,7 @@ public enum ViewModelActionSequenceStubEmitter {
                 inputs: inputs,
                 generatorSetup: plan.setup,
                 isAsyncDispatcher: lifted.isAsyncDispatcher
-            )
+            ),
         ]
         .joined(separator: "\n\n")
     }
@@ -256,7 +256,7 @@ public enum ViewModelActionSequenceStubEmitter {
             "@main",
             "struct ViewModelInteractionVerifier {",
             "    static func main()\(effectMarker) {",
-            "        var rng = Xoshiro(seed: (\(seedTuple(from: inputs.typeName))))"
+            "        var rng = Xoshiro(seed: (\(seedTuple(from: inputs.typeName))))",
         ]
         lines.append(contentsOf: generatorSetup)
         lines.append(contentsOf: [
@@ -273,7 +273,7 @@ public enum ViewModelActionSequenceStubEmitter {
             "        }",
             "        report(passTrials: clean)",
             "    }",
-            ""
+            "",
         ])
         lines.append(contentsOf: Self.reportHelperLines)
         lines.append("}")
@@ -296,7 +296,7 @@ public enum ViewModelActionSequenceStubEmitter {
         "        print(\"VERIFY_EDGE_TRIALS: 0\")",
         "        print(\"VERIFY_EDGE_SAMPLED: 0\")",
         "        exit(0)",
-        "    }"
+        "    }",
     ]
 
     // MARK: - Deterministic seed

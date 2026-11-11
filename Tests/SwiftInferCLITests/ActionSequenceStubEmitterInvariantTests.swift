@@ -12,7 +12,7 @@ import Testing
 @Suite("ActionSequenceStubEmitter — V2.0 M4.D family-aware predicate embedding")
 struct ActionSequenceStubEmitterInvariantTests {
 
-    private func candidate(
+    func candidate(
         signatureShape: ReducerSignatureShape = .stateActionReturnsState,
         enclosingTypeName: String? = nil,
         functionName: String = "reduce"
@@ -49,7 +49,7 @@ struct ActionSequenceStubEmitterInvariantTests {
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
     }
 
@@ -74,7 +74,7 @@ struct ActionSequenceStubEmitterInvariantTests {
             tier: .possible,
             whySuggested: [],
             whyMightBeWrong: [],
-            firstSeenAt: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            firstSeenAt: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
     }
 
@@ -111,8 +111,8 @@ struct ActionSequenceStubEmitterInvariantTests {
         // The precondition lives inside the inner action loop — should
         // appear AFTER the `state = reduce(state, action)` line and
         // BEFORE the loop's closing brace.
-        let applyIndex = source.range(of: "state = reduce(state, action)")!.upperBound
-        let precondIndex = source.range(of: "precondition(state.count")!.lowerBound
+        let applyIndex = try #require(source.range(of: "state = reduce(state, action)")).upperBound
+        let precondIndex = try #require(source.range(of: "precondition(state.count")).lowerBound
         #expect(applyIndex <= precondIndex)
     }
 
@@ -284,39 +284,5 @@ struct ActionSequenceStubEmitterInvariantTests {
             invariant: idempotenceInvariant()
         )
         #expect(idempotence.isEmpty)
-    }
-}
-
-// V2.0 M8.A — effect-discarding idempotence-check shape assertions
-// for the two effect-bearing signatures. Extension-grouped so the
-// parent struct's body stays under SwiftLint's type_body_length cap.
-extension ActionSequenceStubEmitterInvariantTests {
-
-    @Test("makeIdempotenceCheck (S, A) -> (S, Effect<A>) — captures + discards effect (M8.A)")
-    func makeIdempotenceCheckStateActionReturnsStateAndEffect() {
-        let block = ActionSequenceStubEmitter.makeIdempotenceCheck(
-            actionExpr: ".tap",
-            shape: .stateActionReturnsStateAndEffect,
-            reducerCall: "reduce"
-        )
-        #expect(block.count == 3)
-        #expect(block[0] == "let (once, _) = reduce(state, .tap)")
-        #expect(block[1] == "let (twice, _) = reduce(once, .tap)")
-        #expect(block[2].contains("precondition(once == twice"))
-    }
-
-    @Test("makeIdempotenceCheck (inout S, A) -> Effect<A> — captures + discards effect (M8.A)")
-    func makeIdempotenceCheckInoutEffect() {
-        let block = ActionSequenceStubEmitter.makeIdempotenceCheck(
-            actionExpr: ".refresh",
-            shape: .inoutStateActionReturnsEffect,
-            reducerCall: "reduce"
-        )
-        #expect(block.count == 5)
-        #expect(block[0] == "var once = state")
-        #expect(block[1] == "_ = reduce(&once, .refresh)")
-        #expect(block[2] == "var twice = once")
-        #expect(block[3] == "_ = reduce(&twice, .refresh)")
-        #expect(block[4].contains("precondition(once == twice"))
     }
 }

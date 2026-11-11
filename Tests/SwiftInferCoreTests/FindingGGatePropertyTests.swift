@@ -1,5 +1,4 @@
 import Foundation
-import PropertyLawKit
 import SwiftInferCore
 import Testing
 
@@ -74,7 +73,7 @@ struct FindingGGatePropertyTests {
                 swiftInferVersion: "test",
                 excludedActionCount: excludedActionCount,
                 subjectFingerprint: "fixture-\(suggestion.identity.normalized)"
-            )
+            ),
         ]
     }
 

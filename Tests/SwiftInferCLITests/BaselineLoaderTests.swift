@@ -3,6 +3,14 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Test-only `FileSystemReader` reporting every path as missing.
+private struct NoFilesFileSystem: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
+        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
+    }
+}
+
 @Suite("BaselineLoader — explicit path + walk-up implicit lookup + atomic write (M6.2)")
 struct BaselineLoaderTests {
 
@@ -56,7 +64,7 @@ struct BaselineLoaderTests {
                 template: "round-trip",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         try BaselineLoader.write(canonical, to: baselinePath)
 
@@ -92,7 +100,7 @@ struct BaselineLoaderTests {
                 template: "idempotence",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         try BaselineLoader.write(
             implicit,
@@ -107,7 +115,7 @@ struct BaselineLoaderTests {
                 template: "round-trip",
                 scoreAtSnapshot: 70,
                 tier: .likely
-            )
+            ),
         ])
         try BaselineLoader.write(override, to: overridePath)
 
@@ -147,7 +155,7 @@ struct BaselineLoaderTests {
                 template: "idempotence",
                 scoreAtSnapshot: 90,
                 tier: .strong
-            )
+            ),
         ])
         try BaselineLoader.write(baseline, to: path)
         #expect(FileManager.default.fileExists(atPath: path.path))
@@ -173,7 +181,7 @@ struct BaselineLoaderTests {
                 template: "round-trip",
                 scoreAtSnapshot: 70,
                 tier: .likely
-            )
+            ),
         ])
         try BaselineLoader.write(baseline, to: path)
         let firstBytes = try Data(contentsOf: path)
@@ -195,13 +203,5 @@ struct BaselineLoaderTests {
     private func writePackageManifest(in directory: URL) throws {
         try Data("// swift-tools-version: 6.1\n".utf8)
             .write(to: directory.appendingPathComponent("Package.swift"))
-    }
-}
-
-/// Test-only `FileSystemReader` reporting every path as missing.
-private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) throws -> Data {
-        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

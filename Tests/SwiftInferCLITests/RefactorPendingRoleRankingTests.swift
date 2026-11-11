@@ -32,7 +32,7 @@ struct RefactorPendingRoleRankingTests {
             seed("mapper", role: .transform),
             seed("sorter", role: .comparator),
             seed("folder", role: .reducer),
-            seed("tester", role: .predicate)
+            seed("tester", role: .predicate),
         ])
         #expect(ranked.prefix(2).map(\.symbol) == ["sorter", "tester"])
         #expect(ranked.suffix(2).map(\.symbol) == ["mapper", "folder"])
@@ -42,7 +42,7 @@ struct RefactorPendingRoleRankingTests {
     func rolelessSeedsDoNotJumpTheQueue() {
         let ranked = SwiftInferCommand.Discover.prioritised([
             seed("unclassified", role: nil),
-            seed("sorter", role: .comparator)
+            seed("sorter", role: .comparator),
         ])
         #expect(ranked.map(\.symbol) == ["sorter", "unclassified"])
     }
@@ -53,7 +53,7 @@ struct RefactorPendingRoleRankingTests {
     func rankingIsStable() {
         let input = [
             seed("p1", role: .predicate), seed("t1", role: .transform),
-            seed("p2", role: .predicate), seed("t2", role: .transform)
+            seed("p2", role: .predicate), seed("t2", role: .transform),
         ]
         // The explicit expected order IS the stability assertion: `p1` before `p2` and `t1` before
         // `t2` can only hold if each group preserves input order. Re-running the same pure function
@@ -65,7 +65,7 @@ struct RefactorPendingRoleRankingTests {
     func rankingIsAPermutation() {
         let input = [
             seed("a", role: .comparator), seed("b", role: nil),
-            seed("c", role: .partition), seed("d", role: .normalizer)
+            seed("c", role: .partition), seed("d", role: .normalizer),
         ]
         let ranked = SwiftInferCommand.Discover.prioritised(input)
         #expect(ranked.count == input.count)

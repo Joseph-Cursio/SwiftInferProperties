@@ -73,9 +73,9 @@ struct TargetDefaultIsolationTests {
     // MARK: - The post-pass
 
     private static func suggestion(
+        file: String,
         globalActor: String? = nil,
-        declaresNonisolated: Bool = false,
-        file: String
+        declaresNonisolated: Bool = false
     ) -> Suggestion {
         Suggestion(
             templateName: "idempotence",
@@ -87,7 +87,7 @@ struct TargetDefaultIsolationTests {
                     qualifiedTypeName: "Formatter",
                     globalActor: globalActor,
                     declaresNonisolated: declaresNonisolated
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -130,7 +130,7 @@ struct TargetDefaultIsolationTests {
         let file = root.appendingPathComponent("Sources/Isolated/Placeholder.swift").path
 
         let result = SwiftInferCommand.Discover.withTargetDefaultIsolation(
-            [Self.suggestion(declaresNonisolated: true, file: file)]
+            [Self.suggestion(file: file, declaresNonisolated: true)]
         )
         #expect(Self.actor(of: result) == nil)
     }
@@ -145,7 +145,7 @@ struct TargetDefaultIsolationTests {
         let file = root.appendingPathComponent("Sources/Isolated/Placeholder.swift").path
 
         let result = SwiftInferCommand.Discover.withTargetDefaultIsolation(
-            [Self.suggestion(globalActor: "CustomActor", file: file)]
+            [Self.suggestion(file: file, globalActor: "CustomActor")]
         )
         #expect(Self.actor(of: result) == "CustomActor")
     }

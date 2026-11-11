@@ -1,5 +1,24 @@
 import Foundation
 
+/// V1.C — errors thrown by `ReducerPin.parse`. Each carries the raw
+/// input so the CLI can echo it back in the error message.
+public enum ReducerPinError: Error, CustomStringConvertible, Equatable {
+    case emptyPin
+    case malformed(raw: String)
+
+    public var description: String {
+        switch self {
+        case .emptyPin:
+            return "--reducer pin is empty; expected `<funcName>`, `<typeName>.<funcName>`, "
+                + "or `<module>.<typeName>.<funcName>`"
+
+        case let .malformed(raw):
+            return "--reducer pin '\(raw)' is malformed; expected `<funcName>`, "
+                + "`<typeName>.<funcName>`, or `<module>.<typeName>.<funcName>`"
+        }
+    }
+}
+
 /// V1.C — parsed `--reducer <module>.<typeName>.<funcName>` pin
 /// used by `swift-infer discover-reducers` (to filter the candidate
 /// list to one entry) and by downstream M2+ pipelines (to know which
@@ -47,9 +66,9 @@ public struct ReducerPin: Sendable, Equatable {
     public let functionName: String
 
     public init(
+        functionName: String,
         moduleName: String? = nil,
-        typeName: String? = nil,
-        functionName: String
+        typeName: String? = nil
     ) {
         self.moduleName = moduleName
         self.typeName = typeName
@@ -73,16 +92,16 @@ public struct ReducerPin: Sendable, Equatable {
             return Self(functionName: components[0])
 
         case 2:
-            return Self(typeName: components[0], functionName: components[1])
+            return Self(functionName: components[1], typeName: components[0])
 
         case 3:
             // Module prefix accepted as a redundant qualifier — the run is
             // already scoped to one `--target` module. Retained on the pin
             // but ignored in `matches` (candidates carry no module).
             return Self(
+                functionName: components[2],
                 moduleName: components[0],
-                typeName: components[1],
-                functionName: components[2]
+                typeName: components[1]
             )
 
         default:
@@ -108,24 +127,5 @@ public struct ReducerPin: Sendable, Equatable {
             return false
         }
         return true
-    }
-}
-
-/// V1.C — errors thrown by `ReducerPin.parse`. Each carries the raw
-/// input so the CLI can echo it back in the error message.
-public enum ReducerPinError: Error, CustomStringConvertible, Equatable {
-    case emptyPin
-    case malformed(raw: String)
-
-    public var description: String {
-        switch self {
-        case .emptyPin:
-            return "--reducer pin is empty; expected `<funcName>`, `<typeName>.<funcName>`, "
-                + "or `<module>.<typeName>.<funcName>`"
-
-        case let .malformed(raw):
-            return "--reducer pin '\(raw)' is malformed; expected `<funcName>`, "
-                + "`<typeName>.<funcName>`, or `<module>.<typeName>.<funcName>`"
-        }
     }
 }

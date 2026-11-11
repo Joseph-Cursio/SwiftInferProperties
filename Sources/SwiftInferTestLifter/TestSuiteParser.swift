@@ -3,107 +3,6 @@ import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
 
-/// Static-analysis pipeline that walks Swift test source and emits one
-/// `TestMethodSummary` per recognized test method. M1.1 surface — the
-/// M1.2 slicer consumes the produced summaries directly via
-/// `summary.body`.
-///
-/// **Recognition rules (PRD §7.9 M1):**
-/// - **XCTest:** any function inside a `class` whose direct inheritance
-///   clause names `XCTestCase`, where the function's name starts with
-///   `test`. `setUp` / `tearDown` / helper methods don't match because
-///   they don't start with `test`.
-/// - **Swift Testing:** any function carrying the `@Test` attribute,
-///   regardless of where it's declared. Works at file scope, inside
-///   `@Suite` classes / structs, and inside arbitrary nesting.
-/// - **StdlibUnittest:** a call with a trailing closure whose callee chain
-///   contains `.test(<string literal>)` — `Suite.test("name") { … }` and the
-///   chained `…test("name").xfail(…).code { … }`. This one is call-shaped
-///   rather than declaration-shaped; see
-///   `TestSuiteParser+StdlibUnittest.swift` for why neither rule above can
-///   reach it.
-///
-/// **Skipped:**
-/// - Protocol requirements (no body to slice).
-/// - Nested function decls (rare in test bodies; would conflate slices).
-///   **This also bounds StdlibUnittest recognition**: a `.test("…") { }` call
-///   written *inside* a `func` body is not reached, because function bodies
-///   are not descended into. The corpus writes them as top-level code, so the
-///   measured cost is small — but it is a real limit, not an absence of one.
-/// - `@Test`-annotated computed properties (Swift Testing allows them
-///   in some shapes; M1 only handles function decls).
-public enum TestSuiteParser {
-
-    /// Scan a single in-memory source string. `file` is the label
-    /// attached to every emitted `SourceLocation` — pass the path you
-    /// want shown to the user (e.g. `Tests/MyTests/FooTests.swift`).
-    public static func scan(source: String, file: String) -> [TestMethodSummary] {
-        let tree = Parser.parse(source: source)
-        let converter = SourceLocationConverter(fileName: file, tree: tree)
-        let visitor = TestSuiteParserVisitor(file: file, converter: converter)
-        visitor.walk(tree)
-        return visitor.summaries
-    }
-
-    /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
-    public static func scan(file: URL) throws -> [TestMethodSummary] {
-        let source = try String(contentsOf: file, encoding: .utf8)
-        return scan(source: source, file: file.path)
-    }
-
-    /// Recursively scan every `.swift` file under `directory`. Files
-    /// are visited in deterministic (sorted-path) order so output is
-    /// stable across runs — supports the byte-identical-reproducibility
-    /// guarantee (PRD §16 #6).
-    ///
-    /// **No directory filtering at this layer.** Callers pass a
-    /// pre-filtered tests root (e.g. `<project>/Tests/`); the M1.5
-    /// CLI wiring applies the `Tests` / `*Tests` heuristic before
-    /// invoking this method.
-    public static func scanTests(directory: URL) throws -> [TestMethodSummary] {
-        try scanTests(directories: [directory])
-    }
-
-    /// Scan several roots as one corpus.
-    ///
-    /// The plural form exists for **target scoping**: `discover --target X` must lift
-    /// only from the test targets that could be exercising `X`, and those are
-    /// several sibling directories under `Tests/` rather than one subtree. See
-    /// `TestTargetScope` for why the set is computed from the manifest's dependency
-    /// graph rather than from `Tests/<Target>Tests/` name matching.
-    ///
-    /// Roots are **deduplicated by standardized path and sorted** before scanning, so
-    /// the byte-identical-reproducibility guarantee (PRD §16 #6) survives a caller
-    /// passing overlapping or unordered roots. Files are still sorted within each
-    /// root by `SwiftSourceFiles.sorted(in:)`; sorting the roots too makes the
-    /// concatenation deterministic as well.
-    ///
-    /// Overlapping roots would otherwise double-count a file — scanning `Tests/` and
-    /// `Tests/FooTests/` together would parse everything under the latter twice, and
-    /// a duplicated `TestMethodSummary` reads downstream as independent corroboration
-    /// ("stated N times by the scan"), inflating a score from one source.
-    public static func scanTests(directories: [URL]) throws -> [TestMethodSummary] {
-        var seen: Set<String> = []
-        let roots = directories
-            .map(\.standardizedFileURL)
-            .filter { seen.insert($0.path).inserted }
-            .sorted { $0.path < $1.path }
-        // Drop any root nested inside another; see the double-counting note above.
-        let outermost = roots.filter { candidate in
-            !roots.contains { other in
-                other.path != candidate.path && candidate.path.hasPrefix(other.path + "/")
-            }
-        }
-        var summaries: [TestMethodSummary] = []
-        for root in outermost {
-            for fileURL in SwiftSourceFiles.sorted(in: root) {
-                try summaries.append(contentsOf: scan(file: fileURL))
-            }
-        }
-        return summaries
-    }
-}
-
 // MARK: - Visitor
 
 /// Single-pass AST walker emitting `TestMethodSummary` records. Type
@@ -191,7 +90,7 @@ final class TestSuiteParserVisitor: SyntaxVisitor {
     }
 
     /// `StdlibUnittest`'s test *closures* — see
-    /// `TestSuiteParser+StdlibUnittest.swift` for why they need a call-shaped
+    /// `TestSuiteParserVisitor+StdlibUnittest.swift` for why they need a call-shaped
     /// rule rather than a declaration-shaped one.
     ///
     /// Children are still visited: the corpus nests `.test("…") { }` inside
@@ -260,5 +159,106 @@ final class TestSuiteParserVisitor: SyntaxVisitor {
             }
         }
         return false
+    }
+}
+
+/// Static-analysis pipeline that walks Swift test source and emits one
+/// `TestMethodSummary` per recognized test method. M1.1 surface — the
+/// M1.2 slicer consumes the produced summaries directly via
+/// `summary.body`.
+///
+/// **Recognition rules (PRD §7.9 M1):**
+/// - **XCTest:** any function inside a `class` whose direct inheritance
+///   clause names `XCTestCase`, where the function's name starts with
+///   `test`. `setUp` / `tearDown` / helper methods don't match because
+///   they don't start with `test`.
+/// - **Swift Testing:** any function carrying the `@Test` attribute,
+///   regardless of where it's declared. Works at file scope, inside
+///   `@Suite` classes / structs, and inside arbitrary nesting.
+/// - **StdlibUnittest:** a call with a trailing closure whose callee chain
+///   contains `.test(<string literal>)` — `Suite.test("name") { … }` and the
+///   chained `…test("name").xfail(…).code { … }`. This one is call-shaped
+///   rather than declaration-shaped; see
+///   `TestSuiteParserVisitor+StdlibUnittest.swift` for why neither rule above can
+///   reach it.
+///
+/// **Skipped:**
+/// - Protocol requirements (no body to slice).
+/// - Nested function decls (rare in test bodies; would conflate slices).
+///   **This also bounds StdlibUnittest recognition**: a `.test("…") { }` call
+///   written *inside* a `func` body is not reached, because function bodies
+///   are not descended into. The corpus writes them as top-level code, so the
+///   measured cost is small — but it is a real limit, not an absence of one.
+/// - `@Test`-annotated computed properties (Swift Testing allows them
+///   in some shapes; M1 only handles function decls).
+public enum TestSuiteParser {
+
+    /// Scan a single in-memory source string. `file` is the label
+    /// attached to every emitted `SourceLocation` — pass the path you
+    /// want shown to the user (e.g. `Tests/MyTests/FooTests.swift`).
+    public static func scan(source: String, file: String) -> [TestMethodSummary] {
+        let tree = Parser.parse(source: source)
+        let converter = SourceLocationConverter(fileName: file, tree: tree)
+        let visitor = TestSuiteParserVisitor(file: file, converter: converter)
+        visitor.walk(tree)
+        return visitor.summaries
+    }
+
+    /// Scan a single `.swift` file on disk. Reads the file as UTF-8.
+    public static func scan(file: URL) throws -> [TestMethodSummary] {
+        let source = try String(contentsOf: file, encoding: .utf8)
+        return scan(source: source, file: file.path)
+    }
+
+    /// Recursively scan every `.swift` file under `directory`. Files
+    /// are visited in deterministic (sorted-path) order so output is
+    /// stable across runs — supports the byte-identical-reproducibility
+    /// guarantee (PRD §16 #6).
+    ///
+    /// **No directory filtering at this layer.** Callers pass a
+    /// pre-filtered tests root (e.g. `<project>/Tests/`); the M1.5
+    /// CLI wiring applies the `Tests` / `*Tests` heuristic before
+    /// invoking this method.
+    public static func scanTests(directory: URL) throws -> [TestMethodSummary] {
+        try scanTests(directories: [directory])
+    }
+
+    /// Scan several roots as one corpus.
+    ///
+    /// The plural form exists for **target scoping**: `discover --target X` must lift
+    /// only from the test targets that could be exercising `X`, and those are
+    /// several sibling directories under `Tests/` rather than one subtree. See
+    /// `TestTargetScope` for why the set is computed from the manifest's dependency
+    /// graph rather than from `Tests/<Target>Tests/` name matching.
+    ///
+    /// Roots are **deduplicated by standardized path and sorted** before scanning, so
+    /// the byte-identical-reproducibility guarantee (PRD §16 #6) survives a caller
+    /// passing overlapping or unordered roots. Files are still sorted within each
+    /// root by `SwiftSourceFiles.sorted(in:)`; sorting the roots too makes the
+    /// concatenation deterministic as well.
+    ///
+    /// Overlapping roots would otherwise double-count a file — scanning `Tests/` and
+    /// `Tests/FooTests/` together would parse everything under the latter twice, and
+    /// a duplicated `TestMethodSummary` reads downstream as independent corroboration
+    /// ("stated N times by the scan"), inflating a score from one source.
+    public static func scanTests(directories: [URL]) throws -> [TestMethodSummary] {
+        var seen: Set<String> = []
+        let roots = directories
+            .map(\.standardizedFileURL)
+            .filter { seen.insert($0.path).inserted }
+            .sorted { $0.path < $1.path }
+        // Drop any root nested inside another; see the double-counting note above.
+        let outermost = roots.filter { candidate in
+            !roots.contains { other in
+                other.path != candidate.path && candidate.path.hasPrefix(other.path + "/")
+            }
+        }
+        var summaries: [TestMethodSummary] = []
+        for root in outermost {
+            for fileURL in SwiftSourceFiles.sorted(in: root) {
+                try summaries.append(contentsOf: scan(file: fileURL))
+            }
+        }
+        return summaries
     }
 }

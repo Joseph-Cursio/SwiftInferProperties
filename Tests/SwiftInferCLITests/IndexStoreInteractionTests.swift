@@ -20,13 +20,13 @@ struct IndexStoreInteractionTests {
         actionTypeName: "Action",
         predicate: "reduce(reduce(s, .dismiss), .dismiss) == reduce(s, .dismiss)",
         location: "/nav.swift:10",
-        moduleName: nil,
         score: 40,
         tier: "Likely",
-        decision: nil,
-        decisionAt: nil,
         firstSeenAt: "2026-06-13T00:00:00Z",
-        lastSeenAt: "2026-06-13T12:00:00Z"
+        lastSeenAt: "2026-06-13T12:00:00Z",
+        moduleName: nil,
+        decision: nil,
+        decisionAt: nil
     )
 
     private static let interaction2 = InteractionIndexEntry(
@@ -37,13 +37,13 @@ struct IndexStoreInteractionTests {
         actionTypeName: "Action",
         predicate: "state.selectedBookID == nil || state.books.contains { $0.id == state.selectedBookID }",
         location: "/library.swift:20",
-        moduleName: "Library",
         score: 30,
         tier: "Possible",
-        decision: "accept",
-        decisionAt: "2026-06-14T01:00:00Z",
         firstSeenAt: "2026-06-13T00:00:00Z",
-        lastSeenAt: "2026-06-14T01:00:00Z"
+        lastSeenAt: "2026-06-14T01:00:00Z",
+        moduleName: "Library",
+        decision: "accept",
+        decisionAt: "2026-06-14T01:00:00Z"
     )
 
     /// A minimal algebraic entry, used to prove the two surfaces don't
@@ -51,13 +51,13 @@ struct IndexStoreInteractionTests {
     private static let algebraicEntry = SemanticIndexEntry(
         identityHash: "0x0000000000000001",
         templateName: "round-trip",
-        typeName: "Foo",
         score: 35,
         tier: "Possible",
         primaryFunctionName: "encode(_:)",
         location: "/a.swift:10",
         firstSeenAt: "2026-05-11T00:00:00Z",
-        lastSeenAt: "2026-05-11T12:00:00Z"
+        lastSeenAt: "2026-05-11T12:00:00Z",
+        typeName: "Foo"
     )
 
     // MARK: - Round-trip + back-compat
@@ -102,7 +102,7 @@ struct IndexStoreInteractionTests {
         )
         #expect(result.interactionEntries.map(\.identityHash) == [
             "0x00000000000000A1",
-            "0x00000000000000A2"
+            "0x00000000000000A2",
         ])
         #expect(result.updatedAt == "2026-06-14T12:00:00Z")
     }
@@ -122,13 +122,17 @@ struct IndexStoreInteractionTests {
             actionTypeName: Self.interaction1.actionTypeName,
             predicate: Self.interaction1.predicate,
             location: Self.interaction1.location,
+            score: 90,
+            // changed
+            tier: "Verified",
+            firstSeenAt: "2026-06-15T00:00:00Z",
+            // newer, but must be IGNORED
+            lastSeenAt: "2026-06-15T00:00:00Z",
             moduleName: Self.interaction1.moduleName,
-            score: 90,                    // changed
-            tier: "Verified",             // changed
-            decision: "accept",          // changed
-            decisionAt: "2026-06-15T01:00:00Z",
-            firstSeenAt: "2026-06-15T00:00:00Z",   // newer, but must be IGNORED
-            lastSeenAt: "2026-06-15T00:00:00Z"
+            // changed
+            decision: "accept",
+            // changed
+            decisionAt: "2026-06-15T01:00:00Z"
         )
         let result = IndexStore.upsertInteraction([fresh], into: initial, at: "2026-06-15T00:00:00Z")
         // interaction2 preserved as historical; algebraic entry untouched.

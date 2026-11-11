@@ -22,7 +22,7 @@ struct GeneratorRecipeCompileSafetyTests {
     private let bannedConstructs = [
         "Gen.frequency",        // @available(swift 6.2) — dead in an older language mode
         "Gen.array(of:",        // no such static; the kit has only an instance `.array(of:)`
-        ".gen()"                // `SomeType.gen()` — no such method on an arbitrary carrier
+        ".gen()",                // `SomeType.gen()` — no such method on an arbitrary carrier
     ]
 
     private func assertCompileSafe(_ recipe: GeneratorRecipe, _ label: String) {

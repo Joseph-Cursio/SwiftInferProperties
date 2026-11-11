@@ -23,7 +23,7 @@ struct FilterSubsetStubTests {
         name: String = "filterViolations",
         parameters: [Parameter] = [
             Parameter(label: nil, internalName: "violations", typeText: "[Violation]", isInout: false),
-            Parameter(label: "allowed", internalName: "allowed", typeText: "[Int]", isInout: false)
+            Parameter(label: "allowed", internalName: "allowed", typeText: "[Int]", isInout: false),
         ],
         returns: String = "[Violation]",
         owner: String? = "Analyzer",

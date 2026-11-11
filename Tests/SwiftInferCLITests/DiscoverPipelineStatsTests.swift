@@ -29,8 +29,8 @@ struct DiscoverPipelineStatsTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            statsOnly: true,
-            output: recording
+            output: recording,
+            statsOnly: true
         )
         // Header line + per-template lines, no per-suggestion blocks.
         // V1.18.A — value-semantic carrier signal pushes the round-trip
@@ -64,8 +64,8 @@ struct DiscoverPipelineStatsTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            statsOnly: true,
-            output: recording
+            output: recording,
+            statsOnly: true
         )
         #expect(recording.body == "0 suggestions.")
     }
@@ -85,8 +85,8 @@ struct DiscoverPipelineStatsTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            dryRun: true,
             output: DPRecordingOutput(),
+            dryRun: true,
             diagnostics: diagnostics
         )
         // Without --interactive there are no writes to suppress, so
@@ -115,8 +115,8 @@ struct DiscoverPipelineStatsTests {
         )
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            dryRun: true,
             output: withFlag,
+            dryRun: true,
             diagnostics: DPRecordingDiagnosticOutput()
         )
         #expect(withoutFlag.text == withFlag.text)

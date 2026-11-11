@@ -41,10 +41,12 @@ import SwiftInferCore
 /// a crashed run as a broken harness.
 public enum InputTotalityTemplate {
 
+    /// The `input-totality` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `input-totality` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "input-totality",
@@ -212,7 +214,7 @@ public enum InputTotalityTemplate {
             "This law is ROLE-ENTAILED, not a naming conjecture: nothing about \"interpret "
                 + "these bytes\" admits \"unless the bytes are strange\". If it does not hold, "
                 + "that is a finding about the function rather than a reason to skip the "
-                + "property."
+                + "property.",
         ]
     }
 }

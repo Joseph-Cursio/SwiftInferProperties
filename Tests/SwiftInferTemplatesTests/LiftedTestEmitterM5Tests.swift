@@ -124,7 +124,7 @@ struct LiftedTestEmitterM5Tests {
             ("/", "op_divide_reduceIsReversalInvariant"),
             ("%", "op_modulo_reduceIsReversalInvariant"),
             ("&&", "op_and_reduceIsReversalInvariant"),
-            ("||", "op_or_reduceIsReversalInvariant")
+            ("||", "op_or_reduceIsReversalInvariant"),
         ]
         for pair in pairs {
             let source = LiftedTestEmitter.liftedReduceEquivalence(

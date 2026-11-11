@@ -62,7 +62,6 @@ struct DeterminismFrozenStubTests {
         #expect(stub == Self.staticOperator)
     }
 
-    // swiftlint:disable line_length
     static let actorInstance = "\n" + #"""
         @Test func count_isDeterministic() async {
             let backend = SwiftPropertyBasedBackend()
@@ -84,7 +83,8 @@ struct DeterminismFrozenStubTests {
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "count(of:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                    "count(of:) is not deterministic — same input produced different output at input \(input). \#
+        \(error?.message ?? "")"
                 )
             }
         }
@@ -107,11 +107,13 @@ struct DeterminismFrozenStubTests {
                             let arg1 = (Gen<String>.always("x")).run(using: &rng)
                             return (arg0, arg1)
                         },
-                property: { (args: (Ledger, String)) in await (try? args.0.balance(for: args.1)) == (try? args.0.balance(for: args.1)) }
+                property: { (args: (Ledger, String)) in await (try? args.0.balance(for: args.1)) == (try? \#
+        args.0.balance(for: args.1)) }
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "balance(for:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                    "balance(for:) is not deterministic — same input produced different output at input \(input). \#
+        \(error?.message ?? "")"
                 )
             }
         }
@@ -138,10 +140,10 @@ struct DeterminismFrozenStubTests {
             )
             if case let .failed(_, _, input, error) = result {
                 Issue.record(
-                    "Money.+(_:_:) is not deterministic — same input produced different output at input \(input). \(error?.message ?? "")"
+                    "Money.+(_:_:) is not deterministic — same input produced different output at input \(input). \#
+        \(error?.message ?? "")"
                 )
             }
         }
         """#
-    // swiftlint:enable line_length
 }

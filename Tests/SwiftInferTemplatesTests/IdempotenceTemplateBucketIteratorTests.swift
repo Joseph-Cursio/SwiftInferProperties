@@ -47,15 +47,15 @@ struct IdempotenceTemplateBucketIteratorTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
     }
 
-    private func lifted(method: String, carrier: String) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    private func lifted(method: String, carrier: String) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             summary(method, carrier: carrier),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     // MARK: - Curated method-name extension
@@ -82,7 +82,7 @@ struct IdempotenceTemplateBucketIteratorTests {
 
     @Test("`BucketIterator` carrier + `advance` method fires veto via name fallback")
     func bucketIteratorAdvanceVetoes() throws {
-        let lift = lifted(method: "advance", carrier: "_HashTable.BucketIterator")
+        let lift = try lifted(method: "advance", carrier: "_HashTable.BucketIterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -93,8 +93,8 @@ struct IdempotenceTemplateBucketIteratorTests {
     }
 
     @Test("`BucketIterator` carrier + `findNext` method fires veto (cycle-18 finding case)")
-    func bucketIteratorFindNextVetoes() {
-        let lift = lifted(method: "findNext", carrier: "_HashTable.BucketIterator")
+    func bucketIteratorFindNextVetoes() throws {
+        let lift = try lifted(method: "findNext", carrier: "_HashTable.BucketIterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -103,8 +103,8 @@ struct IdempotenceTemplateBucketIteratorTests {
     }
 
     @Test("`BucketIterator` carrier + `advanceToNextUnoccupiedBucket` fires veto")
-    func bucketIteratorAdvanceToNextVetoes() {
-        let lift = lifted(method: "advanceToNextUnoccupiedBucket", carrier: "_HashTable.BucketIterator")
+    func bucketIteratorAdvanceToNextVetoes() throws {
+        let lift = try lifted(method: "advanceToNextUnoccupiedBucket", carrier: "_HashTable.BucketIterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -115,8 +115,8 @@ struct IdempotenceTemplateBucketIteratorTests {
     // MARK: - Joint-match guardrail (false-positive control)
 
     @Test("`BucketIterator` carrier + non-curated method ('removeAll') does NOT veto")
-    func bucketIteratorNonCuratedMethodPreserves() {
-        let lift = lifted(method: "removeAll", carrier: "_HashTable.BucketIterator")
+    func bucketIteratorNonCuratedMethodPreserves() throws {
+        let lift = try lifted(method: "removeAll", carrier: "_HashTable.BucketIterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -125,9 +125,9 @@ struct IdempotenceTemplateBucketIteratorTests {
     }
 
     @Test("Non-Iterator carrier + curated method does NOT veto")
-    func nonIteratorCarrierWithCuratedMethodPreserves() {
+    func nonIteratorCarrierWithCuratedMethodPreserves() throws {
         // 'next' is in curated names but 'Bag' isn't an Iterator-shape carrier.
-        let lift = lifted(method: "next", carrier: "Bag")
+        let lift = try lifted(method: "next", carrier: "Bag")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -138,8 +138,8 @@ struct IdempotenceTemplateBucketIteratorTests {
     // MARK: - Other Iterator-suffix carriers
 
     @Test("`HashIterator` carrier + `next` method fires veto")
-    func hashIteratorVetoes() {
-        let lift = lifted(method: "next", carrier: "HashIterator")
+    func hashIteratorVetoes() throws {
+        let lift = try lifted(method: "next", carrier: "HashIterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -148,9 +148,9 @@ struct IdempotenceTemplateBucketIteratorTests {
     }
 
     @Test("Pre-V1.22.A patterns (bare `Iterator`, `*.Iterator`) still veto")
-    func preV122PatternsPreserved() {
+    func preV122PatternsPreserved() throws {
         for carrier in ["Iterator", "Foo.Iterator", "Bar.Baz.Iterator"] {
-            let lift = lifted(method: "next", carrier: carrier)
+            let lift = try lifted(method: "next", carrier: carrier)
             let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
                 for: lift,
                 inheritedTypesByName: [:]

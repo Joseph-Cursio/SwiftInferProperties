@@ -540,7 +540,7 @@ attributing a decline to the wrong one is a documented way to build the wrong pl
 
 ### Decline
 Verify returning no verdict because it could not build the attempt at all — as distinct from
-running and passing. The `VerifyError` cases (`SwiftInferProperties/Sources/SwiftInferCLI/VerifyCommand.swift`):
+running and passing. The `VerifyError` cases (`SwiftInferProperties/Sources/SwiftInferCLI/SwiftInferCommand.Verify.swift`):
 
 | decline | meaning |
 |---|---|
@@ -552,7 +552,7 @@ running and passing. The `VerifyError` cases (`SwiftInferProperties/Sources/Swif
 | `monotonicity-domain-not-comparable` | pre-flight: `a ≤ b ⟹ f(a) ≤ f(b)` needs an ordered domain |
 | `carrier-not-equatable` | pre-flight: the law needs `==` and the carrier is not `Equatable` (`UnverifiableCause`) |
 
-The strings are rendered in `VerifyCommand+AllFromIndexRecords.swift`; the cases live on `VerifyError`.
+The strings are rendered in `SwiftInferCommand.Verify+AllFromIndexRecords.swift`; the cases live on `VerifyError`.
 
 **`unsupported-carrier` is nearly always the wrong suspect.** It reads like the obvious
 bottleneck and measures at ~4%. `supportedCarriers` — the constant that looks like the gate —

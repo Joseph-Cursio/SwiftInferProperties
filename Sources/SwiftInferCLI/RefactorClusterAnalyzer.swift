@@ -1,14 +1,4 @@
-import Foundation
 import SwiftInferCore
-
-/// V1.35.A — carrier-aware refactor-suggestion analyzer (PRD §20.1
-/// follow-up). Groups SemanticIndex entries by `typeName` and
-/// classifies the per-type cluster into a named shape that drives
-/// curated user-facing refactor suggestions.
-///
-/// Read-only over the SemanticIndex output — no source modification,
-/// no inference changes. Consumed by `swift-infer suggest-refactors`
-/// (V1.35.B).
 
 /// One per (typeName, cluster-shape) row.
 public struct RefactorCluster: Sendable, Equatable {
@@ -84,6 +74,14 @@ public enum ClusterShape: String, Sendable, Equatable, CaseIterable {
     case generalCluster
 }
 
+/// V1.35.A — carrier-aware refactor-suggestion analyzer (PRD §20.1
+/// follow-up). Groups SemanticIndex entries by `typeName` and
+/// classifies the per-type cluster into a named shape that drives
+/// curated user-facing refactor suggestions.
+///
+/// Read-only over the SemanticIndex output — no source modification,
+/// no inference changes. Consumed by `swift-infer suggest-refactors`
+/// (V1.35.B).
 public enum RefactorClusterAnalyzer {
 
     /// Group `entries` by `typeName`, classify each per-type cluster,
@@ -93,9 +91,8 @@ public enum RefactorClusterAnalyzer {
     /// Entries with `typeName == nil` are filtered out (free
     /// functions don't cluster by carrier).
     public static func analyze(_ entries: [SemanticIndexEntry]) -> [RefactorCluster] {
-        let grouped = Dictionary(grouping: entries.filter { $0.typeName != nil }) { entry in
-            entry.typeName!
-        }
+        let typed = entries.compactMap { entry in entry.typeName.map { (typeName: $0, entry: entry) } }
+        let grouped = Dictionary(grouping: typed, by: \.typeName).mapValues { $0.map(\.entry) }
         var clusters: [RefactorCluster] = []
         for (typeName, typeEntries) in grouped {
             let perTemplateCounts = countByTemplate(typeEntries)
@@ -142,7 +139,7 @@ public enum RefactorClusterAnalyzer {
     /// The pre-v1.41 fixed priority order (idempotence before
     /// dual-style before round-trip) is retained as the **tie-breaker**
     /// when two per-template shapes have the same count.
-    private struct Candidate {
+    struct Candidate {
         let shape: ClusterShape
         let count: Int
         let tieBreakerIndex: Int
@@ -175,7 +172,7 @@ public enum RefactorClusterAnalyzer {
                 count: perTemplateCounts["dual-style-consistency"] ?? 0,
                 tieBreakerIndex: 1
             ),
-            Candidate(shape: .roundTripCluster, count: perTemplateCounts["round-trip"] ?? 0, tieBreakerIndex: 2)
+            Candidate(shape: .roundTripCluster, count: perTemplateCounts["round-trip"] ?? 0, tieBreakerIndex: 2),
         ]
         let firing = candidates.filter { $0.count >= 3 }
         if let winner = firing.max(by: byCountThenTieBreakerIndexDescending) {
@@ -194,22 +191,5 @@ public enum RefactorClusterAnalyzer {
             counts[entry.templateName, default: 0] += 1
         }
         return counts
-    }
-}
-
-extension RefactorClusterAnalyzer {
-
-    /// Count ascending, tie-breaker index descending — written for `max(by:)`,
-    /// which takes the **greatest** element under this ordering, so the winner
-    /// is the highest count and, among ties, the lowest tie-breaker index.
-    ///
-    /// The direction reads backwards for that reason, and the name states the
-    /// ordering rather than the selection because that is what the laws are
-    /// about: it must still be irreflexive, asymmetric and transitive, and
-    /// `max(by:)` is undefined if it is not.
-    private static func byCountThenTieBreakerIndexDescending(_ lhs: Candidate, _ rhs: Candidate) -> Bool {
-        lhs.count != rhs.count
-            ? lhs.count < rhs.count
-            : lhs.tieBreakerIndex > rhs.tieBreakerIndex
     }
 }

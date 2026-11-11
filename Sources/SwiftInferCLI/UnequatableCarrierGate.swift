@@ -49,7 +49,7 @@ enum UnequatableCarrierGate {
         "Equatable", "Hashable", "Comparable", "Strideable",
         "BinaryInteger", "FixedWidthInteger", "SignedInteger", "UnsignedInteger",
         "FloatingPoint", "BinaryFloatingPoint", "StringProtocol", "Real",
-        "CaseIterable", "RawRepresentable", "Error", "OptionSet", "SetAlgebra"
+        "CaseIterable", "RawRepresentable", "Error", "OptionSet", "SetAlgebra",
     ]
 
     /// Templates whose emitted law states itself with `==` over the subject's own type.

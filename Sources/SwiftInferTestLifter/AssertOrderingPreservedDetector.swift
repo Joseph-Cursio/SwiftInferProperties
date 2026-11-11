@@ -1,4 +1,3 @@
-import SwiftInferCore
 import SwiftSyntax
 
 /// PRD §7.3 "Assert-Ordering-Preserved → monotonicity" detector. Runs
@@ -47,6 +46,7 @@ import SwiftSyntax
 /// anti-monotonicity, not in scope).
 public enum AssertOrderingPreservedDetector {
 
+    /// Monotonicity asserted by `slice`: a precondition `a < b` paired with a terminal `f(a) <= f(b)`.
     public static func detect(in slice: SlicedTestBody) -> [DetectedMonotonicity] {
         guard let conclusion = slice.assertion else {
             return []

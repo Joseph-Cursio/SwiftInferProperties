@@ -2,7 +2,7 @@ import SwiftInferCore
 
 /// The input-order-independence stub: the dictionary keys a sorted result holds, in order, for an
 /// input and for its reversal (`InputOrderIndependenceTemplate`).
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// Shares the totality arm's call machinery, and `sortedByKey`'s placement of the isolation hop:
     /// under a global actor the whole comparison runs inside it, because the elements' members are
@@ -11,13 +11,13 @@ extension LiftedTestEmitter {
     /// The second call reverses the first drawn value whose type is an array — a drawn receiver is
     /// not one — and reuses the rest. The comparison names no element type and needs only the key's
     /// `==`, which a dictionary key has. `nil` when nothing drawn is an array.
-    public static func inputOrderIndependent(
+    static func inputOrderIndependent(
         callee: CalleeReference,
         ordering: SortedOutput,
         seed: SamplingSeed.Value,
         generators: [String],
-        argumentTypes: [String] = [],
-        failureLabel: String
+        failureLabel: String,
+        argumentTypes: [String] = []
     ) -> String? {
         guard let key = ordering.dictionaryKeyMember,
               let reversedIndex = argumentTypes.firstIndex(where: InputOrderIndependenceTemplate.isArrayType),

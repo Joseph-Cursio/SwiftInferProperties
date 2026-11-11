@@ -36,9 +36,10 @@ extension CaseIterableMappingTemplate {
     /// case-insensitively against the codomain enum's case identifiers.
     public static let curatedSinkCaseNames: Set<String> = [
         "other", "unknown", "unspecified", "unrecognized", "unclassified",
-        "none", "undefined", "misc", "miscellaneous"
+        "none", "undefined", "misc", "miscellaneous",
     ]
 
+    /// The `caseiterable-case-coverage` suggestion for `summary` (enums from `shapesByName`), or `nil`.
     public static func coverageSuggestion(
         for summary: FunctionSummary,
         shapesByName: [String: TypeShape]
@@ -49,6 +50,7 @@ extension CaseIterableMappingTemplate {
         )
     }
 
+    /// The `caseiterable-case-coverage` template as a constraint, reading enums from `shapesByName`.
     public static func makeCoverageConstraint(
         shapesByName: [String: TypeShape]
     ) -> Constraint<FunctionSummary> {
@@ -125,7 +127,7 @@ extension CaseIterableMappingTemplate {
                 weight: 15,
                 detail: "\(returnType) carries the sink case `.\(sink)` — a case routed there is "
                     + "never reported wrong, it is simply never checked"
-            )
+            ),
         ]
     }
 
@@ -156,7 +158,7 @@ extension CaseIterableMappingTemplate {
                 + "much, and this law is the only check there is.",
             "SINK ROUTING IS NAME-CONJECTURED. `.\(sink)` is read as a sink because of its NAME; "
                 + "it may be a perfectly ordinary member of the codomain. If it is, this law does "
-                + "not apply — say so and move on."
+                + "not apply — say so and move on.",
         ]
     }
 }

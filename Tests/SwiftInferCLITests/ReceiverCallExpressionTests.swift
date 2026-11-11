@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 import Testing
 
@@ -23,13 +22,13 @@ struct ReceiverCallExpressionTests {
         SemanticIndexEntry(
             identityHash: "0x1",
             templateName: "commutativity",
-            typeName: "Bag",
             score: 60,
             tier: "Likely",
             primaryFunctionName: function,
             location: "/Module.swift:1",
             firstSeenAt: "2026-07-02T00:00:00Z",
             lastSeenAt: "2026-07-02T00:00:00Z",
+            typeName: "Bag",
             isInstanceMethod: isInstanceMethod,
             isMutatingMethod: isMutatingMethod
         )

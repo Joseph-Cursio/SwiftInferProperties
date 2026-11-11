@@ -22,18 +22,6 @@ protocol TemplateRankedRow {
     var rankingCount: Int { get }
 }
 
-extension MetricsRenderer.TemplateRow: TemplateRankedRow {
-    var rankingCount: Int { total }
-}
-
-extension MetricsRenderer.PostAcceptanceFailureRow: TemplateRankedRow {
-    var rankingCount: Int { total }
-}
-
-extension MetricsRenderer.TimeToAdoptionRow: TemplateRankedRow {
-    var rankingCount: Int { count }
-}
-
 enum MetricsRowOrdering {
 
     /// Busiest first, template name ascending as the tiebreak.
@@ -44,4 +32,16 @@ enum MetricsRowOrdering {
             ? lhs.rankingCount > rhs.rankingCount
             : lhs.template < rhs.template
     }
+}
+
+extension MetricsRenderer.TemplateRow: TemplateRankedRow {
+    var rankingCount: Int { total }
+}
+
+extension MetricsRenderer.PostAcceptanceFailureRow: TemplateRankedRow {
+    var rankingCount: Int { total }
+}
+
+extension MetricsRenderer.TimeToAdoptionRow: TemplateRankedRow {
+    var rankingCount: Int { count }
 }

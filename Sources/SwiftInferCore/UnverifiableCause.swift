@@ -1,5 +1,3 @@
-import Foundation
-
 /// Why an `architecturalCoveragePending` record did not run — read back off the `detail`
 /// string the verify path wrote.
 ///
@@ -112,7 +110,7 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
         ("not-a-candidate", .subjectNotVisible),
         ("instance-method-shape-not-supported", .instanceMethodShape),
         ("monotonicity-domain-not-comparable", .monotonicityDomainNotComparable),
-        ("carrier-not-equatable", .carrierNotEquatable)
+        ("carrier-not-equatable", .carrierNotEquatable),
     ]
 
     /// Short label for a count breakdown.

@@ -1,6 +1,5 @@
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 @testable import SwiftInferTestLifter
 import Testing
 

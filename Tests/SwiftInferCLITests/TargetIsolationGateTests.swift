@@ -169,13 +169,13 @@ struct TargetIsolationGateTests {
                 standing: .assumed,
                 coveredLaws: [.equatableReflexive, .equatableSymmetric],
                 declaredCoveringConformances: ["Equatable"]
-            )
+            ),
         ]
         let shapes = [
             "Money": TypeShape(
                 name: "Money", kind: .struct, inheritedTypes: ["Equatable"], hasUserGen: false,
                 storedMembers: [StoredMember(name: "amount", typeName: "Int")]
-            )
+            ),
         ]
 
         let control = KitSuiteEmitter.emit(

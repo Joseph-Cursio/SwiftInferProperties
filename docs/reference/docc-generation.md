@@ -79,6 +79,6 @@ Behavioral properties SwiftInfer verified by executed property tests.
 ## Files / tests
 
 - `DoccPageBuilder.swift` (pure: gate, jargon mapping, grouping, render, write),
-  `DoccCommand.swift` (the subcommand).
+  `SwiftInferCommand.Docc.swift` (the subcommand).
 - `DoccPageBuilderTests` (10 — verified gate, both-surface mapping, grouping,
   render, file write).

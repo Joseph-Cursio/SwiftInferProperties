@@ -21,13 +21,13 @@ struct DoccPageBuilderTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: template,
-            typeName: type,
             score: 90,
             tier: "Strong",
             primaryFunctionName: function,
             location: "/x.swift:1",
             firstSeenAt: "2026-07-01T00:00:00Z",
             lastSeenAt: "2026-07-01T00:00:00Z",
+            typeName: type,
             secondaryFunctionName: secondary
         )
     }
@@ -46,11 +46,11 @@ struct DoccPageBuilderTests {
             actionTypeName: "Action",
             predicate: predicate,
             location: "/r.swift:1",
-            moduleName: nil,
             score: 80,
             tier: "Verified",
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            moduleName: nil
         )
     }
 
@@ -73,7 +73,7 @@ struct DoccPageBuilderTests {
             Self.evidence("AAAA000000000001", .measuredBothPass),
             Self.evidence("BBBB000000000002", .measuredDefaultFails),
             Self.evidence("CCCC000000000003", .measuredError),
-            Self.evidence("DDDD000000000004", .measuredEdgeCaseAdvisory)
+            Self.evidence("DDDD000000000004", .measuredEdgeCaseAdvisory),
         ])
         let verified = DoccPageBuilder.verifiedHashes(in: log)
         #expect(verified == ["AAAA000000000001"])
@@ -89,13 +89,13 @@ struct DoccPageBuilderTests {
                 ),
                 Self.algebraic(
                     hash: "0xBBBB000000000002", template: "idempotence", type: "Other", function: "sort()"
-                )
+                ),
             ],
             interactionEntries: [
                 Self.interaction(
                     hash: "0xEEEE000000000005", family: "idempotence",
                     reducer: "NavFeature.reduce", predicate: "s == s"
-                )
+                ),
             ]
         )
         // Verify only the Text row + the interaction row.
@@ -114,7 +114,7 @@ struct DoccPageBuilderTests {
             entries: [
                 Self.algebraic(
                     hash: "0xAAAA000000000001", template: "idempotence", type: "Text", function: "normalize(_:)"
-                )
+                ),
             ]
         )
         let props = DoccPageBuilder.verifiedProperties(in: index, verified: [])
@@ -137,7 +137,7 @@ struct DoccPageBuilderTests {
                 Self.algebraic(hash: "0x03", template: "commutativity", type: "Money", function: "plus(_:_:)"),
                 Self.algebraic(
                     hash: "0x04", template: "some-future-template", type: "Widget", function: "frobnicate()"
-                )
+                ),
             ]
         )
         let props = DoccPageBuilder.verifiedProperties(in: index, verified: ["01", "02", "03", "04"])
@@ -163,7 +163,7 @@ struct DoccPageBuilderTests {
                 ),
                 Self.interaction(
                     hash: "0x11", family: "cardinality", reducer: "Router.reduce", predicate: "≤1 modal"
-                )
+                ),
             ]
         )
         let props = DoccPageBuilder.verifiedProperties(in: index, verified: ["10", "11"])
@@ -181,7 +181,7 @@ struct DoccPageBuilderTests {
         let props = [
             DoccProperty(container: "Zebra", headline: "Idempotent", consequence: "z"),
             DoccProperty(container: "Alpha", headline: "Commutative", consequence: "a"),
-            DoccProperty(container: nil, headline: "Monotonic", consequence: "free")
+            DoccProperty(container: nil, headline: "Monotonic", consequence: "free"),
         ]
         let pages = DoccPageBuilder.pages(from: props)
         #expect(pages.map(\.fileName) == ["Alpha.md", "Zebra.md", "VerifiedProperties.md"])
@@ -226,7 +226,7 @@ struct DoccPageBuilderTests {
         defer { try? FileManager.default.removeItem(at: tempDir) }
         let pages = [
             DoccPage(fileName: "Text.md", markdown: "# ``Text``\n"),
-            DoccPage(fileName: "VerifiedProperties.md", markdown: "# Verified Properties\n")
+            DoccPage(fileName: "VerifiedProperties.md", markdown: "# Verified Properties\n"),
         ]
         let urls = try DoccPageBuilder.write(pages, to: tempDir)
         #expect(urls.count == 2)

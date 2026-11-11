@@ -26,7 +26,7 @@ struct FunctorIdentityTests {
                 Parameter(
                     label: nil, internalName: "transform",
                     typeText: parameter, isInout: false
-                )
+                ),
             ],
             returnTypeText: returns,
             isThrows: false,
@@ -65,7 +65,7 @@ struct FunctorIdentityTests {
                 mapper(
                     "mapValues", on: "Dictionary", returns: "Dictionary<Key, T>",
                     parameter: "(Value) throws -> T"
-                )
+                ),
             ],
             inheritedTypesByName: ["Dictionary": ["Sequence", "Collection"]]
         )
@@ -196,7 +196,7 @@ struct FunctorIdentityTests {
             let shapes = FunctorIdentityPairing.candidates(
                 in: [
                     mapper("map", on: "Result", returns: "Result<T, E>"),
-                    mapper("mapError", on: "Result", returns: "Result<S, F>")
+                    mapper("mapError", on: "Result", returns: "Result<S, F>"),
                 ],
                 inheritedTypesByName: ["Result": ["Equatable"]]
             )

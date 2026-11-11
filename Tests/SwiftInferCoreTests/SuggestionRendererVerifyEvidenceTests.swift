@@ -20,7 +20,7 @@ struct SuggestionRendererVerifyEvidenceTests {
     func emptyMapLeavesListRenderUnchanged() {
         let suggestions = [
             makeSuggestion(canonicalInput: "list-a"),
-            makeSuggestion(canonicalInput: "list-b")
+            makeSuggestion(canonicalInput: "list-b"),
         ]
         #expect(
             SuggestionRenderer.render(suggestions, verifyEvidenceByIdentity: [:])
@@ -37,7 +37,7 @@ struct SuggestionRendererVerifyEvidenceTests {
             (.measuredEdgeCaseAdvisory, "⚠ edge-case advisory"),
             (.measuredDefaultFails, "✗ defaultFails (verify-disproven)"),
             (.measuredError, "! error"),
-            (.architecturalCoveragePending, "· architectural-coverage-pending")
+            (.architecturalCoveragePending, "· architectural-coverage-pending"),
         ]
         let suggestion = makeSuggestion(canonicalInput: "outcome-glyphs")
         for (outcome, expectedFragment) in cases {
@@ -107,7 +107,7 @@ struct SuggestionRendererVerifyEvidenceTests {
         let suggestion = makeStrongSuggestion(canonicalInput: "no-promote-strong")
         for outcome: VerifyEvidenceOutcome in [
             .measuredEdgeCaseAdvisory, .measuredDefaultFails, .measuredError,
-            .architecturalCoveragePending
+            .architecturalCoveragePending,
         ] {
             let rendered = SuggestionRenderer.render(
                 suggestion,
@@ -152,7 +152,7 @@ struct SuggestionRendererVerifyEvidenceTests {
             ),
             strongB.identity.normalized: makeEvidence(
                 for: strongB, outcome: .measuredDefaultFails, detail: nil
-            )
+            ),
         ]
         let ordered = SuggestionRenderer.verifiedFirst(
             input,
@@ -163,7 +163,7 @@ struct SuggestionRendererVerifyEvidenceTests {
             strongD.identity.normalized,
             likelyA.identity.normalized,
             strongB.identity.normalized,
-            likelyC.identity.normalized
+            likelyC.identity.normalized,
         ])
     }
 
@@ -172,7 +172,7 @@ struct SuggestionRendererVerifyEvidenceTests {
         let input = [
             makeStrongSuggestion(canonicalInput: "noevidence-A"),
             makeSuggestion(canonicalInput: "noevidence-B"),
-            makeStrongSuggestion(canonicalInput: "noevidence-C")
+            makeStrongSuggestion(canonicalInput: "noevidence-C"),
         ]
         let ordered = SuggestionRenderer.verifiedFirst(input, verifyEvidenceByIdentity: [:])
         #expect(ordered.map(\.identity.normalized) == input.map(\.identity.normalized))
@@ -185,7 +185,7 @@ struct SuggestionRendererVerifyEvidenceTests {
         let evidenceMap = [
             strong.identity.normalized: makeEvidence(
                 for: strong, outcome: .measuredBothPass, detail: nil
-            )
+            ),
         ]
         // Input order is [likely, strong]; verified-first flips it.
         let rendered = SuggestionRenderer.render(
@@ -211,7 +211,7 @@ struct SuggestionRendererVerifyEvidenceTests {
                 for: verified,
                 outcome: .measuredBothPass,
                 detail: nil
-            )
+            ),
         ]
         let rendered = SuggestionRenderer.render(
             [verified, unverified],
@@ -232,7 +232,7 @@ struct SuggestionRendererVerifyEvidenceTests {
                     displayName: "normalize(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "Sanitizer.swift", line: 7, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [
                 Signal(kind: .exactNameMatch, weight: 40, detail: "normalize")
@@ -256,12 +256,12 @@ struct SuggestionRendererVerifyEvidenceTests {
                     displayName: "normalize(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "Sanitizer.swift", line: 7, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [
                 Signal(kind: .exactNameMatch, weight: 40, detail: "normalize"),
                 Signal(kind: .typeSymmetrySignature, weight: 30, detail: "T -> T"),
-                Signal(kind: .selfComposition, weight: 20, detail: "comp")
+                Signal(kind: .selfComposition, weight: 20, detail: "comp"),
             ]),
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(

@@ -1,5 +1,3 @@
-import Foundation
-
 /// **Is the coverage veto's premise actually true?**
 ///
 /// `ProtocolCoverageMap` suppresses a template when the carrier's conformances mean

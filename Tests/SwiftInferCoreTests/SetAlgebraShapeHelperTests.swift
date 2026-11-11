@@ -2,7 +2,7 @@ import SwiftInferCore
 import Testing
 
 // V1.16.1 — Tests for the hoisted SetAlgebraShape.isSelfTypedBinaryOp(_:)
-// helper. Hoisted from InversePairSetAlgebraShapeGate.swift's private
+// helper. Hoisted from InversePairTemplate+SetAlgebraShapeGate.swift's private
 // helper when round-trip + idempetence became consumers (second-
 // consumer-triggers-hoist pattern from v1.13).
 

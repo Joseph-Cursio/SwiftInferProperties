@@ -154,7 +154,7 @@ public enum ProtocolCoverageMap {
             .setUnionPairedMutation,
             .setIntersectionPairedMutation,
             .setSubtractionPairedMutation,
-            .setSymmetricDifferencePairedMutation
+            .setSymmetricDifferencePairedMutation,
         ],
 
         // — stdlib codable —
@@ -181,7 +181,7 @@ public enum ProtocolCoverageMap {
         // to `semilatticeIdempotence` (the kit-shaped property the
         // idempotence template emits when the type's `combine`-shaped
         // op meets the kit's posture).
-        "Semilattice": monoidBase.union([.semilatticeIdempotence])
+        "Semilattice": monoidBase.union([.semilatticeIdempotence]),
     ]
 
     // MARK: - Hand-baked parent sets (kept private so the public
@@ -190,7 +190,7 @@ public enum ProtocolCoverageMap {
     private static let equatableBase: Set<KnownProperty> = [
         .equatableReflexive,
         .equatableSymmetric,
-        .equatableTransitive
+        .equatableTransitive,
     ]
 
     /// **No `equatableBase` here, and that is the 2026-08-02 correction.** The table used to
@@ -203,14 +203,14 @@ public enum ProtocolCoverageMap {
     private static let additiveArithmeticBase: Set<KnownProperty> = [
         .additiveAssociative,
         .additiveCommutative,
-        .additiveIdentityZero
+        .additiveIdentityZero,
     ]
 
     private static let numericBase: Set<KnownProperty> = additiveArithmeticBase.union([
         .multiplicativeAssociative,
         .multiplicativeCommutative,
         .multiplicativeIdentityOne,
-        .distributivity
+        .distributivity,
     ])
 
     private static let monoidBase: Set<KnownProperty> = [.monoidIdentity]

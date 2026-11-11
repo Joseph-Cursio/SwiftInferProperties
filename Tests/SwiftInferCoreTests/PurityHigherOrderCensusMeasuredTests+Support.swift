@@ -1,9 +1,38 @@
 import Foundation
 import SwiftEffectInference
-import SwiftParser
 import SwiftSyntax
 
 @testable import SwiftInferCore
+
+// MARK: - Collection
+
+/// Every closure literal handed to a call, keyed by the callee's bare name.
+///
+/// Trailing closures count — `xs.map { … }` is the ordinary spelling and
+/// omitting it would measure almost nothing. Additional trailing closures count
+/// too, since a two-closure call passes two arguments whose purity differs.
+final class CensusClosureArgumentCollector: SyntaxVisitor {
+
+    private(set) var passed: [(calleeName: String, closure: ClosureExprSyntax)] = []
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        guard let callee = CensusCalleeCollector.callee(of: node.calledExpression) else {
+            return .visitChildren
+        }
+        for argument in node.arguments {
+            if let closure = argument.expression.as(ClosureExprSyntax.self) {
+                passed.append((callee.name, closure))
+            }
+        }
+        if let trailing = node.trailingClosure {
+            passed.append((callee.name, trailing))
+        }
+        for additional in node.additionalTrailingClosures {
+            passed.append((callee.name, additional.closure))
+        }
+        return .visitChildren
+    }
+}
 
 /// Type unwrapping and call-site collection for
 /// `PurityHigherOrderCensusMeasuredTests`. Split out for the 400-line file cap
@@ -95,34 +124,4 @@ extension PurityHigherOrderCensusMeasuredTests {
         }
         return found
     }()
-}
-
-// MARK: - Collection
-
-/// Every closure literal handed to a call, keyed by the callee's bare name.
-///
-/// Trailing closures count — `xs.map { … }` is the ordinary spelling and
-/// omitting it would measure almost nothing. Additional trailing closures count
-/// too, since a two-closure call passes two arguments whose purity differs.
-final class CensusClosureArgumentCollector: SyntaxVisitor {
-
-    private(set) var passed: [(calleeName: String, closure: ClosureExprSyntax)] = []
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        guard let callee = CensusCalleeCollector.callee(of: node.calledExpression) else {
-            return .visitChildren
-        }
-        for argument in node.arguments {
-            if let closure = argument.expression.as(ClosureExprSyntax.self) {
-                passed.append((callee.name, closure))
-            }
-        }
-        if let trailing = node.trailingClosure {
-            passed.append((callee.name, trailing))
-        }
-        for additional in node.additionalTrailingClosures {
-            passed.append((callee.name, additional.closure))
-        }
-        return .visitChildren
-    }
 }

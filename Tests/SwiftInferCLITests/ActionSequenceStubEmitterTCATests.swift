@@ -42,7 +42,7 @@ struct ActionSequenceStubEmitterTCATests {
         // the relaxed generator to explore.
         let cases = [
             ActionCaseInfo(name: "binding", payloadTypes: ["BindingAction<State>"]),
-            ActionCaseInfo(name: "child", payloadTypes: ["Child.Action"])
+            ActionCaseInfo(name: "child", payloadTypes: ["Child.Action"]),
         ]
         #expect(
             throws: ActionSequenceStubEmitter.EmitError
@@ -57,7 +57,7 @@ struct ActionSequenceStubEmitterTCATests {
         let source = try ActionSequenceStubEmitter.emit(inputs(tcaCandidate(actionCases: [
             ActionCaseInfo(name: "increment"),
             ActionCaseInfo(name: "decrement"),
-            ActionCaseInfo(name: "closeMenu")
+            ActionCaseInfo(name: "closeMenu"),
         ])))
         #expect(source.contains("import ComposableArchitecture"))
         #expect(source.contains("Gen.oneOf("))
@@ -73,7 +73,7 @@ struct ActionSequenceStubEmitterTCATests {
         let candidate = tcaCandidate(actionCases: [
             ActionCaseInfo(name: "closeMenu"),                        // free
             ActionCaseInfo(name: "setCount", payloadTypes: ["Int"]), // raw
-            ActionCaseInfo(name: "child", payloadTypes: ["Child.Action"]) // excluded
+            ActionCaseInfo(name: "child", payloadTypes: ["Child.Action"]), // excluded
         ])
         let source = try ActionSequenceStubEmitter.emit(inputs(candidate))
         // free + raw generated...
@@ -106,7 +106,7 @@ struct ActionSequenceStubEmitterTCATests {
         let source = try ActionSequenceStubEmitter.emit(inputs(
             tcaCandidate(actionCases: [
                 ActionCaseInfo(name: "increment"),
-                ActionCaseInfo(name: "closeMenu")
+                ActionCaseInfo(name: "closeMenu"),
             ]),
             invariant: invariant
         ))

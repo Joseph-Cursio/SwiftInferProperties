@@ -1,90 +1,5 @@
 import SwiftEffectInference
 
-/// The unified shape every state architecture (TCA, MVVM, Redux/Elm, VIPER,
-/// MVP, MVC) reduces to: a thing that owns **state** and exposes **mutation
-/// entry points** (an action alphabet), plus how to **construct** an instance
-/// to drive and which **collaborators** to fake.
-///
-/// From `docs/design/stateful-role-discoverer-design.md`. It was conceived as the
-/// unification of `ReducerCandidate` (TCA / Elm / ReSwift / Mobius / Workflow) and
-/// `ViewModelCandidate` (MVVM), reached through adapters.
-///
-/// **That unification never happened, and this type outlived it.** The adapters and
-/// the `ParadigmDiscoverer` facade over them were deleted on 2026-08-07, unadopted:
-/// this shape is a *lossy projection* — 9 fields against `ReducerCandidate`'s 17 and
-/// `ViewModelCandidate`'s 32 — so a consumer routed through it loses fields it needs
-/// (`stateIDTypeName`, which `IdentifiedActionResolver` requires, is not here). Every
-/// production caller kept reaching for the concrete candidate types.
-///
-/// What it IS, and is good at, is the shape for roles that have **no** richer
-/// candidate type: `ConventionRoleDiscoverer` builds these directly for VIPER / MVP,
-/// and `ConventionRoleInteractionAnalyzer` + `OutputDeterminismVerifierEmitter`
-/// consume them. Read it as the convention path's own type, not as a universal one.
-public struct StatefulRole: Sendable, Equatable {
-
-    /// `<path>:<line>` of the declaration — same click-target UX as
-    /// `ReducerCandidate.location` / `ViewModelCandidate.location`.
-    public let location: SourceLocation
-
-    /// The role's type name (or, for a free-function reducer, its function
-    /// name).
-    public let typeName: String
-
-    /// Which architecture this role belongs to.
-    public let paradigm: Paradigm
-
-    /// How the role was structurally recognized — surfaced for the same
-    /// transparency reason `ViewModelExcludedField` carries its exclusion
-    /// reason: a human can see *why* a declaration was treated as this role.
-    public let recognizedBy: RecognitionKind
-
-    /// The state surface the invariants reason about — a named `State` type
-    /// (reducer) or the stored properties (viewmodel-style).
-    public let state: StateSurface
-
-    /// The action alphabet — the mutation entry points. Unifies a reducer's
-    /// `Action` cases and a viewmodel's state-mutating methods.
-    public let actions: [RoleAction]
-
-    /// How the verify harness obtains something to drive — a free function it
-    /// calls directly, or an instance it must build (injecting fakes).
-    public let construction: Construction
-
-    /// Protocols the role calls *out* to, recognized so they can be faked. A
-    /// `.dependency` is a no-op fake; an `.output` is a recording fake the
-    /// property asserts against (the capability MVP/VIPER need; empty for the
-    /// Phase 0 adapters).
-    public let collaborators: [Collaborator]
-
-    /// The role's effect on the SwiftEffectInference lattice, when known. A
-    /// `.pure` reducer can be fuzzed as a free function with no harness; an
-    /// effectful role needs the instance + mock path. `nil` when not yet
-    /// classified.
-    public let effect: Effect?
-
-    public init(
-        location: SourceLocation,
-        typeName: String,
-        paradigm: Paradigm,
-        recognizedBy: RecognitionKind,
-        state: StateSurface,
-        actions: [RoleAction],
-        construction: Construction,
-        collaborators: [Collaborator] = [],
-        effect: Effect? = nil
-    ) {
-        self.location = location
-        self.typeName = typeName
-        self.paradigm = paradigm
-        self.recognizedBy = recognizedBy
-        self.state = state
-        self.actions = actions
-        self.construction = construction
-        self.collaborators = collaborators
-        self.effect = effect
-    }
-}
-
 /// The state architectures the discoverer can recognize. The reducer families
 /// (Elm / ReSwift / Mobius / Workflow) fold into `.redux` at this granularity;
 /// `ReducerCandidate.carrierKind` retains the finer distinction.
@@ -222,4 +137,89 @@ public enum PropertyKind: String, Sendable, Equatable, Codable, CaseIterable {
     case outputDeterminism = "output-determinism"
     case viewUpdateDeterminism = "view-update-determinism"
     case noUIKitImport = "no-uikit-import"
+}
+
+/// The unified shape every state architecture (TCA, MVVM, Redux/Elm, VIPER,
+/// MVP, MVC) reduces to: a thing that owns **state** and exposes **mutation
+/// entry points** (an action alphabet), plus how to **construct** an instance
+/// to drive and which **collaborators** to fake.
+///
+/// From `docs/design/stateful-role-discoverer-design.md`. It was conceived as the
+/// unification of `ReducerCandidate` (TCA / Elm / ReSwift / Mobius / Workflow) and
+/// `ViewModelCandidate` (MVVM), reached through adapters.
+///
+/// **That unification never happened, and this type outlived it.** The adapters and
+/// the `ParadigmDiscoverer` facade over them were deleted on 2026-08-07, unadopted:
+/// this shape is a *lossy projection* — 9 fields against `ReducerCandidate`'s 17 and
+/// `ViewModelCandidate`'s 32 — so a consumer routed through it loses fields it needs
+/// (`stateIDTypeName`, which `IdentifiedActionResolver` requires, is not here). Every
+/// production caller kept reaching for the concrete candidate types.
+///
+/// What it IS, and is good at, is the shape for roles that have **no** richer
+/// candidate type: `ConventionRoleDiscoverer` builds these directly for VIPER / MVP,
+/// and `ConventionRoleInteractionAnalyzer` + `OutputDeterminismVerifierEmitter`
+/// consume them. Read it as the convention path's own type, not as a universal one.
+public struct StatefulRole: Sendable, Equatable {
+
+    /// `<path>:<line>` of the declaration — same click-target UX as
+    /// `ReducerCandidate.location` / `ViewModelCandidate.location`.
+    public let location: SourceLocation
+
+    /// The role's type name (or, for a free-function reducer, its function
+    /// name).
+    public let typeName: String
+
+    /// Which architecture this role belongs to.
+    public let paradigm: Paradigm
+
+    /// How the role was structurally recognized — surfaced for the same
+    /// transparency reason `ViewModelExcludedField` carries its exclusion
+    /// reason: a human can see *why* a declaration was treated as this role.
+    public let recognizedBy: RecognitionKind
+
+    /// The state surface the invariants reason about — a named `State` type
+    /// (reducer) or the stored properties (viewmodel-style).
+    public let state: StateSurface
+
+    /// The action alphabet — the mutation entry points. Unifies a reducer's
+    /// `Action` cases and a viewmodel's state-mutating methods.
+    public let actions: [RoleAction]
+
+    /// How the verify harness obtains something to drive — a free function it
+    /// calls directly, or an instance it must build (injecting fakes).
+    public let construction: Construction
+
+    /// Protocols the role calls *out* to, recognized so they can be faked. A
+    /// `.dependency` is a no-op fake; an `.output` is a recording fake the
+    /// property asserts against (the capability MVP/VIPER need; empty for the
+    /// Phase 0 adapters).
+    public let collaborators: [Collaborator]
+
+    /// The role's effect on the SwiftEffectInference lattice, when known. A
+    /// `.pure` reducer can be fuzzed as a free function with no harness; an
+    /// effectful role needs the instance + mock path. `nil` when not yet
+    /// classified.
+    public let effect: Effect?
+
+    public init(
+        location: SourceLocation,
+        typeName: String,
+        paradigm: Paradigm,
+        recognizedBy: RecognitionKind,
+        state: StateSurface,
+        actions: [RoleAction],
+        construction: Construction,
+        collaborators: [Collaborator] = [],
+        effect: Effect? = nil
+    ) {
+        self.location = location
+        self.typeName = typeName
+        self.paradigm = paradigm
+        self.recognizedBy = recognizedBy
+        self.state = state
+        self.actions = actions
+        self.construction = construction
+        self.collaborators = collaborators
+        self.effect = effect
+    }
 }

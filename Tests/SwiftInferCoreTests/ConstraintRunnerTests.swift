@@ -2,6 +2,22 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Thread-safe boolean flag for the gate-short-circuit test.
+private final class LockedFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flag = false
+
+    func set() {
+        lock.lock(); defer { lock.unlock() }
+        flag = true
+    }
+
+    var wasSet: Bool {
+        lock.lock(); defer { lock.unlock() }
+        return flag
+    }
+}
+
 /// V1.36.B — `ConstraintRunner.suggest(constraint:subject:)` tests.
 @Suite("ConstraintRunner — V1.36.B orchestration")
 struct ConstraintRunnerTests {
@@ -58,7 +74,7 @@ struct ConstraintRunnerTests {
             signals: { _ in
                 [
                     Signal(kind: .typeSymmetrySignature, weight: 100, detail: "shape"),
-                    Signal(kind: .nonDeterministicBody, weight: Signal.vetoWeight, detail: "veto")
+                    Signal(kind: .nonDeterministicBody, weight: Signal.vetoWeight, detail: "veto"),
                 ]
             },
             evidence: { _ in [Self.makeEvidence()] },
@@ -157,21 +173,5 @@ struct ConstraintRunnerTests {
         )
         #expect(block.whySuggested.isEmpty)
         #expect(block.whyMightBeWrong.isEmpty)
-    }
-}
-
-/// Thread-safe boolean flag for the gate-short-circuit test.
-private final class LockedFlag: @unchecked Sendable {
-    private let lock = NSLock()
-    private var flag = false
-
-    func set() {
-        lock.lock(); defer { lock.unlock() }
-        flag = true
-    }
-
-    var wasSet: Bool {
-        lock.lock(); defer { lock.unlock() }
-        return flag
     }
 }

@@ -113,7 +113,7 @@ struct ConformanceCaveatFilterTests {
             "T must conform to Equatable for the emitted property to compile.",
             "X must conform to Equatable for the emitted property to compile.",
             "The element type must be Equatable (or Hashable) for the membership check to compile;",
-            "The element type must be Hashable for `Set` / `isDisjoint`; this tool does not verify"
+            "The element type must be Hashable for `Set` / `isDisjoint`; this tool does not verify",
         ]
     )
     func everyPhrasingIsRecognised(caveat: String) {

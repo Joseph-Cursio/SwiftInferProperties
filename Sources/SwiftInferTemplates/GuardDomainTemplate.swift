@@ -38,10 +38,12 @@ import SwiftInferCore
 /// constant.
 public enum GuardDomainTemplate {
 
+    /// The `guard-domain` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `guard-domain` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "guard-domain",
@@ -89,7 +91,7 @@ public enum GuardDomainTemplate {
                 weight: 40,
                 detail: "the body states it: \(arrow)(\(domain.condition)) ⟹ "
                     + "\(summary.name)(\(domain.parameterName)) == \(domain.returnedExpression)"
-            )
+            ),
         ]
     }
 
@@ -101,7 +103,7 @@ public enum GuardDomainTemplate {
                 + "the value it used to return untouched.",
             "Read the sentence and decide whether you meant it. It is your own line played back, "
                 + "so the question is not whether the code satisfies it — it does — but whether "
-                + "the sub-domain it names is behaviour you intend to keep."
+                + "the sub-domain it names is behaviour you intend to keep.",
         ]
     }
 }

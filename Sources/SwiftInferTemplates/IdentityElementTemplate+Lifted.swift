@@ -159,14 +159,11 @@ extension IdentityElementTemplate {
             evidence: { pair in
                 [
                     Self.makeLiftedOperationEvidence(pair),
-                    Self.makeLiftedIdentityEvidence(pair)
+                    Self.makeLiftedIdentityEvidence(pair),
                 ]
             },
             identity: Self.makeLiftedIdentity(for:),
-            // Multi-closure Constraint call: multiple_closures_with_trailing_closure
-            // (default) forbids the trailing form trailing_closure would want.
-            // swiftlint:disable:next trailing_closure
-            carrier: { $0.operation.carrier }
+            carrier: \.operation.carrier
         )
     }
 
@@ -313,7 +310,7 @@ extension IdentityElementTemplate {
             "Property holds iff `\(pair.operation.carrier)` has value "
                 + "semantics — the lift's `var copy = original; copy."
                 + "\(pair.operationSummary.name)(...)` does not "
-                + "alias original's state."
+                + "alias original's state.",
         ]
         return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }

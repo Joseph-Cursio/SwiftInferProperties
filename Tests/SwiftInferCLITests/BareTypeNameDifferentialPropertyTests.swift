@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -11,7 +11,7 @@ import Testing
 // four spelled `strippingGenericParameters` in `SwiftInferCore` (pinned in the
 // Core suite) and three spelled `bareTypeName`:
 //
-//   * `SwiftInferCommand.Index.bareTypeName(from:)`  (IndexCommand+Projection.swift:185)
+//   * `SwiftInferCommand.Index.bareTypeName(from:)`  (SwiftInferCommand.Index+Projection.swift:185)
 //   * `RoundTripPairResolver.bareTypeName(from:)`    (RoundTripPairResolver.swift:136)
 //   * `DoccPageBuilder.bareTypeName(_:)`             (DoccPageBuilder.swift:244)
 //
@@ -52,7 +52,7 @@ struct BareTypeNameDifferentialPropertyTests {
 
     private static let implementations: [(name: String, strip: @Sendable (String) -> String)] = [
         ("SwiftInferCommand.Index", { SwiftInferCommand.Index.bareTypeName(from: $0) }),
-        ("RoundTripPairResolver", { RoundTripPairResolver.bareTypeName(from: $0) })
+        ("RoundTripPairResolver", { RoundTripPairResolver.bareTypeName(from: $0) }),
     ]
 
     private static let reference = CarrierKindResolver.strippingGenericParameters
@@ -76,12 +76,12 @@ struct BareTypeNameDifferentialPropertyTests {
         "<%@>",
         "%@<",
         "%@<>",
-        "%@ <Double>"
+        "%@ <Double>",
     ]
 
     private static let nameGen = zip(
-        Gen.element(of: shapes).map { $0! },
-        Gen.element(of: baseNames).map { $0! }
+        Gen.element(of: shapes).compactMap(\.self),
+        Gen.element(of: baseNames).compactMap(\.self)
     ).map { shape, name in shape.replacingOccurrences(of: "%@", with: name) }
 
     // MARK: - Laws

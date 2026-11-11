@@ -27,7 +27,7 @@ struct ProtocolCoverageMapStdlibBakeInTests {
             // V1.7.1 scoped this table to a numeric finding and never revisited it;
             // by the time `OrderedCarrierDiscriminator` began reading the conformance
             // index there were twelve consumers and the table still held only scalars.
-            "Substring", "Array", "ContiguousArray", "ArraySlice", "Set", "Dictionary"
+            "Substring", "Array", "ContiguousArray", "ArraySlice", "Set", "Dictionary",
         ]
         #expect(Set(ProtocolCoverageMap.stdlibConformances.keys) == expected)
         #expect(ProtocolCoverageMap.stdlibConformances.count == 20)

@@ -154,7 +154,7 @@ struct KitSuiteCollectionsRecipeTests {
         let emission = KitSuiteEmitter.emit(
             findings: [
                 finding("Money", conformances: ["Equatable"]),
-                finding("Deque", conformances: ["Equatable"])
+                finding("Deque", conformances: ["Equatable"]),
             ],
             shapes: ["Money": money, "Deque": opaqueShape("Deque")],
             moduleName: "M",
@@ -194,7 +194,7 @@ struct KitSuiteCollectionsRecipeTests {
 
         for carrier in [
             "Deque<Int>", "OrderedSet<Int>", "OrderedDictionary<Int, Int>",
-            "TreeSet<Int>", "TreeDictionary<Int, Int>", "BitSet", "Heap<Int>"
+            "TreeSet<Int>", "TreeDictionary<Int, Int>", "BitSet", "Heap<Int>",
         ] {
             let recipe = try #require(
                 KitSuiteEmitter.propertyLawCollectionsRecipe(for: carrier),

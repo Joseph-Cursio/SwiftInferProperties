@@ -39,10 +39,12 @@ import SwiftInferCore
 /// when the fast path is unavailable.
 public enum DifferentialTemplate {
 
+    /// The `differential-equivalence` suggestion for `pair`, or `nil` when the template does not apply.
     public static func suggest(for pair: VariantPair) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: pair)
     }
 
+    /// The `differential-equivalence` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<VariantPair> {
         Constraint<VariantPair>(
             templateName: "differential-equivalence",
@@ -77,7 +79,7 @@ public enum DifferentialTemplate {
                     + "reference and `\(pair.naming.variant)` is the same computation marked "
                     + "`\(pair.naming.marker)` — two implementations of one specification owe "
                     + "agreement on every input"
-            )
+            ),
         ]
         signals.append(
             Signal(
@@ -157,7 +159,7 @@ public enum DifferentialTemplate {
                 + "`_ensureFreeCapacity` returns early when capacity already suffices and "
                 + "otherwise calls `_ensureFreeCapacitySlow`, which reallocates unconditionally — "
                 + "so they differ on every input the guard catches, and the law would be false "
-                + "for correct code."
+                + "for correct code.",
         ]
         caveats.append(contentsOf: conditionalCaveats(for: pair))
         return caveats

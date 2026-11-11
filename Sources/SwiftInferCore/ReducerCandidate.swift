@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M1.A — value type representing one detected reducer-shaped
 /// function. The output unit of `ReducerDiscoverer` and the input unit
 /// for every later v2.0 milestone (M2 generates Action sequences for
@@ -328,4 +326,4 @@ public struct ReducerCandidate: Sendable, Equatable, Codable {
 // `ActionCaseInfo.swift` (extracted for the `file_length` cap).
 
 // `ReducerSignatureShape` + `ReducerCarrierKind` are declared in
-// `ReducerShapeAndCarrier.swift` (extracted for the `file_length` cap).
+// their own files (extracted for the `file_length` cap).

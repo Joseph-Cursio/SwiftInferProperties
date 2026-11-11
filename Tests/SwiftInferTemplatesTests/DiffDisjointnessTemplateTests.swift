@@ -45,10 +45,10 @@ struct DiffDisjointnessTemplateTests {
             storedMembers: [
                 StoredMember(name: "addedRules", typeName: "[String]"),
                 StoredMember(name: "removedRules", typeName: "[String]"),
-                StoredMember(name: "modifiedRules", typeName: "[String]")
+                StoredMember(name: "modifiedRules", typeName: "[String]"),
             ],
             hasUserInit: false
-            )
+            ),
         ]
     }
 
@@ -89,7 +89,7 @@ struct DiffDisjointnessTemplateTests {
             "Plain": TypeShape(
             name: "Plain", kind: .struct, inheritedTypes: [], hasUserGen: false,
             storedMembers: [StoredMember(name: "items", typeName: "[String]")], hasUserInit: false
-            )
+            ),
         ]
         let function = summary("diffThings", params: [param(nil, "X")], returns: "Plain")
         #expect(DiffDisjointnessTemplate.suggest(for: function, shapesByName: shapes) == nil)

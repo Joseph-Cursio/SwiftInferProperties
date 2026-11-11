@@ -42,7 +42,7 @@ struct ConservationInteractionTemplateTests {
         )
     }
 
-    private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+    private let firstSeenAt = Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
 
     // MARK: - analyze
 
@@ -76,7 +76,7 @@ struct ConservationInteractionTemplateTests {
             candidate: candidate(),
             witnesses: [
                 witness(aggregate: "itemCount", collection: "items"),
-                witness(aggregate: "tagCount", collection: "tags", element: "Tag")
+                witness(aggregate: "tagCount", collection: "tags", element: "Tag"),
             ],
             firstSeenAt: firstSeenAt
         )

@@ -90,7 +90,7 @@ struct InversePairTemplateTests {
                 kind: .struct,
                 inheritedTypes: ["Equatable"],
                 location: SourceLocation(file: "Money.swift", line: 1, column: 1)
-            )
+            ),
         ])
         let suggestion = InversePairTemplate.suggest(
             for: pair,

@@ -1,8 +1,6 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 /// TestLifter M6.2 acceptance — `.swiftinfer/decisions.json`
@@ -64,7 +62,7 @@ struct LiftedDecisionsPersistenceTests {
                 signalWeights: lifted.score.signals.map {
                     SignalSnapshot(kind: $0.kind.rawValue, weight: $0.weight)
                 }
-            )
+            ),
         ])
         let outcome = try runInteractive(
             suggestion: lifted,
@@ -184,8 +182,8 @@ struct LiftedDecisionsPersistenceTests {
     private func discoverLifted(directory: URL) throws -> Suggestion {
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: HGSilentDiagnosticOutput()
+            diagnostics: HGSilentDiagnosticOutput(),
+            includePossible: true
         )
         return try #require(result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"

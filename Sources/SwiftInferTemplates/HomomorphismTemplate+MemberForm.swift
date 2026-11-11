@@ -213,7 +213,7 @@ extension HomomorphismTemplate {
                 detail: "Member form: `\(shape.typeName).\(shape.measure.name)` is nullary "
                     + "and integer-valued, and `\(shape.concatenation.name)` combines two "
                     + "\(shape.typeName)s freely"
-            )
+            ),
         ]
     }
 
@@ -239,7 +239,7 @@ extension HomomorphismTemplate {
             "GENERATE THE JOIN, NOT THE OPERANDS. Two independently drawn containers exercise "
                 + "the seam once each; the failures live at an EMPTY operand, a "
                 + "single-element operand, and a join that crosses whatever internal boundary "
-                + "the carrier has — a word, a chunk, a capacity. Draw those deliberately."
+                + "the carrier has — a word, a chunk, a capacity. Draw those deliberately.",
         ]
     }
 

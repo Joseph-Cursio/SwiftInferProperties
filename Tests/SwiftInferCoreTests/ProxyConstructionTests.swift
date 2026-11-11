@@ -19,7 +19,7 @@ struct ProxyConstructionTests {
         arguments: [
             "FunctionDeclSyntax", "ClosureExprSyntax", "StructDeclSyntax",
             "FunctionCallExprSyntax", "AccessorBlockSyntax", "SourceFileSyntax",
-            "PatternBindingSyntax", "MemberBlockSyntax", "Syntax"
+            "PatternBindingSyntax", "MemberBlockSyntax", "Syntax",
         ]
     )
     func recognisesNodeTypes(typeName: String) {

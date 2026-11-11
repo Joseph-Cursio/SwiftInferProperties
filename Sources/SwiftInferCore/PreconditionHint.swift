@@ -1,57 +1,3 @@
-/// TestLifter M9.0 — inferred-precondition hint attached to a
-/// `MockGenerator` argument position. Surfaces patterns the
-/// `PreconditionInferrer` (M9.1) detects in `ConstructionRecord.
-/// observedLiterals` rows: "all observed values for this position
-/// are positive Ints across N test sites" → suggest
-/// `Gen.int(in: 1...)` instead of the unconstrained generator.
-///
-/// **Advisory only.** PRD §3.5 conservative bias — hints don't
-/// change the suggestion's score or tier; they render as
-/// `// Inferred precondition:` provenance comment lines in the
-/// accept-flow stub (M9.2). The user inspects + decides whether
-/// to apply.
-public struct PreconditionHint: Sendable, Equatable {
-
-    /// Argument-shape index the hint applies to. Matches the
-    /// position in `MockGenerator.argumentSpec`.
-    public let position: Int
-
-    /// Argument label as observed in the construction sites.
-    /// `nil` for positional / unlabeled arguments. Surfaced in
-    /// the rendered comment so the user knows which field the
-    /// hint targets.
-    public let argumentLabel: String?
-
-    /// The pattern detected. See `PreconditionPattern` for the
-    /// curated set.
-    public let pattern: PreconditionPattern
-
-    /// Number of test-site constructions where the pattern was
-    /// observed. Mirrors `MockGenerator.siteCount` but per-hint
-    /// so the rendered comment can say "across N test sites" with
-    /// the exact count that contributed to this hint.
-    public let siteCount: Int
-
-    /// Recommended Swift expression the user could substitute into
-    /// the generator. Pre-computed by the inferrer so the renderer
-    /// doesn't have to re-derive it per pattern.
-    public let suggestedGenerator: String
-
-    public init(
-        position: Int,
-        argumentLabel: String?,
-        pattern: PreconditionPattern,
-        siteCount: Int,
-        suggestedGenerator: String
-    ) {
-        self.position = position
-        self.argumentLabel = argumentLabel
-        self.pattern = pattern
-        self.siteCount = siteCount
-        self.suggestedGenerator = suggestedGenerator
-    }
-}
-
 /// The curated set of precondition patterns `PreconditionInferrer`
 /// (M9.1) recognizes. Per M9 plan OD #1, numerical patterns are
 /// `Int`-only for v1.0 (`Float`/`Double` deferred — precision-class
@@ -120,4 +66,58 @@ public enum PreconditionPattern: Sendable, Equatable {
     /// `nonNegativeDouble` when both apply (mirrors M9 plan OD #4 for
     /// `intRange`).
     case doubleRange(low: Double, high: Double)
+}
+
+/// TestLifter M9.0 — inferred-precondition hint attached to a
+/// `MockGenerator` argument position. Surfaces patterns the
+/// `PreconditionInferrer` (M9.1) detects in `ConstructionRecord.
+/// observedLiterals` rows: "all observed values for this position
+/// are positive Ints across N test sites" → suggest
+/// `Gen.int(in: 1...)` instead of the unconstrained generator.
+///
+/// **Advisory only.** PRD §3.5 conservative bias — hints don't
+/// change the suggestion's score or tier; they render as
+/// `// Inferred precondition:` provenance comment lines in the
+/// accept-flow stub (M9.2). The user inspects + decides whether
+/// to apply.
+public struct PreconditionHint: Sendable, Equatable {
+
+    /// Argument-shape index the hint applies to. Matches the
+    /// position in `MockGenerator.argumentSpec`.
+    public let position: Int
+
+    /// Argument label as observed in the construction sites.
+    /// `nil` for positional / unlabeled arguments. Surfaced in
+    /// the rendered comment so the user knows which field the
+    /// hint targets.
+    public let argumentLabel: String?
+
+    /// The pattern detected. See `PreconditionPattern` for the
+    /// curated set.
+    public let pattern: PreconditionPattern
+
+    /// Number of test-site constructions where the pattern was
+    /// observed. Mirrors `MockGenerator.siteCount` but per-hint
+    /// so the rendered comment can say "across N test sites" with
+    /// the exact count that contributed to this hint.
+    public let siteCount: Int
+
+    /// Recommended Swift expression the user could substitute into
+    /// the generator. Pre-computed by the inferrer so the renderer
+    /// doesn't have to re-derive it per pattern.
+    public let suggestedGenerator: String
+
+    public init(
+        position: Int,
+        argumentLabel: String?,
+        pattern: PreconditionPattern,
+        siteCount: Int,
+        suggestedGenerator: String
+    ) {
+        self.position = position
+        self.argumentLabel = argumentLabel
+        self.pattern = pattern
+        self.siteCount = siteCount
+        self.suggestedGenerator = suggestedGenerator
+    }
 }

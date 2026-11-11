@@ -1,9 +1,140 @@
-import Foundation
 import SwiftEffectInference
-import SwiftParser
 import SwiftSyntax
 
 @testable import SwiftInferCore
+
+// MARK: - Replicated checkers
+
+/// `PurityInferrer.NondeterminismChecker`, re-derived — but note what is and is
+/// not copied here. The *walk* is replicated; the *answer* is not. Every `source`
+/// question goes to `NondeterminismSources`, the public shared classifier, so
+/// this file cannot drift from SEI on which forms count as nondeterminism.
+///
+/// Both overloads are needed and a call-only walk is not enough:
+/// `source(of: FunctionCallExprSyntax)` catches `ContinuousClock()`,
+/// `mach_absolute_time()` and `DispatchTime.now()`, while
+/// `source(of: MemberAccessExprSyntax)` catches the property forms —
+/// `SuspendingClock.now`, `Locale.current`, `TimeZone.current` — which are not
+/// calls at all.
+final class CensusNondeterminismChecker: SyntaxVisitor {
+    private(set) var sawSource = false
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        if NondeterminismSources.source(of: node) != nil { sawSource = true }
+        return .visitChildren
+    }
+
+    override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
+        if NondeterminismSources.source(of: node) != nil { sawSource = true }
+        return .visitChildren
+    }
+}
+
+/// `PurityInferrer.TryExpressionChecker`, re-derived.
+final class CensusTryChecker: SyntaxVisitor {
+    private(set) var sawTry = false
+
+    override func visit(_: TryExprSyntax) -> SyntaxVisitorContinueKind {
+        sawTry = true
+        return .skipChildren
+    }
+}
+
+/// Collects function decls with `FunctionScannerVisitor`'s traversal rules:
+/// nested functions and protocol requirements are both out of the population the
+/// shipped scan summarises.
+final class CensusFunctionCollector: SyntaxVisitor {
+    private(set) var functions: [FunctionDeclSyntax] = []
+    /// Accessor blocks by property name, for the computed-property half. Keyed
+    /// by name rather than re-derived from `makeSummary(fromComputedProperty:)`'s
+    /// filter — the caller intersects with the shipped scan's own names and
+    /// asserts the intersection is total, so a divergence is reported rather
+    /// than silently narrowing the population.
+    private(set) var accessorsByName: [String: AccessorBlockSyntax] = [:]
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        functions.append(node)
+        return .skipChildren
+    }
+
+    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+        for binding in node.bindings {
+            if let pattern = binding.pattern.as(IdentifierPatternSyntax.self),
+               let accessor = binding.accessorBlock {
+                accessorsByName[pattern.identifier.text] = accessor
+            }
+        }
+        return .visitChildren
+    }
+
+    override func visit(_: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+        .skipChildren
+    }
+}
+
+/// `PurityInferrer.FileReadChecker`, re-derived — a file read spelled
+/// `SomeType(contentsOf:)`.
+///
+/// Shape-aware rather than a token, and that is the whole point of it. SEI
+/// carried `contentsOf` in `sideEffectMarkers` between `fff33cf` and `23d1dab`,
+/// where the bare token also matched `append(contentsOf:)`; matching the callee
+/// separates `String(contentsOf: url)` from `array.append(contentsOf: other)`.
+final class CensusFileReadChecker: SyntaxVisitor {
+
+    private static let fileReadingTypes: Set<String> = [
+        "String", "Data", "NSString", "NSData", "NSDictionary", "NSArray"
+    ]
+
+    private(set) var sawFileRead = false
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        guard let callee = node.calledExpression.as(DeclReferenceExprSyntax.self),
+              Self.fileReadingTypes.contains(callee.baseName.text),
+              node.arguments.contains(where: { $0.label?.text == "contentsOf" })
+        else { return .visitChildren }
+        sawFileRead = true
+        return .visitChildren
+    }
+}
+
+/// `PurityInferrer.TotalityChecker`, re-derived. See the suite header for why a
+/// copy here is safe.
+final class CensusTotalityChecker: SyntaxVisitor {
+    private(set) var isTotal = true
+
+    private static let trapFunctions: Set<String> = [
+        "fatalError", "preconditionFailure", "precondition",
+        "assert", "assertionFailure",
+    ]
+
+    override func visit(_: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {
+        isTotal = false
+        return .skipChildren
+    }
+
+    override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
+        if node.questionOrExclamationMark?.text == "!" { isTotal = false }
+        return .visitChildren
+    }
+
+    override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
+        if node.questionOrExclamationMark?.text == "!" { isTotal = false }
+        return .visitChildren
+    }
+
+    override func visit(_ node: UnresolvedAsExprSyntax) -> SyntaxVisitorContinueKind {
+        if node.questionOrExclamationMark?.text == "!" { isTotal = false }
+        return .visitChildren
+    }
+
+    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+        if let callee = node.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text,
+           Self.trapFunctions.contains(callee) {
+            isTotal = false
+        }
+        return .visitChildren
+    }
+}
 
 /// The frozen taxonomy and the re-derived refuters for
 /// `PurityRefutationCensusMeasuredTests`. Split out only for the 400-line file
@@ -107,14 +238,14 @@ extension PurityRefutationCensusMeasuredTests {
             "FileHandle", "Process", "Pipe",
             "resourceValues", "checkResourceIsReachable", "checkPromisedItemIsReachable",
             "startAccessingSecurityScopedResource", "stopAccessingSecurityScopedResource",
-            "contentsOfFile", "contentsOfDirectory"
+            "contentsOfFile", "contentsOfDirectory",
         ]
 
         /// `PurityInferrer.nondeterministicMarkers`.
         static let nondeterministicMarkers: Set<String> = [
             "arc4random", "arc4random_uniform", "drand48", "CFAbsoluteTimeGetCurrent",
             "random", "randomElement", "shuffled",
-            "Date", "UUID"
+            "Date", "UUID",
         ]
 
         /// Injected so the control can truncate it.
@@ -127,7 +258,7 @@ extension PurityRefutationCensusMeasuredTests {
         /// `constructionBlindReplicaIsDetected` demonstrates.
         let inferrer: PurityInferrer
 
-        init(markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers), inferrer: PurityInferrer) {
+        init(inferrer: PurityInferrer, markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers)) {
             self.markers = markers
             self.inferrer = inferrer
         }
@@ -250,138 +381,5 @@ extension PurityRefutationCensusMeasuredTests {
             checker.walk(body)
             return checker.sawTry
         }
-    }
-}
-
-// MARK: - Replicated checkers
-
-/// `PurityInferrer.NondeterminismChecker`, re-derived — but note what is and is
-/// not copied here. The *walk* is replicated; the *answer* is not. Every `source`
-/// question goes to `NondeterminismSources`, the public shared classifier, so
-/// this file cannot drift from SEI on which forms count as nondeterminism.
-///
-/// Both overloads are needed and a call-only walk is not enough:
-/// `source(of: FunctionCallExprSyntax)` catches `ContinuousClock()`,
-/// `mach_absolute_time()` and `DispatchTime.now()`, while
-/// `source(of: MemberAccessExprSyntax)` catches the property forms —
-/// `SuspendingClock.now`, `Locale.current`, `TimeZone.current` — which are not
-/// calls at all.
-final class CensusNondeterminismChecker: SyntaxVisitor {
-    private(set) var sawSource = false
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        if NondeterminismSources.source(of: node) != nil { sawSource = true }
-        return .visitChildren
-    }
-
-    override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
-        if NondeterminismSources.source(of: node) != nil { sawSource = true }
-        return .visitChildren
-    }
-}
-
-/// `PurityInferrer.TotalityChecker`, re-derived. See the suite header for why a
-/// copy here is safe.
-final class CensusTotalityChecker: SyntaxVisitor {
-    private(set) var isTotal = true
-
-    private static let trapFunctions: Set<String> = [
-        "fatalError", "preconditionFailure", "precondition",
-        "assert", "assertionFailure"
-    ]
-
-    override func visit(_: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {
-        isTotal = false
-        return .skipChildren
-    }
-
-    override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
-        if node.questionOrExclamationMark?.text == "!" { isTotal = false }
-        return .visitChildren
-    }
-
-    override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
-        if node.questionOrExclamationMark?.text == "!" { isTotal = false }
-        return .visitChildren
-    }
-
-    override func visit(_ node: UnresolvedAsExprSyntax) -> SyntaxVisitorContinueKind {
-        if node.questionOrExclamationMark?.text == "!" { isTotal = false }
-        return .visitChildren
-    }
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        if let callee = node.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text,
-           Self.trapFunctions.contains(callee) {
-            isTotal = false
-        }
-        return .visitChildren
-    }
-}
-
-/// `PurityInferrer.TryExpressionChecker`, re-derived.
-final class CensusTryChecker: SyntaxVisitor {
-    private(set) var sawTry = false
-
-    override func visit(_: TryExprSyntax) -> SyntaxVisitorContinueKind {
-        sawTry = true
-        return .skipChildren
-    }
-}
-
-/// Collects function decls with `FunctionScannerVisitor`'s traversal rules:
-/// nested functions and protocol requirements are both out of the population the
-/// shipped scan summarises.
-final class CensusFunctionCollector: SyntaxVisitor {
-    private(set) var functions: [FunctionDeclSyntax] = []
-    /// Accessor blocks by property name, for the computed-property half. Keyed
-    /// by name rather than re-derived from `makeSummary(fromComputedProperty:)`'s
-    /// filter — the caller intersects with the shipped scan's own names and
-    /// asserts the intersection is total, so a divergence is reported rather
-    /// than silently narrowing the population.
-    private(set) var accessorsByName: [String: AccessorBlockSyntax] = [:]
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        functions.append(node)
-        return .skipChildren
-    }
-
-    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-        for binding in node.bindings {
-            if let pattern = binding.pattern.as(IdentifierPatternSyntax.self),
-               let accessor = binding.accessorBlock {
-                accessorsByName[pattern.identifier.text] = accessor
-            }
-        }
-        return .visitChildren
-    }
-
-    override func visit(_: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        .skipChildren
-    }
-}
-
-/// `PurityInferrer.FileReadChecker`, re-derived — a file read spelled
-/// `SomeType(contentsOf:)`.
-///
-/// Shape-aware rather than a token, and that is the whole point of it. SEI
-/// carried `contentsOf` in `sideEffectMarkers` between `fff33cf` and `23d1dab`,
-/// where the bare token also matched `append(contentsOf:)`; matching the callee
-/// separates `String(contentsOf: url)` from `array.append(contentsOf: other)`.
-final class CensusFileReadChecker: SyntaxVisitor {
-
-    private static let fileReadingTypes: Set<String> = [
-        "String", "Data", "NSString", "NSData", "NSDictionary", "NSArray"
-    ]
-
-    private(set) var sawFileRead = false
-
-    override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        guard let callee = node.calledExpression.as(DeclReferenceExprSyntax.self),
-              Self.fileReadingTypes.contains(callee.baseName.text),
-              node.arguments.contains(where: { $0.label?.text == "contentsOf" })
-        else { return .visitChildren }
-        sawFileRead = true
-        return .visitChildren
     }
 }

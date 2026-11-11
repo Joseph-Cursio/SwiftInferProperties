@@ -76,7 +76,7 @@ struct ModelLawTemplateTests {
             member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
             member("intersection", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
             member("symmetricDifference", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
-            member("subtracting", param: "RangeSet<Bound>", returns: "RangeSet<Bound>")
+            member("subtracting", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
         ]
     }
 
@@ -112,7 +112,7 @@ struct ModelLawTemplateTests {
             member("contains", param: "Self", returns: "Bool", on: "Fields"),
             member("union", param: "Self", returns: "Self", on: "Fields"),
             member("intersection", param: "Self", returns: "Self", on: "Fields"),
-            member("symmetricDifference", param: "Self", returns: "Self", on: "Fields")
+            member("symmetricDifference", param: "Self", returns: "Self", on: "Fields"),
         ]
         #expect(ModelLawPairing.candidates(in: optionSetLike).isEmpty)
     }
@@ -121,7 +121,7 @@ struct ModelLawTemplateTests {
     func carrierTypedContainsIsRejected() {
         let spelled = [
             member("contains", param: "Fields", returns: "Bool", on: "Fields"),
-            member("union", param: "Fields", returns: "Fields", on: "Fields")
+            member("union", param: "Fields", returns: "Fields", on: "Fields"),
         ]
         #expect(ModelLawPairing.candidates(in: spelled).isEmpty)
     }
@@ -130,7 +130,7 @@ struct ModelLawTemplateTests {
     func noContainsMeansNoLaw() {
         let noPredicate = [
             member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
-            member("intersection", param: "RangeSet<Bound>", returns: "RangeSet<Bound>")
+            member("intersection", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
         ]
         #expect(ModelLawPairing.candidates(in: noPredicate).isEmpty)
     }
@@ -139,7 +139,7 @@ struct ModelLawTemplateTests {
     func labelledContainsIsRejected() {
         let closureForm = [
             member("contains", param: "(Bound) -> Bool", returns: "Bool", label: "where"),
-            member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>")
+            member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
         ]
         #expect(ModelLawPairing.candidates(in: closureForm).isEmpty)
     }
@@ -149,7 +149,7 @@ struct ModelLawTemplateTests {
         let mutating = [
             member("contains", param: "Bound", returns: "Bool"),
             member("formUnion", param: "RangeSet<Bound>", returns: nil, isMutating: true),
-            member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>", isMutating: true)
+            member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>", isMutating: true),
         ]
         #expect(ModelLawPairing.candidates(in: mutating).isEmpty)
     }
@@ -158,7 +158,7 @@ struct ModelLawTemplateTests {
     func loneOperationDoesNotGetTheClusterBonus() throws {
         let lone = [
             member("contains", param: "Bound", returns: "Bool"),
-            member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>")
+            member("union", param: "RangeSet<Bound>", returns: "RangeSet<Bound>"),
         ]
         let shape = try #require(ModelLawPairing.candidates(in: lone).first)
         #expect(shape.siblingOperationCount == 1)
@@ -173,7 +173,7 @@ struct ModelLawTemplateTests {
             .union: "a.contains(x) || b.contains(x)",
             .intersection: "a.contains(x) && b.contains(x)",
             .symmetricDifference: "a.contains(x) != b.contains(x)",
-            .subtracting: "a.contains(x) && !b.contains(x)"
+            .subtracting: "a.contains(x) && !b.contains(x)",
         ]
         for (form, text) in expected {
             #expect(form.membershipExpression("a", "b", element: "x") == text)

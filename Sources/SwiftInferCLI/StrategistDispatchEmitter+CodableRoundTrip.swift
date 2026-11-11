@@ -1,6 +1,3 @@
-import Foundation
-import SwiftInferCore
-
 // Split from `StrategistDispatchEmitter+Templates.swift` to keep that file under
 // the `file_length` cap after the unary collision sweep was wired in. Holds the
 // codable-round-trip pass, which is self-contained: it is the one template whose
@@ -72,6 +69,4 @@ extension StrategistDispatchEmitter {
         print("VERIFY_DEFAULT_TRIALS: \\(trials)")
         """
     }
-
-    // MARK: - Idempotence (1 value per trial; f(f(x)) == f(x))
 }

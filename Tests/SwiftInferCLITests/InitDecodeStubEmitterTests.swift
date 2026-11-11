@@ -19,10 +19,10 @@ struct InitDecodeStubEmitterTests {
             .init(
                 typeName: typeName,
                 encodeMethod: encodeMethod,
-                encodeIsProperty: encodeIsProperty,
                 decodeLabel: decodeLabel,
                 isFailable: isFailable,
-                valuesExpression: values
+                valuesExpression: values,
+                encodeIsProperty: encodeIsProperty
             )
         )
     }

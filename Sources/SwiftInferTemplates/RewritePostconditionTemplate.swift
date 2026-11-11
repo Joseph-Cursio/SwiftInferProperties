@@ -26,12 +26,15 @@ import SwiftInferCore
 /// exists now. What it catches is an edit that drops a replacement or changes the separator.
 public enum RewritePostconditionTemplate {
 
+    /// The name this template's suggestions carry: `rewrite-postcondition`.
     public static let templateName = "rewrite-postcondition"
 
+    /// The `rewrite-postcondition` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `rewrite-postcondition` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             // Spelled as a literal: `StubWriterCoverageTests` finds emitted templates by this text.
@@ -64,7 +67,7 @@ public enum RewritePostconditionTemplate {
                 kind: .typeSymmetrySignature,
                 weight: 40,
                 detail: "the body states it: " + sentence(postcondition, function: summary.name)
-            )
+            ),
         ]
     }
 
@@ -86,7 +89,7 @@ public enum RewritePostconditionTemplate {
                 + "construction, so it will not find a bug that exists today. It catches an EDIT — a "
                 + "dropped replacement, a changed pattern or separator.",
             "Read the sentence and decide whether you meant it: that these characters never come out is "
-                + "behaviour a caller may rely on, or an accident of today's implementation."
+                + "behaviour a caller may rely on, or an accident of today's implementation.",
         ]
     }
 }

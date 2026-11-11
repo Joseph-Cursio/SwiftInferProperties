@@ -164,14 +164,14 @@ struct SpeculativeWideningTests {
     func candidatesAreFilteredAndOrdered() {
         let sources = [
             "B.swift": "private func b() {}",
-            "A.swift": "private func a() {}\nprivate func a2() {}"
+            "A.swift": "private func a() {}\nprivate func a2() {}",
         ]
         let restricted = [
             RestrictedFunction(summary: summary(line: 1, file: "B.swift"), restriction: .notVisibleToTests),
             RestrictedFunction(summary: summary(line: 2, file: "A.swift"), restriction: .notVisibleToTests),
             RestrictedFunction(summary: summary(line: 1, file: "A.swift"), restriction: .notVisibleToTests),
             // Excluded: widening a nested local is a no-op.
-            RestrictedFunction(summary: summary(line: 1, file: "C.swift"), restriction: .nestedLocal)
+            RestrictedFunction(summary: summary(line: 1, file: "C.swift"), restriction: .nestedLocal),
         ]
         let candidates = SpeculativeWidening.candidates(from: restricted, in: sources)
         #expect(candidates.count == 3)

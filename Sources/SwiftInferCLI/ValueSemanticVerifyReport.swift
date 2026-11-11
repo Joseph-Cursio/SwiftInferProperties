@@ -8,6 +8,7 @@ public enum ValueSemanticVerifyReport {
         results.contains(where: \.isConfirmedLeak)
     }
 
+    /// The value-semantics verify report for `moduleName`, confirmed leaks first; byte-stable.
     public static func render(results: [ValueSemanticVerifyResult], moduleName: String) -> String {
         guard !results.isEmpty else {
             return "swift-infer verify-value-semantics: no value-semantics "
@@ -32,7 +33,7 @@ public enum ValueSemanticVerifyReport {
         var lines: [String] = [
             "swift-infer verify-value-semantics — \(results.count) candidate"
                 + "\(results.count == 1 ? "" : "s") in \(moduleName):",
-            ""
+            "",
         ]
         appendLeaks(leaks, into: &lines)
         appendSection("\u{2713}  Verified value-semantic", safe, into: &lines) { _ in nil }

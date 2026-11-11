@@ -20,50 +20,50 @@ import Testing
 @Suite("Availability — a withdrawn declaration owes no law")
 struct UncallableDeclarationTests {
 
-    private func decl(_ source: String) -> DeclSyntax {
-        Parser.parse(source: source).statements.first!.item.as(DeclSyntax.self)!
+    private func decl(_ source: String) throws -> DeclSyntax {
+        try #require(Parser.parse(source: source).statements.first?.item.as(DeclSyntax.self))
     }
 
-    private func isWithdrawn(_ source: String) -> Bool {
-        UncallableDeclaration.isWithdrawn(decl(source))
+    private func isWithdrawn(_ source: String) throws -> Bool {
+        UncallableDeclaration.isWithdrawn(try decl(source))
     }
 
     // MARK: - Blocks
 
     @Test("an unavailable function is withdrawn")
-    func unavailableFunctionIsWithdrawn() {
-        #expect(isWithdrawn("""
+    func unavailableFunctionIsWithdrawn() throws {
+        #expect(try isWithdrawn("""
         @available(*, unavailable, renamed: "removingLastComponent()")
         public func dirname() -> Path { fatalError() }
         """))
     }
 
     @Test("an unavailable computed property is withdrawn — the actual witness")
-    func unavailablePropertyIsWithdrawn() {
-        #expect(isWithdrawn("""
+    func unavailablePropertyIsWithdrawn() throws {
+        #expect(try isWithdrawn("""
         @available(*, unavailable, renamed: "removingLastComponent()")
         public var dirname: FilePath { removingLastComponent() }
         """))
     }
 
     @Test("a bare unavailable with no payload is withdrawn")
-    func bareUnavailableIsWithdrawn() {
-        #expect(isWithdrawn("@available(*, unavailable)\npublic func gone() {}"))
+    func bareUnavailableIsWithdrawn() throws {
+        #expect(try isWithdrawn("@available(*, unavailable)\npublic func gone() {}"))
     }
 
     /// `@available(swift, deprecated: 3.0, obsoleted: 5.0, renamed: …)` — 49+ sites across the
     /// corpora, and note it says BOTH `deprecated` and `obsoleted`. A rule keyed on `deprecated`
     /// would read this as callable; it was removed in Swift 5.0.
     @Test("an obsoleted declaration is withdrawn even though it also says deprecated")
-    func obsoletedIsWithdrawn() {
-        #expect(isWithdrawn("""
+    func obsoletedIsWithdrawn() throws {
+        #expect(try isWithdrawn("""
         @available(swift, deprecated: 3.0, obsoleted: 5.0, renamed: "newName")
         public func oldName() {}
         """))
     }
 
     @Test("a member of an unavailable extension is withdrawn")
-    func memberOfUnavailableExtensionIsWithdrawn() {
+    func memberOfUnavailableExtensionIsWithdrawn() throws {
         let source = """
         @available(*, unavailable)
         extension Thing {
@@ -71,8 +71,10 @@ struct UncallableDeclarationTests {
         }
         """
         let tree = Parser.parse(source: source)
-        let function = tree.statements.first!.item.as(ExtensionDeclSyntax.self)!
-            .memberBlock.members.first!.decl.as(FunctionDeclSyntax.self)!
+        let function = try #require(
+            tree.statements.first?.item.as(ExtensionDeclSyntax.self)?
+                .memberBlock.members.first?.decl.as(FunctionDeclSyntax.self)
+        )
         #expect(UncallableDeclaration.isWithdrawn(function))
     }
 
@@ -82,12 +84,12 @@ struct UncallableDeclarationTests {
     /// runs, and is still a law subject. This is the single arm that would matter if the rule
     /// were ever loosened to "carries `@available`".
     @Test("a deprecated declaration is NOT withdrawn")
-    func deprecatedIsNotWithdrawn() {
-        #expect(!isWithdrawn("""
+    func deprecatedIsNotWithdrawn() throws {
+        #expect(try !isWithdrawn("""
         @available(*, deprecated, renamed: "newName")
         public func oldName() {}
         """))
-        #expect(!isWithdrawn("""
+        #expect(try !isWithdrawn("""
         @available(*, deprecated, message: "Use the other one")
         public func oldName() {}
         """))
@@ -96,32 +98,32 @@ struct UncallableDeclarationTests {
     /// Version floors — hundreds of sites. `@available(macOS 13, iOS 16, *)` says *this exists
     /// from here on*, which is the opposite of withdrawal.
     @Test("a version floor is NOT withdrawn")
-    func versionFloorIsNotWithdrawn() {
+    func versionFloorIsNotWithdrawn() throws {
         for attribute in [
             "@available(macOS 13, iOS 16, tvOS 16, watchOS 9, *)",
             "@available(SwiftStdlib 6.0, *)",
-            "@available(macOS, introduced: 10.10)"
+            "@available(macOS, introduced: 10.10)",
         ] {
-            #expect(!isWithdrawn("\(attribute)\npublic func present() {}"), "\(attribute) blocked")
+            #expect(try !isWithdrawn("\(attribute)\npublic func present() {}"), "\(attribute) blocked")
         }
     }
 
     /// 28 sites. `noasync` bars a call from an async context; the emitted stub is synchronous,
     /// so it is callable exactly where the tool calls it.
     @Test("noasync is NOT withdrawn — the emitted stub is synchronous")
-    func noasyncIsNotWithdrawn() {
-        #expect(!isWithdrawn("@available(*, noasync)\npublic func syncOnly() {}"))
+    func noasyncIsNotWithdrawn() throws {
+        #expect(try !isWithdrawn("@available(*, noasync)\npublic func syncOnly() {}"))
     }
 
     @Test("an unannotated declaration is NOT withdrawn")
-    func plainDeclarationIsNotWithdrawn() {
-        #expect(!isWithdrawn("public func ordinary() -> Int { 0 }"))
+    func plainDeclarationIsNotWithdrawn() throws {
+        #expect(try !isWithdrawn("public func ordinary() -> Int { 0 }"))
     }
 
     /// A member of a merely-deprecated extension must survive: the ancestor walk has to carry
     /// the same two-keyword rule upward, not a looser one.
     @Test("a member of a DEPRECATED extension is NOT withdrawn")
-    func memberOfDeprecatedExtensionIsNotWithdrawn() {
+    func memberOfDeprecatedExtensionIsNotWithdrawn() throws {
         let source = """
         @available(*, deprecated, message: "prefer Other")
         extension Thing {
@@ -129,14 +131,16 @@ struct UncallableDeclarationTests {
         }
         """
         let tree = Parser.parse(source: source)
-        let function = tree.statements.first!.item.as(ExtensionDeclSyntax.self)!
-            .memberBlock.members.first!.decl.as(FunctionDeclSyntax.self)!
+        let function = try #require(
+            tree.statements.first?.item.as(ExtensionDeclSyntax.self)?
+                .memberBlock.members.first?.decl.as(FunctionDeclSyntax.self)
+        )
         #expect(!UncallableDeclaration.isWithdrawn(function))
     }
 
     /// A non-`available` attribute must not be read for these keywords at all.
     @Test("another attribute mentioning the word is NOT withdrawn")
-    func anotherAttributeIsNotWithdrawn() {
-        #expect(!isWithdrawn("@objc(unavailable)\npublic func named() {}"))
+    func anotherAttributeIsNotWithdrawn() throws {
+        #expect(try !isWithdrawn("@objc(unavailable)\npublic func named() {}"))
     }
 }

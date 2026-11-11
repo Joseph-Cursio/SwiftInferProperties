@@ -1,9 +1,37 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
+
+// MARK: - Test doubles
+
+private struct SilentECDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class SilentECDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class RecordingECOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
+private final class ScriptedECPromptInput: PromptInput, @unchecked Sendable {
+    private var remaining: [String]
+
+    init(scriptedLines: [String]) {
+        self.remaining = scriptedLines
+    }
+    func readLine() -> String? {
+        guard !remaining.isEmpty else { return nil }
+        return remaining.removeFirst()
+    }
+}
 
 /// TestLifter M11.2 — end-to-end integration test verifying that
 /// (a) a Valid/Invalid test corpus surfaces a `.advisory`-tier
@@ -24,8 +52,8 @@ struct EquivalenceClassRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentECDiagnostics()
+            diagnostics: SilentECDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         #expect(advisory.score.tier == .advisory)
@@ -78,8 +106,8 @@ struct EquivalenceClassRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentECDiagnostics()
+            diagnostics: SilentECDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(result.suggestions.first { $0.templateName == "equivalence-class" })
         let kind = try #require(result.equivalenceClassHintsByIdentity[advisory.identity])
@@ -119,8 +147,8 @@ struct EquivalenceClassRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentECDiagnostics()
+            diagnostics: SilentECDiagnostics(),
+            includePossible: true
         )
         let advisory = result.suggestions.first { $0.templateName == "equivalence-class" }
         #expect(advisory == nil, "testValidate_* methods must NOT trigger the Valid marker")
@@ -220,36 +248,5 @@ struct EquivalenceClassRenderingTests {
             atomically: true,
             encoding: .utf8
         )
-    }
-}
-
-// MARK: - Test doubles
-
-private struct SilentECDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class SilentECDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class RecordingECOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
-    }
-}
-
-private final class ScriptedECPromptInput: PromptInput, @unchecked Sendable {
-    private var remaining: [String]
-
-    init(scriptedLines: [String]) {
-        self.remaining = scriptedLines
-    }
-    func readLine() -> String? {
-        guard !remaining.isEmpty else { return nil }
-        return remaining.removeFirst()
     }
 }

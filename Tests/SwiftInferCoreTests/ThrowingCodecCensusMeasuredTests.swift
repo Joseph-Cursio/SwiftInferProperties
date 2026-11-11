@@ -1,10 +1,32 @@
 import Foundation
-import SwiftInferTemplates
 import SwiftParser
 import SwiftSyntax
 import Testing
 
-@testable import SwiftInferCore
+/// Hand-written `Codable` halves: `func encode(to:) throws` and `init(from:) throws`.
+final class CodecFinder: SyntaxVisitor {
+    private(set) var encoders: [FunctionDeclSyntax] = []
+    private(set) var decoders: [InitializerDeclSyntax] = []
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        if node.name.text == "encode",
+           node.signature.parameterClause.parameters.contains(where: {
+               $0.type.trimmedDescription.hasSuffix("Encoder")
+           }) {
+            encoders.append(node)
+        }
+        return .visitChildren
+    }
+
+    override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
+        if node.signature.parameterClause.parameters.contains(where: {
+            $0.type.trimmedDescription.hasSuffix("Decoder")
+        }) {
+            decoders.append(node)
+        }
+        return .visitChildren
+    }
+}
 
 /// **How often does the shape behind the only surviving real defects actually occur?**
 ///
@@ -70,15 +92,15 @@ struct ThrowingCodecCensusMeasuredTests {
     /// The type name enclosing a node, or `nil` at file scope.
     static func enclosingTypeName(of node: some SyntaxProtocol) -> String? {
         var current: Syntax? = Syntax(node).parent
-        while let node = current {
-            if let decl = node.as(StructDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(ClassDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(EnumDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(ActorDeclSyntax.self) { return decl.name.text }
-            if let decl = node.as(ExtensionDeclSyntax.self) {
+        while let ancestor = current {
+            if let decl = ancestor.as(StructDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(ClassDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(EnumDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(ActorDeclSyntax.self) { return decl.name.text }
+            if let decl = ancestor.as(ExtensionDeclSyntax.self) {
                 return decl.extendedType.trimmedDescription
             }
-            current = node.parent
+            current = ancestor.parent
         }
         return nil
     }
@@ -245,30 +267,5 @@ struct ThrowingCodecCensusMeasuredTests {
         }
         lines.append("  types: " + findings.map(\.type).sorted().prefix(18).joined(separator: ", "))
         return lines
-    }
-}
-
-/// Hand-written `Codable` halves: `func encode(to:) throws` and `init(from:) throws`.
-final class CodecFinder: SyntaxVisitor {
-    private(set) var encoders: [FunctionDeclSyntax] = []
-    private(set) var decoders: [InitializerDeclSyntax] = []
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        if node.name.text == "encode",
-           node.signature.parameterClause.parameters.contains(where: {
-               $0.type.trimmedDescription.hasSuffix("Encoder")
-           }) {
-            encoders.append(node)
-        }
-        return .visitChildren
-    }
-
-    override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
-        if node.signature.parameterClause.parameters.contains(where: {
-            $0.type.trimmedDescription.hasSuffix("Decoder")
-        }) {
-            decoders.append(node)
-        }
-        return .visitChildren
     }
 }

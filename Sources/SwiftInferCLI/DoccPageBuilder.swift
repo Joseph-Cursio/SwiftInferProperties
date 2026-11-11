@@ -1,18 +1,6 @@
 import Foundation
 import SwiftInferCore
 
-/// V1.142 — verified-only DocC generation. Reads the SemanticIndex + the
-/// measured verify-evidence log and produces DocC documentation ONLY for
-/// properties backed by an executed property test (`measured-bothPass`).
-///
-/// **The deliberate gate.** Published documentation is trusted as
-/// authoritative, so it must be *provable*, not inferred — the useful
-/// subset is exactly the subset the verify pipeline confirmed. Rows that
-/// are merely `.likely` / `.possible` (inferred, unverified) are never
-/// documented: a guess that reads as a guarantee is worse than silence.
-/// Jargon (`monoid`, `semilattice`) is translated to the behavioral
-/// consequence a caller actually cares about.
-
 /// One verified property, container-grouped, ready to render.
 public struct DoccProperty: Equatable, Sendable {
     /// Enclosing type name (the DocC symbol the property attaches to), or
@@ -42,6 +30,17 @@ public struct DoccPage: Equatable, Sendable {
     }
 }
 
+/// V1.142 — verified-only DocC generation. Reads the SemanticIndex + the
+/// measured verify-evidence log and produces DocC documentation ONLY for
+/// properties backed by an executed property test (`measured-bothPass`).
+///
+/// **The deliberate gate.** Published documentation is trusted as
+/// authoritative, so it must be *provable*, not inferred — the useful
+/// subset is exactly the subset the verify pipeline confirmed. Rows that
+/// are merely `.likely` / `.possible` (inferred, unverified) are never
+/// documented: a guess that reads as a guarantee is worse than silence.
+/// Jargon (`monoid`, `semilattice`) is translated to the behavioral
+/// consequence a caller actually cares about.
 public enum DoccPageBuilder {
 
     // MARK: - Verified gate
@@ -136,7 +135,7 @@ public enum DoccPageBuilder {
         "composition": ("Composes", "Repeated `{sym}` calls combine into a single equivalent step."),
         "identity-element": ("Has an identity element", "`{sym}` has a neutral element that leaves values unchanged."),
         "inverse-pair": ("Invertible", "`{sym}` and `{sec}` undo each other."),
-        "invariant-preservation": ("Preserves its invariant", "`{sym}` always maintains the type's invariant.")
+        "invariant-preservation": ("Preserves its invariant", "`{sym}` always maintains the type's invariant."),
     ]
 
     private static let interactionDescriptions: [String: (headline: String, template: String)] = [
@@ -153,7 +152,7 @@ public enum DoccPageBuilder {
             "Kept in lockstep",
             "Two pieces of state stay consistent — one is set exactly when the other is."
         ),
-        "conservation": ("Conserved count", "A stored count stays in sync with the collection it counts.")
+        "conservation": ("Conserved count", "A stored count stays in sync with the collection it counts."),
     ]
 
     private static func algebraicProperty(_ entry: SemanticIndexEntry) -> DoccProperty {

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -60,9 +59,9 @@ struct VerifyPipelineLiftedIntegrationTests {
                 typeShape: nil,
                 template: "dual-style-consistency",
                 functionCalls: ["nonMutBump", "bumpInPlace"],
-                extraImports: [],
                 seedHex: VerifyPipelineIntegrationFixture.canonicalSeed,
                 trialBudget: .small,
+                extraImports: [],
                 preamble: preamble
             )
         )
@@ -140,15 +139,15 @@ struct VerifyPipelineLiftedIntegrationTests {
             hasUserGen: false,
             storedMembers: [
                 IndexedTypeShape.StoredMember(name: "x", typeName: "Int"),
-                IndexedTypeShape.StoredMember(name: "y", typeName: "Int")
+                IndexedTypeShape.StoredMember(name: "y", typeName: "Int"),
             ],
             hasUserInit: false
         )
         let outcome = try VerifyPipelineIntegrationFixture.runStrategistPipeline(
             functionCalls: ["{ (p: PairCarrier) in p }"],
             carrier: "PairCarrier",
-            typeShape: typeShape,
             template: "idempotence",
+            typeShape: typeShape,
             preamble: preamble
         )
         if case let .bothPass(defaultTrials, edgeTrials, _) = outcome {
@@ -196,11 +195,11 @@ struct VerifyPipelineLiftedIntegrationTests {
                 template: "round-trip",
                 functionCalls: [
                     "{ (x: Int) in x + 100 }",
-                    "{ (x: Int) in x - 100 }"
+                    "{ (x: Int) in x - 100 }",
                 ],
-                extraImports: [],
                 seedHex: VerifyPipelineIntegrationFixture.canonicalSeed,
-                trialBudget: .small
+                trialBudget: .small,
+                extraImports: []
             )
         )
         _ = try VerifierWorkdir.synthesize(

@@ -20,7 +20,7 @@ struct IdentityElementTemplateGoldenTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: "IntSet", isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: "IntSet", isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: "IntSet", isInout: false),
             ],
             returnTypeText: "IntSet",
             isThrows: false,

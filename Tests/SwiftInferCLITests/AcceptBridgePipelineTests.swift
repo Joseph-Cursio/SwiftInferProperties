@@ -13,7 +13,7 @@ struct AcceptBridgePipelineTests {
 
     private typealias Command = SwiftInferCommand.AcceptBridge
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-17T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_779_019_200) // 2026-05-17T12:00:00Z
 
     private func makeInvariant(
         family: InteractionInvariantFamily,
@@ -91,7 +91,7 @@ struct AcceptBridgePipelineTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let output = ABRecordingOutput()
 
@@ -120,7 +120,7 @@ struct AcceptBridgePipelineTests {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
             makePeer(family: .biconditional, predicate: "p2"),
-            makePeer(family: .conservation, predicate: "p3")
+            makePeer(family: .conservation, predicate: "p3"),
         ])
         let output = ABRecordingOutput()
 
@@ -149,7 +149,7 @@ struct AcceptBridgePipelineTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         do {
             try Command.runWithBridges(
@@ -181,7 +181,7 @@ struct AcceptBridgePipelineTests {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
             makePeer(family: .biconditional, predicate: "p2"),
-            makePeer(family: .conservation, predicate: "p3")
+            makePeer(family: .conservation, predicate: "p3"),
         ])
 
         try Command.runWithBridges(
@@ -207,7 +207,7 @@ struct AcceptBridgePipelineTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         // runWithBridges uppercases the identity before matching,
         // mirroring accept-interaction's behavior. Pass lowercase to

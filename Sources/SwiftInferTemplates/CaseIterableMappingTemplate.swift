@@ -67,6 +67,7 @@ public enum CaseIterableMappingTemplate {
         "String", "Int", "UInt", "Int32", "Int64", "Character", "StaticString"
     ]
 
+    /// The `caseiterable-key-injectivity` suggestion for `summary` (enums from `shapesByName`), or `nil`.
     public static func suggest(
         for summary: FunctionSummary,
         shapesByName: [String: TypeShape]
@@ -77,6 +78,7 @@ public enum CaseIterableMappingTemplate {
         )
     }
 
+    /// The `caseiterable-key-injectivity` template as a constraint, reading enums from `shapesByName`.
     public static func makeConstraint(shapesByName: [String: TypeShape]) -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "caseiterable-key-injectivity",
@@ -186,7 +188,7 @@ public enum CaseIterableMappingTemplate {
                 weight: 15,
                 detail: "Curated key noun in '\(summary.name)' — it IDENTIFIES a case rather than "
                     + "describing it, so distinct cases owe distinct values"
-            )
+            ),
         ]
     }
 
@@ -216,7 +218,7 @@ public enum CaseIterableMappingTemplate {
                 + "the NAME says the value identifies the case. Confirm that before applying.",
             "The law lives on the TYPE, not on this member: it is a claim about the whole case "
                 + "list, so it belongs in a suite over the enum and should be re-run whenever a "
-                + "case is added. That is the commit where it earns its keep."
+                + "case is added. That is the commit where it earns its keep.",
         ]
     }
 }

@@ -1,4 +1,3 @@
-import PropertyLawCore
 @testable import SwiftInferCore
 import Testing
 
@@ -77,7 +76,7 @@ struct CarrierKindProtocolBoundTests {
                 kind: .extension,
                 inheritedTypes: [],
                 location: SourceLocation(file: "P.swift", line: 9, column: 1)
-            )
+            ),
         ]
         #expect(CarrierKindResolver(typeDecls: decls).classify(typeName: "Delegate") == .referenceType)
     }
@@ -103,7 +102,7 @@ struct CarrierKindProtocolBoundTests {
                 kind: .class,
                 inheritedTypes: [],
                 location: SourceLocation(file: "B.swift", line: 1, column: 1)
-            )
+            ),
         ]
         #expect(CarrierKindResolver(typeDecls: decls).classify(typeName: "Box") == .referenceType)
     }

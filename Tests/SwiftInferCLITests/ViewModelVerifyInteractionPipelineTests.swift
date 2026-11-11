@@ -20,17 +20,17 @@ struct ViewModelVerifyInteractionPipelineTests {
         ViewModelAction(
             name: name,
             parameterTypes: parameters.map(\.typeText),
-            firstParameterLabel: parameters.first?.label,
-            parameters: parameters,
             isAsync: isAsync,
             isThrows: false,
-            mutatesStateDirectly: true
+            mutatesStateDirectly: true,
+            firstParameterLabel: parameters.first?.label,
+            parameters: parameters
         )
     }
 
     private static func candidate(
-        typeName: String = "SelectionModel",
         actions: [ViewModelAction],
+        typeName: String = "SelectionModel",
         constructibility: ViewModelConstructibility = .zeroArgument
     ) -> ViewModelCandidate {
         ViewModelCandidate(
@@ -82,8 +82,7 @@ struct ViewModelVerifyInteractionPipelineTests {
     @Test("a failing verifier surfaces defaultFails")
     func surfacesFailure() {
         let failure = VerifyOutcome.defaultFails(
-            trial: 1, input: "sequence", forwardResult: "", inverseResult: "",
-            shrunk: nil, shrinkSteps: 0
+            trial: 1, input: "sequence", forwardResult: "", inverseResult: ""
         )
         let result = ViewModelVerifyInteractionPipeline.verify(
             candidate: Self.candidate(actions: [Self.vmAction("selectAll")]),

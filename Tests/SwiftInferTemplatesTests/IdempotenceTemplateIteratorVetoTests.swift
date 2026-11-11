@@ -51,7 +51,7 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: ["IteratorProtocol"],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -59,19 +59,19 @@ struct IdempotenceTemplateIteratorVetoTests {
         method: String,
         carrier: String,
         params: [(String?, String)] = []
-    ) -> LiftedTransformation {
+    ) throws -> LiftedTransformation {
         let resolver = valueSemanticResolver(carrier: carrier)
-        return LiftedTransformation.lift(
+        return try #require(LiftedTransformation.lift(
             summary(method, carrier: carrier, params: params),
             carrierKindResolver: resolver
-        )!
+        ))
     }
 
     // MARK: - Primary path (textual conformance)
 
     @Test("Carrier conforming to IteratorProtocol vetoes lifted idempotence (Score → Suppressed)")
     func conformanceVetoFires() throws {
-        let lift = lifted(method: "next", carrier: "AdjacentPairsIterator")
+        let lift = try lifted(method: "next", carrier: "AdjacentPairsIterator")
         let inheritedIndex: [String: Set<String>] = [
             "AdjacentPairsIterator": ["IteratorProtocol"]
         ]
@@ -116,8 +116,8 @@ struct IdempotenceTemplateIteratorVetoTests {
     }
 
     @Test("Carrier without IteratorProtocol conformance does not fire conformance veto")
-    func conformanceVetoMissesNonIteratorCarrier() {
-        let lift = lifted(method: "removeAll", carrier: "Bag")
+    func conformanceVetoMissesNonIteratorCarrier() throws {
+        let lift = try lifted(method: "removeAll", carrier: "Bag")
         let inheritedIndex: [String: Set<String>] = [
             "Bag": ["Sequence"]
         ]
@@ -132,7 +132,7 @@ struct IdempotenceTemplateIteratorVetoTests {
 
     @Test("Empty inheritedTypesByName index falls through to name fallback")
     func emptyIndexAllowsNameFallback() throws {
-        let lift = lifted(method: "advance", carrier: "MyType.Iterator")
+        let lift = try lifted(method: "advance", carrier: "MyType.Iterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -147,7 +147,7 @@ struct IdempotenceTemplateIteratorVetoTests {
 
     @Test("Bare carrier name 'Iterator' + method 'next' fires name fallback veto")
     func nameFallbackOnBareIterator() throws {
-        let lift = lifted(method: "next", carrier: "Iterator")
+        let lift = try lifted(method: "next", carrier: "Iterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -159,7 +159,7 @@ struct IdempotenceTemplateIteratorVetoTests {
 
     @Test("Nested carrier 'Foo.Iterator' + method 'next' fires name fallback veto")
     func nameFallbackOnNestedIterator() throws {
-        let lift = lifted(method: "next", carrier: "AdjacentPairsSequence.Iterator")
+        let lift = try lifted(method: "next", carrier: "AdjacentPairsSequence.Iterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -171,7 +171,7 @@ struct IdempotenceTemplateIteratorVetoTests {
     @Test("Name fallback fires on all curated method names: next, advance, nextState, step")
     func nameFallbackCoversAllCuratedMethods() throws {
         for methodName in IdempotenceTemplate.iteratorMethodNames {
-            let lift = lifted(method: methodName, carrier: "Iterator")
+            let lift = try lifted(method: methodName, carrier: "Iterator")
             let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
                 for: lift,
                 inheritedTypesByName: [:]
@@ -182,11 +182,11 @@ struct IdempotenceTemplateIteratorVetoTests {
     }
 
     @Test("Iterator-named carrier with non-curated method name does NOT fire name fallback")
-    func nameFallbackRequiresCuratedMethodName() {
+    func nameFallbackRequiresCuratedMethodName() throws {
         // Carrier is Iterator-shaped but method "removeAll" isn't a
         // canonical Iterator-pattern name → name fallback doesn't fire.
         // (Conformance path also doesn't fire since index is empty.)
-        let lift = lifted(method: "removeAll", carrier: "MyIterator")
+        let lift = try lifted(method: "removeAll", carrier: "MyIterator")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: [:]
@@ -197,11 +197,11 @@ struct IdempotenceTemplateIteratorVetoTests {
     // Curated method name on non-Iterator-shaped carrier does NOT fire name fallback
     // (no Sequence/IteratorProtocol conformance).
     @Test("Curated method name on non-Iterator carrier does NOT fire name fallback")
-    func nameFallbackRequiresIteratorCarrierShape() {
+    func nameFallbackRequiresIteratorCarrierShape() throws {
         // Method is "next" but carrier "Bag" isn't IteratorProtocol-conforming,
         // Sequence-conforming (V1.27.A path), or `*Iterator`-suffixed.
         // No veto fires.
-        let lift = lifted(method: "next", carrier: "Bag")
+        let lift = try lifted(method: "next", carrier: "Bag")
         let signal = IdempotenceTemplate.iteratorProtocolCarrierVeto(
             for: lift,
             inheritedTypesByName: ["Bag": ["Comparable"]]
@@ -212,8 +212,8 @@ struct IdempotenceTemplateIteratorVetoTests {
     // MARK: - End-to-end interaction with lifted suggest()
 
     @Test("End-to-end: Iterator-protocol-carrier-with-conformance suppresses lifted-idempotence suggestion")
-    func endToEndConformanceSuppression() {
-        let lift = lifted(method: "next", carrier: "AdjacentPairsIterator")
+    func endToEndConformanceSuppression() throws {
+        let lift = try lifted(method: "next", carrier: "AdjacentPairsIterator")
         let inheritedIndex: [String: Set<String>] = [
             "AdjacentPairsIterator": ["IteratorProtocol"]
         ]
@@ -224,21 +224,21 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: ["IteratorProtocol"],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
         // Without veto (cycle-17 baseline): 30 type-symmetry + 5 carrier
         // + 10 lifted = 45 → Likely. With V1.21.A veto: Suppressed.
         let suggestion = IdempotenceTemplate.suggest(
             forLifted: lift,
-            inheritedTypesByName: inheritedIndex,
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            inheritedTypesByName: inheritedIndex
         )
         #expect(suggestion == nil, "V1.21.A veto should suppress Iterator-protocol-conforming carriers")
     }
 
     @Test("End-to-end: name-fallback Iterator carrier suppresses lifted-idempotence suggestion")
-    func endToEndNameFallbackSuppression() {
-        let lift = lifted(method: "advance", carrier: "MyIterator.Iterator")
+    func endToEndNameFallbackSuppression() throws {
+        let lift = try lifted(method: "advance", carrier: "MyIterator.Iterator")
         let resolver = CarrierKindResolver(typeDecls: [
             TypeDecl(
                 name: "MyIterator.Iterator",
@@ -246,12 +246,12 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "index", typeName: "Int")]
-            )
+            ),
         ])
         let suggestion = IdempotenceTemplate.suggest(
             forLifted: lift,
-            inheritedTypesByName: [:],
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            inheritedTypesByName: [:]
         )
         #expect(
             suggestion == nil,
@@ -270,12 +270,12 @@ struct IdempotenceTemplateIteratorVetoTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
-        let lift = LiftedTransformation.lift(
+        let lift = try #require(LiftedTransformation.lift(
             summary("removeAll", carrier: "Bag"),
             carrierKindResolver: resolver
-        )!
+        ))
         let suggestion = IdempotenceTemplate.suggest(
             forLifted: lift,
             carrierKindResolver: resolver

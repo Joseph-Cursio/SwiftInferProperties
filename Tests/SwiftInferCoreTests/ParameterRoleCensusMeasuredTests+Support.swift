@@ -1,5 +1,3 @@
-import Foundation
-
 @testable import SwiftInferCore
 @testable import SwiftInferTemplates
 
@@ -7,6 +5,7 @@ import Foundation
 /// 400-line file cap; the reasoning lives in that suite's header.
 extension ParameterRoleCensusMeasuredTests {
 
+    // swiftlint:disable:next unused_declaration - used only by a closure-initialised static, which the index misses
     struct Reading {
         let corpus: String
         let total: Int

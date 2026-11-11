@@ -22,10 +22,10 @@ import SwiftInferCore
 /// two cannot drift apart once both do. Determinism passes the subject as its own oracle
 /// (`deterministic(callee:…)`), and `DeterminismCalleeEmitterTests` pins that its property is
 /// exactly this one.
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// What `agreementProperty` compares: two calls with the same drawn arguments.
-    public struct AgreementLaw: Sendable, Equatable {
+    struct AgreementLaw: Sendable, Equatable {
 
         /// The function under test, spelled as accept spells it — qualified, labelled, with a
         /// drawn receiver first for an instance method.
@@ -88,7 +88,7 @@ extension LiftedTestEmitter {
     /// takes a synchronous closure (#432). A synchronous isolated subject gets one hop around
     /// the whole comparison — the oracle is declared beside the subject, so it shares the
     /// subject's isolation and the one hop covers both.
-    public static func agreementProperty(_ law: AgreementLaw) -> String {
+    static func agreementProperty(_ law: AgreementLaw) -> String {
         let isTuple = law.argumentCount > 1
         let bind = isTuple
             ? tupleBinding(argumentTypes: law.argumentTypes, count: law.argumentCount)
@@ -116,7 +116,7 @@ extension LiftedTestEmitter {
     /// SwiftAssist it sits behind its *unable to type-check this expression in reasonable time*
     /// failures: a `SandboxLedger.SourceKind.fileName` scaffold that timed out compiled in 4.1 s
     /// once written this way, with the `(args: (String, String))` binding beside it.
-    public static func argumentSample(generators: [String]) -> String {
+    static func argumentSample(generators: [String]) -> String {
         guard generators.count > 1 else {
             return "{ rng in (\(generators.first ?? "")).run(using: &rng) }"
         }
@@ -134,7 +134,7 @@ extension LiftedTestEmitter {
     ///
     /// One reading, shared by every caller that must refuse to build on an unresolved generator,
     /// so the marker's spelling lives in one place.
-    public static func isUnresolvedGenerator(_ generator: String) -> Bool {
+    static func isUnresolvedGenerator(_ generator: String) -> Bool {
         generator.contains(".todo") || generator.contains("no generator derived")
     }
 }

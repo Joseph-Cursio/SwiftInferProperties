@@ -1,13 +1,13 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
-index 8dc76cb2..95b06f02 100644
+index 9df64361..f0637d6f 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
-@@ -29,7 +29,7 @@ extension ConstructionUniverse {
-             var read: Set<String> = []
-             let compiled = compiledNestedPackages(
-                 nestedPackages,
--                reported: judged,
-+                reported: [],
-                 rootHasManifest: bounds,
-                 rootPath: root.path,
-                 resolvingSymlinks: canonicalPath
+@@ -32,7 +32,7 @@ extension ConstructionUniverse {
+                 if !relative.isEmpty, manifests.contains(where: { $0 != .absent }) { read.insert(relative) }
+                 return manifests
+             }
+-            let compiled = compiledNestedPackages(nestedPackages, reported: judged, rootHasManifest: bounds, in: tree)
++            let compiled = compiledNestedPackages(nestedPackages, reported: [], rootHasManifest: bounds, in: tree)
+             return (compiled, read)
+         }
+     }

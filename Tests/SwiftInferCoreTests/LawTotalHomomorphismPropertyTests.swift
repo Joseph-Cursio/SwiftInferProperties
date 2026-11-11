@@ -1,5 +1,4 @@
-import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCore
 import Testing
 
@@ -48,7 +47,7 @@ struct LawTotalHomomorphismPropertyTests {
     // non-deduplication rule is observable.
 
     private static let findingGen = zip(
-        Gen.element(of: ["Foo", "Bar", "Baz", "Qux"]).map { $0! },
+        Gen.element(of: ["Foo", "Bar", "Baz", "Qux"]).compactMap(\.self),
         Gen.int(in: 0...4)
     ).map { typeName, lawCount in
         ProtocolCoverageAudit.Finding(

@@ -1,6 +1,5 @@
 import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// PROTOTYPE — end-to-end measured proof for the ValueSemantic feature, now

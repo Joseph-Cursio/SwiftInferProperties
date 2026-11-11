@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.42.C.6 — resolves the inverse-side function name + the verifier
@@ -57,7 +56,7 @@ public enum RoundTripPairResolver {
         Pair(forwardName: "cosh(_:)", inverseName: "acosh(_:)"),
         Pair(forwardName: "acosh(_:)", inverseName: "cosh(_:)"),
         Pair(forwardName: "tanh(_:)", inverseName: "atanh(_:)"),
-        Pair(forwardName: "atanh(_:)", inverseName: "tanh(_:)")
+        Pair(forwardName: "atanh(_:)", inverseName: "tanh(_:)"),
     ]
 
     /// Resolution result. Carries the inverse name + the qualified

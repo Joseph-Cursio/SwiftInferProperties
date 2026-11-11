@@ -8,12 +8,21 @@ import Testing
 // gate), so tests inject synthetic Strong-tier bridges via the
 // runWithBridges seam.
 
+final class ABRecordingOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+    var text: String { lines.joined(separator: "\n") }
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
 @Suite("AcceptBridge — V1.110 bridge-decision recorder")
 struct AcceptBridgeCommandTests {
 
     private typealias Command = SwiftInferCommand.AcceptBridge
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-17T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_779_019_200) // 2026-05-17T12:00:00Z
 
     // MARK: - Fixture helpers
 
@@ -128,7 +137,7 @@ struct AcceptBridgeCommandTests {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
             makePeer(family: .biconditional, predicate: "p2"),
-            makePeer(family: .conservation, predicate: "p3")
+            makePeer(family: .conservation, predicate: "p3"),
         ])
         let result = try Command.resolveScope(bridge: bridge, peerIndex: nil)
         #expect(result.count == 3)
@@ -137,7 +146,7 @@ struct AcceptBridgeCommandTests {
     @Test func resolveScopeValidPeerReturnsThatPeersInvariants() throws {
         let bridge = makeBridge(peers: [
             makePeer(family: .cardinality, predicate: "p1"),
-            makePeer(family: .biconditional, predicate: "p2")
+            makePeer(family: .biconditional, predicate: "p2"),
         ])
         let result = try Command.resolveScope(bridge: bridge, peerIndex: 2)
         #expect(result.count == 1)
@@ -200,21 +209,12 @@ struct AcceptBridgeCommandTests {
             "--identity", "ABCD1234567890EF",
             "--decision", "accepted-as-conformance",
             "--peer", "2",
-            "--decisions", "/tmp/foo.json"
+            "--decisions", "/tmp/foo.json",
         ])
         #expect(parsed.target == "MyApp")
         #expect(parsed.identity == "ABCD1234567890EF")
         #expect(parsed.decision == "accepted-as-conformance")
         #expect(parsed.peer == 2)
         #expect(parsed.decisions == "/tmp/foo.json")
-    }
-}
-
-final class ABRecordingOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
     }
 }

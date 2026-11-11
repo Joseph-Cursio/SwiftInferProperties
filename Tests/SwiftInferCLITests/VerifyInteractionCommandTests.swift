@@ -1,6 +1,4 @@
-import Foundation
 @testable import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 // V2.0 M3.D — `verify-interaction` subcommand smoke tests. The
@@ -24,7 +22,7 @@ struct VerifyInteractionCommandTests {
             "--target", "MyApp",
             "--reducer", "Inbox.reduce",
             "--user-module", "MyAppLib",
-            "--sequence-count", "100"
+            "--sequence-count", "100",
         ])
         #expect(parsed.target == ["MyApp"])
         #expect(parsed.reducer == "Inbox.reduce")

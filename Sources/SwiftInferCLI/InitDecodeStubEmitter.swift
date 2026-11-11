@@ -1,5 +1,3 @@
-import Foundation
-
 /// Emits a standalone verifier for a codec round-trip whose **decode is an
 /// initializer** — the measured half of Case 7 Part 2.
 ///
@@ -44,10 +42,10 @@ public enum InitDecodeStubEmitter {
         public init(
             typeName: String,
             encodeMethod: String,
-            encodeIsProperty: Bool = false,
             decodeLabel: String,
             isFailable: Bool,
             valuesExpression: String,
+            encodeIsProperty: Bool = false,
             extraImports: [String] = []
         ) {
             self.typeName = typeName
@@ -60,6 +58,7 @@ public enum InitDecodeStubEmitter {
         }
     }
 
+    /// The init-decode codec round-trip verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let imports = (["Foundation"] + inputs.extraImports)
             .map { "import \($0)" }

@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 import Testing
 
@@ -43,7 +42,7 @@ struct QualifiedSpellingDerivationTests {
                     parameters: [.init(label: "value", typeName: memberType)],
                     isFailable: false,
                     isThrowing: false
-                )
+                ),
             ],
             enumCases: []
         )

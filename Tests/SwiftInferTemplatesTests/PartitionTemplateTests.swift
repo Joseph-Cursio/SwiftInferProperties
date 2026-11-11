@@ -54,7 +54,7 @@ struct PartitionTemplateTests {
                 "progress",
                 parameters: [parameter("afterCompleting", "index", "Int")],
                 returns: "Double"
-            )
+            ),
         ]
     }
 
@@ -138,7 +138,7 @@ struct PartitionTemplateTests {
     func plainMemberIsNotAPartition() {
         let ordinary = [
             member("chunkCount", parameters: [parameter(nil, "size", "Int")], returns: "Int"),
-            member("describe", parameters: [parameter(nil, "index", "Int")], returns: "String")
+            member("describe", parameters: [parameter(nil, "index", "Int")], returns: "String"),
         ]
         #expect(PartitionPairing.candidates(in: ordinary).isEmpty)
     }
@@ -151,7 +151,7 @@ struct PartitionTemplateTests {
                 parameters: [parameter("ofChunk", "index", "Int")],
                 returns: "Range<Int>",
                 type: nil
-            )
+            ),
         ]
         #expect(PartitionPairing.candidates(in: free).isEmpty)
     }
@@ -192,7 +192,7 @@ struct PartitionTemplateTests {
                 "progress",
                 parameters: [parameter("afterSending", "index", "Int")],
                 returns: "Double"
-            )
+            ),
         ]
 
         let shape = try #require(PartitionPairing.candidates(in: members).first)
@@ -213,8 +213,8 @@ struct PartitionTemplateTests {
                 parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
                 returns: "Data"
             ),
-            tilerForm: .slice,
-            progress: nil
+            progress: nil,
+            tilerForm: .slice
         )
         let caveats = PartitionTemplate.makeCaveats(for: shape).joined(separator: " ")
 
@@ -241,7 +241,7 @@ struct PartitionTemplateTests {
                 parameters: [parameter(nil, "items", "[Int]"), parameter("threshold", "threshold", "Int")],
                 returns: "[Int]",
                 type: "Library"
-            )
+            ),
         ]
 
         #expect(PartitionPairing.candidates(in: members).isEmpty)
@@ -255,7 +255,7 @@ struct PartitionTemplateTests {
                 parameters: [parameter(nil, "docs", "[String]"), parameter("count", "count", "Int")],
                 returns: "[String]",
                 type: "Library"
-            )
+            ),
         ]
 
         #expect(PartitionPairing.candidates(in: members).isEmpty)
@@ -272,7 +272,7 @@ struct PartitionTemplateTests {
                 parameters: [parameter("at", "index", "Int")],
                 returns: "[String]",
                 type: "Library"
-            )
+            ),
         ]
 
         #expect(PartitionPairing.candidates(in: members).isEmpty)
@@ -294,8 +294,8 @@ struct PartitionTemplateTests {
                 parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
                 returns: "Data"
             ),
-            tilerForm: .slice,
-            progress: nil
+            progress: nil,
+            tilerForm: .slice
         )
 
         let recipe = try #require(PartitionTemplate.makeGenerators(for: shape).first)
@@ -316,8 +316,8 @@ struct PartitionTemplateTests {
                 parameters: [parameter("of", "data", "Data"), parameter("at", "index", "Int")],
                 returns: "Data"
             ),
-            tilerForm: .slice,
-            progress: nil
+            progress: nil,
+            tilerForm: .slice
         )
 
         let suggestion = try #require(PartitionTemplate.suggest(for: shape))
@@ -338,7 +338,7 @@ struct PartitionTemplateTests {
                 "byteRange",
                 parameters: [parameter("ofChunk", "index", "Int")],
                 returns: "Range<Int>"
-            )
+            ),
         ]
 
         let shape = try #require(PartitionPairing.candidates(in: members).first)

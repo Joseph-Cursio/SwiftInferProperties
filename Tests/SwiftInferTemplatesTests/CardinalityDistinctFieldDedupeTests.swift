@@ -62,7 +62,7 @@ struct CardinalityDistinctFieldDedupeTests {
             files: [
                 "FileStorage.swift": template,
                 "InMemory.swift": template,
-                "UserDefaults.swift": template
+                "UserDefaults.swift": template,
             ]
         )
         #expect(witnesses.isEmpty)
@@ -127,7 +127,7 @@ struct CardinalityDistinctFieldDedupeTests {
             files: [
                 "a-sheet.swift": sheetFile,
                 "b-sheet.swift": sheetFile,
-                "c-alert.swift": alertFile
+                "c-alert.swift": alertFile,
             ]
         )
         #expect(witnesses.count == 1)

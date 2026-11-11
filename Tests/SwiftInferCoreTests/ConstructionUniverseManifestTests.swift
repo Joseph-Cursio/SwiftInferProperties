@@ -4,7 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
 private typealias Nested = ConstructionUniverseNestedPackageTests
 
 /// **What a manifest is** — the shared spec's amendments F and S. A directory holds one iff it
@@ -32,7 +31,7 @@ struct ConstructionUniverseManifestTests {
         ("struct Package: Equatable { let name: String }", false),
         ("/* swift-tools-version:5.9 */", false),
         ("// tools-version:5.9", false),
-        ("", false)
+        ("", false),
     ])
     func firstLineDecides(text: String, isManifest: Bool) {
         #expect(ConstructionUniverse.isManifest(text) == isManifest)
@@ -60,13 +59,13 @@ struct ConstructionUniverseManifestTests {
         ("\n\n// swift-tools-version:5.9\n", true),
         ("// Copyright 2026 Example\n// swift-tools-version:6.0\n", true),
         ("// Copyright 2026 Example\n// swift-tools-version:5.9\n", false),
-        ("/// swift-tools-version:5.9\n", false)
+        ("/// swift-tools-version:5.9\n", false),
     ])
     func rootManifestIsWhatSwiftPMLoads(firstLines: String, isRoot: Bool) throws {
         let root = try Wiring.makePackage([
             "Package.swift": firstLines + "import PackageDescription\nlet package = Package(name: \"Blank\")\n",
             "Sources/Model/Item.swift": Wiring.item,
-            "Sources/Lib/Make.swift": Wiring.make
+            "Sources/Lib/Make.swift": Wiring.make,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -85,7 +84,7 @@ struct ConstructionUniverseManifestTests {
         let root = try Wiring.makePackage([
             "Sources/App/Models/Package.swift": "struct Package: Equatable { let name: String }",
             "Sources/App/Models/Item.swift": Wiring.item,
-            "Sources/App/Count.swift": Self.countOf()
+            "Sources/App/Count.swift": Self.countOf(),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("Sources/App")
@@ -108,7 +107,7 @@ struct ConstructionUniverseManifestTests {
             "Ghost/Sources/Ghost/Ghost.swift": "struct Ghost { let id = UUID() }",
             "Sources/Lib/Row.swift": Nested.row,
             "Demo/Package.swift": Nested.demoManifest,
-            "Demo/Sources/Demo/main.swift": Nested.mintingRow
+            "Demo/Sources/Demo/main.swift": Nested.mintingRow,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         try ConstructionUniverseSymlinkTests.link("Ghost/Package.swift", in: root, to: "/nonexistent/Package.swift")
@@ -126,7 +125,7 @@ struct ConstructionUniverseManifestTests {
         let root = try Wiring.makePackage([
             "Odd/Package.swift/Readme.md": "not a manifest",
             "Odd/Sources/Odd/Item.swift": Wiring.item,
-            "Sources/Lib/Make.swift": Wiring.make
+            "Sources/Lib/Make.swift": Wiring.make,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let odd = root.appendingPathComponent("Odd/Sources/Odd")
@@ -148,7 +147,7 @@ struct ConstructionUniverseManifestTests {
             "Packages/Locked/Sources/Locked/Locked.swift": "public struct Locked {}",
             "Sources/Lib/Row.swift": Nested.row,
             "Demo/Package.swift": Nested.demoManifest,
-            "Demo/Sources/Demo/main.swift": Nested.mintingRow
+            "Demo/Sources/Demo/main.swift": Nested.mintingRow,
         ]
         for (dependency, demoIsIn) in [("Packages/Locked", true), ("Packages/Elsewhere", false)] {
             var package = files
@@ -180,14 +179,14 @@ struct ConstructionUniverseManifestTests {
         ("App.xcworkspace/contents.xcworkspacedata", true),
         ("Apps/iOS/App.xcodeproj/project.pbxproj", false),
         // Any entry so named, as SwiftProjectLint reads it — a dot-prefixed one too.
-        (".Hidden.xcodeproj/project.pbxproj", true)
+        (".Hidden.xcodeproj/project.pbxproj", true),
     ])
     func xcodeProjectBesideTheManifestTakesEveryNestedPackage(project: String, takesEvery: Bool) throws {
         let root = try Wiring.makePackage([
             project: "// !$*UTF8*$!",
             "LocalPackages/Feature/Package.swift": Nested.demoManifest,
             "LocalPackages/Feature/Sources/Feature/Item.swift": Wiring.item,
-            "App/Count.swift": Self.countOf()
+            "App/Count.swift": Self.countOf(),
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let app = root.appendingPathComponent("App")

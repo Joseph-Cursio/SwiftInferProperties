@@ -15,7 +15,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 2)],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -28,7 +28,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -55,7 +55,7 @@ struct ConsumerProducerChainDetectorTests {
             summariesByName: [
                 "format": Fixtures.formatProducer(),
                 "stringify": Fixtures.formatProducer(name: "stringify"),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -70,7 +70,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": sites],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -85,7 +85,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": sites],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -112,7 +112,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(returnTypeText: "Data"),
-                "validate": Fixtures.validateConsumer(argTypeText: "String")
+                "validate": Fixtures.validateConsumer(argTypeText: "String"),
             ],
             knownRoundTripPairs: []
         )
@@ -125,7 +125,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(returnTypeText: nil),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -150,7 +150,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: [
                 RoundTripPair(forwardName: "format", reverseName: "validate", domainTypeName: "String")
@@ -165,7 +165,7 @@ struct ConsumerProducerChainDetectorTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: [
                 RoundTripPair(forwardName: "encode", reverseName: "decode", domainTypeName: "Other")

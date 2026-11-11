@@ -1,24 +1,27 @@
 import Foundation
 import PropertyLawCore
 import SwiftInferCore
-import SwiftInferTemplates
 
 /// The triage dependencies `InteractiveTriage` threads through its accept path.
 ///
 /// Extracted from `InteractiveTriage.swift` when that file reached SwiftLint's 400-line cap. The
 /// type is one bundle of stored properties and their reasoning, which is a clean seam: nothing
 /// here decides anything, and every consumer takes the whole `Context`.
-extension InteractiveTriage {
+public extension InteractiveTriage {
 
     /// Bundle of triage dependencies — keeps `run`'s parameter list
     /// short and lets sub-helpers share the same set without
     /// re-threading individual deps. SwiftLint also caps function
     /// parameter counts at 5; bundling keeps both `run` and
     /// `handleAccept` under that limit.
-    public struct Context {
+    struct Context {
+        /// Where the triage loop reads the user's `[A/s/n/?]` answers from.
         public let prompt: any PromptInput
+        /// Where prompts, accepted-stub paths and session messages are written.
         public let output: any DiscoverOutput
+        /// Where warnings go, kept off the `output` stream.
         public let diagnostics: any DiagnosticOutput
+        /// The package root accepted stubs are written under; `generatedRoot` defaults from it.
         public let outputDirectory: URL
 
         /// The directory holding `SwiftInfer/` and `SwiftInferRefactors/`.
@@ -30,7 +33,9 @@ extension InteractiveTriage {
         /// before.
         public let generatedRoot: URL
 
+        /// When true, accept gestures print the would-be path and nothing is written.
         public let dryRun: Bool
+        /// Supplies the timestamp recorded on each triage decision.
         public let clock: @Sendable () -> Date
         /// Per-type RefactorBridge proposals keyed by type name, built
         /// by `RefactorBridgeOrchestrator.proposals(from:)` (M7.5b +
@@ -154,14 +159,15 @@ extension InteractiveTriage {
         /// `SourceModuleResolver`; built once, from `packageRoot`.
         let sourceModules: SourceModuleResolver
 
+        /// Bundles the triage dependencies; the maps default to empty and `generatedRoot` to the legacy path.
         public init(
             prompt: any PromptInput,
             output: any DiscoverOutput,
             diagnostics: any DiagnosticOutput,
             outputDirectory: URL,
-            generatedRoot: URL? = nil,
             dryRun: Bool,
             clock: @escaping @Sendable () -> Date = { Date() },
+            generatedRoot: URL? = nil,
             proposalsByType: [String: [RefactorBridgeProposal]] = [:],
             equivalenceClassHintsByIdentity: [SuggestionIdentity: EquivalenceClassHintKind] = [:],
             consumerProducerChainHintsByIdentity: [SuggestionIdentity: DomainHint] = [:],

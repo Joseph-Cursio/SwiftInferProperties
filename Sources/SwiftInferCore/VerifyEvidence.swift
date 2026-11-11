@@ -30,6 +30,78 @@ public enum VerifyEvidenceOutcome: String, Sendable, Equatable, Codable, CaseIte
     case architecturalCoveragePending = "architectural-coverage-pending"
 }
 
+/// Top-level `.swiftinfer/verify-evidence.json` shape. Wraps the
+/// evidence list with a schema version, mirroring `Decisions`.
+///
+/// `upserting` is the canonical mutator: a second verify run on the
+/// same identity replaces the first — the latest run is the evidence
+/// currently in effect (a re-run reflects a code or kit change worth
+/// keeping).
+public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
+
+    /// Bumped when the on-disk schema changes incompatibly. Ships at
+    /// version `1` (v1.64). Loaders that see a higher number warn and
+    /// load what they can — same posture as `Decisions`.
+    public static let currentSchemaVersion = 1
+
+    public let schemaVersion: Int
+    public let records: [VerifyEvidence]
+
+    public init(
+        schemaVersion: Int = Self.currentSchemaVersion,
+        records: [VerifyEvidence] = []
+    ) {
+        self.schemaVersion = schemaVersion
+        self.records = records
+    }
+
+    /// The empty value — schema version present, no records yet.
+    /// `VerifyEvidenceStore.load` returns this when the file is absent.
+    public static let empty = Self()
+
+    /// Look up evidence by suggestion-identity hash. Used by the
+    /// `discover` explainability annotation ("does this suggestion have
+    /// verify evidence?").
+    public func record(for identityHash: String) -> VerifyEvidence? {
+        records.first { $0.identityHash == identityHash }
+    }
+
+    /// Append-or-overwrite by identity. Returns a new log with the
+    /// prior record for the same identity removed (if any) and the new
+    /// record appended at the end — the trailing-append shape keeps
+    /// re-saved JSON stable for previously-recorded evidence. Mirrors
+    /// `Decisions.upserting`.
+    public func upserting(_ record: VerifyEvidence) -> Self {
+        let withoutPrior = records.filter { $0.identityHash != record.identityHash }
+        return Self(
+            schemaVersion: schemaVersion,
+            records: withoutPrior + [record]
+        )
+    }
+
+    /// Fold another `VerifyEvidenceLog` into this one (V1.69). Used by
+    /// `swift-infer metrics` to aggregate `.swiftinfer/verify-evidence.json`
+    /// across multiple `--decisions` corpora into one in-memory log for
+    /// the §17.2 cross-reference. Identity-keyed; on collision the
+    /// record with the later `capturedAt` wins (mirrors `upserting(_:)`'s
+    /// "latest run in effect" posture and `Decisions.merge`), and an
+    /// EQUAL `capturedAt` is broken by canonical encoding — see
+    /// `IdentityKeyedFold`. The result is sorted by `capturedAt` then
+    /// `identityHash`, so the aggregate is order-deterministic in its
+    /// rows AND in their contents.
+    public func merge(_ other: Self) -> Self {
+        Self(
+            schemaVersion: max(schemaVersion, other.schemaVersion),
+            records: IdentityKeyedFold.merged(
+                primary: records,
+                secondary: other.records,
+                identity: \.identityHash,
+                timestamp: \.capturedAt
+            )
+        )
+    }
+}
+
 /// One persisted verify outcome, keyed by suggestion identity.
 ///
 /// The machine-evidence counterpart to `DecisionRecord` — deliberately
@@ -182,77 +254,5 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         self.regressionTestPath = regressionTestPath
         self.corpusProvenance = corpusProvenance
         self.subjectFingerprint = subjectFingerprint
-    }
-}
-
-/// Top-level `.swiftinfer/verify-evidence.json` shape. Wraps the
-/// evidence list with a schema version, mirroring `Decisions`.
-///
-/// `upserting` is the canonical mutator: a second verify run on the
-/// same identity replaces the first — the latest run is the evidence
-/// currently in effect (a re-run reflects a code or kit change worth
-/// keeping).
-public struct VerifyEvidenceLog: Sendable, Equatable, Codable {
-
-    /// Bumped when the on-disk schema changes incompatibly. Ships at
-    /// version `1` (v1.64). Loaders that see a higher number warn and
-    /// load what they can — same posture as `Decisions`.
-    public static let currentSchemaVersion = 1
-
-    public let schemaVersion: Int
-    public let records: [VerifyEvidence]
-
-    public init(
-        schemaVersion: Int = Self.currentSchemaVersion,
-        records: [VerifyEvidence] = []
-    ) {
-        self.schemaVersion = schemaVersion
-        self.records = records
-    }
-
-    /// The empty value — schema version present, no records yet.
-    /// `VerifyEvidenceStore.load` returns this when the file is absent.
-    public static let empty = Self()
-
-    /// Look up evidence by suggestion-identity hash. Used by the
-    /// `discover` explainability annotation ("does this suggestion have
-    /// verify evidence?").
-    public func record(for identityHash: String) -> VerifyEvidence? {
-        records.first { $0.identityHash == identityHash }
-    }
-
-    /// Append-or-overwrite by identity. Returns a new log with the
-    /// prior record for the same identity removed (if any) and the new
-    /// record appended at the end — the trailing-append shape keeps
-    /// re-saved JSON stable for previously-recorded evidence. Mirrors
-    /// `Decisions.upserting`.
-    public func upserting(_ record: VerifyEvidence) -> Self {
-        let withoutPrior = records.filter { $0.identityHash != record.identityHash }
-        return Self(
-            schemaVersion: schemaVersion,
-            records: withoutPrior + [record]
-        )
-    }
-
-    /// Fold another `VerifyEvidenceLog` into this one (V1.69). Used by
-    /// `swift-infer metrics` to aggregate `.swiftinfer/verify-evidence.json`
-    /// across multiple `--decisions` corpora into one in-memory log for
-    /// the §17.2 cross-reference. Identity-keyed; on collision the
-    /// record with the later `capturedAt` wins (mirrors `upserting(_:)`'s
-    /// "latest run in effect" posture and `Decisions.merge`), and an
-    /// EQUAL `capturedAt` is broken by canonical encoding — see
-    /// `IdentityKeyedFold`. The result is sorted by `capturedAt` then
-    /// `identityHash`, so the aggregate is order-deterministic in its
-    /// rows AND in their contents.
-    public func merge(_ other: Self) -> Self {
-        Self(
-            schemaVersion: max(schemaVersion, other.schemaVersion),
-            records: IdentityKeyedFold.merged(
-                primary: records,
-                secondary: other.records,
-                identity: \.identityHash,
-                timestamp: \.capturedAt
-            )
-        )
     }
 }

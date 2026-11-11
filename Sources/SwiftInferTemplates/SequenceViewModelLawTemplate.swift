@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **sequence-view model law** — the second of the two model-law families.
@@ -37,12 +36,14 @@ import SwiftInferCore
 /// scored down: `5..<5` and `7..<7` are both empty, so the second direction is false for it.
 public enum SequenceViewModelLawTemplate {
 
+    /// The `sequence-view-model-law` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: SequenceViewModelPairing.SequenceViewModelShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `sequence-view-model-law` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint()
         -> Constraint<SequenceViewModelPairing.SequenceViewModelShape> {
         Constraint<SequenceViewModelPairing.SequenceViewModelShape>(
@@ -93,7 +94,7 @@ public enum SequenceViewModelLawTemplate {
                     + "that a sequence of elements is enough to construct it, so nothing outside "
                     + "the elements contributes to its identity"
             ),
-            bodyShapeSignal(for: shape)
+            bodyShapeSignal(for: shape),
         ]
         if case .conversionComparison(let via) = shape.bodyShape {
             signals.append(Signal(
@@ -175,7 +176,7 @@ public enum SequenceViewModelLawTemplate {
         [
             "Abstraction function: \(shape.typeName)'s own sequence view. No conversion and no "
                 + "annotation is needed — the type already publishes the reference definition "
-                + "of its value, and `==` is being held to it."
+                + "of its value, and `==` is being held to it.",
         ]
     }
 
@@ -207,7 +208,7 @@ public enum SequenceViewModelLawTemplate {
                 + "laws ask whether `==` is an equivalence relation; a projection of the stored "
                 + "fields is one however wrong it is. Measured: three real projection bodies "
                 + "pass 4/4 and fail this law at trial ≤3 "
-                + "(`fixtures/equatable-signal/README.md`)."
+                + "(`fixtures/equatable-signal/README.md`).",
         ]
     }
 
@@ -225,7 +226,7 @@ public enum SequenceViewModelLawTemplate {
                     + "pairs should be built to agree — permutations of one another, or equal "
                     + "contents reached through different representations — because that is the "
                     + "only region where `==` and the sequence view can disagree."
-            )
+            ),
         ]
     }
 

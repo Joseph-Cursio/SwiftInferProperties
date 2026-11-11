@@ -24,7 +24,7 @@ struct DeterminismInteractionTemplateTests {
         )
     }
 
-    private let firstSeen = ISO8601DateFormatter().date(from: "2026-06-01T00:00:00Z")!
+    private let firstSeen = Date(timeIntervalSince1970: 1_780_272_000) // 2026-06-01T00:00:00Z
 
     @Test("emits exactly one determinism suggestion for every carrier, incl. TCA")
     func emitsOneForEveryCarrier() {

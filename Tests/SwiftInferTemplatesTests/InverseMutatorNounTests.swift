@@ -54,7 +54,7 @@ struct InverseMutatorNounTests {
             move("setOption", [labelled("key"), labelled("value")]),
             move("removeOption", [labelled("key")]),
             move("addRule", [labelled(nil), labelled("to")]),
-            move("removeRule", [labelled(nil), labelled("from")])
+            move("removeRule", [labelled(nil), labelled("from")]),
         ])
 
         // The right pair, and ONLY the right pair.
@@ -71,13 +71,13 @@ struct InverseMutatorNounTests {
             move("removeOptInRuleIfPresent", [labelled("from")]),
             move("removeDisabledRuleIfPresent", [labelled("from")]),
             move("addOnlyRuleIfNeeded", [labelled("to")]),
-            move("removeOnlyRuleIfPresent", [labelled("from")])
+            move("removeOnlyRuleIfPresent", [labelled("from")]),
         ])
 
         #expect(names(pairs) == [
             "addDisabledRuleIfNeeded/removeDisabledRuleIfPresent",
             "addOnlyRuleIfNeeded/removeOnlyRuleIfPresent",
-            "addOptInRuleIfNeeded/removeOptInRuleIfPresent"
+            "addOptInRuleIfNeeded/removeOptInRuleIfPresent",
         ])
     }
 
@@ -88,7 +88,7 @@ struct InverseMutatorNounTests {
         // already existed, which is the case a generated sequence reaches first.
         let pairs = InverseMutatorPairing.candidates(in: [
             move("addOrUpdate", [labelled("for"), labelled("user"), labelled("password")]),
-            move("remove", [labelled("for")])
+            move("remove", [labelled("for")]),
         ])
 
         #expect(pairs.isEmpty)
@@ -101,7 +101,7 @@ struct InverseMutatorNounTests {
         // index happens to be the last one, and a stub would have to invent it.
         let pairs = InverseMutatorPairing.candidates(in: [
             move("removeObject", [labelled("at", "Int")]),
-            move("add", [labelled(nil, "AnyObject")])
+            move("add", [labelled(nil, "AnyObject")]),
         ])
 
         #expect(pairs.isEmpty)
@@ -113,17 +113,17 @@ struct InverseMutatorNounTests {
     func matchingNameNounsPair() {
         #expect(names(InverseMutatorPairing.candidates(in: [
             move("addAvoidPattern", [labelled(nil, "String")]),
-            move("removeAvoidPattern", [labelled(nil, "String")])
+            move("removeAvoidPattern", [labelled(nil, "String")]),
         ])) == ["addAvoidPattern/removeAvoidPattern"])
 
         #expect(names(InverseMutatorPairing.candidates(in: [
             move("addHandler", [labelled(nil), labelled("name"), labelled("position")]),
-            move("removeHandler", [labelled(nil)])
+            move("removeHandler", [labelled(nil)]),
         ])) == ["addHandler/removeHandler"])
 
         #expect(names(InverseMutatorPairing.candidates(in: [
             move("pushType", [labelled(nil), labelled("genericParams")]),
-            move("popType")
+            move("popType"),
         ])) == ["pushType/popType"])
     }
 
@@ -133,7 +133,7 @@ struct InverseMutatorNounTests {
         // carry the direction, so `To`/`From` cannot be part of what is being moved.
         #expect(names(InverseMutatorPairing.candidates(in: [
             move("addToRecentWorkspaces", [labelled(nil, "Workspace")]),
-            move("removeFromRecentWorkspaces", [labelled(nil, "Workspace")])
+            move("removeFromRecentWorkspaces", [labelled(nil, "Workspace")]),
         ])) == ["addToRecentWorkspaces/removeFromRecentWorkspaces"])
     }
 
@@ -147,7 +147,7 @@ struct InverseMutatorNounTests {
             move("add", [labelled("function", "DatabaseFunction")]),
             move("remove", [labelled("function", "DatabaseFunction")]),
             move("add", [labelled("collation", "DatabaseCollation")]),
-            move("remove", [labelled("collation", "DatabaseCollation")])
+            move("remove", [labelled("collation", "DatabaseCollation")]),
         ])
 
         // Two rows, and neither crosses.
@@ -163,7 +163,7 @@ struct InverseMutatorNounTests {
         // repositories.
         #expect(names(InverseMutatorPairing.candidates(in: [
             move("push", [labelled("value", "JSONMap.Value")]),
-            move("popValue")
+            move("popValue"),
         ])) == ["push/popValue"])
     }
 
@@ -171,7 +171,7 @@ struct InverseMutatorNounTests {
     func twoEmptyNounsPair() {
         #expect(names(InverseMutatorPairing.candidates(in: [
             move("select", [labelled(nil, "Int")]),
-            move("deselect")
+            move("deselect"),
         ])) == ["select/deselect"])
     }
 
@@ -181,7 +181,7 @@ struct InverseMutatorNounTests {
     func anEmptyBackwardNounIsExcusedWhenThereIsOneWayDown() {
         #expect(names(InverseMutatorPairing.candidates(in: [
             move("navigateToFolder", [labelled(nil, "MacCloudFile")]),
-            move("navigateUp")
+            move("navigateUp"),
         ])) == ["navigateToFolder/navigateUp"])
     }
 
@@ -193,7 +193,7 @@ struct InverseMutatorNounTests {
         let pairs = InverseMutatorPairing.candidates(in: [
             move("navigateToFolder", [labelled(nil, "MacCloudFile")]),
             move("navigateToRoot", [labelled(nil, "Root")]),
-            move("navigateUp")
+            move("navigateUp"),
         ])
 
         #expect(pairs.isEmpty)

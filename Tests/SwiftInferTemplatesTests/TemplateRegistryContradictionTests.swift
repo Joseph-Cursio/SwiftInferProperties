@@ -3,6 +3,61 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
+@Suite("TemplateRegistry — @Discoverable signal end-to-end (M5.1)")
+struct TemplateRegistryDiscoverableTests {
+
+    @Test("@Discoverable(group:) on both halves of a round-trip pair fires the +35 signal end-to-end")
+    func discoverableGroupSignalFiresEndToEnd() throws {
+        let directory = try writeRegistryFixture(named: "DiscoverableE2E", contents: """
+        struct MyType {}
+        struct Codec {
+            @Discoverable(group: "codec")
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            @Discoverable(group: "codec")
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
+        let discoverable = try #require(
+            roundTrip.score.signals.first { $0.kind == .discoverableAnnotation }
+        )
+        #expect(discoverable.weight == 35)
+        #expect(discoverable.detail.contains("codec"))
+        // 30 type + 40 curated + 35 discoverable + 5 value-semantic
+        // (V1.18.A; struct Codec is value-semantic) = 110 → Strong.
+        #expect(roundTrip.score.total == 110)
+    }
+
+    @Test("Mismatched @Discoverable groups across the pair leave the +35 signal off")
+    func discoverableGroupMismatchSkipsTheSignal() throws {
+        let directory = try writeRegistryFixture(named: "DiscoverableMismatch", contents: """
+        struct MyType {}
+        struct Codec {
+            @Discoverable(group: "codec")
+            func encode(_ value: MyType) -> Data {
+                return Data()
+            }
+            @Discoverable(group: "queue")
+            func decode(_ data: Data) -> MyType {
+                return MyType()
+            }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let suggestions = try TemplateRegistry.discover(in: directory)
+        let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
+        #expect(!roundTrip.score.signals.contains { $0.kind == .discoverableAnnotation })
+        // 30 type + 40 curated + 5 value-semantic carrier (V1.18.A) = 75.
+        #expect(roundTrip.score.total == 75)
+    }
+}
+
 @Suite("TemplateRegistry — contradiction detection (PRD §5.6)")
 struct TemplateRegistryContradictionTests {
 
@@ -12,7 +67,7 @@ struct TemplateRegistryContradictionTests {
             name: "merge",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Any", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "Any", isInout: false),
             ],
             returnTypeText: "Any",
             isThrows: false,
@@ -95,60 +150,5 @@ struct TemplateRegistryContradictionTests {
                 && line.contains("commutativity")
                 && line.contains("merge")
         })
-    }
-}
-
-@Suite("TemplateRegistry — @Discoverable signal end-to-end (M5.1)")
-struct TemplateRegistryDiscoverableTests {
-
-    @Test("@Discoverable(group:) on both halves of a round-trip pair fires the +35 signal end-to-end")
-    func discoverableGroupSignalFiresEndToEnd() throws {
-        let directory = try writeRegistryFixture(named: "DiscoverableE2E", contents: """
-        struct MyType {}
-        struct Codec {
-            @Discoverable(group: "codec")
-            func encode(_ value: MyType) -> Data {
-                return Data()
-            }
-            @Discoverable(group: "codec")
-            func decode(_ data: Data) -> MyType {
-                return MyType()
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let suggestions = try TemplateRegistry.discover(in: directory)
-        let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
-        let discoverable = try #require(
-            roundTrip.score.signals.first { $0.kind == .discoverableAnnotation }
-        )
-        #expect(discoverable.weight == 35)
-        #expect(discoverable.detail.contains("codec"))
-        // 30 type + 40 curated + 35 discoverable + 5 value-semantic
-        // (V1.18.A; struct Codec is value-semantic) = 110 → Strong.
-        #expect(roundTrip.score.total == 110)
-    }
-
-    @Test("Mismatched @Discoverable groups across the pair leave the +35 signal off")
-    func discoverableGroupMismatchSkipsTheSignal() throws {
-        let directory = try writeRegistryFixture(named: "DiscoverableMismatch", contents: """
-        struct MyType {}
-        struct Codec {
-            @Discoverable(group: "codec")
-            func encode(_ value: MyType) -> Data {
-                return Data()
-            }
-            @Discoverable(group: "queue")
-            func decode(_ data: Data) -> MyType {
-                return MyType()
-            }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let suggestions = try TemplateRegistry.discover(in: directory)
-        let roundTrip = try #require(suggestions.first { $0.templateName == "round-trip" })
-        #expect(!roundTrip.score.signals.contains { $0.kind == .discoverableAnnotation })
-        // 30 type + 40 curated + 5 value-semantic carrier (V1.18.A) = 75.
-        #expect(roundTrip.score.total == 75)
     }
 }

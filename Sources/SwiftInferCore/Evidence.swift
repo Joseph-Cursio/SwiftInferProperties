@@ -1,3 +1,101 @@
+/// Generator selection + sampling state for a suggestion. PRD §4.3 requires
+/// every suggestion's evidence record to carry these three fields; M1 emits
+/// placeholder values since selection + sampling are deferred.
+public struct GeneratorMetadata: Sendable, Equatable {
+
+    /// Where the generator came from. M1 always reports
+    /// `.notYetComputed` — selection is gated on `DerivationStrategist`
+    /// being publicly exposed from SwiftPropertyLaws (PRD §11, §21 OQ #4)
+    /// and lands at M3.
+    public enum Source: String, Sendable, Equatable {
+        case derivedCaseIterable
+        case derivedRawRepresentable
+        case derivedMemberwise
+        case derivedInitializer
+        case derivedEnumCases
+        case derivedCodableRoundTrip
+        /// A stdlib / collection / composite carrier the corpus doesn't declare
+        /// (`String`, `[String]`, `[String: Int]`, a composite of resolvable
+        /// leaves) — derived directly via `CompositeMemberParser`, not by matching
+        /// a corpus `TypeShape`. Fills the gap the app road-test surfaced: kernels
+        /// are overwhelmingly stdlib/collection-typed, and those were being skipped
+        /// to `.notYetComputed` despite being trivially generatable.
+        case derivedComposite
+        case registered
+        case todo
+        case inferredFromTests
+
+        /// No `Gen` is synthesisable, but the carrier has a known construction
+        /// path from another representation and a runnable recipe is attached —
+        /// see `ProxyConstruction`. Distinct from `.notYetComputed` because the
+        /// reader is not stuck: "not derived" and "cannot be tested" are
+        /// different claims, and conflating them cost the road-test subject 60%
+        /// of its suggestions.
+        case proxyRecipe
+        case notYetComputed
+    }
+
+    // The identically-named `Confidence` in `Tests/Fixtures/algebraic-survey-corpus/` is sample
+    // input this tool *parses*, not a second production model — it's `Int`-raw-valued and mirrors
+    // these case names by coincidence. Not real duplication.
+    // swiftprojectlint:disable:next parallel-enum-shape
+    /// Confidence in the selected generator. `nil` until selection runs.
+    public enum Confidence: String, Sendable, Equatable {
+        case high
+        case medium
+        case low
+    }
+
+    /// Outcome of the sampling pass. M1 always reports `.notRun` — the
+    /// seeded sampling policy lands at M4 per the M1 Plan.
+    public enum SamplingResult: Sendable, Equatable {
+        case passed(trials: Int)
+        case failed(seed: UInt64, counterexample: String)
+        case notRun
+    }
+
+    public let source: Source
+    public let confidence: Confidence?
+    public let sampling: SamplingResult
+
+    public init(source: Source, confidence: Confidence?, sampling: SamplingResult) {
+        self.source = source
+        self.confidence = confidence
+        self.sampling = sampling
+    }
+
+    /// Placeholder used by every M1 suggestion. Generator selection lands
+    /// at M3 and sampling at M4 — until then both fields are explicit
+    /// `notYetComputed` / `notRun` so the explainability block can render
+    /// them honestly.
+    public static let m1Placeholder = Self(
+        source: .notYetComputed,
+        confidence: nil,
+        sampling: .notRun
+    )
+}
+
+/// Two-sided explainability block per §4.5. Renderer responsibility — the
+/// template builds these arrays in order; the renderer formats them.
+public struct ExplainabilityBlock: Sendable, Equatable {
+
+    /// Lines that go under "Why suggested" — typically evidence rows
+    /// followed by per-signal lines. Each line is rendered verbatim with
+    /// a leading bullet glyph by `SuggestionRenderer`.
+    public let whySuggested: [String]
+
+    /// Lines that go under "Why this might be wrong" — active counter-
+    /// signals + template-known caveats. May be empty for a Strong
+    /// suggestion with no caveats; the renderer emits an explicit "no
+    /// known caveats" line in that case so absence is visible.
+    public let whyMightBeWrong: [String]
+
+    public init(whySuggested: [String], whyMightBeWrong: [String]) {
+        self.whySuggested = whySuggested
+        self.whyMightBeWrong = whyMightBeWrong
+    }
+}
+
 /// One function or function pair a template matched, as the renderer and every stub writer see it.
 ///
 /// Split out of `Suggestion.swift` when that file passed SwiftLint's 400-line ceiling — the same
@@ -165,103 +263,5 @@ public struct Evidence: Sendable, Equatable {
             genericParameters: genericParameters,
             inoutParameterIndices: inoutParameterIndices
         )
-    }
-}
-
-/// Generator selection + sampling state for a suggestion. PRD §4.3 requires
-/// every suggestion's evidence record to carry these three fields; M1 emits
-/// placeholder values since selection + sampling are deferred.
-public struct GeneratorMetadata: Sendable, Equatable {
-
-    /// Where the generator came from. M1 always reports
-    /// `.notYetComputed` — selection is gated on `DerivationStrategist`
-    /// being publicly exposed from SwiftPropertyLaws (PRD §11, §21 OQ #4)
-    /// and lands at M3.
-    public enum Source: String, Sendable, Equatable {
-        case derivedCaseIterable
-        case derivedRawRepresentable
-        case derivedMemberwise
-        case derivedInitializer
-        case derivedEnumCases
-        case derivedCodableRoundTrip
-        /// A stdlib / collection / composite carrier the corpus doesn't declare
-        /// (`String`, `[String]`, `[String: Int]`, a composite of resolvable
-        /// leaves) — derived directly via `CompositeMemberParser`, not by matching
-        /// a corpus `TypeShape`. Fills the gap the app road-test surfaced: kernels
-        /// are overwhelmingly stdlib/collection-typed, and those were being skipped
-        /// to `.notYetComputed` despite being trivially generatable.
-        case derivedComposite
-        case registered
-        case todo
-        case inferredFromTests
-
-        /// No `Gen` is synthesisable, but the carrier has a known construction
-        /// path from another representation and a runnable recipe is attached —
-        /// see `ProxyConstruction`. Distinct from `.notYetComputed` because the
-        /// reader is not stuck: "not derived" and "cannot be tested" are
-        /// different claims, and conflating them cost the road-test subject 60%
-        /// of its suggestions.
-        case proxyRecipe
-        case notYetComputed
-    }
-
-    // The identically-named `Confidence` in `Tests/Fixtures/algebraic-survey-corpus/` is sample
-    // input this tool *parses*, not a second production model — it's `Int`-raw-valued and mirrors
-    // these case names by coincidence. Not real duplication.
-    // swiftprojectlint:disable:next parallel-enum-shape
-    /// Confidence in the selected generator. `nil` until selection runs.
-    public enum Confidence: String, Sendable, Equatable {
-        case high
-        case medium
-        case low
-    }
-
-    /// Outcome of the sampling pass. M1 always reports `.notRun` — the
-    /// seeded sampling policy lands at M4 per the M1 Plan.
-    public enum SamplingResult: Sendable, Equatable {
-        case passed(trials: Int)
-        case failed(seed: UInt64, counterexample: String)
-        case notRun
-    }
-
-    public let source: Source
-    public let confidence: Confidence?
-    public let sampling: SamplingResult
-
-    public init(source: Source, confidence: Confidence?, sampling: SamplingResult) {
-        self.source = source
-        self.confidence = confidence
-        self.sampling = sampling
-    }
-
-    /// Placeholder used by every M1 suggestion. Generator selection lands
-    /// at M3 and sampling at M4 — until then both fields are explicit
-    /// `notYetComputed` / `notRun` so the explainability block can render
-    /// them honestly.
-    public static let m1Placeholder = Self(
-        source: .notYetComputed,
-        confidence: nil,
-        sampling: .notRun
-    )
-}
-
-/// Two-sided explainability block per §4.5. Renderer responsibility — the
-/// template builds these arrays in order; the renderer formats them.
-public struct ExplainabilityBlock: Sendable, Equatable {
-
-    /// Lines that go under "Why suggested" — typically evidence rows
-    /// followed by per-signal lines. Each line is rendered verbatim with
-    /// a leading bullet glyph by `SuggestionRenderer`.
-    public let whySuggested: [String]
-
-    /// Lines that go under "Why this might be wrong" — active counter-
-    /// signals + template-known caveats. May be empty for a Strong
-    /// suggestion with no caveats; the renderer emits an explicit "no
-    /// known caveats" line in that case so absence is visible.
-    public let whyMightBeWrong: [String]
-
-    public init(whySuggested: [String], whyMightBeWrong: [String]) {
-        self.whySuggested = whySuggested
-        self.whyMightBeWrong = whyMightBeWrong
     }
 }

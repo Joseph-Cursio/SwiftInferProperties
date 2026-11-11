@@ -309,7 +309,7 @@ not one cause.
 
 ### 6.1 `codable-round-trip` is missing from the equatable gate — 6 rows
 
-`VerifyCommand+TemplateDispatch.swift:367`:
+`SwiftInferCommand.Verify+TemplateDispatch.swift:367`:
 
 ```swift
 static let equalityShapedTemplates: Set<String> = ["inverse-pair", "identity-element"]

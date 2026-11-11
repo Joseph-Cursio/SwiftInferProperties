@@ -39,8 +39,8 @@ struct BulkIncrementalTemplateTests {
     }
 
     private func decl(
-        _ name: String = "RangeSet",
-        inits: [[String]]
+        inits: [[String]],
+        named name: String = "RangeSet"
     ) -> TypeDecl {
         TypeDecl(
             name: name,
@@ -69,7 +69,7 @@ struct BulkIncrementalTemplateTests {
         let shapes = BulkIncrementalPairing.candidates(
             in: [
                 inserter("insert", param: "Bound"),
-                inserter("insert", param: "Range<Bound>", label: "contentsOf")
+                inserter("insert", param: "Range<Bound>", label: "contentsOf"),
             ],
             typeDecls: [decl(inits: [[], ["[Range<Bound>]"]])]
         )
@@ -187,7 +187,7 @@ struct BulkIncrementalTemplateTests {
         func shape(carrier: String) -> BulkIncrementalPairing.BulkIncrementalShape? {
             BulkIncrementalPairing.candidates(
                 in: [inserter("insert", param: "Range<Bound>", label: "contentsOf", on: carrier)],
-                typeDecls: [decl(carrier, inits: [[], ["[Range<Bound>]"]])]
+                typeDecls: [decl(inits: [[], ["[Range<Bound>]"]], named: carrier)]
             ).first
         }
         guard let rangeSet = shape(carrier: "RangeSet"),

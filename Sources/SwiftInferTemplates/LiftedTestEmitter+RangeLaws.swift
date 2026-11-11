@@ -2,19 +2,19 @@ import SwiftInferCore
 
 /// The two range laws' stubs: a result inside its documented range (`DocumentedRangeTemplate`), and
 /// an empty range selecting nothing (`EmptyRangeTemplate`).
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// The documented-range arm. Shares the totality arm's call machinery — any arity, the receiver
     /// drawn first — and checks the result against the stated range as a `Double`, so one stub
     /// serves every numeric codomain and NaN and infinity fail it, which a comparison of the
     /// original type could let through.
-    public static func withinDocumentedRange(
+    static func withinDocumentedRange(
         callee: CalleeReference,
         range: DocumentedRange,
         seed: SamplingSeed.Value,
         generators: [String],
-        argumentTypes: [String] = [],
-        failureLabel: String
+        failureLabel: String,
+        argumentTypes: [String] = []
     ) -> String {
         let isTuple = generators.count > 1
         let bind = generators.isEmpty ? "_"
@@ -35,7 +35,7 @@ extension LiftedTestEmitter {
     }
 
     /// The empty-range arm: one bound drawn, passed as both ends.
-    public static func emptyRange(
+    static func emptyRange(
         callee: CalleeReference,
         bound: (typeName: String, generator: String),
         seed: SamplingSeed.Value

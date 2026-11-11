@@ -17,9 +17,9 @@ import Testing
 struct ArityFreeTotalityTests {
 
     private static func suggestion(
-        template: String = "predicate",
         displayName: String,
         signature: String,
+        template: String = "predicate",
         carrier: String? = nil,
         isInstanceMethod: Bool = false,
         isMutatingMethod: Bool = false
@@ -34,7 +34,7 @@ struct ArityFreeTotalityTests {
                     isInstanceMethod: isInstanceMethod,
                     isMutatingMethod: isMutatingMethod,
                     qualifiedTypeName: carrier
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
             generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -96,9 +96,9 @@ struct ArityFreeTotalityTests {
     /// exactly as the unary emitter always rendered it.
     @Test func aUnaryStaticSubjectIsUnchanged() throws {
         let suggestion = Self.suggestion(
-            template: "input-totality",
             displayName: "parse(_:)",
             signature: "(String) -> [WikilinkRef]",
+            template: "input-totality",
             carrier: "WikilinkParser"
         )
         let expected = LiftedTestEmitter.total(
@@ -187,7 +187,7 @@ struct ArityFreeTotalityTests {
         let subjects = [
             Self.suggestion(displayName: "a(_:)", signature: "(Int) -> Bool", carrier: "T", isInstanceMethod: true),
             Self.suggestion(displayName: "b(_:_:_:)", signature: "(Int, Int, Int) -> Bool", carrier: "T"),
-            Self.suggestion(template: "input-totality", displayName: "c(_:)", signature: "(Data) -> X", carrier: "T")
+            Self.suggestion(displayName: "c(_:)", signature: "(Data) -> X", template: "input-totality", carrier: "T"),
         ]
         for subject in subjects {
             let reason = StubApplicationArity.declineReason(for: subject) ?? ""

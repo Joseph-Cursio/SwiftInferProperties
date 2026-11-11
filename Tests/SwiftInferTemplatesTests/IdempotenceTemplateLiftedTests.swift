@@ -60,34 +60,34 @@ struct IdempotenceTemplateLiftedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 
     private func liftedNoParam(
         _ name: String = "removeAll",
         carrier: String = "Bag"
-    ) -> LiftedTransformation {
+    ) throws -> LiftedTransformation {
         let resolver = valueSemanticResolver(carrier: carrier)
-        return LiftedTransformation.lift(
+        return try #require(LiftedTransformation.lift(
             summary(name, containingType: carrier),
             carrierKindResolver: resolver
-        )!
+        ))
     }
 
     private func liftedParamMatchesCarrier(
         _ name: String = "formUnion",
         carrier: String = "Bag"
-    ) -> LiftedTransformation {
+    ) throws -> LiftedTransformation {
         let resolver = valueSemanticResolver(carrier: carrier)
-        return LiftedTransformation.lift(
+        return try #require(LiftedTransformation.lift(
             summary(
                 name,
                 params: [ParamSpec(nil, carrier)],
                 containingType: carrier
             ),
             carrierKindResolver: resolver
-        )!
+        ))
     }
 
     // MARK: - Admission shapes
@@ -119,19 +119,19 @@ struct IdempotenceTemplateLiftedTests {
     }
 
     @Test("Single param with type ≠ carrier is NOT an idempotence candidate")
-    func paramNotMatchingCarrierRejected() {
+    func paramNotMatchingCarrierRejected() throws {
         // `mutating func increment(by: Int)` on `struct Counter` — Int ≠
         // Counter. Idempotence on this would be `op'(op'(s, x), x) == op'(s, x)`
         // which is false (doubles). V1.19.C handles via CompositionTemplate.
         let resolver = valueSemanticResolver(carrier: "Counter")
-        let lifted = LiftedTransformation.lift(
+        let lifted = try #require(LiftedTransformation.lift(
             summary(
                 "increment",
                 params: [ParamSpec("by", "Int")],
                 containingType: "Counter"
             ),
             carrierKindResolver: resolver
-        )!
+        ))
         #expect(IdempotenceTemplate.suggest(
             forLifted: lifted,
             carrierKindResolver: resolver
@@ -173,18 +173,18 @@ struct IdempotenceTemplateLiftedTests {
     }
 
     @Test("Two-param mutating method is NOT an idempotence candidate")
-    func twoParamRejected() {
+    func twoParamRejected() throws {
         let resolver = valueSemanticResolver()
-        let lifted = LiftedTransformation.lift(
+        let lifted = try #require(LiftedTransformation.lift(
             summary(
                 "merge",
                 params: [
                     ParamSpec(nil, "Bag"),
-                    ParamSpec("with", "Int")
+                    ParamSpec("with", "Int"),
                 ]
             ),
             carrierKindResolver: resolver
-        )!
+        ))
         #expect(IdempotenceTemplate.suggest(
             forLifted: lifted,
             carrierKindResolver: resolver
@@ -192,15 +192,15 @@ struct IdempotenceTemplateLiftedTests {
     }
 
     @Test("Inout param disqualifies (aliasing breaks the lift's value-semantic guarantee)")
-    func inoutParamRejected() {
+    func inoutParamRejected() throws {
         let resolver = valueSemanticResolver()
-        let lifted = LiftedTransformation.lift(
+        let lifted = try #require(LiftedTransformation.lift(
             summary(
                 "consume",
                 params: [ParamSpec(nil, "Bag", isInout: true)]
             ),
             carrierKindResolver: resolver
-        )!
+        ))
         #expect(IdempotenceTemplate.suggest(
             forLifted: lifted,
             carrierKindResolver: resolver

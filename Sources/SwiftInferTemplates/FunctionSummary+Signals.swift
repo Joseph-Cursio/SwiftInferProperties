@@ -10,7 +10,7 @@ extension FunctionSummary {
     /// single-member forms).
     ///
     /// It used to gate on `bodySignals.hasNonDeterministicCall` while the pair forms gated on the
-    /// list behind it; `NonDeterministicVeto.swift` records why that mattered and why every reader
+    /// list behind it; `FunctionSummary+NonDeterministicVeto.swift` records why that mattered and why every reader
     /// now goes through the list.
     var nonDeterministicVetoSignal: Signal? {
         Signal.nonDeterministicVeto(acrossBodiesOf: [self]) {

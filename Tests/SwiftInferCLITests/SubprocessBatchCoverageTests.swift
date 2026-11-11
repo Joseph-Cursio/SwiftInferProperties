@@ -94,7 +94,7 @@ struct SubprocessBatchCoverageTests {
             "shells out to `git ls-files` / `git rev-parse` on paths already in this "
             + "checkout — milliseconds, no network, no `.build`. The point of the suite "
             + "is that the tracked-file warning fires on a REAL tracked file, so a fake "
-            + "would test the fake."
+            + "would test the fake.",
     ]
 
     @Test("every .subprocess suite is matched by SUBPROCESS_RE")
@@ -211,24 +211,34 @@ struct SubprocessBatchCoverageTests {
     /// pair in one shot keeps multi-line `@Suite(…)` spellings readable.
     static func suiteTypeNames(in text: String, taggedSubprocessOnly: Bool) -> [String] {
         var names: [String] = []
-        var pendingIsSubprocess: Bool?
+        var pending = PendingSuite.noAttribute
         for rawLine in text.components(separatedBy: "\n") {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
             if line.hasPrefix("@Suite") {
-                pendingIsSubprocess = line.contains(".tags(.subprocess)")
+                pending = line.contains(".tags(.subprocess)") ? .subprocess : .untagged
                 continue
             }
-            guard let isSubprocess = pendingIsSubprocess else { continue }
+            guard pending != .noAttribute else { continue }
             // Tolerates a trailing tag line between the attribute and the struct.
             if line.contains(".tags(.subprocess)") {
-                pendingIsSubprocess = true
+                pending = .subprocess
                 continue
             }
             guard let name = structName(in: line) else { continue }
-            if !taggedSubprocessOnly || isSubprocess { names.append(name) }
-            pendingIsSubprocess = nil
+            if !taggedSubprocessOnly || pending == .subprocess { names.append(name) }
+            pending = .noAttribute
         }
         return names
+    }
+
+    /// The `@Suite` attribute `suiteTypeNames` has read and not yet matched to its declaration.
+    enum PendingSuite {
+        /// None is waiting.
+        case noAttribute
+        /// One tagged `.subprocess` is waiting.
+        case subprocess
+        /// One without that tag is waiting.
+        case untagged
     }
 
     static func structName(in line: String) -> String? {

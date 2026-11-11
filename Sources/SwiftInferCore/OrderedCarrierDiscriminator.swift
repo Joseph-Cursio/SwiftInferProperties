@@ -68,7 +68,7 @@ public enum OrderedCarrierDiscriminator {
     public static let orderSignals: Set<String> = [
         "RandomAccessCollection",
         "MutableCollection",
-        "RangeReplaceableCollection"
+        "RangeReplaceableCollection",
     ]
 
     /// The type's own statement that a bare sequence of elements is enough to build it, and

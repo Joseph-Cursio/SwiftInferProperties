@@ -177,7 +177,7 @@ struct InverseElementPairingTests {
             name: name,
             parameters: [
                 Parameter(label: nil, internalName: "lhs", typeText: typeText, isInout: false),
-                Parameter(label: nil, internalName: "rhs", typeText: typeText, isInout: false)
+                Parameter(label: nil, internalName: "rhs", typeText: typeText, isInout: false),
             ],
             returnTypeText: typeText,
             isThrows: false,

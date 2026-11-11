@@ -2,6 +2,28 @@ import Foundation
 import SwiftParser
 import SwiftSyntax
 
+/// V2.0 M4.C — extracts Idempotence witnesses from one enum's
+/// member block. Pure; testable in isolation.
+enum IdempotenceCaseExtractor {
+
+    /// Iterate `EnumCaseDeclSyntax` members, route each case name
+    /// through `IdempotenceWitnessDetector.classify`. Multi-element
+    /// cases (`case foo, bar`) produce one witness per element.
+    static func extract(from memberBlock: MemberBlockSyntax) -> [IdempotenceWitness] {
+        var witnesses: [IdempotenceWitness] = []
+        for member in memberBlock.members {
+            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
+            for element in caseDecl.elements {
+                let name = element.name.text
+                if let kind = IdempotenceWitnessDetector.classify(name) {
+                    witnesses.append(IdempotenceWitness(actionCaseName: name, matchKind: kind))
+                }
+            }
+        }
+        return witnesses
+    }
+}
+
 /// V2.0 M4.C — SwiftSyntax pass detecting Idempotence witnesses
 /// (Action enum cases whose name suggests applying-twice equals
 /// applying-once) inside a named Action enum.
@@ -57,7 +79,7 @@ public enum IdempotenceWitnessDetector {
     static let exactNames: Set<String> = [
         "refresh", "reset", "clear", "dismiss", "cancel", "close", "hide",
         "select",
-        "task", "delegate", "binding"
+        "task", "delegate", "binding",
     ]
 
     /// Prefix-match names. The case identifier must start with one
@@ -169,27 +191,5 @@ public enum IdempotenceWitnessDetector {
             let suffix = typeStack.suffix(targetComponents.count)
             return Array(suffix) == targetComponents
         }
-    }
-}
-
-/// V2.0 M4.C — extracts Idempotence witnesses from one enum's
-/// member block. Pure; testable in isolation.
-enum IdempotenceCaseExtractor {
-
-    /// Iterate `EnumCaseDeclSyntax` members, route each case name
-    /// through `IdempotenceWitnessDetector.classify`. Multi-element
-    /// cases (`case foo, bar`) produce one witness per element.
-    static func extract(from memberBlock: MemberBlockSyntax) -> [IdempotenceWitness] {
-        var witnesses: [IdempotenceWitness] = []
-        for member in memberBlock.members {
-            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
-            for element in caseDecl.elements {
-                let name = element.name.text
-                if let kind = IdempotenceWitnessDetector.classify(name) {
-                    witnesses.append(IdempotenceWitness(actionCaseName: name, matchKind: kind))
-                }
-            }
-        }
-        return witnesses
     }
 }

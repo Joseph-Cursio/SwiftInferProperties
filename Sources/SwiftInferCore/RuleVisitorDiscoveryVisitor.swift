@@ -1,5 +1,26 @@
 import SwiftSyntax
 
+// MARK: - Per-type accumulator
+
+/// Mutable per-type info gathered across the class declaration + all its
+/// extensions. `declLocation` / `inheritedTypes` come only from the class
+/// decl; `visitedNodeTypes` + `emittedRuleNames` merge from every source.
+/// A type is a candidate iff it has a `declLocation` (it's a class) AND a
+/// non-empty `visitedNodeTypes` (it overrides ≥1 `visit(_:)`).
+struct RawVisitorInfo {
+    var declLocation: SourceLocation?
+    var inheritedTypes: [String] = []
+    var visitedNodeTypes: Set<String> = []
+    var emittedRuleNames: Set<String> = []
+
+    mutating func merge(_ other: Self) {
+        declLocation = declLocation ?? other.declLocation
+        if inheritedTypes.isEmpty { inheritedTypes = other.inheritedTypes }
+        visitedNodeTypes.formUnion(other.visitedNodeTypes)
+        emittedRuleNames.formUnion(other.emittedRuleNames)
+    }
+}
+
 /// PROTOTYPE — single-pass walker collecting per-type lint-rule-visitor
 /// info for one source file. Tracks an enclosing-type stack so members in
 /// `class` / `extension` blocks attribute to the right type name (a
@@ -88,26 +109,5 @@ final class RuleVisitorDiscoveryVisitor: SyntaxVisitor {
             collected[typeName, default: RawVisitorInfo()].emittedRuleNames.insert(text)
         }
         return .visitChildren
-    }
-}
-
-// MARK: - Per-type accumulator
-
-/// Mutable per-type info gathered across the class declaration + all its
-/// extensions. `declLocation` / `inheritedTypes` come only from the class
-/// decl; `visitedNodeTypes` + `emittedRuleNames` merge from every source.
-/// A type is a candidate iff it has a `declLocation` (it's a class) AND a
-/// non-empty `visitedNodeTypes` (it overrides ≥1 `visit(_:)`).
-struct RawVisitorInfo {
-    var declLocation: SourceLocation?
-    var inheritedTypes: [String] = []
-    var visitedNodeTypes: Set<String> = []
-    var emittedRuleNames: Set<String> = []
-
-    mutating func merge(_ other: Self) {
-        declLocation = declLocation ?? other.declLocation
-        if inheritedTypes.isEmpty { inheritedTypes = other.inheritedTypes }
-        visitedNodeTypes.formUnion(other.visitedNodeTypes)
-        emittedRuleNames.formUnion(other.emittedRuleNames)
     }
 }

@@ -19,8 +19,8 @@ struct UnknownEffectCaveatTests {
     ) -> FunctionSummary {
         makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
             returnType: "String",
+            paramType: "String",
             containingType: "Fixture",
             declaredEffect: declaredEffect,
             declaresUnknownEffect: declaresUnknownEffect

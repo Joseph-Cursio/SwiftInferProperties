@@ -15,9 +15,10 @@ public enum DefensiveCopyDiscoverer {
     /// returning the class type is treated as its defensive copy.
     static let copyVerbs: Set<String> = [
         "copy", "copied", "clone", "cloned",
-        "duplicate", "duplicated", "mutableCopy", "deepCopy"
+        "duplicate", "duplicated", "mutableCopy", "deepCopy",
     ]
 
+    /// Classes in the corpus that declare a copy method, as defensive-copy candidates.
     public static func discover(
         typeDecls: [TypeDecl],
         functions: [FunctionSummary]

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.46.B — resolves the verifier call expression for an associativity

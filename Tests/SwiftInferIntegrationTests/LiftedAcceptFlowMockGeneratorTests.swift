@@ -1,9 +1,37 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
+
+// MARK: - Test doubles
+
+private struct SilentMockDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class SilentMockDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class RecordingMockOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
+private final class ScriptedMockPromptInput: PromptInput, @unchecked Sendable {
+    private var remaining: [String]
+
+    init(scriptedLines: [String]) {
+        self.remaining = scriptedLines
+    }
+    func readLine() -> String? {
+        guard !remaining.isEmpty else { return nil }
+        return remaining.removeFirst()
+    }
+}
 
 /// TestLifter M4.4 acceptance — accepting a lifted-promoted suggestion
 /// whose `generator.source == .inferredFromTests` writes a stub whose
@@ -30,8 +58,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         #expect(lifted.generator.source == .inferredFromTests)
@@ -102,8 +130,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "idempotence" })
         #expect(lifted.generator.source == .inferredFromTests)
@@ -142,8 +170,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "commutativity" })
         #expect(lifted.generator.source == .inferredFromTests)
@@ -158,8 +186,8 @@ struct LiftedAcceptFlowMockGeneratorTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentMockDiagnostics()
+            diagnostics: SilentMockDiagnostics(),
+            includePossible: true
         )
         let lifted = try #require(result.suggestions.first { $0.templateName == "round-trip" })
         let siteCount = try #require(lifted.mockGenerator?.siteCount)
@@ -228,36 +256,5 @@ struct LiftedAcceptFlowMockGeneratorTests {
             atomically: true,
             encoding: .utf8
         )
-    }
-}
-
-// MARK: - Test doubles
-
-private struct SilentMockDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class SilentMockDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class RecordingMockOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
-    }
-}
-
-private final class ScriptedMockPromptInput: PromptInput, @unchecked Sendable {
-    private var remaining: [String]
-
-    init(scriptedLines: [String]) {
-        self.remaining = scriptedLines
-    }
-    func readLine() -> String? {
-        guard !remaining.isEmpty else { return nil }
-        return remaining.removeFirst()
     }
 }

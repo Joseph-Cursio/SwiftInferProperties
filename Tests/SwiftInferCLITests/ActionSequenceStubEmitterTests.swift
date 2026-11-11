@@ -297,8 +297,8 @@ struct ActionSequenceStubEmitterTests {
         #expect(source.contains("Array(dropped.prefix($0))"))
         // Ensure ordering: dropFirst occurs in the source before
         // dropped.prefix.
-        let dropFirstIndex = source.range(of: "rawActions.dropFirst")!.lowerBound
-        let prefixIndex = source.range(of: "dropped.prefix")!.lowerBound
+        let dropFirstIndex = try #require(source.range(of: "rawActions.dropFirst")).lowerBound
+        let prefixIndex = try #require(source.range(of: "dropped.prefix")).lowerBound
         #expect(dropFirstIndex < prefixIndex)
     }
 

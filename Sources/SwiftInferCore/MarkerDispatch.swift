@@ -27,73 +27,6 @@ public struct MarkerRow: Sendable, Equatable {
     }
 }
 
-/// A `String -> E` function written as a keyword table (SwiftInferProperties#644):
-///
-/// ```swift
-/// let lower = ruleName.lowercased()
-/// if lower.contains("comment") || lower.contains("doc") { return .comments }
-/// if lower.contains("sort") || lower.contains("mark") { return .organization }
-/// return .idiomatic
-/// ```
-///
-/// The rows are in source order, which is precedence: a name matching two rows takes the first.
-public struct MarkerDispatch: Sendable, Equatable {
-    public let rows: [MarkerRow]
-    /// `true` when the chain tests a `lowercased()` binding, so case is part of the law.
-    public let isCaseInsensitive: Bool
-
-    public init(rows: [MarkerRow], isCaseInsensitive: Bool) {
-        self.rows = rows
-        self.isCaseInsensitive = isCaseInsensitive
-    }
-
-    /// The index of the row `name` dispatches to, read the way the chain reads it.
-    public func dispatchedRow(for name: String) -> Int? {
-        let text = isCaseInsensitive ? name.lowercased() : name
-        return rows.firstIndex { $0.test.matches(text, literal: $0.literal) }
-    }
-
-    /// Letters that appear in no literal, so an affix built from them cannot spell a marker or
-    /// complete one across the boundary. Lowercase, and checked against lowercased literals, so
-    /// their uppercase forms are neutral for a case-insensitive chain too.
-    public var neutralLetters: [Character] {
-        let used = Set(rows.flatMap { $0.literal.lowercased() })
-        return Array("qzjxkvwyfg").filter { !used.contains($0) }
-    }
-
-    /// The names a test can check, each with the case it must dispatch to, and the literals that
-    /// cannot be checked because an EARLIER row claims them.
-    ///
-    /// A row is checkable when its bare literal dispatches to it. That is also enough for every
-    /// affixed form: affix letters appear in no literal, so they can complete no earlier marker.
-    public func probes() -> (checkable: [(name: String, result: String)], shadowed: [String]) {
-        var checkable: [(name: String, result: String)] = []
-        var shadowed: [String] = []
-        let neutral = neutralLetters
-        let before = neutral.first.map { String($0) } ?? ""
-        let after = neutral.dropFirst().first.map { String($0) } ?? before
-        for (index, row) in rows.enumerated() {
-            guard dispatchedRow(for: row.literal) == index else {
-                shadowed.append(row.literal)
-                continue
-            }
-            var names = [row.literal]
-            let affixed: String
-            switch row.test {
-            case .contains: affixed = before + row.literal + after
-            case .hasPrefix: affixed = row.literal + after
-            case .hasSuffix: affixed = before + row.literal
-            }
-            if affixed != row.literal { names.append(affixed) }
-            if isCaseInsensitive { names.append(affixed.uppercased()) }
-            for name in names where !checkable.contains(where: { $0.name == name }) {
-                checkable.append((name, row.result))
-            }
-        }
-        return (checkable, shadowed)
-    }
-}
-
 /// `primary(for: x) ?? fallback(for: x)` — a lookup fronting a fallback. When the fallback is a
 /// dispatch chain, a test reaches it through this function and must skip names the lookup claims.
 public struct FallbackDelegation: Sendable, Equatable {
@@ -276,5 +209,72 @@ public enum MarkerDispatchReader {
             return nil
         }
         return (name, argument.label?.text)
+    }
+}
+
+/// A `String -> E` function written as a keyword table (SwiftInferProperties#644):
+///
+/// ```swift
+/// let lower = ruleName.lowercased()
+/// if lower.contains("comment") || lower.contains("doc") { return .comments }
+/// if lower.contains("sort") || lower.contains("mark") { return .organization }
+/// return .idiomatic
+/// ```
+///
+/// The rows are in source order, which is precedence: a name matching two rows takes the first.
+public struct MarkerDispatch: Sendable, Equatable {
+    public let rows: [MarkerRow]
+    /// `true` when the chain tests a `lowercased()` binding, so case is part of the law.
+    public let isCaseInsensitive: Bool
+
+    public init(rows: [MarkerRow], isCaseInsensitive: Bool) {
+        self.rows = rows
+        self.isCaseInsensitive = isCaseInsensitive
+    }
+
+    /// The index of the row `name` dispatches to, read the way the chain reads it.
+    public func dispatchedRow(for name: String) -> Int? {
+        let text = isCaseInsensitive ? name.lowercased() : name
+        return rows.firstIndex { $0.test.matches(text, literal: $0.literal) }
+    }
+
+    /// Letters that appear in no literal, so an affix built from them cannot spell a marker or
+    /// complete one across the boundary. Lowercase, and checked against lowercased literals, so
+    /// their uppercase forms are neutral for a case-insensitive chain too.
+    public var neutralLetters: [Character] {
+        let used = Set(rows.flatMap { $0.literal.lowercased() })
+        return Array("qzjxkvwyfg").filter { !used.contains($0) }
+    }
+
+    /// The names a test can check, each with the case it must dispatch to, and the literals that
+    /// cannot be checked because an EARLIER row claims them.
+    ///
+    /// A row is checkable when its bare literal dispatches to it. That is also enough for every
+    /// affixed form: affix letters appear in no literal, so they can complete no earlier marker.
+    public func probes() -> (checkable: [(name: String, result: String)], shadowed: [String]) {
+        var checkable: [(name: String, result: String)] = []
+        var shadowed: [String] = []
+        let neutral = neutralLetters
+        let before = neutral.first.map { String($0) } ?? ""
+        let after = neutral.dropFirst().first.map { String($0) } ?? before
+        for (index, row) in rows.enumerated() {
+            guard dispatchedRow(for: row.literal) == index else {
+                shadowed.append(row.literal)
+                continue
+            }
+            var names = [row.literal]
+            let affixed: String
+            switch row.test {
+            case .contains: affixed = before + row.literal + after
+            case .hasPrefix: affixed = row.literal + after
+            case .hasSuffix: affixed = before + row.literal
+            }
+            if affixed != row.literal { names.append(affixed) }
+            if isCaseInsensitive { names.append(affixed.uppercased()) }
+            for name in names where !checkable.contains(where: { $0.name == name }) {
+                checkable.append((name, row.result))
+            }
+        }
+        return (checkable, shadowed)
     }
 }

@@ -64,9 +64,10 @@ public enum InverseMutatorPairing {
         Rule(forward: "enter", backward: "exit", convention: .enterExit),
         Rule(forward: "descend", backward: "ascend", convention: .enterExit),
         Rule(forward: "select", backward: "deselect", convention: .enterExit),
-        Rule(forward: "add", backward: "remove", convention: .enterExit)
+        Rule(forward: "add", backward: "remove", convention: .enterExit),
     ]
 
+    /// Every inverse mutator pair the rules find among each type's mutators, in type-name order.
     public static func candidates(in summaries: [FunctionSummary]) -> [InverseMutatorPair] {
         var byType: [String: [FunctionSummary]] = [:]
         for summary in summaries where isMutator(summary) {

@@ -77,35 +77,35 @@ struct SubjectCallPlan: Equatable {
         if let reason = InteractiveTriage.determinismResultDeclineReason(for: evidence) {
             return .declined(reason)
         }
-        guard let callee = CalleeReference(evidence: evidence) else {
+        guard let reference = CalleeReference(evidence: evidence) else {
             return .declined(evidence.isMutatingMethod
                 ? "\(evidence.displayName) is a `mutating` method, so it cannot be called on a drawn "
                     + "receiver, which is immutable"
                 : "\(evidence.displayName) names no function a call can spell")
         }
-        if let reason = callShapeDeclineReason(callee: callee, evidence: evidence) {
+        if let reason = callShapeDeclineReason(callee: reference, evidence: evidence) {
             return .declined(reason)
         }
-        guard let argumentTypes = InteractiveTriage.arityFreeArgumentTypes(callee: callee, evidence: evidence) else {
+        guard let inputTypes = InteractiveTriage.arityFreeArgumentTypes(callee: reference, evidence: evidence) else {
             let parameters = InteractiveTriage.parameterTypes(from: evidence.signature)
-            return .declined("\(callee.displaySignature) records \(callee.argumentLabels.count) argument "
+            return .declined("\(reference.displaySignature) records \(reference.argumentLabels.count) argument "
                 + "label(s) and \(parameters.count) parameter type(s), so the call cannot be spelled "
                 + "reliably")
         }
         let effects = InteractiveTriage.determinismEffects(in: evidence.signature)
         let returned = InteractiveTriage.returnType(from: strippingEffects(evidence.signature))
-        guard let returnTypeText = returned, returnTypeText != "Void", returnTypeText != "()" else {
+        guard let returnedType = returned, returnedType != "Void", returnedType != "()" else {
             return .declined("\(evidence.displayName) returns no value to compare")
         }
-        if returnTypeText.contains("->") {
-            return .declined("\(evidence.displayName) returns a function (`\(returnTypeText)`), which `==` "
+        if returnedType.contains("->") {
+            return .declined("\(evidence.displayName) returns a function (`\(returnedType)`), which `==` "
                 + "cannot compare")
         }
         let owner = evidence.qualifiedTypeName
         return .plan(Self(
-            callee: callee,
-            argumentTypes: spelled(argumentTypes, callee: callee, owner: owner, universe: typeUniverse),
-            returnTypeText: returnTypeText,
+            callee: reference,
+            argumentTypes: spelled(inputTypes, callee: reference, owner: owner, universe: typeUniverse),
+            returnTypeText: returnedType,
             isAsync: effects.isAsync,
             isThrows: effects.isThrows
         ))

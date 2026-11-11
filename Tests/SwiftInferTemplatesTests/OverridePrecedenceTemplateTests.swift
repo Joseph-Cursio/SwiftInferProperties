@@ -39,7 +39,7 @@ struct OverridePrecedenceTemplateTests {
             "resolveRules",
             params: [
                 param("cliCategories", "cliCategories", "[PatternCategory]?"),
-                param("cliRuleIdentifiers", "cliRuleIdentifiers", "[RuleIdentifier]?")
+                param("cliRuleIdentifiers", "cliRuleIdentifiers", "[RuleIdentifier]?"),
             ],
             returns: "[RuleIdentifier]?"
         )

@@ -2,6 +2,110 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Rendering must not contradict scoring.
+///
+/// **The defect these guard shipped WITH the staleness gate and was caught by re-reading the
+/// output the next day.** `SuggestionRenderer.render` computes the displayed tier as
+/// `score.tier.promoted(byVerifyOutcome:)` — `.verified` is set by the surfacing pipeline, not
+/// derived from the score — and it was handed the RAW evidence map. So a row whose `+50` had
+/// been correctly withheld still printed `Verified`, immediately above its own caveat saying
+/// the evidence was not being applied. Measured: 4 such rows on `SwiftInferCore`.
+///
+/// The remedy is one rule in one place: `VerifyEvidenceScoring.applicable` filters the map,
+/// and every consumer inherits that decision.
+@Suite("Rendering uses only the evidence scoring accepted")
+struct ApplicableEvidenceTests {
+
+    private let identity = "AABBCCDDAABBCCDD"
+
+    private func evidence(fingerprint: String?) -> VerifyEvidence {
+        VerifyEvidence(
+            identityHash: identity,
+            template: "idempotence",
+            outcome: .measuredBothPass,
+            detail: "held",
+            capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
+            swiftInferVersion: "1.149.0",
+            subjectFingerprint: fingerprint
+        )
+    }
+
+    @Test("evidence measured on a different body is filtered out")
+    func staleEvidenceIsNotApplicable() {
+        let result = VerifyEvidenceScoring.applicable(
+            to: [],
+            evidenceByIdentity: [identity: evidence(fingerprint: "OLDBODY000000000")],
+            currentFingerprintByIdentity: [identity: "NEWBODY000000000"]
+        )
+        #expect(result.isEmpty, "a row the scorer withheld must not reach the renderer as Verified")
+    }
+
+    @Test("evidence with no fingerprint is filtered out")
+    func unfingerprintedEvidenceIsNotApplicable() {
+        let result = VerifyEvidenceScoring.applicable(
+            to: [],
+            evidenceByIdentity: [identity: evidence(fingerprint: nil)],
+            currentFingerprintByIdentity: [identity: "ANYBODY000000000"]
+        )
+        #expect(result.isEmpty)
+    }
+
+    /// **The control.** Filtering everything would make the renderer silent about every
+    /// verified law and look like a clean result.
+    @Test("evidence measured on the current body survives the filter")
+    func matchingEvidenceIsApplicable() {
+        let result = VerifyEvidenceScoring.applicable(
+            to: [],
+            evidenceByIdentity: [identity: evidence(fingerprint: "SAMEBODY00000000")],
+            currentFingerprintByIdentity: [identity: "SAMEBODY00000000"]
+        )
+        #expect(result.count == 1)
+        #expect(result[identity]?.outcome == .measuredBothPass)
+    }
+
+    /// `applicable` and `applied` must agree — the whole point is that scoring and rendering
+    /// cannot diverge. Asserted over both directions rather than assumed.
+    @Test("a row filtered from rendering is also withheld from scoring, and vice versa")
+    func filterAndScoringAgree() {
+        let suggestion = Suggestion(
+            templateName: "idempotence",
+            evidence: [
+                Evidence(
+                    displayName: "normalize(_:)",
+                    signature: "(String) -> String",
+                    location: SourceLocation(file: "S.swift", line: 1, column: 1)
+                ),
+            ],
+            score: Score(signals: [Signal(kind: .exactNameMatch, weight: 40, detail: "n")]),
+            generator: .m1Placeholder,
+            explainability: ExplainabilityBlock(whySuggested: ["n"], whyMightBeWrong: []),
+            identity: SuggestionIdentity(canonicalInput: "agree")
+        )
+        let key = suggestion.identity.normalized
+        let record = VerifyEvidence(
+            identityHash: key,
+            template: "idempotence",
+            outcome: .measuredBothPass,
+            detail: "held",
+            capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
+            swiftInferVersion: "1.149.0",
+            subjectFingerprint: "OLDBODY000000000"
+        )
+        let current = [key: "NEWBODY000000000"]
+
+        let filtered = VerifyEvidenceScoring.applicable(
+            to: [suggestion], evidenceByIdentity: [key: record], currentFingerprintByIdentity: current
+        )
+        let scored = VerifyEvidenceScoring.applied(
+            to: [suggestion], evidenceByIdentity: [key: record], currentFingerprintByIdentity: current
+        )[0]
+
+        #expect(filtered.isEmpty, "rendering must not see it")
+        #expect(scored.score.total == 40, "scoring must not count it")
+        #expect(scored.score.signals.last?.kind == .verifyEvidenceStale)
+    }
+}
+
 /// Verify evidence is only evidence about the code it was measured on.
 ///
 /// **The defect these guard, measured on this repo (road test §10.2).** `SuggestionIdentity`
@@ -190,7 +294,7 @@ struct VerifyEvidenceStalenessTests {
                     displayName: "strippingGenericParameters(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "CarrierKindResolver.swift", line: 224, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [
                 Signal(kind: .exactNameMatch, weight: weight, detail: "stripping")
@@ -202,109 +306,5 @@ struct VerifyEvidenceStalenessTests {
             ),
             identity: SuggestionIdentity(canonicalInput: "idempotence|(String) -> String")
         )
-    }
-}
-
-/// Rendering must not contradict scoring.
-///
-/// **The defect these guard shipped WITH the staleness gate and was caught by re-reading the
-/// output the next day.** `SuggestionRenderer.render` computes the displayed tier as
-/// `score.tier.promoted(byVerifyOutcome:)` — `.verified` is set by the surfacing pipeline, not
-/// derived from the score — and it was handed the RAW evidence map. So a row whose `+50` had
-/// been correctly withheld still printed `Verified`, immediately above its own caveat saying
-/// the evidence was not being applied. Measured: 4 such rows on `SwiftInferCore`.
-///
-/// The remedy is one rule in one place: `VerifyEvidenceScoring.applicable` filters the map,
-/// and every consumer inherits that decision.
-@Suite("Rendering uses only the evidence scoring accepted")
-struct ApplicableEvidenceTests {
-
-    private let identity = "AABBCCDDAABBCCDD"
-
-    private func evidence(fingerprint: String?) -> VerifyEvidence {
-        VerifyEvidence(
-            identityHash: identity,
-            template: "idempotence",
-            outcome: .measuredBothPass,
-            detail: "held",
-            capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
-            swiftInferVersion: "1.149.0",
-            subjectFingerprint: fingerprint
-        )
-    }
-
-    @Test("evidence measured on a different body is filtered out")
-    func staleEvidenceIsNotApplicable() {
-        let result = VerifyEvidenceScoring.applicable(
-            to: [],
-            evidenceByIdentity: [identity: evidence(fingerprint: "OLDBODY000000000")],
-            currentFingerprintByIdentity: [identity: "NEWBODY000000000"]
-        )
-        #expect(result.isEmpty, "a row the scorer withheld must not reach the renderer as Verified")
-    }
-
-    @Test("evidence with no fingerprint is filtered out")
-    func unfingerprintedEvidenceIsNotApplicable() {
-        let result = VerifyEvidenceScoring.applicable(
-            to: [],
-            evidenceByIdentity: [identity: evidence(fingerprint: nil)],
-            currentFingerprintByIdentity: [identity: "ANYBODY000000000"]
-        )
-        #expect(result.isEmpty)
-    }
-
-    /// **The control.** Filtering everything would make the renderer silent about every
-    /// verified law and look like a clean result.
-    @Test("evidence measured on the current body survives the filter")
-    func matchingEvidenceIsApplicable() {
-        let result = VerifyEvidenceScoring.applicable(
-            to: [],
-            evidenceByIdentity: [identity: evidence(fingerprint: "SAMEBODY00000000")],
-            currentFingerprintByIdentity: [identity: "SAMEBODY00000000"]
-        )
-        #expect(result.count == 1)
-        #expect(result[identity]?.outcome == .measuredBothPass)
-    }
-
-    /// `applicable` and `applied` must agree — the whole point is that scoring and rendering
-    /// cannot diverge. Asserted over both directions rather than assumed.
-    @Test("a row filtered from rendering is also withheld from scoring, and vice versa")
-    func filterAndScoringAgree() {
-        let suggestion = Suggestion(
-            templateName: "idempotence",
-            evidence: [
-                Evidence(
-                    displayName: "normalize(_:)",
-                    signature: "(String) -> String",
-                    location: SourceLocation(file: "S.swift", line: 1, column: 1)
-                )
-            ],
-            score: Score(signals: [Signal(kind: .exactNameMatch, weight: 40, detail: "n")]),
-            generator: .m1Placeholder,
-            explainability: ExplainabilityBlock(whySuggested: ["n"], whyMightBeWrong: []),
-            identity: SuggestionIdentity(canonicalInput: "agree")
-        )
-        let key = suggestion.identity.normalized
-        let record = VerifyEvidence(
-            identityHash: key,
-            template: "idempotence",
-            outcome: .measuredBothPass,
-            detail: "held",
-            capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
-            swiftInferVersion: "1.149.0",
-            subjectFingerprint: "OLDBODY000000000"
-        )
-        let current = [key: "NEWBODY000000000"]
-
-        let filtered = VerifyEvidenceScoring.applicable(
-            to: [suggestion], evidenceByIdentity: [key: record], currentFingerprintByIdentity: current
-        )
-        let scored = VerifyEvidenceScoring.applied(
-            to: [suggestion], evidenceByIdentity: [key: record], currentFingerprintByIdentity: current
-        )[0]
-
-        #expect(filtered.isEmpty, "rendering must not see it")
-        #expect(scored.score.total == 40, "scoring must not count it")
-        #expect(scored.score.signals.last?.kind == .verifyEvidenceStale)
     }
 }

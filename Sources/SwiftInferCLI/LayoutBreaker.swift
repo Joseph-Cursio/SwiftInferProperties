@@ -1,3 +1,41 @@
+/// A brace group's body ready to be broken: the closure's parameters, if it is a closure and has
+/// them — named for it when it used `$0`, which `shorthand_argument` refuses more than a few
+/// lines below the brace — and its statements.
+struct BraceBody {
+
+    let head: String
+    let statements: [[LayoutNode]]
+
+    init(prefix: [LayoutNode], children: [LayoutNode]) {
+        let isClosure = Self.isClosure(prefix: prefix)
+        let split = isClosure ? ClosureHead.split(children) : (head: "", body: children)
+        if isClosure, split.head.isEmpty, let named = ShorthandNames.naming(children) {
+            head = named.head
+            statements = named.body.split(on: ";").filter { !$0.isEmpty }
+        } else {
+            head = split.head
+            statements = split.body.split(on: ";").filter { !$0.isEmpty }
+        }
+    }
+
+    /// Whether the brace after `prefix` opens a closure rather than a statement's block — read
+    /// from the words before it, which for a block always include its keyword.
+    static func isClosure(prefix: [LayoutNode]) -> Bool {
+        let keywords: Set<Substring> = [
+            "if", "guard", "else", "for", "while", "switch", "do", "catch", "repeat", "defer", "func",
+            "init", "deinit", "get", "set", "willSet", "didSet", "struct", "class", "enum", "extension",
+            "protocol", "actor",
+        ]
+        let words = prefix.compactMap { node -> String? in
+            guard case .text(let text) = node else { return nil }
+            return text
+        }
+        .joined(separator: " ")
+        .split { !($0.isLetter || $0.isNumber || $0 == "_") }
+        return !words.contains(where: keywords.contains)
+    }
+}
+
 /// Breaks one flattened line of Swift into lines that fit `limit`, the way SwiftLint's default
 /// and commonly enabled rules want them: one argument or element per line with the closer back
 /// at the opening line's indentation (`closure_end_indentation`,
@@ -148,43 +186,5 @@ struct LayoutBreaker {
     static func holdsBrace(_ node: LayoutNode) -> Bool {
         guard case let .group(open, children, _) = node else { return false }
         return open == "{" || children.contains(where: holdsBrace)
-    }
-}
-
-/// A brace group's body ready to be broken: the closure's parameters, if it is a closure and has
-/// them — named for it when it used `$0`, which `shorthand_argument` refuses more than a few
-/// lines below the brace — and its statements.
-struct BraceBody {
-
-    let head: String
-    let statements: [[LayoutNode]]
-
-    init(prefix: [LayoutNode], children: [LayoutNode]) {
-        let isClosure = Self.isClosure(prefix: prefix)
-        let split = isClosure ? ClosureHead.split(children) : (head: "", body: children)
-        if isClosure, split.head.isEmpty, let named = ShorthandNames.naming(children) {
-            head = named.head
-            statements = named.body.split(on: ";").filter { !$0.isEmpty }
-        } else {
-            head = split.head
-            statements = split.body.split(on: ";").filter { !$0.isEmpty }
-        }
-    }
-
-    /// Whether the brace after `prefix` opens a closure rather than a statement's block — read
-    /// from the words before it, which for a block always include its keyword.
-    static func isClosure(prefix: [LayoutNode]) -> Bool {
-        let keywords: Set<Substring> = [
-            "if", "guard", "else", "for", "while", "switch", "do", "catch", "repeat", "defer", "func",
-            "init", "deinit", "get", "set", "willSet", "didSet", "struct", "class", "enum", "extension",
-            "protocol", "actor"
-        ]
-        let words = prefix.compactMap { node -> String? in
-            guard case .text(let text) = node else { return nil }
-            return text
-        }
-        .joined(separator: " ")
-        .split { !($0.isLetter || $0.isNumber || $0 == "_") }
-        return !words.contains(where: keywords.contains)
     }
 }

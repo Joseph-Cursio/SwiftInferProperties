@@ -43,7 +43,7 @@ public enum IdentityOperatorAlgebra {
         "add",
         "plus",
         "addingProduct",
-        "_relaxedAdd"
+        "_relaxedAdd",
     ]
 
     /// Operator names for which `T.one` is the algebraic identity.
@@ -59,7 +59,7 @@ public enum IdentityOperatorAlgebra {
         "*",
         "multiply",
         "times",
-        "_relaxedMul"
+        "_relaxedMul",
     ]
 
     /// Returns `true` when the `(identityName, opName)` combination is

@@ -18,13 +18,13 @@ struct VerifyHarnessTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: template,
-            typeName: "Complex<Double>",
             score: 50,
             tier: "Strong",
             primaryFunctionName: "exp(_:)",
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-11T00:00:00Z",
-            lastSeenAt: "2026-05-11T00:00:00Z"
+            lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: "Complex<Double>"
         )
     }
 
@@ -112,7 +112,7 @@ struct VerifyHarnessTests {
         let entries = [
             Self.entry("0xBC43359C0574816B"),
             Self.entry("0xBC43DEADBEEFCAFE"),
-            Self.entry("0xAA11223344556677")
+            Self.entry("0xAA11223344556677"),
         ]
         do {
             _ = try VerifyHarness.lookupSuggestion(

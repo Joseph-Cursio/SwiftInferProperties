@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V2.0 M5 — Cardinality interaction-template family. PRD §5.4.
@@ -53,7 +52,7 @@ public enum CardinalityInteractionTemplate: InteractionTemplateFamily {
                 + ", \(optionalCount) Optional "
                 + "presentation\(optionalCount == 1 ? "" : "s")): \(fieldList).",
             "Reducer-shaped signature (\(candidate.signatureShape.rawValue)) — "
-                + "verifier loop will assert ≤ 1 active at each action step."
+                + "verifier loop will assert ≤ 1 active at each action step.",
         ]
     }
 
@@ -72,7 +71,7 @@ public enum CardinalityInteractionTemplate: InteractionTemplateFamily {
             "Initial-state invariant may not hold if `State.init()` "
                 + "leaves multiple fields in their non-default active "
                 + "state.",
-            crossReferenceCaveat
+            crossReferenceCaveat,
         ]
     }
 

@@ -3,6 +3,88 @@ import Testing
 
 @testable import SwiftInferCLI
 
+/// Reading a module back OUT of a path must consult the manifest too.
+///
+/// Fixing only the forward direction (`--target` → directory) made native GRDB **worse** than
+/// the hand-staged arm: the scan reached all 307 picks and then every stub lost its
+/// `@testable import GRDB`, trading *no such directory* for *cannot find type 'SQL' in scope*.
+/// Proven went 5 → 2 and Inconclusive 24 → 39.
+///
+/// That is the day's recurring shape for the fifth time — a blocker that fires first hides
+/// every blocker behind it — and here the second blocker was created by fixing the first.
+@Suite("A module resolves back out of a path through the manifest")
+struct VerifyTargetInferenceLayoutTests {
+
+    private func makePackage(target: String, path: String?) throws -> URL {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("infer-\(UUID().uuidString)")
+        let clause = path.map { ", path: \"\($0)\"" } ?? ""
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try """
+        // swift-tools-version: 5.9
+        import PackageDescription
+        let package = Package(
+            name: "Subject",
+            targets: [.target(name: "\(target)"\(clause))]
+        )
+        """.write(
+            to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8
+        )
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent(path ?? "Sources/\(target)"),
+            withIntermediateDirectories: true
+        )
+        return root
+    }
+
+    @Test("a file under a custom target path resolves to that target")
+    func customPathResolvesBackToTheModule() throws {
+        // GRDB's shape: sources at `<root>/GRDB/`, not `<root>/Sources/GRDB/`.
+        let root = try makePackage(target: "GRDB", path: "GRDB")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let location = root.appendingPathComponent("GRDB/Core/Row.swift").path + ":42"
+        #expect(
+            VerifyTargetInference.module(forLocation: location, packageRoot: root) == "GRDB"
+        )
+    }
+
+    @Test("the conventional layout still resolves — the control")
+    func conventionalLayoutUnchanged() throws {
+        // Every package in every previous run has this shape. A regression here is a
+        // regression everywhere, so this arm matters more than the one above.
+        let root = try makePackage(target: "Core", path: nil)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let location = root.appendingPathComponent("Sources/Core/Thing.swift").path + ":7:3"
+        #expect(
+            VerifyTargetInference.module(forLocation: location, packageRoot: root) == "Core"
+        )
+    }
+
+    @Test("a file in no declared target resolves to nothing, not to a guess")
+    func fileOutsideAnyTargetIsNil() throws {
+        let root = try makePackage(target: "GRDB", path: "GRDB")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let location = root.appendingPathComponent("Scripts/gen.swift").path + ":1"
+        #expect(VerifyTargetInference.module(forLocation: location, packageRoot: root) == nil)
+    }
+
+    @Test("with no manifest the path-shape rule still applies")
+    func noManifestKeepsThePathShapeRule() throws {
+        // The fallback that keeps every pre-existing corpus working when `dump-package`
+        // cannot run at all.
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("infer-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent("Sources/Core"), withIntermediateDirectories: true
+        )
+        defer { try? FileManager.default.removeItem(at: root) }
+        let location = root.appendingPathComponent("Sources/Core/Thing.swift").path + ":9"
+        #expect(
+            VerifyTargetInference.module(forLocation: location, packageRoot: root) == "Core"
+        )
+    }
+}
+
 /// A target's sources are wherever its manifest says, not always `Sources/<target>`.
 ///
 /// **`Sources/<target>` is SwiftPM's default, not a rule**, and assuming it made whole
@@ -118,88 +200,6 @@ struct ProveThenShowSourcesReachTests {
         #expect(
             TargetIsolation.sourceDirectory(packageRoot: root, targetName: "Subject").path
                 .hasSuffix("Sources/Subject")
-        )
-    }
-}
-
-/// Reading a module back OUT of a path must consult the manifest too.
-///
-/// Fixing only the forward direction (`--target` → directory) made native GRDB **worse** than
-/// the hand-staged arm: the scan reached all 307 picks and then every stub lost its
-/// `@testable import GRDB`, trading *no such directory* for *cannot find type 'SQL' in scope*.
-/// Proven went 5 → 2 and Inconclusive 24 → 39.
-///
-/// That is the day's recurring shape for the fifth time — a blocker that fires first hides
-/// every blocker behind it — and here the second blocker was created by fixing the first.
-@Suite("A module resolves back out of a path through the manifest")
-struct VerifyTargetInferenceLayoutTests {
-
-    private func makePackage(target: String, path: String?) throws -> URL {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("infer-\(UUID().uuidString)")
-        let clause = path.map { ", path: \"\($0)\"" } ?? ""
-        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        try """
-        // swift-tools-version: 5.9
-        import PackageDescription
-        let package = Package(
-            name: "Subject",
-            targets: [.target(name: "\(target)"\(clause))]
-        )
-        """.write(
-            to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8
-        )
-        try FileManager.default.createDirectory(
-            at: root.appendingPathComponent(path ?? "Sources/\(target)"),
-            withIntermediateDirectories: true
-        )
-        return root
-    }
-
-    @Test("a file under a custom target path resolves to that target")
-    func customPathResolvesBackToTheModule() throws {
-        // GRDB's shape: sources at `<root>/GRDB/`, not `<root>/Sources/GRDB/`.
-        let root = try makePackage(target: "GRDB", path: "GRDB")
-        defer { try? FileManager.default.removeItem(at: root) }
-        let location = root.appendingPathComponent("GRDB/Core/Row.swift").path + ":42"
-        #expect(
-            VerifyTargetInference.module(forLocation: location, packageRoot: root) == "GRDB"
-        )
-    }
-
-    @Test("the conventional layout still resolves — the control")
-    func conventionalLayoutUnchanged() throws {
-        // Every package in every previous run has this shape. A regression here is a
-        // regression everywhere, so this arm matters more than the one above.
-        let root = try makePackage(target: "Core", path: nil)
-        defer { try? FileManager.default.removeItem(at: root) }
-        let location = root.appendingPathComponent("Sources/Core/Thing.swift").path + ":7:3"
-        #expect(
-            VerifyTargetInference.module(forLocation: location, packageRoot: root) == "Core"
-        )
-    }
-
-    @Test("a file in no declared target resolves to nothing, not to a guess")
-    func fileOutsideAnyTargetIsNil() throws {
-        let root = try makePackage(target: "GRDB", path: "GRDB")
-        defer { try? FileManager.default.removeItem(at: root) }
-        let location = root.appendingPathComponent("Scripts/gen.swift").path + ":1"
-        #expect(VerifyTargetInference.module(forLocation: location, packageRoot: root) == nil)
-    }
-
-    @Test("with no manifest the path-shape rule still applies")
-    func noManifestKeepsThePathShapeRule() throws {
-        // The fallback that keeps every pre-existing corpus working when `dump-package`
-        // cannot run at all.
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("infer-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(
-            at: root.appendingPathComponent("Sources/Core"), withIntermediateDirectories: true
-        )
-        defer { try? FileManager.default.removeItem(at: root) }
-        let location = root.appendingPathComponent("Sources/Core/Thing.swift").path + ":9"
-        #expect(
-            VerifyTargetInference.module(forLocation: location, packageRoot: root) == "Core"
         )
     }
 }

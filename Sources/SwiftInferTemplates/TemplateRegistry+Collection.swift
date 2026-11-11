@@ -1,5 +1,3 @@
-import Foundation
-import PropertyLawCore
 import SwiftInferCore
 
 /// V1.18.A — read-only resolver context threaded into per-summary and
@@ -231,16 +229,16 @@ extension TemplateRegistry {
     ) {
         if let suggestion = IdempotenceTemplate.suggest(
             forLifted: transformation,
+            carrierKindResolver: resolver,
             vocabulary: context.vocabulary,
-            inheritedTypesByName: context.inheritedTypesByName,
-            carrierKindResolver: resolver
+            inheritedTypesByName: context.inheritedTypesByName
         ) {
             collector.record(suggestion, generatorType: transformation.carrier)
         }
         if let suggestion = CompositionTemplate.suggest(
             forLifted: transformation,
-            vocabulary: context.vocabulary,
-            carrierKindResolver: resolver
+            carrierKindResolver: resolver,
+            vocabulary: context.vocabulary
         ) {
             collector.record(suggestion, generatorType: transformation.carrier)
         }

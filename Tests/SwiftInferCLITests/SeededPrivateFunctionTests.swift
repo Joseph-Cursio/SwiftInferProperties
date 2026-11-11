@@ -58,7 +58,7 @@ struct SeededPrivateFunctionTests {
         defer { try? FileManager.default.removeItem(at: directory) }
 
         let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(directory: directory, includePossible: false, output: recording)
+        try SwiftInferCommand.Discover.run(directory: directory, output: recording, includePossible: false)
 
         // Privacy no longer gates discovery — no seed required. The law appears with the access
         // caveat naming the refactor that would let a test run it.
@@ -81,8 +81,8 @@ struct SeededPrivateFunctionTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
 
         #expect(recording.text.contains("Template: predicate"))
@@ -111,9 +111,9 @@ struct SeededPrivateFunctionTests {
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -129,8 +129,8 @@ struct SeededPrivateFunctionTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
 
         // Stating the law without saying it cannot be run would be a different kind of lie. The
@@ -158,8 +158,8 @@ struct SeededPrivateFunctionTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
 
         // No manifest, and both private predicates appear — the seed no longer gates visibility.
@@ -204,15 +204,15 @@ struct SeededPrivateFunctionTests {
                 rule: "Pure Function Property-Test Candidate",
                 kind: .restrictedFunction,
                 restriction: .enclosingType
-            )
+            ),
         ])
         let recording = DPRecordingOutput()
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 
@@ -248,15 +248,15 @@ struct SeededPrivateFunctionTests {
                 rule: "Pure Function Property-Test Candidate",
                 kind: .restrictedFunction,
                 restriction: .declaration
-            )
+            ),
         ])
         let recording = DPRecordingOutput()
         let diagnostics = DPRecordingDiagnosticOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
             seedManifest: manifest,
-            output: recording,
             diagnostics: diagnostics
         )
 

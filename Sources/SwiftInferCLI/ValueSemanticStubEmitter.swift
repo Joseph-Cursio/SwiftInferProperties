@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// PROTOTYPE — emits a standalone verifier that checks a recognized
@@ -72,6 +71,7 @@ public enum ValueSemanticStubEmitter {
         )
     }
 
+    /// The standalone `ValueSemantic` copy-mutate-compare verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let cases = inputs.mutationMethods
             .map { "        case \($0)" }

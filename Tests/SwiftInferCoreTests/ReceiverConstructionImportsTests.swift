@@ -37,7 +37,7 @@ struct ReceiverConstructionImportsTests {
             @Test func other() {
                 _ = Budget(limit: 10)
             }
-            """
+            """,
         ], wanted: ["UnsafeMemoryAPIVisitor", "Budget"])
 
         let visitor = try #require(found["UnsafeMemoryAPIVisitor"])
@@ -45,7 +45,7 @@ struct ReceiverConstructionImportsTests {
             "import SwiftParser",
             "import SwiftProjectLintVisitors",
             "@testable import SwiftProjectLintRules",
-            "import Testing"
+            "import Testing",
         ])
         #expect(found["Budget"]?.imports == ["import Foundation"])
     }

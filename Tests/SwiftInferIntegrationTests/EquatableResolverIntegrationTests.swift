@@ -53,7 +53,7 @@ struct EquatableResolverIntegrationTests {
             struct Order {
                 let lines: Int
             }
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: directory) }
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
@@ -76,7 +76,7 @@ struct EquatableResolverIntegrationTests {
             """,
             "Foo+Equatable.swift": """
             extension Foo: Equatable {}
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: directory) }
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
@@ -97,7 +97,7 @@ struct EquatableResolverIntegrationTests {
                 let major: Int
                 static func < (lhs: Version, rhs: Version) -> Bool { lhs.major < rhs.major }
             }
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: directory) }
         let corpus = try FunctionScanner.scanCorpus(directory: directory)
@@ -118,7 +118,7 @@ struct EquatableResolverIntegrationTests {
                 let n: Int
             }
             extension Logger: Equatable {}
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: directory) }
         let corpus = try FunctionScanner.scanCorpus(directory: directory)

@@ -29,7 +29,7 @@ public enum MeasureTemplate {
     /// be negative), for which non-negativity would be a false law.
     public static let curatedVerbs: Set<String> = [
         "count", "size", "length", "cardinality", "magnitude",
-        "depth", "height", "width"
+        "depth", "height", "width",
     ]
 
     /// Curated suffixes, so `byteCount` / `treeDepth` / `viewWidth` fire.
@@ -41,10 +41,12 @@ public enum MeasureTemplate {
     /// can be violated. `UInt`-family returns are excluded (the type guarantees it).
     public static let signedIntegerCodomains: Set<String> = FixedWidthIntegerNames.signed
 
+    /// The `measure-non-negativity` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `measure-non-negativity` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "measure-non-negativity",
@@ -109,7 +111,7 @@ public enum MeasureTemplate {
                 weight: 15,
                 detail: "Curated non-negative-measure verb match: '\(summary.name)' — a cardinality "
                     + "or magnitude, so it owes `measure >= 0`"
-            )
+            ),
         ]
     }
 
@@ -133,7 +135,7 @@ public enum MeasureTemplate {
                 + "(empty / zero / reversed) on purpose, because that is the only place this fails.",
             "CONFIRM the measure is genuinely non-negative. `count` / `size` / `magnitude` are; a "
                 + "signed quantity that happens to be named like one (a `balance`, a `delta`) is not — "
-                + "those verbs are deliberately excluded, but a project may reuse a curated name."
+                + "those verbs are deliberately excluded, but a project may reuse a curated name.",
         ]
     }
 }

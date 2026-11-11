@@ -35,7 +35,7 @@ struct ConventionRoleDiscovererTests {
         // Genuine mutable State only — the two protocol deps are excluded.
         #expect(role.state == .storedFields([
             RoleStateField(name: "isBusy", typeText: "Bool", isMutable: true),
-            RoleStateField(name: "title", typeText: "String", isMutable: true)
+            RoleStateField(name: "title", typeText: "String", isMutable: true),
         ]))
 
         // Action alphabet — the private helper is not an action.

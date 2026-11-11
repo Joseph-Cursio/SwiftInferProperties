@@ -19,8 +19,8 @@ struct ReplayIdempotenceTemplateTests {
     /// shapes care about.
     private func makeReplaySummary(
         name: String,
-        parameters: [Parameter] = [],
         returnType: String?,
+        parameters: [Parameter] = [],
         isAsync: Bool = true,
         isThrows: Bool = true,
         isStatic: Bool = true,
@@ -70,8 +70,8 @@ struct ReplayIdempotenceTemplateTests {
         // Shape of AcronymService.notifyCache: annotated, no key-typed param here.
         let summary = makeReplaySummary(
             name: "notifyCache",
-            parameters: [Parameter(label: "acronym", internalName: "acronym", typeText: "Acronym", isInout: false)],
             returnType: nil,
+            parameters: [Parameter(label: "acronym", internalName: "acronym", typeText: "Acronym", isInout: false)],
             declaredEffect: .externallyIdempotent(keyParameter: "idempotencyKey")
         )
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
@@ -91,12 +91,12 @@ struct ReplayIdempotenceTemplateTests {
         // AND an idempotencyKey: IdempotencyKey parameter.
         let summary = makeReplaySummary(
             name: "download",
+            returnType: "OfflineAlbum",
             parameters: [
                 Parameter(label: "album", internalName: "album", typeText: "Album", isInout: false),
                 keyParam(),
-                Parameter(label: "in", internalName: "container", typeText: "ModelContainer", isInout: false)
+                Parameter(label: "in", internalName: "container", typeText: "ModelContainer", isInout: false),
             ],
-            returnType: "OfflineAlbum",
             declaredEffect: .externallyIdempotent(keyParameter: "idempotencyKey")
         )
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
@@ -111,11 +111,11 @@ struct ReplayIdempotenceTemplateTests {
     func keyParameterMatches() {
         let summary = makeReplaySummary(
             name: "chargeCard",
+            returnType: nil,
             parameters: [
                 Parameter(label: "amount", internalName: "amount", typeText: "Int", isInout: false),
-                keyParam()
-            ],
-            returnType: nil
+                keyParam(),
+            ]
         )
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
         #expect(suggestion != nil)
@@ -131,8 +131,8 @@ struct ReplayIdempotenceTemplateTests {
     func declaredNonIdempotentVetoes() {
         let summary = makeReplaySummary(
             name: "handle",
-            parameters: [keyParam()],
             returnType: nil,
+            parameters: [keyParam()],
             declaredEffect: .nonIdempotent
         )
         #expect(ReplayIdempotenceTemplate.suggest(for: summary) == nil)
@@ -144,8 +144,8 @@ struct ReplayIdempotenceTemplateTests {
         // any effectful function that isn't a replay handler). No gate, no proposal.
         let summary = makeReplaySummary(
             name: "handle",
-            parameters: [Parameter(label: nil, internalName: "order", typeText: "Order", isInout: false)],
-            returnType: "Bool"
+            returnType: "Bool",
+            parameters: [Parameter(label: nil, internalName: "order", typeText: "Order", isInout: false)]
         )
         #expect(ReplayIdempotenceTemplate.suggest(for: summary) == nil)
     }
@@ -158,8 +158,8 @@ struct ReplayIdempotenceTemplateTests {
         // but the walker found an early-return dedup gate.
         let summary = makeReplaySummary(
             name: "handle",
-            parameters: [Parameter(label: nil, internalName: "order", typeText: "Order", isInout: false)],
             returnType: "Bool",
+            parameters: [Parameter(label: nil, internalName: "order", typeText: "Order", isInout: false)],
             dedupGateShape: .earlyReturnDedup(keyRoot: "order")
         )
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)
@@ -174,8 +174,8 @@ struct ReplayIdempotenceTemplateTests {
     func gateAndKeyReachesLikely() {
         let summary = makeReplaySummary(
             name: "download",
-            parameters: [keyParam()],
             returnType: "Row",
+            parameters: [keyParam()],
             dedupGateShape: .fetchThenInsert
         )
         // 40 + 25 = 65 → .likely.
@@ -187,8 +187,8 @@ struct ReplayIdempotenceTemplateTests {
         // Shape of PricingCalculator.priceInCents — value idempotence's turf.
         let summary = makeReplaySummary(
             name: "priceInCents",
-            parameters: [Parameter(label: "kg", internalName: "kg", typeText: "Int", isInout: false)],
             returnType: "Int",
+            parameters: [Parameter(label: "kg", internalName: "kg", typeText: "Int", isInout: false)],
             isAsync: false,
             isThrows: false
         )
@@ -201,8 +201,8 @@ struct ReplayIdempotenceTemplateTests {
         // below the .possible floor (20) → suppressed → nil.
         let summary = makeReplaySummary(
             name: "enqueue",
-            parameters: [keyParam()],
             returnType: nil,
+            parameters: [keyParam()],
             bodySignals: BodySignals(
                 hasNonDeterministicCall: true,
                 hasSelfComposition: false,
@@ -220,8 +220,8 @@ struct ReplayIdempotenceTemplateTests {
         // IdempotencyKey — no gate, no key parameter, no annotation.
         let summary = makeReplaySummary(
             name: "makeChargeRequest",
-            parameters: [Parameter(label: "for", internalName: "event", typeText: "PaymentIntent", isInout: false)],
             returnType: "ChargeRequest",
+            parameters: [Parameter(label: "for", internalName: "event", typeText: "PaymentIntent", isInout: false)],
             isAsync: false,
             isThrows: false,
             buildsIdempotencyKey: true
@@ -258,8 +258,8 @@ struct ReplayIdempotenceTemplateTests {
         // annotation/key/gate. +40 → .likely alone (a guarantee, like a claim).
         let summary = makeReplaySummary(
             name: "record",
-            parameters: [Parameter(label: nil, internalName: "event", typeText: "Event", isInout: false)],
             returnType: nil,
+            parameters: [Parameter(label: nil, internalName: "event", typeText: "Event", isInout: false)],
             callsIdempotentWrite: true
         )
         let suggestion = ReplayIdempotenceTemplate.suggest(for: summary)

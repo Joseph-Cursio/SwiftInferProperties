@@ -85,7 +85,7 @@ extension LiftedTestEmitter {
             (
                 wide: "Gen<Float>.float(in: -1_000_000...1_000_000)",
                 dense: "Gen<Int>.int(in: 0...4).map { Float($0) }"
-            )
+            ),
         ]
     }()
 }

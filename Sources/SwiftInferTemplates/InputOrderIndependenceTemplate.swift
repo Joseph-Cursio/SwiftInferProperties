@@ -39,10 +39,12 @@ import SwiftInferCore
 /// and the fixed comparator disagreed on 0. Inserting in another order is what moves the ties.
 public enum InputOrderIndependenceTemplate {
 
+    /// The `input-order-independence` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `input-order-independence` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "input-order-independence",
@@ -113,7 +115,7 @@ public enum InputOrderIndependenceTemplate {
                 kind: .typeSymmetrySignature,
                 weight: 40,
                 detail: "the body sorts a dictionary's entries: \(subject) holds its key in `\(key)`; \(reach)"
-            )
+            ),
         ]
     }
 
@@ -127,7 +129,7 @@ public enum InputOrderIndependenceTemplate {
                 + "the key, and the order with it, as intended.",
             "A FAILURE NEEDS TWO ELEMENTS THE COMPARATOR CALLS TIED, so a generator that rarely "
                 + "draws equal sort keys rarely fails. Narrow the alphabet of whatever the sort keys "
-                + "are counted or summed from."
+                + "are counted or summed from.",
         ]
         if summary.bodySignals.sortedOutput?.comparatorReachesDictionaryKey == true {
             caveats.insert(

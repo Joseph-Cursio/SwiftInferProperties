@@ -46,8 +46,8 @@ struct ConservationSurveyCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "ConservationSurveyCorpus",
             familyFilter: "conservation",
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
 
         // Cycle 140 — widened to 4 reducers: InventoryReducer (lockstep) +
@@ -69,8 +69,8 @@ struct ConservationSurveyCorpusMeasuredTests {
         // suppressed (their predicates absent from the stream).
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "ConservationSurveyCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         #expect(discovered.contains("(Verified)"))
         #expect(!discovered.contains("state.badgeCount"))                    // Badge suppressed

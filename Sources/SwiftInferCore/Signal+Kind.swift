@@ -1,5 +1,3 @@
-import Foundation
-
 /// The catalogue of signal kinds the §4 scoring engine recognises.
 ///
 /// Extracted from `Signal.swift`, which crossed SwiftLint's 400-line file cap. The seam
@@ -7,9 +5,9 @@ import Foundation
 /// vocabulary* — every case carries the measurement or the corpus finding that justifies
 /// its weight — while `Signal.swift` keeps the value type, the veto sentinel, and the
 /// rendering. Additions land here and cost one case plus a row in the PRD weight table.
-extension Signal {
+public extension Signal {
 
-    public enum Kind: String, Sendable, Equatable, CaseIterable {
+    enum Kind: String, Sendable, Equatable, CaseIterable {
 
         // Positive
         case exactNameMatch

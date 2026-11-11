@@ -95,7 +95,7 @@ public enum InvariantPreservationTemplate {
             "Doesn't fire without explicit @CheckProperty(.preservesInvariant(_:)) "
                 + "annotation per the §5.2 caveat — the M5.2 macro is the opt-in path.",
             "if invariant(x) then invariant(f(x)) is a *one-way* implication; the test "
-                + "does not verify that f rejects invalid inputs."
+                + "does not verify that f rejects invalid inputs.",
         ]
     }
 
@@ -131,32 +131,6 @@ public enum InvariantPreservationTemplate {
             location: summary.location,
             genericParameters: summary.genericParameters
         )
-    }
-
-    private static func makeExplainability(
-        for summary: FunctionSummary,
-        keyPath: String,
-        signals: [Signal]
-    ) -> ExplainabilityBlock {
-        var whySuggested: [String] = []
-        let evidence = makeEvidence(summary, keyPath: keyPath)
-        whySuggested.append(
-            "\(evidence.displayName) \(evidence.signature) — \(evidence.location)"
-        )
-        for signal in signals {
-            whySuggested.append(signal.formattedLine)
-        }
-        let caveats: [String] = [
-            "Keypath \(keyPath) is opaque text — user-side compile error if it doesn't "
-                + "resolve against the parameter type. M7.2 does not validate keypaths at "
-                + "scan time per M7 plan open decision #5(a); SemanticIndex (PRD §20.1) "
-                + "lifts that to scan-time in v1.1+.",
-            "Doesn't fire without explicit @CheckProperty(.preservesInvariant(_:)) "
-                + "annotation per the §5.2 caveat — the M5.2 macro is the opt-in path.",
-            "if invariant(x) then invariant(f(x)) is a *one-way* implication; the test "
-                + "does not verify that f rejects invalid inputs."
-        ]
-        return ExplainabilityBlock(whySuggested: whySuggested, whyMightBeWrong: caveats)
     }
 
     // MARK: - Display helpers

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // V2.0 — `unknownActionIsNoOp` stub-emission helpers, lifted out of the main
@@ -18,7 +17,7 @@ extension ActionSequenceStubEmitter {
         guard inputs.invariant?.family == .unknownActionIsNoOp else { return [] }
         return [
             "struct \(unknownActionProbeTypeName): \(inputs.candidate.actionTypeName) {}",
-            ""
+            "",
         ]
     }
 

@@ -1,6 +1,4 @@
-import Foundation
 import SwiftInferCLI
-import SwiftInferCore
 import Testing
 
 /// V1.89 lint pass — `commutativity` + `associativity` arms of the

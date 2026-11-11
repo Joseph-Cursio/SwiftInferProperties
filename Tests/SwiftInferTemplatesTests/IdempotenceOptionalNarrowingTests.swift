@@ -12,8 +12,8 @@ struct IdempotenceOptionalNarrowingTests {
     func optionalNarrowingMatches() {
         let summary = makeIdempotenceSummary(
             name: "process",
-            paramType: "[String]?",
-            returnType: "[String]"
+            returnType: "[String]",
+            paramType: "[String]?"
         )
         let suggestion = IdempotenceTemplate.suggest(for: summary)
         #expect(suggestion?.score.total == 30)
@@ -24,8 +24,8 @@ struct IdempotenceOptionalNarrowingTests {
     func optionalDifferentBaseDoesNotMatch() {
         let summary = makeIdempotenceSummary(
             name: "process",
-            paramType: "Int?",
-            returnType: "String"
+            returnType: "String",
+            paramType: "Int?"
         )
         #expect(IdempotenceTemplate.suggest(for: summary) == nil)
     }

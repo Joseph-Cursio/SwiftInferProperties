@@ -1,9 +1,37 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
+
+// MARK: - Test doubles
+
+private struct SilentChainDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class SilentChainDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
+
+private final class RecordingChainOutput: DiscoverOutput, @unchecked Sendable {
+    private(set) var lines: [String] = []
+
+    func write(_ text: String) {
+        lines.append(text)
+    }
+}
+
+private final class ScriptedChainPromptInput: PromptInput, @unchecked Sendable {
+    private var remaining: [String]
+
+    init(scriptedLines: [String]) {
+        self.remaining = scriptedLines
+    }
+    func readLine() -> String? {
+        guard !remaining.isEmpty else { return nil }
+        return remaining.removeFirst()
+    }
+}
 
 /// TestLifter M16.3 — end-to-end integration test verifying that
 /// (a) a `validate(format(...))` corpus surfaces a `.advisory`-tier
@@ -24,8 +52,8 @@ struct ConsumerProducerChainRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentChainDiagnostics()
+            diagnostics: SilentChainDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(
             result.suggestions.first { $0.templateName == "consumer-producer-chain" }
@@ -75,8 +103,8 @@ struct ConsumerProducerChainRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentChainDiagnostics()
+            diagnostics: SilentChainDiagnostics(),
+            includePossible: true
         )
         let advisory = try #require(
             result.suggestions.first { $0.templateName == "consumer-producer-chain" }
@@ -114,8 +142,8 @@ struct ConsumerProducerChainRenderingTests {
 
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentChainDiagnostics()
+            diagnostics: SilentChainDiagnostics(),
+            includePossible: true
         )
         let chainAdvisory = result.suggestions.first { $0.templateName == "consumer-producer-chain" }
         #expect(chainAdvisory == nil, "M5 round-trip pair should suppress the M16 chain advisory")
@@ -276,36 +304,5 @@ struct ConsumerProducerChainRenderingTests {
             atomically: true,
             encoding: .utf8
         )
-    }
-}
-
-// MARK: - Test doubles
-
-private struct SilentChainDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class SilentChainDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
-}
-
-private final class RecordingChainOutput: DiscoverOutput, @unchecked Sendable {
-    private(set) var lines: [String] = []
-    var text: String { lines.joined(separator: "\n") }
-
-    func write(_ text: String) {
-        lines.append(text)
-    }
-}
-
-private final class ScriptedChainPromptInput: PromptInput, @unchecked Sendable {
-    private var remaining: [String]
-
-    init(scriptedLines: [String]) {
-        self.remaining = scriptedLines
-    }
-    func readLine() -> String? {
-        guard !remaining.isEmpty else { return nil }
-        return remaining.removeFirst()
     }
 }

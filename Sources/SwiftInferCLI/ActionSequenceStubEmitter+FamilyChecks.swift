@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 // V2.0 — `makePerStepCheck` / `makePostLoopCheck` / `makeIdempotenceCheck`
@@ -27,25 +26,25 @@ extension ActionSequenceStubEmitter {
         case .conservation:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"\(Self.invariantViolationMarker) Conservation invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Conservation invariant violated\")",
             ]
 
         case .cardinality:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"\(Self.invariantViolationMarker) Cardinality invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Cardinality invariant violated\")",
             ]
 
         case .referentialIntegrity:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"\(Self.invariantViolationMarker) Referential-integrity invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Referential-integrity invariant violated\")",
             ]
 
         case .biconditional:
             return [
                 "precondition(\(invariant.predicate), "
-                    + "\"\(Self.invariantViolationMarker) Biconditional invariant violated\")"
+                    + "\"\(Self.invariantViolationMarker) Biconditional invariant violated\")",
             ]
 
         // Idempotence and unknown-action-is-no-op are single-witness post-loop
@@ -59,7 +58,7 @@ extension ActionSequenceStubEmitter {
         case .outputDeterminism:
             return [
                 "precondition(false, \"output-determinism uses a dedicated "
-                    + "recording-fake verifier, not the action-sequence emitter\")"
+                    + "recording-fake verifier, not the action-sequence emitter\")",
             ]
 
         // Determinism is a per-step check, not a single-witness post-loop one:
@@ -160,7 +159,7 @@ extension ActionSequenceStubEmitter {
             return [
                 "let once = \(awaitPrefix)\(reducerCall)(state, \(actionExpr)).model ?? state",
                 "let twice = \(awaitPrefix)\(reducerCall)(once, \(actionExpr)).model ?? once",
-                assertion
+                assertion,
             ]
         }
         // Cycle 122 (Phase A) — `.tca` double-applies the witness through
@@ -171,16 +170,16 @@ extension ActionSequenceStubEmitter {
                 "_ = reducer.reduce(into: &once, action: \(actionExpr))",
                 "var twice = once",
                 "_ = reducer.reduce(into: &twice, action: \(actionExpr))",
-                assertion
+                assertion,
             ]
         }
         return idempotenceShapeCheck(
             actionExpr: actionExpr,
             shape: shape,
             reducerCall: reducerCall,
-            actionFirst: actionFirst,
             awaitPrefix: awaitPrefix,
-            assertion: assertion
+            assertion: assertion,
+            actionFirst: actionFirst
         )
     }
 
@@ -191,9 +190,9 @@ extension ActionSequenceStubEmitter {
         actionExpr: String,
         shape: ReducerSignatureShape,
         reducerCall: String,
-        actionFirst: Bool = false,
         awaitPrefix: String,
-        assertion: String
+        assertion: String,
+        actionFirst: Bool = false
     ) -> [String] {
         switch shape {
         case .stateActionReturnsState:
@@ -202,7 +201,7 @@ extension ActionSequenceStubEmitter {
                     + "(\(orderedArgs("state", actionExpr, actionFirst: actionFirst)))",
                 "let twice = \(awaitPrefix)\(reducerCall)"
                     + "(\(orderedArgs("once", actionExpr, actionFirst: actionFirst)))",
-                assertion
+                assertion,
             ]
 
         case .inoutStateActionReturnsVoid:
@@ -211,14 +210,14 @@ extension ActionSequenceStubEmitter {
                 "\(awaitPrefix)\(reducerCall)(&once, \(actionExpr))",
                 "var twice = once",
                 "\(awaitPrefix)\(reducerCall)(&twice, \(actionExpr))",
-                assertion
+                assertion,
             ]
 
         case .stateActionReturnsStateAndEffect:
             return [
                 "let (once, _) = \(awaitPrefix)\(reducerCall)(state, \(actionExpr))",
                 "let (twice, _) = \(awaitPrefix)\(reducerCall)(once, \(actionExpr))",
-                assertion
+                assertion,
             ]
 
         case .inoutStateActionReturnsEffect:
@@ -227,7 +226,7 @@ extension ActionSequenceStubEmitter {
                 "_ = \(awaitPrefix)\(reducerCall)(&once, \(actionExpr))",
                 "var twice = once",
                 "_ = \(awaitPrefix)\(reducerCall)(&twice, \(actionExpr))",
-                assertion
+                assertion,
             ]
         }
     }
@@ -257,7 +256,7 @@ extension ActionSequenceStubEmitter {
             "    var detSecond = state",
             "    _ = reducer.reduce(into: &detSecond, action: action)",
             "    \(assertion)",
-            "}"
+            "}",
         ]
     }
 
@@ -286,7 +285,7 @@ extension ActionSequenceStubEmitter {
             return [
                 "let detFirst = \(awaitPrefix)\(reducerCall)(state, action).model ?? state",
                 "let detSecond = \(awaitPrefix)\(reducerCall)(state, action).model ?? state",
-                assertion
+                assertion,
             ]
         }
         if isTCA {
@@ -299,7 +298,7 @@ extension ActionSequenceStubEmitter {
                     + "(\(orderedArgs("state", "action", actionFirst: actionFirst)))",
                 "let detSecond = \(awaitPrefix)\(reducerCall)"
                     + "(\(orderedArgs("state", "action", actionFirst: actionFirst)))",
-                assertion
+                assertion,
             ]
 
         case .inoutStateActionReturnsVoid:
@@ -308,14 +307,14 @@ extension ActionSequenceStubEmitter {
                 "\(awaitPrefix)\(reducerCall)(&detFirst, action)",
                 "var detSecond = state",
                 "\(awaitPrefix)\(reducerCall)(&detSecond, action)",
-                assertion
+                assertion,
             ]
 
         case .stateActionReturnsStateAndEffect:
             return [
                 "let (detFirst, _) = \(awaitPrefix)\(reducerCall)(state, action)",
                 "let (detSecond, _) = \(awaitPrefix)\(reducerCall)(state, action)",
-                assertion
+                assertion,
             ]
 
         case .inoutStateActionReturnsEffect:
@@ -324,7 +323,7 @@ extension ActionSequenceStubEmitter {
                 "_ = \(awaitPrefix)\(reducerCall)(&detFirst, action)",
                 "var detSecond = state",
                 "_ = \(awaitPrefix)\(reducerCall)(&detSecond, action)",
-                assertion
+                assertion,
             ]
         }
     }
@@ -352,7 +351,7 @@ extension ActionSequenceStubEmitter {
         if isMobius {
             return [
                 "let afterProbe = \(awaitPrefix)\(reducerCall)(state, \(probe)).model ?? state",
-                assertion
+                assertion,
             ]
         }
         switch shape {
@@ -360,27 +359,27 @@ extension ActionSequenceStubEmitter {
             return [
                 "let afterProbe = \(awaitPrefix)\(reducerCall)"
                     + "(\(orderedArgs("state", probe, actionFirst: actionFirst)))",
-                assertion
+                assertion,
             ]
 
         case .inoutStateActionReturnsVoid:
             return [
                 "var afterProbe = state",
                 "\(awaitPrefix)\(reducerCall)(&afterProbe, \(probe))",
-                assertion
+                assertion,
             ]
 
         case .stateActionReturnsStateAndEffect:
             return [
                 "let (afterProbe, _) = \(awaitPrefix)\(reducerCall)(state, \(probe))",
-                assertion
+                assertion,
             ]
 
         case .inoutStateActionReturnsEffect:
             return [
                 "var afterProbe = state",
                 "_ = \(awaitPrefix)\(reducerCall)(&afterProbe, \(probe))",
-                assertion
+                assertion,
             ]
         }
     }

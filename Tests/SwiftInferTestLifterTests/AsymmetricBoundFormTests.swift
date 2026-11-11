@@ -2,11 +2,6 @@
 import SwiftSyntax
 import Testing
 
-private func detectAsymmetric(in source: String) -> [DetectedAsymmetricAssertion] {
-    let slice = SlicerTestHelper.sliceFirstBody(in: source)
-    return AsymmetricAssertionDetector.detect(in: slice)
-}
-
 /// Negative assertions written the way people actually write them: with intermediate `let`
 /// bindings instead of one nested expression.
 ///

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// The **partition / tiling** law: the parts must reconstitute the whole.
@@ -21,10 +20,12 @@ import SwiftInferCore
 /// clothes.
 public enum PartitionTemplate {
 
+    /// The `partition` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(for shape: PartitionShape) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `partition` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<PartitionShape> {
         Constraint<PartitionShape>(
             templateName: "partition",
@@ -129,7 +130,7 @@ public enum PartitionTemplate {
             totality,
             "The part count must be `ceil(whole / partSize)` — not `whole / partSize`, which silently "
                 + "drops a trailing partial part, and not `whole / partSize + 1`, which invents an "
-                + "empty one when the division is exact."
+                + "empty one when the division is exact.",
         ]
 
         if shape.progress != nil {

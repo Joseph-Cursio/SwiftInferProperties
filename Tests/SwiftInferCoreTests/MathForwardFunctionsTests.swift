@@ -65,7 +65,7 @@ struct MathForwardFunctionsTests {
             ("tanh", "atanh"),
             ("cos", "acos"),
             ("sin", "asin"),
-            ("tan", "atan")
+            ("tan", "atan"),
         ]
         for (forward, inverse) in anchors {
             #expect(

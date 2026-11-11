@@ -17,11 +17,11 @@ struct ViewModelActionEnumEmitterTests {
         ViewModelAction(
             name: name,
             parameterTypes: parameters.map(\.typeText),
-            firstParameterLabel: parameters.first?.label,
-            parameters: parameters,
             isAsync: isAsync,
             isThrows: isThrows,
-            mutatesStateDirectly: true
+            mutatesStateDirectly: true,
+            firstParameterLabel: parameters.first?.label,
+            parameters: parameters
         )
     }
 
@@ -34,8 +34,8 @@ struct ViewModelActionEnumEmitterTests {
                 Self.action("clear"),
                 Self.action("rename", [
                     .init(label: "id", typeText: "UUID"),
-                    .init(label: "to", typeText: "String")
-                ])
+                    .init(label: "to", typeText: "String"),
+                ]),
             ]
         )
 
@@ -78,13 +78,13 @@ struct ViewModelActionEnumEmitterTests {
             actions: [
                 Self.action("reset"),
                 Self.action("load", isAsync: true),
-                Self.action("save", isThrows: true)
+                Self.action("save", isThrows: true),
             ]
         )
         #expect(result.lifted.map(\.caseName) == ["reset"])
         #expect(result.skipped == [
             .init(action: "load", reason: .asyncMethod),
-            .init(action: "save", reason: .throwingMethod)
+            .init(action: "save", reason: .throwingMethod),
         ])
         #expect(!result.source.contains("case load"))
         #expect(!result.source.contains("case save"))
@@ -96,7 +96,7 @@ struct ViewModelActionEnumEmitterTests {
             typeName: "PickerModel",
             actions: [
                 Self.action("select", [.init(label: nil, typeText: "UUID")]),
-                Self.action("select", [.init(label: "all", typeText: "Bool")])
+                Self.action("select", [.init(label: "all", typeText: "Bool")]),
             ]
         )
         // Distinct case names…

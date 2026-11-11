@@ -76,7 +76,7 @@ struct PurityHigherOrderCensusMeasuredTests {
         ("closure through a local let",
          "func f(_ xs: [Int]) -> [Int] { let g: (Int) -> Int = { $0 }; return xs.map(g) }"),
         ("nested named function", "func f(_ xs: [Int]) -> [Int] { func g(_ i: Int) -> Int { i }; return xs.map(g) }"),
-        ("IMPURE closure literal", "func f(_ xs: [Int]) -> [Int] { xs.map { print($0); return $0 } }")
+        ("IMPURE closure literal", "func f(_ xs: [Int]) -> [Int] { xs.map { print($0); return $0 } }"),
     ]
 
     static func verdict(ofFirstFunctionIn source: String) -> PurityVerdict? {
@@ -107,11 +107,11 @@ struct PurityHigherOrderCensusMeasuredTests {
     /// wrong is which way the analyzer currently errs.
     @Test("a function-typed parameter does not qualify the verdict at all")
     func aFunctionTypedParameterIsInvisible() {
-        let conditional = "func f(_ xs: [Int], _ t: (Int) -> Int) -> [Int] { xs.map(t) }"
+        let conditionalSource = "func f(_ xs: [Int], _ t: (Int) -> Int) -> [Int] { xs.map(t) }"
         let unconditional = "func f(_ xs: [Int]) -> [Int] { xs.map { $0 } }"
-        #expect(Self.verdict(ofFirstFunctionIn: conditional) == .pure)
+        #expect(Self.verdict(ofFirstFunctionIn: conditionalSource) == .pure)
         #expect(
-            Self.verdict(ofFirstFunctionIn: conditional) == Self.verdict(ofFirstFunctionIn: unconditional),
+            Self.verdict(ofFirstFunctionIn: conditionalSource) == Self.verdict(ofFirstFunctionIn: unconditional),
             "the conditional and unconditional forms are indistinguishable in the verdict"
         )
     }

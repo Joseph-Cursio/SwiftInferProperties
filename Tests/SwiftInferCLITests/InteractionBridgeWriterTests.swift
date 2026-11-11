@@ -10,7 +10,7 @@ import Testing
 @Suite("InteractionBridgeWriter — V2.0 M9 conformance-stub emission")
 struct InteractionBridgeWriterTests {
 
-    private let now = ISO8601DateFormatter().date(from: "2026-05-15T12:00:00Z")!
+    private let now = Date(timeIntervalSince1970: 1_778_846_400) // 2026-05-15T12:00:00Z
 
     private func suggestion(
         family: InteractionInvariantFamily,
@@ -56,7 +56,7 @@ struct InteractionBridgeWriterTests {
         let (target, peer) = bridge(with: [
             suggestion(family: .cardinality, predicate: "state.isShowingSheet ? 1 : 0 <= 1"),
             suggestion(family: .conservation, predicate: "state.count == state.items.count"),
-            suggestion(family: .biconditional, predicate: "state.isLoading == (state.activeTask != nil)")
+            suggestion(family: .biconditional, predicate: "state.isLoading == (state.activeTask != nil)"),
         ])
         let source = InteractionBridgeWriter.emit(bridge: target, peer: peer)
         let firstLine = source.split(separator: "\n").first.map(String.init) ?? ""
@@ -68,7 +68,7 @@ struct InteractionBridgeWriterTests {
         let (target, peer) = bridge(with: [
             suggestion(family: .cardinality, predicate: "p1"),
             suggestion(family: .conservation, predicate: "p2"),
-            suggestion(family: .biconditional, predicate: "p3")
+            suggestion(family: .biconditional, predicate: "p3"),
         ])
         let source = InteractionBridgeWriter.emit(bridge: target, peer: peer)
         #expect(source.contains("import PropertyLawKit"))
@@ -77,15 +77,15 @@ struct InteractionBridgeWriterTests {
     // MARK: - State-predicate stub shape (4 families)
 
     @Test("Cardinality peer emits a `: CardinalityInvariant` conformance stub")
-    func cardinalityStubShape() {
+    func cardinalityStubShape() throws {
         let (target, peer) = bridge(with: [
             suggestion(family: .cardinality, predicate: "p_cardinality"),
             suggestion(family: .conservation, predicate: "p_conservation"),
-            suggestion(family: .biconditional, predicate: "p_biconditional")
+            suggestion(family: .biconditional, predicate: "p_biconditional"),
         ])
         // peer[0] is the Cardinality peer (sorted alphabetically: biconditional,
         // cardinality, conservation). Find the Cardinality peer explicitly.
-        let cardinalityPeer = target.peers.first { $0.family == .cardinality }!
+        let cardinalityPeer = try #require(target.peers.first { $0.family == .cardinality })
         let source = InteractionBridgeWriter.emit(bridge: target, peer: cardinalityPeer)
         #expect(source.contains("struct InboxCardinality: CardinalityInvariant {"))
         #expect(source.contains("typealias State = Inbox.State"))
@@ -94,16 +94,16 @@ struct InteractionBridgeWriterTests {
     }
 
     @Test("multi-member peer conjoins predicates with `&&` in invariantHolds body")
-    func multiMemberPeerConjoinsPredicates() {
+    func multiMemberPeerConjoinsPredicates() throws {
         // 3 distinct families with 2 Cardinality predicates → 1 Cardinality
         // peer covering both via &&.
         let (target, _) = bridge(with: [
             suggestion(family: .cardinality, predicate: "cardA"),
             suggestion(family: .cardinality, predicate: "cardB"),
             suggestion(family: .conservation, predicate: "p_conservation"),
-            suggestion(family: .biconditional, predicate: "p_biconditional")
+            suggestion(family: .biconditional, predicate: "p_biconditional"),
         ])
-        let cardinalityPeer = target.peers.first { $0.family == .cardinality }!
+        let cardinalityPeer = try #require(target.peers.first { $0.family == .cardinality })
         let source = InteractionBridgeWriter.emit(bridge: target, peer: cardinalityPeer)
         #expect(source.contains("cardA && cardB"))
     }
@@ -111,13 +111,13 @@ struct InteractionBridgeWriterTests {
     // MARK: - Idempotence stub shape (idempotentActions Set)
 
     @Test("ActionIdempotence peer emits idempotentActions Set, not a state predicate")
-    func actionIdempotenceStubShape() {
+    func actionIdempotenceStubShape() throws {
         let (target, _) = bridge(with: [
             suggestion(family: .idempotence, predicate: ".refresh"),
             suggestion(family: .idempotence, predicate: ".reset"),
-            suggestion(family: .idempotence, predicate: ".clearAll")
+            suggestion(family: .idempotence, predicate: ".clearAll"),
         ])
-        let peer = target.peers.first { $0.family == .idempotence }!
+        let peer = try #require(target.peers.first { $0.family == .idempotence })
         let source = InteractionBridgeWriter.emit(bridge: target, peer: peer)
         #expect(source.contains("struct InboxIdempotence: ActionIdempotenceInvariant {"))
         #expect(source.contains("typealias Action = Inbox.Action"))
@@ -133,13 +133,13 @@ struct InteractionBridgeWriterTests {
     // MARK: - Writeout path
 
     @Test("stubFilePath lands under Tests/Generated/SwiftInferRefactors/<stateRoot>/<stubName>.swift")
-    func stubFilePathLayout() {
+    func stubFilePathLayout() throws {
         let (target, peer) = bridge(with: [
             suggestion(family: .cardinality, predicate: "p1"),
             suggestion(family: .conservation, predicate: "p2"),
-            suggestion(family: .biconditional, predicate: "p3")
+            suggestion(family: .biconditional, predicate: "p3"),
         ])
-        let cardinalityPeer = target.peers.first { $0.family == .cardinality }!
+        let cardinalityPeer = try #require(target.peers.first { $0.family == .cardinality })
         let packageRoot = URL(fileURLWithPath: "/tmp/MyPackage", isDirectory: true)
         let path = InteractionBridgeWriter.stubFilePath(
             bridge: target,
@@ -163,7 +163,7 @@ struct InteractionBridgeWriterTests {
         let (target, peer) = bridge(with: [
             suggestion(family: .cardinality, predicate: "p1"),
             suggestion(family: .conservation, predicate: "p2"),
-            suggestion(family: .biconditional, predicate: "p3")
+            suggestion(family: .biconditional, predicate: "p3"),
         ])
         let path = try InteractionBridgeWriter.persist(
             bridge: target,

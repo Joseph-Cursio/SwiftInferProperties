@@ -1,4 +1,3 @@
-import Foundation
 import Testing
 
 /// **Phase 0.5, step 1 — does the sandbox distinguish the trip list from pure controls?**

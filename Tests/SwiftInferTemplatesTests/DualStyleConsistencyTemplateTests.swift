@@ -73,7 +73,7 @@ struct DualStyleConsistencyTemplateTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Item]")]
-            )
+            ),
         ])
     }
 
@@ -107,7 +107,7 @@ struct DualStyleConsistencyTemplateTests {
                 kind: TypeDecl.Kind.class,
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1)
-            )
+            ),
         ])
         let suggestion = try #require(DualStyleConsistencyTemplate.suggest(
             for: makePair(),
@@ -228,7 +228,7 @@ struct DualStyleConsistencyTemplateTests {
             ("formUnion", "union"),
             ("formIntersection", "intersection"),
             ("subtract", "subtracting"),
-            ("formSymmetricDifference", "symmetricDifference")
+            ("formSymmetricDifference", "symmetricDifference"),
         ]
         for (mutating, nonMutating) in pairs {
             let signal = DualStyleConsistencyTemplate.assumedKitCoverage(

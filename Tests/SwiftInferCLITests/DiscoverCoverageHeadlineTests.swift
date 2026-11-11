@@ -31,8 +31,8 @@ struct DiscoverCoverageHeadlineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.text.hasPrefix("Coverage: discover proposes "))
         #expect(recording.text.contains("PropertyLawKit's suites cover"))
@@ -51,8 +51,8 @@ struct DiscoverCoverageHeadlineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
-            includePossible: false,
-            output: recording
+            output: recording,
+            includePossible: false
         )
         #expect(recording.text.hasPrefix("Coverage: discover proposes 0;"))
         #expect(recording.body == "0 suggestions.", "the body itself is unchanged")
@@ -74,9 +74,9 @@ struct DiscoverCoverageHeadlineTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: false,
-            statsOnly: true,
-            output: recording
+            statsOnly: true
         )
         #expect(recording.text.hasPrefix("Coverage: discover proposes "))
     }

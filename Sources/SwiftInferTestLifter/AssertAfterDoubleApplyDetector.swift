@@ -1,6 +1,33 @@
 import SwiftInferCore
 import SwiftSyntax
 
+/// Output of `AssertAfterDoubleApplyDetector.detect(in:)`. M2.3 wraps
+/// it in a `LiftedSuggestion` whose cross-validation key matches
+/// `IdempotenceTemplate`'s production-side key for the same callee.
+public struct DetectedIdempotence: Equatable, Sendable {
+
+    /// The callee name for `f`. Source surface name; member-access call
+    /// sites surface the *member* name (e.g. `s.normalized()` →
+    /// `"normalized"`).
+    public let calleeName: String
+
+    /// The input identifier name — the value `f` was applied to. Always
+    /// set; both shapes surface a concrete identifier here.
+    public let inputBindingName: String
+
+    public let assertionLocation: SwiftInferCore.SourceLocation
+
+    public init(
+        calleeName: String,
+        inputBindingName: String,
+        assertionLocation: SwiftInferCore.SourceLocation
+    ) {
+        self.calleeName = calleeName
+        self.inputBindingName = inputBindingName
+        self.assertionLocation = assertionLocation
+    }
+}
+
 /// PRD §7.3 "Assert-after-Double-Apply → idempotence" detector. Runs
 /// against the **property region** of a sliced test (not the raw body),
 /// mirroring `AssertAfterTransformDetector`'s shape.
@@ -33,6 +60,7 @@ import SwiftSyntax
 /// only); receivers swapping mid-chain; side-effecting transforms.
 public enum AssertAfterDoubleApplyDetector {
 
+    /// Idempotence (`f(f(x)) == f(x)`) asserted by `slice`, collapsed or across three lines.
     public static func detect(in slice: SlicedTestBody) -> [DetectedIdempotence] {
         guard let assertion = slice.assertion else {
             return []
@@ -191,32 +219,5 @@ public enum AssertAfterDoubleApplyDetector {
             inputBindingName: innerInput.baseName.text,
             assertionLocation: location
         )
-    }
-}
-
-/// Output of `AssertAfterDoubleApplyDetector.detect(in:)`. M2.3 wraps
-/// it in a `LiftedSuggestion` whose cross-validation key matches
-/// `IdempotenceTemplate`'s production-side key for the same callee.
-public struct DetectedIdempotence: Equatable, Sendable {
-
-    /// The callee name for `f`. Source surface name; member-access call
-    /// sites surface the *member* name (e.g. `s.normalized()` →
-    /// `"normalized"`).
-    public let calleeName: String
-
-    /// The input identifier name — the value `f` was applied to. Always
-    /// set; both shapes surface a concrete identifier here.
-    public let inputBindingName: String
-
-    public let assertionLocation: SwiftInferCore.SourceLocation
-
-    public init(
-        calleeName: String,
-        inputBindingName: String,
-        assertionLocation: SwiftInferCore.SourceLocation
-    ) {
-        self.calleeName = calleeName
-        self.inputBindingName = inputBindingName
-        self.assertionLocation = assertionLocation
     }
 }

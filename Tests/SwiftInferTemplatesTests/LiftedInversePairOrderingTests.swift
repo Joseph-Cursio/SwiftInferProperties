@@ -26,12 +26,12 @@ struct LiftedInversePairOrderingTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 
-    private func lift(_ name: String, line: Int, column: Int) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    private func lift(_ name: String, line: Int, column: Int) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             FunctionSummary(
                 name: name,
                 parameters: [
@@ -47,18 +47,18 @@ struct LiftedInversePairOrderingTests {
                 bodySignals: .empty
             ),
             carrierKindResolver: valueSemanticResolver()
-        )!
+        ))
     }
 
     private func pair(
         forwardLine: Int,
-        forwardColumn: Int = 1,
         reverseLine: Int,
+        forwardColumn: Int = 1,
         reverseColumn: Int = 1
-    ) -> LiftedInversePair {
+    ) throws -> LiftedInversePair {
         LiftedInversePair(
-            forward: lift("add", line: forwardLine, column: forwardColumn),
-            reverse: lift("remove", line: reverseLine, column: reverseColumn),
+            forward: try lift("add", line: forwardLine, column: forwardColumn),
+            reverse: try lift("remove", line: reverseLine, column: reverseColumn),
             pairName: LiftedInversePair.NamePair(lhs: "add", rhs: "remove")
         )
     }
@@ -66,22 +66,24 @@ struct LiftedInversePairOrderingTests {
     /// Two pairs whose forward halves share a line and differ only in column — the case the old
     /// ladder called equivalent — plus enough neighbours to exercise the reverse-half fallback.
     private var pairs: [LiftedInversePair] {
-        [
-            pair(forwardLine: 1, forwardColumn: 5, reverseLine: 9),
-            pair(forwardLine: 1, forwardColumn: 17, reverseLine: 9),
-            pair(forwardLine: 1, forwardColumn: 5, reverseLine: 4),
-            pair(forwardLine: 2, reverseLine: 9),
-            pair(forwardLine: 10, reverseLine: 1)
-        ]
+        get throws {
+            [
+                try pair(forwardLine: 1, reverseLine: 9, forwardColumn: 5),
+                try pair(forwardLine: 1, reverseLine: 9, forwardColumn: 17),
+                try pair(forwardLine: 1, reverseLine: 4, forwardColumn: 5),
+                try pair(forwardLine: 2, reverseLine: 9),
+                try pair(forwardLine: 10, reverseLine: 1),
+            ]
+        }
     }
 
     @Test("distinct pairs are never equivalent")
-    func distinctPairsAreOrdered() {
+    func distinctPairsAreOrdered() throws {
         // The defect, stated directly: the first two differ only in the forward half's column, and
         // the old comparator answered false in both directions — equivalent, order unpinned.
-        let pairs = pairs
-        for (lhsIndex, lhs) in pairs.enumerated() {
-            for rhs in pairs.dropFirst(lhsIndex + 1) {
+        let candidates = try pairs
+        for (lhsIndex, lhs) in candidates.enumerated() {
+            for rhs in candidates.dropFirst(lhsIndex + 1) {
                 let forward = InverseLiftedPairing.lessThan(lhs, rhs)
                 let backward = InverseLiftedPairing.lessThan(rhs, lhs)
                 #expect(forward != backward, "distinct pairs compared equivalent")
@@ -90,16 +92,16 @@ struct LiftedInversePairOrderingTests {
     }
 
     @Test("irreflexive — no pair precedes itself")
-    func irreflexive() {
-        for candidate in pairs {
+    func irreflexive() throws {
+        for candidate in try pairs {
             #expect(!InverseLiftedPairing.lessThan(candidate, candidate))
         }
     }
 
     @Test("asymmetric — at most one direction holds")
-    func asymmetric() {
-        for lhs in pairs {
-            for rhs in pairs {
+    func asymmetric() throws {
+        for lhs in try pairs {
+            for rhs in try pairs {
                 let forward = InverseLiftedPairing.lessThan(lhs, rhs)
                 let backward = InverseLiftedPairing.lessThan(rhs, lhs)
                 #expect(!(forward && backward))
@@ -108,10 +110,10 @@ struct LiftedInversePairOrderingTests {
     }
 
     @Test("transitive")
-    func transitive() {
-        for first in pairs {
-            for second in pairs where InverseLiftedPairing.lessThan(first, second) {
-                for third in pairs where InverseLiftedPairing.lessThan(second, third) {
+    func transitive() throws {
+        for first in try pairs {
+            for second in try pairs where InverseLiftedPairing.lessThan(first, second) {
+                for third in try pairs where InverseLiftedPairing.lessThan(second, third) {
                     #expect(InverseLiftedPairing.lessThan(first, third))
                 }
             }
@@ -119,17 +121,17 @@ struct LiftedInversePairOrderingTests {
     }
 
     @Test("the forward half's column decides a same-line tie")
-    func columnDecidesSameLineTie() {
-        let earlier = pair(forwardLine: 1, forwardColumn: 5, reverseLine: 9)
-        let later = pair(forwardLine: 1, forwardColumn: 17, reverseLine: 9)
+    func columnDecidesSameLineTie() throws {
+        let earlier = try pair(forwardLine: 1, reverseLine: 9, forwardColumn: 5)
+        let later = try pair(forwardLine: 1, reverseLine: 9, forwardColumn: 17)
         #expect(InverseLiftedPairing.lessThan(earlier, later))
         #expect(!InverseLiftedPairing.lessThan(later, earlier))
     }
 
     @Test("the reverse half decides when the forward halves are identical")
-    func reverseHalfBreaksAForwardTie() {
-        let earlier = pair(forwardLine: 1, forwardColumn: 5, reverseLine: 4)
-        let later = pair(forwardLine: 1, forwardColumn: 5, reverseLine: 9)
+    func reverseHalfBreaksAForwardTie() throws {
+        let earlier = try pair(forwardLine: 1, reverseLine: 4, forwardColumn: 5)
+        let later = try pair(forwardLine: 1, reverseLine: 9, forwardColumn: 5)
         #expect(InverseLiftedPairing.lessThan(earlier, later))
         #expect(!InverseLiftedPairing.lessThan(later, earlier))
     }

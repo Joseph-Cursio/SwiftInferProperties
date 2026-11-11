@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.46.A carrier — Double two-pass associativity emission. Mirrors
 // `CommutativityStubEmitter+NonComplex.swift`'s `composeDoubleSource`
 // but for the `f(f(a, b), c) ≈ f(a, f(b, c))` shape: each trial draws

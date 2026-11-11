@@ -39,7 +39,7 @@ struct ReferenceOracleDiscoverWitnessTests {
         WitnessCase(owner: "OracleDiscoverTally", name: "adding", body: "amount &+ total"),
         WitnessCase(owner: "Shelf", name: "thickened", body: "OracleDiscoverLibrary.Book(pages: book.pages &* 2)"),
         WitnessCase(owner: "OracleDiscoverAccount", name: "isOwned", body: "id == owner"),
-        WitnessCase(owner: "[OracleDiscoverBead]", name: "totalWeight", body: "map(\\.weight).reduce(bonus, &+)")
+        WitnessCase(owner: "[OracleDiscoverBead]", name: "totalWeight", body: "map(\\.weight).reduce(bonus, &+)"),
     ]
 
     /// The scanned functions, and the context discover builds from the same scan.
@@ -63,13 +63,13 @@ struct ReferenceOracleDiscoverWitnessTests {
         let pipeline = SwiftInferCommand.Discover.PipelineResult(
             suggestions: [],
             packageRoot: nil,
+            docstringAdvice: true,
             typeShapesByName: Dictionary(uniqueKeysWithValues: shapes.map { ($0.name, $0) }),
             inheritedTypesByName: ProtocolCoverageMap.inheritedTypesIndex(from: corpus.typeDecls),
             testVisibleTypeNames: SendableShim.testVisibleTypeNames(from: corpus.typeDecls),
             typeAliases: corpus.typeAliases,
             protocolNames: Set(corpus.typeDecls.filter { $0.kind == .protocol }.map(\.qualifiedName)),
-            summaries: corpus.summaries,
-            docstringAdvice: true
+            summaries: corpus.summaries
         )
         return Scan(summaries: corpus.summaries, context: .init(pipeline: pipeline))
     }

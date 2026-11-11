@@ -67,7 +67,7 @@ struct DiscoverableGroupIntegrationTests {
                     return MyType()
                 }
             }
-            """
+            """,
         ])
         defer { try? FileManager.default.removeItem(at: directory) }
         let suggestions = try TemplateRegistry.discover(in: directory)

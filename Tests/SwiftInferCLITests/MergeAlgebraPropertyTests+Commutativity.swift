@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -52,8 +52,8 @@ extension MergeAlgebraPropertyTests {
     @Test("merge commutes for every pair of clock readings")
     func mergeCommutesForEveryReadingPair() async {
         await propertyCheck(
-            input: Gen.element(of: Self.readings).map { $0! },
-            Gen.element(of: Self.readings).map { $0! }
+            input: Gen.element(of: Self.readings).compactMap(\.self),
+            Gen.element(of: Self.readings).compactMap(\.self)
         ) { firstReading, secondReading in
             // One identity, two different verdicts, stamped by the clock.
             let identity = Self.identities[0]
@@ -90,8 +90,8 @@ extension MergeAlgebraPropertyTests {
     @Test("VerifyEvidenceLog.merge commutes for every pair of clock readings")
     func evidenceMergeCommutesForEveryReadingPair() async {
         await propertyCheck(
-            input: Gen.element(of: Self.readings).map { $0! },
-            Gen.element(of: Self.readings).map { $0! }
+            input: Gen.element(of: Self.readings).compactMap(\.self),
+            Gen.element(of: Self.readings).compactMap(\.self)
         ) { firstReading, secondReading in
             let identity = Self.identities[0]
             let passed = ViewModelVerifyEvidence.evidence(

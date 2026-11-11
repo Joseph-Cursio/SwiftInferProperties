@@ -44,14 +44,14 @@ struct ConstructionFactsPipelineTests {
     func siblingConstructionWithdrawsTheAdvice() throws {
         let root = try Self.makePackage([
             "Sources/Model/Item.swift": Self.item,
-            "Sources/Logic/Logic.swift": Self.logic
+            "Sources/Logic/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 
         let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: root.appendingPathComponent("Sources/Logic"),
-            includePossible: true,
-            diagnostics: SilentDiagnostics()
+            diagnostics: SilentDiagnostics(),
+            includePossible: true
         )
         let make = try #require(pipeline.summaries.first { $0.name == "make" })
         #expect(make.purityVerdict == .refuted)
@@ -92,7 +92,7 @@ struct ConstructionFactsPipelineTests {
             """,
             "Packages/Model/Package.swift": Self.modelManifest,
             "Packages/Model/Sources/Model/Item.swift": Self.item,
-            "Sources/Logic/Logic.swift": Self.logic
+            "Sources/Logic/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 
@@ -118,7 +118,7 @@ struct ConstructionFactsPipelineTests {
         let root = try Self.makePackage([
             "Demo/Package.swift": Self.modelManifest,
             "Demo/Sources/Demo/Item.swift": Self.item,
-            "Sources/Logic/Logic.swift": Self.logic
+            "Sources/Logic/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
 

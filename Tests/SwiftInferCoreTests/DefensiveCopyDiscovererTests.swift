@@ -11,7 +11,7 @@ struct DefensiveCopyDiscovererTests {
             typeDecls: [classDecl("Buffer", inherited: ["Equatable"])],
             functions: [
                 method("copy", on: "Buffer", returns: "Buffer"),
-                method("append", on: "Buffer")
+                method("append", on: "Buffer"),
             ]
         )
         #expect(candidates.count == 1)
@@ -68,7 +68,7 @@ struct DefensiveCopyDiscovererTests {
                 method("copy", on: "Widget", returns: "Widget"),   // returns type → exclude
                 method("count", on: "Widget", returns: "Int"),     // query → exclude
                 method("make", on: "Widget", isStatic: true),      // static → exclude
-                method("mutate", on: "Other")                      // wrong type → exclude
+                method("mutate", on: "Other"),                      // wrong type → exclude
             ]
         )
         #expect(surface.map(\.name) == ["mutate"])

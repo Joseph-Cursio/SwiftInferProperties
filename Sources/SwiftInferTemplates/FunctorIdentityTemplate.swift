@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// **Functor identity** — mapping the identity function changes nothing.
@@ -10,12 +9,14 @@ import SwiftInferCore
 /// and the kit-overlap gate.
 public enum FunctorIdentityTemplate {
 
+    /// The `functor-identity` suggestion for `shape`, or `nil` when the template does not apply.
     public static func suggest(
         for shape: FunctorIdentityPairing.FunctorShape
     ) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: shape)
     }
 
+    /// The `functor-identity` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctorIdentityPairing.FunctorShape> {
         Constraint<FunctorIdentityPairing.FunctorShape>(
             templateName: "functor-identity",
@@ -50,7 +51,7 @@ public enum FunctorIdentityTemplate {
                     + "`\(shape.returnTypeText)`, which is \(shape.typeName) again. "
                     + "A map returning `[T]` — `Set.map`, `Dictionary.map` — changes the "
                     + "container and cannot carry this law"
-            )
+            ),
         ]
     }
 
@@ -60,7 +61,7 @@ public enum FunctorIdentityTemplate {
         [
             "From the `known-properties` [reference] rows — laws the catalog already "
                 + "verifies on `Optional` and `Dictionary` but that no template could "
-                + "transfer to a carrier of your own"
+                + "transfer to a carrier of your own",
         ]
     }
 
@@ -87,7 +88,7 @@ public enum FunctorIdentityTemplate {
             "The kit's `checkTransformationPropertyLaws` runs `Transformation.mapFusion` "
                 + "over ANY `Sequence`, so a bare `map` on a sequence carrier is its job, "
                 + "not this template's — that case is declined at pairing. `mapValues` is "
-                + "not `Sequence.map`, which is why a dictionary carrier is still reached."
+                + "not `Sequence.map`, which is why a dictionary carrier is still reached.",
         ]
     }
 
@@ -105,7 +106,7 @@ public enum FunctorIdentityTemplate {
                     + "identity law is trivially true on a typical populated value; where "
                     + "it breaks is a short-circuit path that forgets to carry the payload "
                     + "through, and those paths are exactly the degenerate states."
-            )
+            ),
         ]
     }
 

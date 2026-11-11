@@ -16,6 +16,7 @@ import SwiftInferCore
 /// harness (`OutputDeterminismVerifierEmitter`), joined in a later slice.
 public enum ConventionRoleInteractionAnalyzer {
 
+    /// `role`'s `outputDeterminism` interaction suggestion, or none when it has no output collaborator.
     public static func suggestions(
         for role: StatefulRole,
         firstSeenAt: Date
@@ -62,14 +63,14 @@ public enum ConventionRoleInteractionAnalyzer {
                 "\(role.paradigm.rawValue.uppercased()) convention role (by naming/conformance)",
                 rationale,
                 "output collaborator: \(output.propertyName): \(output.protocolType)",
-                actionList.isEmpty ? "actions: (none detected)" : "actions: \(actionList)"
+                actionList.isEmpty ? "actions: (none detected)" : "actions: \(actionList)",
             ],
             whyMightBeWrong: [
                 "Surfaced from the role's output collaborator by convention — unverified "
                     + "(default Possible per §3.5).",
                 "Measured verification requires constructing the role (its non-output protocol "
                     + "dependencies must be fakeable) and recording the output protocol's calls; "
-                    + "async / throws output requirements are not yet recordable."
+                    + "async / throws output requirements are not yet recordable.",
             ],
             firstSeenAt: firstSeenAt
         )

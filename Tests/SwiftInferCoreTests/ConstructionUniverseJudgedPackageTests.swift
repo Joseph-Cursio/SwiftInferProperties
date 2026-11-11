@@ -4,7 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
 private typealias Nested = ConstructionUniverseNestedPackageTests
 
 /// **A package the scan judges is in its universe** — the shared spec's amendment J. A nested
@@ -32,13 +31,13 @@ struct ConstructionUniverseJudgedPackageTests {
             "Examples/Demo/Package.swift": Nested.demoManifest,
             "Examples/Demo/Sources/Demo/Item.swift": Self.item,
             "Examples/Demo/Sources/Demo/Callers.swift": Self.callers,
-            "Sources/App/Plain.swift": "public func appPlain(_ n: Int) -> Int { n * 2 }"
+            "Sources/App/Plain.swift": "public func appPlain(_ n: Int) -> Int { n * 2 }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let examples = root.appendingPathComponent("Examples")
         #expect(ConstructionUniverse.files(forScanOf: examples).map(\.relativePath) == [
             "Examples/Demo/Sources/Demo/Callers.swift", "Examples/Demo/Sources/Demo/Item.swift",
-            "Sources/App/Plain.swift"
+            "Sources/App/Plain.swift",
         ])
         #expect(try Nested.verdict("normalized", scanning: examples) == .refuted)
         #expect(try Nested.verdict("clamp", scanning: examples) == .pure, "control: the table refutes only the builder")
@@ -56,7 +55,7 @@ struct ConstructionUniverseJudgedPackageTests {
             "Examples/Demo/Sources/Demo/Callers.swift": Self.callers,
             "Shared/Package.swift": Nested.demoManifest,
             "Shared/Sources/Shared/Item.swift": Self.item,
-            "Sources/App/Plain.swift": "public func appPlain(_ n: Int) -> Int { n * 2 }"
+            "Sources/App/Plain.swift": "public func appPlain(_ n: Int) -> Int { n * 2 }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let examples = root.appendingPathComponent("Examples")
@@ -72,7 +71,7 @@ struct ConstructionUniverseJudgedPackageTests {
         let root = try Wiring.makePackage([
             "Sources/Lib/Row.swift": Nested.row,
             "Demo/Package.swift": Nested.demoManifest,
-            "Demo/Sources/Demo/main.swift": Nested.mintingRow
+            "Demo/Sources/Demo/main.swift": Nested.mintingRow,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         #expect(try Nested.verdict("make", scanning: root) == .refuted)
@@ -87,7 +86,7 @@ struct ConstructionUniverseJudgedPackageTests {
             "Examples/Demo/Package.swift": Nested.demoManifest,
             "Examples/Demo/Sources/Demo/Item.swift": Self.item,
             "Examples/Demo/Sources/Demo/Callers.swift": Self.callers,
-            "Sources/App/Plain.swift": "public func appPlain(_ n: Int) -> Int { n * 2 }"
+            "Sources/App/Plain.swift": "public func appPlain(_ n: Int) -> Int { n * 2 }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let app = PackagePurity.forScan(of: root.appendingPathComponent("Sources/App"))
@@ -109,7 +108,7 @@ struct ConstructionUniverseJudgedPackageTests {
     func coversItsOwnDirectoryFromTheRecord() throws {
         let root = try Wiring.makePackage([
             "Sources/Model/Item.swift": Wiring.item,
-            "Sources/Lib/Make.swift": Wiring.make
+            "Sources/Lib/Make.swift": Wiring.make,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")
@@ -130,7 +129,7 @@ struct ConstructionUniverseJudgedPackageTests {
     func coversRemembersAnotherDirectory() throws {
         let root = try Wiring.makePackage([
             "Sources/Model/Item.swift": Wiring.item,
-            "Sources/Lib/Make.swift": Wiring.make
+            "Sources/Lib/Make.swift": Wiring.make,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let purity = PackagePurity.forScan(of: root.appendingPathComponent("Sources"))

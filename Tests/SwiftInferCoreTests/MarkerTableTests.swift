@@ -183,7 +183,7 @@ struct MarkerTableTests {
             MarkerPair(positive: "Success", negative: "Failure"),
             MarkerPair(positive: "Accept", negative: "Reject"),
             MarkerPair(positive: "Pass", negative: "Fail"),
-            MarkerPair(positive: "Allowed", negative: "Forbidden")
+            MarkerPair(positive: "Allowed", negative: "Forbidden"),
         ]
         #expect(MarkerTable.curatedPairs == expected)
     }

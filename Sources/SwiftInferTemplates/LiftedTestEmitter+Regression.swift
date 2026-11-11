@@ -1,6 +1,5 @@
 import CryptoKit
 import Foundation
-import SwiftInferCore
 
 /// TestLifter M8.0 — regression-stub arms for `swift-infer
 /// convert-counterexample`. Each arm parallels the corresponding

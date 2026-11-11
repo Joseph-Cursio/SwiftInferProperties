@@ -25,9 +25,12 @@ struct InversePairDomainMarkerCounterTests {
         // Hypothetical: future Self-typed binary op pair with explicit
         // domain markers (no real candidates on cycle-1..11 corpora).
         let pair = makePair(
-            forwardName: "scaleA", forwardLabel: "forScale",
-            reverseName: "scaleB", reverseLabel: "forCapacity",
-            paramType: "Int", returnType: "Int"
+            forwardName: "scaleA",
+            reverseName: "scaleB",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "forScale",
+            reverseLabel: "forCapacity"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil, "Both-sides domain-marker pair should be suppressed")
@@ -40,9 +43,12 @@ struct InversePairDomainMarkerCounterTests {
     )
     func allCuratedCombinationsSuppress(forward: String, reverse: String) {
         let pair = makePair(
-            forwardName: "fwd", forwardLabel: forward,
-            reverseName: "rev", reverseLabel: reverse,
-            paramType: "Int", returnType: "Int"
+            forwardName: "fwd",
+            reverseName: "rev",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: forward,
+            reverseLabel: reverse
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil, "\(forward) ↔ \(reverse) should suppress")
@@ -53,9 +59,12 @@ struct InversePairDomainMarkerCounterTests {
     @Test("V1.15.1 — asymmetric `forBucketContents:` ↔ `for:` preserved")
     func asymmetricForLabelPairPreserved() {
         let pair = makePair(
-            forwardName: "_value", forwardLabel: "forBucketContents",
-            reverseName: "_bucketContents", reverseLabel: "for",
-            paramType: "UInt64", returnType: "UInt64"
+            forwardName: "_value",
+            reverseName: "_bucketContents",
+            paramType: "UInt64",
+            returnType: "UInt64",
+            forwardLabel: "forBucketContents",
+            reverseLabel: "for"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         let hasDomainMarker = suggestion?.score.signals.contains { signal in
@@ -67,9 +76,12 @@ struct InversePairDomainMarkerCounterTests {
     @Test("V1.15.1 — non-domain labels do NOT trigger counter")
     func nonDomainLabelsDoNotTrigger() {
         let pair = makePair(
-            forwardName: "fwd", forwardLabel: "value",
-            reverseName: "rev", reverseLabel: "input",
-            paramType: "Int", returnType: "Int"
+            forwardName: "fwd",
+            reverseName: "rev",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "value",
+            reverseLabel: "input"
         )
         let signal = InversePairTemplate.domainMarkerCounterSignal(for: pair)
         #expect(signal == nil)
@@ -80,9 +92,12 @@ struct InversePairDomainMarkerCounterTests {
     @Test("V1.15.1 — counter weight is exactly -15 (uniform across three templates)")
     func counterWeightIsMinusFifteen() {
         let pair = makePair(
-            forwardName: "fwd", forwardLabel: "forScale",
-            reverseName: "rev", reverseLabel: "forCapacity",
-            paramType: "Int", returnType: "Int"
+            forwardName: "fwd",
+            reverseName: "rev",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "forScale",
+            reverseLabel: "forCapacity"
         )
         let signal = InversePairTemplate.domainMarkerCounterSignal(for: pair)
         #expect(signal?.weight == -15)
@@ -97,9 +112,12 @@ struct InversePairDomainMarkerCounterTests {
         // both-sides — so this case fires direction only, not domain
         // marker. typeSymmetry +25 + direction -10 = +15 → Suppressed.
         let pair = makePair(
-            forwardName: "step", forwardLabel: "after",
-            reverseName: "scale", reverseLabel: "forCapacity",
-            paramType: "Int", returnType: "Int"
+            forwardName: "step",
+            reverseName: "scale",
+            paramType: "Int",
+            returnType: "Int",
+            forwardLabel: "after",
+            reverseLabel: "forCapacity"
         )
         let suggestion = InversePairTemplate.suggest(for: pair)
         #expect(suggestion == nil)
@@ -109,11 +127,11 @@ struct InversePairDomainMarkerCounterTests {
 
     private func makePair(
         forwardName: String,
-        forwardLabel: String? = nil,
         reverseName: String,
-        reverseLabel: String? = nil,
         paramType: String,
-        returnType: String
+        returnType: String,
+        forwardLabel: String? = nil,
+        reverseLabel: String? = nil
     ) -> FunctionPair {
         let forward = FunctionSummary(
             name: forwardName,

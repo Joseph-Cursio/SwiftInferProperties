@@ -1,6 +1,46 @@
 import SwiftInferCore
 import SwiftSyntax
 
+/// Output of `AssertAfterTransformDetector.detect(in:)`. M1.4 hashes
+/// `(forwardCallee, backwardCallee)` into a `LiftedSuggestion.identity`
+/// matching `RoundTripTemplate`'s identity for the same function pair.
+public struct DetectedRoundTrip: Equatable, Sendable {
+
+    /// The "forward" half of the pair — `f` in `g(f(x)) == x`. Source
+    /// surface name; member-access call sites surface the *member* name
+    /// (e.g. `encoder.encode(x)` → `"encode"`).
+    public let forwardCallee: String
+
+    /// The "backward" half — `g`.
+    public let backwardCallee: String
+
+    /// The input identifier name — the value the round-trip closes
+    /// over. Always set; `XCTAssertEqual(input, recovered)` shape and
+    /// the collapsed shape both surface a concrete identifier here.
+    public let inputBindingName: String
+
+    /// The intermediate-bound recovered name — `let recovered = ...`.
+    /// `nil` when the collapsed shape is detected (the assertion calls
+    /// the backward function inline, no `let recovered` binding exists).
+    public let recoveredBindingName: String?
+
+    public let assertionLocation: SwiftInferCore.SourceLocation
+
+    public init(
+        forwardCallee: String,
+        backwardCallee: String,
+        inputBindingName: String,
+        recoveredBindingName: String?,
+        assertionLocation: SwiftInferCore.SourceLocation
+    ) {
+        self.forwardCallee = forwardCallee
+        self.backwardCallee = backwardCallee
+        self.inputBindingName = inputBindingName
+        self.recoveredBindingName = recoveredBindingName
+        self.assertionLocation = assertionLocation
+    }
+}
+
 /// PRD §7.3 "Assert-after-Transform → round-trip" detector. Runs
 /// against the **property region** of a sliced test (not the raw body)
 /// and surfaces round-trip patterns the M1.5 cross-validation wiring
@@ -29,6 +69,7 @@ import SwiftSyntax
 /// nested inside `if let` / `guard let` shadowing.
 public enum AssertAfterTransformDetector {
 
+    /// Round-trips (`backward(forward(x)) == x`) asserted by `slice`, collapsed or across three lines.
     public static func detect(in slice: SlicedTestBody) -> [DetectedRoundTrip] {
         guard let assertion = slice.assertion else {
             return []
@@ -190,45 +231,5 @@ public enum AssertAfterTransformDetector {
             recoveredBindingName: recoveredName,
             assertionLocation: location
         )
-    }
-}
-
-/// Output of `AssertAfterTransformDetector.detect(in:)`. M1.4 hashes
-/// `(forwardCallee, backwardCallee)` into a `LiftedSuggestion.identity`
-/// matching `RoundTripTemplate`'s identity for the same function pair.
-public struct DetectedRoundTrip: Equatable, Sendable {
-
-    /// The "forward" half of the pair — `f` in `g(f(x)) == x`. Source
-    /// surface name; member-access call sites surface the *member* name
-    /// (e.g. `encoder.encode(x)` → `"encode"`).
-    public let forwardCallee: String
-
-    /// The "backward" half — `g`.
-    public let backwardCallee: String
-
-    /// The input identifier name — the value the round-trip closes
-    /// over. Always set; `XCTAssertEqual(input, recovered)` shape and
-    /// the collapsed shape both surface a concrete identifier here.
-    public let inputBindingName: String
-
-    /// The intermediate-bound recovered name — `let recovered = ...`.
-    /// `nil` when the collapsed shape is detected (the assertion calls
-    /// the backward function inline, no `let recovered` binding exists).
-    public let recoveredBindingName: String?
-
-    public let assertionLocation: SwiftInferCore.SourceLocation
-
-    public init(
-        forwardCallee: String,
-        backwardCallee: String,
-        inputBindingName: String,
-        recoveredBindingName: String?,
-        assertionLocation: SwiftInferCore.SourceLocation
-    ) {
-        self.forwardCallee = forwardCallee
-        self.backwardCallee = backwardCallee
-        self.inputBindingName = inputBindingName
-        self.recoveredBindingName = recoveredBindingName
-        self.assertionLocation = assertionLocation
     }
 }

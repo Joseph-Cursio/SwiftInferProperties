@@ -34,7 +34,7 @@ struct DocstringOutsideFocusRendererTests {
             "  The seed manifest does not name these as functions to analyse — an",
             "extractable-kernel seed names only the method its kernel sits in — so --seeds lists",
             "them in brief instead of with the full advisory. Each docstring states a checkable",
-            "contract; run discover without --seeds for the full entry."
+            "contract; run discover without --seeds for the full entry.",
         ].joined(separator: " "))
         #expect(lines[2] == "  • clip(_:_:)  (String, Int) -> (text: String, cut: Bool)  —  Source.swift:7")
         #expect(lines[3] == "      \"The longest prefix that fits; never longer than limit.\"")
@@ -44,7 +44,7 @@ struct DocstringOutsideFocusRendererTests {
     func severalItemsArePlural() {
         let rendered = DocstringAdvisoryRenderer.renderOutsideFocus([
             Self.item(name: "clip(_:_:)", doc: "Never longer than limit."),
-            Self.item(name: "stoppedEarly(_:limit:)", doc: "Keeps at most limit elements.")
+            Self.item(name: "stoppedEarly(_:limit:)", doc: "Keeps at most limit elements."),
         ])
         let lines = rendered.components(separatedBy: "\n")
 
@@ -81,7 +81,7 @@ struct DocstringOutsideFocusRendererTests {
             ),
             DocstringAdvisory.fallbackContract(
                 .init(docComment: Self.doc, redHerrings: ["monotonicity"])
-            )
+            ),
         ]
     )
     func quotesTheDocstringWhicheverShape(advisory: DocstringAdvisory) {

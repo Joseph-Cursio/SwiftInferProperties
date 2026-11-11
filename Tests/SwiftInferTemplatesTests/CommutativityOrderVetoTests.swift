@@ -30,8 +30,8 @@ struct CommutativityOrderVetoTests {
     func userDefinedOrderedCarrierIsVetoed() {
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("Timeline", "Timeline"),
             returnType: "Timeline",
+            paramTypes: ("Timeline", "Timeline"),
             containingType: "Timeline"
         )
         let conformances = [
@@ -57,8 +57,8 @@ struct CommutativityOrderVetoTests {
     func orderedButNotElementDeterminedIsVetoed() {
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("Ledger", "Ledger"),
             returnType: "Ledger",
+            paramTypes: ("Ledger", "Ledger"),
             containingType: "Ledger"
         )
         let conformances = ["Ledger": Set(["RandomAccessCollection", "Equatable"])]
@@ -74,8 +74,8 @@ struct CommutativityOrderVetoTests {
     func unorderedCarrierIsNotVetoed() {
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("Tags", "Tags"),
             returnType: "Tags",
+            paramTypes: ("Tags", "Tags"),
             containingType: "Tags"
         )
         let signals = CommutativityTemplate.accumulatedSignals(
@@ -104,8 +104,8 @@ struct CommutativityOrderVetoTests {
 
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("OrderedDictionary", "OrderedDictionary"),
             returnType: "OrderedDictionary",
+            paramTypes: ("OrderedDictionary", "OrderedDictionary"),
             containingType: "OrderedDictionary"
         )
         let signals = CommutativityTemplate.accumulatedSignals(
@@ -129,8 +129,8 @@ struct CommutativityOrderVetoTests {
     func arrayIsVetoedWithoutConformanceRecords() {
         let summary = makeCommutativitySummary(
             name: "union",
-            paramTypes: ("Array", "Array"),
             returnType: "Array",
+            paramTypes: ("Array", "Array"),
             containingType: "Array"
         )
         // Empty index: exactly what an app corpus gives the structural rule.

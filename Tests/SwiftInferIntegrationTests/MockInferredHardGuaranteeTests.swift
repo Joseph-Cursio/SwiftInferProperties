@@ -20,8 +20,8 @@ struct MockInferredHardGuaranteeTests {
 
         let pipeline = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: HGSilentDiagnosticOutput()
+            diagnostics: HGSilentDiagnosticOutput(),
+            includePossible: true
         )
         let mockInferred = try #require(pipeline.suggestions.first { suggestion in
             suggestion.generator.source == .inferredFromTests

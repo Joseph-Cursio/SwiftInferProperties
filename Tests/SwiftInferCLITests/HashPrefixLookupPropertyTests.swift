@@ -1,5 +1,4 @@
-import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -42,13 +41,13 @@ struct HashPrefixLookupPropertyTests {
         SemanticIndexEntry(
             identityHash: hash,
             templateName: "round-trip",
-            typeName: "Complex<Double>",
             score: 50,
             tier: "Strong",
             primaryFunctionName: "exp(_:)",
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-11T00:00:00Z",
-            lastSeenAt: "2026-05-11T00:00:00Z"
+            lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: "Complex<Double>"
         )
     }
 
@@ -78,7 +77,7 @@ struct HashPrefixLookupPropertyTests {
         }
     }
 
-    private static let bodyGen = Gen.element(of: hashBodies).map { $0! }
+    private static let bodyGen = Gen.element(of: hashBodies).compactMap(\.self)
     private static let styleGen = Gen.int(in: 0...3)
 
     // MARK: - Laws

@@ -111,7 +111,7 @@ struct EndedAccessRoundTripTests {
         let shapes = EndedAccessPairing.candidates(
             in: [
                 addition("push", on: "PriorityQueue"),
-                removal("pop", returns: "Element?", on: "PriorityQueue")
+                removal("pop", returns: "Element?", on: "PriorityQueue"),
             ]
         )
         #expect(shapes.isEmpty)
@@ -144,7 +144,7 @@ struct EndedAccessRoundTripTests {
         let shapes = EndedAccessPairing.candidates(in: [
             addition("append"),
             removal("removeLast"),
-            removal("popLast", returns: "Element?")
+            removal("popLast", returns: "Element?"),
         ])
         #expect(shapes.count == 1)
     }
@@ -154,7 +154,7 @@ struct EndedAccessRoundTripTests {
     func bothEndsOnOneCarrier() {
         let shapes = EndedAccessPairing.candidates(in: [
             addition("append"), removal("removeLast"),
-            addition("prepend"), removal("removeFirst")
+            addition("prepend"), removal("removeFirst"),
         ])
         #expect(Set(shapes.map(\.end)) == [.back, .front])
     }
@@ -202,7 +202,7 @@ struct EndedAccessRoundTripTests {
         func build() -> [SuggestionIdentity] {
             let shapes = EndedAccessPairing.candidates(in: [
                 addition("append"), removal("removeLast"),
-                addition("prepend"), removal("removeFirst")
+                addition("prepend"), removal("removeFirst"),
             ])
             return shapes.map(EndedAccessRoundTripTemplate.makeIdentity(for:))
         }

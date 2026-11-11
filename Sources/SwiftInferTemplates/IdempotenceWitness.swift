@@ -1,5 +1,3 @@
-import Foundation
-
 /// V2.0 M4.C — one detected Idempotence witness inside a reducer's
 /// Action enum: a case whose name suggests applying-twice equals
 /// applying-once (PRD §5.3).

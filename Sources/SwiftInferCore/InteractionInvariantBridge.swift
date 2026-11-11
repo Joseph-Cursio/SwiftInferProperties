@@ -55,11 +55,11 @@ public enum InteractionInvariantBridge {
         now: Date
     ) -> BridgeSuggestion {
         let byFamily = Dictionary(grouping: group, by: \.family)
-        let peers: [PeerProposal] = byFamily.keys.sorted { $0.rawValue < $1.rawValue }.map { family in
+        let peers: [PeerProposal] = byFamily.sorted { $0.key.rawValue < $1.key.rawValue }.map { family, members in
             PeerProposal(
                 family: family,
                 kitProtocolName: kitProtocolName(for: family),
-                invariants: byFamily[family]!.sorted { $0.predicate < $1.predicate }
+                invariants: members.sorted { $0.predicate < $1.predicate }
             )
         }
         let stateTypeName = group.first?.stateTypeName ?? "Unknown"

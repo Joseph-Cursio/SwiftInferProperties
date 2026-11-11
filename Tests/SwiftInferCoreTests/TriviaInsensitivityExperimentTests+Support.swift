@@ -1,5 +1,4 @@
 import Foundation
-import PropertyLawKit
 @testable import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
@@ -136,7 +135,7 @@ extension TriviaInsensitivityExperimentTests {
                 summary.containingTypeName ?? "-",
                 summary.parameters.map { "\($0.label ?? "_"):\($0.typeText)" }.joined(separator: ","),
                 summary.returnTypeText ?? "-",
-                "\(summary.isStatic)\(summary.isMutating)\(summary.isThrows)\(summary.isAsync)"
+                "\(summary.isStatic)\(summary.isMutating)\(summary.isThrows)\(summary.isAsync)",
             ].joined(separator: "|")
         }
         .map(normalized)

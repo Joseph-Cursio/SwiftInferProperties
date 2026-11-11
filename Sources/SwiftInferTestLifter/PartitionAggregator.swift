@@ -1,5 +1,4 @@
 import SwiftInferCore
-import SwiftSyntax
 
 /// Per-`(predicateName, markerPair)` accumulator backing
 /// `PartitionAggregator.bucketsByKey`. Records positive / negative
@@ -74,6 +73,30 @@ struct NClassPartitionAccumulator {
 struct NClassPartitionKey: Hashable {
     let predicateName: String
     let markerSetName: String
+}
+
+/// Per-predicate ranking helper used by `PartitionAggregator.finalize()`.
+/// Carries the candidate plus the two scalar fields the rank comparison
+/// needs — extracted into a struct so the dedup map's value isn't a
+/// 3-tuple (SwiftLint `large_tuple` cap).
+private struct RankedCandidate {
+
+    let candidate: PartitionCandidate
+    let totalSites: Int
+    let positiveMarker: String
+
+    init(candidate: PartitionCandidate, accumulator: PartitionAccumulator) {
+        self.candidate = candidate
+        self.totalSites = accumulator.positiveSites.count + accumulator.negativeSites.count
+        self.positiveMarker = accumulator.markerPair.positive
+    }
+
+    func beats(_ other: Self) -> Bool {
+        if totalSites != other.totalSites {
+            return totalSites > other.totalSites
+        }
+        return positiveMarker < other.positiveMarker
+    }
 }
 
 /// Streaming aggregator the M11.2 `TestLifter.discover(in:)` loop drives
@@ -191,11 +214,11 @@ struct PartitionAggregator {
                 && !accumulator.negativeSites.isEmpty
             let candidate = PartitionCandidate(
                 predicateName: key.predicateName,
+                outlierSiteCount: accumulator.outlierSiteCount,
                 markerPair: accumulator.markerPair,
                 markerSet: nil,
                 positiveSites: accumulator.positiveSites,
                 negativeSites: accumulator.negativeSites,
-                outlierSiteCount: accumulator.outlierSiteCount,
                 coversDomainSyntactic: coversDomainSyntactic
             )
             let ranked = RankedCandidate(candidate: candidate, accumulator: accumulator)
@@ -214,12 +237,12 @@ struct PartitionAggregator {
         nClassBucketsByKey.map { key, accumulator in
             PartitionCandidate(
                 predicateName: key.predicateName,
+                outlierSiteCount: accumulator.outlierSiteCount,
                 markerPair: nil,
                 markerSet: accumulator.markerSet,
                 positiveSites: [],
                 negativeSites: [],
-                nClassBucketsByMarker: accumulator.bucketsByMarker,
-                outlierSiteCount: accumulator.outlierSiteCount
+                nClassBucketsByMarker: accumulator.bucketsByMarker
             )
         }
     }
@@ -243,29 +266,5 @@ struct PartitionAggregator {
             return lhsIsTwoClass
         }
         return (lhs.markerSet?.name ?? "") < (rhs.markerSet?.name ?? "")
-    }
-}
-
-/// Per-predicate ranking helper used by `PartitionAggregator.finalize()`.
-/// Carries the candidate plus the two scalar fields the rank comparison
-/// needs — extracted into a struct so the dedup map's value isn't a
-/// 3-tuple (SwiftLint `large_tuple` cap).
-private struct RankedCandidate {
-
-    let candidate: PartitionCandidate
-    let totalSites: Int
-    let positiveMarker: String
-
-    init(candidate: PartitionCandidate, accumulator: PartitionAccumulator) {
-        self.candidate = candidate
-        self.totalSites = accumulator.positiveSites.count + accumulator.negativeSites.count
-        self.positiveMarker = accumulator.markerPair.positive
-    }
-
-    func beats(_ other: Self) -> Bool {
-        if totalSites != other.totalSites {
-            return totalSites > other.totalSites
-        }
-        return positiveMarker < other.positiveMarker
     }
 }

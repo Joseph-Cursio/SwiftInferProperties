@@ -26,7 +26,7 @@ struct StdlibCollectionBakeInTests {
         let conformances = index[name] ?? []
         for expected in [
             "Sequence", "Collection", "BidirectionalCollection", "RandomAccessCollection",
-            "MutableCollection", "RangeReplaceableCollection", "ExpressibleByArrayLiteral"
+            "MutableCollection", "RangeReplaceableCollection", "ExpressibleByArrayLiteral",
         ] {
             #expect(conformances.contains(expected), "\(name) is missing \(expected)")
         }

@@ -1,5 +1,4 @@
 import SwiftInferCore
-@testable import SwiftInferTemplates
 
 // Shared builders for the CommutativityTemplate test suites. Extracted (and made
 // internal) so `CommutativityTemplateTests` and `CommutativityTemplateShapeTests`
@@ -7,9 +6,9 @@ import SwiftInferCore
 // cap. The `docComment` param feeds the docstring-corroboration tests.
 func makeCommutativitySummary(
     name: String,
+    returnType: String?,
     paramTypes: (String, String)? = nil,
     parameters explicitParameters: [Parameter]? = nil,
-    returnType: String?,
     isMutating: Bool = false,
     containingType: String? = nil,
     bodySignals: BodySignals = .empty,
@@ -21,7 +20,7 @@ func makeCommutativitySummary(
     } else if let paramTypes {
         parameters = [
             Parameter(label: nil, internalName: "lhs", typeText: paramTypes.0, isInout: false),
-            Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false)
+            Parameter(label: nil, internalName: "rhs", typeText: paramTypes.1, isInout: false),
         ]
     } else {
         parameters = []
@@ -48,9 +47,9 @@ func makeCommutativitySummary(
 ) -> FunctionSummary {
     makeCommutativitySummary(
         name: name,
+        returnType: returnType,
         paramTypes: nil,
         parameters: parameters,
-        returnType: returnType,
         isMutating: false,
         bodySignals: .empty
     )

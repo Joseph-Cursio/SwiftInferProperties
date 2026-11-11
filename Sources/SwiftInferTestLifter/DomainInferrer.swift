@@ -1,5 +1,31 @@
 import SwiftInferCore
 
+/// The round-trip pair input for `DomainInferrer.infer(...)`. Carries
+/// the M5 detector's `(forward, reverse)` names plus the carrier type
+/// `T` the override generator wraps as `Gen<T>.map(forward)`. M10.3
+/// pipeline wiring constructs one of these per round-trip suggestion
+/// before invoking the inferrer.
+public struct RoundTripPair: Sendable, Equatable {
+
+    /// The producer function name (e.g. `encode`).
+    public let forwardName: String
+
+    /// The consumer function name (e.g. `decode`).
+    public let reverseName: String
+
+    /// The carrier type the override generator wraps. The PRD §7.8
+    /// example `Gen<MyType>.map(encode)` puts `MyType` here. The M10.3
+    /// pipeline derives this from the round-trip suggestion's
+    /// `MockGenerator.typeName` or the source-side type-flow analysis.
+    public let domainTypeName: String
+
+    public init(forwardName: String, reverseName: String, domainTypeName: String) {
+        self.forwardName = forwardName
+        self.reverseName = reverseName
+        self.domainTypeName = domainTypeName
+    }
+}
+
 /// TestLifter M10.2 — pure-function inferrer that decides whether a
 /// round-trip pair's reverse-side argument was uniformly the forward-
 /// side function's output across the test corpus, and (when so) returns
@@ -40,6 +66,7 @@ import SwiftInferCore
 /// Returns `nil` otherwise.
 public enum DomainInferrer {
 
+    /// A `DomainHint` when three or more `sites` all feed `pair`'s consumer the producer's output.
     public static func infer(
         pair: RoundTripPair,
         forwardSummary: FunctionSummary,
@@ -95,31 +122,5 @@ public enum DomainInferrer {
         if forwardSummary.parameters.count != 1 { return .producerMultiArg }
         if !producerArgGeneratable { return .producerArgNotGeneratable }
         return nil
-    }
-}
-
-/// The round-trip pair input for `DomainInferrer.infer(...)`. Carries
-/// the M5 detector's `(forward, reverse)` names plus the carrier type
-/// `T` the override generator wraps as `Gen<T>.map(forward)`. M10.3
-/// pipeline wiring constructs one of these per round-trip suggestion
-/// before invoking the inferrer.
-public struct RoundTripPair: Sendable, Equatable {
-
-    /// The producer function name (e.g. `encode`).
-    public let forwardName: String
-
-    /// The consumer function name (e.g. `decode`).
-    public let reverseName: String
-
-    /// The carrier type the override generator wraps. The PRD §7.8
-    /// example `Gen<MyType>.map(encode)` puts `MyType` here. The M10.3
-    /// pipeline derives this from the round-trip suggestion's
-    /// `MockGenerator.typeName` or the source-side type-flow analysis.
-    public let domainTypeName: String
-
-    public init(forwardName: String, reverseName: String, domainTypeName: String) {
-        self.forwardName = forwardName
-        self.reverseName = reverseName
-        self.domainTypeName = domainTypeName
     }
 }

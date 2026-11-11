@@ -5,7 +5,7 @@ import SwiftInferTemplates
 
 /// TestLifter M8.1 — pure-function engine behind
 /// `swift-infer convert-counterexample`. Lifted out of
-/// `ConvertCounterexampleCommand.swift` so the AsyncParsableCommand
+/// `SwiftInferCommand.ConvertCounterexample.swift` so the AsyncParsableCommand
 /// shell stays small + the engine is unit-testable without going
 /// through ArgumentParser's `parse(_:)`.
 public enum ConvertCounterexampleEngine {
@@ -49,6 +49,7 @@ public enum ConvertCounterexampleEngine {
         }
     }
 
+    /// The `--template` values `convert-counterexample` can render a regression stub for.
     public static let validTemplates: [String] = [
         "idempotence",
         "round-trip",
@@ -59,11 +60,12 @@ public enum ConvertCounterexampleEngine {
         "identity-element",
         "inverse-pair",
         "count-invariance",
-        "reduce-equivalence"
+        "reduce-equivalence",
     ]
 
     // MARK: - Package-root walk-up
 
+    /// `explicit` if given, else the nearest directory above the working directory holding `Package.swift`.
     public static func resolvePackageRoot(explicit: String?) throws -> URL {
         if let explicit {
             return URL(fileURLWithPath: explicit).standardizedFileURL
@@ -88,6 +90,7 @@ public enum ConvertCounterexampleEngine {
 
     // MARK: - Stub rendering — dispatch to LiftedTestEmitter regression arm
 
+    /// The regression test stub for `args`' counterexample; throws for an unknown `--template`.
     public static func renderRegressionStub(args: Args) throws -> String {
         if let stub = try renderUnaryTemplate(args) {
             return stub
@@ -213,6 +216,7 @@ public enum ConvertCounterexampleEngine {
 
     // MARK: - File write — sandboxed at <package-root>/Tests/Generated/SwiftInfer/
 
+    /// Writes `stub` under `Tests/Generated/SwiftInfer/<template>/` and returns the file's URL.
     public static func writeRegressionStub(
         args: Args,
         stub: String,

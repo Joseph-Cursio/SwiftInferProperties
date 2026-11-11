@@ -1,0 +1,206 @@
+import SwiftInferCore
+
+/// The non-empty-focus path of `discover --seeds`, split out of
+/// `SwiftInferCommand.Discover+Seeds.swift` to keep that file within the length limit and `focus`
+/// within the body-length limit. The two loud "silent zero" warnings stay one on
+/// each side of the split — the empty-focus warning in `focus`, the no-match
+/// warning here — because each guards a different way the focus can quietly
+/// destroy the run.
+extension SwiftInferCommand.Discover {
+
+    /// The parenthetical that scopes an announced seed count —
+    /// " (6 under the scanned sources)", or nothing when the manifest is entirely in scope.
+    ///
+    /// The count is what was actually wrong: a whole-project manifest against a single `--sources`
+    /// target announced "focused on 145 analysable seed(s)" for a target holding six, so `kept 4`
+    /// read as a catastrophic yield instead of a healthy one. The FILTERING is deliberately
+    /// unscoped — see `Discover+Seeds` for why approximating "scanned" from analysis outputs loses
+    /// categories of file.
+    static func scopeNote(_ inScope: Int?, of total: Int) -> String {
+        guard let inScope, inScope != total else { return "" }
+        return " (\(inScope) under the scanned sources)"
+    }
+
+    /// At least one analysable seed: honour the focus, but never discard a law
+    /// the code OWES (`keepRoleEntailedLaws`) or a real law the tier cut merely
+    /// hid (`promoteTierHiddenLaws`), and always broaden with the generic
+    /// determinism fallback so `--seeds` surfaces something.
+    static func focusOnAnalysableSeeds(
+        focusing: [SeedManifest.Seed],
+        analysableManifest: SeedManifest,
+        pipeline: PipelineResult,
+        diagnostics: any DiagnosticOutput,
+        inScopeCount: Int? = nil,
+        pendingKernelCount: Int = 0
+    ) -> [Suggestion] {
+        // The base names this run's own sources declare. A lifted law whose subject is not among
+        // them is out of any manifest's reach for this scan — see `SeedFocus.isUnseedableLifted`.
+        let declaredSubjects = Set(pipeline.summaries.map(\.name))
+        let focused = SeedFocus.filter(
+            pipeline.suggestions, to: analysableManifest, declaredSubjects: declaredSubjects
+        )
+
+        // A seed-independent law was never *in* the search the seeds narrow — its subject is impure,
+        // and a pure-function manifest cannot name one. Counting it as a "seed match" would be a lie,
+        // and filtering it out would throw away the only law in the run that can fail.
+        let exempt = SeedFocus.seedIndependent(in: focused)
+        let lifted = SeedFocus.unseedableLifted(in: focused, declaredSubjects: declaredSubjects)
+        let matched = focused.count - exempt.count - lifted.count
+
+        diagnostics.writeDiagnostic(
+            "focused on \(focusing.count) analysable seed(s)"
+                // Only said when it differs. A manifest written for one target has every seed in
+                // scope, and a parenthetical repeating the number it sits next to is noise.
+                + (scopeNote(inScopeCount, of: focusing.count))
+                + ": kept \(matched) of \(pipeline.suggestions.count - exempt.count) "
+                + "seedable suggestion(s)"
+        )
+
+        if !exempt.isEmpty {
+            diagnostics.writeDiagnostic(
+                "kept \(exempt.count) law(s) no seed manifest could name — their subjects are impure "
+                    + "(a state machine's moves are `Void`-returning mutators), so the linter's "
+                    + "pure-function rule can never seed them. They were never in the search the "
+                    + "seeds narrow, so the focus does not get to discard them."
+            )
+        }
+
+        reportUnseedableLifted(lifted, diagnostics: diagnostics)
+
+        // Seeds that match nothing are the other way to end up at a confident zero. The focus is
+        // honoured — the user asked for it — but they are told it emptied the run, and why. See
+        // `warnIfNoSeedsMatched` for the "kept 0" note-vs-warning distinction (W1).
+        let seedableFound = pipeline.suggestions.count - exempt.count - lifted.count
+        warnIfNoSeedsMatched(
+            matched: matched,
+            seedableFound: seedableFound,
+            focusing: focusing,
+            pendingKernelCount: pendingKernelCount,
+            diagnostics: diagnostics
+        )
+
+        // A law the code OWES is never discarded for want of a seed.
+        let owed = keepRoleEntailedLaws(
+            in: pipeline.suggestions,
+            alreadyShown: focused,
+            diagnostics: diagnostics
+        )
+
+        // A seeded function whose real law the tier cut hid does not get a tautology instead.
+        let promoted = promoteTierHiddenLaws(
+            for: analysableManifest,
+            pipeline: pipeline,
+            alreadyShown: focused + owed,
+            diagnostics: diagnostics
+        )
+
+        // Broaden: a seeded pure function that no template matched still earns
+        // the generic determinism law, so `--seeds` always surfaces something.
+        let covered = focused + owed + promoted
+        let generic = seededFloorLaws(
+            for: analysableManifest, pipeline: pipeline, covered: covered, diagnostics: diagnostics
+        )
+        return guardFinalAnswer(covered + generic, pipeline: pipeline, diagnostics: diagnostics)
+    }
+
+    /// The laws a seed earns when no template spoke to it: determinism for a function, and —
+    /// since a seeded mutator returns nothing and the determinism floor refuses it — the laws over
+    /// what a mutator leaves behind.
+    ///
+    /// **Isolated as the pipeline's own rows are.** These laws are built here, after
+    /// `makePipelineResult` ran its isolation passes, from each summary's `inferenceEvidence` —
+    /// which carries only the declaration's own attribute. So in a `.defaultIsolation(MainActor)`
+    /// target every one of them called its subject with no hop, while the template rows for the
+    /// same functions had one: SwiftLintRuleStudio's `detectMigrations` determinism stub and its
+    /// `applyMigration` mutator stubs failed with *main actor-isolated instance method cannot be
+    /// called from outside of the actor* (#482's gap, for the laws #482's pass never saw).
+    static func seededFloorLaws(
+        for manifest: SeedManifest,
+        pipeline: PipelineResult,
+        covered: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        withTargetDefaultIsolation(synthesizedFloorLaws(
+            for: manifest, pipeline: pipeline, covered: covered, diagnostics: diagnostics
+        ))
+    }
+
+    private static func synthesizedFloorLaws(
+        for manifest: SeedManifest,
+        pipeline: PipelineResult,
+        covered: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) -> [Suggestion] {
+        synthesizeGenericLaws(
+            for: manifest,
+            summaries: pipeline.summaries,
+            covered: covered,
+            diagnostics: diagnostics,
+            restrictedFunctions: pipeline.restrictedFunctions
+        ) + synthesizeMutatorLaws(
+            for: manifest,
+            summaries: pipeline.summaries,
+            covered: covered,
+            diagnostics: diagnostics,
+            restrictedFunctions: pipeline.restrictedFunctions
+        )
+    }
+
+    /// Say why a lifted law survived the focus, so it does not read as a lucky seed match —
+    /// the same disclosure `seedIndependentTemplates` already gets. Hoisted out of
+    /// `focusOnAnalysableSeeds` to keep that function under the body-length cap.
+    private static func reportUnseedableLifted(
+        _ lifted: [Suggestion],
+        diagnostics: any DiagnosticOutput
+    ) {
+        guard !lifted.isEmpty else { return }
+        diagnostics.writeDiagnostic(
+            "kept \(lifted.count) law(s) read out of your TESTS whose subject this scan never "
+                + "declared — so no seed manifest over these sources could name them, and the "
+                + "focus does not get to discard them. A lifted law records no source location "
+                + "(`<test-body>:0`), so it can never join a manifest on `(file, symbol)`; without "
+                + "this it would be dropped silently, which is how a Strong-tier law went missing "
+                + "from a seeded run."
+        )
+    }
+
+    /// Seeds that match nothing are the other way to end up at a confident zero. The focus is
+    /// honoured — the user asked for it — but they are told it emptied the run, and why.
+    ///
+    /// **W1 — but "kept 0" before any extraction is EXPECTED, not a warning.** Every cold reader
+    /// hit this on their first run and read it as a failure: the manifest's analysable seeds are
+    /// pure functions, the only refutable law found is over an impure state machine, so they miss —
+    /// while the linter's `extractable-kernel` advisories (reported just above) name the pure logic
+    /// that has no name yet. A seed can only match a *named* function, so of course the kernels
+    /// don't match until they are extracted. When kernels are pending, this is a **note** that says
+    /// "extract first, then re-run"; the alarming "the tools disagree" reading is kept only for the
+    /// genuine post-extraction case, where there is nothing left to extract and a miss is real.
+    private static func warnIfNoSeedsMatched(
+        matched: Int,
+        seedableFound: Int,
+        focusing: [SeedManifest.Seed],
+        pendingKernelCount: Int,
+        diagnostics: any DiagnosticOutput
+    ) {
+        guard matched == 0, seedableFound > 0 else { return }
+        if pendingKernelCount > 0 {
+            diagnostics.writeDiagnostic(
+                "note: kept 0 of \(seedableFound) seedable suggestion(s) — this is EXPECTED "
+                    + "before you extract. The \(pendingKernelCount) `extractable-kernel` "
+                    + "advisor(y/ies) above name pure logic that has no name yet, and a seed can "
+                    + "only match a named function. Extract those kernels into named value types "
+                    + "and re-run — the seeds will match then. (Already extracted everything? Then "
+                    + "the join on (file basename, bare symbol) missed, and the linter and "
+                    + "swift-infer disagree about which functions are candidates.)"
+            )
+        } else {
+            diagnostics.writeDiagnostic(
+                "warning: none of the \(focusing.count) analysable seed(s) matched any of the "
+                    + "\(seedableFound) seedable suggestion(s) found, so the focus discarded "
+                    + "all of them. The join is on (file basename, bare symbol) — a mismatch here "
+                    + "usually means the linter and swift-infer disagree about which functions are "
+                    + "candidates."
+            )
+        }
+    }
+}

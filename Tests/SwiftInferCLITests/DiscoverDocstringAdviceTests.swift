@@ -41,7 +41,7 @@ struct DiscoverDocstringAdviceTests {
         SeedManifest(seeds: [
             .init(file: "Source.swift", line: 3, symbol: "isValidName"),
             .init(file: "Source.swift", line: 6, symbol: "backoffDelay"),
-            .init(file: "Source.swift", line: 9, symbol: "weighted")
+            .init(file: "Source.swift", line: 9, symbol: "weighted"),
         ])
     }
 
@@ -52,9 +52,9 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         #expect(recording.text.contains("Reference definitions from docstrings"))
         #expect(recording.text.contains("isValidName"))
@@ -67,10 +67,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: false,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         #expect(recording.text.contains("Reference definitions from docstrings") == false)
     }
@@ -92,21 +92,21 @@ struct DiscoverDocstringAdviceTests {
         let viaConfig = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: viaConfig,
             includePossible: true,
             explicitConfigPath: configPath,
-            seedManifest: manifest(),
-            output: viaConfig
+            seedManifest: manifest()
         )
         #expect(viaConfig.text.contains("Reference definitions from docstrings") == false)
 
         let flagWins = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: flagWins,
             includePossible: true,
             explicitConfigPath: configPath,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: flagWins
+            seedManifest: manifest()
         )
         #expect(flagWins.text.contains("Reference definitions from docstrings"))
     }
@@ -118,10 +118,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         #expect(recording.text.contains("Reference definitions from docstrings"))
         #expect(recording.text.contains("isValidName"))
@@ -149,10 +149,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         // Post-B24 the bare `(Int, Int) -> Int` shape no longer over-fires
         // associativity/commutativity, so `backoffDelay` reaches only the
@@ -165,22 +165,22 @@ struct DiscoverDocstringAdviceTests {
 
     @Test("a comparator gets an ordering-key oracle — the SWO law can't say which ordering")
     func comparatorOrderingKey() throws {
-        let source = """
+        let fixture = """
         struct Entry { let size: Int; let name: String }
         /// Orders entries by size ascending, then by name in ascending lexicographic order.
         func precedes(_ lhs: Entry, _ rhs: Entry) -> Bool {
             lhs.size != rhs.size ? lhs.size < rhs.size : lhs.name.count < rhs.name.count
         }
         """
-        let directory = try writeDPFixture(name: "DocAdviceComparator", contents: source)
+        let directory = try writeDPFixture(name: "DocAdviceComparator", contents: fixture)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 3, symbol: "precedes")]),
-            output: recording
+            seedManifest: SeedManifest(seeds: [.init(file: "Source.swift", line: 3, symbol: "precedes")])
         )
         #expect(recording.text.contains("precedes"))
         // Comparator-specific framing: the SWO law checks validity, the docstring the key.
@@ -199,7 +199,7 @@ struct DiscoverDocstringAdviceTests {
     /// which no tuple can be. The `Int`-returning neighbour is the control: its note is unchanged.
     @Test("a tuple-returning seed's reference oracle declares the tuple and says what it needs")
     func tupleReturningFallbackContract() throws {
-        let source = """
+        let fixture = """
         /// The clipped text never exceeds the byte budget.
         func clip(_ text: String, _ budget: Int) -> (text: String, didTruncate: Bool) {
             (String(text.prefix(budget)), text.count > budget)
@@ -208,18 +208,18 @@ struct DiscoverDocstringAdviceTests {
         /// Delay is capped at the ceiling and never negative.
         func backoffDelay(_ attempt: Int, _ ceiling: Int) -> Int { min(max(attempt * attempt, 0), ceiling) }
         """
-        let directory = try writeDPFixture(name: "DocAdviceTuple", contents: source)
+        let directory = try writeDPFixture(name: "DocAdviceTuple", contents: fixture)
         defer { try? FileManager.default.removeItem(at: directory) }
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
             seedManifest: SeedManifest(seeds: [
                 .init(file: "Source.swift", line: 2, symbol: "clip"),
-                .init(file: "Source.swift", line: 7, symbol: "backoffDelay")
-            ]),
-            output: recording
+                .init(file: "Source.swift", line: 7, symbol: "backoffDelay"),
+            ])
         )
         #expect(recording.text.contains("Reference definitions from docstrings"))
         #expect(recording.text.contains(
@@ -240,10 +240,10 @@ struct DiscoverDocstringAdviceTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             docstringAdvice: true,
-            seedManifest: manifest(),
-            output: recording
+            seedManifest: manifest()
         )
         // `weighted`'s doc only narrates; it must not appear in the advice. `manifest()` seeds
         // every function, so only the full block is rendered here. The compact block is checked

@@ -1,5 +1,4 @@
 import Foundation
-import SwiftInferCore
 
 /// Row-level comparison of two `RetainedSurveyRun`s.
 ///
@@ -256,15 +255,5 @@ enum SurveyRunDiff {
         var tally: [Bucket: Int] = [:]
         for record in records { tally[Bucket.of(record.outcome), default: 0] += 1 }
         return tally
-    }
-}
-
-extension SurveyRunDiff {
-
-    /// Subject ascending, template ascending as the tiebreak — one subject can
-    /// change under several templates, and a diff that reorders them between
-    /// runs reads as churn that did not happen.
-    static func bySubjectThenTemplate(_ lhs: ChangedRow, _ rhs: ChangedRow) -> Bool {
-        (lhs.subject, lhs.template) < (rhs.subject, rhs.template)
     }
 }

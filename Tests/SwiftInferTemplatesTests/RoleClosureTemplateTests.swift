@@ -12,8 +12,8 @@ struct RoleClosureTemplateTests {
 
     private static func summary(
         _ name: String,
-        parameters: [(String?, String)] = [],
         returns: String?,
+        parameters: [(String?, String)] = [],
         containingType: String? = nil,
         isStatic: Bool = false,
         isMutating: Bool = false,
@@ -47,7 +47,7 @@ struct RoleClosureTemplateTests {
     /// T4 from `roadtest-swiftmarkdownwiki.md`, reduced to its declaration.
     @Test func clampedOnItsOwnTypeIsProposed() throws {
         let suggestion = try #require(RoleClosureTemplate.suggest(
-            for: Self.summary("clamped", parameters: [("to", "Int")], returns: "NSRange", containingType: "NSRange")
+            for: Self.summary("clamped", returns: "NSRange", parameters: [("to", "Int")], containingType: "NSRange")
         ))
         #expect(suggestion.templateName == "role-closure")
     }
@@ -88,7 +88,7 @@ struct RoleClosureTemplateTests {
     @Test("each role's closure is a stated judgement", arguments: [
         (RolePostcondition.sorted, true), (.clamped, true), (.rounded, true),
         (.lowercased, true), (.uppercased, true), (.deduplicated, true),
-        (.escaped, false), (.unescaped, false), (.reversed, false), (.shuffled, false)
+        (.escaped, false), (.unescaped, false), (.reversed, false), (.shuffled, false),
     ])
     func closureIsStatedPerRole(role: RolePostcondition, closed: Bool) {
         #expect(role.isClosedUnderReapplication == closed)
@@ -101,7 +101,7 @@ struct RoleClosureTemplateTests {
     /// produces a duplicate indistinguishable from coverage.
     @Test func aSiteIdempotenceAlreadyReachesIsLeftToIt() {
         #expect(RoleClosureTemplate.suggest(
-            for: Self.summary("sorted", parameters: [(nil, "[Int]")], returns: "[Int]")
+            for: Self.summary("sorted", returns: "[Int]", parameters: [(nil, "[Int]")])
         ) == nil)
     }
 
@@ -111,8 +111,8 @@ struct RoleClosureTemplateTests {
         #expect(RoleClosureTemplate.suggest(
             for: Self.summary(
                 "sorted",
-                parameters: [("by", "(Int, Int) -> Bool")],
                 returns: "[Int]",
+                parameters: [("by", "(Int, Int) -> Bool")],
                 containingType: "[Int]"
             )
         ) != nil)
@@ -124,7 +124,7 @@ struct RoleClosureTemplateTests {
     /// wearing the name.
     @Test func aResultThatDoesNotComposeIsRefused() {
         #expect(RoleClosureTemplate.suggest(
-            for: Self.summary("sorted", parameters: [(nil, "[Int]")], returns: "Report")
+            for: Self.summary("sorted", returns: "Report", parameters: [(nil, "[Int]")])
         ) == nil)
     }
 
@@ -134,8 +134,13 @@ struct RoleClosureTemplateTests {
     func effectfulDeclarationsAreRefused(label: String, isAsync: Bool, isThrows: Bool, isMutating: Bool) {
         #expect(RoleClosureTemplate.suggest(
             for: Self.summary(
-                "clamped", parameters: [("to", "Int")], returns: "NSRange",
-                containingType: "NSRange", isMutating: isMutating, isAsync: isAsync, isThrows: isThrows
+                "clamped",
+                returns: "NSRange",
+                parameters: [("to", "Int")],
+                containingType: "NSRange",
+                isMutating: isMutating,
+                isAsync: isAsync,
+                isThrows: isThrows
             )
         ) == nil, "\(label) should not carry this law")
     }
@@ -147,8 +152,8 @@ struct RoleClosureTemplateTests {
         #expect(RoleClosureTemplate.suggest(
             for: Self.summary(
                 "clamped",
-                parameters: [("matching", "Filter")],
                 returns: "NSRange",
+                parameters: [("matching", "Filter")],
                 containingType: "NSRange"
             )
         ) == nil)
@@ -158,7 +163,7 @@ struct RoleClosureTemplateTests {
 
     @Test func theHeldArgumentIsCalledOut() throws {
         let suggestion = try #require(RoleClosureTemplate.suggest(
-            for: Self.summary("clamped", parameters: [("to", "Int")], returns: "NSRange", containingType: "NSRange")
+            for: Self.summary("clamped", returns: "NSRange", parameters: [("to", "Int")], containingType: "NSRange")
         ))
         let caveats = suggestion.explainability.whyMightBeWrong.joined(separator: " ")
         #expect(caveats.contains("SAME IN BOTH CALLS"))

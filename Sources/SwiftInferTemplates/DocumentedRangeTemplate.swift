@@ -31,15 +31,19 @@ import SwiftInferCore
 /// lower bound below the upper. A half-open `0..<1` states a different law and is not read.
 public enum DocumentedRangeTemplate {
 
+    /// The name this template's suggestions carry: `documented-range`.
     public static let templateName = "documented-range"
 
+    /// Return types a documented range is read for: the fixed-width integers and the floating-point types.
     public static let numericCodomains: Set<String> = FixedWidthIntegerNames.signed
         .union(["UInt", "UInt8", "UInt16", "UInt32", "UInt64", "Double", "Float", "CGFloat"])
 
+    /// The `documented-range` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `documented-range` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "documented-range",
@@ -75,7 +79,7 @@ public enum DocumentedRangeTemplate {
         number + #"\s*(?:\.\.\.|…)\s*"# + number,
         #"\[\s*"# + number + #"\s*,\s*"# + number + #"\s*\]"#,
         #"\bbetween\s+"# + number + #"\s+and\s+"# + number,
-        #"\bfrom\s+"# + number + #"\s+(?:to|through)\s+"# + number
+        #"\bfrom\s+"# + number + #"\s+(?:to|through)\s+"# + number,
     ]
 
     /// The one range `doc` states, or `nil` for none or several.
@@ -111,7 +115,7 @@ public enum DocumentedRangeTemplate {
                 kind: .orderedCodomainSignature,
                 weight: 20,
                 detail: "Numeric result: \(summary.name) -> \(returnType)"
-            )
+            ),
         ]
     }
 
@@ -123,7 +127,7 @@ public enum DocumentedRangeTemplate {
                 + "division whose guard can be bypassed, NaN or infinity from a zero denominator.",
             "A FAILURE IS A DISAGREEMENT, and either side may be wrong: clamp the code to the "
                 + "range, or correct the comment. Inputs the type admits but callers never pass — "
-                + "a count above its total — still count; if they are impossible, make the type say so."
+                + "a count above its total — still count; if they are impossible, make the type say so.",
         ]
     }
 }

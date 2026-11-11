@@ -26,7 +26,7 @@ struct AcceptCheckCommandTests {
             scoreAtDecision: 80,
             tier: .strong,
             decision: choice,
-            timestamp: ISO8601DateFormatter().date(from: "2026-05-14T10:00:00Z")!
+            timestamp: Date(timeIntervalSince1970: 1_778_752_800) // 2026-05-14T10:00:00Z
         )
     }
 
@@ -75,7 +75,7 @@ struct AcceptCheckCommandTests {
             decision(identity: "AAA1111111111111", choice: .accepted),
             decision(identity: "BBB2222222222222", choice: .acceptedAsConformance),
             decision(identity: "CCC3333333333333", choice: .rejected),
-            decision(identity: "DDD4444444444444", choice: .skipped)
+            decision(identity: "DDD4444444444444", choice: .skipped),
         ])
         let kept = Command.acceptedRecords(from: decisions, templateFilter: nil)
         #expect(kept.map(\.identityHash) == ["AAA1111111111111", "BBB2222222222222"])
@@ -86,7 +86,7 @@ struct AcceptCheckCommandTests {
         let decisions = Decisions(records: [
             decision(identity: "AAA1111111111111", template: "round-trip"),
             decision(identity: "BBB2222222222222", template: "idempotence"),
-            decision(identity: "CCC3333333333333", template: "round-trip")
+            decision(identity: "CCC3333333333333", template: "round-trip"),
         ])
         let kept = Command.acceptedRecords(from: decisions, templateFilter: "round-trip")
         #expect(kept.map(\.identityHash) == ["AAA1111111111111", "CCC3333333333333"])
@@ -114,7 +114,7 @@ struct AcceptCheckCommandTests {
         #expect(singular.contains("re-verified 1 accepted decision:"))
         let plural = Command.renderSummary(results: [
             AcceptCheckResult(record: decision(identity: "AAA1111111111111"), kind: .stillPasses, detail: "bothPass"),
-            AcceptCheckResult(record: decision(identity: "BBB2222222222222"), kind: .nowFails, detail: "defaultFails")
+            AcceptCheckResult(record: decision(identity: "BBB2222222222222"), kind: .nowFails, detail: "defaultFails"),
         ])
         #expect(plural.contains("re-verified 2 accepted decisions:"))
     }
@@ -126,7 +126,7 @@ struct AcceptCheckCommandTests {
                 record: decision(identity: "AAA1111111111111", template: "round-trip"),
                 kind: .stillPasses,
                 detail: "bothPass"
-            )
+            ),
         ])
         #expect(rendered.contains("AAA1111111111111  round-trip  still-passes (bothPass)"))
     }
@@ -138,7 +138,7 @@ struct AcceptCheckCommandTests {
                 record: decision(identity: "AAA1111111111111", template: "round-trip"),
                 kind: .obsolete,
                 detail: nil
-            )
+            ),
         ])
         #expect(rendered.contains("AAA1111111111111  round-trip  obsolete\n"))
         #expect(!rendered.contains("obsolete ("))
@@ -148,7 +148,7 @@ struct AcceptCheckCommandTests {
     func renderSummaryBlockCoversAllKinds() {
         let rendered = Command.renderSummary(results: [
             AcceptCheckResult(record: decision(identity: "AAA1111111111111"), kind: .stillPasses, detail: nil),
-            AcceptCheckResult(record: decision(identity: "BBB2222222222222"), kind: .nowFails, detail: nil)
+            AcceptCheckResult(record: decision(identity: "BBB2222222222222"), kind: .nowFails, detail: nil),
         ])
         #expect(rendered.contains("Summary:"))
         #expect(rendered.contains("still-passes: 1"))
@@ -168,7 +168,7 @@ struct AcceptCheckCommandTests {
             record: record,
             outcome: (.stillPasses, "bothPass"),
             packageRoot: directory,
-            now: ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+            now: Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
         )
         #expect(warnings.isEmpty)
 

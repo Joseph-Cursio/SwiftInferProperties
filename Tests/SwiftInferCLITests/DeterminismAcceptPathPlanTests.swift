@@ -1,6 +1,5 @@
 @testable import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
 
 /// The determinism accept path through `SubjectCallPlan`: what it now declines, and the stub

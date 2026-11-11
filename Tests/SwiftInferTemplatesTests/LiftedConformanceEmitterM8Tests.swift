@@ -2,6 +2,78 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
+@Suite("LiftedConformanceEmitter — M8.4.b stdlib arms (Numeric, SetAlgebra)")
+struct LiftedConformanceEmitterStdlibTests {
+
+    @Test
+    func numericEmitsBareExtensionByteStable() {
+        // Numeric is the Ring arm — bare extension because the user's
+        // existing operator implementations satisfy stdlib Numeric's
+        // requirement set.
+        let explainability = ExplainabilityBlock(
+            whySuggested: [
+                "RefactorBridge claim: Money → Ring (stdlib Numeric)",
+                "additive op: plus(_:_:) with identity zero",
+                "multiplicative op: times(_:_:) with identity one",
+            ],
+            whyMightBeWrong: [
+                "Distributivity is NOT sample-verified.",
+                "FloatingPoint caveat: don't conform Double / Float.",
+            ]
+        )
+        let source = LiftedConformanceEmitter.numeric(
+            typeName: "Money",
+            explainability: explainability
+        )
+        let expected = """
+
+            // SwiftInfer RefactorBridge — Money: Numeric
+            //
+            // Why suggested:
+            //   - RefactorBridge claim: Money → Ring (stdlib Numeric)
+            //   - additive op: plus(_:_:) with identity zero
+            //   - multiplicative op: times(_:_:) with identity one
+            //
+            // Why this might be wrong:
+            //   - Distributivity is NOT sample-verified.
+            //   - FloatingPoint caveat: don't conform Double / Float.
+            extension Money: Numeric {}
+            """
+        #expect(source == expected)
+    }
+
+    @Test
+    func setAlgebraEmitsBareExtensionByteStable() {
+        // SetAlgebra is the secondary arm to a primary Semilattice
+        // claim — the emitter produces a bare `extension T: SetAlgebra {}`
+        // because the user's existing methods satisfy the protocol.
+        let explainability = ExplainabilityBlock(
+            whySuggested: [
+                "RefactorBridge claim: Bag → SetAlgebra"
+            ],
+            whyMightBeWrong: [
+                "stdlib SetAlgebra requires insert / remove / contains."
+            ]
+        )
+        let source = LiftedConformanceEmitter.setAlgebra(
+            typeName: "Bag",
+            explainability: explainability
+        )
+        let expected = """
+
+            // SwiftInfer RefactorBridge — Bag: SetAlgebra
+            //
+            // Why suggested:
+            //   - RefactorBridge claim: Bag → SetAlgebra
+            //
+            // Why this might be wrong:
+            //   - stdlib SetAlgebra requires insert / remove / contains.
+            extension Bag: SetAlgebra {}
+            """
+        #expect(source == expected)
+    }
+}
+
 @Suite("LiftedConformanceEmitter — M8.5 kit-protocol arms")
 struct LiftedConformanceEmitterM8Tests {
 
@@ -10,11 +82,11 @@ struct LiftedConformanceEmitterM8Tests {
         let explainability = ExplainabilityBlock(
             whySuggested: [
                 "RefactorBridge claim: Tally → CommutativeMonoid",
-                "from associativity: merge(_:_:)"
+                "from associativity: merge(_:_:)",
             ],
             whyMightBeWrong: [
                 "Commutativity is a Strict law per kit v1.9.0 — "
-                    + "`combine(a, b) == combine(b, a)` must hold for every (a, b)."
+                    + "`combine(a, b) == combine(b, a)` must hold for every (a, b).",
             ]
         )
         let source = LiftedConformanceEmitter.commutativeMonoid(
@@ -50,7 +122,7 @@ struct LiftedConformanceEmitterM8Tests {
             whySuggested: [
                 "RefactorBridge claim: AdditiveInt → Group",
                 "from associativity: plus(_:_:)",
-                "from inverse-element pairing: negate(_:) -> AdditiveInt"
+                "from inverse-element pairing: negate(_:) -> AdditiveInt",
             ],
             whyMightBeWrong: [
                 "Inverse witness must satisfy both Strict laws."
@@ -185,77 +257,5 @@ struct LiftedConformanceEmitterM8Tests {
         #expect(monoid.contains("T: Monoid"))
         #expect(cmon.contains("T: CommutativeMonoid"))
         #expect(semilattice.contains("T: Semilattice"))
-    }
-}
-
-@Suite("LiftedConformanceEmitter — M8.4.b stdlib arms (Numeric, SetAlgebra)")
-struct LiftedConformanceEmitterStdlibTests {
-
-    @Test
-    func numericEmitsBareExtensionByteStable() {
-        // Numeric is the Ring arm — bare extension because the user's
-        // existing operator implementations satisfy stdlib Numeric's
-        // requirement set.
-        let explainability = ExplainabilityBlock(
-            whySuggested: [
-                "RefactorBridge claim: Money → Ring (stdlib Numeric)",
-                "additive op: plus(_:_:) with identity zero",
-                "multiplicative op: times(_:_:) with identity one"
-            ],
-            whyMightBeWrong: [
-                "Distributivity is NOT sample-verified.",
-                "FloatingPoint caveat: don't conform Double / Float."
-            ]
-        )
-        let source = LiftedConformanceEmitter.numeric(
-            typeName: "Money",
-            explainability: explainability
-        )
-        let expected = """
-
-            // SwiftInfer RefactorBridge — Money: Numeric
-            //
-            // Why suggested:
-            //   - RefactorBridge claim: Money → Ring (stdlib Numeric)
-            //   - additive op: plus(_:_:) with identity zero
-            //   - multiplicative op: times(_:_:) with identity one
-            //
-            // Why this might be wrong:
-            //   - Distributivity is NOT sample-verified.
-            //   - FloatingPoint caveat: don't conform Double / Float.
-            extension Money: Numeric {}
-            """
-        #expect(source == expected)
-    }
-
-    @Test
-    func setAlgebraEmitsBareExtensionByteStable() {
-        // SetAlgebra is the secondary arm to a primary Semilattice
-        // claim — the emitter produces a bare `extension T: SetAlgebra {}`
-        // because the user's existing methods satisfy the protocol.
-        let explainability = ExplainabilityBlock(
-            whySuggested: [
-                "RefactorBridge claim: Bag → SetAlgebra"
-            ],
-            whyMightBeWrong: [
-                "stdlib SetAlgebra requires insert / remove / contains."
-            ]
-        )
-        let source = LiftedConformanceEmitter.setAlgebra(
-            typeName: "Bag",
-            explainability: explainability
-        )
-        let expected = """
-
-            // SwiftInfer RefactorBridge — Bag: SetAlgebra
-            //
-            // Why suggested:
-            //   - RefactorBridge claim: Bag → SetAlgebra
-            //
-            // Why this might be wrong:
-            //   - stdlib SetAlgebra requires insert / remove / contains.
-            extension Bag: SetAlgebra {}
-            """
-        #expect(source == expected)
     }
 }

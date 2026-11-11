@@ -1,6 +1,29 @@
 @testable import SwiftInferCore
 import Testing
 
+@Suite("Signal.Kind.protocolCoveredProperty — V1.5.1 veto signal")
+struct ProtocolCoveredPropertySignalTests {
+
+    @Test("New Kind case is reachable via CaseIterable")
+    func kindIsCaseIterable() {
+        #expect(Signal.Kind.allCases.contains(.protocolCoveredProperty))
+    }
+
+    @Test("Veto-shaped Signal collapses score (mirrors nonDeterministicBody / nonEquatableOutput)")
+    func vetoCollapsesScore() {
+        let detail = "Property already covered by conformance to 'AdditiveArithmetic'"
+            + " — checked by PropertyLawKit's checkAdditiveArithmeticPropertyLaws"
+        let veto = Signal(
+            kind: .protocolCoveredProperty,
+            weight: Signal.vetoWeight,
+            detail: detail
+        )
+        #expect(veto.isVeto)
+        // formattedLine ends in " (veto)" for veto-shaped signals
+        #expect(veto.formattedLine.hasSuffix(" (veto)"))
+    }
+}
+
 @Suite("ProtocolCoverageMap — V1.5.1 curated protocol → property coverage")
 struct ProtocolCoverageMapTests {
 
@@ -256,7 +279,7 @@ struct ProtocolCoverageMapTests {
             "IteratorProtocol",
             "Sequence",
             // stdlib string conversion
-            "LosslessStringConvertible"
+            "LosslessStringConvertible",
         ]
         #expect(Set(ProtocolCoverageMap.protocolCoverage.keys) == expected)
         #expect(ProtocolCoverageMap.protocolCoverage.count == 17)
@@ -330,28 +353,5 @@ struct ProtocolCoverageMapTests {
                 #expect(!properties.isEmpty, "\(name) should cover at least one property")
             }
         }
-    }
-}
-
-@Suite("Signal.Kind.protocolCoveredProperty — V1.5.1 veto signal")
-struct ProtocolCoveredPropertySignalTests {
-
-    @Test("New Kind case is reachable via CaseIterable")
-    func kindIsCaseIterable() {
-        #expect(Signal.Kind.allCases.contains(.protocolCoveredProperty))
-    }
-
-    @Test("Veto-shaped Signal collapses score (mirrors nonDeterministicBody / nonEquatableOutput)")
-    func vetoCollapsesScore() {
-        let detail = "Property already covered by conformance to 'AdditiveArithmetic'"
-            + " — checked by PropertyLawKit's checkAdditiveArithmeticPropertyLaws"
-        let veto = Signal(
-            kind: .protocolCoveredProperty,
-            weight: Signal.vetoWeight,
-            detail: detail
-        )
-        #expect(veto.isVeto)
-        // formattedLine ends in " (veto)" for veto-shaped signals
-        #expect(veto.formattedLine.hasSuffix(" (veto)"))
     }
 }

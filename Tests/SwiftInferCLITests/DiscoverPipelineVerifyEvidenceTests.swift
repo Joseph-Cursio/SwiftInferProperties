@@ -19,14 +19,14 @@ struct DiscoverPipelineVerifyEvidenceTests {
 
     private func collect(
         _ directory: URL,
-        includePossible: Bool? = nil,
+        includePossible: SettingOverride = .notGiven,
         evidence: [String: VerifyEvidence] = [:]
     ) throws -> [Suggestion] {
         try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
+            diagnostics: DPRecordingDiagnosticOutput(),
             includePossible: includePossible,
-            evidence: DiscoverEvidenceInputs(verifyByIdentity: evidence),
-            diagnostics: DPRecordingDiagnosticOutput()
+            evidence: DiscoverEvidenceInputs(verifyByIdentity: evidence)
         ).suggestions
     }
 
@@ -45,7 +45,7 @@ struct DiscoverPipelineVerifyEvidenceTests {
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.67.0",
                 subjectFingerprint: fingerprint
-            )
+            ),
         ]
     }
 

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 import Testing
 
@@ -37,13 +36,13 @@ struct MonotonicityLabeledCallTests {
         SemanticIndexEntry(
             identityHash: "0x518A359C0574816B",
             templateName: template,
-            typeName: "Int",
             score: 30,
             tier: "Possible",
             primaryFunctionName: primary,
             location: "/Module.swift:1",
             firstSeenAt: "2026-05-11T00:00:00Z",
-            lastSeenAt: "2026-05-11T00:00:00Z"
+            lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: "Int"
         )
     }
 

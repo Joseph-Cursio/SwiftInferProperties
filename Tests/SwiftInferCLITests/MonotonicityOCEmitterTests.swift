@@ -33,9 +33,9 @@ struct MonotonicityOCEmitterTests {
             typeShape: nil,
             template: "monotonicity",
             functionCalls: ["\(bareType).index", primaryFunctionName],
-            extraImports: [],
             seedHex: canonicalSeed,
-            trialBudget: .small
+            trialBudget: .small,
+            extraImports: []
         )
     }
 
@@ -129,9 +129,9 @@ struct MonotonicityOCEmitterTests {
                 typeShape: nil,
                 template: "monotonicity",
                 functionCalls: ["{ (x: Int) in x * 2 }", "scale(_:)"],
-                extraImports: [],
                 seedHex: Self.canonicalSeed,
-                trialBudget: .small
+                trialBudget: .small,
+                extraImports: []
             )
         )
         // The else-branch composer reads only functionCalls.first; the
@@ -146,7 +146,7 @@ struct MonotonicityOCEmitterTests {
     @Test("nested-OC carriers emit the instance shape", arguments: [
         "OrderedSet<Int>.SubSequence",
         "OrderedDictionary<Int, Int>.Values",
-        "OrderedDictionary<Int, Int>.Elements.SubSequence"
+        "OrderedDictionary<Int, Int>.Elements.SubSequence",
     ])
     func nestedOCCarrierEmitsInstanceShape(carrier: String) throws {
         let source = try StrategistDispatchEmitter.emit(
@@ -162,7 +162,7 @@ struct MonotonicityOCEmitterTests {
     /// — `instance-method-shape-census.md` §8. Its `Index` is `Int`, as the shape needs.
     @Test("Deque<Int> emits the instance shape, on either spelling", arguments: [
         "Deque<Int>",
-        "Deque"
+        "Deque",
     ])
     func dequeEmitsInstanceShape(carrier: String) throws {
         #expect(StrategistDispatchEmitter.isMonotonicityInstanceCarrier(carrier))

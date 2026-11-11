@@ -19,9 +19,9 @@ struct PreconditionInferrerTests {
     /// literal rows. Each row's length must match the shape's
     /// argument count.
     private static func entry(
-        typeName: String = "Doc",
         shape: ConstructionShape,
-        rows: [[String]]
+        rows: [[String]],
+        typeName: String = "Doc"
     ) -> ConstructionRecordEntry {
         ConstructionRecordEntry(
             typeName: typeName,
@@ -148,7 +148,7 @@ struct PreconditionInferrerTests {
         #expect(PreconditionInferrer.infer(from: entry).isEmpty)
     }
 
-    // String-pattern tests live in PreconditionInferrerTests+Strings.swift.
+    // String-pattern tests live in PreconditionInferrerStringTests.swift.
 
     // MARK: - Boolean patterns
 
@@ -194,12 +194,12 @@ struct PreconditionInferrerTests {
         let entry = Self.entry(
             shape: Self.shape([
                 (label: "count", kind: .integer),
-                (label: "title", kind: .string)
+                (label: "title", kind: .string),
             ]),
             rows: [
                 ["1", "\"a\""],
                 ["2", "\"bb\""],
-                ["3", "\"ccc\""]
+                ["3", "\"ccc\""],
             ]
         )
         let hints = PreconditionInferrer.infer(from: entry)
@@ -217,12 +217,12 @@ struct PreconditionInferrerTests {
         let entry = Self.entry(
             shape: Self.shape([
                 (label: "count", kind: .integer),
-                (label: "flag", kind: .boolean)
+                (label: "flag", kind: .boolean),
             ]),
             rows: [
                 ["1", "true"],
                 ["2", "false"],  // mixed bool — outlier
-                ["3", "true"]
+                ["3", "true"],
             ]
         )
         let hints = PreconditionInferrer.infer(from: entry)

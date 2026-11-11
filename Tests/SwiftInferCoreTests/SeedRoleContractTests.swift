@@ -29,7 +29,7 @@ struct SeedRoleContractTests {
         // PureClosureCandidateVisitor.Kind — one per case.
         "comparator", "predicate", "transform", "reducer",
         // ExtractableTotalKernelVisitor — the two kernel shapes.
-        "partition", "normalizer"
+        "partition", "normalizer",
     ]
 
     private func decodeRole(_ raw: String) throws -> SeedRole {
@@ -133,7 +133,7 @@ struct SeedRoleContractTests {
         let manifest = SeedManifest(seeds: [
             SeedManifest.Seed(file: "A.swift", line: 1, symbol: "open", kind: .pureFunction),
             SeedManifest.Seed(file: "A.swift", line: 9, symbol: "hidden", kind: .restrictedFunction),
-            SeedManifest.Seed(file: "A.swift", line: 20, symbol: "trapped", kind: .extractableKernel)
+            SeedManifest.Seed(file: "A.swift", line: 20, symbol: "trapped", kind: .extractableKernel),
         ])
         #expect(manifest.analysableSeeds.map(\.symbol) == ["open", "hidden"])
         #expect(manifest.refactorPendingSeeds.map(\.symbol) == ["trapped"])

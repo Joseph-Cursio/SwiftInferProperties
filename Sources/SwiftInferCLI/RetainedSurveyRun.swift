@@ -23,7 +23,7 @@ import SwiftInferCore
 ///
 /// The persisted evidence store is **lossy in exactly the bucket that matters**:
 /// `architecturalCoveragePending` collapses to `measuredError` on write, as
-/// `VerifyCommand+AllFromIndex.swift:23` states in as many words. Unverifiable is where the
+/// `SwiftInferCommand.Verify+AllFromIndex.swift:23` states in as many words. Unverifiable is where the
 /// interesting movement has been — §9.3's nine syntax-node rows, §9.7's re-attribution,
 /// §11.3's two `BodySignalVisitor` rows — so a diff built on the store could not have
 /// answered a single one of those questions. `SurveyRecord` is the canonical measurement
@@ -123,16 +123,12 @@ struct RetainedSurveyRun: Codable, Sendable {
         tiers: [String: Tier],
         context: Context
     ) -> Self {
-        let label = context.label
-        let target = context.target
-        let packageRoot = context.packageRoot
-        let capturedAt = context.capturedAt
-        return Self(
+        Self(
             schemaVersion: currentSchemaVersion,
-            label: label,
-            capturedAt: capturedAt,
-            target: target,
-            subjectRevision: CorpusProvenance.describe(packageRoot),
+            label: context.label,
+            capturedAt: context.capturedAt,
+            target: context.target,
+            subjectRevision: CorpusProvenance.describe(context.packageRoot),
             swiftInferVersion: VerifyEvidenceRecorder.swiftInferVersion,
             tiersByIdentity: tiers.mapValues { $0.rawValue },
             records: records

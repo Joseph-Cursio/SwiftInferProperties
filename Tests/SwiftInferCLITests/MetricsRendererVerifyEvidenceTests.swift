@@ -44,12 +44,12 @@ struct MetricsRendererVerifyEvidenceTests {
         let decisions = Decisions(records: [
             Self.decision("AAA1111111111111", .accepted),
             Self.decision("BBB2222222222222", .accepted),
-            Self.decision("CCC3333333333333", .rejected)
+            Self.decision("CCC3333333333333", .rejected),
         ])
         let evidence = VerifyEvidenceLog(records: [
             Self.evidence("AAA1111111111111", .measuredBothPass),
             Self.evidence("BBB2222222222222", .measuredEdgeCaseAdvisory),
-            Self.evidence("CCC3333333333333", .measuredDefaultFails)
+            Self.evidence("CCC3333333333333", .measuredDefaultFails),
         ])
         let rows = MetricsRenderer.evidenceRows(decisions: decisions, evidence: evidence)
         #expect(rows.count == 2)
@@ -66,7 +66,7 @@ struct MetricsRendererVerifyEvidenceTests {
     func decisionsWithoutEvidenceExcluded() {
         let decisions = Decisions(records: [
             Self.decision("AAA1111111111111", .accepted),
-            Self.decision("NOEVIDENCE000000", .accepted)
+            Self.decision("NOEVIDENCE000000", .accepted),
         ])
         let evidence = VerifyEvidenceLog(records: [
             Self.evidence("AAA1111111111111", .measuredBothPass)
@@ -82,12 +82,12 @@ struct MetricsRendererVerifyEvidenceTests {
         let decisions = Decisions(records: [
             Self.decision("DDD4444444444444", .skipped),
             Self.decision("AAA1111111111111", .accepted),
-            Self.decision("CCC3333333333333", .rejected)
+            Self.decision("CCC3333333333333", .rejected),
         ])
         let evidence = VerifyEvidenceLog(records: [
             Self.evidence("AAA1111111111111", .measuredBothPass),
             Self.evidence("CCC3333333333333", .measuredDefaultFails),
-            Self.evidence("DDD4444444444444", .architecturalCoveragePending)
+            Self.evidence("DDD4444444444444", .architecturalCoveragePending),
         ])
         let rows = MetricsRenderer.evidenceRows(decisions: decisions, evidence: evidence)
         #expect(rows.map(\.decision) == [.accepted, .rejected, .skipped])
@@ -111,11 +111,11 @@ struct MetricsRendererVerifyEvidenceTests {
         let decisions = Decisions(records: [
             Self.decision("AAA1111111111111", .accepted),
             Self.decision("BBB2222222222222", .rejected),
-            Self.decision("NOEVIDENCE000000", .skipped)
+            Self.decision("NOEVIDENCE000000", .skipped),
         ])
         let evidence = VerifyEvidenceLog(records: [
             Self.evidence("AAA1111111111111", .measuredBothPass),
-            Self.evidence("BBB2222222222222", .measuredDefaultFails)
+            Self.evidence("BBB2222222222222", .measuredDefaultFails),
         ])
         let output = MetricsRenderer.render(
             decisions: decisions,

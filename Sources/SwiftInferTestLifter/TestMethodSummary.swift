@@ -39,6 +39,7 @@ public struct TestMethodSummary {
         case stdlibUnittest
     }
 
+    /// Which test harness declared the method: XCTest, Swift Testing or `StdlibUnittest`.
     public let harness: Harness
 
     /// `nil` only for `@Test func` declarations at file scope. XCTest
@@ -46,10 +47,14 @@ public struct TestMethodSummary {
     /// inside a `@Suite` (or any enclosing type) carry the type name.
     public let className: String?
 
+    /// The test's method name, or the string-literal label of a `StdlibUnittest` closure.
     public let methodName: String
+    /// The test's body, kept as syntax so the slicer can walk it without re-parsing.
     public let body: CodeBlockSyntax
+    /// Where the test method or test closure appears in source.
     public let location: SwiftInferCore.SourceLocation
 
+    /// Builds a summary from the harness, enclosing class, method name, body and location.
     public init(
         harness: Harness,
         className: String?,

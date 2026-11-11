@@ -43,6 +43,7 @@ public enum NClassEquivalenceClassDetector {
     /// one bucket isn't a partition.
     static let minActiveBuckets = 3
 
+    /// The N-class equivalence-class hint for `candidate`, or `nil` when it does not qualify.
     public static func detect(
         candidate: PartitionCandidate,
         predicateSummary: FunctionSummary?,

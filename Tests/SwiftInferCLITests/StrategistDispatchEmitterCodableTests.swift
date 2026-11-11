@@ -21,9 +21,9 @@ struct StrategistDispatchEmitterCodableTests {
                 typeShape: nil,
                 template: "codable-round-trip",
                 functionCalls: [],
-                extraImports: [],
                 seedHex: Self.seed,
-                trialBudget: .small
+                trialBudget: .small,
+                extraImports: []
             )
         )
     }

@@ -217,7 +217,7 @@ public enum InteractionVerifyOutcomeParser {
             "dyld[",
             "image not found",
             "Symbol not found:",
-            "no LC_RPATH"
+            "no LC_RPATH",
         ]
         return signatures.contains { stderr.contains($0) }
     }

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.150 — the user-facing pointer at what to do about Unverifiable picks, surfaced wherever

@@ -2,6 +2,24 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Trivial thread-safe counter for the appliesTo-invocation test.
+/// (Mirrors what we'd use in a `@Sendable` closure capture without
+/// pulling in a heavier sync framework.)
+private final class LockedCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _value = 0
+
+    func increment() {
+        lock.lock(); defer { lock.unlock() }
+        _value += 1
+    }
+
+    var value: Int {
+        lock.lock(); defer { lock.unlock() }
+        return _value
+    }
+}
+
 /// V1.36.A — `Constraint<Subject>` data-model tests. Field defaults,
 /// generic Subject type-checking, closure invocation.
 @Suite("Constraint — V1.36.A data model")
@@ -121,23 +139,5 @@ struct ConstraintTests {
         #expect(id1 == id2, "same Subject should produce same identity")
         let id3 = constraint.identity("bar")
         #expect(id1 != id3, "different Subject should produce different identity")
-    }
-}
-
-/// Trivial thread-safe counter for the appliesTo-invocation test.
-/// (Mirrors what we'd use in a `@Sendable` closure capture without
-/// pulling in a heavier sync framework.)
-private final class LockedCounter: @unchecked Sendable {
-    private let lock = NSLock()
-    private var _value = 0
-
-    func increment() {
-        lock.lock(); defer { lock.unlock() }
-        _value += 1
-    }
-
-    var value: Int {
-        lock.lock(); defer { lock.unlock() }
-        return _value
     }
 }

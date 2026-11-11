@@ -57,7 +57,7 @@ extension IdempotenceTemplate {
         "nextState",
         "step",
         "findNext",
-        "advanceToNextUnoccupiedBucket"
+        "advanceToNextUnoccupiedBucket",
     ]
 
     /// Returns a veto `Signal` (weight `Signal.vetoWeight`) when the

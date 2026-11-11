@@ -123,7 +123,7 @@ the left decides the result, so `a && f()` and `f() && a` differ in what runs).
 - `CuratedStdlibCatalog.swift` (the catalog + model) + per-library
   extensions (`+Numerics` / `+Collections` / `+Algorithms` / `+Foundation` /
   `+Containers`); `KnownPropertiesRenderer.swift` (pure: list render +
-  verify-program generation + output parsing); `KnownPropertiesCommand.swift`
+  verify-program generation + output parsing); `SwiftInferCommand.KnownProperties.swift`
   (the subcommand + interpreter subprocess + stdlib/package partition);
   `KnownPropertiesPackages.swift` (module → package mapping);
   `KnownPropertiesPackageVerify.swift` (temp-package build + run).

@@ -61,7 +61,7 @@ public enum DeterminismInteractionTemplate: InteractionTemplateFamily {
         return [
             carrierNote,
             "Reducer-shaped signature (\(candidate.signatureShape.rawValue)); "
-                + "static purity label: \(candidate.purity.rawValue)."
+                + "static purity label: \(candidate.purity.rawValue).",
         ]
     }
 
@@ -76,7 +76,7 @@ public enum DeterminismInteractionTemplate: InteractionTemplateFamily {
                 + "unsupported shape / non-constructible State reports "
                 + "architectural-coverage-pending rather than a pass/fail. For "
                 + "TCA, `withRandomNumberGenerator` is not yet pinned, so a "
-                + "reducer using it synchronously may report a false failure."
+                + "reducer using it synchronously may report a false failure.",
         ]
     }
 

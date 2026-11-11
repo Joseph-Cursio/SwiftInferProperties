@@ -3,293 +3,6 @@ import Foundation
 import SwiftInferCore
 import Testing
 
-@Suite("Discover pipeline — --seeds focus (lint → infer pipeline consumer)")
-struct DiscoverPipelineSeedsTests {
-
-    /// Two Strong idempotent functions in one file. Seeding one focuses the
-    /// output to exactly that suggestion; the other is dropped.
-    private static let twoCandidates = """
-    struct Sanitizer {
-        func normalize(_ value: String) -> String {
-            return normalize(normalize(value))
-        }
-        func sanitize(_ value: String) -> String {
-            return sanitize(sanitize(value))
-        }
-    }
-    """
-
-    @Test("No manifest surfaces every suggestion (control)")
-    func noManifestSurfacesAll() throws {
-        let directory = try writeDPFixture(name: "SeedsControl", contents: Self.twoCandidates)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(directory: directory, includePossible: false, output: recording)
-        #expect(recording.text.contains("2 suggestions."))
-        #expect(recording.text.contains("normalize(_:)"))
-        #expect(recording.text.contains("sanitize(_:)"))
-    }
-
-    @Test("A manifest focuses output to the seeded function only")
-    func manifestFocusesToSeededFunction() throws {
-        let directory = try writeDPFixture(name: "SeedsFocus", contents: Self.twoCandidates)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 2, symbol: "normalize", rule: "Pure Function Property-Test Candidate")
-        ])
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording,
-            diagnostics: diagnostics
-        )
-        #expect(recording.text.contains("1 suggestion."))
-        #expect(recording.text.contains("normalize(_:)"))
-        #expect(recording.text.contains("sanitize(_:)") == false)
-        // "seedable" qualifies the denominator: a law whose subject a pure-function manifest could
-        // never name (a state machine's impure mutators) is not counted against the seed match,
-        // because it was never in the search the seeds narrow.
-        #expect(diagnostics.lines.contains {
-            $0.contains("focused on 1 analysable seed(s): kept 1 of 2 seedable suggestion(s)")
-        })
-    }
-
-    @Test("Seeding by a different filename (basename mismatch) focuses to nothing")
-    func basenameMismatchFocusesToNothing() throws {
-        let directory = try writeDPFixture(name: "SeedsMismatch", contents: Self.twoCandidates)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(seeds: [.init(file: "Other.swift", line: 2, symbol: "normalize")])
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording
-        )
-        #expect(recording.body == "0 suggestions.")
-    }
-
-    @Test("An empty manifest applies no focus rather than discarding everything")
-    func emptyManifestAppliesNoFocus() throws {
-        // This used to assert `"0 suggestions."`, on the reading that "focus on these zero
-        // functions" means "keep zero suggestions". Defensible for a manifest someone sat down and
-        // wrote. But nobody writes this manifest — it is whatever the producing linter found, and a
-        // linter with a blind spot emits an empty one. The filter then threw away every genuine
-        // suggestion and reported a confident zero, which made running the documented lint → infer
-        // pipeline *strictly worse* than running swift-infer alone.
-        //
-        // Focusing on nothing is not a request anyone makes. It is what a producer that found
-        // nothing looks like, and the honest answer is to say so and not filter.
-        let directory = try writeDPFixture(name: "SeedsEmpty", contents: Self.twoCandidates)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: SeedManifest(seeds: []),
-            output: recording,
-            diagnostics: diagnostics
-        )
-
-        #expect(recording.text.contains("2 suggestions."))
-        #expect(diagnostics.joined.contains("warning"))
-    }
-
-    @Test("An off-version manifest is consumed best-effort with a warning")
-    func offVersionWarnsButConsumes() throws {
-        let directory = try writeDPFixture(name: "SeedsVersion", contents: Self.twoCandidates)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(version: 99, seeds: [.init(file: "Source.swift", line: 2, symbol: "normalize")])
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording,
-            diagnostics: diagnostics
-        )
-        #expect(recording.text.contains("1 suggestion."))
-        #expect(diagnostics.lines.contains { $0.contains("version 99 is not the supported version 2") })
-    }
-
-    // MARK: - Generic laws (broaden discover: seeded pure fn → determinism)
-
-    @Test("Synthesizes a determinism law for a seeded function no template matched")
-    func synthesizesDeterminismForUncoveredSeed() throws {
-        let directory = try writeDPFixture(name: "GenericLaw", contents: """
-        func describe(_ n: Int, prefix: String) -> String { prefix + "\\(n)" }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "describe")])
-        let recording = DPRecordingOutput()
-        let diagnostics = DPRecordingDiagnosticOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording,
-            diagnostics: diagnostics
-        )
-        #expect(recording.text.contains("Template: determinism"))
-        #expect(recording.text.contains("describe(_:prefix:)"))
-        #expect(recording.text.contains("f(x) == f(x)"))
-        #expect(diagnostics.lines.contains { $0.contains("synthesized 1 generic determinism law") })
-    }
-
-    @Test("Skips the determinism law when a template already covers the seeded function")
-    func skipsDeterminismWhenTemplateCovers() throws {
-        let directory = try writeDPFixture(name: "GenericCovered", contents: """
-        func normalize(_ value: String) -> String { normalize(normalize(value)) }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "normalize")])
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording
-        )
-        #expect(recording.text.contains("Template: idempotence"))
-        #expect(recording.text.contains("Template: determinism") == false)
-    }
-
-    @Test("Determinism requires a value-returning function that takes inputs")
-    func determinismQualificationFilters() throws {
-        let directory = try writeDPFixture(name: "GenericQualify", contents: """
-        func noParams() -> Int { 0 }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 1, symbol: "noParams")
-        ])
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording
-        )
-        // A nullary function has nothing to vary — still excluded; these are shape
-        // requirements for *writing* the law.
-        #expect(recording.text.contains("Template: determinism") == false)
-    }
-
-    @Test("A seeded throwing function earns the determinism law")
-    func determinismCoversThrowingFunctions() throws {
-        // Used to be excluded on the grounds that "a throwing function has no value to compare on
-        // some inputs" — the identical mistake as the instance-method refusal, un-fixed until the
-        // SwiftLintRuleStudio road-test hit it on `serialize`. A pure function is deterministic
-        // whether or not it throws; the emitted stub compares `try? f(x)` on both sides, so a
-        // throwing input is `nil == nil` and only a value difference falsifies it.
-        let directory = try writeDPFixture(name: "GenericThrows", contents: """
-        func risky(_ text: String) throws -> Int { Int(text) ?? 0 }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 1, symbol: "risky")
-        ])
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording
-        )
-        #expect(recording.text.contains("Template: determinism"))
-    }
-
-    @Test("A seeded instance method earns the determinism law")
-    func determinismCoversInstanceMethods() throws {
-        // This used to be bundled into the exclusions above, on the grounds that "an instance
-        // method could read mutable `self`" — the same blanket refusal the producing linter made,
-        // in the same words. It is redundant twice over. The seed IS the purity claim: a producer
-        // that analyses what a method reads from `self` has already answered the objection, and
-        // this end cannot re-litigate it anyway. And the law is self-falsifying — a hidden state
-        // read is exactly what running it catches. Refusing to write a law because it might fail
-        // is refusing to test.
-        //
-        // The cost was concrete: in an app almost all logic is instance methods, so every seed the
-        // linter handed over was discarded here and the pipeline reported nothing.
-        let directory = try writeDPFixture(name: "GenericInstance", contents: """
-        struct Box {
-            func get(_ key: String) -> Int { key.count }
-        }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let manifest = SeedManifest(seeds: [
-            .init(file: "Source.swift", line: 2, symbol: "get")
-        ])
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(
-            directory: directory,
-            includePossible: false,
-            seedManifest: manifest,
-            output: recording
-        )
-
-        #expect(recording.text.contains("Template: determinism"))
-        #expect(recording.text.contains("get(_:)"))
-    }
-
-    @Test("No determinism laws without a seed manifest")
-    func noDeterminismWithoutSeeds() throws {
-        let directory = try writeDPFixture(name: "GenericNoSeeds", contents: """
-        func describe(_ n: Int, prefix: String) -> String { prefix + "\\(n)" }
-        """)
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let recording = DPRecordingOutput()
-        try SwiftInferCommand.Discover.run(directory: directory, includePossible: false, output: recording)
-        #expect(recording.text.contains("Template: determinism") == false)
-    }
-
-    // MARK: - loadSeedManifest
-
-    @Test("loadSeedManifest decodes a producer-shaped manifest")
-    func loadsProducerShapedManifest() throws {
-        let directory = try makeDPFixtureDirectory(name: "SeedsLoad")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let path = directory.appendingPathComponent("seeds.json")
-        try Data("""
-        { "version": 2, "seeds": [
-            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function",
-              "rule": "Pure Function Property-Test Candidate" }
-        ] }
-        """.utf8).write(to: path)
-        let manifest = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
-        #expect(manifest.version == 2)
-        #expect(manifest.seeds.count == 1)
-        #expect(manifest.seeds.first?.symbol == "add")
-        #expect(manifest.seeds.first?.file == "Math.swift")
-    }
-
-    @Test("loadSeedManifest throws on a missing file")
-    func throwsOnMissingFile() throws {
-        let directory = try makeDPFixtureDirectory(name: "SeedsMissing")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let path = directory.appendingPathComponent("nope.json")
-        #expect(throws: (any Error).self) {
-            _ = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
-        }
-    }
-
-    @Test("loadSeedManifest throws on malformed JSON")
-    func throwsOnMalformedJSON() throws {
-        let directory = try makeDPFixtureDirectory(name: "SeedsMalformed")
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let path = directory.appendingPathComponent("seeds.json")
-        try Data("{ not json".utf8).write(to: path)
-        #expect(throws: (any Error).self) {
-            _ = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
-        }
-    }
-}
-
 /// The manifest's **required** fields, and what a document missing one does.
 ///
 /// Its own suite rather than another few tests on `DiscoverPipelineSeedsTests`, which is at its
@@ -334,5 +47,292 @@ struct SeedManifestRequiredFieldTests {
         """.utf8).write(to: path)
         let manifest = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
         #expect(manifest.seeds.first?.rule == "Pure Function Property-Test Candidate")
+    }
+}
+
+@Suite("Discover pipeline — --seeds focus (lint → infer pipeline consumer)")
+struct DiscoverPipelineSeedsTests {
+
+    /// Two Strong idempotent functions in one file. Seeding one focuses the
+    /// output to exactly that suggestion; the other is dropped.
+    private static let twoCandidates = """
+    struct Sanitizer {
+        func normalize(_ value: String) -> String {
+            return normalize(normalize(value))
+        }
+        func sanitize(_ value: String) -> String {
+            return sanitize(sanitize(value))
+        }
+    }
+    """
+
+    @Test("No manifest surfaces every suggestion (control)")
+    func noManifestSurfacesAll() throws {
+        let directory = try writeDPFixture(name: "SeedsControl", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(directory: directory, output: recording, includePossible: false)
+        #expect(recording.text.contains("2 suggestions."))
+        #expect(recording.text.contains("normalize(_:)"))
+        #expect(recording.text.contains("sanitize(_:)"))
+    }
+
+    @Test("A manifest focuses output to the seeded function only")
+    func manifestFocusesToSeededFunction() throws {
+        let directory = try writeDPFixture(name: "SeedsFocus", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 2, symbol: "normalize", rule: "Pure Function Property-Test Candidate")
+        ])
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("1 suggestion."))
+        #expect(recording.text.contains("normalize(_:)"))
+        #expect(recording.text.contains("sanitize(_:)") == false)
+        // "seedable" qualifies the denominator: a law whose subject a pure-function manifest could
+        // never name (a state machine's impure mutators) is not counted against the seed match,
+        // because it was never in the search the seeds narrow.
+        #expect(diagnostics.lines.contains {
+            $0.contains("focused on 1 analysable seed(s): kept 1 of 2 seedable suggestion(s)")
+        })
+    }
+
+    @Test("Seeding by a different filename (basename mismatch) focuses to nothing")
+    func basenameMismatchFocusesToNothing() throws {
+        let directory = try writeDPFixture(name: "SeedsMismatch", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [.init(file: "Other.swift", line: 2, symbol: "normalize")])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest
+        )
+        #expect(recording.body == "0 suggestions.")
+    }
+
+    @Test("An empty manifest applies no focus rather than discarding everything")
+    func emptyManifestAppliesNoFocus() throws {
+        // This used to assert `"0 suggestions."`, on the reading that "focus on these zero
+        // functions" means "keep zero suggestions". Defensible for a manifest someone sat down and
+        // wrote. But nobody writes this manifest — it is whatever the producing linter found, and a
+        // linter with a blind spot emits an empty one. The filter then threw away every genuine
+        // suggestion and reported a confident zero, which made running the documented lint → infer
+        // pipeline *strictly worse* than running swift-infer alone.
+        //
+        // Focusing on nothing is not a request anyone makes. It is what a producer that found
+        // nothing looks like, and the honest answer is to say so and not filter.
+        let directory = try writeDPFixture(name: "SeedsEmpty", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: SeedManifest(seeds: []),
+            diagnostics: diagnostics
+        )
+
+        #expect(recording.text.contains("2 suggestions."))
+        #expect(diagnostics.joined.contains("warning"))
+    }
+
+    @Test("An off-version manifest is consumed best-effort with a warning")
+    func offVersionWarnsButConsumes() throws {
+        let directory = try writeDPFixture(name: "SeedsVersion", contents: Self.twoCandidates)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 2, symbol: "normalize")], version: 99)
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("1 suggestion."))
+        #expect(diagnostics.lines.contains { $0.contains("version 99 is not the supported version 2") })
+    }
+
+    // MARK: - Generic laws (broaden discover: seeded pure fn → determinism)
+
+    @Test("Synthesizes a determinism law for a seeded function no template matched")
+    func synthesizesDeterminismForUncoveredSeed() throws {
+        let directory = try writeDPFixture(name: "GenericLaw", contents: """
+        func describe(_ n: Int, prefix: String) -> String { prefix + "\\(n)" }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "describe")])
+        let recording = DPRecordingOutput()
+        let diagnostics = DPRecordingDiagnosticOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest,
+            diagnostics: diagnostics
+        )
+        #expect(recording.text.contains("Template: determinism"))
+        #expect(recording.text.contains("describe(_:prefix:)"))
+        #expect(recording.text.contains("f(x) == f(x)"))
+        #expect(diagnostics.lines.contains { $0.contains("synthesized 1 generic determinism law") })
+    }
+
+    @Test("Skips the determinism law when a template already covers the seeded function")
+    func skipsDeterminismWhenTemplateCovers() throws {
+        let directory = try writeDPFixture(name: "GenericCovered", contents: """
+        func normalize(_ value: String) -> String { normalize(normalize(value)) }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [.init(file: "Source.swift", line: 1, symbol: "normalize")])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest
+        )
+        #expect(recording.text.contains("Template: idempotence"))
+        #expect(recording.text.contains("Template: determinism") == false)
+    }
+
+    @Test("Determinism requires a value-returning function that takes inputs")
+    func determinismQualificationFilters() throws {
+        let directory = try writeDPFixture(name: "GenericQualify", contents: """
+        func noParams() -> Int { 0 }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 1, symbol: "noParams")
+        ])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest
+        )
+        // A nullary function has nothing to vary — still excluded; these are shape
+        // requirements for *writing* the law.
+        #expect(recording.text.contains("Template: determinism") == false)
+    }
+
+    @Test("A seeded throwing function earns the determinism law")
+    func determinismCoversThrowingFunctions() throws {
+        // Used to be excluded on the grounds that "a throwing function has no value to compare on
+        // some inputs" — the identical mistake as the instance-method refusal, un-fixed until the
+        // SwiftLintRuleStudio road-test hit it on `serialize`. A pure function is deterministic
+        // whether or not it throws; the emitted stub compares `try? f(x)` on both sides, so a
+        // throwing input is `nil == nil` and only a value difference falsifies it.
+        let directory = try writeDPFixture(name: "GenericThrows", contents: """
+        func risky(_ text: String) throws -> Int { Int(text) ?? 0 }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 1, symbol: "risky")
+        ])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest
+        )
+        #expect(recording.text.contains("Template: determinism"))
+    }
+
+    @Test("A seeded instance method earns the determinism law")
+    func determinismCoversInstanceMethods() throws {
+        // This used to be bundled into the exclusions above, on the grounds that "an instance
+        // method could read mutable `self`" — the same blanket refusal the producing linter made,
+        // in the same words. It is redundant twice over. The seed IS the purity claim: a producer
+        // that analyses what a method reads from `self` has already answered the objection, and
+        // this end cannot re-litigate it anyway. And the law is self-falsifying — a hidden state
+        // read is exactly what running it catches. Refusing to write a law because it might fail
+        // is refusing to test.
+        //
+        // The cost was concrete: in an app almost all logic is instance methods, so every seed the
+        // linter handed over was discarded here and the pipeline reported nothing.
+        let directory = try writeDPFixture(name: "GenericInstance", contents: """
+        struct Box {
+            func get(_ key: String) -> Int { key.count }
+        }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let manifest = SeedManifest(seeds: [
+            .init(file: "Source.swift", line: 2, symbol: "get")
+        ])
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(
+            directory: directory,
+            output: recording,
+            includePossible: false,
+            seedManifest: manifest
+        )
+
+        #expect(recording.text.contains("Template: determinism"))
+        #expect(recording.text.contains("get(_:)"))
+    }
+
+    @Test("No determinism laws without a seed manifest")
+    func noDeterminismWithoutSeeds() throws {
+        let directory = try writeDPFixture(name: "GenericNoSeeds", contents: """
+        func describe(_ n: Int, prefix: String) -> String { prefix + "\\(n)" }
+        """)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let recording = DPRecordingOutput()
+        try SwiftInferCommand.Discover.run(directory: directory, output: recording, includePossible: false)
+        #expect(recording.text.contains("Template: determinism") == false)
+    }
+
+    // MARK: - loadSeedManifest
+
+    @Test("loadSeedManifest decodes a producer-shaped manifest")
+    func loadsProducerShapedManifest() throws {
+        let directory = try makeDPFixtureDirectory(name: "SeedsLoad")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let path = directory.appendingPathComponent("seeds.json")
+        try Data("""
+        { "version": 2, "seeds": [
+            { "file": "Math.swift", "line": 3, "symbol": "add", "kind": "pure-function",
+              "rule": "Pure Function Property-Test Candidate" }
+        ] }
+        """.utf8).write(to: path)
+        let manifest = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
+        #expect(manifest.version == 2)
+        #expect(manifest.seeds.count == 1)
+        #expect(manifest.seeds.first?.symbol == "add")
+        #expect(manifest.seeds.first?.file == "Math.swift")
+    }
+
+    @Test("loadSeedManifest throws on a missing file")
+    func throwsOnMissingFile() throws {
+        let directory = try makeDPFixtureDirectory(name: "SeedsMissing")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let path = directory.appendingPathComponent("nope.json")
+        #expect(throws: (any Error).self) {
+            _ = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
+        }
+    }
+
+    @Test("loadSeedManifest throws on malformed JSON")
+    func throwsOnMalformedJSON() throws {
+        let directory = try makeDPFixtureDirectory(name: "SeedsMalformed")
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let path = directory.appendingPathComponent("seeds.json")
+        try Data("{ not json".utf8).write(to: path)
+        #expect(throws: (any Error).self) {
+            _ = try SwiftInferCommand.Discover.loadSeedManifest(at: path)
+        }
     }
 }

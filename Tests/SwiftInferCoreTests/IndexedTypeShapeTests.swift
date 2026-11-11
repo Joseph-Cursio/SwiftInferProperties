@@ -30,7 +30,7 @@ struct IndexedTypeShapeTests {
             hasUserGen: true,
             storedMembers: [
                 PropertyLawCore.StoredMember(name: "x", typeName: "Int"),
-                PropertyLawCore.StoredMember(name: "y", typeName: "String")
+                PropertyLawCore.StoredMember(name: "y", typeName: "String"),
             ],
             hasUserInit: true
         )
@@ -131,16 +131,16 @@ struct IndexedTypeShapeTests {
             hasUserGen: false,
             storedMembers: [
                 PropertyLawCore.StoredMember(name: "count", typeName: "Int"),
-                PropertyLawCore.StoredMember(name: "label", typeName: "String")
+                PropertyLawCore.StoredMember(name: "label", typeName: "String"),
             ],
             hasUserInit: true,
             initializers: [
                 PropertyLawCore.InitializerSignature(
                     parameters: [
                         PropertyLawCore.InitializerParameter(label: "count", typeName: "Int"),
-                        PropertyLawCore.InitializerParameter(label: "label", typeName: "String")
+                        PropertyLawCore.InitializerParameter(label: "label", typeName: "String"),
                     ]
-                )
+                ),
             ]
         )
         let mirror = IndexedTypeShape(from: kitShape)

@@ -74,7 +74,7 @@ struct SubjectCallPlanTests {
         ("static func parse(from text: String) throws -> Int { 0 }", false, true),
         ("static func parse(from text: String) throws(ParseError) -> Int { 0 }", false, true),
         ("static func parse(from text: String) async -> Int { 0 }", true, false),
-        ("static func parse(from text: String) async throws -> Int { 0 }", true, true)
+        ("static func parse(from text: String) async throws -> Int { 0 }", true, true),
     ])
     func effectsAreRead(declaration: String, isAsync: Bool, isThrows: Bool) throws {
         let plan = try Self.plan("enum CoverageReport {\n    \(declaration)\n}", named: "parse")
@@ -127,7 +127,7 @@ struct SubjectCallPlanTests {
     @Test("a closure parameter is named as one, not as a label-count mismatch", arguments: [
         "(Int) -> Bool",
         "((Int) -> Bool)?",
-        "@escaping (Int) throws -> Bool"
+        "@escaping (Int) throws -> Bool",
     ])
     func aFunctionTypedParameterDeclines(type: String) throws {
         let reason = try Self.reason(

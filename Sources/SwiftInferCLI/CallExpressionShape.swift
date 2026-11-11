@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.52.A — classifies the Swift call-expression shape for a function
 /// indexed under a carrier type.
 ///
@@ -139,7 +137,7 @@ public enum CallExpressionShape: Equatable, Sendable {
     private static let operatorCharacters: Set<Character> = [
         "+", "-", "*", "/", "%",
         "<", ">", "=", "!",
-        "&", "|", "^", "~", "?"
+        "&", "|", "^", "~", "?",
     ]
 
     /// Returns `true` if `name` is non-empty and every character is in

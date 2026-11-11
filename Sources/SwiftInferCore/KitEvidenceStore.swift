@@ -21,6 +21,7 @@ import Foundation
 /// described in its own commit message as closing one.
 public enum KitEvidenceStore {
 
+    /// Where the kit-evidence log lives, relative to the package root.
     public static let conventionalRelativePath = ".swiftinfer/kit-evidence.json"
 
     /// - Parameter directory: where to start looking. `.swiftinfer/` lives at the PACKAGE
@@ -98,6 +99,7 @@ public enum KitEvidenceStore {
         }
     }
 
+    /// Writes `log` to `url` as pretty-printed, key-sorted JSON, creating the directory if needed.
     public static func write(_ log: KitEvidenceLog, to url: URL) throws {
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),

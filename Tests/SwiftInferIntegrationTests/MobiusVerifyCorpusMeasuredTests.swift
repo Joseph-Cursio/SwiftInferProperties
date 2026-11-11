@@ -36,8 +36,8 @@ struct MobiusVerifyCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "MobiusVerifyCorpus",
             familyFilter: "idempotence",
-            sequenceCount: 128,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 128
         )
         #expect(summary.contains("Identities: 2 (--family idempotence)"))
         #expect(summary.contains("1 measured-bothPass"))
@@ -56,8 +56,8 @@ struct MobiusVerifyCorpusMeasuredTests {
         // (AST-only); the false positive is suppressed.
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "MobiusVerifyCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         #expect(discovered.contains("(Verified)"))
         #expect(!discovered.contains(".refresh"))

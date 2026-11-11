@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Recognises the **boolean-valued** half of the membership model law: a carrier that

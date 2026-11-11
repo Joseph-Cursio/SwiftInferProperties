@@ -215,7 +215,7 @@ struct LiftedSuggestionPromotionTests {
                     displayName: "f(_:)",
                     signature: "(Int) -> Int",
                     location: SourceLocation(file: "F.swift", line: 1, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [Signal(kind: .exactNameMatch, weight: 25, detail: "")]),
             generator: .m1Placeholder,

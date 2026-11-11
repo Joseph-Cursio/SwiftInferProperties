@@ -1,4 +1,12 @@
-import Foundation
+/// Production `PromptInput` — direct passthrough to `Swift.readLine()`.
+/// Quoted spelling (`Swift.readLine()`) avoids the recursive
+/// shadowing that would happen if the method were just `readLine()`.
+public struct StdinPromptInput: PromptInput {
+    public init() { /* no-op */ }
+    public func readLine() -> String? {
+        Swift.readLine()
+    }
+}
 
 /// Test seam over the single `readLine()` call `InteractiveTriage`
 /// (M6.4) makes per prompt. Production code uses `StdinPromptInput`;
@@ -12,14 +20,4 @@ public protocol PromptInput: Sendable {
     /// input ran out, or the user pressed Ctrl-D). The terminating
     /// newline is stripped — same shape as `Swift.readLine()`.
     func readLine() -> String?
-}
-
-/// Production `PromptInput` — direct passthrough to `Swift.readLine()`.
-/// Quoted spelling (`Swift.readLine()`) avoids the recursive
-/// shadowing that would happen if the method were just `readLine()`.
-public struct StdinPromptInput: PromptInput {
-    public init() { /* no-op */ }
-    public func readLine() -> String? {
-        Swift.readLine()
-    }
 }

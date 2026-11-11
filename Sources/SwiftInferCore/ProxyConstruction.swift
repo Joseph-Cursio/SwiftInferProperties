@@ -90,7 +90,7 @@ public enum ProxyConstruction {
         // Malformed on purpose — totality is a real law, not a formality.
         "struct Half { var x =",
         "func broken( {",
-        ""
+        "",
     ]
 
     static func expression(for typeName: String) -> String {

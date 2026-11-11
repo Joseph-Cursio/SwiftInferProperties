@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V2.0 M4.C — Idempotence interaction-template family. PRD §5.3.
@@ -71,7 +70,7 @@ public enum IdempotenceInteractionTemplate: InteractionTemplateFamily {
         return [
             "Action case `.\(witness.actionCaseName)` matches an "
                 + "idempotent-action pattern: \(patternDescription).",
-            "Reducer-shaped signature (\(candidate.signatureShape.rawValue))."
+            "Reducer-shaped signature (\(candidate.signatureShape.rawValue)).",
         ]
     }
 
@@ -81,7 +80,7 @@ public enum IdempotenceInteractionTemplate: InteractionTemplateFamily {
                 + "this action is not yet inspected (M4.C+ refinement). "
                 + "An action body that increments counters or accumulates "
                 + "into unbounded collections breaks idempotence even when "
-                + "the name suggests otherwise."
+                + "the name suggests otherwise.",
         ]
         if witness.matchKind == .namePrefix {
             caveats.append(

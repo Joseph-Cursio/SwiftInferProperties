@@ -16,7 +16,7 @@ struct DeclaringModuleImportTests {
         "SyntaxPattern": ["SwiftProjectLintVisitors"],
         "PatternCategory": ["SwiftProjectLintModels"],
         "UIVisitor": ["SwiftProjectLintRules"],
-        "Ambiguous": ["A", "B"]
+        "Ambiguous": ["A", "B"],
     ]
 
     @Test("each named type's resolvable declaring module is imported, and the rest survive the filter")
@@ -33,9 +33,9 @@ struct DeclaringModuleImportTests {
 
     @Test("a name declared in two modules gets no import")
     func ambiguousNameIsLeftAlone() {
-        let harvested = ReceiverConstructionHarvester.Harvested(expression: "Ambiguous()", imports: [])
+        let ambiguous = ReceiverConstructionHarvester.Harvested(expression: "Ambiguous()", imports: [])
         let widened = ReceiverConstructionSource.addingDeclaringImports(
-            harvested, declaring: Self.declaring, in: ["A", "B"]
+            ambiguous, declaring: Self.declaring, in: ["A", "B"]
         )
         #expect(widened.imports.isEmpty)
     }

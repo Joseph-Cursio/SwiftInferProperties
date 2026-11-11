@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// Measured-verify Pass-1 composers for the three algebraic-law templates added

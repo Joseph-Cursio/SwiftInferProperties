@@ -1,8 +1,99 @@
 import Foundation
 import SwiftInferCLI
-import SwiftInferCore
 import SwiftInferTemplates
 import Testing
+
+/// TestLifter M8.2 acceptance — `convert-counterexample` writeouts
+/// stay rooted under `<package-root>/Tests/Generated/SwiftInfer/`.
+/// Mirrors the M3.3 / M5.6 / M6.3 §16 #1 hard-guarantee tests.
+@Suite("ConvertCounterexample — §16 #1 sandbox guarantee (M8.2)")
+struct ConvertCounterexampleSandboxTests {
+
+    typealias Args = ConvertCounterexampleEngine.Args
+
+    @Test("Writeout stays under <package-root>/Tests/Generated/SwiftInfer/")
+    func writeoutStaysSandboxed() throws {
+        let packageRoot = try makeFixture(name: "Sandbox")
+        defer { try? FileManager.default.removeItem(at: packageRoot) }
+
+        let args = Args(
+            template: "round-trip",
+            callee: "encode",
+            type: "Int",
+            counterexample: "42",
+            reverseCallee: "decode"
+        )
+        let path = try ConvertCounterexampleEngine.writeRegressionStub(
+            args: args,
+            stub: try ConvertCounterexampleEngine.renderRegressionStub(args: args),
+            packageRoot: packageRoot
+        )
+        let stubsRoot = packageRoot
+            .appendingPathComponent("Tests/Generated/SwiftInfer")
+            .standardizedFileURL
+            .path
+        let written = path.standardizedFileURL.path
+        #expect(
+            written.hasPrefix(stubsRoot + "/"),
+            "convert-counterexample writeout escaped Tests/Generated/SwiftInfer/: \(written)"
+        )
+    }
+
+    @Test("Writeout is the only new file under packageRoot after the run")
+    func writeoutIsTheOnlyNewFile() throws {
+        let packageRoot = try makeFixture(name: "OnlyNew")
+        defer { try? FileManager.default.removeItem(at: packageRoot) }
+
+        let beforeFiles = fileSet(in: packageRoot)
+        let args = Args(
+            template: "idempotence", callee: "normalize", type: "String", counterexample: "\"x\""
+        )
+        _ = try ConvertCounterexampleEngine.writeRegressionStub(
+            args: args,
+            stub: try ConvertCounterexampleEngine.renderRegressionStub(args: args),
+            packageRoot: packageRoot
+        )
+        let afterFiles = fileSet(in: packageRoot)
+        let newFiles = Set(afterFiles).subtracting(beforeFiles)
+        #expect(newFiles.count == 1)
+        let stubsRoot = packageRoot
+            .appendingPathComponent("Tests/Generated/SwiftInfer")
+            .standardizedFileURL
+            .path
+        for newFile in newFiles {
+            #expect(newFile.standardizedFileURL.path.hasPrefix(stubsRoot + "/"))
+        }
+    }
+}
+
+// MARK: - Shared fixture helpers
+
+private func makeFixture(name: String) throws -> URL {
+    let base = FileManager.default.temporaryDirectory
+        .appendingPathComponent("ConvertCEX-\(name)-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+    return base
+}
+
+private func fileSet(in directory: URL) -> [URL] {
+    let manager = FileManager.default
+    guard let enumerator = manager.enumerator(
+        at: directory,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+    ) else {
+        return []
+    }
+    var files: [URL] = []
+    for case let url as URL in enumerator {
+        var isDir: ObjCBool = false
+        manager.fileExists(atPath: url.path, isDirectory: &isDir)
+        if !isDir.boolValue {
+            files.append(url)
+        }
+    }
+    return files.sorted { $0.path < $1.path }
+}
 
 /// TestLifter M8.1 + M8.2 acceptance — `swift-infer convert-counterexample`
 /// CLI subcommand. Closes PRD §3.6 step 6 + §7.9 row M8 by routing
@@ -204,96 +295,4 @@ struct ConvertCounterexampleCLITests {
         #expect(FileManager.default.fileExists(atPath: path1.path))
         #expect(FileManager.default.fileExists(atPath: path2.path))
     }
-}
-
-/// TestLifter M8.2 acceptance — `convert-counterexample` writeouts
-/// stay rooted under `<package-root>/Tests/Generated/SwiftInfer/`.
-/// Mirrors the M3.3 / M5.6 / M6.3 §16 #1 hard-guarantee tests.
-@Suite("ConvertCounterexample — §16 #1 sandbox guarantee (M8.2)")
-struct ConvertCounterexampleSandboxTests {
-
-    typealias Args = ConvertCounterexampleEngine.Args
-
-    @Test("Writeout stays under <package-root>/Tests/Generated/SwiftInfer/")
-    func writeoutStaysSandboxed() throws {
-        let packageRoot = try makeFixture(name: "Sandbox")
-        defer { try? FileManager.default.removeItem(at: packageRoot) }
-
-        let args = Args(
-            template: "round-trip",
-            callee: "encode",
-            type: "Int",
-            counterexample: "42",
-            reverseCallee: "decode"
-        )
-        let path = try ConvertCounterexampleEngine.writeRegressionStub(
-            args: args,
-            stub: try ConvertCounterexampleEngine.renderRegressionStub(args: args),
-            packageRoot: packageRoot
-        )
-        let stubsRoot = packageRoot
-            .appendingPathComponent("Tests/Generated/SwiftInfer")
-            .standardizedFileURL
-            .path
-        let written = path.standardizedFileURL.path
-        #expect(
-            written.hasPrefix(stubsRoot + "/"),
-            "convert-counterexample writeout escaped Tests/Generated/SwiftInfer/: \(written)"
-        )
-    }
-
-    @Test("Writeout is the only new file under packageRoot after the run")
-    func writeoutIsTheOnlyNewFile() throws {
-        let packageRoot = try makeFixture(name: "OnlyNew")
-        defer { try? FileManager.default.removeItem(at: packageRoot) }
-
-        let beforeFiles = fileSet(in: packageRoot)
-        let args = Args(
-            template: "idempotence", callee: "normalize", type: "String", counterexample: "\"x\""
-        )
-        _ = try ConvertCounterexampleEngine.writeRegressionStub(
-            args: args,
-            stub: try ConvertCounterexampleEngine.renderRegressionStub(args: args),
-            packageRoot: packageRoot
-        )
-        let afterFiles = fileSet(in: packageRoot)
-        let newFiles = Set(afterFiles).subtracting(beforeFiles)
-        #expect(newFiles.count == 1)
-        let stubsRoot = packageRoot
-            .appendingPathComponent("Tests/Generated/SwiftInfer")
-            .standardizedFileURL
-            .path
-        for newFile in newFiles {
-            #expect(newFile.standardizedFileURL.path.hasPrefix(stubsRoot + "/"))
-        }
-    }
-}
-
-// MARK: - Shared fixture helpers
-
-private func makeFixture(name: String) throws -> URL {
-    let base = FileManager.default.temporaryDirectory
-        .appendingPathComponent("ConvertCEX-\(name)-\(UUID().uuidString)")
-    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
-    return base
-}
-
-private func fileSet(in directory: URL) -> [URL] {
-    let manager = FileManager.default
-    guard let enumerator = manager.enumerator(
-        at: directory,
-        includingPropertiesForKeys: [.isRegularFileKey],
-        options: [.skipsHiddenFiles]
-    ) else {
-        return []
-    }
-    var files: [URL] = []
-    for case let url as URL in enumerator {
-        var isDir: ObjCBool = false
-        manager.fileExists(atPath: url.path, isDirectory: &isDir)
-        if !isDir.boolValue {
-            files.append(url)
-        }
-    }
-    return files.sorted { $0.path < $1.path }
 }

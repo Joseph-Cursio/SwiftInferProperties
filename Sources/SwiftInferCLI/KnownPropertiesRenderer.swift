@@ -76,8 +76,9 @@ enum KnownPropertiesRenderer {
             lines.append("import \(module)")
         }
         lines.append(preamble)
-        for law in laws where law.checkBody != nil {
-            lines.append("check(\(escaped(law.displayName))) { \(law.checkBody!) }")
+        for law in laws {
+            guard let checkBody = law.checkBody else { continue }
+            lines.append("check(\(escaped(law.displayName))) { \(checkBody) }")
         }
         return lines.joined(separator: "\n") + "\n"
     }

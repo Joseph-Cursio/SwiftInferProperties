@@ -1,5 +1,93 @@
 import SwiftInferCore
 
+/// A `Bool` member and a count on one type that the naming convention says agree.
+public struct EmptinessAgreementPair: Sendable, Equatable {
+    public let predicate: FunctionSummary
+    public let measure: FunctionSummary
+    /// `true` for `predicate == (measure > 0)`, `false` for `predicate == (measure == 0)`.
+    public let holdsWhenPositive: Bool
+
+    public init(predicate: FunctionSummary, measure: FunctionSummary, holdsWhenPositive: Bool) {
+        self.predicate = predicate
+        self.measure = measure
+        self.holdsWhenPositive = holdsWhenPositive
+    }
+}
+
+/// Finds `EmptinessAgreementPair`s among a scan's summaries.
+public enum EmptinessAgreementPairing {
+
+    /// Which count a paired predicate holds for.
+    public enum Polarity: Sendable, Equatable {
+        /// The predicate holds when the count is positive: `isNotEmpty`, `hasIssues`.
+        case holdsWhenPositive
+        /// The predicate holds when the count is zero: `isEmpty`.
+        case holdsWhenZero
+    }
+
+    /// Every pair on one type: an argument-free `Bool` member and an argument-free signed-integer
+    /// measure (`MeasureTemplate.isMeasure`) whose names agree — `has<Thing>` with a count naming
+    /// the thing, `isEmpty` / `isNotEmpty` with `count`.
+    public static func candidates(in summaries: [FunctionSummary]) -> [EmptinessAgreementPair] {
+        let members = summaries.filter(isArgumentFreeMember)
+        let byType = Dictionary(grouping: members) { $0.containingTypeName ?? "" }
+        var pairs: [EmptinessAgreementPair] = []
+        for (type, typeMembers) in byType.sorted(by: { $0.key < $1.key }) where !type.isEmpty {
+            let predicates = typeMembers.filter { $0.returnTypeText == "Bool" }
+            let measures = typeMembers.filter(MeasureTemplate.isMeasure)
+            for predicate in predicates {
+                for measure in measures {
+                    if let polarity = polarity(predicate: predicate.name, measure: measure.name) {
+                        pairs.append(EmptinessAgreementPair(
+                            predicate: predicate, measure: measure,
+                            holdsWhenPositive: polarity == .holdsWhenPositive
+                        ))
+                    }
+                }
+            }
+        }
+        return pairs
+    }
+
+    /// Which count the predicate holds for, or `nil` when the names do not pair.
+    public static func polarity(predicate: String, measure: String) -> Polarity? {
+        switch predicate {
+        case "isEmpty":
+            return measure == "count" ? .holdsWhenZero : nil
+
+        case "isNotEmpty":
+            return measure == "count" ? .holdsWhenPositive : nil
+
+        default:
+            guard let subject = hasSubject(predicate) else { return nil }
+            return measure.lowercased().contains(subject.lowercased()) ? .holdsWhenPositive : nil
+        }
+    }
+
+    /// The thing a `has<Thing>` predicate is about, singular: `hasIssues` → `Issue`. `nil` for any
+    /// other name, and for a bare `has`.
+    static func hasSubject(_ name: String) -> String? {
+        guard name.hasPrefix("has"), name.count > 3 else { return nil }
+        let subject = name.dropFirst(3)
+        guard let first = subject.first, first.isUppercase else { return nil }
+        return singular(String(subject))
+    }
+
+    /// English singular for the plural shapes member names use: `Retries` → `Retry`,
+    /// `Matches` → `Match`, `Issues` → `Issue`. A word that is already singular is unchanged.
+    static func singular(_ word: String) -> String {
+        if word.hasSuffix("ies"), word.count > 3 { return String(word.dropLast(3)) + "y" }
+        if ["sses", "xes", "ches", "shes"].contains(where: word.hasSuffix) { return String(word.dropLast(2)) }
+        if word.hasSuffix("s"), !word.hasSuffix("ss"), word.count > 1 { return String(word.dropLast()) }
+        return word
+    }
+
+    private static func isArgumentFreeMember(_ summary: FunctionSummary) -> Bool {
+        summary.containingTypeName != nil && !summary.isStatic && summary.parameters.isEmpty
+            && !summary.isMutating && !summary.isAsync && !summary.isThrows
+    }
+}
+
 /// A `Bool` member and a count on one type, named for the same thing — `hasIssues` and
 /// `totalIssueCount`, `isEmpty` and `count` — and the law that ties them: the predicate holds
 /// exactly when the count is positive (or, for an emptiness predicate, exactly when it is zero).
@@ -33,12 +121,15 @@ import SwiftInferCore
 /// belong to one type and take no arguments, so the law is a statement about one value.
 public enum EmptinessAgreementTemplate {
 
+    /// The name this template's suggestions carry: `emptiness-agreement`.
     public static let templateName = "emptiness-agreement"
 
+    /// The `emptiness-agreement` suggestion for `pair`, or `nil` when the template does not apply.
     public static func suggest(for pair: EmptinessAgreementPair) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: pair)
     }
 
+    /// The `emptiness-agreement` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<EmptinessAgreementPair> {
         Constraint<EmptinessAgreementPair>(
             templateName: "emptiness-agreement",
@@ -71,7 +162,7 @@ public enum EmptinessAgreementTemplate {
                 weight: 15,
                 detail: "Named for the same thing: '\(pair.predicate.name)' / '\(pair.measure.name)' — "
                     + "so `\(lawText(for: pair))`"
-            )
+            ),
         ]
     }
 
@@ -88,96 +179,16 @@ public enum EmptinessAgreementTemplate {
                 + "the comparison.",
             "A CONJECTURE read from the names. A predicate that means something narrower than its "
                 + "count — `hasUnreadIssues` beside a count of all issues — is correct code that "
-                + "fails this; confirm the two are meant to agree before encoding it."
+                + "fails this; confirm the two are meant to agree before encoding it.",
         ]
     }
 
     private static func makeIdentity(for pair: EmptinessAgreementPair) -> SuggestionIdentity {
         let halves = [
             IdempotenceTemplate.canonicalSignature(of: pair.predicate),
-            IdempotenceTemplate.canonicalSignature(of: pair.measure)
+            IdempotenceTemplate.canonicalSignature(of: pair.measure),
         ]
         return SuggestionIdentity(canonicalInput: "\(templateName)|" + halves.joined(separator: "|"))
-    }
-}
-
-/// A `Bool` member and a count on one type that the naming convention says agree.
-public struct EmptinessAgreementPair: Sendable, Equatable {
-    public let predicate: FunctionSummary
-    public let measure: FunctionSummary
-    /// `true` for `predicate == (measure > 0)`, `false` for `predicate == (measure == 0)`.
-    public let holdsWhenPositive: Bool
-
-    public init(predicate: FunctionSummary, measure: FunctionSummary, holdsWhenPositive: Bool) {
-        self.predicate = predicate
-        self.measure = measure
-        self.holdsWhenPositive = holdsWhenPositive
-    }
-}
-
-/// Finds `EmptinessAgreementPair`s among a scan's summaries.
-public enum EmptinessAgreementPairing {
-
-    /// Every pair on one type: an argument-free `Bool` member and an argument-free signed-integer
-    /// measure (`MeasureTemplate.isMeasure`) whose names agree — `has<Thing>` with a count naming
-    /// the thing, `isEmpty` / `isNotEmpty` with `count`.
-    public static func candidates(in summaries: [FunctionSummary]) -> [EmptinessAgreementPair] {
-        let members = summaries.filter(isArgumentFreeMember)
-        let byType = Dictionary(grouping: members) { $0.containingTypeName ?? "" }
-        var pairs: [EmptinessAgreementPair] = []
-        for (type, typeMembers) in byType.sorted(by: { $0.key < $1.key }) where !type.isEmpty {
-            let predicates = typeMembers.filter { $0.returnTypeText == "Bool" }
-            let measures = typeMembers.filter(MeasureTemplate.isMeasure)
-            for predicate in predicates {
-                for measure in measures {
-                    if let positive = polarity(predicate: predicate.name, measure: measure.name) {
-                        pairs.append(EmptinessAgreementPair(
-                            predicate: predicate, measure: measure, holdsWhenPositive: positive
-                        ))
-                    }
-                }
-            }
-        }
-        return pairs
-    }
-
-    /// `true` when the predicate holds for a positive count, `false` when it holds for zero, `nil`
-    /// when the names do not pair.
-    public static func polarity(predicate: String, measure: String) -> Bool? {
-        switch predicate {
-        case "isEmpty":
-            return measure == "count" ? false : nil
-
-        case "isNotEmpty":
-            return measure == "count" ? true : nil
-
-        default:
-            guard let subject = hasSubject(predicate) else { return nil }
-            return measure.lowercased().contains(subject.lowercased()) ? true : nil
-        }
-    }
-
-    /// The thing a `has<Thing>` predicate is about, singular: `hasIssues` → `Issue`. `nil` for any
-    /// other name, and for a bare `has`.
-    static func hasSubject(_ name: String) -> String? {
-        guard name.hasPrefix("has"), name.count > 3 else { return nil }
-        let subject = name.dropFirst(3)
-        guard let first = subject.first, first.isUppercase else { return nil }
-        return singular(String(subject))
-    }
-
-    /// English singular for the plural shapes member names use: `Retries` → `Retry`,
-    /// `Matches` → `Match`, `Issues` → `Issue`. A word that is already singular is unchanged.
-    static func singular(_ word: String) -> String {
-        if word.hasSuffix("ies"), word.count > 3 { return String(word.dropLast(3)) + "y" }
-        if ["sses", "xes", "ches", "shes"].contains(where: word.hasSuffix) { return String(word.dropLast(2)) }
-        if word.hasSuffix("s"), !word.hasSuffix("ss"), word.count > 1 { return String(word.dropLast()) }
-        return word
-    }
-
-    private static func isArgumentFreeMember(_ summary: FunctionSummary) -> Bool {
-        summary.containingTypeName != nil && !summary.isStatic && summary.parameters.isEmpty
-            && !summary.isMutating && !summary.isAsync && !summary.isThrows
     }
 }
 

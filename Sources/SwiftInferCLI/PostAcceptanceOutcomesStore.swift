@@ -43,8 +43,10 @@ public enum PostAcceptanceOutcomesStore {
         }
     }
 
+    /// The outcomes log's path relative to the package root.
     public static let conventionalRelativePath = ".swiftinfer/post-acceptance-outcomes.json"
 
+    /// Loads outcomes from `explicitPath` or the package root above `directory`; missing is empty.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil,
@@ -134,7 +136,7 @@ public enum PostAcceptanceOutcomesStore {
                 log: .empty,
                 warnings: [
                     "could not read post-acceptance-outcomes at \(path.path): "
-                        + error.localizedDescription
+                        + error.localizedDescription,
                 ],
                 packageRoot: packageRoot
             )

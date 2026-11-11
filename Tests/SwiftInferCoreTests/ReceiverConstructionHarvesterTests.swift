@@ -185,14 +185,14 @@ struct ReceiverConstructionHarvesterTests {
     /// leading-dot `.name` beside it is the control: it was always read as a member.
     @Test("a key-path component's name is not a test-local")
     func keyPathComponentNameIsNotALocal() {
-        let source = #"""
+        let fixture = #"""
         @Test func sorts() {
             let byKeyPath = Sorter(by: \.name)
             let byCase = Sorter(by: .name)
             _ = (byKeyPath, byCase)
         }
         """#
-        let found = ReceiverConstructionHarvester.constructions(in: source, wanted: ["Sorter"])
+        let found = ReceiverConstructionHarvester.constructions(in: fixture, wanted: ["Sorter"])
         #expect(found.map(\.expression) == [#"Sorter(by: \.name)"#, "Sorter(by: .name)"])
         #expect(found.map(\.substituted) == [false, false])
     }
@@ -201,13 +201,13 @@ struct ReceiverConstructionHarvesterTests {
     /// formed, so it is a read like any argument, and a local there still refuses the call.
     @Test("a key-path subscript's argument is still a test-local")
     func keyPathSubscriptArgumentIsALocal() {
-        let source = #"""
+        let fixture = #"""
         @Test func sorts() {
             let sorter = Sorter(by: \.[index])
             _ = sorter
         }
         """#
-        #expect(ReceiverConstructionHarvester.constructions(in: source, wanted: ["Sorter"]).isEmpty)
+        #expect(ReceiverConstructionHarvester.constructions(in: fixture, wanted: ["Sorter"]).isEmpty)
     }
 
     /// ⚠ **Inlining rewrote the key path's NAME as well as the argument.** The member half of a
@@ -216,7 +216,7 @@ struct ReceiverConstructionHarvesterTests {
     /// `Plain` is the control: the same local, with no key path, inlines as it always did.
     @Test("a local sharing a key-path component's name inlines the argument only")
     func keyPathComponentNameIsNotInlined() {
-        let source = #"""
+        let fixture = #"""
         @Test func pages() {
             let pageSize = 10
             let pager = Pager(sortedBy: \.pageSize, pageSize: pageSize)
@@ -224,7 +224,7 @@ struct ReceiverConstructionHarvesterTests {
             _ = (pager, plain)
         }
         """#
-        let found = ReceiverConstructionHarvester.constructions(in: source, wanted: ["Pager", "Plain"])
+        let found = ReceiverConstructionHarvester.constructions(in: fixture, wanted: ["Pager", "Plain"])
         #expect(found.map(\.expression) == [#"Pager(sortedBy: \.pageSize, pageSize: 10)"#, "Plain(pageSize: 10)"])
         #expect(found.map(\.substituted) == [true, true])
     }
@@ -233,14 +233,14 @@ struct ReceiverConstructionHarvesterTests {
     /// so a local there is a read and is inlined like any argument.
     @Test("a local in a key-path subscript argument is inlined")
     func keyPathSubscriptArgumentIsInlined() {
-        let source = #"""
+        let fixture = #"""
         @Test func sorts() {
             let index = 1
             let sorter = Sorter(by: \.[index])
             _ = sorter
         }
         """#
-        let found = ReceiverConstructionHarvester.constructions(in: source, wanted: ["Sorter"])
+        let found = ReceiverConstructionHarvester.constructions(in: fixture, wanted: ["Sorter"])
         #expect(found.map(\.expression) == [#"Sorter(by: \.[1])"#])
         #expect(found.map(\.substituted) == [true])
     }
@@ -254,7 +254,7 @@ struct ReceiverConstructionHarvesterTests {
     /// with the production one — 11 census stubs were handed its initializer.
     @Test("a type the test file declares itself is not harvested")
     func testLocalTypeIsNotHarvested() {
-        let source = """
+        let fixture = """
         final class Collector: SyntaxVisitor {}
         @Test func walks() {
             let collector = Collector(viewMode: .sourceAccurate)
@@ -263,7 +263,7 @@ struct ReceiverConstructionHarvesterTests {
         }
         """
         let found = ReceiverConstructionHarvester.constructions(
-            in: source, wanted: ["Collector", "LawOfDemeterVisitor"]
+            in: fixture, wanted: ["Collector", "LawOfDemeterVisitor"]
         )
         #expect(found.map(\.type) == ["LawOfDemeterVisitor"])
     }

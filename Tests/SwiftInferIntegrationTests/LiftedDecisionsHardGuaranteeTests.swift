@@ -1,8 +1,6 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
 
 /// TestLifter M6.3 acceptance bar item (f) — `.swiftinfer/decisions.json`
@@ -93,7 +91,7 @@ struct LiftedDecisionsHardGuaranteeTests {
         let sourceFiles = [
             packageRoot.appendingPathComponent("Sources/Foo/Filter.swift"),
             packageRoot.appendingPathComponent("Tests/FooTests/FilterTests.swift"),
-            packageRoot.appendingPathComponent("Package.swift")
+            packageRoot.appendingPathComponent("Package.swift"),
         ]
         for sourceFile in sourceFiles {
             #expect(
@@ -157,8 +155,8 @@ struct LiftedDecisionsHardGuaranteeTests {
     private func discoverLifted(directory: URL) throws -> Suggestion {
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory.appendingPathComponent("Sources/Foo"),
-            includePossible: true,
-            diagnostics: HGSilentDiagnosticOutput()
+            diagnostics: HGSilentDiagnosticOutput(),
+            includePossible: true
         )
         return try #require(result.suggestions.first { suggestion in
             suggestion.liftedOrigin != nil && suggestion.templateName == "invariant-preservation"

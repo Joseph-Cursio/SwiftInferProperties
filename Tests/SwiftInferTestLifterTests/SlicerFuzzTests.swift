@@ -1,6 +1,21 @@
 @testable import SwiftInferTestLifter
-import SwiftSyntax
 import Testing
+
+/// Linear-congruential PRNG so the fuzz corpus is byte-identical
+/// across runs — supports the PRD §16 #6 reproducibility guarantee
+/// even for the test layer.
+struct SeededGenerator: RandomNumberGenerator {
+    private var state: UInt64
+
+    init(seed: UInt64) {
+        self.state = seed | 1
+    }
+
+    mutating func next() -> UInt64 {
+        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+        return state
+    }
+}
 
 /// PRD §15 hard contract for the slicer: never throws regardless of
 /// the input body shape. M1.6 backs this with a fuzz pass over 100
@@ -116,21 +131,5 @@ struct SlicerFuzzTests {
     private func randomIdent(generator: inout SeededGenerator) -> String {
         let names = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta"]
         return names[Int.random(in: 0..<names.count, using: &generator)]
-    }
-}
-
-/// Linear-congruential PRNG so the fuzz corpus is byte-identical
-/// across runs — supports the PRD §16 #6 reproducibility guarantee
-/// even for the test layer.
-struct SeededGenerator: RandomNumberGenerator {
-    private var state: UInt64
-
-    init(seed: UInt64) {
-        self.state = seed | 1
-    }
-
-    mutating func next() -> UInt64 {
-        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
-        return state
     }
 }

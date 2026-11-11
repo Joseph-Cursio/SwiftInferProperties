@@ -19,13 +19,13 @@ struct VerifyAutoBridgeTests {
         SemanticIndexEntry(
             identityHash: "0xABCDEF0123456789",
             templateName: template,
-            typeName: carrier,
             score: 80,
             tier: "strong",
             primaryFunctionName: primary,
             location: "Sources/Foo.swift:1",
             firstSeenAt: "2026-06-26T00:00:00Z",
             lastSeenAt: "2026-06-26T00:00:00Z",
+            typeName: carrier,
             secondaryFunctionName: secondary
         )
     }
@@ -113,7 +113,7 @@ struct VerifyAutoBridgeTests {
         )
         let parsed = VerifyOutcome.defaultFails(
             trial: 7, input: "999", forwardResult: "a", inverseResult: "b",
-            shrunk: "0", shrinkSteps: 3
+            shrink: ShrinkTrace(minimal: "0", steps: 3)
         )
         let rendered = SwiftInferCommand.Verify.renderOutcome(
             parsed: parsed,

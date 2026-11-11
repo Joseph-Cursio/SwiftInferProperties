@@ -22,13 +22,13 @@ public struct Score: Sendable, Equatable {
     public init(signals: [Signal]) {
         self.signals = signals
         let vetoed = signals.contains(where: \.isVeto)
-        let total = signals
+        let weightTotal = signals
             .filter { !$0.isVeto }
             .map(\.weight)
             .reduce(0, +)
-        self.total = total
+        self.total = weightTotal
         self.isVetoed = vetoed
-        self.tier = vetoed ? .suppressed : Tier(score: total)
+        self.tier = vetoed ? .suppressed : Tier(score: weightTotal)
     }
 
     /// TestLifter M11.2 — construct a Score with explicit `.advisory`
@@ -45,8 +45,8 @@ public struct Score: Sendable, Equatable {
     ///   runnable but lint-backed rather than score-graded.
     public init(advisorySignals: [Signal]) {
         self.signals = advisorySignals
-        let total = advisorySignals.map(\.weight).reduce(0, +)
-        self.total = total
+        let weightTotal = advisorySignals.map(\.weight).reduce(0, +)
+        self.total = weightTotal
         self.isVetoed = false
         self.tier = .advisory
     }

@@ -33,8 +33,8 @@ struct CompositionPayloadCorpusMeasuredTests {
         let summary = try await VerifyInteractionSurvey.run(
             target: "TCACompositionCorpus",
             familyFilter: "determinism",
-            sequenceCount: 64,
-            workingDirectory: root
+            workingDirectory: root,
+            sequenceCount: 64
         )
         #expect(summary.contains("Identities: 1 (--family determinism)"))
         #expect(summary.contains("1 measured-bothPass"))
@@ -45,8 +45,8 @@ struct CompositionPayloadCorpusMeasuredTests {
 
         let discovered = try SwiftInferCommand.DiscoverInteraction.runPipeline(
             target: "TCACompositionCorpus",
-            includePossible: true,
-            workingDirectory: root
+            workingDirectory: root,
+            includePossible: true
         )
         let block = discovered
             .components(separatedBy: "[Interaction-Invariant Suggestion]")

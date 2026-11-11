@@ -84,7 +84,7 @@ enum SoundnessProbe {
         Probe(name: "DrainedProcess.standardOutputViaEnv") {
             let data = DrainedProcess.standardOutputViaEnv(["echo", "probe"])
             return "bytes=\(data?.count ?? -1)"
-        }
+        },
     ]
 
     // MARK: - Controls
@@ -101,7 +101,7 @@ enum SoundnessProbe {
         },
         Probe(name: "control/candidateValuesExpression-String") {
             ViewModelArgumentGenerator.candidateValuesExpression(for: "String") ?? "nil"
-        }
+        },
     ]
 
     // MARK: - Run

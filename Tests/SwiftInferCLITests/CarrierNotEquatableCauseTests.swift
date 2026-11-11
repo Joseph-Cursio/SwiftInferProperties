@@ -34,13 +34,13 @@ struct CarrierNotEquatableCauseTests {
         SemanticIndexEntry(
             identityHash: "0xA1",
             templateName: template,
-            typeName: carrier,
             score: 25,
             tier: "possible",
             primaryFunctionName: "f(_:)",
             location: "/tmp/Subject.swift:1",
             firstSeenAt: "2026-08-14T00:00:00Z",
             lastSeenAt: "2026-08-14T00:00:00Z",
+            typeName: carrier,
             carrierTypeName: carrier
         )
     }

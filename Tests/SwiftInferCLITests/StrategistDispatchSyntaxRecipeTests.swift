@@ -31,7 +31,7 @@ struct StrategistDispatchSyntaxRecipeTests {
         "MemberBlockSyntax",
         "PatternBindingSyntax",
         "CodeBlockSyntax",
-        "FunctionDeclSyntax"
+        "FunctionDeclSyntax",
     ]
 
     @Test("every measured syntax carrier resolves a recipe", arguments: measuredCarriers)

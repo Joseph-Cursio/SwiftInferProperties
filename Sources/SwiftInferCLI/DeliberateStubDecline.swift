@@ -1,5 +1,3 @@
-import SwiftInferCore
-
 /// Templates the accept path writes no stub for **on purpose**, with the reason.
 ///
 /// The generic sentence — *"no stub writeout available for template 'X' in v1"* — reads as

@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// PROTOTYPE — emits a verifier that checks an identity-stability candidate
@@ -28,6 +27,7 @@ public enum StableIdentityStubEmitter {
         }
     }
 
+    /// Emitter inputs for `candidate`'s zero-argument mutators, or `nil` when it has none.
     public static func inputs(
         for candidate: StableIdentityCandidate,
         moduleName: String,
@@ -40,6 +40,7 @@ public enum StableIdentityStubEmitter {
         return Inputs(typeName: candidate.typeName, mutationMethods: cases, moduleName: moduleName, testable: testable)
     }
 
+    /// The `StableIdentity` verifier `main.swift` for `inputs`.
     public static func emit(_ inputs: Inputs) -> String {
         let cases = inputs.mutationMethods
             .map { "        case \($0)" }

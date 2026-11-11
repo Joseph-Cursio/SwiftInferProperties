@@ -28,8 +28,10 @@ public enum BaselineLoader {
         }
     }
 
+    /// The baseline's path relative to the package root: `.swiftinfer/baseline.json`.
     public static let conventionalRelativePath = Baseline.conventionalRelativePath
 
+    /// Loads the baseline from `explicitPath` or the package root above `directory`; missing is empty.
     public static func load(
         startingFrom directory: URL,
         explicitPath: URL? = nil,
@@ -47,10 +49,12 @@ public enum BaselineLoader {
         )
     }
 
+    /// Writes `baseline` to `path` as canonical JSON, creating `.swiftinfer/` if needed.
     public static func write(_ baseline: Baseline, to path: URL) throws {
         try Store.write(baseline, to: path)
     }
 
+    /// The baseline's path under `packageRoot`.
     public static func defaultPath(for packageRoot: URL) -> URL {
         Store.defaultPath(for: packageRoot)
     }

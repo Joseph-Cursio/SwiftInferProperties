@@ -3,190 +3,6 @@ import SwiftInferCore
 @testable import SwiftInferTemplates
 import Testing
 
-@Suite("InverseLiftedPairing — V1.19.D mutating add/remove pairing")
-struct InverseLiftedPairingTests {
-
-    // MARK: - Helpers
-
-    private func valueSemanticResolver(carrier: String = "Bag") -> CarrierKindResolver {
-        CarrierKindResolver(typeDecls: [
-            TypeDecl(
-                name: carrier,
-                kind: .struct,
-                inheritedTypes: [],
-                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-                storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
-        ])
-    }
-
-    private func mutator(
-        _ name: String,
-        paramType: String = "Int",
-        carrier: String = "Bag",
-        line: Int = 1,
-        column: Int = 1,
-        bodySignals: BodySignals = .empty
-    ) -> FunctionSummary {
-        FunctionSummary(
-            name: name,
-            parameters: [
-                Parameter(label: nil, internalName: "x", typeText: paramType, isInout: false)
-            ],
-            returnTypeText: "Void",
-            isThrows: false,
-            isAsync: false,
-            isMutating: true,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: line, column: column),
-            containingTypeName: carrier,
-            bodySignals: bodySignals
-        )
-    }
-
-    private func lifted(
-        _ name: String,
-        paramType: String = "Int",
-        carrier: String = "Bag",
-        line: Int = 1,
-        column: Int = 1,
-        bodySignals: BodySignals = .empty
-    ) -> LiftedTransformation {
-        LiftedTransformation.lift(
-            mutator(
-                name, paramType: paramType, carrier: carrier,
-                line: line, column: column, bodySignals: bodySignals
-            ),
-            carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
-    }
-
-    // MARK: - Curated pairs
-
-    @Test("add/remove on the same carrier pairs (canonical example)")
-    func addRemovePair() {
-        let pairs = InverseLiftedPairing.candidates(in: [
-            lifted("add"),
-            lifted("remove")
-        ])
-        #expect(pairs.count == 1)
-        #expect(pairs.first?.forwardSummary.name == "add")
-        #expect(pairs.first?.reverseSummary.name == "remove")
-    }
-
-    @Test("Pair is canonical-orientation-stable (lex-smaller name is forward)")
-    func canonicalOrientation() {
-        // Input order shouldn't matter — orientation is always lex-smaller-first.
-        let pairsA = InverseLiftedPairing.candidates(in: [
-            lifted("add"),
-            lifted("remove")
-        ])
-        let pairsB = InverseLiftedPairing.candidates(in: [
-            lifted("remove"),
-            lifted("add")
-        ])
-        #expect(pairsA.first?.forwardSummary.name == "add")
-        #expect(pairsB.first?.forwardSummary.name == "add")
-    }
-
-    @Test("All curated pair names produce a pair when both halves exist")
-    func allCuratedPairs() {
-        for namePair in InverseLiftedPairing.curatedPairs {
-            let pairs = InverseLiftedPairing.candidates(in: [
-                lifted(namePair.lhs),
-                lifted(namePair.rhs)
-            ])
-            #expect(pairs.count == 1, "expected pair for \(namePair.lhs)/\(namePair.rhs)")
-        }
-    }
-
-    @Test("Project-vocabulary inverse pair admits via Vocabulary.inversePairs")
-    func projectVocabularyPair() {
-        let vocab = Vocabulary(inversePairs: [InversePair(forward: "ingest", reverse: "expel")])
-        let pairs = InverseLiftedPairing.candidates(
-            in: [lifted("ingest"), lifted("expel")],
-            vocabulary: vocab
-        )
-        #expect(pairs.count == 1)
-    }
-
-    // MARK: - Filters
-
-    @Test("Different carriers don't pair (Set.insert + Array.remove)")
-    func differentCarriersDoNotPair() {
-        let pairs = InverseLiftedPairing.candidates(in: [
-            lifted("insert", carrier: "Set"),
-            lifted("remove", carrier: "Array")
-        ])
-        #expect(pairs.isEmpty)
-    }
-
-    @Test("Mismatched parameter types don't pair")
-    func mismatchedParamTypes() {
-        let pairs = InverseLiftedPairing.candidates(in: [
-            lifted("add", paramType: "Int"),
-            lifted("remove", paramType: "String")
-        ])
-        #expect(pairs.isEmpty)
-    }
-
-    @Test("Non-inverse name pair doesn't pair (`add` + `merge`)")
-    func nonInverseNamesDoNotPair() {
-        let pairs = InverseLiftedPairing.candidates(in: [
-            lifted("add"),
-            lifted("merge")
-        ])
-        #expect(pairs.isEmpty)
-    }
-
-    @Test("No-param mutators don't pair (no `x` to add or remove)")
-    func noParamDoNotPair() {
-        let resolver = valueSemanticResolver()
-        let summaryAdd = FunctionSummary(
-            name: "add", parameters: [], returnTypeText: "Void",
-            isThrows: false, isAsync: false, isMutating: true, isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-            containingTypeName: "Bag", bodySignals: .empty
-        )
-        let summaryRemove = FunctionSummary(
-            name: "remove", parameters: [], returnTypeText: "Void",
-            isThrows: false, isAsync: false, isMutating: true, isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: 2, column: 1),
-            containingTypeName: "Bag", bodySignals: .empty
-        )
-        let liftAdd = LiftedTransformation.lift(summaryAdd, carrierKindResolver: resolver)!
-        let liftRemove = LiftedTransformation.lift(summaryRemove, carrierKindResolver: resolver)!
-        #expect(InverseLiftedPairing.candidates(in: [liftAdd, liftRemove]).isEmpty)
-    }
-
-    @Test("Pairs sort by forward location for byte-stable output")
-    func pairsSortDeterministically() {
-        let pairs = InverseLiftedPairing.candidates(in: [
-            lifted("add", carrier: "B", line: 50),
-            lifted("remove", carrier: "B", line: 60),
-            lifted("add", carrier: "A", line: 100),
-            lifted("remove", carrier: "A", line: 110)
-        ])
-        #expect(pairs.count == 2)
-        // Sorted by forward.location.line — A's forward is at line 100,
-        // B's forward is at line 50. So B's pair sorts first.
-        #expect(pairs[0].forward.carrier == "B")
-        #expect(pairs[1].forward.carrier == "A")
-    }
-
-    @Test("Same carrier with multiple add+remove pairs produces one pair per match")
-    func multipleHomogeneousPairs() {
-        // Two `add`s + two `remove`s on Bag — cross-product is 4 pairs.
-        let pairs = InverseLiftedPairing.candidates(in: [
-            lifted("add", line: 10),
-            lifted("add", line: 20),
-            lifted("remove", line: 30),
-            lifted("remove", line: 40)
-        ])
-        #expect(pairs.count == 4)
-    }
-}
-
 @Suite("InversePairTemplate — V1.19.D lift admission scoring")
 struct InversePairTemplateLiftedTests {
 
@@ -198,7 +14,7 @@ struct InversePairTemplateLiftedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
-            )
+            ),
         ])
     }
 
@@ -207,9 +23,9 @@ struct InversePairTemplateLiftedTests {
         reverseName: String = "remove",
         bodySignalsForward: BodySignals = .empty,
         bodySignalsReverse: BodySignals = .empty
-    ) -> LiftedInversePair {
+    ) throws -> LiftedInversePair {
         let resolver = valueSemanticResolver()
-        let forward = LiftedTransformation.lift(
+        let forward = try #require(LiftedTransformation.lift(
             FunctionSummary(
                 name: forwardName,
                 parameters: [
@@ -222,8 +38,8 @@ struct InversePairTemplateLiftedTests {
                 bodySignals: bodySignalsForward
             ),
             carrierKindResolver: resolver
-        )!
-        let reverse = LiftedTransformation.lift(
+        ))
+        let reverse = try #require(LiftedTransformation.lift(
             FunctionSummary(
                 name: reverseName,
                 parameters: [
@@ -236,7 +52,7 @@ struct InversePairTemplateLiftedTests {
                 bodySignals: bodySignalsReverse
             ),
             carrierKindResolver: resolver
-        )!
+        ))
         return LiftedInversePair(
             forward: forward,
             reverse: reverse,
@@ -298,8 +114,8 @@ struct InversePairTemplateLiftedTests {
     // MARK: - Vetoes
 
     @Test("Non-deterministic body in EITHER half vetoes")
-    func nonDeterministicVetoesEitherHalf() {
-        let pair = makePair(bodySignalsForward: BodySignals(
+    func nonDeterministicVetoesEitherHalf() throws {
+        let pair = try makePair(bodySignalsForward: BodySignals(
             hasNonDeterministicCall: true,
             hasSelfComposition: false,
             nonDeterministicAPIsDetected: ["Date.init"]
@@ -311,8 +127,8 @@ struct InversePairTemplateLiftedTests {
     }
 
     @Test("Non-deterministic body in REVERSE half vetoes too")
-    func nonDeterministicVetoesReverseHalf() {
-        let pair = makePair(bodySignalsReverse: BodySignals(
+    func nonDeterministicVetoesReverseHalf() throws {
+        let pair = try makePair(bodySignalsReverse: BodySignals(
             hasNonDeterministicCall: true,
             hasSelfComposition: false,
             nonDeterministicAPIsDetected: ["Date.init"]
@@ -343,5 +159,189 @@ struct InversePairTemplateLiftedTests {
         #expect(suggestion.evidence.count == 2)
         #expect(suggestion.evidence[0].displayName == "Bag.add(_:)")
         #expect(suggestion.evidence[1].displayName == "Bag.remove(_:)")
+    }
+}
+
+@Suite("InverseLiftedPairing — V1.19.D mutating add/remove pairing")
+struct InverseLiftedPairingTests {
+
+    // MARK: - Helpers
+
+    private func valueSemanticResolver(carrier: String = "Bag") -> CarrierKindResolver {
+        CarrierKindResolver(typeDecls: [
+            TypeDecl(
+                name: carrier,
+                kind: .struct,
+                inheritedTypes: [],
+                location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+                storedMembers: [StoredMember(name: "items", typeName: "[Int]")]
+            ),
+        ])
+    }
+
+    private func mutator(
+        _ name: String,
+        paramType: String = "Int",
+        carrier: String = "Bag",
+        line: Int = 1,
+        column: Int = 1,
+        bodySignals: BodySignals = .empty
+    ) -> FunctionSummary {
+        FunctionSummary(
+            name: name,
+            parameters: [
+                Parameter(label: nil, internalName: "x", typeText: paramType, isInout: false)
+            ],
+            returnTypeText: "Void",
+            isThrows: false,
+            isAsync: false,
+            isMutating: true,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: line, column: column),
+            containingTypeName: carrier,
+            bodySignals: bodySignals
+        )
+    }
+
+    private func lifted(
+        _ name: String,
+        paramType: String = "Int",
+        carrier: String = "Bag",
+        line: Int = 1,
+        column: Int = 1,
+        bodySignals: BodySignals = .empty
+    ) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
+            mutator(
+                name, paramType: paramType, carrier: carrier,
+                line: line, column: column, bodySignals: bodySignals
+            ),
+            carrierKindResolver: valueSemanticResolver(carrier: carrier)
+        ))
+    }
+
+    // MARK: - Curated pairs
+
+    @Test("add/remove on the same carrier pairs (canonical example)")
+    func addRemovePair() throws {
+        let pairs = InverseLiftedPairing.candidates(in: [
+            try lifted("add"),
+            try lifted("remove"),
+        ])
+        #expect(pairs.count == 1)
+        #expect(pairs.first?.forwardSummary.name == "add")
+        #expect(pairs.first?.reverseSummary.name == "remove")
+    }
+
+    @Test("Pair is canonical-orientation-stable (lex-smaller name is forward)")
+    func canonicalOrientation() throws {
+        // Input order shouldn't matter — orientation is always lex-smaller-first.
+        let pairsA = InverseLiftedPairing.candidates(in: [
+            try lifted("add"),
+            try lifted("remove"),
+        ])
+        let pairsB = InverseLiftedPairing.candidates(in: [
+            try lifted("remove"),
+            try lifted("add"),
+        ])
+        #expect(pairsA.first?.forwardSummary.name == "add")
+        #expect(pairsB.first?.forwardSummary.name == "add")
+    }
+
+    @Test("All curated pair names produce a pair when both halves exist")
+    func allCuratedPairs() throws {
+        for namePair in InverseLiftedPairing.curatedPairs {
+            let pairs = InverseLiftedPairing.candidates(in: [
+                try lifted(namePair.lhs),
+                try lifted(namePair.rhs),
+            ])
+            #expect(pairs.count == 1, "expected pair for \(namePair.lhs)/\(namePair.rhs)")
+        }
+    }
+
+    @Test("Project-vocabulary inverse pair admits via Vocabulary.inversePairs")
+    func projectVocabularyPair() throws {
+        let vocab = Vocabulary(inversePairs: [InversePair(forward: "ingest", reverse: "expel")])
+        let pairs = InverseLiftedPairing.candidates(
+            in: [try lifted("ingest"), try lifted("expel")],
+            vocabulary: vocab
+        )
+        #expect(pairs.count == 1)
+    }
+
+    // MARK: - Filters
+
+    @Test("Different carriers don't pair (Set.insert + Array.remove)")
+    func differentCarriersDoNotPair() throws {
+        let pairs = InverseLiftedPairing.candidates(in: [
+            try lifted("insert", carrier: "Set"),
+            try lifted("remove", carrier: "Array"),
+        ])
+        #expect(pairs.isEmpty)
+    }
+
+    @Test("Mismatched parameter types don't pair")
+    func mismatchedParamTypes() throws {
+        let pairs = InverseLiftedPairing.candidates(in: [
+            try lifted("add", paramType: "Int"),
+            try lifted("remove", paramType: "String"),
+        ])
+        #expect(pairs.isEmpty)
+    }
+
+    @Test("Non-inverse name pair doesn't pair (`add` + `merge`)")
+    func nonInverseNamesDoNotPair() throws {
+        let pairs = InverseLiftedPairing.candidates(in: [
+            try lifted("add"),
+            try lifted("merge"),
+        ])
+        #expect(pairs.isEmpty)
+    }
+
+    @Test("No-param mutators don't pair (no `x` to add or remove)")
+    func noParamDoNotPair() throws {
+        let resolver = valueSemanticResolver()
+        let summaryAdd = FunctionSummary(
+            name: "add", parameters: [], returnTypeText: "Void",
+            isThrows: false, isAsync: false, isMutating: true, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: "Bag", bodySignals: .empty
+        )
+        let summaryRemove = FunctionSummary(
+            name: "remove", parameters: [], returnTypeText: "Void",
+            isThrows: false, isAsync: false, isMutating: true, isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 2, column: 1),
+            containingTypeName: "Bag", bodySignals: .empty
+        )
+        let liftAdd = try #require(LiftedTransformation.lift(summaryAdd, carrierKindResolver: resolver))
+        let liftRemove = try #require(LiftedTransformation.lift(summaryRemove, carrierKindResolver: resolver))
+        #expect(InverseLiftedPairing.candidates(in: [liftAdd, liftRemove]).isEmpty)
+    }
+
+    @Test("Pairs sort by forward location for byte-stable output")
+    func pairsSortDeterministically() throws {
+        let pairs = InverseLiftedPairing.candidates(in: [
+            try lifted("add", carrier: "B", line: 50),
+            try lifted("remove", carrier: "B", line: 60),
+            try lifted("add", carrier: "A", line: 100),
+            try lifted("remove", carrier: "A", line: 110),
+        ])
+        #expect(pairs.count == 2)
+        // Sorted by forward.location.line — A's forward is at line 100,
+        // B's forward is at line 50. So B's pair sorts first.
+        #expect(pairs[0].forward.carrier == "B")
+        #expect(pairs[1].forward.carrier == "A")
+    }
+
+    @Test("Same carrier with multiple add+remove pairs produces one pair per match")
+    func multipleHomogeneousPairs() throws {
+        // Two `add`s + two `remove`s on Bag — cross-product is 4 pairs.
+        let pairs = InverseLiftedPairing.candidates(in: [
+            try lifted("add", line: 10),
+            try lifted("add", line: 20),
+            try lifted("remove", line: 30),
+            try lifted("remove", line: 40),
+        ])
+        #expect(pairs.count == 4)
     }
 }

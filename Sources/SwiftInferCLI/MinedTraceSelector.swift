@@ -1,8 +1,41 @@
-import Foundation
 import SwiftInferCore
 import SwiftInferTestLifter
 import SwiftParser
 import SwiftSyntax
+
+/// Detects any lowercase-leading identifier reference in a parsed expression —
+/// the marker of a test-body-local binding in a mined `initialState:` expr.
+///
+/// ⚠ Two names are not references: a key-path component's (`\.name`), a member
+/// of the key path's root type, and a leading-dot member's (`.red`), a member of
+/// the type the context supplies. Counting them dropped `Feature.State(sort:
+/// \.name)` and `Feature.State(color: .red)`. A member reached through a base
+/// still counts when lowercase: `FeatureTests.fixture` and `Self.items` name
+/// statics only the test target declares, and the stub that receives the
+/// expression compiles production sources alone. `Self` is the test suite here
+/// and the stub there; a `$`-projection reads a test-local's wrapper. The base
+/// of a member access, and a key-path subscript's argument, are still visited.
+private final class LowercaseReferenceCollector: SyntaxVisitor {
+    private(set) var sawLowercaseReference = false
+
+    override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
+        if node.baseName.tokenKind == .keyword(.Self) {
+            sawLowercaseReference = true
+            return .skipChildren
+        }
+        if node.baseName.text.hasPrefix("$") {
+            // `$0` is a closure's own parameter; `$store` projects a test-local's wrapper.
+            if case .dollarIdentifier = node.baseName.tokenKind { return .skipChildren }
+            sawLowercaseReference = true
+            return .skipChildren
+        }
+        if node.isKeyPathComponentName || node.isImplicitMemberName { return .skipChildren }
+        if let first = node.baseName.text.first, first.isLowercase {
+            sawLowercaseReference = true
+        }
+        return .visitChildren
+    }
+}
 
 /// TestStore Trace Mining — turns raw mined `MinedActionTrace`s into the
 /// verifier-replayable `SeedTrace`s for a reducer candidate. Slice 3 widens
@@ -130,39 +163,5 @@ enum MinedTraceSelector {
             }
         }
         return synthesized.map { ActionSequenceStubEmitter.SeedTrace(initialState: nil, actions: $0) }
-    }
-}
-
-/// Detects any lowercase-leading identifier reference in a parsed expression —
-/// the marker of a test-body-local binding in a mined `initialState:` expr.
-///
-/// ⚠ Two names are not references: a key-path component's (`\.name`), a member
-/// of the key path's root type, and a leading-dot member's (`.red`), a member of
-/// the type the context supplies. Counting them dropped `Feature.State(sort:
-/// \.name)` and `Feature.State(color: .red)`. A member reached through a base
-/// still counts when lowercase: `FeatureTests.fixture` and `Self.items` name
-/// statics only the test target declares, and the stub that receives the
-/// expression compiles production sources alone. `Self` is the test suite here
-/// and the stub there; a `$`-projection reads a test-local's wrapper. The base
-/// of a member access, and a key-path subscript's argument, are still visited.
-private final class LowercaseReferenceCollector: SyntaxVisitor {
-    private(set) var sawLowercaseReference = false
-
-    override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
-        if node.baseName.tokenKind == .keyword(.Self) {
-            sawLowercaseReference = true
-            return .skipChildren
-        }
-        if node.baseName.text.hasPrefix("$") {
-            // `$0` is a closure's own parameter; `$store` projects a test-local's wrapper.
-            if case .dollarIdentifier = node.baseName.tokenKind { return .skipChildren }
-            sawLowercaseReference = true
-            return .skipChildren
-        }
-        if node.isKeyPathComponentName || node.isImplicitMemberName { return .skipChildren }
-        if let first = node.baseName.text.first, first.isLowercase {
-            sawLowercaseReference = true
-        }
-        return .visitChildren
     }
 }

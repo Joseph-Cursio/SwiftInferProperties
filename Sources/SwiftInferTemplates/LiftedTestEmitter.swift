@@ -1,4 +1,3 @@
-import PropertyLawCore
 import SwiftInferCore
 
 /// Pure-function emit of a Swift Testing `@Test func` source string
@@ -117,7 +116,7 @@ public enum LiftedTestEmitter {
             "                    let lhs = (\(generator)).run(using: &rng)",
             "                    let rhs = (\(generator)).run(using: &rng)",
             "                    return lhs < rhs ? (lhs, rhs) : (rhs, lhs)",
-            "                }"
+            "                }",
         ].joined(separator: "\n")
         let property = "{ pair in \(callee.isolated("\(callee.call("pair.0")) <= \(callee.call("pair.1"))")) }"
         let failureLabel = "\(callee.bareName)(_:) failed monotonicity"
@@ -151,7 +150,7 @@ public enum LiftedTestEmitter {
             "                    let lhs = (\(generator)).run(using: &rng)",
             "                    let rhs = (\(generator)).run(using: &rng)",
             "                    return (lhs, rhs)",
-            "                }"
+            "                }",
         ].joined(separator: "\n")
         let sides = "\(callee.call("pair.0", "pair.1")) == \(callee.call("pair.1", "pair.0"))"
         let binding = operandBinding("pair", arity: 2, callee: callee, typeName: typeName)
@@ -187,7 +186,7 @@ public enum LiftedTestEmitter {
             "                    let two = (\(generator)).run(using: &rng)",
             "                    let three = (\(generator)).run(using: &rng)",
             "                    return (one, two, three)",
-            "                }"
+            "                }",
         ].joined(separator: "\n")
         // Multi-line property — the nested call shape would push a
         // one-liner past 120 chars. Indents match the test-stub
@@ -196,7 +195,7 @@ public enum LiftedTestEmitter {
             "{ \(operandBinding("triple", arity: 3, callee: callee, typeName: typeName)) in",
             "            " + callee.call(callee.call("triple.0", "triple.1"), "triple.2"),
             "                == " + callee.call("triple.0", callee.call("triple.1", "triple.2")),
-            "        }"
+            "        }",
         ].joined(separator: "\n")
         let failureLabel = "\(callee.bareName)(_:_:) failed associativity"
         return makeTestStubExpression(
@@ -307,67 +306,5 @@ public enum LiftedTestEmitter {
             propertyExpression: property,
             failureLabel: failureLabel
         )
-    }
-}
-
-// V1.43 cleanup — private builders live here so the primary
-// enum body stays under SwiftLint's type_body_length cap.
-extension LiftedTestEmitter {
-
-    // MARK: - Shared stub shape
-
-    /// Convenience overload for unary-property arms — wraps the canonical
-    /// `{ rng in (generator).run(using: &rng) }` sample and a single-value
-    /// property closure, then forwards to `makeTestStubExpression`.
-    /// Shared scaffold for every arm — they differ only in the sample /
-    /// property closure shape and failure-label string. Module-private
-    /// (not file-private) so the M5.5 lifted-only arms in
-    /// `LiftedTestEmitter+M5.swift` can reuse it.
-    static func makeTestStubExpression(
-        testFunctionName: String,
-        seed: SamplingSeed.Value,
-        sampleExpression: String,
-        propertyExpression: String,
-        failureLabel: String
-    ) -> String {
-        """
-
-        @Test func \(testFunctionName)() async {
-            let backend = SwiftPropertyBasedBackend()
-            let seed = Seed(
-                stateA: 0x\(hex(seed.stateA)),
-                stateB: 0x\(hex(seed.stateB)),
-                stateC: 0x\(hex(seed.stateC)),
-                stateD: 0x\(hex(seed.stateD))
-            )
-            let result = await backend.check(
-                trials: 100,
-                seed: seed,
-                sample: \(sampleExpression),
-                property: \(propertyExpression)
-            )
-            if case let .failed(_, _, input, error) = result {
-                Issue.record(
-                    "\(escapedForLiteral(failureLabel)) at input \\(input). \\(error?.message ?? "")"
-                )
-            }
-        }
-        """
-    }
-
-    /// `\.isValid` → `isValid`; `\.account.balance` → `account_balance`.
-    /// Used only for test-function-name suffixes; the keypath itself is
-    /// emitted verbatim into the property closure.
-    private static func sanitizeKeyPathForIdentifier(_ keyPath: String) -> String {
-        var sanitized = keyPath
-        if sanitized.hasPrefix("\\.") {
-            sanitized = String(sanitized.dropFirst(2))
-        }
-        return sanitized.replacingOccurrences(of: ".", with: "_")
-    }
-
-    static func hex(_ word: UInt64) -> String {
-        let raw = String(word, radix: 16, uppercase: true)
-        return String(repeating: "0", count: 16 - raw.count) + raw
     }
 }

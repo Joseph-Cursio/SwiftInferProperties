@@ -1,5 +1,3 @@
-import Foundation
-
 /// swift-algorithms (`apple/swift-algorithms`) laws — properties of the package's
 /// lazy transformations, stated against the array model. `uniqued` is idempotent;
 /// `chunks` then flatten is the identity; `min(count:)` agrees with the sorted
@@ -25,6 +23,6 @@ extension CuratedStdlibCatalog {
             "let a = randArr(); let k = Swift.min(3, a.count); "
                 + "return Array(a.min(count: k)) == Array(a.sorted().prefix(k))",
             imports: ["Algorithms"]
-        )
+        ),
     ]
 }

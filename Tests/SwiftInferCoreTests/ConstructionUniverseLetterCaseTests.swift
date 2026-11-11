@@ -4,8 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
-
 /// **The scanned path in its on-disk letter case** — the shared spec's amendment L. On a volume that
 /// folds case a mis-cased `--sources` opens the same directory, so it must build the same universe:
 /// the predicate reads names (`MyTests` is a test directory, `Mytests` is not), and the build order and
@@ -31,7 +29,7 @@ struct ConstructionUniverseLetterCaseTests {
     func misCasedTestSpellingStillFindsThePackage() throws {
         let root = try Wiring.makePackage([
             "Sources/Model/Item.swift": Wiring.item,
-            "Mytests/X/Logic.swift": Self.logic
+            "Mytests/X/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let typed = root.appendingPathComponent("MyTests/X")
@@ -51,7 +49,7 @@ struct ConstructionUniverseLetterCaseTests {
         let root = try Wiring.makePackage([
             "Sources/Model/Item.swift": Wiring.item,
             "MyTests/Fixtures/X/Item.swift": "struct Item { let title: String }",
-            "MyTests/Fixtures/X/Logic.swift": Self.logic
+            "MyTests/Fixtures/X/Logic.swift": Self.logic,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let typed = root.appendingPathComponent("Mytests/fixtures/x")
@@ -73,7 +71,7 @@ struct ConstructionUniverseLetterCaseTests {
             struct Row { let stamp = Date() }
             func make() -> Row { Row() }
             """,
-            "Sources/AQ/Rival.swift": "import Foundation\nstruct Row { let stamp = UUID() }"
+            "Sources/AQ/Rival.swift": "import Foundation\nstruct Row { let stamp = UUID() }",
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let onDisk = PackagePurity.forScan(of: root.appendingPathComponent("Sources/App"))

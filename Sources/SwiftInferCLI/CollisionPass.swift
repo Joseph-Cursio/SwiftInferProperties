@@ -1,5 +1,3 @@
-import Foundation
-
 /// The **collision pass** — a second sweep of a binary law under deliberately
 /// narrowed entropy, so that independently-drawn operands share field values.
 ///
@@ -221,7 +219,7 @@ enum CollisionPass {
     /// `body` receives the bound variable name so each template can spell its
     /// own check — `idempotence` applies the function twice, the round trips
     /// encode and decode.
-    static func unarySweep(carrier: String, valueName: String = "collisionValue", body: String) -> String {
+    static func unarySweep(carrier: String, body: String, valueName: String = "collisionValue") -> String {
         """
         // --- Pass 1b: collision sweep (narrowed entropy) ---
         //

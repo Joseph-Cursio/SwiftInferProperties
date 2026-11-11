@@ -4,7 +4,7 @@ import SwiftInferCore
 /// secondary / Ring writeouts that target stdlib protocols rather
 /// than kit-defined ones (`SetAlgebra` from M8.4.b.1, `Numeric` from
 /// M8.4.b.2).
-extension LiftedConformanceEmitter {
+public extension LiftedConformanceEmitter {
 
     /// Emit a stdlib `SetAlgebra` conformance extension for `typeName`.
     /// **Secondary arm** to a primary Semilattice claim per PRD §5.4
@@ -28,7 +28,7 @@ extension LiftedConformanceEmitter {
     /// have a single canonical-rename pattern like Semigroup's
     /// `combine` / Monoid's `identity`. The user satisfies SetAlgebra
     /// directly through their own type's declared methods.
-    public static func setAlgebra(
+    static func setAlgebra(
         typeName: String,
         explainability: ExplainabilityBlock
     ) -> String {
@@ -63,7 +63,7 @@ extension LiftedConformanceEmitter {
     /// canonical names (`+`, `-`, `*`) the user's type either provides
     /// or doesn't. Aliasing would conflict with operator overload
     /// resolution.
-    public static func numeric(
+    static func numeric(
         typeName: String,
         explainability: ExplainabilityBlock
     ) -> String {

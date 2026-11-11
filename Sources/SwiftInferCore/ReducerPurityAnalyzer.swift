@@ -1,58 +1,4 @@
-import Foundation
-import SwiftParser
 import SwiftSyntax
-
-/// V2.0 M3.A — classifies a reducer body's "purity" for verify-path
-/// routing. Walks the body's expression / statement tree once via
-/// SwiftSyntax and emits one of three labels:
-///
-///   - `.pure` — no effect / async / Task references found. Safe for
-///     the in-process verify path (PRD v2.0 §7.2).
-///   - `.effectBearing` — body references `Effect` / `Task` /
-///     `AnyCancellable`, awaits an async call, or invokes a known
-///     effect API (`.run` / `.send` / `.cancel` / `.fireAndForget`).
-///     Routes to the subprocess verify path (PRD §7.3, §5.8 M8).
-///   - `.hiddenMutability` — body writes to a static / global var.
-///     `-∞` veto in PRD §4.1; the reducer is non-deterministic in
-///     both verify paths so the suggestion is suppressed.
-///
-/// **Heuristic, not type-resolution.** Detection is textual /
-/// name-based. False positives (a user-defined `Effect` type that
-/// isn't TCA's) cause subprocess routing — slower but not incorrect.
-/// False negatives (a side-effect via `print`, file I/O, etc. that
-/// isn't routed here) result in the in-process path running real
-/// side effects in swift-infer's host process. PRD §16 #1a documents
-/// that this is the intended trade-off — the alternative (full type
-/// resolution) is significantly heavier and v1 routinely accepts
-/// the same shape of conservative-textual approximation.
-///
-/// **Why not just check `effectBearing`?** A reducer with hidden
-/// mutability (writes to `Self.staticCounter += 1`) still produces
-/// the wrong outcomes in *both* verify paths — every action sequence
-/// reads a state that shifted under it. PRD §4.1 vetoes these with
-/// `-∞`. Worth distinguishing from `.effectBearing` (which is just a
-/// routing signal) so the caller can suppress rather than route.
-public enum ReducerPurityAnalyzer {
-
-    /// Walk the function body and emit a purity label. Pure /
-    /// `nil`-body case (protocol requirements, externs) returns
-    /// `.pure` — no body means no detectable impurity.
-    public static func analyze(_ function: FunctionDeclSyntax) -> ReducerPurity {
-        guard let body = function.body else { return .pure }
-        return analyze(Syntax(body))
-    }
-
-    /// Walk any syntax subtree (used by M3 when feeding in a TCA
-    /// `Reduce { state, action in ... }` closure rather than a
-    /// function decl).
-    public static func analyze(_ subtree: Syntax) -> ReducerPurity {
-        let visitor = Visitor()
-        visitor.walk(subtree)
-        if visitor.foundHiddenMutability { return .hiddenMutability }
-        if visitor.foundEffectSignal { return .effectBearing }
-        return .pure
-    }
-}
 
 /// V2.0 M3.A — three-state purity classification. Stable rawValues
 /// so downstream consumers (M3 verify routing, M4+ scoring) can key
@@ -76,7 +22,7 @@ private final class Visitor: SyntaxVisitor {
         "EffectOf",
         "EffectTask",
         "Task",
-        "AnyCancellable"
+        "AnyCancellable",
     ]
 
     /// Method-call name suffixes (`<expr>.<name>(...)`) that route a
@@ -86,7 +32,7 @@ private final class Visitor: SyntaxVisitor {
         "run",
         "send",
         "cancel",
-        "fireAndForget"
+        "fireAndForget",
     ]
 
     init() {
@@ -208,5 +154,57 @@ private final class Visitor: SyntaxVisitor {
             return false
         }
         return text.hasSuffix("=")
+    }
+}
+
+/// V2.0 M3.A — classifies a reducer body's "purity" for verify-path
+/// routing. Walks the body's expression / statement tree once via
+/// SwiftSyntax and emits one of three labels:
+///
+///   - `.pure` — no effect / async / Task references found. Safe for
+///     the in-process verify path (PRD v2.0 §7.2).
+///   - `.effectBearing` — body references `Effect` / `Task` /
+///     `AnyCancellable`, awaits an async call, or invokes a known
+///     effect API (`.run` / `.send` / `.cancel` / `.fireAndForget`).
+///     Routes to the subprocess verify path (PRD §7.3, §5.8 M8).
+///   - `.hiddenMutability` — body writes to a static / global var.
+///     `-∞` veto in PRD §4.1; the reducer is non-deterministic in
+///     both verify paths so the suggestion is suppressed.
+///
+/// **Heuristic, not type-resolution.** Detection is textual /
+/// name-based. False positives (a user-defined `Effect` type that
+/// isn't TCA's) cause subprocess routing — slower but not incorrect.
+/// False negatives (a side-effect via `print`, file I/O, etc. that
+/// isn't routed here) result in the in-process path running real
+/// side effects in swift-infer's host process. PRD §16 #1a documents
+/// that this is the intended trade-off — the alternative (full type
+/// resolution) is significantly heavier and v1 routinely accepts
+/// the same shape of conservative-textual approximation.
+///
+/// **Why not just check `effectBearing`?** A reducer with hidden
+/// mutability (writes to `Self.staticCounter += 1`) still produces
+/// the wrong outcomes in *both* verify paths — every action sequence
+/// reads a state that shifted under it. PRD §4.1 vetoes these with
+/// `-∞`. Worth distinguishing from `.effectBearing` (which is just a
+/// routing signal) so the caller can suppress rather than route.
+public enum ReducerPurityAnalyzer {
+
+    /// Walk the function body and emit a purity label. Pure /
+    /// `nil`-body case (protocol requirements, externs) returns
+    /// `.pure` — no body means no detectable impurity.
+    public static func analyze(_ function: FunctionDeclSyntax) -> ReducerPurity {
+        guard let body = function.body else { return .pure }
+        return analyze(Syntax(body))
+    }
+
+    /// Walk any syntax subtree (used by M3 when feeding in a TCA
+    /// `Reduce { state, action in ... }` closure rather than a
+    /// function decl).
+    public static func analyze(_ subtree: Syntax) -> ReducerPurity {
+        let visitor = Visitor()
+        visitor.walk(subtree)
+        if visitor.foundHiddenMutability { return .hiddenMutability }
+        if visitor.foundEffectSignal { return .effectBearing }
+        return .pure
     }
 }

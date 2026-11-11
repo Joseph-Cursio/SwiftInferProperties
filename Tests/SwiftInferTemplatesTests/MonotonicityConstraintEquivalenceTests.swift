@@ -45,7 +45,7 @@ struct MonotonicityConstraintEquivalenceTests {
         )
         let twoParams = [
             Parameter(label: nil, internalName: "x", typeText: "Foo", isInout: false),
-            Parameter(label: nil, internalName: "y", typeText: "Foo", isInout: false)
+            Parameter(label: nil, internalName: "y", typeText: "Foo", isInout: false),
         ]
         return [
             ("curatedVerb_count", unarySummary(name: "count", paramName: "items")),
@@ -54,7 +54,7 @@ struct MonotonicityConstraintEquivalenceTests {
             ("nonComparableCodomain", unarySummary(name: "isFresh", returnType: "Bool")),
             ("multiParam", unarySummary(name: "count", parameters: twoParams)),
             ("mutating", unarySummary(name: "count", isMutating: true)),
-            ("nonDeterministic", unarySummary(name: "count", bodySignals: nonDeterministic))
+            ("nonDeterministic", unarySummary(name: "count", bodySignals: nonDeterministic)),
         ]
     }
 

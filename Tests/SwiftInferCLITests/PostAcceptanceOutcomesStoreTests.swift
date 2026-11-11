@@ -8,6 +8,14 @@ import Testing
 // files. Mirrors VerifyEvidenceStoreTests' shape — the parallel
 // store carries the parallel guarantees.
 
+/// Test-only `FileSystemReader` reporting every path as missing.
+private struct NoFilesFileSystem: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
+        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
+    }
+}
+
 @Suite("PostAcceptanceOutcomesStore — V1.72.B load + write + walk-up")
 struct PostAcceptanceOutcomesStoreTests {
 
@@ -66,7 +74,7 @@ struct PostAcceptanceOutcomesStoreTests {
                 originalAcceptedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 checkedAt: Date(timeIntervalSince1970: 1_700_001_000),
                 swiftInferVersion: "1.72.0"
-            )
+            ),
         ])
         try PostAcceptanceOutcomesStore.write(canonical, to: outcomesPath)
 
@@ -140,14 +148,14 @@ struct PostAcceptanceOutcomesStoreTests {
                 originalAcceptedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 checkedAt: Date(timeIntervalSince1970: 1_700_001_000),
                 swiftInferVersion: "1.72.0"
-            )
+            ),
         ])
         try PostAcceptanceOutcomesStore.write(log, to: outcomesPath)
         let raw = try String(contentsOf: outcomesPath, encoding: .utf8)
         // sortedKeys → "checkedAt" comes before "detail" comes before "identityHash" alphabetically.
-        let checkedAtIdx = raw.range(of: "checkedAt")!.lowerBound
-        let detailIdx = raw.range(of: "detail")!.lowerBound
-        let identityIdx = raw.range(of: "identityHash")!.lowerBound
+        let checkedAtIdx = try #require(raw.range(of: "checkedAt")).lowerBound
+        let detailIdx = try #require(raw.range(of: "detail")).lowerBound
+        let identityIdx = try #require(raw.range(of: "identityHash")).lowerBound
         #expect(checkedAtIdx < detailIdx)
         #expect(detailIdx < identityIdx)
     }
@@ -159,13 +167,5 @@ struct PostAcceptanceOutcomesStoreTests {
             .appendingPathComponent("PostAcceptanceOutcomesStoreTests-\(name)-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base
-    }
-}
-
-/// Test-only `FileSystemReader` reporting every path as missing.
-private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) throws -> Data {
-        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

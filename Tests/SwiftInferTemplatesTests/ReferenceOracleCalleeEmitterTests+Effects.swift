@@ -116,7 +116,7 @@ extension ReferenceOracleCalleeEmitterTests {
                 owner: "ReadWindow",
                 parameters: [
                     Self.parameter("lineCount", "lineCount", "Int"), Self.parameter("startLine", "startLine", "Int?"),
-                    Self.parameter("maxLines", "maxLines", "Int?"), Self.parameter("cap", "cap", "Int")
+                    Self.parameter("maxLines", "maxLines", "Int?"), Self.parameter("cap", "cap", "Int"),
                 ],
                 returnTypeText: "Self?", isAsync: false, isThrows: false
             ),

@@ -1,6 +1,5 @@
 import Foundation
 import SwiftEffectInference
-import SwiftParser
 import SwiftSyntax
 import Testing
 
@@ -165,7 +164,7 @@ struct PurityRefutationCensusMeasuredTests {
     @Test("a truncated marker set is detected as a mismatch")
     func truncatedMarkerSetIsDetected() {
         let full = Attributor.sideEffectMarkers.union(Attributor.nondeterministicMarkers)
-        let truncated = Attributor(markers: full.subtracting(["print"]), inferrer: CensusPurity.inferrer)
+        let truncated = Attributor(inferrer: CensusPurity.inferrer, markers: full.subtracting(["print"]))
         let mismatches = zip(Self.corpus, Self.verdicts).filter {
             $0.1 != truncated.reassembledVerdict(of: $0.0.function)
         }

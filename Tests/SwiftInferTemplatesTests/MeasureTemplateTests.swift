@@ -117,7 +117,7 @@ struct MeasureTemplateTests {
             name: "count",
             parameters: [
                 Parameter(label: nil, internalName: "a", typeText: "Int", isInout: false),
-                Parameter(label: nil, internalName: "b", typeText: "Int", isInout: false)
+                Parameter(label: nil, internalName: "b", typeText: "Int", isInout: false),
             ],
             returnTypeText: "Int",
             isThrows: false,

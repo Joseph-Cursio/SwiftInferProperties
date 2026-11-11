@@ -23,13 +23,13 @@ struct SharedVerifierPackageTests {
             entry: SemanticIndexEntry(
                 identityHash: hash,
                 templateName: "idempotence",
-                typeName: "Widget",
                 score: 60,
                 tier: "Likely",
                 primaryFunctionName: "normalize",
                 location: "Sources/Widget.swift:1",
                 firstSeenAt: "2026-08-05T00:00:00Z",
-                lastSeenAt: "2026-08-05T00:00:00Z"
+                lastSeenAt: "2026-08-05T00:00:00Z",
+                typeName: "Widget"
             ),
             stubSource: stub,
             userPackage: nil,
@@ -107,7 +107,7 @@ struct SharedVerifierPackageTests {
         _ = try SharedVerifierPackage.synthesize(
             members: [
                 member(hash: "alg001", mode: .algebraic),
-                member(hash: "int002", mode: .interaction)
+                member(hash: "int002", mode: .interaction),
             ],
             at: root
         )

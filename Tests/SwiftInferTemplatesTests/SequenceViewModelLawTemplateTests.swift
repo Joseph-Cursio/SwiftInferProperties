@@ -30,7 +30,7 @@ struct SequenceViewModelLawTemplateTests {
                 Parameter(
                     label: nil, internalName: "right",
                     typeText: rhsType ?? carrier, isInout: false
-                )
+                ),
             ],
             returnTypeText: returns,
             isThrows: false,

@@ -1,5 +1,3 @@
-import Foundation
-
 extension ConvertCounterexampleEngine {
 
     /// Said in the emitted file because the file's location does not say it.

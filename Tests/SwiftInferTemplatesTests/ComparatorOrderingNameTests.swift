@@ -37,7 +37,7 @@ struct ComparatorOrderingNameTests {
             name: name,
             parameters: [
                 Parameter(label: nil, internalName: first, typeText: type, isInout: false),
-                Parameter(label: nil, internalName: second, typeText: type, isInout: false)
+                Parameter(label: nil, internalName: second, typeText: type, isInout: false),
             ],
             returnTypeText: "Bool",
             isThrows: false,
@@ -61,7 +61,7 @@ struct ComparatorOrderingNameTests {
         "matches",                             // (_ name:, _ stem:) — roles, not operands
         "curatedActiveToPresentParticiple",    // (_ active:, _ ing:)
         "curatedActiveToPastParticiple",       // (_ active:, _ past:)
-        "curatedFormPrefixToBare"              // (_ form:, _ bare:)
+        "curatedFormPrefixToBare",              // (_ form:, _ bare:)
     ])
     func measuredFalsePositivesAreSuppressed(name: String) {
         let summary = binary(name)
@@ -93,7 +93,7 @@ struct ComparatorOrderingNameTests {
     /// there can take `sorted(by:)` out of bounds.
     @Test("ordering-named comparators still fire at full weight", arguments: [
         "lessThan", "locationLessThan", "sortCandidates", "precedes",
-        "isOrderedBefore", "compare", "sortsBefore", "ranksBefore"
+        "isOrderedBefore", "compare", "sortsBefore", "ranksBefore",
     ])
     func orderingNamesStillFire(name: String) throws {
         #expect(ComparatorTemplate.hasOrderingName(name))

@@ -39,9 +39,9 @@ public enum ConstraintRunner {
         let evidence = constraint.evidence(subject)
         let explainability = makeExplainability(
             evidence: evidence,
-            additionalWhySuggested: constraint.additionalWhySuggested(subject),
             signals: signals,
-            caveats: constraint.caveats(subject)
+            caveats: constraint.caveats(subject),
+            additionalWhySuggested: constraint.additionalWhySuggested(subject)
         )
         return Suggestion(
             templateName: constraint.templateName,
@@ -76,9 +76,9 @@ public enum ConstraintRunner {
     /// are self-documenting.
     static func makeExplainability(
         evidence: [Evidence],
-        additionalWhySuggested: [String] = [],
         signals: [Signal],
-        caveats: [String]
+        caveats: [String],
+        additionalWhySuggested: [String] = []
     ) -> ExplainabilityBlock {
         var whySuggested: [String] = []
         for row in evidence {

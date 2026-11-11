@@ -36,10 +36,12 @@ import SwiftInferCore
 /// returns `Void` has no output to assert about.
 public enum RolePostconditionTemplate {
 
+    /// The `role-postcondition` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `role-postcondition` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "role-postcondition",
@@ -94,7 +96,7 @@ public enum RolePostconditionTemplate {
                 weight: 20,
                 detail: "Postcondition shape: the law is asserted of the RESULT, and the "
                     + "predicate is supplied by the catalogue rather than read from the subject"
-            )
+            ),
         ]
     }
 
@@ -108,7 +110,7 @@ public enum RolePostconditionTemplate {
                 + "supplies, or an `escaped` using a private escaping scheme, still owes its "
                 + "guarantee — but a function borrowing the verb for something else does not. "
                 + "This is the one failure mode measured on real corpora: `trimmed(matching:)` "
-                + "trims trivia a caller selects, and is excluded by parameter shape for that reason."
+                + "trims trivia a caller selects, and is excluded by parameter shape for that reason.",
         ]
         if !role.isStrong {
             caveats.append(

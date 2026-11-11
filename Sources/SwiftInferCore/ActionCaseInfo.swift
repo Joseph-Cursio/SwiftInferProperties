@@ -1,5 +1,3 @@
-import Foundation
-
 // Cycle 125 + item 2 slices 3/4 — the per-Action-case discovery record and its
 // composition-payload resolution enrichments, lifted out of
 // `ReducerCandidate.swift` so that file stays under SwiftLint's `file_length`
@@ -20,6 +18,46 @@ public struct StateFieldInfo: Sendable, Equatable, Codable {
     public init(name: String, typeName: String) {
         self.name = name
         self.typeName = typeName
+    }
+}
+
+/// Item 2 slice 4 — the resolved facts for constructing a canonical
+/// `BindingAction.set(\.field, value)` value against a
+/// `case binding(BindingAction<State>)` payload. Pure data (a field name + its
+/// value type) — the emitter formats the keypath + the canned value literal.
+public struct ResolvedBindingField: Sendable, Equatable, Codable {
+    /// The `@ObservableState` stored `var` name — the `.set` keypath is `\.<fieldName>`.
+    public let fieldName: String
+    /// The field's value type — one of the cheaply-defaultable set
+    /// (`Bool` / `Int` / `String` / `Double` / `UUID`); the emitter maps it
+    /// to a canned literal.
+    public let valueType: String
+
+    public init(fieldName: String, valueType: String) {
+        self.fieldName = fieldName
+        self.valueType = valueType
+    }
+}
+
+/// Item 2 slice 3 — the resolved facts for constructing a canonical
+/// `IdentifiedAction.element(id:action:)` value against an
+/// `IdentifiedActionOf<Child>` payload. The emitter formats the id literal +
+/// the `Gen.always(...)` wrapper; the child-action value is pre-built by
+/// `IdentifiedActionResolver.childActionValue` so it can carry arbitrary
+/// (slice 3c) nesting.
+public struct ResolvedIdentifiedElement: Sendable, Equatable, Codable {
+    /// The child `State.ID` type — a cheaply-defaultable type; the emitter maps
+    /// it to a canned literal.
+    public let idType: String
+    /// Slice 3b/3c — the complete `action:` argument: a concrete `Child.Action`
+    /// value expression. Payload-free (3b) → `"Row.Action.increment"`; a
+    /// payload-bearing case (3c) → e.g. `"Editor.Action.setText(\"\")"`, or a
+    /// depth-bounded nested `".element(...)"` for `IdentifiedActionOf<GrandChild>`.
+    public let childActionValue: String
+
+    public init(idType: String, childActionValue: String) {
+        self.idType = idType
+        self.childActionValue = childActionValue
     }
 }
 
@@ -61,45 +99,5 @@ public struct ActionCaseInfo: Sendable, Equatable, Codable {
         self.payloadTypes = payloadTypes
         self.resolvedElement = resolvedElement
         self.resolvedBinding = resolvedBinding
-    }
-}
-
-/// Item 2 slice 4 — the resolved facts for constructing a canonical
-/// `BindingAction.set(\.field, value)` value against a
-/// `case binding(BindingAction<State>)` payload. Pure data (a field name + its
-/// value type) — the emitter formats the keypath + the canned value literal.
-public struct ResolvedBindingField: Sendable, Equatable, Codable {
-    /// The `@ObservableState` stored `var` name — the `.set` keypath is `\.<fieldName>`.
-    public let fieldName: String
-    /// The field's value type — one of the cheaply-defaultable set
-    /// (`Bool` / `Int` / `String` / `Double` / `UUID`); the emitter maps it
-    /// to a canned literal.
-    public let valueType: String
-
-    public init(fieldName: String, valueType: String) {
-        self.fieldName = fieldName
-        self.valueType = valueType
-    }
-}
-
-/// Item 2 slice 3 — the resolved facts for constructing a canonical
-/// `IdentifiedAction.element(id:action:)` value against an
-/// `IdentifiedActionOf<Child>` payload. The emitter formats the id literal +
-/// the `Gen.always(...)` wrapper; the child-action value is pre-built by
-/// `IdentifiedActionResolver.childActionValue` so it can carry arbitrary
-/// (slice 3c) nesting.
-public struct ResolvedIdentifiedElement: Sendable, Equatable, Codable {
-    /// The child `State.ID` type — a cheaply-defaultable type; the emitter maps
-    /// it to a canned literal.
-    public let idType: String
-    /// Slice 3b/3c — the complete `action:` argument: a concrete `Child.Action`
-    /// value expression. Payload-free (3b) → `"Row.Action.increment"`; a
-    /// payload-bearing case (3c) → e.g. `"Editor.Action.setText(\"\")"`, or a
-    /// depth-bounded nested `".element(...)"` for `IdentifiedActionOf<GrandChild>`.
-    public let childActionValue: String
-
-    public init(idType: String, childActionValue: String) {
-        self.idType = idType
-        self.childActionValue = childActionValue
     }
 }

@@ -4,7 +4,6 @@ import Testing
 
 @testable import SwiftInferCore
 
-private typealias Wiring = ConstructionPurityWiringTests
 private typealias Nested = ConstructionUniverseNestedPackageTests
 
 /// **Where a `.package(path:)` leads** — the shared spec's amendment H: the literal's value is
@@ -33,7 +32,7 @@ struct ConstructionUniverseDependencyPathTests {
         let root = try Wiring.makePackage([
             "Packages/Q/Package.swift": Nested.demoManifest,
             "Packages/Q/Sources/Q/Token.swift": Self.token,
-            "Sources/Lib/Mint.swift": Self.mint
+            "Sources/Lib/Mint.swift": Self.mint,
         ])
         try Nested.manifest(dependingOn: spell(root)).write(
             to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8
@@ -63,7 +62,7 @@ struct ConstructionUniverseDependencyPathTests {
                 let path = root.path
                 return (path.hasPrefix("/private/") ? path : "/private" + path) + "/Packages/Q"
             }),
-            ("resolved", { $0.resolvingSymlinksInPath().path + "/Packages/Q" })
+            ("resolved", { $0.resolvingSymlinksInPath().path + "/Packages/Q" }),
         ]
         for (label, spell) in spellings {
             let root = try Self.package(dependingOn: spell)
@@ -90,7 +89,7 @@ struct ConstructionUniverseDependencyPathTests {
     func dependencyLinkedOutsideTheRootIsIgnored() throws {
         let outside = try Wiring.makePackage([
             "Q/Package.swift": Nested.demoManifest,
-            "Q/Sources/Q/Token.swift": Self.token
+            "Q/Sources/Q/Token.swift": Self.token,
         ], manifest: false)
         defer { try? FileManager.default.removeItem(at: outside) }
         let root = try Self.package(dependingOn: { _ in "External/Q" }, prepare: { root in
@@ -135,7 +134,7 @@ struct ConstructionUniverseDependencyPathTests {
             "\(middle)/Sources/Support/Support.swift": "public struct Support { public let id = UUID() }",
             "Shared/Package.swift": Nested.demoManifest,
             "Shared/Sources/Shared/Token.swift": Self.token,
-            "Sources/Lib/Mint.swift": Self.mint
+            "Sources/Lib/Mint.swift": Self.mint,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let universe = ConstructionUniverse.universe(forScanOf: root.appendingPathComponent("Sources/Lib"))
@@ -160,7 +159,7 @@ struct ConstructionUniverseDependencyPathTests {
             """,
             "Sources/Lib/Row.swift": Nested.row,
             "Demo/Package.swift": Nested.demoManifest,
-            "Demo/Sources/Demo/main.swift": Nested.mintingRow
+            "Demo/Sources/Demo/main.swift": Nested.mintingRow,
         ])
         defer { try? FileManager.default.removeItem(at: root) }
         let lib = root.appendingPathComponent("Sources/Lib")

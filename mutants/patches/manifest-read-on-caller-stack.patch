@@ -1,5 +1,5 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
-index 8dc76cb2..6d396220 100644
+index 9df64361..e3c7e873 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
 @@ -25,7 +25,7 @@ extension ConstructionUniverse {
@@ -9,11 +9,11 @@ index 8dc76cb2..6d396220 100644
 -        return LargeStackWorkers.run {
 +        return ({
              var read: Set<String> = []
-             let compiled = compiledNestedPackages(
-                 nestedPackages,
-@@ -39,7 +39,7 @@ extension ConstructionUniverse {
-                 return manifests
+             let tree = PackageTree(rootPath: root.path, resolvingSymlinks: canonicalPath) { relative in
+                 let manifests = manifests(inDirectory: packageDirectory(relative, under: root))
+@@ -34,7 +34,7 @@ extension ConstructionUniverse {
              }
+             let compiled = compiledNestedPackages(nestedPackages, reported: judged, rootHasManifest: bounds, in: tree)
              return (compiled, read)
 -        }
 +        })()

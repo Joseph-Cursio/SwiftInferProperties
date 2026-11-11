@@ -35,7 +35,7 @@ to compile. Both numbers matter and they are not the same number — see
 [The trap in this method](#the-trap-in-this-method).
 
 `supportedCarriers` turned out not to be the gate at all. It governs **Route 1**
-only (`VerifyCommand+TemplateDispatch.swift`), the v1.46 hardcoded path for
+only (`SwiftInferCommand.Verify+TemplateDispatch.swift`), the v1.46 hardcoded path for
 `Complex<Double>` / `Double`. Everything else routes to `StrategistDispatchEmitter`,
 which derives from `RawType` (15 stdlib types including `String`) or from an
 indexed `TypeShape`. Reading the constant and believing it is what produced the

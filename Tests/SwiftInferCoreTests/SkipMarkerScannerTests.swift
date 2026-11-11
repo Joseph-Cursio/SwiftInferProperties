@@ -91,7 +91,7 @@ struct SkipMarkerScannerTests {
     func directoryScanUnion() throws {
         let directory = try makeFixture(files: [
             ("a.swift", "// swiftinfer: skip 0x1111\nstruct A {}"),
-            ("b.swift", "// swiftinfer: skip 0x2222\nstruct B {}")
+            ("b.swift", "// swiftinfer: skip 0x2222\nstruct B {}"),
         ])
         defer { try? FileManager.default.removeItem(at: directory) }
         let hashes = try SkipMarkerScanner.skipHashes(in: directory)
@@ -102,7 +102,7 @@ struct SkipMarkerScannerTests {
     func directoryScanIgnoresNonSwift() throws {
         let directory = try makeFixture(files: [
             ("a.swift", "// swiftinfer: skip 0x3333"),
-            ("readme.md", "// swiftinfer: skip 0x9999")
+            ("readme.md", "// swiftinfer: skip 0x9999"),
         ])
         defer { try? FileManager.default.removeItem(at: directory) }
         let hashes = try SkipMarkerScanner.skipHashes(in: directory)

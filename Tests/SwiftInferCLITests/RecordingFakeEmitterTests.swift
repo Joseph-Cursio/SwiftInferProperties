@@ -7,13 +7,13 @@ import Testing
 /// `callLog`, with defaults for properties / non-`Void` returns.
 struct RecordingFakeEmitterTests {
 
-    private func decl(_ source: String) -> ViewModelProtocolScanner.ProtocolDecl {
-        ViewModelProtocolScanner.scan(source: source).first!
+    private func decl(_ source: String) throws -> ViewModelProtocolScanner.ProtocolDecl {
+        try #require(ViewModelProtocolScanner.scan(source: source).first)
     }
 
     @Test("records Void methods with their arguments")
     func recordsVoidMethods() throws {
-        let proto = decl("""
+        let proto = try decl("""
         protocol ViewP {
             func show(title: String)
             func update(_ count: Int, flag: Bool)
@@ -33,7 +33,7 @@ struct RecordingFakeEmitterTests {
 
     @Test("non-Void method logs then returns a default; property gets a stored default")
     func nonVoidAndProperty() throws {
-        let proto = decl("""
+        let proto = try decl("""
         protocol MetricsP {
             var label: String { get }
             func score() -> Int
@@ -45,8 +45,8 @@ struct RecordingFakeEmitterTests {
     }
 
     @Test("gated: an unsupported requirement (init) is not recordable")
-    func gatesUnsupportedRequirement() {
-        let proto = decl("""
+    func gatesUnsupportedRequirement() throws {
+        let proto = try decl("""
         protocol BadP {
             init(x: Int)
             func go()
@@ -56,8 +56,8 @@ struct RecordingFakeEmitterTests {
     }
 
     @Test("gated: a non-defaultable return type is not recordable")
-    func gatesNonDefaultableReturn() {
-        let proto = decl("""
+    func gatesNonDefaultableReturn() throws {
+        let proto = try decl("""
         protocol FactoryP {
             func make() -> SomeCustomType
         }
@@ -66,9 +66,9 @@ struct RecordingFakeEmitterTests {
     }
 
     @Test("gated: an async / throws requirement is not recordable")
-    func gatesAsyncThrows() {
-        let asyncProto = decl("protocol AP { func load() async }")
-        let throwsProto = decl("protocol TP { func load() throws }")
+    func gatesAsyncThrows() throws {
+        let asyncProto = try decl("protocol AP { func load() async }")
+        let throwsProto = try decl("protocol TP { func load() throws }")
         #expect(RecordingFakeEmitter.recordingClass(for: asyncProto) == nil)
         #expect(RecordingFakeEmitter.recordingClass(for: throwsProto) == nil)
     }

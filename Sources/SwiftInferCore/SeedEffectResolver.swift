@@ -1,5 +1,4 @@
 import Foundation
-import SwiftEffectInference
 
 /// Applies effects a linter resolved to the summaries this tool scored.
 ///

@@ -32,7 +32,7 @@ rules:
       - "SwiftInferCore/IndexedTypeShape.swift"
       - "SwiftInferCore/InteractionDecisions.swift"
       - "SwiftInferCore/InteractionInvariantSuggestion.swift"
-      - "SwiftInferCore/KitEvidence.swift"
+      - "SwiftInferCore/KitEvidenceLog.swift"
       - "SwiftInferCore/PostAcceptanceOutcome.swift"
       - "SwiftInferCore/SeedEffect.swift"
       - "SwiftInferCore/TemplateName.swift"

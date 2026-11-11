@@ -27,8 +27,8 @@ struct IdentifiedActionCorpusTests {
 
         let (candidate, stub) = try VerifyInteractionPipeline.resolveAndEmit(
             target: "TCAIdentifiedActionCorpus",
-            pinRaw: "RowList.body",
-            workingDirectory: root
+            workingDirectory: root,
+            pinRaw: "RowList.body"
         )
         #expect(candidate.qualifiedName == "RowList.body")
 
@@ -61,8 +61,8 @@ struct IdentifiedActionCorpusTests {
 
         let (_, stub) = try VerifyInteractionPipeline.resolveAndEmit(
             target: "TCAIdentifiedActionCorpus",
-            pinRaw: "EditorList.body",
-            workingDirectory: root
+            workingDirectory: root,
+            pinRaw: "EditorList.body"
         )
         // Editor has NO payload-free case, so 3c picks the raw `setText(String)`
         // and constructs `.setText("")` as the child action.

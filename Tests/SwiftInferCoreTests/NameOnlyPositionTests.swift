@@ -56,7 +56,7 @@ struct NameOnlyPositionTests {
     func memberNames() throws {
         for (text, expression) in [
             ("name", "job.name"), ("pattern", "Rule().pattern"), ("id", "rows.map { $0.id }"),
-            ("name", "self.name"), ("name", "self?.name"), ("name", "Self.name")
+            ("name", "self.name"), ("name", "self?.name"), ("name", "Self.name"),
         ] {
             let node = try Self.reference(text, in: expression)
             #expect(node.isMemberName, "`\(text)` in `\(expression)`")

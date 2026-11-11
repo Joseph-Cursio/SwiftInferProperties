@@ -1,4 +1,3 @@
-import Foundation
 import PropertyLawCore
 import SwiftInferCore
 
@@ -122,7 +121,7 @@ enum UnequatableResultGate {
     static let knownNotEquatable: Set<String> = [
         "Sendable", "Codable", "Encodable", "Decodable", "Identifiable", "CodingKey",
         "CustomStringConvertible", "CustomDebugStringConvertible", "LosslessStringConvertible",
-        "CustomReflectable", "TextOutputStreamable", "AnyObject", "Copyable", "Escapable", "BitwiseCopyable"
+        "CustomReflectable", "TextOutputStreamable", "AnyObject", "Copyable", "Escapable", "BitwiseCopyable",
     ]
 
     /// What the scan knows about where a type's `==` comes from.

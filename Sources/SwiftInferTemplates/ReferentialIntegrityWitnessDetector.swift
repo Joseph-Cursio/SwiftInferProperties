@@ -3,93 +3,6 @@ import SwiftInferCore
 import SwiftParser
 import SwiftSyntax
 
-/// V2.0 M6 — SwiftSyntax pass detecting Referential Integrity
-/// witnesses (a "selected" Optional ID field paired with an array
-/// collection) inside a named State struct.
-///
-/// **Two entries** (mirrors Conservation / Cardinality detector
-/// shape):
-///   - `detect(stateTypeName:in source:)` — pure source-level entry
-///   - `detect(stateTypeName:in directory:)` — directory walk
-///
-/// **Cartesian-product pairing.** Every "selected" Optional × every
-/// array collection in the State produces one witness. v0.0
-/// deliberately broad; calibration cycles will narrow.
-public enum ReferentialIntegrityWitnessDetector {
-
-    /// V2.0 M6 — detect witnesses in `source`. Pure.
-    public static func detect(
-        stateTypeName: String,
-        in source: String
-    ) -> [ReferentialIntegrityWitness] {
-        let tree = Parser.parse(source: source)
-        let visitor = Visitor(targetName: stateTypeName)
-        visitor.walk(tree)
-        return visitor.witnesses
-    }
-
-    /// V2.0 M6 — detect across every `.swift` file under `directory`.
-    public static func detect(
-        stateTypeName: String,
-        in directory: URL
-    ) throws -> [ReferentialIntegrityWitness] {
-        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
-        var witnesses: [ReferentialIntegrityWitness] = []
-        for fileURL in swiftFiles {
-            let source = try String(contentsOf: fileURL, encoding: .utf8)
-            witnesses.append(contentsOf: detect(stateTypeName: stateTypeName, in: source))
-        }
-        return witnesses
-    }
-
-    // MARK: - Visitor
-
-    private final class Visitor: SyntaxVisitor {
-        let targetComponents: [String]
-        var typeStack: [String] = []
-        var witnesses: [ReferentialIntegrityWitness] = []
-
-        init(targetName: String) {
-            self.targetComponents = targetName.split(separator: ".").map(String.init)
-            super.init(viewMode: .sourceAccurate)
-        }
-
-        override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-            typeStack.append(node.name.text)
-            if matchesTarget() {
-                witnesses.append(
-                    contentsOf: ReferentialIntegrityExtractor.extract(from: node.memberBlock)
-                )
-            }
-            return .visitChildren
-        }
-        override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
-
-        override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-            typeStack.append(node.name.text)
-            if matchesTarget() {
-                witnesses.append(
-                    contentsOf: ReferentialIntegrityExtractor.extract(from: node.memberBlock)
-                )
-            }
-            return .visitChildren
-        }
-        override func visitPost(_: ClassDeclSyntax) { typeStack.removeLast() }
-
-        override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-            typeStack.append(node.name.text)
-            return .visitChildren
-        }
-        override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
-
-        private func matchesTarget() -> Bool {
-            guard typeStack.count >= targetComponents.count else { return false }
-            let suffix = typeStack.suffix(targetComponents.count)
-            return Array(suffix) == targetComponents
-        }
-    }
-}
-
 /// V2.0 M6 — extracts Referential Integrity witnesses from one
 /// member block. Pure; testable in isolation.
 enum ReferentialIntegrityExtractor {
@@ -311,12 +224,12 @@ enum ReferentialIntegrityExtractor {
 
     private static let identifiedArrayOfPrefixes = [
         "IdentifiedArrayOf<",
-        "IdentifiedCollections.IdentifiedArrayOf<"
+        "IdentifiedCollections.IdentifiedArrayOf<",
     ]
 
     private static let identifiedArrayPrefixes = [
         "IdentifiedArray<",
-        "IdentifiedCollections.IdentifiedArray<"
+        "IdentifiedCollections.IdentifiedArray<",
     ]
 
     /// Depth-counting split on the top-level comma. `inner` is the
@@ -348,5 +261,92 @@ enum ReferentialIntegrityExtractor {
         let second = inner[inner.index(after: commaIdx)...]
             .trimmingCharacters(in: .whitespaces)
         return second.isEmpty ? nil : second
+    }
+}
+
+/// V2.0 M6 — SwiftSyntax pass detecting Referential Integrity
+/// witnesses (a "selected" Optional ID field paired with an array
+/// collection) inside a named State struct.
+///
+/// **Two entries** (mirrors Conservation / Cardinality detector
+/// shape):
+///   - `detect(stateTypeName:in source:)` — pure source-level entry
+///   - `detect(stateTypeName:in directory:)` — directory walk
+///
+/// **Cartesian-product pairing.** Every "selected" Optional × every
+/// array collection in the State produces one witness. v0.0
+/// deliberately broad; calibration cycles will narrow.
+public enum ReferentialIntegrityWitnessDetector {
+
+    /// V2.0 M6 — detect witnesses in `source`. Pure.
+    public static func detect(
+        stateTypeName: String,
+        in source: String
+    ) -> [ReferentialIntegrityWitness] {
+        let tree = Parser.parse(source: source)
+        let visitor = Visitor(targetName: stateTypeName)
+        visitor.walk(tree)
+        return visitor.witnesses
+    }
+
+    /// V2.0 M6 — detect across every `.swift` file under `directory`.
+    public static func detect(
+        stateTypeName: String,
+        in directory: URL
+    ) throws -> [ReferentialIntegrityWitness] {
+        let swiftFiles = SwiftSourceFiles.sorted(in: directory)
+        var witnesses: [ReferentialIntegrityWitness] = []
+        for fileURL in swiftFiles {
+            let source = try String(contentsOf: fileURL, encoding: .utf8)
+            witnesses.append(contentsOf: detect(stateTypeName: stateTypeName, in: source))
+        }
+        return witnesses
+    }
+
+    // MARK: - Visitor
+
+    private final class Visitor: SyntaxVisitor {
+        let targetComponents: [String]
+        var typeStack: [String] = []
+        var witnesses: [ReferentialIntegrityWitness] = []
+
+        init(targetName: String) {
+            self.targetComponents = targetName.split(separator: ".").map(String.init)
+            super.init(viewMode: .sourceAccurate)
+        }
+
+        override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+            typeStack.append(node.name.text)
+            if matchesTarget() {
+                witnesses.append(
+                    contentsOf: ReferentialIntegrityExtractor.extract(from: node.memberBlock)
+                )
+            }
+            return .visitChildren
+        }
+        override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
+
+        override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+            typeStack.append(node.name.text)
+            if matchesTarget() {
+                witnesses.append(
+                    contentsOf: ReferentialIntegrityExtractor.extract(from: node.memberBlock)
+                )
+            }
+            return .visitChildren
+        }
+        override func visitPost(_: ClassDeclSyntax) { typeStack.removeLast() }
+
+        override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+            typeStack.append(node.name.text)
+            return .visitChildren
+        }
+        override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
+
+        private func matchesTarget() -> Bool {
+            guard typeStack.count >= targetComponents.count else { return false }
+            let suffix = typeStack.suffix(targetComponents.count)
+            return Array(suffix) == targetComponents
+        }
     }
 }

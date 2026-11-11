@@ -53,7 +53,7 @@ struct GuardDomainReaderTests {
     /// would make four fifths of the population noise.
     @Test("a binding condition is not a predicate", arguments: [
         "func f(_ v: String?) -> Int? { guard let v else { return nil }\n return v.count }",
-        "func f(_ v: Any) -> Bool { guard case let s as String = v else { return false }\n return !s.isEmpty }"
+        "func f(_ v: Any) -> Bool { guard case let s as String = v else { return false }\n return !s.isEmpty }",
     ])
     func bindingsAreRefused(source: String) {
         #expect(read(source) == nil)

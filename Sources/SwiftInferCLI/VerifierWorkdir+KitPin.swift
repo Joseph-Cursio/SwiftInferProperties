@@ -1,5 +1,3 @@
-import Foundation
-
 // Extracted from `VerifierWorkdir.swift` to keep that file under the
 // `file_length` cap. The constant is small but load-bearing enough to want
 // its own file: it is the single point where the synthesized verifier's

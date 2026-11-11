@@ -1,5 +1,25 @@
 import Foundation
 
+/// `Package.resolved`, v2/v3 (`pins` at the top) or v1 (`object.pins`) — what `KitAPIFloor` reads.
+private struct ResolvedFile: Decodable {
+    let pins: [ResolvedPin]?
+    let object: ResolvedObject?
+}
+
+private struct ResolvedObject: Decodable {
+    let pins: [ResolvedPin]
+}
+
+private struct ResolvedPin: Decodable {
+    let identity: String?
+    let package: String?
+    let state: ResolvedState
+}
+
+private struct ResolvedState: Decodable {
+    let version: String?
+}
+
 /// The SwiftPropertyLaws release a generated stub needs, checked against the release the package
 /// actually resolves.
 ///
@@ -32,7 +52,7 @@ enum KitAPIFloor {
         Floor(spelling: "Gen<UUID>.uuid(", version: [3, 10, 0]),
         Floor(spelling: "Gen<Data>.data(", version: [3, 10, 0]),
         Floor(spelling: "Gen<URL>.url(", version: [3, 10, 0]),
-        Floor(spelling: "Gen<Decimal>.decimal(", version: [3, 11, 0])
+        Floor(spelling: "Gen<Decimal>.decimal(", version: [3, 11, 0]),
     ]
 
     /// What to tell the reader when `stub` needs a newer kit than `resolved`, or `nil`.
@@ -70,24 +90,4 @@ enum KitAPIFloor {
     private static func spelled(_ version: [Int]) -> String {
         version.map(String.init).joined(separator: ".")
     }
-}
-
-/// `Package.resolved`, v2/v3 (`pins` at the top) or v1 (`object.pins`) — what `KitAPIFloor` reads.
-private struct ResolvedFile: Decodable {
-    let pins: [ResolvedPin]?
-    let object: ResolvedObject?
-}
-
-private struct ResolvedObject: Decodable {
-    let pins: [ResolvedPin]
-}
-
-private struct ResolvedPin: Decodable {
-    let identity: String?
-    let package: String?
-    let state: ResolvedState
-}
-
-private struct ResolvedState: Decodable {
-    let version: String?
 }

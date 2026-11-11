@@ -1,7 +1,38 @@
 import ArgumentParser
 import Foundation
 import SwiftInferCore
-import SwiftInferTemplates
+
+/// Sink for `Discover.run(directory:output:)`. Production code uses
+/// `PrintOutput`; tests use a recording sink so they can match the rendered
+/// text byte-for-byte.
+public protocol DiscoverOutput {
+    /// Emits one chunk of rendered `discover` output.
+    func write(_ text: String)
+}
+
+public struct PrintOutput: DiscoverOutput {
+    public init() { /* no-op */ }
+    public func write(_ text: String) {
+        print(text)
+    }
+}
+
+/// Sink for diagnostic warnings (vocabulary load failures, etc.). Kept
+/// separate from `DiscoverOutput` so warnings reach stderr without
+/// disturbing the byte-stable suggestion stream on stdout — PRD §16's
+/// reproducibility guarantee depends on stdout being a function of
+/// (target sources, vocabulary, config) only.
+public protocol DiagnosticOutput {
+    /// Emits one diagnostic line, out of band from the suggestion stream.
+    func writeDiagnostic(_ text: String)
+}
+
+public struct PrintDiagnosticOutput: DiagnosticOutput {
+    public init() { /* no-op */ }
+    public func writeDiagnostic(_ text: String) {
+        FileHandle.standardError.write(Data((text + "\n").utf8))
+    }
+}
 
 /// Root command for the `swift-infer` executable. v1.2.0 ships
 /// `discover` + `drift` + `convert-counterexample` (subcommand surface
@@ -50,303 +81,10 @@ public struct SwiftInferCommand: AsyncParsableCommand {
             AcceptInteraction.self,
             AcceptCheckInteraction.self,
             MetricsInteraction.self,
-            AcceptBridge.self
+            AcceptBridge.self,
         ],
         defaultSubcommand: Discover.self
     )
 
     public init() { /* no-op */ }
-}
-
-extension SwiftInferCommand {
-
-    /// `swift-infer discover` — scan a target for inferred property
-    /// candidates. M1.3 wires the idempotence template; M1.4 wires
-    /// round-trip + cross-function pairing.
-    public struct Discover: AsyncParsableCommand {
-
-        public static let configuration = CommandConfiguration(
-            commandName: "discover",
-            abstract: "Scan a target for inferred property candidates."
-        )
-
-        @Option(
-            name: .long,
-            help: """
-            Name of the SwiftPM target to scan. Resolved to Sources/<target>/ \
-            relative to the working directory. Mutually exclusive with \
-            --sources; pass exactly one.
-            """
-        )
-        public var target: String?
-
-        @Option(
-            name: .long,
-            help: """
-            Path to a source directory to scan directly, bypassing the \
-            Sources/<target>/ convention. The Xcode escape hatch: an app has no \
-            SwiftPM target, so point this at the folder your .swift files live \
-            in. Mutually exclusive with --target; pass exactly one.
-            """
-        )
-        public var sources: String?
-
-        @Flag(
-            name: .long,
-            inversion: .prefixedNo,
-            help: """
-            Also show the below-cut CONJECTURES — `round-trip`, \
-            `idempotence`, `monotonicity` and the like, which a correct \
-            implementation could legitimately fail (PRD §4.2). This is not a \
-            plain score cut: a role-entailed law, one the code OWES such as a \
-            `predicate` totality claim, is shown by DEFAULT at any score, so \
-            some `Possible`-tier rows appear without this flag and \
-            --no-include-possible will not remove them. See \
-            docs/design/predicate-display-order.md. Pass --include-possible / \
-            --no-include-possible to override the project's \
-            .swiftinfer/config.toml setting.
-            """
-        )
-        public var includePossible: Bool?
-
-        @Flag(
-            name: .long,
-            help: """
-            PROTOTYPE. Withhold default visibility from any suggestion whose score rests \
-            on a SINGLE positive signal. Q3 measured that all 9 laws discover reached \
-            rested on one +50 conformance signal, and that 74% of swift-syntax \
-            suggestions carry exactly one signal — so for most output the score carries \
-            no information beyond which signal fired. Opt-in and measurable: it does NOT \
-            change the tier arithmetic. Cost, blinded: swift-syntax 586 -> 586 (free), \
-            stdlib 315 -> 264, swift-foundation 347 -> 259, and Q3 recall 9/12 -> 0/12. \
-            See CorroborationRule.
-            """
-        )
-        public var requireCorroboration: Bool = false
-
-        @Flag(
-            name: .long,
-            help: """
-            OPT-IN. Resolve each function's idempotency effect ACROSS FILES, \
-            including effects nothing wrote down: a function that calls a \
-            `@NonIdempotent` one is itself non-idempotent, and reading its own \
-            declaration will never say so. Off by default for its cost: a \
-            second pass after the scan, which re-parses the scanned directory \
-            and merges an effect table over every file, with a 30 s inference \
-            budget against discover's 2 s. (The scan itself is two-phase: it \
-            already parses the project's construction universe up front and \
-            holds those trees while it judges; this pass runs after.) Only the \
-            retry-HOSTILE direction is used: an inferred pure/idempotent is \
-            the least upper bound of what a body calls and says nothing about \
-            the caller. Demotes (-45) rather than vetoes — a declaration denies \
-            the law, an inference is a fact about a callee. Measured on this \
-            repo's four targets (2026-10-06, with construction facts): +5% to \
-            +23% wall clock, under 2 MB peak RSS. See EffectResolver.
-            """
-        )
-        public var resolveEffects: Bool = false
-
-        @Option(
-            name: .long,
-            help: """
-            Path to a vocabulary file (PRD §4.5). When omitted, swift-infer \
-            falls back to the path in .swiftinfer/config.toml's \
-            [discover].vocabularyPath, then to the conventional \
-            .swiftinfer/vocabulary.json next to Package.swift.
-            """
-        )
-        public var vocabulary: String?
-
-        @Option(
-            name: .long,
-            help: """
-            Path to a config file. When omitted, swift-infer walks up \
-            from the target directory to the package root and looks for \
-            .swiftinfer/config.toml.
-            """
-        )
-        public var config: String?
-
-        @Option(
-            name: .long,
-            help: """
-            Comma-separated list of template packs to enable: \
-            numeric, serialization, collections, algebraic, concurrency \
-            (PRD §20.3). When omitted, all packs are enabled (the v1 \
-            monolithic-registry default). Falls back to the path in \
-            .swiftinfer/config.toml's [discover].packs string when set. \
-            Unknown pack names emit a diagnostic warning and are ignored.
-            """
-        )
-        public var packs: String?
-
-        @Flag(
-            name: .long,
-            help: """
-            Render a per-template / per-tier summary block instead of \
-            the full §4.5 explainability blocks. Useful for CI \
-            dashboards tracking suggestion-count regressions over time. \
-            (M5.4, PRD §5.8.)
-            """
-        )
-        public var statsOnly: Bool = false
-
-        @Flag(
-            name: .long,
-            help: """
-            Append a "Pure-effect annotations" advisory section recommending a \
-            `/// @lint.effect pure` line for each function SoundPurity infers \
-            referentially transparent. Off by default; the advice is separate \
-            from property-test suggestions and never enters accept / verify.
-            """
-        )
-        public var effectAnnotations: Bool = false
-
-        @Flag(
-            name: .long,
-            inversion: .prefixedNo,
-            help: """
-            Append a "Reference definitions from docstrings" advisory section. For \
-            a documented function whose doc states a checkable contract, it pairs \
-            that sentence with the law it defines — the reference definition a \
-            `predicate` law openly owes, the spec a lifted example test needs, or \
-            the only refutable contract on a function the templates could offer \
-            nothing owed for. Its runnable reference-oracle scaffold spells the call \
-            the way `accept` does (a qualified static call, a drawn receiver for a \
-            method, try?/await/actor hop, and the member's <name>_reference declared \
-            in an extension of its type), and otherwise prints "no runnable reference \
-            oracle:" with the reason. **On by default**: on the SwiftProjectLint road test, \
-            run without --seeds, it surfaced 8 of 10 hand-keyed kernels where the \
-            templates surfaced 2. Under --seeds, documented functions the manifest \
-            does not name as functions to analyse (one only an extractable-kernel \
-            seed names, for instance) are listed in brief in a second block, \
-            "Documented contracts outside the seed focus", never dropped. Pass \
-            --no-docstring-advice to suppress both blocks, or set \
-            [discover].docstringAdvice in .swiftinfer/config.toml. The advice is \
-            separate from property-test suggestions and never enters accept / verify.
-            """
-        )
-        public var docstringAdvice: Bool?
-
-        @Flag(
-            name: .long,
-            help: """
-            Suppress writes during --interactive triage. Accept (A) \
-            gestures show the would-be file path on stdout but skip \
-            both the file write and the .swiftinfer/decisions.json \
-            update. Without --interactive there are no writes to \
-            suppress, so --dry-run is a no-op. (M5.5 + M6.4, PRD \
-            §5.8.)
-            """
-        )
-        public var dryRun: Bool = false
-
-        @Flag(
-            name: .long,
-            help: """
-            Walk surviving suggestions one at a time, prompting \
-            [A/s/n/?]: Accept writes a property-test stub to \
-            Tests/Generated/SwiftInfer/<TemplateName>/<Suite>.swift (named for \
-            the suite it declares: type, function and template, then Tests) \
-            and records the decision; Skip / Reject record the decision \
-            without writing files. (M6.4, PRD §5.8.)
-            """
-        )
-        public var interactive: Bool = false
-
-        @Flag(
-            name: .long,
-            help: """
-            Snapshot the current run's surface-suggestion identities to \
-            .swiftinfer/baseline.json. Used by `swift-infer drift` to \
-            compute "what's new since the last snapshot" — only Strong-tier \
-            suggestions added after this snapshot (and lacking a recorded \
-            decision) earn a drift warning. Mutually exclusive with \
-            --interactive in v1: triage and snapshot are different gestures. \
-            Honors --dry-run by skipping the write. (M6.5, PRD §5.8.)
-            """
-        )
-        public var updateBaseline: Bool = false
-
-        @Option(
-            name: .long,
-            help: """
-            Path to the directory TestLifter scans for tests. When omitted, \
-            swift-infer walks up from the --target directory to find \
-            Package.swift, then scans <package-root>/Tests/ if it exists. \
-            When the explicit path is missing, swift-infer warns and falls \
-            back to the walk-up resolver. (TestLifter M6.0, PRD §7.9.)
-            """
-        )
-        public var testDir: String?
-
-        @Option(
-            name: .long,
-            help: """
-            Path to a JSON seed manifest (the `pbt-seeds` output of an external \
-            linter, e.g. `swiftprojectlint … --format pbt-seeds`). When set, \
-            discovery still scans the whole target but the surfaced suggestions \
-            are FOCUSED to functions named in the manifest — the consumer side \
-            of the lint → infer pipeline. A seeded pure function that no template \
-            matched still earns the generic determinism law (f(x) == f(x)). \
-            Focusing is not total: a law the code OWES, and one whose subject a \
-            manifest could never name (a state machine's moves are impure), \
-            survive it — see `SeedFocus`. Docstring advice for a function the \
-            manifest does not name as one to analyse is listed in brief, never \
-            dropped. A missing or malformed file is an error. An EMPTY manifest \
-            does NOT focus, and returns what an unseeded run would: a manifest is \
-            whatever the linter happened to find, so "focus on zero functions" is \
-            what a producer with a blind spot looks like, not a request anyone \
-            makes.
-            """
-        )
-        public var seeds: String?
-
-        @Option(
-            name: .long,
-            help: """
-            Directory that receives accepted `--interactive` writeouts — the one holding \
-            the `SwiftInfer/` and `SwiftInferRefactors/` trees. When omitted, swift-infer \
-            reads Package.swift and picks a declared TEST TARGET's directory, because \
-            `Tests/Generated/` is inside no SwiftPM target on any package and a file \
-            written there is compiled by nothing, silently (#414). Pass this when the \
-            manifest cannot decide — a package with several test targets reaching the \
-            scanned module, or an Xcode-layout project with no test target at all. The run \
-            always prints the destination it chose and whether anything builds it.
-            """
-        )
-        public var outputDir: String?
-
-        public init() { /* no-op */ }
-    }
-}
-
-/// Sink for `Discover.run(directory:output:)`. Production code uses
-/// `PrintOutput`; tests use a recording sink so they can match the rendered
-/// text byte-for-byte.
-public protocol DiscoverOutput {
-    func write(_ text: String)
-}
-
-public struct PrintOutput: DiscoverOutput {
-    public init() { /* no-op */ }
-    public func write(_ text: String) {
-        print(text)
-    }
-}
-
-/// Sink for diagnostic warnings (vocabulary load failures, etc.). Kept
-/// separate from `DiscoverOutput` so warnings reach stderr without
-/// disturbing the byte-stable suggestion stream on stdout — PRD §16's
-/// reproducibility guarantee depends on stdout being a function of
-/// (target sources, vocabulary, config) only.
-public protocol DiagnosticOutput {
-    func writeDiagnostic(_ text: String)
-}
-
-public struct PrintDiagnosticOutput: DiagnosticOutput {
-    public init() { /* no-op */ }
-    public func writeDiagnostic(_ text: String) {
-        FileHandle.standardError.write(Data((text + "\n").utf8))
-    }
 }

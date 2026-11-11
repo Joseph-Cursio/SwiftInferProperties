@@ -53,9 +53,9 @@ struct DiscoverDocstringAdviceSeedFocusTests {
 
     private func run(
         _ name: String,
-        source: String = Self.source,
         manifest: SeedManifest?,
-        docstringAdvice: Bool? = nil,
+        source: String = Self.source,
+        docstringAdvice: SettingOverride = .notGiven,
         statsOnly: Bool = false
     ) throws -> String {
         let directory = try writeDPFixture(name: name, contents: source)
@@ -63,11 +63,11 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         let recording = DPRecordingOutput()
         try SwiftInferCommand.Discover.run(
             directory: directory,
+            output: recording,
             includePossible: true,
             statsOnly: statsOnly,
             docstringAdvice: docstringAdvice,
             seedManifest: manifest,
-            output: recording,
             diagnostics: SilentDiagnostics()
         )
         return recording.text
@@ -100,7 +100,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
     /// `Self` (the shape of `CappedList.stoppedEarly`). The linter cannot seed either.
     @Test("shapes the linter cannot seed are listed outside the focus")
     func unseededShapesTheLinterCannotSeedAreListed() throws {
-        let source = """
+        let fixture = """
         /// A folder name is valid when it is non-empty and contains no slash.
         func isValidName(_ name: String) -> Bool { !name.isEmpty && !name.contains("/") }
 
@@ -121,8 +121,8 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         """
         let text = try run(
             "DocAdviceUnseedableShapes",
-            source: source,
-            manifest: SeedManifest(seeds: [Self.seed("isValidName", line: 2)])
+            manifest: SeedManifest(seeds: [Self.seed("isValidName", line: 2)]),
+            source: fixture
         )
 
         let compact = Self.compactBlock(of: text)
@@ -152,7 +152,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         let manifest = SeedManifest(seeds: [
             Self.seed("isValidName", line: 3),
             Self.seed("backoffDelay", line: 6),
-            Self.seed("weighted", line: 9)
+            Self.seed("weighted", line: 9),
         ])
         let text = try run("DocAdviceFullySeeded", manifest: manifest)
 
@@ -166,7 +166,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
     /// drops any of it.
     @Test("--seeds splits the docstring advice but never drops any of it")
     func seedsSplitButNeverDropDocstringAdvice() throws {
-        let source = """
+        let fixture = """
         struct Ledger {
             /// A folder name is valid when it is non-empty and contains no slash.
             func isValidName(_ name: String) -> Bool { !name.isEmpty && !name.contains("/") }
@@ -178,11 +178,11 @@ struct DiscoverDocstringAdviceSeedFocusTests {
             func wholeUnits(_ balance: Double) -> Int { Int(balance.rounded()) }
         }
         """
-        let unseeded = try run("DocAdviceParityPlain", source: source, manifest: nil)
+        let unseeded = try run("DocAdviceParityPlain", manifest: nil, source: fixture)
         let seeded = try run(
             "DocAdviceParitySeeded",
-            source: source,
-            manifest: SeedManifest(seeds: [Self.seed("backoffDelay", line: 6)])
+            manifest: SeedManifest(seeds: [Self.seed("backoffDelay", line: 6)]),
+            source: fixture
         )
 
         let plainNames = Self.itemNames(in: Self.mainBlock(of: unseeded))
@@ -202,7 +202,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
         "an empty or kernel-only manifest does not narrow docstring advice",
         arguments: [
             SeedManifest(seeds: []),
-            SeedManifest(seeds: [Self.seed("weighted", line: 9, kind: .extractableKernel)])
+            SeedManifest(seeds: [Self.seed("weighted", line: 9, kind: .extractableKernel)]),
         ]
     )
     func emptyManifestDoesNotNarrowDocstringAdvice(manifest: SeedManifest) throws {
@@ -223,7 +223,7 @@ struct DiscoverDocstringAdviceSeedFocusTests {
     func kernelSeedDoesNotVouchForItsEnclosingFunction() throws {
         let manifest = SeedManifest(seeds: [
             Self.seed("isValidName", line: 3),
-            Self.seed("backoffDelay", line: 6, kind: .extractableKernel)
+            Self.seed("backoffDelay", line: 6, kind: .extractableKernel),
         ])
         let text = try run("DocAdviceKernelSeed", manifest: manifest)
 

@@ -1,31 +1,3 @@
-import Foundation
-
-/// **The line that must accompany every `discover` result.**
-///
-/// A `discover` count read on its own is close to meaningless, and the reason is a thought
-/// experiment the repo owner posed: *if PropertyLawKit were perfect at finding testable
-/// properties, there would be nothing left to discover.* A tool reporting `22 suggestions`
-/// would then be reporting total success in the exact typography of total failure. The
-/// leaderboard fixture's scorecards were withdrawn for precisely this — they scored
-/// `discover` as if the kit did not exist.
-///
-/// So the kit's contribution ships **beside** the count, in the same unit, always.
-///
-/// ## Why stdout, not the diagnostic channel
-///
-/// `ProtocolCoverageAudit.diagnostics` already said something like this, on stderr, as a
-/// `note:`. It was invisible in practice: the 2026-08-01 census swept eight corpora with
-/// `2>/dev/null` on every invocation and never surfaced the line once — including the runs
-/// whose numbers were then written into the findings doc. A channel that the tool's own
-/// author redirects away is not a channel. This goes where the suggestion count goes.
-///
-/// ## Laws, not carriers
-///
-/// The count is **laws**, because carriers are not comparable to suggestions and reporting
-/// them side by side invites exactly the unit confusion that `ProtocolCoverageAudit`'s first
-/// version shipped — *"150 carrier(s) had laws suppressed"* on a target where the measured
-/// suppression was zero. `discover: 22` against `kit: 297` is that mistake again with the
-/// numbers in different columns.
 /// What the kit covers on this corpus, reduced to the three numbers the headline needs.
 ///
 /// Carried on `PipelineResult` so the renderer does not have to re-derive it — and so the
@@ -60,6 +32,32 @@ public struct CoverageSummary: Sendable, Equatable {
     }
 }
 
+/// **The line that must accompany every `discover` result.**
+///
+/// A `discover` count read on its own is close to meaningless, and the reason is a thought
+/// experiment the repo owner posed: *if PropertyLawKit were perfect at finding testable
+/// properties, there would be nothing left to discover.* A tool reporting `22 suggestions`
+/// would then be reporting total success in the exact typography of total failure. The
+/// leaderboard fixture's scorecards were withdrawn for precisely this — they scored
+/// `discover` as if the kit did not exist.
+///
+/// So the kit's contribution ships **beside** the count, in the same unit, always.
+///
+/// ## Why stdout, not the diagnostic channel
+///
+/// `ProtocolCoverageAudit.diagnostics` already said something like this, on stderr, as a
+/// `note:`. It was invisible in practice: the 2026-08-01 census swept eight corpora with
+/// `2>/dev/null` on every invocation and never surfaced the line once — including the runs
+/// whose numbers were then written into the findings doc. A channel that the tool's own
+/// author redirects away is not a channel. This goes where the suggestion count goes.
+///
+/// ## Laws, not carriers
+///
+/// The count is **laws**, because carriers are not comparable to suggestions and reporting
+/// them side by side invites exactly the unit confusion that `ProtocolCoverageAudit`'s first
+/// version shipped — *"150 carrier(s) had laws suppressed"* on a target where the measured
+/// suppression was zero. `discover: 22` against `kit: 297` is that mistake again with the
+/// numbers in different columns.
 public enum CoverageHeadline {
 
     /// One line pairing what `discover` proposes with what the kit's suites cover.

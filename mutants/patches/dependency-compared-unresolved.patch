@@ -1,13 +1,13 @@
 diff --git a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
-index 8dc76cb2..4c3a442a 100644
+index 9df64361..a52a6cb7 100644
 --- a/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
 +++ b/Sources/SwiftInferCore/ConstructionUniverse+Bound.swift
-@@ -32,7 +32,7 @@ extension ConstructionUniverse {
-                 reported: judged,
-                 rootHasManifest: bounds,
-                 rootPath: root.path,
--                resolvingSymlinks: canonicalPath
-+                resolvingSymlinks: { $0 }
-             ) { relative in
+@@ -27,7 +27,7 @@ extension ConstructionUniverse {
+             : []
+         return LargeStackWorkers.run {
+             var read: Set<String> = []
+-            let tree = PackageTree(rootPath: root.path, resolvingSymlinks: canonicalPath) { relative in
++            let tree = PackageTree(rootPath: root.path, resolvingSymlinks: { $0 }) { relative in
                  let manifests = manifests(inDirectory: packageDirectory(relative, under: root))
                  if !relative.isEmpty, manifests.contains(where: { $0 != .absent }) { read.insert(relative) }
+                 return manifests

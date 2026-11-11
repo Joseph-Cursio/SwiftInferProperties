@@ -48,13 +48,15 @@ public enum FilterSubsetTemplate {
     /// sub-collection, so `result ⊆ input` is owed.
     public static let curatedVerbPrefixes: [String] = [
         "filter", "select", "keep", "retain", "matching", "applicable",
-        "restrict", "prune", "exclude", "reject", "only", "drop"
+        "restrict", "prune", "exclude", "reject", "only", "drop",
     ]
 
+    /// The `filter-subset` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `filter-subset` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "filter-subset",
@@ -114,7 +116,7 @@ public enum FilterSubsetTemplate {
                 weight: 15,
                 detail: "Curated filter/selection verb match: '\(summary.name)' — it selects, "
                     + "so it owes `result ⊆ input`"
-            )
+            ),
         ]
     }
 
@@ -184,7 +186,7 @@ public enum FilterSubsetTemplate {
         "derive", "derived",
         "normalize", "normalized", "normalise", "normalised",
         "rewrite", "rewritten",
-        "expand", "expanded"
+        "expand", "expanded",
     ]
 
     /// Whether the name promises an operation BEYOND selection, so subset is not owed (#476).
@@ -214,7 +216,7 @@ public enum FilterSubsetTemplate {
             "The element type must be Equatable (or Hashable) for the membership check to compile. "
                 + "This tool does not verify conformance — confirm before applying.",
             "Bias the generator so elements COLLIDE (a small alphabet, repeated values): a filter that "
-                + "mishandles equal-but-distinct elements fails only where the input repeats."
+                + "mishandles equal-but-distinct elements fails only where the input repeats.",
         ]
     }
 }

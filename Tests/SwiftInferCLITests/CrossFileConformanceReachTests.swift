@@ -48,11 +48,11 @@ struct CrossFileConformanceReachTests {
         let diagnostics = SilentDiagnostics()
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: url,
+            diagnostics: diagnostics,
             includePossible: true,
             evidence: SwiftInferCommand.Discover.loadEvidence(
                 directory: url, diagnostics: diagnostics
-            ),
-            diagnostics: diagnostics
+            )
         )
         return (result, dir)
     }
@@ -64,7 +64,7 @@ struct CrossFileConformanceReachTests {
         let (result, dir) = try pipeline([
             "Money.swift": "public struct Money {\n    public let cents: Int\n}",
             "Money+Equatable.swift": "extension Money: Equatable {}",
-            "Money+Hashable.swift": "extension Money: Hashable {}"
+            "Money+Hashable.swift": "extension Money: Hashable {}",
         ])
         defer { try? FileManager.default.removeItem(atPath: dir) }
 
@@ -82,7 +82,7 @@ struct CrossFileConformanceReachTests {
     func shapeIndexRemainsSameFileOnly() throws {
         let (result, dir) = try pipeline([
             "Money.swift": "public struct Money {\n    public let cents: Int\n}",
-            "Money+Equatable.swift": "extension Money: Equatable {}"
+            "Money+Equatable.swift": "extension Money: Equatable {}",
         ])
         defer { try? FileManager.default.removeItem(atPath: dir) }
 
@@ -100,7 +100,7 @@ struct CrossFileConformanceReachTests {
     func auditReachesCrossFileConformerOnlyWithMergedIndex() throws {
         let (result, dir) = try pipeline([
             "Money.swift": "public struct Money {\n    public let cents: Int\n}",
-            "Money+Hashable.swift": "extension Money: Hashable {}"
+            "Money+Hashable.swift": "extension Money: Hashable {}",
         ])
         defer { try? FileManager.default.removeItem(atPath: dir) }
 

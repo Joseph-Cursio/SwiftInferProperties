@@ -16,7 +16,7 @@ struct IdentityElementTemplateLiftedTests {
                 inheritedTypes: [],
                 location: SourceLocation(file: "Test.swift", line: 1, column: 1),
                 storedMembers: [StoredMember(name: "value", typeName: "Int")]
-            )
+            ),
         ])
     }
 
@@ -45,11 +45,11 @@ struct IdentityElementTemplateLiftedTests {
         _ name: String = "increment",
         paramType: String = "Int",
         carrier: String = "Counter"
-    ) -> LiftedTransformation {
-        LiftedTransformation.lift(
+    ) throws -> LiftedTransformation {
+        try #require(LiftedTransformation.lift(
             mutatorBy(name, paramType: paramType, carrier: carrier),
             carrierKindResolver: valueSemanticResolver(carrier: carrier)
-        )!
+        ))
     }
 
     private func zeroIdentity(
@@ -68,9 +68,9 @@ struct IdentityElementTemplateLiftedTests {
     // MARK: - Pairing
 
     @Test("(Counter.increment(by: Int), zero: Int) pair is found")
-    func canonicalPairFound() {
+    func canonicalPairFound() throws {
         let pairs = LiftedIdentityElementPairing.candidates(
-            in: [lifted()],
+            in: [try lifted()],
             identities: [zeroIdentity()]
         )
         #expect(pairs.count == 1)
@@ -79,59 +79,59 @@ struct IdentityElementTemplateLiftedTests {
     }
 
     @Test("Identity with mismatched type does NOT pair")
-    func mismatchedIdentityTypeDoesntPair() {
+    func mismatchedIdentityTypeDoesntPair() throws {
         let pairs = LiftedIdentityElementPairing.candidates(
-            in: [lifted()],
+            in: [try lifted()],
             identities: [zeroIdentity(typeText: "String")]
         )
         #expect(pairs.isEmpty)
     }
 
     @Test("Identity with non-curated name does NOT pair (e.g. 'origin')")
-    func nonCuratedIdentityNameDoesntPair() {
+    func nonCuratedIdentityNameDoesntPair() throws {
         let pairs = LiftedIdentityElementPairing.candidates(
-            in: [lifted()],
+            in: [try lifted()],
             identities: [zeroIdentity(name: "origin")]
         )
         #expect(pairs.isEmpty)
     }
 
     @Test("Param-matches-carrier shape is filtered out (handled by IdempotenceTemplate)")
-    func paramMatchesCarrierFilteredOut() {
+    func paramMatchesCarrierFilteredOut() throws {
         // mutating func formUnion(_:Counter) — flows through IdempotenceTemplate.
         let pairs = LiftedIdentityElementPairing.candidates(
-            in: [lifted("formUnion", paramType: "Counter")],
+            in: [try lifted("formUnion", paramType: "Counter")],
             identities: [zeroIdentity()]
         )
         #expect(pairs.isEmpty)
     }
 
     @Test("Generic-specialization-stripped types pair")
-    func genericSpecializationStripsForMatching() {
+    func genericSpecializationStripsForMatching() throws {
         let pairs = LiftedIdentityElementPairing.candidates(
-            in: [lifted(paramType: "Int<NotReal>")],
+            in: [try lifted(paramType: "Int<NotReal>")],
             identities: [zeroIdentity(typeText: "Int")]
         )
         #expect(pairs.count == 1)
     }
 
     @Test("Multiple identities of same type produce multiple pairs (cross-product)")
-    func multipleIdentitiesProduceCrossProduct() {
+    func multipleIdentitiesProduceCrossProduct() throws {
         let pairs = LiftedIdentityElementPairing.candidates(
-            in: [lifted()],
+            in: [try lifted()],
             identities: [
                 zeroIdentity(name: "zero"),
-                zeroIdentity(name: "empty")
+                zeroIdentity(name: "empty"),
             ]
         )
         #expect(pairs.count == 2)
     }
 
     @Test("Pairs sort by (operation file/line, identity file/line) for byte-stable output")
-    func pairsSortDeterministically() {
+    func pairsSortDeterministically() throws {
         let resolverA = valueSemanticResolver(carrier: "A")
         let resolverB = valueSemanticResolver(carrier: "B")
-        let mutatorEarly = LiftedTransformation.lift(
+        let mutatorEarly = try #require(LiftedTransformation.lift(
             FunctionSummary(
                 name: "increment",
                 parameters: [Parameter(label: "by", internalName: "x", typeText: "Int", isInout: false)],
@@ -141,8 +141,8 @@ struct IdentityElementTemplateLiftedTests {
                 containingTypeName: "A", bodySignals: .empty
             ),
             carrierKindResolver: resolverA
-        )!
-        let mutatorLate = LiftedTransformation.lift(
+        ))
+        let mutatorLate = try #require(LiftedTransformation.lift(
             FunctionSummary(
                 name: "increment",
                 parameters: [Parameter(label: "by", internalName: "x", typeText: "Int", isInout: false)],
@@ -152,7 +152,7 @@ struct IdentityElementTemplateLiftedTests {
                 containingTypeName: "B", bodySignals: .empty
             ),
             carrierKindResolver: resolverB
-        )!
+        ))
         let pairs = LiftedIdentityElementPairing.candidates(
             in: [mutatorLate, mutatorEarly],
             identities: [zeroIdentity()]
@@ -166,7 +166,7 @@ struct IdentityElementTemplateLiftedTests {
     @Test("Suggestion scores 30+40+5+10=85 → Strong on canonical pair")
     func suggestionScoresStrong() throws {
         let pair = LiftedIdentityElementPair(
-            operation: lifted(),
+            operation: try lifted(),
             identity: zeroIdentity()
         )
         let suggestion = try #require(IdentityElementTemplate.suggest(
@@ -181,7 +181,7 @@ struct IdentityElementTemplateLiftedTests {
     @Test("liftedFromMutation +10 signal fires")
     func liftedSignalFires() throws {
         let pair = LiftedIdentityElementPair(
-            operation: lifted(),
+            operation: try lifted(),
             identity: zeroIdentity()
         )
         let suggestion = try #require(IdentityElementTemplate.suggest(
@@ -198,7 +198,7 @@ struct IdentityElementTemplateLiftedTests {
     @Test("Identity uses `identity-element-lifted|` prefix")
     func identityPrefix() throws {
         let pair = LiftedIdentityElementPair(
-            operation: lifted(),
+            operation: try lifted(),
             identity: zeroIdentity()
         )
         let suggestion = try #require(IdentityElementTemplate.suggest(
@@ -211,7 +211,7 @@ struct IdentityElementTemplateLiftedTests {
     @Test("Two evidence rows: operation + identity constant")
     func twoEvidenceRows() throws {
         let pair = LiftedIdentityElementPair(
-            operation: lifted(),
+            operation: try lifted(),
             identity: zeroIdentity()
         )
         let suggestion = try #require(IdentityElementTemplate.suggest(
@@ -224,7 +224,7 @@ struct IdentityElementTemplateLiftedTests {
     }
 
     @Test("Non-deterministic body in operation vetoes")
-    func nonDeterministicVetoes() {
+    func nonDeterministicVetoes() throws {
         let resolver = valueSemanticResolver()
         let summaryWithVeto = FunctionSummary(
             name: "increment",
@@ -241,7 +241,7 @@ struct IdentityElementTemplateLiftedTests {
                 nonDeterministicAPIsDetected: ["Date.init"]
             )
         )
-        let lift = LiftedTransformation.lift(summaryWithVeto, carrierKindResolver: resolver)!
+        let lift = try #require(LiftedTransformation.lift(summaryWithVeto, carrierKindResolver: resolver))
         let pair = LiftedIdentityElementPair(operation: lift, identity: zeroIdentity())
         #expect(IdentityElementTemplate.suggest(
             forLifted: pair,

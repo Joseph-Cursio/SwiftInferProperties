@@ -33,7 +33,7 @@ struct IdempotenceInteractionTemplateTests {
         IdempotenceWitness(actionCaseName: name, matchKind: kind)
     }
 
-    private let firstSeenAt = ISO8601DateFormatter().date(from: "2026-05-15T10:00:00Z")!
+    private let firstSeenAt = Date(timeIntervalSince1970: 1_778_839_200) // 2026-05-15T10:00:00Z
 
     // MARK: - analyze
 
@@ -67,7 +67,7 @@ struct IdempotenceInteractionTemplateTests {
             witnesses: [
                 witness(name: "refresh"),
                 witness(name: "dismiss"),
-                witness(name: "setColor", kind: .namePrefix)
+                witness(name: "setColor", kind: .namePrefix),
             ],
             firstSeenAt: firstSeenAt
         )

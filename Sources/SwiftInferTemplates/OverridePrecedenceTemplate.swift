@@ -47,13 +47,15 @@ public enum OverridePrecedenceTemplate {
     /// law that fires on those would cry wolf on ordinary merge functions.
     public static let curatedOverrideNouns: [String] = [
         "override", "overrides", "explicit", "forced", "cli",
-        "requested", "preferred", "pinned"
+        "requested", "preferred", "pinned",
     ]
 
+    /// The `override-precedence` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `override-precedence` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "override-precedence",
@@ -130,7 +132,7 @@ public enum OverridePrecedenceTemplate {
                 weight: 15,
                 detail: "Curated override noun in `\(name)` — the caller is SUPPLYING the "
                     + "answer, so a non-nil value owes being returned unchanged"
-            )
+            ),
         ]
     }
 
@@ -155,7 +157,7 @@ public enum OverridePrecedenceTemplate {
                 + "defaults-with-fallback, or an accumulate-into shape — which is correct code "
                 + "that fails this law. Confirm the parameter is obeyed rather than combined.",
             "If two parameters could each override, the law is owed for each INDEPENDENTLY and "
-                + "their relative precedence is a separate claim the signature does not state."
+                + "their relative precedence is a separate claim the signature does not state.",
         ]
     }
 }

@@ -3,6 +3,16 @@ import Foundation
 @testable import SwiftInferCore
 import Testing
 
+/// Test-only `FileSystemReader` reporting every path as missing. Used
+/// to drive the "no walk-up target found" code path without setting up
+/// a real fixture tree.
+private struct NoFilesFileSystem: FileSystemReader {
+    func fileExists(atPath _: String) -> Bool { false }
+    func contents(of _: URL) throws -> Data {
+        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
+    }
+}
+
 @Suite("DecisionsLoader — explicit path + walk-up implicit lookup + atomic write (M6.1)")
 struct DecisionsLoaderTests {
 
@@ -62,7 +72,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .accepted,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(canonical, to: decisionsPath)
 
@@ -105,7 +115,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .skipped,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(
             implicit,
@@ -123,7 +133,7 @@ struct DecisionsLoaderTests {
                 tier: .likely,
                 decision: .rejected,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(override, to: overridePath)
 
@@ -166,7 +176,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .accepted,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(decisions, to: path)
         #expect(FileManager.default.fileExists(atPath: path.path))
@@ -194,7 +204,7 @@ struct DecisionsLoaderTests {
                 signalWeights: [
                     SignalSnapshot(kind: "exactNameMatch", weight: 40)
                 ]
-            )
+            ),
         ])
         try DecisionsLoader.write(decisions, to: path)
         let firstBytes = try Data(contentsOf: path)
@@ -219,7 +229,7 @@ struct DecisionsLoaderTests {
                 tier: .strong,
                 decision: .accepted,
                 timestamp: Date(timeIntervalSince1970: 1_700_000_000)
-            )
+            ),
         ])
         try DecisionsLoader.write(decisions, to: path)
         let text = try String(contentsOf: path, encoding: .utf8)
@@ -243,15 +253,5 @@ struct DecisionsLoaderTests {
             .appendingPathComponent("DecisionsLoaderTests-\(name)-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base
-    }
-}
-
-/// Test-only `FileSystemReader` reporting every path as missing. Used
-/// to drive the "no walk-up target found" code path without setting up
-/// a real fixture tree.
-private struct NoFilesFileSystem: FileSystemReader {
-    func fileExists(atPath _: String) -> Bool { false }
-    func contents(of _: URL) throws -> Data {
-        throw NSError(domain: "NoFilesFileSystem", code: 0, userInfo: nil)
     }
 }

@@ -1,5 +1,3 @@
-import Foundation
-
 /// **What would have to move** for a test to reach a seeded symbol, as the linter determined it.
 ///
 /// `SeedKind.restrictedFunction` says a test cannot call the symbol. This says *why*, and the two
@@ -60,28 +58,7 @@ public enum SeedRestriction: Sendable, Equatable, Hashable {
     }
 }
 
-extension SeedRestriction: Codable {
-    public init(from decoder: Decoder) throws {
-        let raw = try decoder.singleValueContainer().decode(String.self)
-        switch raw {
-        case "declaration":
-            self = .declaration
-
-        case "enclosing-type":
-            self = .enclosingType
-
-        default:
-            self = .unrecognised(raw)
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-extension AccessRestriction {
+public extension AccessRestriction {
 
     /// This scan's answer, corrected by the manifest's where the manifest can see further.
     ///
@@ -97,7 +74,7 @@ extension AccessRestriction {
     /// of the declaration in front of us — and the failure would be invisible, because both answers
     /// are plausible sentences about access. `disagrees(with:)` reports those instead; see
     /// `Discover+GenericLaws`, which surfaces them as one aggregate line.
-    public func reconciled(with seed: SeedRestriction?) -> AccessRestriction {
+    func reconciled(with seed: SeedRestriction?) -> AccessRestriction {
         guard seed == .enclosingType, self == .notVisibleToTests else { return self }
         return .enclosingTypeNotVisibleToTests
     }
@@ -116,7 +93,7 @@ extension AccessRestriction {
     /// get. An `unrecognised` spelling is not one either: this build cannot say what it means, and
     /// inventing a conflict out of a word it does not know would report a version skew as a defect
     /// in the code.
-    public func disagrees(with seed: SeedRestriction?) -> Bool {
+    func disagrees(with seed: SeedRestriction?) -> Bool {
         switch seed {
         case .declaration:
             return self == .enclosingTypeNotVisibleToTests

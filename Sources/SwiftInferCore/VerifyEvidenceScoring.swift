@@ -1,44 +1,5 @@
 import Foundation
 
-extension Suggestion {
-
-    /// Which explainability arm a folded-in signal's `formattedLine`
-    /// joins — V1.66.
-    enum ExplainabilityArm {
-        case whySuggested
-        case whyMightBeWrong
-    }
-
-    /// V1.66 — return a copy with `signal` appended to the score and its
-    /// `formattedLine` appended to the named explainability arm. The
-    /// `Score` is rebuilt via `Score(signals:)`, so a veto signal
-    /// collapses the tier to `.suppressed` and a positive signal raises
-    /// the total (and may lift the tier).
-    func appendingScoreSignal(
-        _ signal: Signal,
-        explainabilityArm arm: ExplainabilityArm
-    ) -> Suggestion {
-        let newExplainability: ExplainabilityBlock
-        switch arm {
-        case .whySuggested:
-            newExplainability = ExplainabilityBlock(
-                whySuggested: explainability.whySuggested + [signal.formattedLine],
-                whyMightBeWrong: explainability.whyMightBeWrong
-            )
-
-        case .whyMightBeWrong:
-            newExplainability = ExplainabilityBlock(
-                whySuggested: explainability.whySuggested,
-                whyMightBeWrong: explainability.whyMightBeWrong + [signal.formattedLine]
-            )
-        }
-        // Mutate a copy. The field-by-field rebuild this replaces silently dropped BOTH
-        // `carrierTypeName` and `generatorRecipes` — the omitted arguments have defaults, so the
-        // compiler said nothing and the suggestion rendered fine with half of itself missing.
-        return withAdditionalSignal(signal, explainability: newExplainability)
-    }
-}
-
 /// V1.66 — verify-as-signal post-pass: folds persisted `swift-infer
 /// verify` outcomes into suggestion `Score`s so verify evidence
 /// participates in the grade, not just the rendered annotation.
@@ -249,5 +210,44 @@ public enum VerifyEvidenceScoring {
         return "Verify evidence from \(captured) is NOT being applied: it was measured against "
             + "a DIFFERENT version of this function's body (recorded \(recorded), now "
             + "\(current)). The law may no longer hold — re-run `swift-infer verify`."
+    }
+}
+
+extension Suggestion {
+
+    /// Which explainability arm a folded-in signal's `formattedLine`
+    /// joins — V1.66.
+    enum ExplainabilityArm {
+        case whySuggested
+        case whyMightBeWrong
+    }
+
+    /// V1.66 — return a copy with `signal` appended to the score and its
+    /// `formattedLine` appended to the named explainability arm. The
+    /// `Score` is rebuilt via `Score(signals:)`, so a veto signal
+    /// collapses the tier to `.suppressed` and a positive signal raises
+    /// the total (and may lift the tier).
+    func appendingScoreSignal(
+        _ signal: Signal,
+        explainabilityArm arm: ExplainabilityArm
+    ) -> Suggestion {
+        let newExplainability: ExplainabilityBlock
+        switch arm {
+        case .whySuggested:
+            newExplainability = ExplainabilityBlock(
+                whySuggested: explainability.whySuggested + [signal.formattedLine],
+                whyMightBeWrong: explainability.whyMightBeWrong
+            )
+
+        case .whyMightBeWrong:
+            newExplainability = ExplainabilityBlock(
+                whySuggested: explainability.whySuggested,
+                whyMightBeWrong: explainability.whyMightBeWrong + [signal.formattedLine]
+            )
+        }
+        // Mutate a copy. The field-by-field rebuild this replaces silently dropped BOTH
+        // `carrierTypeName` and `generatorRecipes` — the omitted arguments have defaults, so the
+        // compiler said nothing and the suggestion rendered fine with half of itself missing.
+        return withAdditionalSignal(signal, explainability: newExplainability)
     }
 }

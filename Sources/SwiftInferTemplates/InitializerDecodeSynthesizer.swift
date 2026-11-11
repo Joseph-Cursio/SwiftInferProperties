@@ -38,7 +38,7 @@ public enum InitializerDecodeSynthesizer {
                                 internalName: "value",
                                 typeText: parameter.typeName,
                                 isInout: false
-                            )
+                            ),
                         ],
                         returnTypeText: decl.name,
                         isThrows: initializer.isThrowing,

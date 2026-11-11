@@ -1,4 +1,3 @@
-import Foundation
 import SwiftSyntax
 
 /// **Why** the scanner sets a declaration aside — the whole of that decision, in one place.

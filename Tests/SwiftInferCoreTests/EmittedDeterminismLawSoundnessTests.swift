@@ -58,7 +58,7 @@ struct EmittedDeterminismLawSoundnessTests {
             ("addSeven", { value in value &+ 7 }),
             ("constant", { _ in 42 }),
             ("lowByte", { value in value & 0xFF }),
-            ("xorMask", { value in value ^ 0x5A5A })
+            ("xorMask", { value in value ^ 0x5A5A }),
         ]
         for entry in corpus {
             let result = await Self.checkDeterminism(of: entry.transform)
@@ -72,7 +72,7 @@ struct EmittedDeterminismLawSoundnessTests {
         let corpus: [(name: String, transform: @Sendable (Int) -> Int)] = [
             // Reads the system RNG — two evaluations of the same input differ.
             ("systemRandom", { _ in Int.random(in: Int.min ... Int.max) }),
-            ("inputPlusRandom", { value in value &+ Int.random(in: 1 ... 1_000_000_000) })
+            ("inputPlusRandom", { value in value &+ Int.random(in: 1 ... 1_000_000_000) }),
         ]
         for entry in corpus {
             let result = await Self.checkDeterminism(of: entry.transform)
@@ -118,7 +118,7 @@ struct EmittedDeterminismLawSoundnessTests {
                 let digits = String(value)
                 return (String(digits.prefix(3)), digits.count > 3)
             }),
-            ("constant", { _ in ("", false) })
+            ("constant", { _ in ("", false) }),
         ]
         for entry in corpus {
             let result = await Self.checkTupleDeterminism(of: entry.transform)
@@ -135,7 +135,7 @@ struct EmittedDeterminismLawSoundnessTests {
             ("randomText", { value in (String(value &+ Int.random(in: 1 ... 1_000_000_000)), false) }),
             ("randomFlag", { value in
                 (String(value), Int.random(in: Int.min ... Int.max).isMultiple(of: 2))
-            })
+            }),
         ]
         for entry in corpus {
             let result = await Self.checkTupleDeterminism(of: entry.transform)
@@ -176,7 +176,7 @@ struct EmittedDeterminismLawSoundnessTests {
         let corpus: [(name: String, transform: @Sendable (Int) throws -> Int)] = [
             ("throwsOnNegative", { value in if value < 0 { throw SampleError() }; return value &* 2 }),
             ("throwsOnEven", { value in if value.isMultiple(of: 2) { throw SampleError() }; return value &+ 7 }),
-            ("alwaysThrows", { _ in throw SampleError() })
+            ("alwaysThrows", { _ in throw SampleError() }),
         ]
         for entry in corpus {
             let result = await Self.checkThrowingDeterminism(of: entry.transform)
@@ -193,7 +193,7 @@ struct EmittedDeterminismLawSoundnessTests {
             ("randomWhenNonNegative", { value in
                 if value < 0 { throw SampleError() }
                 return Int.random(in: Int.min ... Int.max)
-            })
+            }),
         ]
         for entry in corpus {
             let result = await Self.checkThrowingDeterminism(of: entry.transform)

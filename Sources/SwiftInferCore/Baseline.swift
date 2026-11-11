@@ -1,5 +1,3 @@
-import Foundation
-
 /// One entry in `.swiftinfer/baseline.json` — a snapshot of a single
 /// suggestion's identity at a checkpoint. Used by `swift-infer drift`
 /// (M6.5) to compute "what's new since the baseline." Smaller than

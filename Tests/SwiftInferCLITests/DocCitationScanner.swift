@@ -1,5 +1,4 @@
 import Foundation
-import Testing
 
 /// The shared machinery behind ``DocCitationTests`` and ``DocProseCitationTests``:
 /// pull `docs/…` paths out of a line, and answer whether one exists *with exactly
@@ -123,7 +122,7 @@ enum DocCitationScanner {
     static let selfDescribingFiles: Set<String> = [
         "DocCitationScanner.swift",
         "DocCitationTests.swift",
-        "DocProseCitationTests.swift"
+        "DocProseCitationTests.swift",
     ]
 
     /// Every `docs/…` citation under `Sources/` and `Tests/`.

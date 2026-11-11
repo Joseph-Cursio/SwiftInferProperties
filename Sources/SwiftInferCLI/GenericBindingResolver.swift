@@ -1,5 +1,3 @@
-import Foundation
-
 /// V1.47.D — curated resolver from generic associated-type carrier
 /// names (e.g. `"Base.Index"`) to canonical concrete bindings (e.g.
 /// `"Int"`, the `Index` of `Array<Int>`). The verify pipeline calls
@@ -108,7 +106,7 @@ public enum GenericBindingResolver {
         "OrderedSet.SubSequence": "OrderedSet<Int>.SubSequence",
         "OrderedDictionary.Values": "OrderedDictionary<Int, Int>.Values",
         "OrderedDictionary.Elements.SubSequence":
-            "OrderedDictionary<Int, Int>.Elements.SubSequence"
+            "OrderedDictionary<Int, Int>.Elements.SubSequence",
     ]
 
     /// Return the curated concrete carrier name bound to `carrier`,

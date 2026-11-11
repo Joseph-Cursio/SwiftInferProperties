@@ -3,12 +3,12 @@ import SwiftInferCore
 /// Determinism arm of `LiftedTestEmitter`, kept in its own file so the core
 /// emitter stays under SwiftLint's file-length cap. Mirrors the M5.5 lifted-only
 /// arms: it composes the shared `makeTestStubExpression` scaffold directly.
-extension LiftedTestEmitter {
+public extension LiftedTestEmitter {
 
     /// One parameter of the function under a determinism stub: its external
     /// label (`nil` for an `_`-labeled parameter) and the generator expression
     /// for its type.
-    public struct DeterminismParameter: Sendable, Equatable {
+    struct DeterminismParameter: Sendable, Equatable {
         public let label: String?
         public let generator: String
 
@@ -38,7 +38,7 @@ extension LiftedTestEmitter {
     /// already `async` (`PropertyBackend`'s check contract), so the emitted
     /// closure may await. Justified only for clock-deterministic-annotated
     /// candidates — the discover gate enforces that.
-    public static func deterministic(
+    static func deterministic(
         funcName: String,
         parameters: [DeterminismParameter],
         seed: SamplingSeed.Value,
@@ -80,7 +80,7 @@ extension LiftedTestEmitter {
     /// without the helper every other caller of `equalityExpression` appends — so a
     /// floating-point determinism stub failed with *cannot find 'approximatelyEqual' in scope*.
     /// A throwing subject compares `Optional`s strictly and gets no helper.
-    public static func deterministic(
+    static func deterministic(
         callee: CalleeReference,
         generators: [String],
         seed: SamplingSeed.Value,

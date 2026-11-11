@@ -2,6 +2,16 @@ import Foundation
 import PropertyLawCore
 import SwiftInferCore
 
+/// The type spellings a stub asked a generator for, collected while the stub is built. A class so
+/// the recording closure, which the emitters capture and call, can add to it.
+final class DrawnTypeRecorder {
+    private(set) var typeNames: Set<String> = []
+
+    func record(_ typeName: String) {
+        typeNames.insert(typeName)
+    }
+}
+
 /// Lets a stub draw a project type that is not `Sendable`, by declaring it `@unchecked Sendable`
 /// once, in one generated file per test target.
 ///
@@ -110,16 +120,6 @@ enum SendableShim {
         let words = inherited.split(whereSeparator: \.isWhitespace).map(String.init)
         let bare = words.first == "@unchecked" ? Array(words.dropFirst()) : words
         return bare == ["Sendable"] || bare == ["Swift.Sendable"]
-    }
-}
-
-/// The type spellings a stub asked a generator for, collected while the stub is built. A class so
-/// the recording closure, which the emitters capture and call, can add to it.
-final class DrawnTypeRecorder {
-    private(set) var typeNames: Set<String> = []
-
-    func record(_ typeName: String) {
-        typeNames.insert(typeName)
     }
 }
 

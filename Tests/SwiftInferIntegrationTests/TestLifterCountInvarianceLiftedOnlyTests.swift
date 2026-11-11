@@ -2,8 +2,11 @@ import Foundation
 import SwiftInferCLI
 import SwiftInferCore
 import SwiftInferTemplates
-import SwiftInferTestLifter
 import Testing
+
+private struct SilentLiftedOnlyDiagnostics: DiagnosticOutput {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
 
 /// TestLifter M5.6 acceptance bar item (h) — count-invariance
 /// **lifted-only** emission. When TestLifter detects
@@ -36,8 +39,8 @@ struct TestLifterCountInvarianceLiftedOnlyTests {
         // stream because no production-side suggestion suppresses it.
         let result = try SwiftInferCommand.Discover.collectVisibleSuggestions(
             directory: directory,
-            includePossible: true,
-            diagnostics: SilentLiftedOnlyDiagnostics()
+            diagnostics: SilentLiftedOnlyDiagnostics(),
+            includePossible: true
         )
         let liftedOnly = try #require(
             result.suggestions.first { $0.templateName == "invariant-preservation" }
@@ -98,8 +101,4 @@ struct TestLifterCountInvarianceLiftedOnlyTests {
             encoding: .utf8
         )
     }
-}
-
-private struct SilentLiftedOnlyDiagnostics: DiagnosticOutput {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

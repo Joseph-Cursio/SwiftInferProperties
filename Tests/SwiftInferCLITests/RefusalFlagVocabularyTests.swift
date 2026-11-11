@@ -80,7 +80,7 @@ struct RefusalFlagVocabularyTests {
         .unsupportedPair(forward: "encode", supported: ["serialize"]),
         .missingPairedFunction(template: "differential-equivalence", primary: "render"),
         .monotonicityDomainNotComparable(domain: "Widget"),
-        .invalidArguments(reason: "pick one")
+        .invalidArguments(reason: "pick one"),
     ]
 
     static let interactionRefusals: [VerifyInteractionError] = [
@@ -90,7 +90,7 @@ struct RefusalFlagVocabularyTests {
         .requiresPin(candidates: ["A", "B"]),
         .unsupported(reason: "no action alphabet"),
         .hiddenMutability(reducer: "Feature"),
-        .asyncReducer(reducer: "Feature")
+        .asyncReducer(reducer: "Feature"),
     ]
 
     // MARK: - The guard

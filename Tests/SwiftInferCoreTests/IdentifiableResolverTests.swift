@@ -44,7 +44,7 @@ struct IdentifiableResolverTests {
     func extensionConformanceLifts() {
         let resolver = IdentifiableResolver(typeDecls: [
             decl("Item", members: [member("name", "String")]),
-            decl("Item", .extension, inherits: ["Identifiable"])
+            decl("Item", .extension, inherits: ["Identifiable"]),
         ])
         #expect(resolver.classify(typeText: "Item") == .identifiable)
     }

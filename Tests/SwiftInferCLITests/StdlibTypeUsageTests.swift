@@ -1,4 +1,3 @@
-import Foundation
 @testable import SwiftInferCLI
 import Testing
 

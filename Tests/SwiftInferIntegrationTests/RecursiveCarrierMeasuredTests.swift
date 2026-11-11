@@ -1,5 +1,4 @@
 import Foundation
-import PropertyLawCore
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -48,7 +47,7 @@ struct RecursiveCarrierMeasuredTests {
             hasUserGen: false,
             storedMembers: [
                 IndexedTypeShape.StoredMember(name: "name", typeName: "String"),
-                IndexedTypeShape.StoredMember(name: "kids", typeName: "[Node]")
+                IndexedTypeShape.StoredMember(name: "kids", typeName: "[Node]"),
             ]
         )
     }

@@ -12,6 +12,30 @@ struct OpInfo {
     var identityName: String?
 }
 
+// These are structural-conformance axiom signals, not template names — a separate vocabulary
+// that coincidentally shares algebraic words (associativity/commutativity/…) with several
+// `TemplateName` subsets. It carries `inverseElement`, which has no template at all, and is
+// mapped from templates by `RefactorBridgeOrchestrator.templateSignal(of:)`, the deliberate
+// bridge between the two. Overlap with the template lists is expected, not drift.
+// swiftprojectlint:disable:next parallel-list-drift
+/// Structural-conformance signals the orchestrator recognizes. M7.5
+/// shipped associativity + identityElement; M8.4.a adds commutativity +
+/// idempotence (driving CommutativeMonoid / Semilattice) and
+/// inverseElement (driving Group). M8.4.b.2 adds Ring detection via
+/// the per-op tracking on the accumulator (no new signal — Ring is a
+/// pattern over per-op Monoid claims).
+///
+/// Note: `inverseElement` doesn't have a corresponding template — it's
+/// a witness record from M8.3's `InverseElementPairing`. The
+/// orchestrator threads it through `recordInverseElement(witness:)`
+/// rather than the suggestion-driven `record(signal:from:)` path.
+enum TemplateSignal {
+    case associativity
+    case identityElement
+    case commutativity
+    case idempotence
+}
+
 /// Per-type accumulator — collects which structural signals fired on
 /// the type and which suggestions contributed. The `proposals`
 /// computed property (in `RefactorBridgeAccumulator+Promotions.swift`)
@@ -115,28 +139,4 @@ struct RefactorBridgeAccumulator {
             combineWitness = opName
         }
     }
-}
-
-// These are structural-conformance axiom signals, not template names — a separate vocabulary
-// that coincidentally shares algebraic words (associativity/commutativity/…) with several
-// `TemplateName` subsets. It carries `inverseElement`, which has no template at all, and is
-// mapped from templates by `RefactorBridgeOrchestrator.templateSignal(of:)`, the deliberate
-// bridge between the two. Overlap with the template lists is expected, not drift.
-// swiftprojectlint:disable:next parallel-list-drift
-/// Structural-conformance signals the orchestrator recognizes. M7.5
-/// shipped associativity + identityElement; M8.4.a adds commutativity +
-/// idempotence (driving CommutativeMonoid / Semilattice) and
-/// inverseElement (driving Group). M8.4.b.2 adds Ring detection via
-/// the per-op tracking on the accumulator (no new signal — Ring is a
-/// pattern over per-op Monoid claims).
-///
-/// Note: `inverseElement` doesn't have a corresponding template — it's
-/// a witness record from M8.3's `InverseElementPairing`. The
-/// orchestrator threads it through `recordInverseElement(witness:)`
-/// rather than the suggestion-driven `record(signal:from:)` path.
-enum TemplateSignal {
-    case associativity
-    case identityElement
-    case commutativity
-    case idempotence
 }

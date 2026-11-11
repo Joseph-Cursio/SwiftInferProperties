@@ -111,7 +111,7 @@ struct VerifyEvidenceScoringTests {
         #expect(result.map(\.identity.normalized) == [
             first.identity.normalized,
             second.identity.normalized,
-            third.identity.normalized
+            third.identity.normalized,
         ])
         #expect(result[0] == first)
         #expect(result[2] == third)
@@ -168,7 +168,7 @@ struct VerifyEvidenceScoringTests {
                 capturedAt: Date(timeIntervalSince1970: 1_700_000_000),
                 swiftInferVersion: "1.66.0",
                 subjectFingerprint: fingerprint
-            )
+            ),
         ]
     }
 

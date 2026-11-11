@@ -88,7 +88,7 @@ public enum InteractionTraceEmitter {
             "// Reducer: \(inputs.candidate.qualifiedName)",
             "// Carrier: \(inputs.candidate.carrierKind.rawValue)",
             "// Signature: \(inputs.candidate.signatureShape.rawValue)",
-            "// Purity: \(inputs.candidate.purity.rawValue)"
+            "// Purity: \(inputs.candidate.purity.rawValue)",
         ]
         if let failingIndex = inputs.failingSequenceIndex {
             lines.append("// Failing sequence index: \(failingIndex) (M8.D.1 recovery)")

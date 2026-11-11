@@ -17,13 +17,13 @@ struct InteractionIndexEntryTests {
         actionTypeName: "Action",
         predicate: "state.selectedBookID == nil || state.books.contains { $0.id == state.selectedBookID }",
         location: "/foo/LibraryFeature.swift:42",
-        moduleName: "Library",
         score: 30,
         tier: "Possible",
-        decision: "accept",
-        decisionAt: "2026-06-14T12:34:56Z",
         firstSeenAt: "2026-06-13T00:00:00Z",
-        lastSeenAt: "2026-06-14T12:34:56Z"
+        lastSeenAt: "2026-06-14T12:34:56Z",
+        moduleName: "Library",
+        decision: "accept",
+        decisionAt: "2026-06-14T12:34:56Z"
     )
 
     // MARK: - JSON round-trip
@@ -47,13 +47,13 @@ struct InteractionIndexEntryTests {
             actionTypeName: "Action",
             predicate: "reduce(reduce(s, .dismiss), .dismiss) == reduce(s, .dismiss)",
             location: "/a.swift:1",
-            moduleName: nil,
             score: 40,
             tier: "Likely",
-            decision: nil,
-            decisionAt: nil,
             firstSeenAt: "2026-06-13T00:00:00Z",
-            lastSeenAt: "2026-06-13T00:00:00Z"
+            lastSeenAt: "2026-06-13T00:00:00Z",
+            moduleName: nil,
+            decision: nil,
+            decisionAt: nil
         )
         let data = try JSONEncoder().encode(untriaged)
         let decoded = try JSONDecoder().decode(InteractionIndexEntry.self, from: data)
@@ -73,13 +73,13 @@ struct InteractionIndexEntryTests {
             actionTypeName: entry.actionTypeName,
             predicate: entry.predicate,
             location: entry.location,
-            moduleName: nil,
             score: entry.score,
             tier: entry.tier,
-            decision: entry.decision,
-            decisionAt: entry.decisionAt,
             firstSeenAt: entry.firstSeenAt,
-            lastSeenAt: entry.lastSeenAt
+            lastSeenAt: entry.lastSeenAt,
+            moduleName: nil,
+            decision: entry.decision,
+            decisionAt: entry.decisionAt
         )
         let data = try JSONEncoder().encode(entry)
         let decoded = try JSONDecoder().decode(InteractionIndexEntry.self, from: data)
@@ -100,13 +100,14 @@ struct InteractionIndexEntryTests {
             actionTypeName: original.actionTypeName,
             predicate: original.predicate,
             location: "/moved/LibraryFeature.swift:99",
-            moduleName: "LibraryRenamed",
             score: 80,
             tier: "Verified",
+            firstSeenAt: "2026-06-15T00:00:00Z",
+            // newer firstSeenAt — must be ignored
+            lastSeenAt: "2026-06-15T00:00:00Z",
+            moduleName: "LibraryRenamed",
             decision: "reject",
-            decisionAt: "2026-06-15T01:00:00Z",
-            firstSeenAt: "2026-06-15T00:00:00Z",   // newer firstSeenAt — must be ignored
-            lastSeenAt: "2026-06-15T00:00:00Z"
+            decisionAt: "2026-06-15T01:00:00Z"
         )
         let merged = original.updated(from: newer)
         #expect(merged.firstSeenAt == original.firstSeenAt, "firstSeenAt must be preserved from self")
@@ -123,20 +124,21 @@ struct InteractionIndexEntryTests {
     func updatedPreservesIdentityColumns() {
         let original = Self.exampleEntry
         let newer = InteractionIndexEntry(
-            identityHash: "0xDIFFERENTHASH00",   // these don't change in practice
+            identityHash: "0xDIFFERENTHASH00",
+            // these don't change in practice
             family: "conservation",
             reducerQualifiedName: "OtherFeature.reduce",
             stateTypeName: "OtherState",
             actionTypeName: "OtherAction",
             predicate: "state.count == state.items.count",
             location: original.location,
-            moduleName: original.moduleName,
             score: 55,
             tier: "Strong",
-            decision: nil,
-            decisionAt: nil,
             firstSeenAt: "2026-06-15T00:00:00Z",
-            lastSeenAt: "2026-06-15T00:00:00Z"
+            lastSeenAt: "2026-06-15T00:00:00Z",
+            moduleName: original.moduleName,
+            decision: nil,
+            decisionAt: nil
         )
         let merged = original.updated(from: newer)
         // Identity columns come from self (immutable across upserts).
@@ -161,13 +163,13 @@ struct InteractionIndexEntryTests {
             actionTypeName: entry1.actionTypeName,
             predicate: entry1.predicate,
             location: entry1.location,
-            moduleName: entry1.moduleName,
             score: entry1.score,
             tier: entry1.tier,
-            decision: entry1.decision,
-            decisionAt: entry1.decisionAt,
             firstSeenAt: entry1.firstSeenAt,
-            lastSeenAt: entry1.lastSeenAt
+            lastSeenAt: entry1.lastSeenAt,
+            moduleName: entry1.moduleName,
+            decision: entry1.decision,
+            decisionAt: entry1.decisionAt
         )
         #expect(entry1 == entry2)
         // Change one field → not equal.
@@ -179,13 +181,13 @@ struct InteractionIndexEntryTests {
             actionTypeName: entry1.actionTypeName,
             predicate: entry1.predicate,
             location: entry1.location,
-            moduleName: entry1.moduleName,
             score: 99,
             tier: entry1.tier,
-            decision: entry1.decision,
-            decisionAt: entry1.decisionAt,
             firstSeenAt: entry1.firstSeenAt,
-            lastSeenAt: entry1.lastSeenAt
+            lastSeenAt: entry1.lastSeenAt,
+            moduleName: entry1.moduleName,
+            decision: entry1.decision,
+            decisionAt: entry1.decisionAt
         )
         #expect(entry1 != entry3)
     }

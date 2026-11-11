@@ -1,5 +1,5 @@
 import Foundation
-import PropertyLawKit
+import PropertyBased
 @testable import SwiftInferCLI
 import SwiftInferCore
 import Testing
@@ -48,15 +48,15 @@ struct IndexProjectionParityPropertyTests {
         SemanticIndexEntry(
             identityHash: "HASH\(tag)",
             templateName: "template-\(tag)",
-            typeName: "Type\(tag)",
             score: flags ? 80 : 40,
             tier: flags ? "Strong" : "Likely",
             primaryFunctionName: "primary\(tag)",
             location: "File\(tag).swift:1",
-            decision: "accepted-\(tag)",
-            decisionAt: "2026-07-\(tag)T00:00:00Z",
             firstSeenAt: "2026-01-\(tag)T00:00:00Z",
             lastSeenAt: "2026-06-\(tag)T00:00:00Z",
+            typeName: "Type\(tag)",
+            decision: "accepted-\(tag)",
+            decisionAt: "2026-07-\(tag)T00:00:00Z",
             typeShape: IndexedTypeShape(
                 name: "Shape\(tag)",
                 kind: .enum,
@@ -83,19 +83,19 @@ struct IndexProjectionParityPropertyTests {
             actionTypeName: "Action\(tag)",
             predicate: "predicate\(tag)",
             location: "Feature\(tag).swift:1",
-            moduleName: "Module\(tag)",
             score: score,
             tier: "Likely",
-            decision: "accepted-\(tag)",
-            decisionAt: "2026-07-\(tag)T00:00:00Z",
             firstSeenAt: "2026-01-\(tag)T00:00:00Z",
-            lastSeenAt: "2026-06-\(tag)T00:00:00Z"
+            lastSeenAt: "2026-06-\(tag)T00:00:00Z",
+            moduleName: "Module\(tag)",
+            decision: "accepted-\(tag)",
+            decisionAt: "2026-07-\(tag)T00:00:00Z"
         )
     }
 
     private static let tags = ["01", "02", "03"]
-    private static let tagGen = Gen.element(of: tags).map { $0! }
-    private static let boolGen = Gen.element(of: [true, false]).map { $0! }
+    private static let tagGen = Gen.element(of: tags).compactMap(\.self)
+    private static let boolGen = Gen.element(of: [true, false]).compactMap(\.self)
 
     // MARK: - `updated(from:)` — identity from self, everything else from other
 
@@ -229,9 +229,9 @@ struct IndexProjectionParityPropertyTests {
     func indexRoundTrips() async {
         await propertyCheck(input: Self.tagGen, Self.boolGen) { tag, flags in
             let index = IndexStore.Index(
-                schemaVersion: 5,
                 updatedAt: "2026-07-26T00:00:00Z",
                 entries: [Self.entry(tag, flags: flags)],
+                schemaVersion: 5,
                 typeShapes: [
                     "Outer.Kind": IndexedTypeShape(
                         name: "Outer.Kind",
@@ -239,7 +239,7 @@ struct IndexProjectionParityPropertyTests {
                         inheritedTypes: ["String"],
                         hasUserGen: false,
                         enumCases: [IndexedTypeShape.EnumCase(name: "`struct`")]
-                    )
+                    ),
                 ],
                 interactionEntries: [Self.interactionEntry(tag, score: 40)]
             )
@@ -261,20 +261,23 @@ struct IndexProjectionParityPropertyTests {
         await propertyCheck(input: Self.tagGen, Self.boolGen) { tag, flags in
             let original = Self.entry(tag, flags: flags)
             let existing = IndexStore.Index(
-                schemaVersion: 5, updatedAt: "old", entries: [original],
-                typeShapes: [:], interactionEntries: []
+                updatedAt: "old",
+                entries: [original],
+                schemaVersion: 5,
+                typeShapes: [:],
+                interactionEntries: []
             )
             var refreshed = Self.entry(tag, flags: !flags)
             refreshed = SemanticIndexEntry(
                 identityHash: original.identityHash,
                 templateName: refreshed.templateName,
-                typeName: refreshed.typeName,
                 score: refreshed.score + 1,
                 tier: refreshed.tier,
                 primaryFunctionName: refreshed.primaryFunctionName,
                 location: refreshed.location,
                 firstSeenAt: "9999-01-01T00:00:00Z",
-                lastSeenAt: refreshed.lastSeenAt
+                lastSeenAt: refreshed.lastSeenAt,
+                typeName: refreshed.typeName
             )
             let merged = IndexStore.upsert([refreshed], into: existing, at: "now")
             #expect(merged.entries.count == 1)
@@ -291,11 +294,13 @@ struct IndexProjectionParityPropertyTests {
     func upsertKeepsHistoryAndMergesShapes() {
         let old = Self.entry("01", flags: true)
         let existing = IndexStore.Index(
-            schemaVersion: 5, updatedAt: "old", entries: [old],
+            updatedAt: "old",
+            entries: [old],
+            schemaVersion: 5,
             typeShapes: [
                 "Stale": IndexedTypeShape(
                     name: "Stale", kind: .struct, inheritedTypes: [], hasUserGen: false
-                )
+                ),
             ],
             interactionEntries: []
         )
@@ -306,7 +311,7 @@ struct IndexProjectionParityPropertyTests {
                 "Fresh": IndexedTypeShape(
                     name: "Fresh", kind: .enum, inheritedTypes: ["String"], hasUserGen: false,
                     enumCases: [IndexedTypeShape.EnumCase(name: "a")]
-                )
+                ),
             ]
         )
         // History kept.
@@ -328,8 +333,11 @@ struct IndexProjectionParityPropertyTests {
         let algebraic = Self.entry("01", flags: true)
         let interaction = Self.interactionEntry("02", score: 40)
         let start = IndexStore.Index(
-            schemaVersion: 5, updatedAt: "old", entries: [algebraic],
-            typeShapes: [:], interactionEntries: [interaction]
+            updatedAt: "old",
+            entries: [algebraic],
+            schemaVersion: 5,
+            typeShapes: [:],
+            interactionEntries: [interaction]
         )
         let afterAlgebraic = IndexStore.upsert([algebraic], into: start, at: "t1")
         #expect(afterAlgebraic.interactionEntries == [interaction])

@@ -1,10 +1,26 @@
 import Foundation
-import SwiftEffectInference
 import SwiftParser
 import SwiftSyntax
 import Testing
 
 @testable import SwiftInferCore
+
+/// The first function declaration in a file with a given name.
+final class NamedFunctionFinder: SyntaxVisitor {
+
+    private let name: String
+    private(set) var found: FunctionDeclSyntax?
+
+    init(name: String, viewMode: SyntaxTreeViewMode) {
+        self.name = name
+        super.init(viewMode: viewMode)
+    }
+
+    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+        if found == nil, node.name.text == name { found = node }
+        return .visitChildren
+    }
+}
 
 /// **Phase 0.5, step 1: can the soundness arm reach its own frozen prediction?**
 ///
@@ -51,10 +67,10 @@ struct SoundnessArmReachCensusMeasuredTests {
     static let tripList: [Row] = [
         Row(file: "ActionSequenceStubEmitter+PayloadConstructibility.swift", function: "compositionGenerator"),
         Row(file: "DependencyTypeShapes.swift", function: "scan"),
-        Row(file: "Discover+PipelineSetup.swift", function: "resolvePipelineSetup"),
-        Row(file: "MetricsCommand.swift", function: "loadAggregate"),
-        Row(file: "MetricsCommand.swift", function: "loadImplicit"),
-        Row(file: "MetricsInteractionCommand.swift", function: "loadDecisions"),
+        Row(file: "SwiftInferCommand.Discover+PipelineSetup.swift", function: "resolvePipelineSetup"),
+        Row(file: "SwiftInferCommand.Metrics.swift", function: "loadAggregate"),
+        Row(file: "SwiftInferCommand.Metrics.swift", function: "loadImplicit"),
+        Row(file: "SwiftInferCommand.MetricsInteraction.swift", function: "loadDecisions"),
         Row(file: "MetricsRenderer+TimeToAdoption.swift", function: "timeToAdoptionSection"),
         Row(file: "SpeculativeRefactorRunner+Machinery.swift", function: "scanRestricted"),
         Row(file: "SpeculativeRefactorRunner+Machinery.swift", function: "snapshotOrReport"),
@@ -65,7 +81,7 @@ struct SoundnessArmReachCensusMeasuredTests {
         Row(file: "ViewModelArgumentGenerator.swift", function: "candidateValuesExpression"),
         Row(file: "EffectResolver.swift", function: "resolve"),
         Row(file: "KitEvidenceStore.swift", function: "load"),
-        Row(file: "DrainedProcess.swift", function: "standardOutputViaEnv")
+        Row(file: "DrainedProcess.swift", function: "standardOutputViaEnv"),
     ]
 
     struct Reach {
@@ -224,22 +240,5 @@ struct SoundnessArmReachCensusMeasuredTests {
             }
         }
         print(lines.joined(separator: "\n"))
-    }
-}
-
-/// The first function declaration in a file with a given name.
-final class NamedFunctionFinder: SyntaxVisitor {
-
-    private let name: String
-    private(set) var found: FunctionDeclSyntax?
-
-    init(name: String, viewMode: SyntaxTreeViewMode) {
-        self.name = name
-        super.init(viewMode: viewMode)
-    }
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        if found == nil, node.name.text == name { found = node }
-        return .visitChildren
     }
 }

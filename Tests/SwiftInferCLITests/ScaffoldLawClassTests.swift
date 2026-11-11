@@ -22,7 +22,7 @@ struct ScaffoldLawClassTests {
                 displayName: "download(album:idempotencyKey:)",
                 signature: "(Album, IdempotencyKey) -> OfflineAlbum",
                 location: SourceLocation(file: "OfflineManager.swift", line: 53, column: 5)
-            )
+            ),
         ],
         score: Score(signals: [Signal(kind: .exactNameMatch, weight: 50, detail: "w")]),
         generator: GeneratorMetadata(source: .todo, confidence: nil, sampling: .notRun),
@@ -39,7 +39,7 @@ struct ScaffoldLawClassTests {
         ),
         LiftedTestEmitter.replayKeyBuilder(
             funcName: "makeChargeRequest", ownerType: "StripeWebhookHandler", isThrows: false
-        )
+        ),
     ]
 
     @Test func bothReplayEmittersAreRecognisedAsScaffolds() {
@@ -58,7 +58,7 @@ struct ScaffoldLawClassTests {
             ),
             LiftedTestEmitter.total(
                 callee: "parse", seed: seed, generator: "Gen<Int>.int()", isThrowing: false, isAsync: false
-            )
+            ),
         ]
         for law in laws {
             #expect(law.contains("Issue.record"), "the control must share the call the detector looks near")

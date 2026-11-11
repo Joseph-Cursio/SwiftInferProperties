@@ -373,7 +373,7 @@ the universe parse, the table build, the out-of-universe re-parse in
 ## What this does not do, deliberately
 
 - **The seed path is not gated.** `discover --seeds` synthesizes the generic determinism law for
-  any seeded function without reading this repo's verdict (`Discover+GenericLaws.swift`); a seed
+  any seeded function without reading this repo's verdict (`SwiftInferCommand.Discover+GenericLaws.swift`); a seed
   from a linter without the table still produces one. Gating `qualifiesForDeterminism` on a
   witness-refuted verdict is its own verdict-moving A/B.
 - **The `!isThrows` proxy stays.** The join and the veto still establish a witness from

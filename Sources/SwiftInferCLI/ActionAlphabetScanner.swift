@@ -50,6 +50,60 @@ public struct ActionCaseSpec: Equatable, Sendable {
     }
 }
 
+/// Finds the target Action enum (by name, optionally qualified by an enclosing
+/// type) and reads its cases. Stops at the first match per file.
+private final class ActionEnumVisitor: SyntaxVisitor {
+
+    private let enumName: String
+    private let enclosing: String?
+    private var typeStack: [String] = []
+    private(set) var cases: [ActionCaseSpec]?
+
+    init(enumName: String, enclosing: String?) {
+        self.enumName = enumName
+        self.enclosing = enclosing
+        super.init(viewMode: .sourceAccurate)
+    }
+
+    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+        typeStack.append(node.name.text)
+        return .visitChildren
+    }
+    override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
+
+    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+        if cases == nil, matches(node) {
+            cases = readCases(node)
+        }
+        typeStack.append(node.name.text)
+        return .visitChildren
+    }
+    override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
+
+    private func matches(_ node: EnumDeclSyntax) -> Bool {
+        guard node.name.text == enumName else { return false }
+        guard let enclosing else { return true }  // bare name: any match
+        return typeStack.last == enclosing        // dotted: enclosing type must match
+    }
+
+    private func readCases(_ node: EnumDeclSyntax) -> [ActionCaseSpec] {
+        var specs: [ActionCaseSpec] = []
+        for member in node.memberBlock.members {
+            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
+            for element in caseDecl.elements {
+                let params = element.parameterClause?.parameters.map { param in
+                    ActionParam(
+                        label: param.firstName?.text,
+                        type: param.type.trimmedDescription
+                    )
+                } ?? []
+                specs.append(ActionCaseSpec(name: element.name.text, parameters: params))
+            }
+        }
+        return specs
+    }
+}
+
 /// TestStore Trace Mining (Slice 3a) — resolves an Action enum's cases +
 /// parameter labels/types by scanning the target's sources, for *any* carrier
 /// (`.tca`, `.elmStyle`, `.generic`). Discovery only captures `actionCases`
@@ -109,59 +163,5 @@ enum ActionAlphabetScanner {
             }
         }
         return []
-    }
-}
-
-/// Finds the target Action enum (by name, optionally qualified by an enclosing
-/// type) and reads its cases. Stops at the first match per file.
-private final class ActionEnumVisitor: SyntaxVisitor {
-
-    private let enumName: String
-    private let enclosing: String?
-    private var typeStack: [String] = []
-    private(set) var cases: [ActionCaseSpec]?
-
-    init(enumName: String, enclosing: String?) {
-        self.enumName = enumName
-        self.enclosing = enclosing
-        super.init(viewMode: .sourceAccurate)
-    }
-
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        typeStack.append(node.name.text)
-        return .visitChildren
-    }
-    override func visitPost(_: StructDeclSyntax) { typeStack.removeLast() }
-
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        if cases == nil, matches(node) {
-            cases = readCases(node)
-        }
-        typeStack.append(node.name.text)
-        return .visitChildren
-    }
-    override func visitPost(_: EnumDeclSyntax) { typeStack.removeLast() }
-
-    private func matches(_ node: EnumDeclSyntax) -> Bool {
-        guard node.name.text == enumName else { return false }
-        guard let enclosing else { return true }  // bare name: any match
-        return typeStack.last == enclosing        // dotted: enclosing type must match
-    }
-
-    private func readCases(_ node: EnumDeclSyntax) -> [ActionCaseSpec] {
-        var specs: [ActionCaseSpec] = []
-        for member in node.memberBlock.members {
-            guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else { continue }
-            for element in caseDecl.elements {
-                let params = element.parameterClause?.parameters.map { param in
-                    ActionParam(
-                        label: param.firstName?.text,
-                        type: param.type.trimmedDescription
-                    )
-                } ?? []
-                specs.append(ActionCaseSpec(name: element.name.text, parameters: params))
-            }
-        }
-        return specs
     }
 }

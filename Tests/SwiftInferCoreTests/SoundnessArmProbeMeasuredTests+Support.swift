@@ -10,6 +10,7 @@ import Testing
 /// header.
 extension SoundnessArmProbeMeasuredTests {
 
+    // swiftlint:disable:next unused_declaration - used only by a closure-initialised static, which the index misses
     struct Readings {
         let open: [String: String]
         let denied: [String: String]
@@ -113,13 +114,13 @@ extension SoundnessArmProbeMeasuredTests {
         let output = String(data: data, encoding: .utf8) ?? ""
         guard output.contains("PROBE COMPLETED") else { return nil }
 
-        var readings: [String: String] = [:]
+        var parsedReadings: [String: String] = [:]
         for line in output.split(separator: "\n") {
             let parts = line.split(separator: "|", maxSplits: 1, omittingEmptySubsequences: false)
             guard parts.count == 2 else { continue }
-            readings[String(parts[0])] = String(parts[1])
+            parsedReadings[String(parts[0])] = String(parts[1])
         }
-        return readings
+        return parsedReadings
     }
 }
 
@@ -134,8 +135,8 @@ extension SoundnessArmProbeMeasuredTests {
     static let confirmedImpure: [(file: String, name: String)] = [
         (file: "DrainedProcess.swift", name: "standardOutputViaEnv"),
         (file: "KitEvidenceStore.swift", name: "load"),
-        (file: "MetricsInteractionCommand.swift", name: "loadDecisions"),
-        (file: "SpeculativeRefactorRunner+Machinery.swift", name: "scanRestricted")
+        (file: "SwiftInferCommand.MetricsInteraction.swift", name: "loadDecisions"),
+        (file: "SpeculativeRefactorRunner+Machinery.swift", name: "scanRestricted"),
     ]
 
     struct Carried {
@@ -215,7 +216,7 @@ extension SoundnessArmProbeMeasuredTests {
     /// them among the veto's eight witness-scoped removals.
     static let knownToCarryLaws: [(file: String, name: String)] = [
         (file: "TargetDirectory+Inference.swift", name: "directoryExists"),
-        (file: "VocabularyLoader.swift", name: "fileExists")
+        (file: "VocabularyLoader.swift", name: "fileExists"),
     ]
 
     /// **Non-vacuity, and it is the whole warrant for the zero above.** The same join

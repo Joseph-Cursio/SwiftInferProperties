@@ -29,7 +29,7 @@ struct DocstringSubjectMatterGateTests {
         "The generator used by the round-trip template.",
         "Builds the harness that checks this round trip.",
         "Scaffold for a roundtrip property test.",
-        "The verifier for round-trip laws."
+        "The verifier for round-trip laws.",
     ])
     func subjectMatterProseDoesNotCorroborate(docComment: String) {
         #expect(
@@ -55,7 +55,7 @@ struct DocstringSubjectMatterGateTests {
         .commutativity,
         .associativity,
         .roundTrip,
-        .monotonicity
+        .monotonicity,
     ])
     func gateAppliesToEveryProperty(property: DocstringPropertyCorroborator.Property) {
         // One docstring naming every vocabulary at once, in emitter prose. Whatever the

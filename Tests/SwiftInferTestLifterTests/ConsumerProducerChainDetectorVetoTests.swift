@@ -15,7 +15,7 @@ struct ConsumerProducerChainDetectorVetoTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(isThrows: true),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -29,7 +29,7 @@ struct ConsumerProducerChainDetectorVetoTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(isAsync: true),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -43,7 +43,7 @@ struct ConsumerProducerChainDetectorVetoTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(parameterCount: 2),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         )
@@ -57,7 +57,7 @@ struct ConsumerProducerChainDetectorVetoTests {
             callSitesByConsumer: ["validate": Fixtures.sites(count: 3)],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
-                "validate": Fixtures.validateConsumer()
+                "validate": Fixtures.validateConsumer(),
             ],
             knownRoundTripPairs: []
         ) { _ in false }
@@ -94,12 +94,12 @@ struct ConsumerProducerChainDetectorVetoTests {
         let hints = ConsumerProducerChainDetector.detect(
             callSitesByConsumer: [
                 "validate": Fixtures.sites(count: 3),
-                "verify": Fixtures.sites(count: 4)
+                "verify": Fixtures.sites(count: 4),
             ],
             summariesByName: [
                 "format": Fixtures.formatProducer(),
                 "validate": Fixtures.validateConsumer(),
-                "verify": consumerB
+                "verify": consumerB,
             ],
             knownRoundTripPairs: []
         )

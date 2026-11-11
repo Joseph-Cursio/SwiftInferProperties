@@ -1,8 +1,17 @@
 import Foundation
 import SwiftInferCLI
 import SwiftInferCore
-import SwiftInferTemplates
 import Testing
+
+// MARK: - Silent stubs
+
+private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
+    func write(_: String) { /* no-op */ }
+}
+
+private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
+    func writeDiagnostic(_: String) { /* no-op */ }
+}
 
 /// PRD §13 row 3 — `swift-infer drift` re-run after one-file
 /// change must complete in < 500ms (incremental). The drift command
@@ -118,14 +127,4 @@ struct DriftIncrementalPerformanceTests {
     private func formatted(_ seconds: Double) -> String {
         String(format: "%.3f", seconds)
     }
-}
-
-// MARK: - Silent stubs
-
-private final class SilentOutput: DiscoverOutput, @unchecked Sendable {
-    func write(_: String) { /* no-op */ }
-}
-
-private final class SilentDiagnosticOutput: DiagnosticOutput, @unchecked Sendable {
-    func writeDiagnostic(_: String) { /* no-op */ }
 }

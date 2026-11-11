@@ -1,5 +1,3 @@
-import Foundation
-
 // The §4a decision from `docs/plans/kit-suite-backtest-plan.md`, taken 2026-08-08.
 extension KitSuiteEmitter {
 
@@ -90,6 +88,6 @@ extension KitSuiteEmitter {
         "TreeSet<Int>": "Gen<TreeSet<Int>>.smallIntTreeSet()",
         "TreeDictionary<Int, Int>": "Gen<TreeDictionary<Int, Int>>.smallIntTreeDictionary()",
         "BitSet": "Gen<BitSet>.smallBitSet()",
-        "Heap<Int>": "Gen<Heap<Int>>.smallIntHeap()"
+        "Heap<Int>": "Gen<Heap<Int>>.smallIntHeap()",
     ]
 }

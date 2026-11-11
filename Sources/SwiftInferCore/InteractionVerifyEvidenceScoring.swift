@@ -1,5 +1,3 @@
-import Foundation
-
 /// Cycle 112 — verify-as-signal post-pass for interaction-invariant
 /// suggestions: the `InteractionInvariantSuggestion` analogue of the
 /// algebraic `VerifyEvidenceScoring`. Folds persisted `verify-interaction`

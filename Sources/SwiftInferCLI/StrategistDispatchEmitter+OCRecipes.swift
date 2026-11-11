@@ -1,5 +1,3 @@
-import Foundation
-
 // V1.59.A / V1.69.B — curated generator recipes for OrderedCollections
 // carriers the kit's `DerivationStrategist` returns `.todo` on.
 // Extracted from `StrategistDispatchEmitter.swift` in V1.69.B when the
@@ -209,6 +207,6 @@ extension StrategistDispatchEmitter {
                 + "Deque($0) }",
             carrierTypeName: "Deque<Int>",
             imports: ["Foundation", "DequeModule", "PropertyBased"]
-        )
+        ),
     ]
 }

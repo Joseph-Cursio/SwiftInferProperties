@@ -19,6 +19,29 @@ import Testing
 //                                                          if both fire,
 //                                                          hypothetical)
 
+@Suite("IdempotenceTemplate — V1.16.1 end-to-end discover() integration")
+struct IdempotenceSetAlgebraShapeDiscoverTests {
+
+    @Test("V1.16.1 — `intersection(_:)` (Self) -> Self no longer surfaces idempotence in discover()")
+    func setAlgebraIdempotenceSuppressedEndToEnd() {
+        let intersection = FunctionSummary(
+            name: "intersection",
+            parameters: [Parameter(label: nil, internalName: "other", typeText: "Self", isInout: false)],
+            returnTypeText: "Self",
+            isThrows: false,
+            isAsync: false,
+            isMutating: false,
+            isStatic: false,
+            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
+            containingTypeName: nil,
+            bodySignals: .empty
+        )
+        let suggestions = TemplateRegistry.discover(in: [intersection], typeDecls: [])
+        let idempotenceCount = suggestions.filter { $0.templateName == "idempotence" }.count
+        #expect(idempotenceCount == 0, "SetAlgebra-shape idempotence should not surface")
+    }
+}
+
 @Suite("IdempotenceTemplate — V1.16.1 SetAlgebra-shape veto")
 struct IdempotenceSetAlgebraShapeGateTests {
 
@@ -107,28 +130,5 @@ struct IdempotenceSetAlgebraShapeGateTests {
             containingTypeName: nil,
             bodySignals: .empty
         )
-    }
-}
-
-@Suite("IdempotenceTemplate — V1.16.1 end-to-end discover() integration")
-struct IdempotenceSetAlgebraShapeDiscoverTests {
-
-    @Test("V1.16.1 — `intersection(_:)` (Self) -> Self no longer surfaces idempotence in discover()")
-    func setAlgebraIdempotenceSuppressedEndToEnd() {
-        let intersection = FunctionSummary(
-            name: "intersection",
-            parameters: [Parameter(label: nil, internalName: "other", typeText: "Self", isInout: false)],
-            returnTypeText: "Self",
-            isThrows: false,
-            isAsync: false,
-            isMutating: false,
-            isStatic: false,
-            location: SourceLocation(file: "Test.swift", line: 1, column: 1),
-            containingTypeName: nil,
-            bodySignals: .empty
-        )
-        let suggestions = TemplateRegistry.discover(in: [intersection], typeDecls: [])
-        let idempotenceCount = suggestions.filter { $0.templateName == "idempotence" }.count
-        #expect(idempotenceCount == 0, "SetAlgebra-shape idempotence should not surface")
     }
 }

@@ -68,7 +68,7 @@ Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
             score: Score(signals: [
                 Signal(kind: .typeSymmetrySignature, weight: 30, detail: "T -> T"),
                 Signal(kind: .exactNameMatch, weight: 40, detail: "normalize"),
-                Signal(kind: .selfComposition, weight: 20, detail: "comp")
+                Signal(kind: .selfComposition, weight: 20, detail: "comp"),
             ]),
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(
@@ -143,12 +143,12 @@ Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
                     displayName: "normalize(_:)",
                     signature: "(String) -> String",
                     location: SourceLocation(file: "Sanitizer.swift", line: 7, column: 1)
-                )
+                ),
             ],
             score: Score(signals: [
                 Signal(kind: .typeSymmetrySignature, weight: 30, detail: "T -> T"),
                 Signal(kind: .exactNameMatch, weight: 40, detail: "normalize"),
-                Signal(kind: .selfComposition, weight: 20, detail: "comp")
+                Signal(kind: .selfComposition, weight: 20, detail: "comp"),
             ]),
             generator: .m1Placeholder,
             explainability: ExplainabilityBlock(
@@ -156,7 +156,7 @@ Suppress:  // swiftinfer: skip 0x95BF4EDE0EEDECD6
                     "normalize(_:) (String) -> String — Sanitizer.swift:7",
                     "Type-symmetry signature: T -> T (T = String) (+30)",
                     "Curated idempotence verb match: 'normalize' (+40)",
-                    "Self-composition detected in body: normalize(normalize(x)) (+20)"
+                    "Self-composition detected in body: normalize(normalize(x)) (+20)",
                 ],
                 whyMightBeWrong: [
                     "T must conform to Equatable for the emitted property to compile."

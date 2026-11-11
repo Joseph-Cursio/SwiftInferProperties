@@ -45,6 +45,7 @@ import SwiftSyntax
 /// member-access ops (`pricing.combine`) are deferred.
 public enum AssertReduceEquivalenceDetector {
 
+    /// Reduce equivalence (`xs.reduce(s, op) == xs.reversed().reduce(s, op)`) asserted by `slice`.
     public static func detect(in slice: SlicedTestBody) -> [DetectedReduceEquivalence] {
         guard let assertion = slice.assertion else {
             return []

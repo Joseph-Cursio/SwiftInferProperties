@@ -1,5 +1,3 @@
-import Foundation
-
 /// Curated identity-shaped names per PRD §5.2 priority 1. Used by
 /// `FunctionScannerVisitor.captureIdentityCandidates` (declaration
 /// detection), `BodySignalVisitor.isIdentityShapedSeed` (member-access
@@ -8,11 +6,12 @@ import Foundation
 /// against the param-type of `mutating func op(by: X)` lifts).
 public enum IdentityNames {
 
+    /// Names that read as an identity element: `zero`, `empty`, `identity`, `none`, `default`.
     public static let curated: Set<String> = [
         "zero",
         "empty",
         "identity",
         "none",
-        "default"
+        "default",
     ]
 }

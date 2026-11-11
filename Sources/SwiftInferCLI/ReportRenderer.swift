@@ -1,4 +1,3 @@
-import Foundation
 import SwiftInferCore
 
 /// V1.149 — `swift-infer report`: a read-only, one-glance overview of what the
@@ -32,7 +31,7 @@ enum ReportRenderer {
             "Algebraic surface — \(entries.count) propert\(entries.count == 1 ? "y" : "ies")",
             "  " + tierBreakdown(entries.map(\.tier)),
             "  by template: " + countBreakdown(entries.map(\.templateName)),
-            ""
+            "",
         ]
     }
 
@@ -42,7 +41,7 @@ enum ReportRenderer {
             "Interaction surface — \(entries.count) invariant(s)",
             "  " + tierBreakdown(entries.map(\.tier)),
             "  by family: " + countBreakdown(entries.map(\.family)),
-            ""
+            "",
         ]
     }
 
@@ -57,7 +56,7 @@ enum ReportRenderer {
         var lines = [
             "Measured verify — \(evidence.records.count) record(s)",
             "  Proven \(count(.measuredBothPass)) · Disproven \(count(.measuredDefaultFails)) "
-                + "· Unverifiable \(count(.architecturalCoveragePending)) · Inconclusive \(inconclusive)"
+                + "· Unverifiable \(count(.architecturalCoveragePending)) · Inconclusive \(inconclusive)",
         ]
         // **Named, not counted.** `Disproven 1` was the only trace a measured refutation left
         // anywhere on a default surface, and one digit is not a finding: learning WHICH law

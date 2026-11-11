@@ -1,4 +1,10 @@
-import Foundation
+/// V2.0 M5 — classification for one Cardinality field. Hoisted to
+/// file scope to satisfy SwiftLint's 1-level nesting cap; `Field` is
+/// already nested inside `CardinalityWitness`.
+public enum CardinalityFieldKind: String, Sendable, Equatable, Codable, CaseIterable {
+    case boolFlag = "bool-flag"
+    case optionalPresentation = "optional-presentation"
+}
 
 /// V2.0 M5 — one detected Cardinality witness inside a reducer's
 /// State struct: ≥ 2 stored fields that look like mutually-exclusive
@@ -61,12 +67,4 @@ public struct CardinalityWitness: Sendable, Equatable, Codable {
     public init(fields: [Field]) {
         self.fields = fields
     }
-}
-
-/// V2.0 M5 — classification for one Cardinality field. Hoisted to
-/// file scope to satisfy SwiftLint's 1-level nesting cap; `Field` is
-/// already nested inside `CardinalityWitness`.
-public enum CardinalityFieldKind: String, Sendable, Equatable, Codable, CaseIterable {
-    case boolFlag = "bool-flag"
-    case optionalPresentation = "optional-presentation"
 }

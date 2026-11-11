@@ -47,13 +47,15 @@ public enum InvolutionTemplate {
         "flipped",
         "mirrored",
         "swapped",
-        "toggled"
+        "toggled",
     ]
 
+    /// The `involution` suggestion for `summary`, or `nil` when the template does not apply.
     public static func suggest(for summary: FunctionSummary) -> Suggestion? {
         ConstraintRunner.suggest(constraint: makeConstraint(), subject: summary)
     }
 
+    /// The `involution` template as a constraint: applicability, signals, evidence and identity.
     public static func makeConstraint() -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
             templateName: "involution",
@@ -123,7 +125,7 @@ public enum InvolutionTemplate {
                 weight: 40,
                 detail: "Involution verb match: '\(summary.name)' — applying it twice "
                     + "returns the original, so it owes `f(f(x)) == x`"
-            )
+            ),
         ]
         // Corroborate-only docstring signal (+15): a documented `self-inverse` /
         // `own inverse` / `twice returns the original` raises the tier of the
@@ -167,7 +169,7 @@ public enum InvolutionTemplate {
                 + "`conjugated` / `inverted` are involutions by definition; `flipped` / `mirrored` / "
                 + "`swapped` usually are, but a flip that also translates, or a mirror across a moving "
                 + "axis, is not self-inverse.",
-            "T must conform to Equatable for the emitted property to compile."
+            "T must conform to Equatable for the emitted property to compile.",
         ]
     }
 }

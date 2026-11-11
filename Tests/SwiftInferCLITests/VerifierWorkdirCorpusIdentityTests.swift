@@ -3,6 +3,194 @@ import Foundation
 import SwiftInferCore
 import Testing
 
+/// The union half of #169 — and the reason the first fix measured as no fix.
+///
+/// The survey manifest is a `Set` union across members. Collapsing per member
+/// removes the colliding URL line from the corpus member and leaves it in any
+/// member with `userPackage == nil`, so the union puts it straight back. The
+/// per-member fix alone left **54 of 98** entries still failing, unchanged.
+@Suite("Shared survey package — the collapse must hold across the union")
+struct SharedVerifierPackageCorpusIdentityTests {
+
+    private static func corpus() -> VerifierWorkdir.UserPackageReference {
+        VerifierWorkdir.UserPackageReference(
+            packagePath: URL(fileURLWithPath: "/tmp/swift-collections"),
+            productNames: ["Collections"]
+        )
+    }
+
+    private static func member(
+        hash: String,
+        userPackage: VerifierWorkdir.UserPackageReference?
+    ) -> SharedVerifierPackage.Member {
+        SharedVerifierPackage.Member(
+            entry: SemanticIndexEntry(
+                identityHash: hash,
+                templateName: "idempotence",
+                score: 50,
+                tier: "Likely",
+                primaryFunctionName: "f()",
+                location: "Sources/T.swift:1",
+                firstSeenAt: "2026-08-08T00:00:00Z",
+                lastSeenAt: "2026-08-08T00:00:00Z",
+                typeName: "T"
+            ),
+            stubSource: "print(\"PASS\")\n",
+            userPackage: userPackage,
+            mode: .algebraic
+        )
+    }
+
+    /// A corpus member beside a no-corpus member: exactly the shape that
+    /// reintroduced the collision.
+    @Test("a member with no corpus cannot reintroduce the colliding dependency")
+    func unionDoesNotReintroduceCollision() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("shared-collapse-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = try SharedVerifierPackage.synthesize(
+            members: [
+                Self.member(hash: "0xAAAA000000000001", userPackage: Self.corpus()),
+                Self.member(hash: "0xBBBB000000000002", userPackage: nil),
+            ],
+            at: root
+        )
+        let manifest = try String(
+            contentsOf: root.appendingPathComponent("Package.swift"), encoding: .utf8
+        )
+        #expect(
+            !manifest.contains("apple/swift-collections.git"),
+            "the no-corpus member put the colliding URL dependency back:\n\(manifest)"
+        )
+        #expect(manifest.contains("path: \"/tmp/swift-collections\""))
+        // The denominator: an unrelated dependency must survive, or this passes
+        // by having emitted nothing.
+        #expect(manifest.contains("swift-property-based"))
+    }
+}
+
+/// One member's unresolvable product edge must not fail the whole survey.
+///
+/// `--product`-per-member isolates *compilation*; an edge naming a product the
+/// corpus does not vend fails **manifest loading**, before any target is built.
+/// Measured on swift-collections: one `BigString` carrier resolved to product
+/// `RopeModule` (the package vends `_RopeModule`, and has no `RopeModule` target),
+/// and all **54** buildable entries recorded `build-failed`.
+@Suite("Shared survey package — an unresolvable product edge is quarantined")
+struct SharedPackageProductQuarantineTests {
+
+    /// A real on-disk package, because the check reads the corpus manifest.
+    private static func makeCorpus(products: [String]) throws -> URL {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("quarantine-\(UUID().uuidString)")
+            .appendingPathComponent("DemoCorpus")
+        let sources = root.appendingPathComponent("Sources").appendingPathComponent("DemoCore")
+        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
+        try "public let placeholder = 0\n".write(
+            to: sources.appendingPathComponent("Placeholder.swift"), atomically: true, encoding: .utf8
+        )
+        let productLines = products
+            .map { ".library(name: \"\($0)\", targets: [\"DemoCore\"])" }
+            .joined(separator: ", ")
+        try """
+        // swift-tools-version: 6.0
+        import PackageDescription
+        let package = Package(
+            name: "DemoCorpus",
+            products: [\(productLines)],
+            targets: [.target(name: "DemoCore")]
+        )
+        """.write(to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
+        return root
+    }
+
+    private static func member(
+        hash: String,
+        corpusRoot: URL,
+        productNames: [String]
+    ) -> SharedVerifierPackage.Member {
+        SharedVerifierPackage.Member(
+            entry: SemanticIndexEntry(
+                identityHash: hash,
+                templateName: "idempotence",
+                score: 50,
+                tier: "Likely",
+                primaryFunctionName: "f()",
+                location: "Sources/T.swift:1",
+                firstSeenAt: "2026-08-08T00:00:00Z",
+                lastSeenAt: "2026-08-08T00:00:00Z",
+                typeName: "T"
+            ),
+            stubSource: "print(\"PASS\")\n",
+            userPackage: VerifierWorkdir.UserPackageReference(
+                packagePath: corpusRoot, productNames: productNames
+            ),
+            mode: .algebraic
+        )
+    }
+
+    /// **The property that was broken.** One bad member is removed; the good one
+    /// survives. Before the quarantine the bad member took the good one with it.
+    @Test("a member naming a non-existent product is removed, and the others survive")
+    func oneBadMemberDoesNotTakeTheOthers() throws {
+        let root = try Self.makeCorpus(products: ["DemoLib"])
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+
+        let (usable, quarantined) = SharedVerifierPackage.quarantiningUnresolvableProducts([
+            Self.member(hash: "0xAAAA000000000001", corpusRoot: root, productNames: ["DemoLib"]),
+            Self.member(hash: "0xBBBB000000000002", corpusRoot: root, productNames: ["RopeModule"]),
+        ])
+        #expect(usable.count == 1)
+        #expect(usable.first?.entry.identityHash == "0xAAAA000000000001")
+        #expect(quarantined.count == 1)
+        #expect(quarantined.first?.member.entry.identityHash == "0xBBBB000000000002")
+        // The reason has to name the product AND what the corpus does vend, or a
+        // reader cannot tell a typo from an unreachable target.
+        #expect(quarantined.first?.reason.contains("RopeModule") == true)
+        #expect(quarantined.first?.reason.contains("DemoLib") == true)
+    }
+
+    /// An unreadable manifest is not evidence that a product is missing.
+    /// Quarantining on "I could not check" would turn a tooling failure into a
+    /// claim about the user's carrier.
+    @Test("a corpus whose manifest cannot be read passes through unvalidated")
+    func unreadableManifestDoesNotQuarantine() {
+        let missing = FileManager.default.temporaryDirectory
+            .appendingPathComponent("no-such-package-\(UUID().uuidString)")
+        let (usable, quarantined) = SharedVerifierPackage.quarantiningUnresolvableProducts([
+            Self.member(hash: "0xCCCC000000000003", corpusRoot: missing, productNames: ["Whatever"])
+        ])
+        #expect(usable.count == 1)
+        #expect(quarantined.isEmpty)
+    }
+
+    /// A member with no corpus has no corpus product edges to validate.
+    @Test("a member with no corpus is never quarantined")
+    func noCorpusMemberPassesThrough() {
+        let (usable, quarantined) = SharedVerifierPackage.quarantiningUnresolvableProducts([
+            SharedVerifierPackage.Member(
+                entry: SemanticIndexEntry(
+                    identityHash: "0xDDDD000000000004",
+                    templateName: "idempotence",
+                    score: 50,
+                    tier: "Likely",
+                    primaryFunctionName: "f()",
+                    location: "Sources/T.swift:1",
+                    firstSeenAt: "2026-08-08T00:00:00Z",
+                    lastSeenAt: "2026-08-08T00:00:00Z",
+                    typeName: "T"
+                ),
+                stubSource: "print(\"PASS\")\n",
+                userPackage: nil,
+                mode: .algebraic
+            ),
+        ])
+        #expect(usable.count == 1)
+        #expect(quarantined.isEmpty)
+    }
+}
+
 /// #169 — a corpus that IS one of the verifier's own dependencies.
 ///
 /// SwiftPM derives package identity from the last path component on both sides,
@@ -60,7 +248,7 @@ struct VerifierWorkdirCorpusIdentityTests {
             ("swift-collections", "swift-collections"),
             ("swift-numerics", "swift-numerics"),
             ("swift-property-based", "swift-property-based"),
-            ("SwiftPropertyLaws", "SwiftPropertyLaws")
+            ("SwiftPropertyLaws", "SwiftPropertyLaws"),
         ]
     )
     func collidingDependencyIsDropped(directory: String, identity: String) {
@@ -148,193 +336,5 @@ struct VerifierWorkdirCorpusIdentityTests {
                 userPackage: Self.corpus(named: "MyApp"), mode: .algebraic
             ).isEmpty
         )
-    }
-}
-
-/// The union half of #169 — and the reason the first fix measured as no fix.
-///
-/// The survey manifest is a `Set` union across members. Collapsing per member
-/// removes the colliding URL line from the corpus member and leaves it in any
-/// member with `userPackage == nil`, so the union puts it straight back. The
-/// per-member fix alone left **54 of 98** entries still failing, unchanged.
-@Suite("Shared survey package — the collapse must hold across the union")
-struct SharedVerifierPackageCorpusIdentityTests {
-
-    private static func corpus() -> VerifierWorkdir.UserPackageReference {
-        VerifierWorkdir.UserPackageReference(
-            packagePath: URL(fileURLWithPath: "/tmp/swift-collections"),
-            productNames: ["Collections"]
-        )
-    }
-
-    private static func member(
-        hash: String,
-        userPackage: VerifierWorkdir.UserPackageReference?
-    ) -> SharedVerifierPackage.Member {
-        SharedVerifierPackage.Member(
-            entry: SemanticIndexEntry(
-                identityHash: hash,
-                templateName: "idempotence",
-                typeName: "T",
-                score: 50,
-                tier: "Likely",
-                primaryFunctionName: "f()",
-                location: "Sources/T.swift:1",
-                firstSeenAt: "2026-08-08T00:00:00Z",
-                lastSeenAt: "2026-08-08T00:00:00Z"
-            ),
-            stubSource: "print(\"PASS\")\n",
-            userPackage: userPackage,
-            mode: .algebraic
-        )
-    }
-
-    /// A corpus member beside a no-corpus member: exactly the shape that
-    /// reintroduced the collision.
-    @Test("a member with no corpus cannot reintroduce the colliding dependency")
-    func unionDoesNotReintroduceCollision() throws {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("shared-collapse-\(UUID().uuidString)")
-        defer { try? FileManager.default.removeItem(at: root) }
-
-        _ = try SharedVerifierPackage.synthesize(
-            members: [
-                Self.member(hash: "0xAAAA000000000001", userPackage: Self.corpus()),
-                Self.member(hash: "0xBBBB000000000002", userPackage: nil)
-            ],
-            at: root
-        )
-        let manifest = try String(
-            contentsOf: root.appendingPathComponent("Package.swift"), encoding: .utf8
-        )
-        #expect(
-            !manifest.contains("apple/swift-collections.git"),
-            "the no-corpus member put the colliding URL dependency back:\n\(manifest)"
-        )
-        #expect(manifest.contains("path: \"/tmp/swift-collections\""))
-        // The denominator: an unrelated dependency must survive, or this passes
-        // by having emitted nothing.
-        #expect(manifest.contains("swift-property-based"))
-    }
-}
-
-/// One member's unresolvable product edge must not fail the whole survey.
-///
-/// `--product`-per-member isolates *compilation*; an edge naming a product the
-/// corpus does not vend fails **manifest loading**, before any target is built.
-/// Measured on swift-collections: one `BigString` carrier resolved to product
-/// `RopeModule` (the package vends `_RopeModule`, and has no `RopeModule` target),
-/// and all **54** buildable entries recorded `build-failed`.
-@Suite("Shared survey package — an unresolvable product edge is quarantined")
-struct SharedPackageProductQuarantineTests {
-
-    /// A real on-disk package, because the check reads the corpus manifest.
-    private static func makeCorpus(products: [String]) throws -> URL {
-        let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("quarantine-\(UUID().uuidString)")
-            .appendingPathComponent("DemoCorpus")
-        let sources = root.appendingPathComponent("Sources").appendingPathComponent("DemoCore")
-        try FileManager.default.createDirectory(at: sources, withIntermediateDirectories: true)
-        try "public let placeholder = 0\n".write(
-            to: sources.appendingPathComponent("Placeholder.swift"), atomically: true, encoding: .utf8
-        )
-        let productLines = products
-            .map { ".library(name: \"\($0)\", targets: [\"DemoCore\"])" }
-            .joined(separator: ", ")
-        try """
-        // swift-tools-version: 6.0
-        import PackageDescription
-        let package = Package(
-            name: "DemoCorpus",
-            products: [\(productLines)],
-            targets: [.target(name: "DemoCore")]
-        )
-        """.write(to: root.appendingPathComponent("Package.swift"), atomically: true, encoding: .utf8)
-        return root
-    }
-
-    private static func member(
-        hash: String,
-        corpusRoot: URL,
-        productNames: [String]
-    ) -> SharedVerifierPackage.Member {
-        SharedVerifierPackage.Member(
-            entry: SemanticIndexEntry(
-                identityHash: hash,
-                templateName: "idempotence",
-                typeName: "T",
-                score: 50,
-                tier: "Likely",
-                primaryFunctionName: "f()",
-                location: "Sources/T.swift:1",
-                firstSeenAt: "2026-08-08T00:00:00Z",
-                lastSeenAt: "2026-08-08T00:00:00Z"
-            ),
-            stubSource: "print(\"PASS\")\n",
-            userPackage: VerifierWorkdir.UserPackageReference(
-                packagePath: corpusRoot, productNames: productNames
-            ),
-            mode: .algebraic
-        )
-    }
-
-    /// **The property that was broken.** One bad member is removed; the good one
-    /// survives. Before the quarantine the bad member took the good one with it.
-    @Test("a member naming a non-existent product is removed, and the others survive")
-    func oneBadMemberDoesNotTakeTheOthers() throws {
-        let root = try Self.makeCorpus(products: ["DemoLib"])
-        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
-
-        let (usable, quarantined) = SharedVerifierPackage.quarantiningUnresolvableProducts([
-            Self.member(hash: "0xAAAA000000000001", corpusRoot: root, productNames: ["DemoLib"]),
-            Self.member(hash: "0xBBBB000000000002", corpusRoot: root, productNames: ["RopeModule"])
-        ])
-        #expect(usable.count == 1)
-        #expect(usable.first?.entry.identityHash == "0xAAAA000000000001")
-        #expect(quarantined.count == 1)
-        #expect(quarantined.first?.member.entry.identityHash == "0xBBBB000000000002")
-        // The reason has to name the product AND what the corpus does vend, or a
-        // reader cannot tell a typo from an unreachable target.
-        #expect(quarantined.first?.reason.contains("RopeModule") == true)
-        #expect(quarantined.first?.reason.contains("DemoLib") == true)
-    }
-
-    /// An unreadable manifest is not evidence that a product is missing.
-    /// Quarantining on "I could not check" would turn a tooling failure into a
-    /// claim about the user's carrier.
-    @Test("a corpus whose manifest cannot be read passes through unvalidated")
-    func unreadableManifestDoesNotQuarantine() {
-        let missing = FileManager.default.temporaryDirectory
-            .appendingPathComponent("no-such-package-\(UUID().uuidString)")
-        let (usable, quarantined) = SharedVerifierPackage.quarantiningUnresolvableProducts([
-            Self.member(hash: "0xCCCC000000000003", corpusRoot: missing, productNames: ["Whatever"])
-        ])
-        #expect(usable.count == 1)
-        #expect(quarantined.isEmpty)
-    }
-
-    /// A member with no corpus has no corpus product edges to validate.
-    @Test("a member with no corpus is never quarantined")
-    func noCorpusMemberPassesThrough() {
-        let (usable, quarantined) = SharedVerifierPackage.quarantiningUnresolvableProducts([
-            SharedVerifierPackage.Member(
-                entry: SemanticIndexEntry(
-                    identityHash: "0xDDDD000000000004",
-                    templateName: "idempotence",
-                    typeName: "T",
-                    score: 50,
-                    tier: "Likely",
-                    primaryFunctionName: "f()",
-                    location: "Sources/T.swift:1",
-                    firstSeenAt: "2026-08-08T00:00:00Z",
-                    lastSeenAt: "2026-08-08T00:00:00Z"
-                ),
-                stubSource: "print(\"PASS\")\n",
-                userPackage: nil,
-                mode: .algebraic
-            )
-        ])
-        #expect(usable.count == 1)
-        #expect(quarantined.isEmpty)
     }
 }

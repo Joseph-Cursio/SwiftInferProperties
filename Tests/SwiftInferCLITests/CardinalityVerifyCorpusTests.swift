@@ -37,7 +37,7 @@ struct CardinalityVerifyCorpusTests {
         #expect(Set(cardinality.map(\.reducerQualifiedName)) == [
             "RouterFeature.body", "DrawerFeature.body", "LeakyFeature.body",
             // cycle 141 — Optional-presentation widening.
-            "SheetRouterFeature.body", "PopoverFeature.body"
+            "SheetRouterFeature.body", "PopoverFeature.body",
         ])
         // Gated baseline: every cardinality pick sits at .possible pre-verify.
         #expect(cardinality.allSatisfy { $0.tier == .possible })

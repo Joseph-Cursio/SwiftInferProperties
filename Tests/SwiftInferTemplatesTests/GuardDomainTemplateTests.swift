@@ -36,10 +36,10 @@ struct GuardDomainTemplateTests {
             location: SourceLocation(file: "F.swift", line: 1, column: 1),
             containingTypeName: "FrontMatter",
             bodySignals: BodySignals(
-                guardDomain: domain,
                 hasNonDeterministicCall: false,
                 hasSelfComposition: false,
-                nonDeterministicAPIsDetected: []
+                nonDeterministicAPIsDetected: [],
+                guardDomain: domain
             )
         )
     }

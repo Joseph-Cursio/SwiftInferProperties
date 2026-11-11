@@ -6,6 +6,20 @@ import SwiftSyntax
 @testable import SwiftInferCore
 @testable import SwiftInferTemplates
 
+/// Every `var` with an accessor block, for the computed-property arm of the witness
+/// split. Deliberately does not replicate `isReadOnlyGetter` — the question here is
+/// *"is this declaration a computed property"*, not *"would the scanner summarise it"*,
+/// and answering the second would make the classifier agree with the scanner by
+/// construction rather than by measurement.
+final class ComputedPropertyCollector: SyntaxVisitor {
+    var properties: [VariableDeclSyntax] = []
+
+    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+        if node.bindings.first?.accessorBlock != nil { properties.append(node) }
+        return .skipChildren
+    }
+}
+
 /// The arms for `PurityRefactoringReachMeasuredTests`. Split out only for the 400-line
 /// file cap; the reasoning that governs both lives in that suite's header.
 ///
@@ -280,18 +294,4 @@ extension PurityRefactoringReachMeasuredTests {
     }
 
     static let measured: [Arms] = corpora.compactMap { try? arms(for: $0) }
-}
-
-/// Every `var` with an accessor block, for the computed-property arm of the witness
-/// split. Deliberately does not replicate `isReadOnlyGetter` — the question here is
-/// *"is this declaration a computed property"*, not *"would the scanner summarise it"*,
-/// and answering the second would make the classifier agree with the scanner by
-/// construction rather than by measurement.
-final class ComputedPropertyCollector: SyntaxVisitor {
-    var properties: [VariableDeclSyntax] = []
-
-    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-        if node.bindings.first?.accessorBlock != nil { properties.append(node) }
-        return .skipChildren
-    }
 }

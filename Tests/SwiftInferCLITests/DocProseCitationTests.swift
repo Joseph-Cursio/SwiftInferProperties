@@ -193,7 +193,7 @@ struct DocProseCitationTests {
             file: "docs/reference/index-annotations.md",
             path: "docs/glossary.md",
             reason: "quotes the stale path a row carried until 2026-08-06"
-        )
+        ),
     ]
 
     static func isAllowlisted(_ citation: DocCitationScanner.Citation) -> Bool {

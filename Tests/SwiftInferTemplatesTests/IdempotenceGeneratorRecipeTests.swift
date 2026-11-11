@@ -11,8 +11,8 @@ struct IdempotenceGeneratorRecipeTests {
     func stringCarrierGetsNoRecipe() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "String",
-            returnType: "String"
+            returnType: "String",
+            paramType: "String"
         )
         #expect(IdempotenceTemplate.suggest(for: summary)?.generatorRecipes.isEmpty == true)
     }
@@ -21,8 +21,8 @@ struct IdempotenceGeneratorRecipeTests {
     func stringArrayCarrierGetsRecipe() {
         let summary = makeIdempotenceSummary(
             name: "mergedWith",
-            paramType: "[String]?",
-            returnType: "[String]"
+            returnType: "[String]",
+            paramType: "[String]?"
         )
         let recipes = IdempotenceTemplate.suggest(for: summary)?.generatorRecipes ?? []
         #expect(recipes.contains { $0.typeName == "[String]" })
@@ -34,8 +34,8 @@ struct IdempotenceGeneratorRecipeTests {
     func intCarrierGetsNoRecipe() {
         let summary = makeIdempotenceSummary(
             name: "normalize",
-            paramType: "Int",
-            returnType: "Int"
+            returnType: "Int",
+            paramType: "Int"
         )
         #expect(IdempotenceTemplate.suggest(for: summary)?.generatorRecipes.isEmpty == true)
     }

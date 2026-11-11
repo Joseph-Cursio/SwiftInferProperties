@@ -18,14 +18,14 @@ struct InsightsBuilderTests {
         SemanticIndexEntry(
             identityHash: "0x\(type)\(template)",
             templateName: template,
-            typeName: type,
             score: 80,
             tier: tier,
             primaryFunctionName: function,
             location: "/x.swift:1",
-            decision: decision,
             firstSeenAt: "2026-07-01T00:00:00Z",
-            lastSeenAt: "2026-07-01T00:00:00Z"
+            lastSeenAt: "2026-07-01T00:00:00Z",
+            typeName: type,
+            decision: decision
         )
     }
 
@@ -79,7 +79,7 @@ struct InsightsBuilderTests {
         // Two types, but one's associativity is only Possible → not counted.
         let entries = [
             Self.row("Config", "associativity"), Self.row("Config", "identity-element"),
-            Self.row("EventLog", "associativity", tier: "Possible"), Self.row("EventLog", "identity-element")
+            Self.row("EventLog", "associativity", tier: "Possible"), Self.row("EventLog", "identity-element"),
         ]
         let groups = InsightsBuilder.groups(in: Self.index(entries), minTypes: 2, includeTiers: Self.allStrongLikely)
         // Only Config qualifies as a monoid → group of 1 → filtered out.
@@ -98,7 +98,7 @@ struct InsightsBuilderTests {
             Self.row("Config", "associativity", tier: "Strong"),
             Self.row("Config", "identity-element", tier: "Likely"),
             Self.row("EventLog", "associativity", tier: "Strong"),
-            Self.row("EventLog", "identity-element", tier: "Strong")
+            Self.row("EventLog", "identity-element", tier: "Strong"),
         ]
         let groups = InsightsBuilder.groups(in: Self.index(entries), minTypes: 2, includeTiers: Self.allStrongLikely)
         let config = groups.first?.members.first { $0.typeName == "Config" }
@@ -111,7 +111,7 @@ struct InsightsBuilderTests {
             Self.row("Config", "associativity", decision: "acceptedAsConformance"),
             Self.row("Config", "identity-element"),
             Self.row("EventLog", "associativity"),
-            Self.row("EventLog", "identity-element")
+            Self.row("EventLog", "identity-element"),
         ]
         let groups = InsightsBuilder.groups(in: Self.index(entries), minTypes: 2, includeTiers: Self.allStrongLikely)
         #expect(groups.first?.adoptionGap == true)
@@ -126,7 +126,7 @@ struct InsightsBuilderTests {
             Self.row("Config", "associativity", decision: "acceptedAsConformance"),
             Self.row("Config", "identity-element"),
             Self.row("EventLog", "associativity"),
-            Self.row("EventLog", "identity-element")
+            Self.row("EventLog", "identity-element"),
         ]
         let groups = InsightsBuilder.groups(in: Self.index(entries), minTypes: 2, includeTiers: Self.allStrongLikely)
         let rendered = InsightsBuilder.render(groups, minTypes: 2, includePossible: false)
@@ -155,7 +155,7 @@ struct InsightsBuilderTests {
             Self.row("BigUInt", "associativity", function: "+(a:b:)"),
             Self.row("BigUInt", "commutativity", function: "+(a:b:)"),
             Self.row("BigInt", "associativity", function: "+(a:b:)"),
-            Self.row("BigInt", "commutativity", function: "+(a:b:)")
+            Self.row("BigInt", "commutativity", function: "+(a:b:)"),
         ]
         let groups = InsightsBuilder.groups(in: Self.index(entries), minTypes: 2, includeTiers: Self.allStrongLikely)
         let bigUInt = groups.first?.members.first { $0.typeName == "BigUInt" }

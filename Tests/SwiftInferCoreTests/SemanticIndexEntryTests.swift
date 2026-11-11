@@ -10,15 +10,15 @@ struct SemanticIndexEntryTests {
     private static let exampleEntry = SemanticIndexEntry(
         identityHash: "0xBC43359C0574816B",
         templateName: "round-trip",
-        typeName: "_HashTable.UnsafeHandle",
         score: 35,
         tier: "Possible",
         primaryFunctionName: "_value(forBucketContents:)",
         location: "/foo/bar/_HashTable+UnsafeHandle.swift:201",
-        decision: "accept",
-        decisionAt: "2026-05-11T12:34:56Z",
         firstSeenAt: "2026-05-10T00:00:00Z",
-        lastSeenAt: "2026-05-11T12:34:56Z"
+        lastSeenAt: "2026-05-11T12:34:56Z",
+        typeName: "_HashTable.UnsafeHandle",
+        decision: "accept",
+        decisionAt: "2026-05-11T12:34:56Z"
     )
 
     // MARK: - JSON round-trip
@@ -38,15 +38,15 @@ struct SemanticIndexEntryTests {
         let untriaged = SemanticIndexEntry(
             identityHash: "0xDEADBEEF12345678",
             templateName: "idempotence",
-            typeName: "Foo",
             score: 30,
             tier: "Possible",
             primaryFunctionName: "normalize(_:)",
             location: "/a.swift:1",
-            decision: nil,
-            decisionAt: nil,
             firstSeenAt: "2026-05-11T00:00:00Z",
-            lastSeenAt: "2026-05-11T00:00:00Z"
+            lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: "Foo",
+            decision: nil,
+            decisionAt: nil
         )
         let data = try JSONEncoder().encode(untriaged)
         let decoded = try JSONDecoder().decode(SemanticIndexEntry.self, from: data)
@@ -64,15 +64,15 @@ struct SemanticIndexEntryTests {
         let freeFunc = SemanticIndexEntry(
             identityHash: "0xAAAA1111BBBB2222",
             templateName: "monotonicity",
-            typeName: nil,
             score: 25,
             tier: "Possible",
             primaryFunctionName: "log(_:)",
             location: "/math.swift:10",
-            decision: nil,
-            decisionAt: nil,
             firstSeenAt: "2026-05-11T00:00:00Z",
-            lastSeenAt: "2026-05-11T00:00:00Z"
+            lastSeenAt: "2026-05-11T00:00:00Z",
+            typeName: nil,
+            decision: nil,
+            decisionAt: nil
         )
         let data = try JSONEncoder().encode(freeFunc)
         let decoded = try JSONDecoder().decode(SemanticIndexEntry.self, from: data)
@@ -88,15 +88,16 @@ struct SemanticIndexEntryTests {
         let newer = SemanticIndexEntry(
             identityHash: original.identityHash,
             templateName: original.templateName,
-            typeName: original.typeName,
             score: 40,
             tier: "Likely",
             primaryFunctionName: original.primaryFunctionName,
             location: original.location,
+            firstSeenAt: "2026-05-12T00:00:00Z",
+            // newer firstSeenAt
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: original.typeName,
             decision: "reject",
-            decisionAt: "2026-05-12T01:00:00Z",
-            firstSeenAt: "2026-05-12T00:00:00Z",   // newer firstSeenAt
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            decisionAt: "2026-05-12T01:00:00Z"
         )
         let merged = original.updated(from: newer)
         #expect(merged.firstSeenAt == original.firstSeenAt, "firstSeenAt must be preserved from self")
@@ -111,17 +112,18 @@ struct SemanticIndexEntryTests {
     func updatedPreservesIdentityColumns() {
         let original = Self.exampleEntry
         let newer = SemanticIndexEntry(
-            identityHash: "0xDIFFERENT_HASH",      // these don't change in practice
+            identityHash: "0xDIFFERENT_HASH",
+            // these don't change in practice
             templateName: "different",
-            typeName: "DifferentType",
             score: 99,
             tier: "Strong",
             primaryFunctionName: "different",
             location: "/elsewhere.swift:1",
-            decision: nil,
-            decisionAt: nil,
             firstSeenAt: "2026-05-12T00:00:00Z",
-            lastSeenAt: "2026-05-12T00:00:00Z"
+            lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: "DifferentType",
+            decision: nil,
+            decisionAt: nil
         )
         let merged = original.updated(from: newer)
         // Identity columns come from self (immutable across upserts).
@@ -138,30 +140,30 @@ struct SemanticIndexEntryTests {
         let entry2 = SemanticIndexEntry(
             identityHash: entry1.identityHash,
             templateName: entry1.templateName,
-            typeName: entry1.typeName,
             score: entry1.score,
             tier: entry1.tier,
             primaryFunctionName: entry1.primaryFunctionName,
             location: entry1.location,
-            decision: entry1.decision,
-            decisionAt: entry1.decisionAt,
             firstSeenAt: entry1.firstSeenAt,
-            lastSeenAt: entry1.lastSeenAt
+            lastSeenAt: entry1.lastSeenAt,
+            typeName: entry1.typeName,
+            decision: entry1.decision,
+            decisionAt: entry1.decisionAt
         )
         #expect(entry1 == entry2)
         // Change one field → not equal.
         let entry3 = SemanticIndexEntry(
             identityHash: entry1.identityHash,
             templateName: entry1.templateName,
-            typeName: entry1.typeName,
             score: 99,
             tier: entry1.tier,
             primaryFunctionName: entry1.primaryFunctionName,
             location: entry1.location,
-            decision: entry1.decision,
-            decisionAt: entry1.decisionAt,
             firstSeenAt: entry1.firstSeenAt,
-            lastSeenAt: entry1.lastSeenAt
+            lastSeenAt: entry1.lastSeenAt,
+            typeName: entry1.typeName,
+            decision: entry1.decision,
+            decisionAt: entry1.decisionAt
         )
         #expect(entry1 != entry3)
     }
@@ -210,15 +212,15 @@ struct SemanticIndexEntryTests {
         let entry = SemanticIndexEntry(
             identityHash: "0xBC43359C0574816B",
             templateName: "idempotence",
-            typeName: "Foo",
             score: 30,
             tier: "Possible",
             primaryFunctionName: "normalize(_:)",
             location: "/a.swift:1",
-            decision: nil,
-            decisionAt: nil,
             firstSeenAt: "2026-05-12T00:00:00Z",
             lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: "Foo",
+            decision: nil,
+            decisionAt: nil,
             typeShape: shape
         )
         let data = try JSONEncoder().encode(entry)
@@ -232,13 +234,13 @@ struct SemanticIndexEntryTests {
         let entry = SemanticIndexEntry(
             identityHash: "0xBC43359C0574816B",
             templateName: "round-trip",
-            typeName: "Complex<Double>",
             score: 30,
             tier: "Possible",
             primaryFunctionName: "exp(_:)",
             location: "/a.swift:1",
             firstSeenAt: "2026-05-12T00:00:00Z",
             lastSeenAt: "2026-05-12T00:00:00Z",
+            typeName: "Complex<Double>",
             typeShape: nil
         )
         let encoder = JSONEncoder()
@@ -263,15 +265,15 @@ struct SemanticIndexEntryTests {
         let newer = SemanticIndexEntry(
             identityHash: original.identityHash,
             templateName: original.templateName,
-            typeName: original.typeName,
             score: original.score,
             tier: original.tier,
             primaryFunctionName: original.primaryFunctionName,
             location: original.location,
-            decision: original.decision,
-            decisionAt: original.decisionAt,
             firstSeenAt: original.firstSeenAt,
             lastSeenAt: original.lastSeenAt,
+            typeName: original.typeName,
+            decision: original.decision,
+            decisionAt: original.decisionAt,
             typeShape: newShape
         )
         let merged = original.updated(from: newer)
