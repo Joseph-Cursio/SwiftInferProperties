@@ -413,7 +413,7 @@ unseeded finite path and now says so at the call site.
 | question | file |
 |---|---|
 | the derivation tiers and the 100-member arity cliff (10 per enum payload) | `SwiftPropertyLaws/Sources/PropertyLawCore/DerivationStrategy.swift` |
-| what a `.todo` tells the user | `…/PropertyLawCore/TodoReason.swift` |
+| what a `.todo` tells the user | `…/PropertyLawCore/DerivationStrategist+TodoReason.swift` |
 | the products and their dependency footprints | `SwiftPropertyLaws/Package.swift` |
 | the kit's own running notes (NaN seeding, codegen fixes) | `SwiftPropertyLaws/CLAUDE.md` |
 | **the pin, and why it must equal the verifier's** | `SwiftInferProperties/Sources/SwiftInferCLI/VerifierWorkdir+KitPin.swift`, `VerifierWorkdirKitPinTests` |

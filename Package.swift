@@ -1,15 +1,15 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.2
 import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
     name: "SwiftInferProperties",
     platforms: [
-        .macOS(.v14),
-        .iOS(.v17),
-        .tvOS(.v17),
-        .watchOS(.v10),
-        .visionOS(.v1)
+        .macOS(.v26),
+        .iOS(.v26),
+        .tvOS(.v26),
+        .watchOS(.v26),
+        .visionOS(.v26)
     ],
     products: [
         .library(

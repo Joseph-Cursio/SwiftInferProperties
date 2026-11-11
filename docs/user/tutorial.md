@@ -17,7 +17,7 @@ The same workflow scales unchanged to real codebases — the tool isn't doing an
 
 ## Prerequisites
 
-- Swift 6.1+ toolchain (`swift --version`).
+- macOS 26 or later, with a Swift 6.2+ toolchain (`swift --version`). The package is developed and tested on Swift 6.4 (Xcode 27).
 - An empty directory you don't mind committing throwaway code into.
 
 You do **not** need an existing project — we'll build one from scratch.
@@ -34,12 +34,12 @@ swift package init --type library --name Slug
 Replace the generated `Package.swift` with:
 
 ```swift
-// swift-tools-version: 6.1
+// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
     name: "Slug",
-    platforms: [.macOS(.v14)],
+    platforms: [.macOS(.v26)],
     dependencies: [
         .package(url: "https://github.com/Joseph-Cursio/SwiftInferProperties", from: "1.4.0"),
         .package(url: "https://github.com/Joseph-Cursio/SwiftPropertyLaws", from: "2.0.0")
