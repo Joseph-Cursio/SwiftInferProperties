@@ -1088,7 +1088,7 @@ Worth reading `SwiftInferProperties/Sources/SwiftInferCLI/SwiftInferCommand.Disc
 
 | question | file |
 |---|---|
-| the manifest schema, seed kinds, dropped-seed detection | `SwiftProjectLint/Sources/Core/Export/PBTSeedsFormatter.swift` |
+| the manifest schema, seed kinds, dropped-seed detection | `SwiftProjectLint/Sources/Core/Export/PBTSeedManifest.swift`, `PBTSeed.swift` (the schema) and `PBTSeedsFormatter.swift` |
 | the effect tier, its provenance, and why both travel | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/PBTSeedEffect.swift` |
 | which rules exist at all, and the count nothing tests | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/RuleIdentifier.swift` |
 | what a role is and why these six | `SwiftProjectLint/Packages/SwiftProjectLintModels/…/PBTSeedRole.swift` |

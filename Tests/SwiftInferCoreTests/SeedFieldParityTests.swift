@@ -76,7 +76,7 @@ struct SeedFieldParityTests {
     func producerManifestSourceFieldsAreAllKnown() {
         let source = repoRoot
             .deletingLastPathComponent()
-            .appendingPathComponent("SwiftProjectLint/Sources/Core/Export/PBTSeedsFormatter.swift")
+            .appendingPathComponent("SwiftProjectLint/Sources/Core/Export/PBTSeedManifest.swift")
         guard let text = try? String(contentsOf: source, encoding: .utf8) else { return }
 
         let fields = Self.storedProperties(ofStruct: "PBTSeedManifest", in: text)
@@ -241,7 +241,7 @@ struct SeedFieldParityTests {
     func producerSourceFieldsAreAllKnown() throws {
         let source = repoRoot
             .deletingLastPathComponent()
-            .appendingPathComponent("SwiftProjectLint/Sources/Core/Export/PBTSeedsFormatter.swift")
+            .appendingPathComponent("SwiftProjectLint/Sources/Core/Export/PBTSeed.swift")
         guard let text = try? String(contentsOf: source, encoding: .utf8) else { return }
 
         let fields = Self.storedProperties(ofStruct: "PBTSeed", in: text)
