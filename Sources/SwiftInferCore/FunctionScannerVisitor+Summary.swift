@@ -332,7 +332,13 @@ extension FunctionScannerVisitor {
             // M6: the key-from-entity builder marker. Not behind the throws/async
             // gate — the builder is typically a pure sync function.
             buildsIdempotencyKey: scanner.buildsIdempotencyKey,
-            callsIdempotentWrite: scanner.callsIdempotentWrite
+            callsIdempotentWrite: scanner.callsIdempotentWrite,
+            // Only where #669's criterion 1 could hold: a method of a type, or a function with an
+            // `inout` collection. Same bargain: the walk is paid where the template can read it.
+            uniquifierShape: keepsState(node) && Self.returnsValue(node)
+                ? UniquifierShapeReader.read(node)
+                : nil,
+            stateWrites: recordedStateWrites(node)
         )
     }
 
