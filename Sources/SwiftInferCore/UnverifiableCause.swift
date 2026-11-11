@@ -140,7 +140,7 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
     /// `Gen` is `public enum Gen<Value> {}` — an uninhabitable namespace holding static
     /// factories. Nothing can return one. The real type is
     /// `Generator<T, some SendableSequenceType>`, which is exactly what the KIT has always
-    /// told people to write (`SwiftPropertyLaws/PropertyLawCore/TodoReason.swift`,
+    /// told people to write (`SwiftPropertyLaws/PropertyLawCore/DerivationStrategist+TodoReason.swift`,
     /// `PropertyLawMacro`'s documented shape). Two tools in one toolchain gave contradictory
     /// instructions for the same task, and the wrong one was downstream.
     ///
