@@ -128,7 +128,8 @@ public enum UniquifierTemplate {
 
     static func makeConstraint(match: UniquifierMatch) -> Constraint<FunctionSummary> {
         Constraint<FunctionSummary>(
-            templateName: name,
+            // Spelled, not `name`: `StubWriterCoverageTests` reads template names off the source.
+            templateName: "uniquifier",
             appliesTo: { _ in true },
             signals: { signals(for: $0, match: match) },
             evidence: { [$0.inferenceEvidence] },

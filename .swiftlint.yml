@@ -18,3 +18,4 @@ excluded:
   - Tests/SwiftInferCLITests/ReferenceOracleDiscoverWitness.swift
   - Tests/SwiftInferTemplatesTests/ReferenceOracleScaffoldWitness.swift
   - Tests/SwiftInferTemplatesTests/ReferenceOracleScaffoldWitness+Shapes.swift
+  - Tests/SwiftInferCLITests/UniquifierStubCompiledWitness.swift

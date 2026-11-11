@@ -105,6 +105,9 @@ extension InteractiveTriage {
         case "structural-round-trip":
             return structuralRoundTripScaffold(for: suggestion)
 
+        case "uniquifier":
+            return uniquifierStub(for: suggestion, receiverExpression: receiverExpression)
+
         default:
             return nil
         }
