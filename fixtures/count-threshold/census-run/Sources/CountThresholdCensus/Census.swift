@@ -56,6 +56,11 @@ struct GateChange: Codable {
     let key: String
     let condition: String
     let returned: String
+    /// Whether guard-domain would propose the function at all: in the scan, not async, throwing or mutating,
+    /// and returning a value (`GuardDomainTemplate.hasStatableDomain`).
+    let templateEligible: Bool
+    /// The names today's text gate reads as free in the condition and the returned expression.
+    let textFree: [String]
 }
 
 struct GateAB: Codable {
@@ -173,12 +178,19 @@ enum Census {
         let labelAware = ReplicaReader.read(function, gate: .labelAware)
         if shipped != nil { record.gateAB.today += 1 }
         if labelAware != nil { record.gateAB.labelAware += 1 }
-        if let labelAware, replica == nil {
-            record.gateAB.gained.append(GateChange(key: key, condition: labelAware.condition, returned: labelAware.returnedExpression))
+        let eligible = summary.map { summary in
+            !summary.isMutating && !summary.isAsync && !summary.isThrows
+                && summary.returnTypeText.map { $0 != "Void" && $0 != "()" } == true
+        } ?? false
+        func change(_ domain: ReplicaDomain) -> GateChange {
+            let allowed: Set<String> = [domain.parameterName]
+            let free = TextGate.freeNames(in: domain.condition, allowed: allowed, allowingTypeNames: false)
+                .union(TextGate.freeNames(in: domain.returnedExpression, allowed: allowed, allowingTypeNames: true))
+            return GateChange(key: key, condition: domain.condition, returned: domain.returnedExpression,
+                              templateEligible: eligible, textFree: free.sorted())
         }
-        if let replica, labelAware == nil {
-            record.gateAB.lost.append(GateChange(key: key, condition: replica.condition, returned: replica.returnedExpression))
-        }
+        if let labelAware, replica == nil { record.gateAB.gained.append(change(labelAware)) }
+        if let replica, labelAware == nil { record.gateAB.lost.append(change(replica)) }
 
         let enclosing = Enclosing.of(Syntax(function))
         let scope = table.scope(for: enclosing.typeName)
