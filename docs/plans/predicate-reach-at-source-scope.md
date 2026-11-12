@@ -129,7 +129,7 @@ its syntax corpus source.
 | SwiftLintRuleStudio | `77cc792` | | MacCloud_server | `b0a1495` |
 | pbt-workbook-corpus (teaching) | `6df2650` | | SwiftIdempotency | `adf8d18` |
 | pbt-book (teaching) | `3e76194` | | pbt-workbook (teaching) | `959937e` |
-| SwiftFormatRuleStudio | `5cea6a7` | | pbt-workbook-grader (teaching) | `79e6c81` |
+| SwiftFormatRuleStudio | `61cfea1` (A5; was `5cea6a7`) | | pbt-workbook-grader (teaching) | `79e6c81` |
 | SwiftEffectInference | `5e981ca` | | | |
 
 **How each run uses these SHAs:**
@@ -227,7 +227,7 @@ its syntax corpus source.
 
 ## 9. Amendments
 
-Both amendments were recorded before any arm ran, and neither changes §6 or §7.
+A1–A4 were recorded before any arm ran. A5 was recorded after A0–A2's funnels, before any arm was compared. None changes §6 or §7.
 
 **A1: how the build reads §2 (with the lever commits).**
 - **Seeded admission (§2.3) is tested per snippet, not per node.** A snippet past the cap is admitted when it
@@ -299,3 +299,22 @@ repository was set aside. That was a baseline defect, not a lever. It was fixed 
   from it. §3's sibling pins, §6's rules and §7's predictions are unchanged.
   - P9 now reads against the new A0, so SwiftUMLStudio's recovered compiles are not a lever's.
   - Under `seeded`, a corpus file's escaped snippets read back as themselves (`SyntaxCorpusReachArmTests`).
+
+**A5: SwiftFormatRuleStudio's pin moves to `61cfea1`, its tokenizer fix, in every arm.**
+- **Why.** In A0, A1 and A2 alike, the memory guard killed `SwiftCodeTokenizerTokensInputTotalityTests.tokens_isTotal()`
+  at 8 GB. That is a real defect in the subject, not in a lever: `SwiftCodeTokenizer.tokens(inLine:)` never
+  returned, and allocated without bound, on a token starting with a numeric character that is not a hex digit
+  (`½`, `²`; 790 in the BMP). It was first attributed in `docs/measurements/corpus-funnel-census-2026-09-19.md`.
+  It was filed as Joseph-Cursio/SwiftFormatRuleStudio#26 and fixed by #27 (`61cfea1`). The user asked for the
+  pin to follow the fix.
+- **What the pin carries besides the fix.** `5cea6a7..61cfea1` also holds SwiftFormatRuleStudio's SwiftLint
+  cleanup (#24): 81 Swift files in all. So SwiftFormatRuleStudio's rows may move for reasons other than the fix,
+  and they move in every arm alike.
+- **How every arm stays on one pin.** `reach_arms.py rerun` removes the repository's tree and funnel output from
+  a finished arm, re-runs the funnel and the census for that repository alone, and replaces its census rows.
+  Every other repository's rows are untouched. A0, A1 and A2 are re-run that way after their census completes,
+  and A3 runs at `61cfea1` from the start. Each row records `repo_sha`, so a row at the old pin would show.
+- **Before the bump**, identical in A0–A2: 21 stubs, 20 compiled, 17 passed, 1 crashed (the guard kill), and in
+  A0's census 5 predicate rows (2 BOTH, 2 ONLY-FALSE, 1 ONLY-TRUE).
+- **What had been read when A5 was recorded:** the funnel totals of A0–A2 and A0's census. No arm had been
+  compared with `compare`, and no DECISION line had been written.
