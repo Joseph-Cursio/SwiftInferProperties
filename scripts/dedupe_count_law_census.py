@@ -53,7 +53,7 @@ def controls(out_path):
 
 
 def first_refusal(row):
-    return row["nameRefusal"] or row["shapeRefusal"] or row["bodyRefusal"]
+    return row.get("nameRefusal") or row.get("shapeRefusal") or row.get("bodyRefusal")
 
 
 def report(census_path, handcheck_path=None):
@@ -63,28 +63,28 @@ def report(census_path, handcheck_path=None):
     family = [r for r in rows if r["inNameFamily"]]
     print(f"functions read: {census['functions']} in {census['files']} files, {len(census['subjects'])} subjects")
 
-    named = [r for r in family if not r["nameRefusal"]]
-    shaped = [r for r in named if not r["shapeRefusal"]]
-    admitted = [r for r in shaped if not r["bodyRefusal"]]
+    named = [r for r in family if not r.get("nameRefusal")]
+    shaped = [r for r in named if not r.get("shapeRefusal")]
+    admitted = [r for r in shaped if not r.get("bodyRefusal")]
     candidates = [r for r in admitted if r["candidate"]]
     print(f"\nfunnel: name family {len(family)} -> name gate {len(named)} -> shape {len(shaped)} "
           f"-> body (admitted) {len(admitted)} -> candidates {len(candidates)}")
     print(f"  family by repository: {dict(collections.Counter(r['repository'] for r in family).most_common())}")
     print(f"  first refusal: {dict(collections.Counter(first_refusal(r) for r in family if first_refusal(r)).most_common())}")
-    print(f"  shape passes, name refused: {[r['key'] for r in family if r['nameRefusal'] and not r['shapeRefusal']]}")
+    print(f"  shape passes, name refused: {[r['key'] for r in family if r.get('nameRefusal') and not r.get('shapeRefusal')]}")
     recognised = [r for r in family if r["recognisedToday"]]
     print(f"  recognised today: {len(recognised)}; of them admitted {sum(r['admitted'] for r in recognised)}; "
           f"idempotence fires today on {sum(r['idempotenceToday'] for r in recognised)}")
 
     print("\nadmitted rows:")
     for row in admitted:
-        print(f"  {row['key']}  [{row['route']}, keepFirst={row['keepFirst']}, recognised={row['recognisedToday']}, "
-              f"idempotenceToday={row['idempotenceToday']}, candidate={row['candidate']} {row['candidateRefusal'] or ''}]")
+        print(f"  {row['key']}  [{row.get('route')}, keepFirst={row.get('keepFirst')}, recognised={row['recognisedToday']}, "
+              f"idempotenceToday={row['idempotenceToday']}, candidate={row['candidate']} {row.get('candidateRefusal') or ''}]")
 
     outside = [r for r in rows if not r["inNameFamily"]]
     print(f"\nunscored: {len(outside)} functions outside the name family pass shape and body")
     for row in outside:
-        print(f"  {row['key']}  [{row['route']}, candidate={row['candidate']}]")
+        print(f"  {row['key']}  [{row.get('route')}, candidate={row['candidate']}]")
 
     unjudged = [r["key"] for r in admitted if r["key"] not in verdicts]
     if unjudged:
