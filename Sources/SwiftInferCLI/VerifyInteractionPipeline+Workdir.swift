@@ -140,7 +140,11 @@ extension VerifyInteractionPipeline {
         return "\(base)__\(identity)"
     }
 
-    /// An injective, identifier-safe spelling of a qualified name (#716).
+    /// An injective spelling of a qualified name (#716).
+    ///
+    /// Injective, not sanitising: only `_`, `.` and `-` are rewritten. Anything else passes
+    /// through as it always has, so a backticked name (`` `Default`.body ``) or a generic
+    /// extension's (`Foo<Int>.body`) still yields a segment that is not a Swift identifier.
     ///
     /// - **A name with no `_` and no `-`** keeps the historical spelling, `.` → `_`
     ///   (`Inbox.body` → `Inbox_body`). Every `_` in it was a dot, so it decodes, and every
