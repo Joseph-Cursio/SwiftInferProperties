@@ -1,0 +1,74 @@
+{
+  "SwiftAssist:Sources/SwiftAssist/CI/CIAdapter.swift:219 truncateOutput": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's identity-first row, N = Self.maxErrorOutputLength = 10_000, beyond reach; a method of `public actor CIAdapter`, which the writer cannot call synchronously."
+  },
+  "SwiftAssist:Sources/SwiftAssist/Thinking/ThinkingRecipeExtractor.swift:193 trimStep": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "private static: not visible to tests. Bare static maximumStepLength resolved to 240 (ThinkingRecipeExtractor.swift:40)."
+  },
+  "SwiftAssist:Sources/swift-assist-cli/Commands/MLXValidateCommand.swift:147 preview": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "instance method on `MLXValidateCommand: AsyncParsableCommand` in the `swift-assist-cli` executableTarget (SwiftAssist Package.swift:61): a test target cannot import an executable target's types."
+  },
+  "SwiftInferProperties:Sources/SwiftInferCore/ReducerPurityAnalyzer.swift:110 visit": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's row, N = 3 within reach (10); the counted value is not a String input, so outside the walk."
+  },
+  "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/BooleanControlCouplingVisitor.swift:302 isSubstantialArm": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's row, N = 2 within reach (10); the counted value is not a String input, so outside the walk."
+  },
+  "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/CodeQuality/Visitors/SubsumedConditionVisitor.swift:66 visit": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's row, N = 2 within reach (10); the counted value is not a String input, so outside the walk."
+  },
+  "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Security/Visitors/InsecureTransportVisitor.swift:122 truncateURL": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "instance method on `final class InsecureTransportVisitor: BasePatternVisitor`, whose only init is `init(pattern: SyntaxPattern, viewMode:)`. guard-domain's writer draws the receiver from a derived generator and none derives for this class (REASONED from the writer, not run)."
+  },
+  "SwiftPropertyLaws:Sources/PropertyLawCore/DerivationStrategist+InitializerBased.swift:229 takesPrivateStorage": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's row, N = 1 within reach (10); the counted value is not a String input, so outside the walk."
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/SVGRenderer.swift:190 renderEdge": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's row, N = 2 within reach (31); the counted value is not a String input, so outside the walk."
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/ActivityGraphBuilder.swift:203 compactText": {
+    "countedRight": true,
+    "emittable": true,
+    "lawRight": true,
+    "note": "internal static on an internal struct in the SwiftUMLBridgeFramework library; String input; no receiver to draw. Law 1: e(x).count <= 80 => f(x) == e(x), e the whitespace collapse (allowlisted)."
+  },
+  "pbt-book:code/Sources/Ch02FindingProperties/SwiftOrgSortVerifier.swift:15 swiftOrgSortVerifier": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's row, N = 1 within reach (10); the counted value is not a String input, so outside the walk."
+  },
+  "swift-collections:Sources/InternalCollectionsUtilities/UnsafeMutableBufferPointer+Extras.swift:264 initialize": {
+    "countedRight": true,
+    "emittable": false,
+    "lawRight": true,
+    "note": "today's row, N = 0 within reach (10); the counted value is not a String input, so outside the walk."
+  }
+}
