@@ -1,8 +1,9 @@
 # Dedupe count-law census (#671): scope, frozen before the run
 
-> **Status:** `proposed` · **As of:** 2026-11-11
+> **Status:** `shipped` · **As of:** 2026-11-11
 
-**Issue:** Joseph-Cursio/SwiftInferProperties#671.
+**Issue:** Joseph-Cursio/SwiftInferProperties#671. **Run 2026-11-11; result ATTACH (E = 2, A = 1)**, in
+`docs/measurements/dedupe-count-law-census.md`.
 
 ## 0. The question, and what this decides
 
@@ -291,6 +292,12 @@ The kill arm does not enter the decision.
   appear among the rows. They are controls of the gate, not evidence for the decision; they count toward E only
   if they pass the hand-check like any other row.
 - **The census universe is #670's plus one repository.** Its function count is reported, not reconciled with
-  #670's 31,016 (or the 31,022 of `docs/measurements/guard-domain-syntax-gate.md`).
+  #670's 31,016 (or the 31,022 that PR #709's gate measurement reads).
 - **The gates are a prototype in the harness.** If the decision is BUILD or ATTACH, the shipped gate is written
   from this scope, not copied from the harness.
+
+## Amendments
+
+- **2026-11-11, after the run, wording only.** §9 cited `guard-domain-syntax-gate.md` by path, a doc that lands
+  with PR #709 and is not on this branch, so `DocProseCitationTests` failed. The citation now names the PR. No
+  rule, count or decision changes.
