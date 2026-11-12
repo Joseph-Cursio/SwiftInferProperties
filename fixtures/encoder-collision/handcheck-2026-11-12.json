@@ -1,0 +1,5 @@
+{
+  "scope": "docs/plans/encoder-collision-census-scope.md §5",
+  "note": "The census admitted no row, so no row needed a verdict. The recall probe, the hand read of every use of the 18 colliding chains and the adversarial readers are in docs/measurements/encoder-collision-census.md, 'Recorded after the first report'.",
+  "rows": []
+}
