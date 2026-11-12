@@ -241,10 +241,12 @@ public enum InteractionTraceEmitter {
     /// Filename-safe Swift identifier for the trace's `@Suite`-bearing
     /// struct. `Inbox.body` → `Inbox_body_InteractionTrace`; bare
     /// `reduce` → `reduce_InteractionTrace`.
+    ///
+    /// Spelled by `VerifyInteractionPipeline.nameSegment(_:)`, the same injective spelling as
+    /// the trace's directory. Each reducer's trace is its own file, but every file under
+    /// `Tests/Generated/SwiftInferTraces/` compiles into one test target, so two reducers
+    /// whose names differ only by `.` against `_` must not declare one struct (#716).
     static func suiteIdentifier(for candidate: ReducerCandidate) -> String {
-        let safe = candidate.qualifiedName
-            .replacingOccurrences(of: ".", with: "_")
-            .replacingOccurrences(of: "-", with: "_")
-        return "\(safe)_InteractionTrace"
+        "\(VerifyInteractionPipeline.nameSegment(candidate.qualifiedName))_InteractionTrace"
     }
 }

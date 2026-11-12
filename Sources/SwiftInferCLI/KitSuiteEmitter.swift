@@ -81,6 +81,10 @@ public enum KitSuiteEmitter {
         var live: [String] = []
         var blocked: [String] = []
         var liveCarriers = 0, blockedCarriers = 0, liveLaws = 0, blockedLaws = 0
+        // Every live block goes into ONE `@Suite` struct, so its test functions share a scope
+        // and take their names from one table (#715). See `FunctionNameTable`.
+        var functionNames = FunctionNameTable()
+        let issueFunctionName = { (base: String) in functionNames.issue(base) }
 
         for finding in findings.sorted(by: { $0.typeName < $1.typeName }) {
             guard let shape = shapes[finding.typeName] else { continue }
@@ -90,7 +94,8 @@ public enum KitSuiteEmitter {
                 finding: finding, shape: shape, suites: suites, resolve: resolve,
                 genericParametersByName: genericParametersByName,
                 visibleToTestableImport: visibleToTestableImport,
-                defaultIsolation: defaultIsolation
+                defaultIsolation: defaultIsolation,
+                issueFunctionName: issueFunctionName
             ) {
             case .live(let text):
                 liveCarriers += 1
@@ -193,7 +198,8 @@ public enum KitSuiteEmitter {
         resolve: (String) -> DerivationStrategist.ComposedGenerator?,
         genericParametersByName: [String: [TypeDecl.GenericParameter]],
         visibleToTestableImport: [String: Bool] = [:],
-        defaultIsolation: String? = nil
+        defaultIsolation: String? = nil,
+        issueFunctionName: (String) -> String = \.self
     ) -> CarrierBlock {
         if let isolation = isolationBlocked(defaultIsolation) {
             return .blocked(blockedBlock(
@@ -253,8 +259,11 @@ public enum KitSuiteEmitter {
                 finding, suites: suites, reason: reason, carrierName: carrierName
             ))
         }
+        // Names are issued only here, on the live path: a blocked carrier is a comment and
+        // declares nothing, so it must not take a name a later live carrier would want.
         return .live(liveBlock(
-            finding, suites: suites, generator: generator,
+            finding, suites: suites.map { ($0, issueFunctionName(functionName(finding.typeName, $0))) },
+            generator: generator,
             isCaseIterable: strategy == .caseIterable, carrierName: carrierName
         ))
     }
@@ -312,17 +321,17 @@ public enum KitSuiteEmitter {
     /// in a Swift function name.
     static func liveBlock(
         _ finding: ProtocolCoverageAudit.Finding,
-        suites: [String],
+        suites: [(conformance: String, functionName: String)],
         generator: String,
         isCaseIterable: Bool,
         carrierName: String
     ) -> String {
-        suites.map { conformance in
+        suites.map { conformance, name in
             """
                 /// `\(finding.typeName)` conforms to `\(conformance)`, so the kit checks \
             these laws.
                 @Test("\(finding.typeName) — \(conformance) laws")
-                func \(functionName(finding.typeName, conformance))() async throws {
+                func \(name)() async throws {
                     let results = try await check\(conformance)PropertyLaws(
                         for: \(carrierName).self,
                         using: \(placedUnderUsing(generator))\(options(conformance, isCaseIterable: isCaseIterable))
@@ -375,14 +384,5 @@ public enum KitSuiteEmitter {
             // \(reason)\(hint)
         \(calls)
         """
-    }
-
-    /// `VerifyHarness.LookupResult` + `Equatable` → `verifyHarnessLookupResultEquatable`.
-    /// Nested types are the common case here and a dot is not legal in an identifier.
-    static func functionName(_ typeName: String, _ conformance: String) -> String {
-        let parts = typeName.split(separator: ".").map(String.init)
-        let head = parts.first.map { $0.prefix(1).lowercased() + $0.dropFirst() } ?? ""
-        let tail = parts.dropFirst().map { $0.prefix(1).uppercased() + $0.dropFirst() }
-        return head + tail.joined() + conformance
     }
 }

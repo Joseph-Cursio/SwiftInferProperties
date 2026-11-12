@@ -127,12 +127,45 @@ extension VerifyInteractionPipeline {
     /// appends `__<identity>` so sibling identities on one reducer get
     /// distinct workdirs and can build concurrently; `nil` (the bare
     /// `runPipeline` path) preserves the reducer-only segment exactly.
+    ///
+    /// The segment is `nameSegment(_:)`, which is injective: `Outer.Inner.body` and
+    /// `Outer_Inner.body` used to share one segment, so a run on one overwrote the other's
+    /// trace and shared its workdir (#716).
     static func workdirSegment(
         for candidate: ReducerCandidate,
         identity: String? = nil
     ) -> String {
-        let base = candidate.qualifiedName.replacingOccurrences(of: ".", with: "_")
+        let base = nameSegment(candidate.qualifiedName)
         guard let identity, !identity.isEmpty else { return base }
         return "\(base)__\(identity)"
+    }
+
+    /// An injective, identifier-safe spelling of a qualified name (#716).
+    ///
+    /// - **A name with no `_` and no `-`** keeps the historical spelling, `.` → `_`
+    ///   (`Inbox.body` → `Inbox_body`). Every `_` in it was a dot, so it decodes, and every
+    ///   existing workdir and trace path for such a name stays where it was.
+    /// - **Any other name** is spelled `__` followed by a prefix-free escape: `_` → `_u`,
+    ///   `.` → `_d`, `-` → `_h` (`Outer_Inner.body` → `__Outer_uInner_dbody`). Inside the
+    ///   escape every `_` is followed by `u`, `d` or `h`, so it decodes too.
+    ///
+    /// The two families cannot meet: a plain spelling never starts with `_` (a Swift name with
+    /// no `_` starts with a letter), and an escaped one always does. Nor can either meet the
+    /// `__<identity>` suffix `workdirSegment` appends: a plain spelling holds no `__`, and in
+    /// an escaped one `__` occurs only as the leading marker.
+    static func nameSegment(_ qualifiedName: String) -> String {
+        guard qualifiedName.contains(where: { $0 == "_" || $0 == "-" }) else {
+            return qualifiedName.replacingOccurrences(of: ".", with: "_")
+        }
+        var escaped = "__"
+        for character in qualifiedName {
+            switch character {
+            case "_": escaped += "_u"
+            case ".": escaped += "_d"
+            case "-": escaped += "_h"
+            default: escaped.append(character)
+            }
+        }
+        return escaped
     }
 }
