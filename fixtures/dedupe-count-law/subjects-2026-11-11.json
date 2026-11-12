@@ -1,0 +1,487 @@
+[
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-infer-core",
+    "repository": "SwiftInferProperties",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftInferProperties",
+    "revision": "a24c34d051517afdeec83d1f3e1cf0b1c4fe6032",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftInferProperties/Sources/SwiftInferCore"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-format",
+    "repository": "swift-format",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift-format",
+    "revision": "b15dd59fad21f1770cdc888b1ca6e2937490001a",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift-format/Sources/SwiftFormat"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "grdb",
+    "repository": "GRDB.swift",
+    "repositoryRoot": "/Users/josephcursio/github_projects/GRDB.swift",
+    "revision": "0d8cf958b4b66a0473ec6e6986eb9da462171da9",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB",
+      "/Users/josephcursio/GitHub_projects/GRDB.swift/GRDB"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-collections",
+    "repository": "swift-collections",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift-collections",
+    "revision": "98ef3c98609a1e31b7e157b5b619579001a789d6",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift-collections/Sources",
+      "/Users/josephcursio/GitHub_projects/swift-collections/Sources/Collections"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-syntax",
+    "repository": "swift-syntax",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift-syntax",
+    "revision": "0f7a57c5888ccd0bd599e5b8b6fb928b9641f1b8",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift-syntax/Sources/SwiftSyntax"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-nio",
+    "repository": "swift-nio",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift-nio",
+    "revision": "d09ffc8ad6437bc278897279e33150d8e39ee3d5",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift-nio/Sources/NIOCore"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-package-manager",
+    "repository": "swift-package-manager",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift-package-manager",
+    "revision": "778e5678bafe61e2ae74aa49a03f26e0bf6c6216",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift-package-manager/Sources/Basics"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-argument-parser",
+    "repository": "swift-argument-parser",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift-argument-parser",
+    "revision": "efd239f0055b3d6b6cc122a786c46a0ea8d0235b",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift-argument-parser/Sources/ArgumentParser"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-foundation",
+    "repository": "swift-foundation",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift-foundation",
+    "revision": "a211bea22b6fa5b041c37592aaf50c7b3db5c354",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift-foundation/Sources/FoundationEssentials"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swiftlang-swift",
+    "repository": "swift",
+    "repositoryRoot": "/Users/josephcursio/github_projects/swift",
+    "revision": "4f0569be1aa010d9915bf7a7c015c87e760e5444",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/swift/stdlib/public/core"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "harmonize",
+    "repository": "Harmonize",
+    "repositoryRoot": "/Users/josephcursio/github_projects/Harmonize",
+    "revision": "41923397b3034b375dd1486139448eb1bc38ff22",
+    "roots": [
+      "/Users/josephcursio/GitHub_projects/Harmonize/Sources/Harmonize"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-project-lint",
+    "repository": "SwiftProjectLint",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftProjectLint",
+    "revision": "6a231cda6e1618fc1089c86461ae65617fddc0b2",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftProjectLint/Sources",
+      "/Users/josephcursio/xcode_projects/SwiftProjectLint/Packages",
+      "/Users/josephcursio/xcode_projects/SwiftProjectLint/Sources/Core"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-property-laws",
+    "repository": "SwiftPropertyLaws",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftPropertyLaws",
+    "revision": "023704e8d7e6028af6e1f1aec3b66e584566ae15",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftPropertyLaws/Sources/PropertyLawKit"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swift-effect-inference",
+    "repository": "SwiftEffectInference",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftEffectInference",
+    "revision": "5e981ca78ade1d6e5940525a5381f53c8876f4be",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftEffectInference/Sources/SwiftEffectInference"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "maccloud-client-ios",
+    "repository": "MacCloud_client_iOS",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/MacCloud_client_iOS",
+    "revision": "3c861967fabcd06012638476d99204ce3ff80049",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/MacCloud_client_iOS/MacCloud_client_iOS"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": true,
+    "group": "manifest",
+    "name": "swiftlint-rule-studio",
+    "repository": "SwiftLintRuleStudio",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftLintRuleStudio",
+    "revision": "77cc79299cc1a74380888c97ea272f3e7f1c6505",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftLintRuleStudio/SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore",
+      "/Users/josephcursio/xcode_projects/SwiftLintRuleStudio/UI"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "swiftformat-rule-studio",
+    "repository": "SwiftFormatRuleStudio",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftFormatRuleStudio",
+    "revision": "5cea6a7e02088a2967801dd4ee1017a57feb36d3",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftFormatRuleStudio/SwiftFormatRuleStudioCore"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "planted-defect-arm",
+    "repository": "SwiftInferProperties",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftInferProperties",
+    "revision": "a24c34d051517afdeec83d1f3e1cf0b1c4fe6032",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/planted-defect-arm/Sources/PlantedDefectArm"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "cycle27-surface",
+    "repository": "SwiftInferProperties",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftInferProperties",
+    "revision": "a24c34d051517afdeec83d1f3e1cf0b1c4fe6032",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/cycle27-surface/Sources/Cycle27SurfaceFixture"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "manifest",
+    "name": "leaderboard-sort",
+    "repository": "SwiftInferProperties",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftInferProperties",
+    "revision": "a24c34d051517afdeec83d1f3e1cf0b1c4fe6032",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftInferProperties/fixtures/leaderboard-sort/Sources/LeaderboardSort"
+    ],
+    "sourcesComponentOnly": false
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "LintStudioUI",
+    "repository": "LintStudioUI",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/LintStudioUI",
+    "revision": "abcff420253a7ae4bf7e0f8316a207ac3e9a81cb",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/LintStudioUI"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "MacCloud_client_MacOS",
+    "repository": "MacCloud_client_MacOS",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/MacCloud_client_MacOS",
+    "revision": "9424f4f22582e581382ff05968a6d59949724cd7",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/MacCloud_client_MacOS"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": true,
+    "group": "funnel",
+    "name": "MacCloud_server",
+    "repository": "MacCloud_server",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/MacCloud_server",
+    "revision": "b0a1495afbb8048f150d857123b459474568b86f",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/MacCloud_server"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "pbt-book",
+    "repository": "pbt-book",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/pbt-book",
+    "revision": "3e76194a82719ad6fa8c129cbee21e5c554f562d",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/pbt-book"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "pbt-workbook-corpus",
+    "repository": "pbt-workbook-corpus",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/pbt-workbook-corpus",
+    "revision": "6df265001a4fa65909308cd89085cc828a59809d",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/pbt-workbook-corpus"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "pbt-workbook-grader",
+    "repository": "pbt-workbook-grader",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/pbt-workbook-grader",
+    "revision": "79e6c81380fe19a830cd31d9014e8c96499964a0",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/pbt-workbook-grader"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "pbt-workbook-sampler",
+    "repository": "pbt-workbook-sampler",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/pbt-workbook-sampler",
+    "revision": "0e0779528f4427b3cd27f0e205aba2a4dab768f8",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/pbt-workbook-sampler"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "pbt-workbook",
+    "repository": "pbt-workbook",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/pbt-workbook",
+    "revision": "959937ed90f425fadde215d1ade6e9141b1a8a5a",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/pbt-workbook"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftAssist",
+    "repository": "SwiftAssist",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftAssist",
+    "revision": "8e1bc8d34cc2f2ae5f7eda88fe248b5cbc2a57c6",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftAssist"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftCloneDetector",
+    "repository": "SwiftCloneDetector",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftCloneDetector",
+    "revision": "e03e865e67202559f48ea899961800403c855988",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftCloneDetector"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftEffectInference",
+    "repository": "SwiftEffectInference",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftEffectInference",
+    "revision": "5e981ca78ade1d6e5940525a5381f53c8876f4be",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftEffectInference"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftFormatRuleStudio",
+    "repository": "SwiftFormatRuleStudio",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftFormatRuleStudio",
+    "revision": "5cea6a7e02088a2967801dd4ee1017a57feb36d3",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftFormatRuleStudio"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftIdempotency",
+    "repository": "SwiftIdempotency",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftIdempotency",
+    "revision": "adf8d18eb6667f4424f40d5bb0af604007abe6fd",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftIdempotency"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": true,
+    "group": "funnel",
+    "name": "SwiftLintRuleStudio",
+    "repository": "SwiftLintRuleStudio",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftLintRuleStudio",
+    "revision": "77cc79299cc1a74380888c97ea272f3e7f1c6505",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftLintRuleStudio"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftLintRuleStudioTeam",
+    "repository": "SwiftLintRuleStudioTeam",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftLintRuleStudioTeam",
+    "revision": "7789bde63dddc94a2e0c12266da91598ba6259d5",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftLintRuleStudioTeam"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftMarkdownWiki",
+    "repository": "SwiftMarkdownWiki",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftMarkdownWiki",
+    "revision": "51b789e2518533cabb3b96f5c4f9a735a18e505a",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftMarkdownWiki"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftProjectLint",
+    "repository": "SwiftProjectLint",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftProjectLint",
+    "revision": "6a231cda6e1618fc1089c86461ae65617fddc0b2",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftProjectLint"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftPropertyLaws",
+    "repository": "SwiftPropertyLaws",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftPropertyLaws",
+    "revision": "023704e8d7e6028af6e1f1aec3b66e584566ae15",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftPropertyLaws"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "funnel",
+    "name": "SwiftUMLStudio",
+    "repository": "SwiftUMLStudio",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftUMLStudio",
+    "revision": "9ad7631c887d9869974e393fc4a133a17e7a56f6",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftUMLStudio"
+    ],
+    "sourcesComponentOnly": true
+  },
+  {
+    "dirty": false,
+    "group": "self",
+    "name": "SwiftInferProperties",
+    "repository": "SwiftInferProperties",
+    "repositoryRoot": "/Users/josephcursio/xcode_projects/SwiftInferProperties",
+    "revision": "a24c34d051517afdeec83d1f3e1cf0b1c4fe6032",
+    "roots": [
+      "/Users/josephcursio/xcode_projects/SwiftInferProperties/Sources"
+    ],
+    "sourcesComponentOnly": false
+  }
+]
