@@ -1,0 +1,99 @@
+{
+  "controls_passed": true,
+  "date": "2026-11-11",
+  "killed_by": {
+    "idempotence": [
+      "L172-NegateConditional",
+      "L172-or-to-and",
+      "L173-RemoveSideEffects"
+    ],
+    "law1": [
+      "L172-NegateConditional",
+      "L172-or-to-and",
+      "L173-RemoveSideEffects",
+      "L178-SwapTernary"
+    ],
+    "law2": [
+      "L172-NegateConditional",
+      "L172-eq-to-neq"
+    ]
+  },
+  "laws_sha256": "b9dc3a4fe48fcce6c833f8d56f83e8c961be26866b182b5f9b1406ad17d2665c",
+  "matrix": {
+    "L172-NegateConditional": {
+      "emptyDraws": "PASS",
+      "emptyDrawsCount": 9,
+      "idempotence": "FAIL",
+      "law1": "FAIL",
+      "law2": "FAIL"
+    },
+    "L172-eq-to-neq": {
+      "emptyDraws": "PASS",
+      "emptyDrawsCount": 9,
+      "idempotence": "PASS",
+      "law1": "PASS",
+      "law2": "FAIL"
+    },
+    "L172-or-to-and": {
+      "emptyDraws": "PASS",
+      "emptyDrawsCount": 9,
+      "idempotence": "FAIL",
+      "law1": "FAIL",
+      "law2": "PASS"
+    },
+    "L173-RemoveSideEffects": {
+      "emptyDraws": "PASS",
+      "emptyDrawsCount": 9,
+      "idempotence": "FAIL",
+      "law1": "FAIL",
+      "law2": "PASS"
+    },
+    "L178-SwapTernary": {
+      "emptyDraws": "PASS",
+      "emptyDrawsCount": 9,
+      "idempotence": "PASS",
+      "law1": "FAIL",
+      "law2": "PASS"
+    },
+    "original": {
+      "emptyDraws": "PASS",
+      "emptyDrawsCount": 9,
+      "idempotence": "PASS",
+      "law1": "PASS",
+      "law2": "PASS"
+    }
+  },
+  "note": "emptyDrawsCount is the empty strings among 100 draws of the idempotence generator under a Xoshiro on the seed state; the backend may sequence its draws differently, so it is indicative only",
+  "pins": {
+    "swift-async-algorithms": "1.1.7",
+    "swift-collections": "1.7.6",
+    "swift-numerics": "1.1.1",
+    "swift-property-based": "2.0.1",
+    "swift-syntax": "603.0.2",
+    "swiftpropertylaws": "4.11.0"
+  },
+  "swift": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)",
+  "variants": {
+    "L172-NegateConditional": {
+      "anchor": "L172",
+      "line": "            if !(CharacterSet.alphanumerics.contains(scalar) || scalar == \"_\") { // L172"
+    },
+    "L172-eq-to-neq": {
+      "anchor": "L172",
+      "line": "            if CharacterSet.alphanumerics.contains(scalar) || scalar != \"_\" { // L172"
+    },
+    "L172-or-to-and": {
+      "anchor": "L172",
+      "line": "            if CharacterSet.alphanumerics.contains(scalar) && scalar == \"_\" { // L172"
+    },
+    "L173-RemoveSideEffects": {
+      "anchor": "L173",
+      "line": "                // L173 deleted"
+    },
+    "L178-SwapTernary": {
+      "anchor": "L178",
+      "line": "        return sanitized.isEmpty ? sanitized : \"Unknown\" // L178"
+    },
+    "original": null
+  }
+}
