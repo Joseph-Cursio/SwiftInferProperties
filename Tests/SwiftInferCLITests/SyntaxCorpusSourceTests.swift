@@ -30,7 +30,7 @@ struct SyntaxCorpusSourceTests {
     @Test("an array of nodes composes from the corpus generator")
     func arrayOfNodes() throws {
         let source = Self.source()
-        let generator = InteractiveTriage.projectTypeGenerator(types: [], syntaxNode: source.generator(for:))
+        let generator = InteractiveTriage.projectTypeGenerator(types: []) { source.generator(for: $0) }
         let expression = try #require(generator("[FunctionDeclSyntax]"))
         #expect(expression.contains("SwiftInferSyntaxCorpus.gen(FunctionDeclSyntax.self)"))
         #expect(!expression.contains("no generator derived"))
@@ -46,7 +46,7 @@ struct SyntaxCorpusSourceTests {
             name: "WidgetSyntax", kind: .struct, inheritedTypes: [], hasUserGen: false,
             storedMembers: [StoredMember(name: "count", typeName: "Int")]
         )
-        let generator = InteractiveTriage.projectTypeGenerator(types: [widget], syntaxNode: source.generator(for:))
+        let generator = InteractiveTriage.projectTypeGenerator(types: [widget]) { source.generator(for: $0) }
         let expression = try #require(generator("WidgetSyntax"))
         #expect(!expression.contains("SwiftInferSyntaxCorpus"))
     }

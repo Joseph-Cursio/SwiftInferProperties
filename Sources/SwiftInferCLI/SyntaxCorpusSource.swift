@@ -17,17 +17,38 @@ final class SyntaxCorpusSource {
     static let typeName = "SwiftInferSyntaxCorpus"
     static let fileName = "\(typeName).swift"
 
+    /// Snippets kept before any seed admits more — the cap `07803176` set "so the emitted file stays
+    /// reviewable", never measured. #684 measures what it costs (`ReachArm`).
+    static let baseLimit = 300
+    /// Most snippets one stub's seeds admit past `baseLimit` (`ReachArm.Corpus.seeded`).
+    static let admittedPerStub = 8
+
     private let testRoots: [URL]
     private let destination: URL
     private let dryRun: Bool
-    private lazy var corpus = SyntaxSnippetHarvester.harvest(roots: testRoots)
-    private var written = false
+    let arm: ReachArm
+    private lazy var corpus: SyntaxSnippetHarvester.Corpus = {
+        switch arm.corpus {
+        case .baseline, .seeded:
+            return SyntaxSnippetHarvester.harvest(roots: testRoots, limit: Self.baseLimit)
+
+        case .uncapped:
+            return SyntaxSnippetHarvester.harvest(roots: testRoots, limit: .max)
+        }
+    }()
+    /// Every candidate past `baseLimit`, indexed for seeded admission. Built on the first seeded ask.
+    private lazy var pastTheCap = SnippetIndex(snippets: Array(
+        SyntaxSnippetHarvester.harvest(roots: testRoots, limit: .max).snippets.dropFirst(Self.baseLimit)
+    ))
+    private var admitted: [SnippetIndex.Entry] = []
+    private var admittedTypeNames: Set<String> = []
+    private var lastWritten: [String]?
 
     /// - Parameters:
     ///   - packageRoot: the package whose tests are harvested — every top-level directory named
     ///     `Tests` or ending in `Tests`.
     ///   - generatedRoot: the directory holding `SwiftInfer/`; the corpus file goes inside it.
-    init(packageRoot: URL, generatedRoot: URL, dryRun: Bool) {
+    init(packageRoot: URL, generatedRoot: URL, dryRun: Bool, arm: ReachArm = .current) {
         // ⚠ **The enclosing repository's tests count too.** SwiftProjectLint's seven nested
         // packages hold no `Tests/` of their own — every one of its ~2,960 snippets lives in the
         // ROOT package's tests — so harvesting the scanned package alone found nothing for the 50
@@ -38,14 +59,17 @@ final class SyntaxCorpusSource {
             .appendingPathComponent("SwiftInfer")
             .appendingPathComponent(Self.fileName)
         self.dryRun = dryRun
+        self.arm = arm
     }
 
     /// Test seam: a corpus supplied directly, written nowhere.
-    init(corpus: SyntaxSnippetHarvester.Corpus) {
+    init(corpus: SyntaxSnippetHarvester.Corpus, arm: ReachArm = .baseline, pastTheCap: [String] = []) {
         self.testRoots = []
         self.destination = URL(fileURLWithPath: "/dev/null")
         self.dryRun = true
+        self.arm = arm
         self.corpus = corpus
+        self.pastTheCap = SnippetIndex(snippets: pastTheCap)
     }
 
     /// Every top-level directory of `root` whose name ends in `Tests`.
@@ -75,26 +99,71 @@ final class SyntaxCorpusSource {
 
     /// The generator expression for `typeName`, or `nil` when it is not a node type the corpus
     /// contains — the caller then falls through to its explained `.todo`.
-    func generator(for typeName: String) -> String? {
-        guard corpus.nodeTypeNames.contains(typeName) else { return nil }
-        writeOnce()
-        return "\(Self.typeName).gen(\(typeName).self)"
+    ///
+    /// - Parameter seeds: what the subject's body compares against (`SyntaxSeeds`). Under the baseline
+    ///   arm they are ignored. Otherwise a stub with seeds draws through `gen(_:preferring:kinds:)`, and
+    ///   under `seeded` its seeds first admit matching snippets from past the cap.
+    func generator(for typeName: String, seeds: SyntaxSeeds = SyntaxSeeds()) -> String? {
+        let biased = arm.corpus != .baseline && !seeds.isEmpty
+        if biased, arm.corpus == .seeded { admit(typeName, seeds: seeds) }
+        guard corpus.nodeTypeNames.contains(typeName) || admittedTypeNames.contains(typeName) else { return nil }
+        write()
+        guard biased else { return "\(Self.typeName).gen(\(typeName).self)" }
+        return "\(Self.typeName).gen(\(typeName).self, preferring: \(Self.arrayLiteral(seeds.tokens)), "
+            + "kinds: \(Self.arrayLiteral(seeds.kinds)))"
     }
 
-    private func writeOnce() {
-        guard !written, !dryRun else { return }
-        written = true
+    /// The snippets the file holds: the corpus, then everything seeds admitted, in admission order.
+    var snippets: [String] { corpus.snippets + admitted.map(\.snippet) }
+
+    /// Admit the first `admittedPerStub` snippets from past the cap, in file order, that hold a
+    /// `typeName` node and a seed (§2.3). Asking twice admits nothing new, so what the file holds does
+    /// not depend on how many times, or in what order, stubs ask.
+    private func admit(_ typeName: String, seeds: SyntaxSeeds) {
+        let present = Set(admitted.map(\.snippet))
+        let fresh = pastTheCap.matching(nodeType: typeName, seeds: seeds)
+            .prefix(Self.admittedPerStub)
+            .filter { !present.contains($0.snippet) }
+        for entry in fresh {
+            admitted.append(entry)
+            admittedTypeNames.formUnion(entry.kinds)
+        }
+    }
+
+    /// Writes the file when what it holds has changed — once under the baseline arm, and again each
+    /// time seeds admit a snippet.
+    ///
+    /// ⚠ **Under `seeded` the file is shared by every `discover` process that writes to this
+    /// generated root** — the funnel runs one per source target — and each process admits only for its
+    /// own stubs. So the snippets already in the file are kept, and this process's admissions are added
+    /// after them. Writing this process's alone left an earlier process's stubs drawing a node type no
+    /// snippet held any more: an empty pool and a trap.
+    private func write() {
+        guard !dryRun else { return }
+        var contents = snippets
+        if arm.corpus == .seeded, let existing = try? String(contentsOf: destination, encoding: .utf8) {
+            contents = Self.merged(SyntaxSnippetHarvester.snippets(inCorpusFile: existing), adding: contents)
+        }
+        guard lastWritten != contents else { return }
+        lastWritten = contents
         try? FileManager.default.createDirectory(
             at: destination.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        try? Data(Self.fileContents(snippets: corpus.snippets).utf8).write(to: destination, options: .atomic)
+        let text = Self.fileContents(snippets: contents, reach: arm.needsReachMachinery)
+        try? Data(text.utf8).write(to: destination, options: .atomic)
+    }
+
+    /// `existing` in its order, then each of `adding` it lacks, in theirs.
+    static func merged(_ existing: [String], adding: [String]) -> [String] {
+        var seen = Set(existing)
+        return existing + adding.filter { seen.insert($0).inserted }
     }
 
     /// The corpus file. Each snippet is a raw multi-line literal with enough `#`s that nothing in
     /// it can close the literal or start an interpolation, and with every unprintable character
     /// spelled as an escape (`escapingUnprintables`).
-    static func fileContents(snippets: [String]) -> String {
+    static func fileContents(snippets: [String], reach: Bool = false) -> String {
         let literals = snippets.map { snippet -> String in
             let hashes = String(repeating: "#", count: rawDelimiterCount(for: snippet))
             let body = escapingUnprintables(snippet, hashes: hashes)
@@ -115,7 +184,7 @@ final class SyntaxCorpusSource {
         \(literals.joined(separator: ",\n"))
             ]
 
-        \(machinery)
+        \(machinery)\(reach ? "\n\n" + reachMachinery : "")
         }
 
         """
