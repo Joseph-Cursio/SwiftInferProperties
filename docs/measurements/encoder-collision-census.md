@@ -10,11 +10,12 @@
 >   under. A widened recall probe finds no such literal anywhere, inside a loop or not, and neither did a hand read
 >   of all 30 uses.
 >
-> The defect class itself is not rare. Four adversarial readers, each refuted, found **28 sites in 16
-> repositories** where an emitter declares names under an id function that merges them. 21 of the 28 fail loudly,
+> The defect class itself is not rare. Four adversarial readers, each refuted, found **27 sites in 15
+> repositories** where an emitter declares names under an id function that merges them. 20 of the 27 fail loudly,
 > with a redeclaration in generated code. But **not one of them goes through a replacement chain**: they go through
 > character maps, camel-casers and split/join. That is the case the scope's §7 names for a later census with a
-> widened (a), and these reader counts cannot decide it. Two of the 28 are in this toolchain.
+> widened (a), and these reader counts cannot decide it. Two defects in this repository were found the same way
+> and are filed as #715 and #716.
 >
 > The collision search is the reusable piece. It lives in `fixtures/encoder-collision/census-run/`.
 
@@ -139,9 +140,9 @@ checks were added after the first report. None of them enters the decision.
 |---|---|---|---|
 | layout | 18 | 12 | 6 |
 | clones | 12 | 17 | 11 |
-| decision + unmet | 50 | 14 | 4 |
+| decision + unmet | 50 | 14 | 3 |
 | wide | 67 | 23 | 7 |
-| **total** | **147** | **66** | **28, over 16 repositories** |
+| **total** | **147** | **66** | **27, over 15 repositories** |
 
 - **No surviving site goes through a replacement chain.** Four reports named a chain, and every one was refuted
   or falls outside (a)+(b):
@@ -154,30 +155,36 @@ checks were added after the first report. None of them enters the decision.
     and declare no entities inside a returned document.
 
   So the harness missed nothing inside the shape it was frozen to read.
-- **The 28 survivors:**
+- **The 27 survivors** (28 as the refuters returned them, less one refuted by compiling it, below):
   - **18 character maps:** simonbs/dependency-graph's `safeName` (×3: Mermaid, DOT and D2; `Core_UI` and `CoreUI`
     both become `target_CoreUI`), Graffle's `Ident.name`, Natalie (×4), Laurine, SwagGen (×3), Acai's state ids, swift-package-manager's
     C99-mangled resource names, and swift-openapi-generator's `SafeNameGenerator` (×4).
-  - **10 others**, camel-casers and split/join: Graffle (×2), swiftuml's `uniqName`, SwiftGen's
+  - **9 others**, camel-casers and split/join: Graffle (×2), swiftuml's `uniqName`, SwiftGen's
     `swiftIdentifier`, swift-argument-parser's completion function names, swift-protobuf's
-    `toLowerCamelCase`, fluent-kit's joined SQL aliases, sourcekit-lsp's JSON-to-`Codable` refactoring, and the two
-    below.
-  - **21 of the 28 are loud.** Generated Swift with two identical declarations does not compile.
+    `toLowerCamelCase`, fluent-kit's joined SQL aliases, sourcekit-lsp's JSON-to-`Codable` refactoring, and this
+    repository's `KitSuiteEmitter` (below).
+  - **20 of the 27 are loud.** Generated Swift with two identical declarations does not compile.
 - **How far to trust these counts.** Each verdict comes from one reader and one refuter. They are unscored and were
   not hand-checked here, so they show that a population exists outside chains. They do not measure it. 16
   reports were refuted because a table, a uniquifier, a counter or a `Set` already handles the collision. Among
   them are CreateAPI ×4, Graffle's `Ident.unique` ×2, Acai's `mermaidSafeID`, SwiftDependencyGraphExplorer's
   `identifiers` table and swift-openapi-generator's schema names. That is the kind of fix SwiftUMLStudio#52 made.
 
-**Found in passing, in this toolchain** (not filed):
+**Found in passing, in this toolchain.** Each was reproduced by running it before anything was filed:
 - `KitSuiteEmitter.functionName` (`Sources/SwiftInferCLI/KitSuiteEmitter.swift:382`) splits a type name on `.` and
   camel-joins the parts. An `extension Diagram.Node: Equatable {}` beside a type `DiagramNode` therefore gives two
-  `func diagramNode…` in one scaffolded suite, and the suite does not compile.
-- SwiftPropertyLaws' `RecursiveGeneratorEmitter.helperName(for:)` is `"__gen" + typeName.split(separator: ".").joined()`.
-  A nested recursive `Tree.Node` and a top-level recursive `TreeNode` therefore emit `__genTreeNode` twice into one
-  stub. The helper's doc comment says it cannot collide.
+  identical `func diagramNodeEquatable()` in one scaffolded suite, and the suite does not compile. **Filed as #715.**
 - `InteractionTraceEmitter`'s trace path uses `workdirSegment`, which maps only `.` to `_`. A run on `Outer_Inner`
-  therefore overwrites the trace of an earlier run on `Outer.Inner`.
+  therefore overwrites the trace of an earlier run on `Outer.Inner`, and the two traces' suite structs share a name.
+  A refuter set this one aside as outside #674's shape (one suite per run), but it is a defect all the same.
+  **Filed as #716.**
+- **Refuted by compiling it:** SwiftPropertyLaws' `RecursiveGeneratorEmitter.helperName(for:)` is
+  `"__gen" + typeName.split(separator: ".").joined()`. So a nested recursive `Tree.Node` and a top-level recursive
+  `TreeNode` do emit two `__genTreeNode` into one stub, as the reader and refuter said. But the two differ in
+  return type (`Generator<Tree.Node, …>` against `Generator<TreeNode, …>`), Swift overloads on that, and the
+  emitted `checkEquatablePropertyLaws(for: T.self, using: __genTreeNode(4))` call sites resolve. Compiled side by side
+  with PropertyLawKit on 2026-11-12, it builds. Its doc comment's "cannot collide" is loose, but this is not a
+  defect, so it is not filed and not counted.
 
 **Disclosure.** The adversarial workflow ran 70 agents: 4 readers and one refuter per reported site. That is above
 the session's medium size guideline of under 10, because verification fanned out per site.
