@@ -4,10 +4,10 @@ import PropertyLawCore
 import SwiftInferCore
 import Testing
 
-/// **A nested name and its flattened spelling must not get one id.** #674's census
-/// (`docs/measurements/encoder-collision-census.md`, "Found in passing") found emitters in this
-/// repository that turn a dotted type name into an identifier by dropping or replacing the dot,
-/// so `Diagram.Node` and `DiagramNode` (or `Outer.Inner` and `Outer_Inner`) collide.
+/// **A nested name and its flattened spelling must not get one id.** #674's census found emitters
+/// in this repository that turn a dotted type name into an identifier by dropping or replacing the
+/// dot, so `Diagram.Node` and `DiagramNode` (or `Outer.Inner` and `Outer_Inner`) collide. Filed as
+/// #715 (`KitSuiteEmitter`) and #716 (`InteractionTraceEmitter`).
 @Suite("Dotted-name id collisions")
 struct DottedNameIdCollisionTests {
 
