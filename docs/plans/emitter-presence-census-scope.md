@@ -1,8 +1,9 @@
 # Emitter presence census (#673): scope, frozen before the run
 
-> **Status:** `proposed` · **As of:** 2026-11-11
+> **Status:** `shipped` · **As of:** 2026-11-12
 
-**Issue:** Joseph-Cursio/SwiftInferProperties#673.
+**Issue:** Joseph-Cursio/SwiftInferProperties#673. **Run 2026-11-12; result DECLINE (concentration: E = 14, 9 in this
+repository; precision 75.6%)**, in `docs/measurements/emitter-presence-census.md`.
 
 ## 0. The question, and what this decides
 
