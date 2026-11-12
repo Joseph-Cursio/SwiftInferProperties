@@ -275,7 +275,27 @@ Both amendments were recorded before any arm ran, and neither changes §6 or §7
   reports instability apart. Category kinds (`ExprSyntax` and the like) and tokens holding control characters
   are not seeds.
 
-**Found in passing, before any arm:** SwiftUMLStudio's corpus file fails to compile under every arm, `main`
-included, with "unprintable ASCII character found in source file". Every syntax-corpus stub in that repository
-is set aside as a result. That makes it a baseline defect, not a lever. It is left alone here so that A0 stays
-`main`, and it is reported in the write-up.
+**Found in passing, before any arm:** SwiftUMLStudio's corpus file failed to compile under every arm, `main`
+included, with "unprintable ASCII character found in source file". So every syntax-corpus stub in that
+repository was set aside. That was a baseline defect, not a lever. It was fixed on `main` by #719 (A4).
+
+**A4: the first attempt crashed the machine; the baseline moves to `main` at `7e4d8e5e`.**
+- **What happened.** The first A0 run started at 09:03 on 2026-11-12, at `f8865952`. About 30–45 minutes in,
+  `swiftpm-testing-helper` processes running the funnel's stubs held 35 GB, then 212 GB across five. macOS ran
+  out of swap and rebooted at 09:50 (`JetsamEvent-2026-11-12-094707.ips`).
+  - A0 is `main`'s behaviour, so no lever was involved.
+  - The reboot wiped the run directory, so no arm row was ever recorded and nothing was read. The law that
+    allocated is not identified.
+  - The cause in the harness: a timed-out `swift test` left its helper running, and each resume could add one
+    more.
+- **What changed on `main` before any arm runs:**
+  - **#720** (`7e4d8e5e`) holds every test process of the funnel and the census under an 8 GB limit
+    (`scripts/memory_guard.py`), and kills a timed-out run's leftovers. A kill is recorded on the
+    repository's result as `memory_guard_kills`. It reads as a crash of the running law, so a guard kill in
+    any arm is reported by name.
+  - **#719** (`eb2d292c`) escapes control characters in the corpus file, so SwiftUMLStudio's syntax-corpus
+    stubs now compile in every arm.
+- **This branch is rebased onto `7e4d8e5e`.** A0 is that `main`, and §5's V1 is re-taken against a binary built
+  from it. §3's sibling pins, §6's rules and §7's predictions are unchanged.
+  - P9 now reads against the new A0, so SwiftUMLStudio's recovered compiles are not a lever's.
+  - Under `seeded`, a corpus file's escaped snippets read back as themselves (`SyntaxCorpusReachArmTests`).

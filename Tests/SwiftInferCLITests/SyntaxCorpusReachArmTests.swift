@@ -82,7 +82,8 @@ struct SyntaxCorpusReachArmTests {
     /// earlier one's admissions.
     @Test("the corpus file reads back, and a merge keeps what is already there")
     func fileReadsBackAndMerges() {
-        let snippets = ["func f() {}", "let s = \"\"\"#", "struct S {}"]
+        // A control character is written as an escape since #719, and must read back as itself.
+        let snippets = ["func f() {}", "let s = \"\"\"#", "struct S {}", "if a /* \u{07} */ {}"]
         let text = SyntaxCorpusSource.fileContents(snippets: snippets, reach: true)
         #expect(SyntaxSnippetHarvester.snippets(inCorpusFile: text) == snippets)
         #expect(SyntaxCorpusSource.merged(["a", "x"], adding: ["a", "b", "x", "c"]) == ["a", "x", "b", "c"])
