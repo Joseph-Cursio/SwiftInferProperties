@@ -1,0 +1,819 @@
+{
+  "files" : 4668,
+  "functions" : 33725,
+  "rows" : [
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "enum",
+      "file" : "GRDB/Record/EncodableRecord.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "GRDB.swift:GRDB/Record/EncodableRecord.swift:676 _convertToSnakeCase",
+      "law1" : false,
+      "law2" : false,
+      "line" : 676,
+      "name" : "_convertToSnakeCase",
+      "refusal" : "core: none",
+      "repository" : "GRDB.swift",
+      "typeName" : "DatabaseColumnEncodingStrategy"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "enum",
+      "file" : "Sources/App/Models/RuleDocumentationLoader.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftProjectLint:Sources/App/Models/RuleDocumentationLoader.swift:49 camelCaseToKebab",
+      "law1" : false,
+      "law2" : false,
+      "line" : 49,
+      "name" : "camelCaseToKebab",
+      "refusal" : "core: none",
+      "repository" : "SwiftProjectLint",
+      "typeName" : "RuleDocumentationLoader"
+    },
+    {
+      "admitted" : true,
+      "candidate" : true,
+      "enclosingKind" : "struct",
+      "file" : "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Models/PackageManifest.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Models/PackageManifest.swift:294 c99Identifier",
+      "law1" : false,
+      "law2" : true,
+      "line" : 294,
+      "name" : "c99Identifier",
+      "reading" : {
+        "core" : "F2",
+        "fallback" : false,
+        "literals" : [
+          "_",
+          "_"
+        ],
+        "localSets" : [
+
+        ],
+        "preTransform" : false,
+        "prefixRule" : true,
+        "usesAnd" : false
+      },
+      "repository" : "SwiftProjectLint",
+      "typeName" : "PackageManifest"
+    },
+    {
+      "admitted" : true,
+      "candidate" : true,
+      "enclosingKind" : "enum",
+      "file" : "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/NameListReader.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/NameListReader.swift:15 normalize",
+      "law1" : false,
+      "law2" : true,
+      "line" : 15,
+      "name" : "normalize",
+      "reading" : {
+        "core" : "F3",
+        "fallback" : false,
+        "literals" : [
+
+        ],
+        "localSets" : [
+
+        ],
+        "preTransform" : true,
+        "prefixRule" : false,
+        "usesAnd" : false
+      },
+      "repository" : "SwiftProjectLint",
+      "typeName" : "NameListReader"
+    },
+    {
+      "admitted" : true,
+      "candidate" : true,
+      "enclosingKind" : "class",
+      "file" : "Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Security/Visitors/SecurityVisitor.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Security/Visitors/SecurityVisitor.swift:237 alphanumericsOnly",
+      "law1" : false,
+      "law2" : true,
+      "line" : 237,
+      "name" : "alphanumericsOnly",
+      "reading" : {
+        "core" : "F3",
+        "fallback" : false,
+        "literals" : [
+
+        ],
+        "localSets" : [
+
+        ],
+        "preTransform" : true,
+        "prefixRule" : false,
+        "usesAnd" : false
+      },
+      "repository" : "SwiftProjectLint",
+      "typeName" : "SecurityVisitor"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "struct",
+      "file" : "SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/ConfigBackupStore.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftLintRuleStudio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/ConfigBackupStore.swift:120 readableName",
+      "law1" : false,
+      "law2" : false,
+      "line" : 120,
+      "name" : "readableName",
+      "refusal" : "core: none",
+      "repository" : "SwiftLintRuleStudio",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "ConfigBackupStore"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "struct",
+      "file" : "Packages/SwiftInferenceBackends/Sources/SwiftInferenceBackends/Ollama/OllamaHTTPClient.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftAssist:Packages/SwiftInferenceBackends/Sources/SwiftInferenceBackends/Ollama/OllamaHTTPClient.swift:250 extractModelName",
+      "law1" : false,
+      "law2" : false,
+      "line" : 250,
+      "name" : "extractModelName",
+      "refusal" : "core: none",
+      "repository" : "SwiftAssist",
+      "typeName" : "OllamaHTTPClient"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "actor",
+      "file" : "Sources/SwiftAssist/Bootstrap/SkillGapDetector.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : false,
+      "key" : "SwiftAssist:Sources/SwiftAssist/Bootstrap/SkillGapDetector.swift:163 simpleSlug",
+      "law1" : false,
+      "law2" : false,
+      "line" : 163,
+      "name" : "simpleSlug",
+      "refusal" : "core: none",
+      "repository" : "SwiftAssist",
+      "typeName" : "SkillGapDetector"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "struct",
+      "file" : "Sources/SwiftAssist/Knowledge/Evolution/SwiftEvolutionCitationChecker.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftAssist:Sources/SwiftAssist/Knowledge/Evolution/SwiftEvolutionCitationChecker.swift:157 normalized",
+      "law1" : false,
+      "law2" : false,
+      "line" : 157,
+      "name" : "normalized",
+      "refusal" : "core: none",
+      "repository" : "SwiftAssist",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "SwiftEvolutionCitationChecker"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "actor",
+      "file" : "Sources/SwiftAssist/Learning/AntiPatternStore.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : false,
+      "key" : "SwiftAssist:Sources/SwiftAssist/Learning/AntiPatternStore.swift:235 generateId",
+      "law1" : false,
+      "law2" : false,
+      "line" : 235,
+      "name" : "generateId",
+      "refusal" : "core: none",
+      "repository" : "SwiftAssist",
+      "typeName" : "AntiPatternStore"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "actor",
+      "file" : "Sources/SwiftAssist/Thinking/ThinkingAntiPatternIngester.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftAssist:Sources/SwiftAssist/Thinking/ThinkingAntiPatternIngester.swift:85 makeID",
+      "law1" : false,
+      "law2" : false,
+      "line" : 85,
+      "name" : "makeID",
+      "refusal" : "core: none",
+      "repository" : "SwiftAssist",
+      "typeName" : "ThinkingAntiPatternIngester"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "actor",
+      "file" : "Sources/SwiftAssist/Thinking/ThinkingRecipeIngester.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftAssist:Sources/SwiftAssist/Thinking/ThinkingRecipeIngester.swift:97 makeID",
+      "law1" : false,
+      "law2" : false,
+      "line" : 97,
+      "name" : "makeID",
+      "refusal" : "core: none",
+      "repository" : "SwiftAssist",
+      "typeName" : "ThinkingRecipeIngester"
+    },
+    {
+      "admitted" : true,
+      "candidate" : true,
+      "enclosingKind" : "extension",
+      "file" : "SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ERScript.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ERScript.swift:158 sanitizeType",
+      "law1" : true,
+      "law2" : true,
+      "line" : 158,
+      "name" : "sanitizeType",
+      "reading" : {
+        "core" : "F1",
+        "fallback" : true,
+        "literals" : [
+          "_",
+          "Unknown"
+        ],
+        "localSets" : [
+
+        ],
+        "preTransform" : false,
+        "prefixRule" : false,
+        "usesAnd" : false
+      },
+      "repository" : "SwiftUMLStudio",
+      "typeName" : "ERScript"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "enum",
+      "file" : "Sources/SwiftInferCLI/GenericSubjectGate.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/GenericSubjectGate.swift:168 bareName",
+      "law1" : false,
+      "law2" : false,
+      "line" : 168,
+      "name" : "bareName",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "GenericSubjectGate"
+    },
+    {
+      "admitted" : true,
+      "candidate" : true,
+      "enclosingKind" : "extension",
+      "file" : "Sources/SwiftInferCLI/InteractiveTriage+StubFile.swift",
+      "inPool" : false,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/InteractiveTriage+StubFile.swift:341 moduleIdentifier",
+      "law1" : true,
+      "law2" : true,
+      "line" : 341,
+      "name" : "moduleIdentifier",
+      "reading" : {
+        "core" : "F2",
+        "fallback" : false,
+        "literals" : [
+          "_"
+        ],
+        "localSets" : [
+          "Set(\n            \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_\"\n        )"
+        ],
+        "preTransform" : false,
+        "prefixRule" : false,
+        "usesAnd" : false
+      },
+      "repository" : "SwiftInferProperties",
+      "typeName" : "InteractiveTriage"
+    },
+    {
+      "admitted" : true,
+      "candidate" : false,
+      "candidateRefusal" : "private",
+      "enclosingKind" : "extension",
+      "file" : "Sources/SwiftInferCLI/InteractiveTriage+StubName.swift",
+      "inPool" : false,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/InteractiveTriage+StubName.swift:156 sanitizeForFileName",
+      "law1" : true,
+      "law2" : true,
+      "line" : 156,
+      "name" : "sanitizeForFileName",
+      "reading" : {
+        "core" : "F2",
+        "fallback" : false,
+        "literals" : [
+          "_"
+        ],
+        "localSets" : [
+          "Set(\n            \"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-\"\n        )"
+        ],
+        "preTransform" : false,
+        "prefixRule" : false,
+        "usesAnd" : false
+      },
+      "repository" : "SwiftInferProperties",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "InteractiveTriage"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "extension",
+      "file" : "Sources/SwiftInferCLI/InteractiveTriage+StubNamespace.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/InteractiveTriage+StubNamespace.swift:44 suiteName",
+      "law1" : false,
+      "law2" : false,
+      "line" : 44,
+      "name" : "suiteName",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "typeName" : "InteractiveTriage"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "enum",
+      "file" : "Sources/SwiftInferCLI/KitSuiteEmitter.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/KitSuiteEmitter.swift:270 helperName",
+      "law1" : false,
+      "law2" : false,
+      "line" : 270,
+      "name" : "helperName",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "typeName" : "KitSuiteEmitter"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "enum",
+      "file" : "Sources/SwiftInferCLI/OutputDeterminismVerifierEmitter.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/OutputDeterminismVerifierEmitter.swift:90 bareTypeName",
+      "law1" : false,
+      "law2" : false,
+      "line" : 90,
+      "name" : "bareTypeName",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "OutputDeterminismVerifierEmitter"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "extension",
+      "file" : "Sources/SwiftInferCLI/StrategistDispatchEmitter+TupleRecipe.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/StrategistDispatchEmitter+TupleRecipe.swift:123 stripTupleLabel",
+      "law1" : false,
+      "law2" : false,
+      "line" : 123,
+      "name" : "stripTupleLabel",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "StrategistDispatchEmitter"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "enum",
+      "file" : "Sources/SwiftInferCLI/VerifyTargetInference.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferCLI/VerifyTargetInference.swift:201 sourcePath",
+      "law1" : false,
+      "law2" : false,
+      "line" : 201,
+      "name" : "sourcePath",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "typeName" : "VerifyTargetInference"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "extension",
+      "file" : "Sources/SwiftInferTemplates/LiftedTestEmitter+M5.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferTemplates/LiftedTestEmitter+M5.swift:92 sanitizeOperatorForIdentifier",
+      "law1" : false,
+      "law2" : false,
+      "line" : 92,
+      "name" : "sanitizeOperatorForIdentifier",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "LiftedTestEmitter"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "extension",
+      "file" : "Sources/SwiftInferTemplates/LiftedTestEmitter+Regression.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferTemplates/LiftedTestEmitter+Regression.swift:286 identifierSafe",
+      "law1" : false,
+      "law2" : false,
+      "line" : 286,
+      "name" : "identifierSafe",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "typeName" : "LiftedTestEmitter"
+    },
+    {
+      "admitted" : false,
+      "candidate" : false,
+      "enclosingKind" : "extension",
+      "file" : "Sources/SwiftInferTemplates/LiftedTestEmitter+Regression.swift",
+      "inPool" : true,
+      "inScan" : true,
+      "isStatic" : true,
+      "key" : "SwiftInferProperties:Sources/SwiftInferTemplates/LiftedTestEmitter+Regression.swift:354 sanitizeOperatorForRegressionIdentifier",
+      "law1" : false,
+      "law2" : false,
+      "line" : 354,
+      "name" : "sanitizeOperatorForRegressionIdentifier",
+      "refusal" : "core: none",
+      "repository" : "SwiftInferProperties",
+      "restriction" : "notVisibleToTests",
+      "typeName" : "LiftedTestEmitter"
+    }
+  ],
+  "subjects" : [
+    {
+      "dirty" : false,
+      "files" : 229,
+      "functions" : 856,
+      "name" : "swift-infer-core",
+      "repository" : "SwiftInferProperties",
+      "revision" : "72a80674a807c1b1692343b961f9a0f8904de1d3"
+    },
+    {
+      "dirty" : false,
+      "files" : 97,
+      "functions" : 830,
+      "name" : "swift-format",
+      "repository" : "swift-format",
+      "revision" : "b15dd59fad21f1770cdc888b1ca6e2937490001a"
+    },
+    {
+      "dirty" : false,
+      "files" : 167,
+      "functions" : 2310,
+      "name" : "grdb",
+      "repository" : "GRDB.swift",
+      "revision" : "0d8cf958b4b66a0473ec6e6986eb9da462171da9"
+    },
+    {
+      "dirty" : false,
+      "files" : 574,
+      "functions" : 3184,
+      "name" : "swift-collections",
+      "repository" : "swift-collections",
+      "revision" : "98ef3c98609a1e31b7e157b5b619579001a789d6"
+    },
+    {
+      "dirty" : false,
+      "files" : 88,
+      "functions" : 3672,
+      "name" : "swift-syntax",
+      "repository" : "swift-syntax",
+      "revision" : "0f7a57c5888ccd0bd599e5b8b6fb928b9641f1b8"
+    },
+    {
+      "dirty" : false,
+      "files" : 71,
+      "functions" : 1182,
+      "name" : "swift-nio",
+      "repository" : "swift-nio",
+      "revision" : "d09ffc8ad6437bc278897279e33150d8e39ee3d5"
+    },
+    {
+      "dirty" : false,
+      "files" : 78,
+      "functions" : 537,
+      "name" : "swift-package-manager",
+      "repository" : "swift-package-manager",
+      "revision" : "778e5678bafe61e2ae74aa49a03f26e0bf6c6216"
+    },
+    {
+      "dirty" : false,
+      "files" : 52,
+      "functions" : 265,
+      "name" : "swift-argument-parser",
+      "repository" : "swift-argument-parser",
+      "revision" : "efd239f0055b3d6b6cc122a786c46a0ea8d0235b"
+    },
+    {
+      "dirty" : false,
+      "files" : 273,
+      "functions" : 4535,
+      "name" : "swift-foundation",
+      "repository" : "swift-foundation",
+      "revision" : "a211bea22b6fa5b041c37592aaf50c7b3db5c354"
+    },
+    {
+      "dirty" : false,
+      "files" : 258,
+      "functions" : 4680,
+      "name" : "swiftlang-swift",
+      "repository" : "swift",
+      "revision" : "4f0569be1aa010d9915bf7a7c015c87e760e5444"
+    },
+    {
+      "dirty" : false,
+      "files" : 48,
+      "functions" : 241,
+      "name" : "harmonize",
+      "repository" : "Harmonize",
+      "revision" : "41923397b3034b375dd1486139448eb1bc38ff22"
+    },
+    {
+      "dirty" : false,
+      "files" : 636,
+      "functions" : 2718,
+      "name" : "swift-project-lint",
+      "repository" : "SwiftProjectLint",
+      "revision" : "6a231cda6e1618fc1089c86461ae65617fddc0b2"
+    },
+    {
+      "dirty" : false,
+      "files" : 111,
+      "functions" : 457,
+      "name" : "swift-property-laws",
+      "repository" : "SwiftPropertyLaws",
+      "revision" : "023704e8d7e6028af6e1f1aec3b66e584566ae15"
+    },
+    {
+      "dirty" : false,
+      "files" : 46,
+      "functions" : 295,
+      "name" : "swift-effect-inference",
+      "repository" : "SwiftEffectInference",
+      "revision" : "5e981ca78ade1d6e5940525a5381f53c8876f4be"
+    },
+    {
+      "dirty" : false,
+      "files" : 28,
+      "functions" : 108,
+      "name" : "maccloud-client-ios",
+      "repository" : "MacCloud_client_iOS",
+      "revision" : "3c861967fabcd06012638476d99204ce3ff80049"
+    },
+    {
+      "dirty" : true,
+      "files" : 223,
+      "functions" : 863,
+      "name" : "swiftlint-rule-studio",
+      "repository" : "SwiftLintRuleStudio",
+      "revision" : "77cc79299cc1a74380888c97ea272f3e7f1c6505"
+    },
+    {
+      "dirty" : false,
+      "files" : 42,
+      "functions" : 138,
+      "name" : "swiftformat-rule-studio",
+      "repository" : "SwiftFormatRuleStudio",
+      "revision" : "5cea6a7e02088a2967801dd4ee1017a57feb36d3"
+    },
+    {
+      "dirty" : false,
+      "files" : 2,
+      "functions" : 3,
+      "name" : "planted-defect-arm",
+      "repository" : "SwiftInferProperties",
+      "revision" : "72a80674a807c1b1692343b961f9a0f8904de1d3"
+    },
+    {
+      "dirty" : false,
+      "files" : 1,
+      "functions" : 0,
+      "name" : "cycle27-surface",
+      "repository" : "SwiftInferProperties",
+      "revision" : "72a80674a807c1b1692343b961f9a0f8904de1d3"
+    },
+    {
+      "dirty" : false,
+      "files" : 4,
+      "functions" : 12,
+      "name" : "leaderboard-sort",
+      "repository" : "SwiftInferProperties",
+      "revision" : "72a80674a807c1b1692343b961f9a0f8904de1d3"
+    },
+    {
+      "dirty" : false,
+      "files" : 27,
+      "functions" : 57,
+      "name" : "LintStudioUI",
+      "repository" : "LintStudioUI",
+      "revision" : "abcff420253a7ae4bf7e0f8316a207ac3e9a81cb"
+    },
+    {
+      "dirty" : false,
+      "files" : 0,
+      "functions" : 0,
+      "name" : "MacCloud_client_MacOS",
+      "repository" : "MacCloud_client_MacOS",
+      "revision" : "9424f4f22582e581382ff05968a6d59949724cd7"
+    },
+    {
+      "dirty" : true,
+      "files" : 30,
+      "functions" : 101,
+      "name" : "MacCloud_server",
+      "repository" : "MacCloud_server",
+      "revision" : "b0a1495afbb8048f150d857123b459474568b86f"
+    },
+    {
+      "dirty" : false,
+      "files" : 61,
+      "functions" : 246,
+      "name" : "pbt-book",
+      "repository" : "pbt-book",
+      "revision" : "3e76194a82719ad6fa8c129cbee21e5c554f562d"
+    },
+    {
+      "dirty" : false,
+      "files" : 15,
+      "functions" : 241,
+      "name" : "pbt-workbook-corpus",
+      "repository" : "pbt-workbook-corpus",
+      "revision" : "6df265001a4fa65909308cd89085cc828a59809d"
+    },
+    {
+      "dirty" : false,
+      "files" : 5,
+      "functions" : 11,
+      "name" : "pbt-workbook-grader",
+      "repository" : "pbt-workbook-grader",
+      "revision" : "79e6c81380fe19a830cd31d9014e8c96499964a0"
+    },
+    {
+      "dirty" : false,
+      "files" : 6,
+      "functions" : 29,
+      "name" : "pbt-workbook-sampler",
+      "repository" : "pbt-workbook-sampler",
+      "revision" : "0e0779528f4427b3cd27f0e205aba2a4dab768f8"
+    },
+    {
+      "dirty" : false,
+      "files" : 3,
+      "functions" : 34,
+      "name" : "pbt-workbook",
+      "repository" : "pbt-workbook",
+      "revision" : "959937ed90f425fadde215d1ade6e9141b1a8a5a"
+    },
+    {
+      "dirty" : false,
+      "files" : 490,
+      "functions" : 1862,
+      "name" : "SwiftAssist",
+      "repository" : "SwiftAssist",
+      "revision" : "8e1bc8d34cc2f2ae5f7eda88fe248b5cbc2a57c6"
+    },
+    {
+      "dirty" : false,
+      "files" : 47,
+      "functions" : 115,
+      "name" : "SwiftCloneDetector",
+      "repository" : "SwiftCloneDetector",
+      "revision" : "e03e865e67202559f48ea899961800403c855988"
+    },
+    {
+      "dirty" : false,
+      "files" : 0,
+      "functions" : 0,
+      "name" : "SwiftEffectInference",
+      "repository" : "SwiftEffectInference",
+      "revision" : "5e981ca78ade1d6e5940525a5381f53c8876f4be"
+    },
+    {
+      "dirty" : false,
+      "files" : 23,
+      "functions" : 129,
+      "name" : "SwiftFormatRuleStudio",
+      "repository" : "SwiftFormatRuleStudio",
+      "revision" : "5cea6a7e02088a2967801dd4ee1017a57feb36d3"
+    },
+    {
+      "dirty" : false,
+      "files" : 23,
+      "functions" : 38,
+      "name" : "SwiftIdempotency",
+      "repository" : "SwiftIdempotency",
+      "revision" : "adf8d18eb6667f4424f40d5bb0af604007abe6fd"
+    },
+    {
+      "dirty" : true,
+      "files" : 24,
+      "functions" : 153,
+      "name" : "SwiftLintRuleStudio",
+      "repository" : "SwiftLintRuleStudio",
+      "revision" : "77cc79299cc1a74380888c97ea272f3e7f1c6505"
+    },
+    {
+      "dirty" : false,
+      "files" : 44,
+      "functions" : 133,
+      "name" : "SwiftLintRuleStudioTeam",
+      "repository" : "SwiftLintRuleStudioTeam",
+      "revision" : "7789bde63dddc94a2e0c12266da91598ba6259d5"
+    },
+    {
+      "dirty" : false,
+      "files" : 0,
+      "functions" : 0,
+      "name" : "SwiftMarkdownWiki",
+      "repository" : "SwiftMarkdownWiki",
+      "revision" : "51b789e2518533cabb3b96f5c4f9a735a18e505a"
+    },
+    {
+      "dirty" : false,
+      "files" : 0,
+      "functions" : 0,
+      "name" : "SwiftProjectLint",
+      "repository" : "SwiftProjectLint",
+      "revision" : "6a231cda6e1618fc1089c86461ae65617fddc0b2"
+    },
+    {
+      "dirty" : false,
+      "files" : 91,
+      "functions" : 338,
+      "name" : "SwiftPropertyLaws",
+      "repository" : "SwiftPropertyLaws",
+      "revision" : "023704e8d7e6028af6e1f1aec3b66e584566ae15"
+    },
+    {
+      "dirty" : false,
+      "files" : 137,
+      "functions" : 643,
+      "name" : "SwiftUMLStudio",
+      "repository" : "SwiftUMLStudio",
+      "revision" : "9ad7631c887d9869974e393fc4a133a17e7a56f6"
+    },
+    {
+      "dirty" : false,
+      "files" : 614,
+      "functions" : 2709,
+      "name" : "SwiftInferProperties",
+      "repository" : "SwiftInferProperties",
+      "revision" : "72a80674a807c1b1692343b961f9a0f8904de1d3"
+    }
+  ]
+}
