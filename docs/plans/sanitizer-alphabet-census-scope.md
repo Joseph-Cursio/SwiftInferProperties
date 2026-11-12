@@ -1,8 +1,9 @@
 # Per-character sanitizer census (#672): scope, frozen before the run
 
-> **Status:** `proposed` · **As of:** 2026-11-11
+> **Status:** `shipped` · **As of:** 2026-11-11
 
-**Issue:** Joseph-Cursio/SwiftInferProperties#672.
+**Issue:** Joseph-Cursio/SwiftInferProperties#672. **Run 2026-11-11; result DECLINE law 2 (count: E2 = 4), law 1
+held**, in `docs/measurements/sanitizer-alphabet-census.md`.
 
 ## 0. The question, and what this decides
 

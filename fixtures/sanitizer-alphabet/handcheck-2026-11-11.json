@@ -3,21 +3,21 @@
     "emittable": true,
     "law1": true,
     "law2": true,
-    "note": "F2 over Characters with a local Set(\"a\u2013zA\u2013Z0\u20139_\"), replacement \"_\". Both laws true as read; no fallback, so Safe includes \"\". internal static in an InteractiveTriage extension; library target SwiftInferCLI",
+    "note": "F2 over Characters with a local Set(\"a\u2013zA\u2013Z0\u20139_\"), replacement \"_\". Both laws true as read; no fallback, so Safe includes \"\". internal static in an InteractiveTriage extension; library target SwiftInferCLI. Law 2 holds at Character level only: Set<Character> membership is canonical equivalence, so U+212A KELVIN SIGN (NFC 'K') is kept verbatim; a stub must test Characters against the copied set, not 'is ASCII'",
     "predicate": true
   },
   "SwiftInferProperties:Sources/SwiftInferCLI/InteractiveTriage+StubName.swift:156 sanitizeForFileName": {
     "emittable": false,
     "law1": true,
     "law2": true,
-    "note": "F2 as moduleIdentifier, with '-' also allowed; private, so no test can call it",
+    "note": "F2 as moduleIdentifier, with '-' also allowed; private, so no test can call it. Law 2 holds at Character level only: Set<Character> membership is canonical equivalence, so U+212A KELVIN SIGN (NFC 'K') is kept verbatim; a stub must test Characters against the copied set, not 'is ASCII'",
     "predicate": true
   },
   "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Models/PackageManifest.swift:294 c99Identifier": {
     "emittable": true,
     "law1": null,
-    "law2": true,
-    "note": "F2 bound to var: isLetter || isNumber || == \"_\" else \"_\"; prefix rule prepends \"_\" when the first character is a number, and \"_\" is inside P. Law 2 true. Law 1 does not read (prefix rule): \"1a\" -> \"_1a\". internal static on struct PackageManifest; library target SwiftProjectLintRules",
+    "law2": false,
+    "note": "F2 bound to var: isLetter || isNumber || == \"_\" else \"_\"; prefix rule prepends \"_\" when the first character is a number. LAW 2 IS FALSE, found by the adversarial verification pass and MEASURED with a verbatim copy (Swift 6.4): the map works on Characters and String(...) re-joins them, so a replaced control followed by a kept combining Alphabetic scalar merges into one Character. \"\\n\\u{345}\" -> \"_\\u{345}\" (one Character, fails P); also \"a\\n\\u{345}\" and \"\\u{1}\\u{903}\". A reader defect under scope \u00a75: it does not count. Law 1 does not read (prefix rule). internal static on struct PackageManifest; library target SwiftProjectLintRules",
     "predicate": true
   },
   "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/NameListReader.swift:15 normalize": {
