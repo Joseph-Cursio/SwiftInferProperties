@@ -75,4 +75,38 @@ struct SyntaxCorpusSourceTests {
         #expect(text.contains("##\"\"\"\nlet s = \"\"\"#\n\"\"\"##"))
         #expect(text.contains("enum SwiftInferSyntaxCorpus"))
     }
+
+    /// SwiftUMLStudio's own two (`ActivitySVGRendererWellFormednessTests`): a form feed on a line of
+    /// its own, and a BEL inside a block comment. Both parse; written raw, each made the corpus file
+    /// fail with `unprintable ASCII character found in source file`.
+    static let unprintableSnippets = [
+        "struct Runner {\n    func run() {\n\u{0C}\n        print(1)\n    }\n}",
+        "if ready /* \u{07} */ && armed {\n    print(ready)\n}",
+        "let crlf = 1\r\nlet del = \"\u{7F}\"",
+    ]
+
+    @Test("an unprintable character is written as an escape, never raw")
+    func unprintablesAreEscaped() {
+        let text = SyntaxCorpusSource.fileContents(snippets: Self.unprintableSnippets)
+        let raw = text.unicodeScalars.filter { ($0.value < 0x20 && $0 != "\t" && $0 != "\n") || $0.value == 0x7F }
+        #expect(raw.isEmpty, "raw control characters: \(raw.map(\.value))")
+        #expect(text.contains(##"\#u{C}"##))
+        #expect(text.contains(##"\#u{7}"##))
+        #expect(SyntaxSnippetHarvester.parsesCleanly(text))
+    }
+
+    /// The escapes must decode to the snippet the tests wrote, or the corpus draws something else.
+    @Test("each escaped snippet still means what the test wrote")
+    func escapedSnippetsRoundTrip() {
+        let text = SyntaxCorpusSource.fileContents(snippets: Self.unprintableSnippets)
+        #expect(SyntaxSnippetHarvester.multiLineLiterals(in: text) == Self.unprintableSnippets)
+    }
+
+    @Test("a snippet whose delimiter needs two hashes escapes with two", arguments: [
+        ("a\u{07}b", ##"a\#u{7}b"##), ("ends \"\"\"#\u{07}", ###"ends """#\##u{7}"###),
+    ])
+    func escapeUsesTheLiteralsHashes(snippet: String, expected: String) {
+        let hashes = String(repeating: "#", count: SyntaxCorpusSource.rawDelimiterCount(for: snippet))
+        #expect(SyntaxCorpusSource.escapingUnprintables(snippet, hashes: hashes) == expected)
+    }
 }
