@@ -208,6 +208,16 @@ public struct BodySignals: Sendable, Equatable {
     /// `ReplayIdempotenceTemplate`'s idempotent-write branch.
     public let callsIdempotentWrite: Bool
 
+    /// The body hands out names and remembers them: #669's criteria 2 and 3 (`UniquifierShapeReader`).
+    /// Read only for a non-static method of a type, or a function with an `inout` collection, that
+    /// returns something — criterion 1's precondition, the same pay-where-read bargain as above.
+    /// Read by `UniquifierTemplate`.
+    public let uniquifierShape: UniquifierShape?
+
+    /// The stored state the body writes and removes from, for every non-static method of a type, so
+    /// `UniquifierTemplate` can read a uniquifier's siblings for a setup call or a recycling pool.
+    public let stateWrites: StateWrites?
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
@@ -223,8 +233,12 @@ public struct BodySignals: Sendable, Equatable {
         idempotenceReturnShape: IdempotenceReturnShape? = nil,
         dedupGateShape: DedupGateShape? = nil,
         buildsIdempotencyKey: Bool = false,
-        callsIdempotentWrite: Bool = false
+        callsIdempotentWrite: Bool = false,
+        uniquifierShape: UniquifierShape? = nil,
+        stateWrites: StateWrites? = nil
     ) {
+        self.uniquifierShape = uniquifierShape
+        self.stateWrites = stateWrites
         self.guardDomain = guardDomain
         self.rewritePostcondition = rewritePostcondition
         self.sortedOutput = sortedOutput

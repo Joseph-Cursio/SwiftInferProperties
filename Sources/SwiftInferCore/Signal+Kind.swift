@@ -391,5 +391,8 @@ public extension Signal {
 
         /// V-ReplayM10 — the body calls an idempotent-write primitive (`upsert`, …): idempotent by guarantee.
         case replayIdempotentWrite
+
+        /// #692 — the body hands out names and remembers them (`UniquifierShape`); see `UniquifierTemplate`.
+        case uniquifierShape
     }
 }
