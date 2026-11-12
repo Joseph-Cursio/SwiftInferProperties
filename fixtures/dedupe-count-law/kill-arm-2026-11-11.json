@@ -1,0 +1,70 @@
+{
+  "becomes": {
+    "L161-negate-check": "[]",
+    "L162-delete-insert": "identity",
+    "L163-delete-append": "[]"
+  },
+  "controls_passed": true,
+  "date": "2026-11-11",
+  "killed_by": {
+    "c1": [
+      "L161-negate-check",
+      "L163-delete-append"
+    ],
+    "c2": [
+      "L162-delete-insert"
+    ],
+    "idempotence": []
+  },
+  "laws_sha256": "0f259193319cc07fe50457a0b359969a3fa224025335081676c9930d5e89851f",
+  "matrix": {
+    "L161-negate-check": {
+      "c1": "FAIL",
+      "c2": "PASS",
+      "idempotence": "PASS",
+      "sanity": "FAIL"
+    },
+    "L162-delete-insert": {
+      "c1": "PASS",
+      "c2": "FAIL",
+      "idempotence": "PASS",
+      "sanity": "FAIL"
+    },
+    "L163-delete-append": {
+      "c1": "FAIL",
+      "c2": "PASS",
+      "idempotence": "PASS",
+      "sanity": "FAIL"
+    },
+    "original": {
+      "c1": "PASS",
+      "c2": "PASS",
+      "idempotence": "PASS",
+      "sanity": "PASS"
+    }
+  },
+  "pins": {
+    "swift-async-algorithms": "1.1.7",
+    "swift-collections": "1.7.6",
+    "swift-numerics": "1.1.1",
+    "swift-property-based": "2.0.1",
+    "swift-syntax": "603.0.2",
+    "swiftpropertylaws": "4.11.0"
+  },
+  "swift": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)",
+  "variants": {
+    "L161-negate-check": {
+      "anchor": "L161",
+      "line": "            if seen.contains(key) { // L161"
+    },
+    "L162-delete-insert": {
+      "anchor": "L162",
+      "line": "                // L162 deleted"
+    },
+    "L163-delete-append": {
+      "anchor": "L163",
+      "line": "                // L163 deleted"
+    },
+    "original": null
+  }
+}

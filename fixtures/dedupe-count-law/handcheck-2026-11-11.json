@@ -1,0 +1,58 @@
+{
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.DiscoverInteraction+MultiModule.swift:129 dedupedByStateAndAction": {
+    "c1": true,
+    "c2": true,
+    "emittable": true,
+    "equatable": true,
+    "keepFirst": true,
+    "note": "Set route keyed by module|state|action; ReducerCandidate: Equatable. Library target SwiftInferCLI; internal static. MEASURED emittable: `swift-infer verify --suggestion 0x9FE298D4EAFC030E` holds idempotence over [ReducerCandidate], 1000 default + 1000 edge trials (2026-11-11)."
+  },
+  "SwiftInferProperties:Sources/SwiftInferCore/ConstructionUniverse.swift:256 deduplicated": {
+    "c1": true,
+    "c2": true,
+    "emittable": false,
+    "equatable": true,
+    "keepFirst": false,
+    "note": "dictionary route: one member per key, the smallest relativePath kept; count = distinct keys, so C1 and C2 hold. Member: Equatable. Not keep-first: Array(byKey.values) is in hash order. Library target SwiftInferCore. MEASURED not emittable: `swift-infer verify --suggestion 0xF8DB60DD761C664B` stops on 'no generator could be derived for carrier type [Member]' (2026-11-11)."
+  },
+  "SwiftInferProperties:Sources/SwiftInferCore/EqualityBodyShape.swift:322 deduplicated": {
+    "c1": true,
+    "c2": true,
+    "emittable": false,
+    "equatable": true,
+    "keepFirst": true,
+    "note": "filter form over String; private, so no test can call it"
+  },
+  "SwiftLintRuleStudio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+RuleLists.swift:252 deduplicatedByRule": {
+    "c1": true,
+    "c2": true,
+    "emittable": false,
+    "equatable": true,
+    "keepFirst": true,
+    "note": "filter form keyed by SwiftLintDeprecations.currentName(of:), deterministic; private"
+  },
+  "SwiftLintRuleStudio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/YAMLConfigurationEngine+RuleLists.swift:257 deduplicated": {
+    "c1": true,
+    "c2": true,
+    "emittable": false,
+    "equatable": true,
+    "keepFirst": true,
+    "note": "filter form over String; private"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/CoreDataModelExtractor.swift:154 dedupe": {
+    "c1": true,
+    "c2": true,
+    "emittable": true,
+    "equatable": true,
+    "keepFirst": true,
+    "note": "#671's witness; C1 and C2 MEASURED green in the kill arm. ERRelationship: Hashable; discover derives its generator (.derivedComposite, high); library target SwiftUMLBridgeFramework; internal static, reachable by @testable import"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Parsing/StateMachineExtractor.swift:293 uniqued": {
+    "c1": true,
+    "c2": true,
+    "emittable": false,
+    "equatable": true,
+    "keepFirst": true,
+    "note": "filter form over StateTransition (Hashable); private"
+  }
+}
