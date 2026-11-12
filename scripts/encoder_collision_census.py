@@ -132,8 +132,8 @@ def report(census_path, handcheck_path=None):
     counted = [s for s in outside if all(verdicts[s["key"]][k] for k in ("read", "merge", "reachable"))
                and not verdicts[s["key"]]["handled"]]
     repositories = {s["repository"] for s in counted}
-    precision = len(read_true) / len(admitted) if admitted else float("nan")
-    print(f"precision (read over admitted): {len(read_true)}/{len(admitted)} = {precision:.1%}")
+    precision = f"{len(read_true) / len(admitted):.1%}" if admitted else "n/a, nothing admitted"
+    print(f"precision (read over admitted): {len(read_true)}/{len(admitted)} = {precision}")
     print(f"counted outside {WITNESS}: {len(counted)} over {len(repositories)} repositories "
           f"({', '.join(sorted(short(r) for r in repositories)) or 'none'})")
     build = len(counted) >= MINIMUM_SITES and len(repositories) >= MINIMUM_REPOSITORIES

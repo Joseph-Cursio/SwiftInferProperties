@@ -39,6 +39,8 @@ struct CensusRecord: Codable {
     var sites: [SiteRow] = []
     var tally: [String: Int] = [:]
     var foundationChecked = 0
+    var probe: [ProbeRow] = []
+    var uses: [UseRow] = []
 }
 
 enum Census {
@@ -67,6 +69,8 @@ enum Census {
             for candidate in candidates { record.candidates.append(ChainRow(repository: repository, candidate: candidate)) }
         }
         for file in files { SiteReader.read(file, repository: repository, index: index, into: &record.sites, tally: &record.tally) }
+        for file in files { Probe.read(file, repository: repository, index: index, sites: record.sites, into: &record.probe) }
+        for file in files { Probe.uses(file, repository: repository, index: index, into: &record.uses) }
         return index
     }
 

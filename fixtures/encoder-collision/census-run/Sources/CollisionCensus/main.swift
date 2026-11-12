@@ -57,7 +57,7 @@ case "run" where arguments.count == 4:
     print("\(record.files) files, \(record.loops) loops; \(record.candidates.count) candidates, \(chains.count) chains, "
         + "\(chains.filter { $0.candidate.witness != nil }.count) colliding; \(record.sites.count) site rows, "
         + "\(record.sites.filter { $0.filing == "admitted" }.count) admitted; "
-        + "\(record.foundationChecked) witnesses checked against Foundation")
+        + "\(record.foundationChecked) witnesses checked against Foundation; \(record.probe.count) probe rows, \(record.uses.count) uses of a colliding chain")
     exit(failures.isEmpty ? 0 : 1)
 
 default:
