@@ -148,7 +148,9 @@ final class ViewModelDiscoveryVisitor: SyntaxVisitor {
             )
         }
         let method = RawMethod(
-            name: node.name.text,
+            // The identifier, not its spelling: ``func `add`()`` and `func add(x:)` are one name
+            // (#693). `TokenSyntax.text` keeps the backticks; an operator has no identifier.
+            name: node.name.identifier?.name ?? node.name.text,
             parameterTypes: parameterTypes,
             firstParameterLabel: (firstLabel == "_") ? nil : firstLabel,
             parameters: actionParameters,

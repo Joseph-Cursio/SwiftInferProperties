@@ -1,4 +1,5 @@
 import SwiftInferCore
+import SwiftParser
 
 /// PROTOTYPE — materializes an `@Observable` view model's action alphabet
 /// into a **synthetic `Action` enum + a `drive(_:_:)` dispatcher**.
@@ -251,8 +252,8 @@ public enum ViewModelActionEnumEmitter {
             return binding
         }
         .joined(separator: ", ")
-        // Escape a keyword method name at the call site too (the recognizer
-        // stores `node.name.text`, which has the backticks stripped).
+        // Escape a keyword method name at the call site too: the recognizer
+        // stores the identifier, with any backticks stripped (#693).
         let awaitPrefix = action.isAsync ? "await " : ""
         return "\(awaitPrefix)\(modelName).\(escapeIfKeyword(action.name))(\(arguments))"
     }
@@ -264,19 +265,23 @@ public enum ViewModelActionEnumEmitter {
         return first.uppercased() + text.dropFirst()
     }
 
-    /// Swift keywords that can appear as a method name and would break an
-    /// enum-case identifier if left unescaped.
-    private static let reservedWords: Set<String> = [
-        "associatedtype", "class", "deinit", "enum", "extension", "func",
-        "import", "init", "inout", "let", "operator", "protocol", "struct",
-        "subscript", "typealias", "var", "break", "case", "continue",
-        "default", "defer", "do", "else", "fallthrough", "for", "guard",
-        "if", "in", "repeat", "return", "switch", "where", "while", "as",
-        "catch", "false", "is", "nil", "rethrows", "self", "Self", "super",
-        "throw", "throws", "true", "try",
-    ]
+    /// Names swift-syntax's parser accepts unescaped but the compiler does not: after a `.` they name the
+    /// metatype (`CounterAction.Type`), not a case. Measured over every `Keyword` in swift-syntax 603 (#693):
+    /// each word typechecked unescaped as an enum case, a case pattern, an implicit member and a method call.
+    /// The compiler rejected 55; the parser's two checks below flag 53 of them, and these are the other two.
+    private static let metatypeMemberNames: Set<String> = ["Type", "Protocol"]
 
-    private static func escapeIfKeyword(_ identifier: String) -> String {
-        reservedWords.contains(identifier) ? "`\(identifier)`" : identifier
+    /// Whether `identifier` needs backticks as an enum case and after a `.`. Asks swift-syntax rather than a
+    /// list, so a keyword the parser learns is escaped without an edit here.
+    static func needsBackticks(_ identifier: String) -> Bool {
+        !identifier.isValidSwiftIdentifier(for: .variableName)
+            || !identifier.isValidSwiftIdentifier(for: .memberAccess)
+            || metatypeMemberNames.contains(identifier)
+    }
+
+    /// `identifier`, in backticks when `needsBackticks` says so. Shared by every emitter that writes an action
+    /// name into Swift: the recognizer stores identifiers without backticks (#693), so each call site escapes.
+    static func escapeIfKeyword(_ identifier: String) -> String {
+        needsBackticks(identifier) ? "`\(identifier)`" : identifier
     }
 }

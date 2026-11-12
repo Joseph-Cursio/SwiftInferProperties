@@ -95,6 +95,11 @@ struct SubprocessBatchCoverageTests {
             + "checkout — milliseconds, no network, no `.build`. The point of the suite "
             + "is that the tracked-file warning fires on a REAL tracked file, so a fake "
             + "would test the fake.",
+        "ViewModelActionEnumTypecheckTests":
+            "shells out to `swiftc -typecheck` on one generated file — about a second, "
+            + "no `.build`, no package. The defect it guards (#693) is a redeclaration "
+            + "only the compiler reports, and the emitter's own string comparison of case "
+            + "names passed on the broken output, so it earns a place on every `make test-fast`.",
     ]
 
     @Test("every .subprocess suite is matched by SUBPROCESS_RE")
