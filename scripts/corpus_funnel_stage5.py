@@ -535,6 +535,41 @@ def parse_test_output(output, results):
     return started, warned, sides
 
 
+def package_process_pids(listing, package_dir):
+    """PIDs in a `ps -axo pid=,command=` listing whose command line names this package's `.build`, as
+    given or resolved: the test helper a `swift test` here started, and anything else it spawned."""
+    markers = {os.path.join(path, ".build") + os.sep
+               for path in (os.path.abspath(package_dir), os.path.realpath(package_dir))}
+    pids = []
+    for line in listing.splitlines():
+        pid, _, command = line.strip().partition(" ")
+        if pid.isdigit() and int(pid) != os.getpid() and any(marker in command for marker in markers):
+            pids.append(int(pid))
+    return pids
+
+
+def kill_package_processes(package_dir):
+    """Kill whatever a timed-out `swift test` in `package_dir` left running; return the pids killed.
+
+    ⚠ **`subprocess.run(timeout=…)` kills `swift test` and nothing it started.** Its
+    `swiftpm-testing-helper` kept running the hung law, and each of up to 30 resumes could leave one
+    more behind. On 2026-11-12 five such helpers, each still running, held 212 GB between them and
+    the machine rebooted (`memory_guard.py`). `ps` goes through `Popen`, not `subprocess.run`, which
+    the self-tests below script.
+    """
+    with subprocess.Popen(["ps", "-axo", "pid=,command="], stdout=subprocess.PIPE,
+                          stderr=subprocess.DEVNULL, text=True) as ps:
+        listing, _ = ps.communicate()
+    killed = []
+    for pid in package_process_pids(listing, package_dir):
+        try:
+            os.kill(pid, 9)
+            killed.append(pid)
+        except (ProcessLookupError, PermissionError):
+            pass
+    return killed
+
+
 def _runs_within(package_dir, swift, seconds, skip=None):
     """Does the test target RUN to completion inside `seconds`?
 
@@ -559,6 +594,7 @@ def _runs_within(package_dir, swift, seconds, skip=None):
         subprocess.run(command, cwd=package_dir, capture_output=True, text=True,
                        env=env, timeout=seconds)
     except subprocess.TimeoutExpired:
+        kill_package_processes(package_dir)
         return False
     return True
 
@@ -748,6 +784,7 @@ def run_serially(package_dir, swift, census_target=None, max_resumes=30, reach_t
 
             output = _text(expired.stdout) + _text(expired.stderr)
             code, timed_out = None, True
+            kill_package_processes(package_dir)
         run_seconds.append(round(time.monotonic() - began, 1))
 
         # ⚠ **A test's warnings are those of the run that gave its result.** `results` keeps each
@@ -1009,6 +1046,24 @@ def _selftest_error_lines(check):
         check(f"error_line: {line[:60]}", error_line(line) == want, str(error_line(line)))
 
 
+def _selftest_package_processes(check):
+    """The sweep after a timeout: by listing, and live on a process named for a package's `.build`."""
+    import tempfile
+    listing = ("101 /x/swiftpm-testing-helper --test-bundle-path /p/Pkg/.build/out/T.xctest\n"
+               "102 /x/swiftpm-testing-helper --test-bundle-path /p/Other/.build/out/T.xctest\n"
+               "103 /usr/bin/vim /p/Pkg/Sources/a.swift\n")
+    check("package_process_pids names only this package's .build",
+          package_process_pids(listing, "/p/Pkg") == [101], str(package_process_pids(listing, "/p/Pkg")))
+    with tempfile.TemporaryDirectory() as package:
+        name = os.path.join(package, ".build", "debug", "swiftpm-testing-helper")
+        process = subprocess.Popen(["/bin/bash", "-c", f'exec -a "{name}" /bin/sleep 30'])
+        time.sleep(0.3)
+        killed = kill_package_processes(package)
+        process.wait(timeout=10)
+        check("kill_package_processes kills a live leftover helper", process.pid in killed
+              and process.returncode == -9, f"{killed} {process.returncode}")
+
+
 def self_test():
     failures = []
 
@@ -1021,6 +1076,7 @@ def self_test():
     _selftest_bisect_stats(check)
     _selftest_budgets(check)
     _selftest_error_lines(check)
+    _selftest_package_processes(check)
     check("reach names", (is_reach("S.f_reachesBothOutcomes()"), is_reach("S.f_isTotal()"),
                           reach_twin("S.f_isTotal()"), reach_twin("S.f_reachesBothOutcomes()"))
           == (True, False, "S.f_reachesBothOutcomes()", None), "")

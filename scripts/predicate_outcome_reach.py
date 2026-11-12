@@ -69,6 +69,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import corpus_funnel as cf  # noqa: E402
 import corpus_funnel_stage5 as s5  # noqa: E402
+import memory_guard  # noqa: E402
 import literal_reach_check as lrc  # noqa: E402
 import mutation_check as mc  # noqa: E402
 
@@ -917,6 +918,15 @@ def run_packages(packages, out, arm, rand_runs, seconds, swift_infer, cli):
 
 
 def command_run(args):
+    """The census, under `memory_guard`: every test process it starts is killed past the memory limit,
+    and each kill is logged beside `out` as `<out>.memory-guard.jsonl`."""
+    out = args.rest[0] if args.package else (args.rest[1] if len(args.rest) > 1 else None)
+    roots = args.package or ([os.path.join(args.rest[0], "trees")] if args.rest else [])
+    with memory_guard.MemoryGuard(roots, log_path=f"{out}.memory-guard.jsonl" if out else None):
+        return _command_run(args)
+
+
+def _command_run(args):
     others = helpers_running()
     if others:
         print(f"note: {others} swiftpm-testing-helper process(es) already running on this machine; the kill "
