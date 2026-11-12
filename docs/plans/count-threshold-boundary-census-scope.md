@@ -1,6 +1,9 @@
 # Count-threshold boundary census (#670): scope, frozen before the run
 
-> **Status:** `proposed` · **As of:** 2026-11-11 · **Issue:** Joseph-Cursio/SwiftInferProperties#670
+> **Status:** `shipped` · **As of:** 2026-11-11
+>
+> **Issue:** Joseph-Cursio/SwiftInferProperties#670. **Run 2026-11-11; result DECLINE (population)**, in
+> `docs/measurements/count-threshold-boundary-census.md`.
 
 ## 0. The question, and what this decides
 
