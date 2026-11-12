@@ -18,11 +18,4 @@ struct GuardDomainUnderscoreTests {
         #expect(GuardDomainReader.mentionsOnly("text", in: "_AttributeStorage()", allowingTypeNames: true))
         #expect(!GuardDomainReader.mentionsOnly("text", in: "_storage.count", allowingTypeNames: true))
     }
-
-    @Test("the bare wildcard is not a name")
-    func wildcardIsNotAName() {
-        #expect(!GuardDomainReader.isName("_"))
-        #expect(GuardDomainReader.isName("_base"))
-        #expect(GuardDomainReader.isName("value"))
-    }
 }

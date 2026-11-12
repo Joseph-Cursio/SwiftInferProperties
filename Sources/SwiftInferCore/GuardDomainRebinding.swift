@@ -115,6 +115,21 @@ public enum GuardDomainRebinding {
                 continue
             }
 
+            // A `$`-projection is a name of its own. `$user` is the receiver's property-wrapper
+            // projection, not the parameter `user`, so it is never rebound as `user`. `$0` stays
+            // verbatim: it is a closure's own parameter.
+            if character == "$", index + 1 < characters.count,
+               characters[index + 1].isLetter || characters[index + 1] == "_" {
+                let start = index
+                index += 1
+                while index < characters.count,
+                      characters[index].isLetter || characters[index].isNumber || characters[index] == "_" {
+                    index += 1
+                }
+                emit(.freeIdentifier(String(characters[start ..< index])))
+                continue
+            }
+
             guard character.isLetter || character == "_" else {
                 emit(.verbatim(String(character)))
                 index += 1

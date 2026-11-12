@@ -183,6 +183,9 @@ Under scope §7 the A/B is reported, not decided. It is the cheapest part of #67
 by truncation, and it fixes one live false admission. If it is taken up, it is its own change: a syntax-level
 `mentionsOnly`, with `super` free and an A/B over the shipped template's rows.
 
+**Taken up the same day:** `docs/measurements/guard-domain-syntax-gate.md` (+52 reader rows, −2 false, `super`
+free).
+
 ## Predictions (scope §6)
 
 | prediction | outcome |
