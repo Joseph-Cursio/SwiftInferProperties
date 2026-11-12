@@ -227,4 +227,55 @@ its syntax corpus source.
 
 ## 9. Amendments
 
-None yet.
+Both amendments were recorded before any arm ran, and neither changes §6 or §7.
+
+**A1: how the build reads §2 (with the lever commits).**
+- **Seeded admission (§2.3) is tested per snippet, not per node.** A snippet past the cap is admitted when it
+  holds a node of the requested type and, anywhere in it, a seed token or a node of a seed kind
+  (`SnippetIndex.matching`). The draw bias (§2.2) still matches per node. A loose admission costs a few extra
+  snippets in the file and nothing in the draw.
+- **A node also matches through a descendant of a seed kind (§2.2),** not only through itself or an ancestor.
+  `analyzeInitializer` tests `initializer?.value.is(ClosureExprSyntax.self)` on a child.
+- **The corpus file is rewritten whenever seeds admit a snippet,** not only at the end of the run. It holds the
+  base, then every admitted snippet, in admission order.
+- **The switch is read in two places:**
+  - lever 1, once, where `discover` builds its `SyntaxCorpusSource`;
+  - lever 2, by `totalityStub`.
+  An unknown spelling stops the process with exit 64, so an arm cannot be mislabelled.
+- **Pairing (§2.4) looks at every other argument, either side:** "earlier arguments i < j" becomes "every
+  other argument i ≠ j" for `nameFrom` and `memberOf`. `copyOf` still copies only from an earlier argument.
+  `containsReference(to:in:)` draws the name before the node, so the pairing has to look both ways.
+  - Every argument is drawn first, exactly as without pairing.
+  - The pairings are then applied in argument order, so an unpaired draw keeps its place in the random stream.
+  - An `inout` argument is never paired.
+
+**A2: toolchains.**
+- **swift.org `swift-6.4.1-RELEASE` was missing here when this scope was frozen.** It was installed on
+  2026-11-12, at the user's request, from swift.org's notarized package
+  (`Apple Swift version 6.4.1 (swift-6.4.1-RELEASE)`). So every arm keeps #665's swift.org toolchain, and the
+  funnel's default path is unchanged.
+- **Xcode is now 27.2, and its toolchain is `swiftlang-6.4.2.1.9`.** That is the toolchain for the funnel's
+  `XCODE_REPOS`; #665 used `swiftlang-6.4.0.34.1`.
+- **The binaries and the seed CLI are built with swift.org 6.4.1.**
+- **Effect on the comparison:** all four arms share both toolchains, so the A/B holds. Against #665, figures
+  differ by Xcode toolchain as well as by SHA, so #665's G is context, never an arm.
+
+**A3: three fixes before the first arm, from an adversarial review and a two-repository smoke run.**
+- **The biased draw's result type is spelled `Generator<Node, Shrink.None<Node>>`, not `some`.** A stub with a
+  long draw line hoists its generator into a `static let`, which cannot infer another declaration's opaque
+  type. In the smoke run, SwiftEffectInference's compiles fell from 40 to 25 under `seeded+paired` for this
+  reason alone. The biased draw does not shrink; totality never shrinks a passing draw.
+- **Seeded admissions accumulate.** The funnel runs one `discover` per source target, and those processes share
+  one corpus file per test target. Each process now keeps the snippets already in the file, and when the funnel
+  consolidates a package's generated directories, the corpus files are merged rather than all but the first
+  dropped. Under the baseline arm both merges are no-ops: the files are identical.
+- **Pairing takes a name only from a draw of the argument's own node type.** A composed draw such as
+  `gen(ExprSyntax.self).optional` is not a node, and `name(near:)` on it does not compile. Admission takes the
+  first 8 matches in file order, so asking twice admits nothing new. `compare` counts classes, as §4 says, and
+  reports instability apart. Category kinds (`ExprSyntax` and the like) and tokens holding control characters
+  are not seeds.
+
+**Found in passing, before any arm:** SwiftUMLStudio's corpus file fails to compile under every arm, `main`
+included, with "unprintable ASCII character found in source file". Every syntax-corpus stub in that repository
+is set aside as a result. That makes it a baseline defect, not a lever. It is left alone here so that A0 stays
+`main`, and it is reported in the write-up.

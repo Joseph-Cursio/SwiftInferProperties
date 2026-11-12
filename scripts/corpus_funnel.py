@@ -60,6 +60,22 @@ def environment(swift):
     return s5.swift_environment(swift)
 
 
+CORPUS_FILE = "SwiftInferSyntaxCorpus.swift"
+_SNIPPET = re.compile(r'^        (#+)"""\n(.*?)\n"""\1', re.M | re.S)
+
+
+def merge_corpus(kept, extra):
+    """`kept` with every snippet literal of `extra` it lacks appended to its `snippets` array, in `extra`'s
+    order. Snippets are compared by their text, so two files holding the same ones merge to `kept`."""
+    have = {match.group(2) for match in _SNIPPET.finditer(kept)}
+    missing = [match.group(0) for match in _SNIPPET.finditer(extra) if match.group(2) not in have]
+    if not missing:
+        return kept
+    start = kept.index("static let snippets")
+    close = kept.index("\n    ]\n", start)
+    return kept[:close] + ",\n" + ",\n".join(missing) + kept[close:]
+
+
 def worktree(repo_path, destination):
     """Detached worktree at a directory named EXACTLY for the repository.
 
@@ -509,6 +525,13 @@ def walk_repo(repo, repo_path, scratch, infer, cli, timeout=2400):
                     os.makedirs(os.path.dirname(target), exist_ok=True)
                     if not os.path.exists(target):
                         os.replace(os.path.join(root, name), target)
+                    elif name == CORPUS_FILE:
+                        # #684's seeded arm admits per test target, so the dropped copy can hold
+                        # snippets the kept one lacks. Identical files merge to the kept one unchanged.
+                        kept = open(target, encoding="utf-8").read()
+                        merged = merge_corpus(kept, open(os.path.join(root, name), encoding="utf-8").read())
+                        if merged != kept:
+                            open(target, "w", encoding="utf-8").write(merged)
         dirs = [dirs[0]]
         stubs = sum(len([f for f in os.listdir(os.path.join(r))
                          if is_stub(f)])
@@ -1089,6 +1112,16 @@ def self_test():
     def check(name, condition, detail):
         if not condition:
             failures.append(f"{name}: {detail}")
+
+    corpus = ('enum SwiftInferSyntaxCorpus {\n    static let snippets: [String] = [\n'
+              '        #"""\nfunc f() {}\n"""#,\n        ##"""\nlet s = """#\n"""##\n    ]\n\n    static let x = 1\n}\n')
+    other = corpus.replace('func f() {}', 'struct S {}')
+    check("merge_corpus keeps identical files", merge_corpus(corpus, corpus) == corpus, "changed")
+    merged = merge_corpus(corpus, other)
+    check("merge_corpus appends a missing snippet once",
+          [m.group(2) for m in _SNIPPET.finditer(merged)] == ["func f() {}", 'let s = """#', "struct S {}"],
+          merged)
+    check("merge_corpus is idempotent", merge_corpus(merged, other) == merged, "changed again")
 
     with tempfile.TemporaryDirectory() as stubs:
         for relative, text in _SELFTEST_STUBS.items():
