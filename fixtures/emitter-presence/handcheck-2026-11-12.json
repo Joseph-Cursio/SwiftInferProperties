@@ -1,0 +1,405 @@
+{
+  "GRDB.swift:GRDB/FTS/FTS4.swift:45 moduleArguments": {
+    "emittable": false,
+    "emittableNote": "(a) The file is in the library target GRDB (Package.swift:73 `.target(`), not an executable: holds. (c) The method is public (FTS4.swift:45): holds. (b) fails. `in db: Database` is `public final class Database` (GRDB/Core/Database.swift:146), a class, so not derivable. `definition: FTS4TableDefinition` is `public final class FTS4TableDefinition` (FTS4.swift:188), also a class. Its `columns` property is fileprivate (FTS4.swift:195), and FTS4ColumnDefinition is a class too (FTS4.swift:343). The receiver FTS4 is a struct with no stored properties (FTS4.swift:22), so the receiver would derive, but the parameters do not.",
+    "law": true,
+    "lawNote": "GRDB/FTS/FTS4.swift:48-57: `for column in definition.columns { if column.isLanguageId { arguments.append(\"languageid=\\\"\\(column.name)\\\"\") } else { arguments.append(column.name); if !column.isIndexed { arguments.append(\"notindexed=\\(column.name)\") } } }`. The loop has no skip, dedupe, break or throw. Everything after the loop (lines 59-92) only appends further literal-prefixed entries; nothing is removed or reassigned. The function returns `arguments` as-is (line 94). column.name goes in verbatim with no escaping. So every language-id column yields the element `languageid=\"<name>\"` (the \\\" is a real quote character, as the template spells it), and every non-language-id, non-indexed column yields `notindexed=<name>`. The law is true. The bare append at line 52 is correctly left out of the law.",
+    "read": true,
+    "readNote": "Both statable obligations are on the right lines, 50 and 54. The guards are right: line 50 sits under `column.isLanguageId`; line 54 sits under the else arm `!(column.isLanguageId)` and the nested `!column.isIndexed`. Depth is 1 and the source is definition.columns (a parameter path). The line-52 bare append is correctly refused.",
+    "refutations": [
+      {
+        "evidence": "\u00a72.5 refuses a row when, after the last qualifying loop, an accumulator statement is anything but an append of a literal. The harness's own `isLiteral` (fixtures/emitter-presence/census-run/Sources/EmitterCensus/Reader.swift:384-389) treats any interpolated segment as non-literal. FTS4.swift:59-91 appends interpolated strings after the loop: `arguments.append(\"tokenize=\\(tokenizer.name)\")` at :61, `\"content=\\\"\\(content)\\\"\"` at :71/:74, `compress=` at :78, `uncompress=` at :82, `matchinfo=` at :86 and `prefix=` at :90. R missed all of them because `tailMutation` is only called on top-level items (Reader.swift:341, inside `walkTop`), and every one of these appends sits inside an `if let` or a `switch`. Appends cannot falsify presence, so law=true stands.",
+        "shouldBe": "The obligations, guards, depth and source are right, and the law is unaffected. But R admitted a row that \u00a72.5 as frozen refuses, so if the hand-check counts a missed row-level refusal as a reader defect, read should be false. Otherwise record this as an admission-conformance note.",
+        "verdict": "read"
+      }
+    ],
+    "strictTailRefusal": "strict tail: arguments.append(\"tokenize=\\(tokenizer.name)\")",
+    "target": "GRDB (library)"
+  },
+  "GRDB.swift:GRDB/FTS/FTS5.swift:155 moduleArguments": {
+    "emittable": false,
+    "emittableNote": "(a) The file is in the library target GRDB: holds. (c) The method is public: holds. (b) fails. `db: Database` is a final class (GRDB/Core/Database.swift:146). `definition: FTS5TableDefinition` is `public final class` (FTS5.swift:316) with fileprivate `columns` (FTS5.swift:323), and FTS5ColumnDefinition is a final class (FTS5.swift:494). The receiver, struct FTS5 (FTS5.swift:54), is not the blocker.",
+    "law": true,
+    "lawNote": "GRDB/FTS/FTS5.swift:163-169: `for column in definition.columns { if column.isIndexed { arguments.append(\"\\(column.name)\") } else { arguments.append(\"\\(column.name) UNINDEXED\") } }`. The loop has no skip, break or throw. After the loop (lines 171-218) there are only appends, and the function returns `arguments` (line 219). So every non-indexed column yields the element `<name> UNINDEXED`, unescaped, and the law is true as read. Two things a test would meet: (1) lines 158-161 call `fatalError` when definition.columns is empty. That exit comes before the loop and has no elements, so the law is vacuous there, but a generator must draw non-empty columns or the test traps. (2) The function can throw after the loop (quotedSQL, db.primaryKey, lines 172-207). A throw returns no value, so it does not falsify the law.",
+    "read": true,
+    "readNote": "The statable obligation is line 167, template `\u27e8column.name\u27e9 UNINDEXED`, guard `!(column.isIndexed)` (the else arm of line 164), depth 1, source definition.columns. All of that is right. The line-165 interpolation-only append is correctly classed as bare.",
+    "refutations": [
+      {
+        "evidence": "After the loop at FTS5.swift:163-169, these interpolated appends follow, each inside an if, if-let or switch case where `tailMutation` (Reader.swift:341, top-level only) never looks: :181 `arguments.append(\"tokenize=\\(tokenizerSQL)\")`, :188 `content=`, :192 `content_rowid=`, :195 `try arguments.append(\"content=\\(contentTable.sqlExpression.quotedSQL(db))\")`, :198, :211 `prefix=`, :215 `columnSize=` and :219 `detail=`. \u00a72.5 refuses the row on any non-literal accumulator statement after the last qualifying loop, and the harness's own `isLiteral` (Reader.swift:384-389) calls an interpolated literal non-literal.",
+        "shouldBe": "The obligation itself is read right, and the law holds. The row breaches \u00a72.5's tail rule, so the same caveat as for FTS4 applies: read is false if a missed row-level refusal counts as a reader defect.",
+        "verdict": "read"
+      }
+    ],
+    "strictTailRefusal": "strict tail: arguments.append(\"tokenize=\\(tokenizerSQL)\")",
+    "target": "GRDB (library)"
+  },
+  "SwiftAssist:Sources/SwiftAssist/Agent/XMLToolCallProtocol.swift:21 renderToolCatalog": {
+    "emittable": true,
+    "emittableNote": "(a) The file is in `.target(name: \"SwiftAssist\", path: \"Sources/SwiftAssist\")`, a library (Package.swift:41-55). The executables live in other folders. (b) The receiver XMLToolCallProtocol (:14) is a struct whose only stored property is `let name = \"xml\"` (a default), with `public init() {}`. The parameter [AgentToolDescriptor]: AgentToolDescriptor (ToolCallProtocol.swift:55) is a struct over name: String, summary: String, permission: AgentPermission and parameters: [Parameter], with a public init. AgentPermission (AgentPermission.swift:3) is a CaseIterable String enum. Parameter (ToolCallProtocol.swift:73) is a struct over String, ParameterType, Bool and String, with a public init. ParameterType (:94) is a String enum with no payloads. Everything derives. (c) `public func`.",
+    "law": true,
+    "lawNote": "XMLToolCallProtocol.swift:21-58. `lines` starts as an array literal of string literals. Neither the outer loop over `tools` (:43) nor the inner loop over `tool.parameters` (:49) has a skip, break or dedupe, and the function returns `lines.joined(separator: \"\\n\")` (:57). :44 emits \"### \\(tool.name)  _(permission: \\(tool.permission.rawValue))_\" verbatim. :51 emits \"- `name` (raw, \" before the `req` cut, under `if !tool.parameters.isEmpty` (:46), and that guard is vacuous for the inner loop. True as read.",
+    "read": true,
+    "readNote": "Primary at :44 is right at depth 1. The segment at :51 is right at depth 2 with sources [tools, tool.parameters]. `req` (:50) is a ternary, so it is opaque and correctly a cut. The kept run before the cut is longer than \") \u2014 \u27e8param.description\u27e9\" after it. Guard `!tool.parameters.isEmpty` is right. :45 `lines.append(tool.summary)` is correctly bare.",
+    "target": "SwiftAssist (library)"
+  },
+  "SwiftFormatRuleStudio:SwiftFormatRuleStudioCore/Sources/SwiftFormatRuleStudioCore/Export/ImpactReportExporter.swift:40 csv": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate is false: `csv` is `private static` (:40). It is reached through the public `export(_:as:workspaceName:timestamp:)` (:26). It sits in the library target SwiftFormatRuleStudioCore.",
+    "law": true,
+    "lawNote": "ImpactReportExporter.swift:40-47. The accumulator `lines` starts as a one-literal array. The loop over `report.ruleImpacts` has no skip or break. Each iteration appends \"\\(rule),\\(impact.fileCount),\\(impact.findingCount)\" (:44), and the function returns `lines.joined(separator: \"\\n\")`. `rule` is `CSVEscaping.escape(impact.ruleID)` (:43), a one-argument encoder, so \u27e8rule\u27e9 is the escaped text and the output contains it verbatim. True as read.",
+    "read": true,
+    "readNote": "Line :44, depth 1 and source report.ruleImpacts are right, with no guards. Caveat: the escaping lives in the loop-local `let rule = CSVEscaping.escape(impact.ruleID)`, so the obligation's `encoders` is [] (the reader only records encoders written inline in the appended expression; Reader.swift:745-751). An emitted test must evaluate \u27e8rule\u27e9 as `CSVEscaping.escape(impact.ruleID)`, not as `impact.ruleID`, or a rule ID with a comma or quote would make it test the wrong text. The template names `rule` correctly, so I count this as read right.",
+    "target": "SwiftFormatRuleStudioCore (library)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/DocstringAdvisoryRenderer.swift:15 render": {
+    "emittable": true,
+    "emittableNote": "(a) Target: SwiftInferCLI, a library `.target` (Package.swift:182), with no main.swift or @main type in the folder. (b) The parameter is [SwiftInferCommand.Discover.DocstringAdviceItem] (SwiftInferCommand.Discover+DocstringAdvice.swift:14), an internal struct with an implicit memberwise init. Its stored properties are displayName and signature (String), location (SourceLocation: String, Int, Int), advisory (DocstringAdvisory), runnableScaffold (String?) and oracleDecline (String?). DocstringAdvisory (DocstringAdvisor.swift:25) is an enum whose payloads are ReferenceDefinition (String, String, Bool), ComplementaryContract (String, [String]) and FallbackContract (String, [String]), each with a public init. Everything derives. The function is static on an enum. (c) It is internal static on an internal enum, so @testable import reaches it.",
+    "law": true,
+    "lawNote": "DocstringAdvisoryRenderer.swift:26-43: `for item in items`. Line 28 appends \"  \u2022 \\(item.displayName)  \\(item.signature)\" unconditionally. The inner loops and the if-let/else-if-let branches (lines 30-41) only append. There is no break, continue or return, and the function returns `lines.joined(separator: \"\\n\")` (line 43). The guard at line 16 runs before the loop. The law holds.",
+    "read": true,
+    "readNote": "Line 28 is primary at depth 1 with no guards. Line 29 is bare because its literal is whitespace only. The line 40 append under `else if let decline = item.oracleDecline` is correctly call-guarded, since an if-let is never restatable. The loops over `body(for:)` and `scaffold.split` were correctly refused as source: other.",
+    "target": "SwiftInferCLI (library .target, Package.swift:182)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/InteractionBridgeWriter.swift:27 emit": {
+    "emittable": true,
+    "emittableNote": "(a) Target: SwiftInferCLI, a library target (Package.swift:182). (b) The parameters are BridgeSuggestion and PeerProposal (BridgeSuggestion.swift:106 and :6), both with public explicit inits. BridgeSuggestion has identity: SuggestionIdentity (a struct of three Strings with public init(canonicalInput: String), SuggestionIdentity.swift:18), reducerQualifiedName and stateTypeName (String), peers: [PeerProposal] and firstSeenAt: Date. PeerProposal has family: InteractionInvariantFamily (a CaseIterable String enum, InteractionInvariantSuggestion.swift:21), kitProtocolName: String and invariants: [InteractionInvariantSuggestion]. InteractionInvariantSuggestion has a public init over SuggestionIdentity, the family, Strings, Int, Tier (CaseIterable, Tier.swift:7), [String], Date and String?. Everything derives. The function is static. (c) It is `public static`.",
+    "law": true,
+    "lawNote": "InteractionBridgeWriter.swift:40-42: `for invariant in peer.invariants { lines.append(\"//   - \\(invariant.predicate)\") }` has no guard and no skip. After the loop there are only appends: literals at lines 43-46 and 60, and at lines 48 and 54 `lines.append(contentsOf: emitActionIdempotenceStub(...)/emitStatePredicateStub(...))`. None of them removes or rewrites an element. The return is `lines.joined(separator: \"\\n\")` (line 61). The law holds.",
+    "read": true,
+    "readNote": "The line 41 obligation is primary at depth 1 over `peer.invariants`, with no guards, which is correct. But the row should not have been admitted. \u00a72.5 refuses a row with any non-literal accumulator statement after the last qualifying loop, and lines 48 and 54 append non-literal call results (`append(contentsOf: emit...Stub(...))`). The reader missed them because they sit inside a top-level `if peer.family == .idempotence {...} else {...}`. Reader.swift `walkTop` sends the if to `walkTopIf`, which recurses with a fresh `sawQualifying = false`, so `tailMutation` never runs on appends nested in a post-loop if (fixtures/emitter-presence/census-run/Sources/EmitterCensus/Reader.swift:324-353). This is a row-level admission defect against the scope's own rule, not a misread obligation. The appends cannot remove the line, so the law stays true and the emitted law would test the right thing. That is why I marked read true and am flagging the defect here.",
+    "strictTailRefusal": "strict tail: lines.append(contentsOf: emitActionIdempotenceStub(\n        ",
+    "target": "SwiftInferCLI (library .target, Package.swift:182)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SurveyRunDiffRenderer.swift:95 rowListSection": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate is false: the function is `private static` (line 95). It is surfaced with widening advice only. Its target is SwiftInferCLI, a library.",
+    "law": true,
+    "lawNote": "SurveyRunDiffRenderer.swift:95-107: `var lines = [\"\\(heading) \u2014 \\(records.count)\"]`, then `for record in records`, where line 103 appends \"  \\(record.primaryFunctionName)  \\(record.templateName)  [\\(bucket)]\" unconditionally. After the loop there is only the literal `lines.append(\"\")` (line 105), and the function returns `lines`. The emitted text contains the kept run \"  X  Y  [\" for every record. The law holds.",
+    "read": true,
+    "readNote": "The line 103 obligation is a segment. `bucket` (line 102, `SurveyRunDiff.Bucket.of(record.outcome).rawValue`) is not a one-argument encoder call on a tracked path, because `.rawValue` follows the call. So it is opaque and correctly a cut, and the kept run up to `[` is right. Depth 1, no guards.",
+    "target": "SwiftInferCLI (library .target, Package.swift:182)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.DiscoverReducers+ConventionRole.swift:12 renderConventionRoleSummary": {
+    "emittable": true,
+    "emittableNote": "(a) Target: SwiftInferCLI, a library target (Package.swift:182). (b) The parameter is [StatefulRole]. StatefulRole (StatefulRole.swift:162, public init line 204) has:\n- location: SourceLocation\n- typeName: String\n- paradigm: Paradigm (CaseIterable)\n- recognizedBy: RecognitionKind (a String enum with payload-free cases)\n- state: StateSurface (an enum of String or [RoleStateField]; RoleStateField is String, String, Bool)\n- actions: [RoleAction] (String, [String], String?, Bool, Bool, Bool; public init)\n- construction: Construction (an enum of String or [RoleInitParameter] (String?, String) and [Collaborator]; Collaborator is String, String and CollaboratorRole, an enum whose one payload is Bool)\n- collaborators: [Collaborator]\n- effect: Effect? (SwiftEffectInference Effect.swift:65, an enum whose only payload is String?)\n\nEverything derives. The function is static. (c) It is internal static in a non-private extension of SwiftInferCommand.DiscoverReducers.",
+    "law": true,
+    "lawNote": "Lines 22-25 run `for role in roles { lines.append(contentsOf: renderConventionRole(role)) }` and return `lines.joined(separator: \"\\n\") + \"\\n\"`, which is allowed by \u00a72.2. The helper renderConventionRole (line 28) seeds its accumulator with `\"  \\(role.location)  \\(role.typeName)  [\\(role.paradigm.rawValue)]\"` (line 29). Later it only appends (lines 37-59) and returns `lines` (line 62), so that text reaches the caller's output verbatim for every role. The early `if roles.isEmpty { return \"...\" }` (line 13) comes before the loop and fires only when there are no elements. The law holds.",
+    "read": true,
+    "readNote": "The helper is resolved correctly at 1 hop (renderConventionRole, the unique match, with q = role), and the template matches line 29. One flaw: the recorded transform `.location` is spurious. HelperHop.swift:117-123 recorded the first member path in the template (`\u27e8role.location\u27e9`) as a transform, but `role.location` is a path of q, not a transform like `.xmlEscaped`. It changes nothing because the template already spells every path in full and contains no bare \u27e8q\u27e9. An emitter that applied `.location` to the value passed down would be wrong, though. I marked read true on the template and hop, and am flagging this.",
+    "target": "SwiftInferCLI (library .target, Package.swift:182)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.DiscoverReducers+ConventionRole.swift:28 renderConventionRole": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate is false: the function is `private static` (line 28). Its target is SwiftInferCLI, a library. The public entry point is renderConventionRoleSummary, which reaches this function through the helper hop.",
+    "law": true,
+    "lawNote": "There are two segment obligations, and both hold.\n- Lines 43-48: `for action in role.actions` sits in the else arm of `if role.actions.isEmpty`. Line 47 appends \"      - \\(action.signature)\\(async)\\(throwsText)\\(transitive)\", which always contains \"      - \\(action.signature)\".\n- Lines 51-60: `if !role.collaborators.isEmpty { for collaborator in role.collaborators { ... lines.append(\"      - \\(collaborator.propertyName): \\(collaborator.protocolType)  \u2192 \\(kind)\") } }`, which always contains \"      - P: T  \u2192 \".\n\nThere is no skip, break or return in either loop. The accumulator is never truncated, and the function returns `lines` (line 62).",
+    "read": true,
+    "readNote": "Line 47 is a segment, with async, throwsText and transitive opaque (ternary initialisers) and therefore cuts. Its guard `!(role.actions.isEmpty)` is the correct negation for the else arm. Line 59 is a segment with `kind` opaque (assigned in a switch) and therefore a cut, so the kept run ending in \"  \u2192 \" is right. Its guard `!role.collaborators.isEmpty` is correct. Both are depth 1 over the correct sources.",
+    "target": "SwiftInferCLI (library .target, Package.swift:182)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.DiscoverReducers+DefensiveCopy.swift:12 renderDefensiveCopySummary": {
+    "emittable": true,
+    "emittableNote": "a) SwiftInferCLI is a plain `.target` (Package.swift:182-197). The executables are swift-infer (@main in Sources/swift-infer/SwiftInferEntry.swift) and soundness-probe (Package.swift:250-261). b) The function is static, so there is no receiver. DefensiveCopyCandidate (SwiftInferCore/DefensiveCopyCandidate.swift:9-42) is a struct with a public init. Its fields: typeName String; location SourceLocation (BodySignals.swift:8, file String / line Int / column Int, public init); copyMethodName String; mutationSurface [MutationMethod] (ValueSemanticCandidate.swift:31, name String / isMutating Bool / parameterCount Int, public init); equatability EquatableEvidence (EquatableResolver.swift:9, payload-free enum with cases equatable / notEquatable / unknown). All of these derive. c) `static func` inside a `public extension SwiftInferCommand` struct DiscoverReducers (SwiftInferCommand.DiscoverReducers.swift:56-58), so it is not private.",
+    "law": false,
+    "lawNote": "The helper template '  [not verify-ready: \u27e8candidate.equatability\u27e9]' is the false arm of a ternary in renderDefensiveCopy (SwiftInferCommand.DiscoverReducers+DefensiveCopy.swift:29-30: `let note = candidate.equatability == .equatable ? \"\" : \"  [not verify-ready: \\(candidate.equatability)]\"`). For any candidate with equatability == .equatable that text is never emitted, and the obligation carries no guard. So the law is false for a one-element input whose candidate is .equatable. Everything else holds: the early return at :13-15 only fires on empty input, and :25 returns lines.joined(separator: \"\\n\") + \"\\n\", which keeps the helper's lines verbatim.",
+    "read": false,
+    "readNote": "Hop 1 resolved to the right helper (renderDefensiveCopy, :28). But R picked the conditional `note` string-building site, the ternary at :29-30, and did not record its condition (equatability != .equatable) as a guard. The unconditional sites at :35 ('    copy method: \\(candidate.copyMethodName)()') and :36 ('    mutation surface (\\(...count)): ') were there to take. As read, the emitted law would test a guarded line as if it were unconditional.",
+    "target": "SwiftInferCLI (library target)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.DiscoverReducers+StableIdentity.swift:12 renderStableIdentitySummary": {
+    "emittable": true,
+    "emittableNote": "a) SwiftInferCLI is a library `.target` (Package.swift:182). b) The function is static. StableIdentityCandidate (SwiftInferCore/StableIdentityCandidate.swift:11-25) has typeName String, location SourceLocation (String/Int/Int, public init, BodySignals.swift:8) and mutationSurface [MutationMethod] (String/Bool/Int, public init, ValueSemanticCandidate.swift:31), with a public memberwise-style init. All derive. c) It is internal static inside `public extension SwiftInferCommand { struct DiscoverReducers }`.",
+    "law": true,
+    "lawNote": "The helper renderStableIdentity (:28-35) unconditionally returns the line \"    mutation surface (\\(candidate.mutationSurface.count)): \\(surface)\" (:33). The summary appends it with append(contentsOf:) at :23 and returns lines.joined(separator: \"\\n\") + \"\\n\" (:25). So for every candidate the output contains '    mutation surface (N): ' with N = candidate.mutationSurface.count. The early return at :13-15 fires only when candidates is empty. The law is true, if weak: the count is not unique per element.",
+    "read": true,
+    "readNote": "The loop at :22 and the helper hop to renderStableIdentity (unique, :28) are right, at depth 1 with no guards. :33 is the only helper line with non-whitespace literal adjacent to a q-path: :32 has only spaces around origin and typeName. The recorded 'transform' .mutationSurface.count is really a path of q, not a transform, but it does not change what is tested.",
+    "target": "SwiftInferCLI (library target)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.Query.swift:288 renderEntries": {
+    "emittable": true,
+    "emittableNote": "a) SwiftInferCLI is a library `.target`. b) The function is static, with no receiver. totalMatched is Int. SemanticIndexEntry (SwiftInferCore/SemanticIndexEntry.swift:27) has stored vars that are all String, String?, Int, Bool or [String], plus typeShape: IndexedTypeShape?. IndexedTypeShape (IndexedTypeShape.swift:21) holds String, a String-backed payload-free enum Kind, Bool and arrays of StoredMember / InitializerSignature / EnumCase, each of String / String? / Bool / arrays with public inits. SemanticIndexEntry has a public init over derivable values (:176). All derive. c) `static func` (internal) in struct Query inside `public extension SwiftInferCommand` (Query.swift:62-64). It is documented 'Module-internal for V1.33.D unit tests'.",
+    "law": true,
+    "lawNote": "algebraicEntryLines (Query.swift:324-336) returns as its first element the + chain \"[\\(entry.tier) \\(entry.score)] \" + ... (:328-330), with no condition. renderEntries does `lines += algebraicEntryLines(entry)` for every entry (:298) and returns lines.joined(separator: \"\\n\") + \"\\n\" (:299). So '[tier score] ' appears verbatim for every entry. The early return at :292-294 fires only when entries is empty.",
+    "read": true,
+    "readNote": "The loop at :298 is right, and the hop to algebraicEntryLines resolves uniquely (private static, :324). The template is the leading literal run of the :328 + chain. The 'transform' .tier is a path of q, not a real transform, which is harmless.",
+    "target": "SwiftInferCLI (library target)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.Query.swift:304 renderCombined": {
+    "emittable": true,
+    "emittableNote": "a) SwiftInferCLI is a library `.target`. b) The function is static. SemanticIndexEntry derives, as in the renderEntries row. InteractionIndexEntry (SwiftInferCore/InteractionIndexEntry.swift:41) has only String, String? and Int stored lets (:47-107) and public inits (:109, :159). totalMatched is Int. c) It is internal static in struct Query inside `public extension SwiftInferCommand`.",
+    "law": true,
+    "lawNote": "For algebraic entries, :315 runs lines += algebraicEntryLines(entry), whose first line starts with \"[\\(entry.tier) \\(entry.score)] \" (:328). For interaction entries, under `if !interaction.isEmpty` (:316), :319 runs lines += interactionEntryLines(entry). That helper (SwiftInferCommand.Query+Interaction.swift:62-74) starts its first line with \"[\\(entry.tier) \\(entry.score)] \" (:66). The return at :321 is lines.joined(separator: \"\\n\") + \"\\n\". The early return at :309-311 fires only when both arrays are empty, and then neither loop visits anything. The guard is correct, and redundant with the loop. Both obligations hold.",
+    "read": true,
+    "readNote": "There are two loops (:315, :319) at depth 1. Both hops resolve uniquely: algebraicEntryLines at Query.swift:324, interactionEntryLines at Query+Interaction.swift:62. The guard `!interaction.isEmpty` is recorded on the second obligation. The templates match the leading literal runs.",
+    "target": "SwiftInferCLI (library target)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/SwiftInferCommand.SuggestRefactors.swift:188 renderClusters": {
+    "emittable": true,
+    "emittableNote": "a) SwiftInferCLI is a library `.target`. b) The function is static. RefactorCluster (SwiftInferCLI/RefactorClusterAnalyzer.swift:4-26) has typeName String, totalSuggestionCount Int, perTemplateCounts [String: Int], shape ClusterShape and representativeFunctions [String], with a public init. ClusterShape (:45) is a String-backed CaseIterable enum. totalMatched is Int. All derive. c) It is internal static in struct SuggestRefactors inside `public extension SwiftInferCommand` (SuggestRefactors.swift:21-23). It is documented 'Module-internal for V1.35.B unit tests'.",
+    "law": true,
+    "lawNote": "Every cluster unconditionally appends :199-203, '[T] N ' + 'inferred propert' + ternary + ... The kept run '[\u27e8typeName\u27e9] \u27e8totalSuggestionCount\u27e9 inferred propert' is emitted verbatim, since \"\\(count) \" + \"inferred propert\" gives 'N inferred propert'. It also appends :204 '  templates: \\(formatTemplateCounts(cluster.perTemplateCounts))' and :206 '  suggestion: \\(suggestionText(for: cluster.shape))'. The return at :209 is lines.joined(separator: \"\\n\"). There are no skips, and the early return at :192-194 fires only on empty input. All three statable obligations hold.",
+    "read": true,
+    "readNote": "The loop is at :198. The segment at :199 is cut at the ternary interpolation, and the longer kept run is the one before the cut. The primaries at :204 and :206 use one-argument encoder calls on tracked paths. :205's `joined` is listed as an unresolved helper and dropped, correctly.",
+    "target": "SwiftInferCLI (library target)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCLI/ViewModelVerifyInteractionSurvey.swift:204 render": {
+    "emittable": false,
+    "emittableNote": "a) SwiftInferCLI is a library `.target`, so this condition is met. c) `static func render` in internal `enum ViewModelVerifyInteractionSurvey` (:19), so this condition is met. b) This condition fails. `folded: FoldBack?` needs FoldBack (:127-130) to derive, and its stored property `paired: [(suggestion: InteractionInvariantSuggestion, outcome: VerifyOutcome)]` is an array of tuples, which are not derivable. InteractionInvariantSuggestion (SwiftInferCore/InteractionInvariantSuggestion.swift:76) carries identity SuggestionIdentity, family, tier and firstSeenAt Date among others, and is not checked further. target String and entries [Entry] probably derive: Entry has typeName / family String and result StepResult, an enum whose cases are ran(VerifyOutcome) and skipped(String). VerifyOutcome's case payloads are Ints, Strings, EdgeCaseDetail, and DefaultFailDetail with `shrink: ShrinkTrace?`, which is unverified. But FoldBack alone blocks derivation.",
+    "law": false,
+    "lawNote": "`guard !entries.isEmpty else { return \"ViewModel interaction verify \u2014 \\(target)\\n  (no verifiable @Observable carriers)\\n\" }` (:210-212) returns before the folded.unpairable loop (:226) and the warnings loop (:233). With entries = [] and warnings = [\"w\"], the output does not contain '  evidence: w'. The same holds for entries = [] and folded with a non-empty unpairable. Neither obligation records `!entries.isEmpty`, so the law as stated is false. The entries obligation (:215, '  \u27e8typeName\u27e9.\u27e8family\u27e9: \u27e8verdict(result)\u27e9') is true, and the segment template at :230 is emitted verbatim whenever it is reached.",
+    "read": false,
+    "readNote": "The early return at :210-212 guards on `entries`, not on the sources of the other two loops. The dominating condition `!entries.isEmpty` is therefore missing from the folded.unpairable and warnings obligations. \u00a72.2's allowance for an early return before the first loop silently assumes it guards the loops' own sources. Also, the :230 obligation sits under `if let folded` (:217), which \u00a72.5 says is never restatable and makes its accumulations call-guarded and refused. R instead kept it as a statable segment carrying an unrestatable guard.",
+    "target": "SwiftInferCLI (library target)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCore/EffectAnnotationRenderer.swift:12 render": {
+    "emittable": true,
+    "emittableNote": "(a) Target: SwiftInferCore, a library `.target` (Package.swift:133). The executables are swift-infer and soundness-probe (Package.swift:250, 258). (b) The parameter is [EffectAnnotationAdvice]. EffectAnnotationAdvice (EffectAnnotationAdvice.swift:14) has stored properties displayName, signature, recommendedAnnotation and rationale (all String) and location: SourceLocation, with a public explicit init (line 32). SourceLocation (BodySignals.swift:8) has file: String, line: Int and column: Int, with a public init. Everything derives. The function is static on an enum, so there is no receiver. (c) It is `public static`.",
+    "law": true,
+    "lawNote": "EffectAnnotationRenderer.swift:22-29: `for item in advice` makes three unguarded appends of interpolated literals: line 24 \"  \u2022 \\(item.displayName)  \\(item.signature)\", line 26 \"    add: \\(item.recommendedAnnotation)\" and line 27 \"    why: \\(item.rationale)\". The loop has no break, continue or return. After the loop the accumulator is only returned as `lines.joined(separator: \"\\n\")` (line 29), and joining keeps every element verbatim. The `guard !advice.isEmpty else { return \"\" }` at line 13 runs before the loop and only fires when there are no elements, so it changes nothing. All three templates are emitted for every item.",
+    "read": true,
+    "readNote": "Lines 24, 26 and 27 are primary at depth 1 over `advice`, with no guards, which is correct. Line 25 \"    \\(item.location)\" is bare because its only literal is whitespace, which is correct under \u00a72.4. Nothing statable is misattributed.",
+    "target": "SwiftInferCore (library .target, Package.swift:133)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferCore/SuggestionRenderer.swift:244 renderGeneratorRecipes": {
+    "emittable": true,
+    "emittableNote": "(a) Target: SwiftInferCore, a library target (Package.swift:133). (b) The parameter is [GeneratorRecipe]. GeneratorRecipe (GeneratorRecipe.swift:298) has four String stored properties (subject, typeName, expression, rationale) and a public init. It derives. The function is static on `public enum SuggestionRenderer` (line 10), so there is no receiver. (c) It is internal static and is not inside a private extension, so it is callable through @testable import.",
+    "law": true,
+    "lawNote": "SuggestionRenderer.swift:244-256: `var lines = [\"\", \"Generators...\"]`, then `for recipe in recipes`. Line 250 appends \"  // \\(recipe.subject): \\(recipe.typeName) \u2014 \\(recipe.rationale)\" unconditionally. The inner loop (line 251) only appends more lines. There is no skip, break or return in the loop, and the function returns `lines` (line 255) with nothing done to it after the loop. The early `guard !recipes.isEmpty else { return [] }` runs before the loop. The law holds.",
+    "read": true,
+    "readNote": "The line 250 obligation is primary at depth 1 over `recipes`, with no guards, which is correct. The inner `for line in recipe.expression.split(...)` was correctly refused as `source: other`.",
+    "target": "SwiftInferCore (library .target, Package.swift:133)"
+  },
+  "SwiftInferProperties:Sources/SwiftInferTemplates/LiftedConformanceTemplate.swift:91 renderExplainabilityHeader": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate is false because the function is `private static func` (:91). It is surfaced with widening advice only and is not counted. For reference, SwiftInferTemplates is a library target.",
+    "law": true,
+    "lawNote": "In the else arms of `if explainability.whySuggested.isEmpty` (:100-106) and `if explainability.whyMightBeWrong.isEmpty` (:109-115), each entry is appended as \"//   - \\(entry)\" (:104, :113). The return at :116 is lines.joined(separator: \"\\n\"), with no skip or post-processing. The law holds under the recorded guards.",
+    "read": true,
+    "readNote": "Both loops are at depth 1, and both guards are recorded correctly as the negation of the `if` for the else arm: !(\u2026whySuggested.isEmpty) and !(\u2026whyMightBeWrong.isEmpty). The templates match :104 and :113.",
+    "target": "SwiftInferTemplates (library target)"
+  },
+  "SwiftLintRuleStudio:SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/Services/PRCommentGenerator.swift:110 changeSections": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate is false: `changeSections` is `private` (:110), and so is ruleReference (:267). The enclosing PRCommentGenerator is also a class. It sits in the library target SwiftLintRuleStudioCore. Surfaced with widening advice only.",
+    "law": true,
+    "lawNote": "PRCommentGenerator.swift:110-147. The early return at :111-113 fires only when `changes.isEmpty`. ConfigChangeSummary.isEmpty (ConfigChangeSummary.swift:128-131) requires `settingsChanged.isEmpty`, so it never skips a settingsChanged element. The loop at :133 has no skip or break. :134 appends \"- [~] \" + ruleReference(change.ruleId, linked:). ruleReference (:267-270) returns \"`rule`\" or \"[`rule`](base/rule.html)\", and both contain \"`\u27e8rule\u27e9`\" verbatim, with no transform. Nothing after the loops removes anything: the tuple loop at :139 only appends, and `lines` is returned (:146). True as read.",
+    "read": true,
+    "readNote": "The helper obligation is at the right line (:134): chain [ruleReference], q = `rule`, template \"`\u27e8rule\u27e9`\", depth 1. The guard `!changes.settingsChanged.isEmpty` is the enclosing if at :130, which is correct. :135's `.map` closure is correctly unresolved and refused. The :139 tuple-array loop is correctly `source: other`. Caveat, not counted: ruleReference is also declared in many `.claude/worktrees/*` copies of this file. If the universe included those, the unique-match rule (\u00a72.6) would leave it unresolved. The resolution matches the checkout's own declaration.",
+    "refutations": [
+      {
+        "evidence": "The last qualifying loop is :133-136. After it, the non-qualifying tuple loop at :139-145 holds `lines.append(\"### \\(title)\")` (:141) and `lines.append(contentsOf: entries.map { \"- \\($0)\" })` (:143), both non-literal accumulator statements. `walkTop` skips the body of a non-qualifying `for` for tail purposes: a `ForStmtSyntax` goes straight to `continue` (Reader.swift:328-333). (Checked separately: ruleReference resolves uniquely, because Census.swift:126 skips dot-prefixed components, so none of the 11 `.claude/worktrees/*` copies of PRCommentGenerator.swift enter the index.)",
+        "shouldBe": "The helper hop and guard are read right, and the law holds. The row breaches \u00a72.5's tail rule, so read is false under the frozen scope if a missed row-level refusal counts as a reader defect.",
+        "verdict": "read"
+      }
+    ],
+    "strictTailRefusal": "strict tail: lines.append(\"### \\(title)\")",
+    "target": "SwiftLintRuleStudioCore (library)"
+  },
+  "SwiftPropertyLaws:Sources/PropertyLawDiscoveryTool/GeneratedFileEmitter.swift:104 headerLines": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate is false because the function is `private static` (line 104). It would also sit in the executable target PropertyLawDiscoveryTool. Surface it with widening advice only.",
+    "law": true,
+    "lawNote": "GeneratedFileEmitter.swift:112-128. Under `if !map.parseFailures.isEmpty`, `for failure in map.parseFailures { lines.append(\"//   - \\(failure.filePath): \\(failure.message)\") }`. Under `if !map.skippedTypes.isEmpty`, `for type in map.skippedTypes { lines.append(\"//   - \\(type.typeName): \\(type.explanation)\") }`. Neither loop skips or breaks. The function returns `lines` (line 129) with nothing after the loops. ParseFailure has `filePath`/`message` (ConformanceMap.swift:231-233); SkippedType has `typeName` and a computed `explanation` (ConformanceMap.swift:25, 30). The law is true.",
+    "read": true,
+    "readNote": "The obligations are on lines 116 and 126. The templates are verbatim and the guards are the enclosing `if` conditions; both guards are redundant with non-empty iteration but correctly recorded. Depth is 1 and the sources are map.parseFailures and map.skippedTypes.",
+    "target": "PropertyLawDiscoveryTool (executableTarget)"
+  },
+  "SwiftPropertyLaws:Sources/PropertyLawDiscoveryTool/GeneratedFileEmitter.swift:32 emit": {
+    "emittable": false,
+    "emittableNote": "(a) fails. PropertyLawDiscoveryTool is an `.executableTarget` (SwiftPropertyLaws Package.swift:226-234), and PropertyLawDiscoveryTool.swift:12 carries `@main`. (c) The function is internal and static, so it would be callable via @testable. (b) is not needed to decide, but would be doubtful: ConformanceMap.Entry carries `derivationStrategy: DerivationStrategy`, an enum whose `.memberwiseArbitrary(members: [MemberSpec])` payload is not checked here, and `conformances: Set<KnownProtocol>`.",
+    "law": true,
+    "lawNote": "GeneratedFileEmitter.swift:95-98: `for entry in map.entries { lines.append(\"\"); lines.append(contentsOf: suiteLines(for: entry, suppressions: suppressions)) }`. suiteLines (line 134) unconditionally appends `provenanceComment(for: entry)` as its first line (line 139), before the `guard !entry.conformances.isEmpty` early return (lines 145-148), so the comment line is always among the lines it returns. provenanceComment (lines 188-193) returns `\"// \\(entry.typeName) \u2014 \\(summary)\"`. Its summary is a joined map over provenances, which may be empty, but the prefix `// <typeName> \u2014 ` is always present. emit then returns `lines.joined(separator: \"\\n\") + \"\\n\"` (line 99), an allowed return form. Nothing after the loop removes anything. So for every entry, the output contains `// <entry.typeName> \u2014 ` (with an em dash). The law is true.",
+    "read": true,
+    "readNote": "The helper chain [suiteLines, provenanceComment] is right: 2 hops, with lines 97 \u2192 139 \u2192 192. The template `// \u27e8entry.typeName\u27e9 \u2014 ` is spelled in provenanceComment's own parameter name, `entry`, and stops at the cut `summary`. The transform `.typeName` is just the path read off q, which matches the harness's convention elsewhere in the census (e.g. `.name`, `.id`). Depth is 1 and the source is map.entries, with no guards. The fixedImports loop (a static member) and the imports loop (a local) are correctly refused as source: other.",
+    "target": "PropertyLawDiscoveryTool (executableTarget)"
+  },
+  "SwiftPropertyLaws:Sources/PropertyLawDiscoveryTool/PropertyLawDiscoveryTool.swift:135 summaryLines": {
+    "emittable": false,
+    "emittableNote": "(a) fails. The file is the @main file (PropertyLawDiscoveryTool.swift:12) of `.executableTarget` PropertyLawDiscoveryTool (Package.swift:226). (c) The function is internal static and callable via @testable. On (b), for the record: ToolInvocation's stored properties are Strings and [String] (ToolInvocation.swift:21-26; the full property list was not checked), and Set<String> derives. ConformanceMap holds Entry, whose DerivationStrategy payload is unverified, plus dictionaries of WitnessSet, FunctionSignature and TypeShape. The executable target alone decides it.",
+    "law": true,
+    "lawNote": "PropertyLawDiscoveryTool.swift:151-157: `if !map.skippedTypes.isEmpty { ...; for type in map.skippedTypes { lines.append(\"    - \\(type.typeName): \\(type.explanation)\") } }`. There is no skip or break. After this loop the code only appends: the todoEntries block (lines 160-180) appends a header, the bucket lines and the names. The function returns `lines` (line 181). The template is verbatim with 4 leading spaces. The law is true.",
+    "read": true,
+    "readNote": "The single statable obligation is line 155, guard `!map.skippedTypes.isEmpty`, depth 1, source map.skippedTypes. The two `for entry in todoEntries` loops (a local filtered from map.entries, lines 170 and 176) are correctly refused as source: other. The line-177 append is therefore not in the law, which is right.",
+    "refutations": [
+      {
+        "evidence": "The last qualifying loop is :154-156. After it, inside `if !todoEntries.isEmpty` (:164), come non-literal accumulator statements: :165 `lines.append(\"  types needing manual gen() (\\(todoEntries.count)):\")`, :173 `lines.append(contentsOf: Self.bucketLines(buckets))` and :177 `lines.append(\"      - \\(entry.typeName)\")`. `walkTopIf` re-enters `walkTop` with a fresh `sawQualifying = false` (Reader.swift:325-353), so the tail check never fires inside that `if`.",
+        "shouldBe": "The obligation is read right, and the law is unaffected. But the row breaches \u00a72.5's tail rule, so read is false under the frozen scope if admission errors count as reader defects.",
+        "verdict": "read"
+      }
+    ],
+    "strictTailRefusal": "strict tail: lines.append(\"  types needing manual gen() (\\(todoEntries.co",
+    "target": "PropertyLawDiscoveryTool (executableTarget)"
+  },
+  "SwiftPropertyLaws:Sources/PropertyLawDiscoveryTool/PropertyLawDiscoveryTool.swift:254 advisoryLines": {
+    "emittable": false,
+    "emittableNote": "(a) fails. The file is in `.executableTarget` PropertyLawDiscoveryTool (Package.swift:226; `@main` at PropertyLawDiscoveryTool.swift:12). (c) The function is internal static: holds. (b) would likely hold: Suggestion (AdvisorySuggester.swift:26-32) is a struct of typeName String, suggestedProtocol KnownProtocol (an enum used as KnownProtocol.allCases), confidence SuggestionConfidence (an enum with rawValue), and evidence String. Its full property list and inits were not fully verified. The executable target decides it.",
+    "law": true,
+    "lawNote": "PropertyLawDiscoveryTool.swift:255 holds `guard !suggestions.isEmpty else { return [] }`, an early literal return before the loop (allowed, and vacuous: no elements). Lines 258-271 run `for suggestion in suggestions { let proto = suggestion.suggestedProtocol; lines.append(\"  note: \\(suggestion.typeName) \\(suggestion.evidence) \" + \"but does not declare \\(proto.declarationName).\"); lines.append(\"        Consider conforming and running \\(proto.checkFunctionName) \" + \"to verify the laws hold.\"); lines.append(\"        confidence: \\(suggestion.confidence.rawValue)\") }`. There is no skip or break, and the function returns `lines` (line 272). The + chains concatenate to exactly the recorded templates, with one space at each join. The law is true.",
+    "read": true,
+    "readNote": "The obligations are on lines 260, 264 and 268. `proto` is a loop-local `let` initialised from the tracked path suggestion.suggestedProtocol, so it is element text, and \u27e8proto.declarationName\u27e9 / \u27e8proto.checkFunctionName\u27e9 are tracked paths. A law test must resolve proto as suggestion.suggestedProtocol, but that is what the template names. There are no guards (the guard sits before the loop and only returns []). Depth is 1, source `suggestions`. Everything was read right.",
+    "target": "PropertyLawDiscoveryTool (executableTarget)"
+  },
+  "SwiftPropertyLaws:Sources/PropertyLawDiscoveryTool/PropertyLawDiscoveryTool.swift:279 roundTripLines": {
+    "emittable": false,
+    "emittableNote": "(a) fails. The file is in the executable target `PropertyLawDiscoveryTool` (Package.swift:226 `.executableTarget(name: \"PropertyLawDiscoveryTool\"`), and the enum itself is `@main` (PropertyLawDiscoveryTool.swift:12). For the record, (b) and (c) would hold. The method is internal static. RoundTripSuggestion (ConformanceMap.swift:50) is a struct over Scope (an enum with a String payload or none), FunctionSignature (String, [String], String, Bool, String?), SuggestionConfidence (a String enum with no payloads) and evidence String, with an internal memberwise init.",
+    "law": true,
+    "lawNote": "PropertyLawDiscoveryTool.swift:279-312. The early `guard !suggestions.isEmpty else { return [] }` (:280) comes before the loop and only fires when there is nothing to iterate. The loop `for suggestion in suggestions` (:284) has no skip, break or dedupe. Every append is to `lines`, and `lines` is returned unchanged (:311). The segment at :291 keeps the run after the second `scopeLabel` cut: \".\u27e8backward.name\u27e9(_:) form a round-trip pair candidate.\" That is exactly the text the `+` chain emits. The primaries at :296, :301 and :304 interpolate String / rawValue / String verbatim (`evidence: String`, ConformanceMap.swift:70). True as read.",
+    "read": true,
+    "readNote": "Lines, loop and depth 1 are right. `scopeLabel` is a let assigned through a switch, so it is opaque and is correctly a cut. Of the two cut-bounded runs on :291, the reader kept the longer one, and that is consistent with \u00a72.4. No guards are missed: the switch only binds scopeLabel.",
+    "target": "PropertyLawDiscoveryTool (executableTarget, @main)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivitySVGRenderer.swift:81 renderFromLayout": {
+    "emittable": true,
+    "emittableNote": "a: the file is in target SwiftUMLBridgeFramework, a `.target` library (SwiftUMLBridge/Package.swift: library product; the only executableTarget is `swiftumlbridge`). b: `public static`, so there is no receiver. Parameter ActivityLayout (Model/ActivityLayout.swift:43) has a public init over nodes [PositionedActivityNode], edges [ActivityEdge], title String, totalWidth Double, totalHeight Double. PositionedActivityNode (:6) has a public init over Int, ActivityNodeKind, String, Double x4, Bool x2. ActivityNodeKind (ActivityGraph.swift:6) is a String-raw enum with no payloads; it is not CaseIterable, but every case payload is trivially derivable. ActivityEdge (ActivityGraph.swift:55) has an init over Int, Int, String?. Everything derives. c: public static func in a public struct (ActivitySVGRenderer.swift:81).",
+    "law": false,
+    "lawNote": "Only statable obligation is the line-103 helper (renderEdge -> renderBackEdge, template `font-style=\"italic\">\u27e8label.xmlEscaped\u27e9</text>\\n`, no guards). It is false for inputs the types allow. (1) ActivityEdge.label is `String?` and defaults to nil (Model/ActivityGraph.swift:59-61). renderBackEdge writes the label only under `if let label, !label.isEmpty` (ActivitySVGRenderer+Shapes.swift:129), and renderForwardEdge does the same (:101). So an edge with a nil or empty label emits no label text. (2) renderEdge returns \"\" when either endpoint id is missing from layout.nodes (`guard let source = layout.node(withId: edge.fromId), let target = ... else { return \"\" }`, Shapes.swift:78-79). ActivityLayout(nodes:edges:) lets edges name nodes that are absent. Text written in the helper does reach `svg` verbatim (svg += at :103, final `svg += \"\\n</svg>\"; return svg`, :110-111). The literal is also the same on the forward branch once its `+` chain is joined (:105-106). The law fails only on the unrecorded guards.",
+    "read": false,
+    "readNote": "The hop was resolved through a conditional path. renderEdge reaches renderBackEdge only when `target.centerY <= source.centerY` (Shapes.swift:81-82); otherwise it calls renderForwardEdge (:84). Both are reached only after the `guard let` on the two endpoints (:78-79). Inside renderBackEdge the write sits under `if let label, !label.isEmpty` (:129). By \u00a72.5 an `if let` is never restatable, so the obligation should have been call-guarded, i.e. refused, not resolved with guards []. The emitted law would test a label on every edge, including nil-label edges. The line-107 renderNode obligation is correctly unresolved (2 declarations: ActivitySVGRenderer+Shapes.swift:8 and a private one in SVGRenderer.swift:89).",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivityScript.swift:109 buildMermaidText": {
+    "emittable": null,
+    "emittableNote": "Not a syntactic candidate (private extension, ActivityScript.swift:108). The target is SwiftUMLBridgeFramework (library).",
+    "law": false,
+    "lawNote": "Node obligation (line 120 -> mermaidNodeLines, `N\u27e8node.id\u27e9`) is TRUE: `let identifier = \"N\\(node.id)\"` (:134) is interpolated into every switch arm (:137-152), and the lines are appended via `append(contentsOf:)` and joined. Edge obligation (line 126 -> mermaidEdgeLine, `N\u27e8edge.fromId\u27e9`) is true on both branches (:157, :162, :164), but is broken by the early return `if graph.nodes.isEmpty { return lines.joined(separator: \"\\n\") }` (:115-117). With nodes empty and edges non-empty, which ActivityGraph's init allows, no edge line is emitted. So the law as stated, with no guard, is false for the edge obligation.",
+    "read": true,
+    "readNote": "Both hops resolve to the right helper and the right write: mermaidNodeLines :134 and mermaidEdgeLine :157. Each holds on every branch, so no conditional write was mis-attributed. Depth 1 and sources are right. The only gap is the pre-loop early return (:115-117), which \u00a72.2 allows by design. That is a spec gap the law pays for, not a misread of the obligations. The edge template keeps only fromId (toId is also written, :158/:162/:164), which is weak but correct.",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ActivityScript.swift:41 buildPlantUMLText": {
+    "emittable": null,
+    "emittableNote": "Not a syntactic candidate (private extension, ActivityScript.swift:40). For the record, the target is SwiftUMLBridgeFramework (library).",
+    "law": false,
+    "lawNote": "Only statable obligation is the line-61 helper (plantUMLEdgeLine -> plantUMLRef, template `N\u27e8id\u27e9`). False in two ways. (1) plantUMLRef returns \"[*]\" instead of `N\\(id)` when the node with that id is `.start` or `.end` (ActivityScript.swift:98-101). So an edge out of the start node emits `[*] --> N2` and holds no `N<startId>`. (2) The early `if graph.nodes.isEmpty { lines.append(\"@enduml\"); return lines.joined(separator: \"\\n\") }` (:47-50) skips the edge loop entirely. ActivityGraph(nodes: [], edges: [...]) is allowed by its init (Model/ActivityGraph.swift:77-87), and its edges emit nothing.",
+    "read": false,
+    "readNote": "The helper hop was resolved to a write (`N\\(id)`, :101) that is only the fall-through branch of plantUMLRef. The dominating `if let node = graph.node(withId: id), node.kind == .start || node.kind == .end { return \"[*]\" }` (:98) is an `if let`, so the obligation is not restatable and should be refused or call-guarded. The early return at :47-50 is also not recorded as a guard (`!graph.nodes.isEmpty`) on the edge obligation. The line-54 `if let line = plantUMLNodeLine(node)` obligation was correctly refused as call-guarded.",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ComponentScript.swift:41 buildPlantUMLText": {
+    "emittable": null,
+    "emittableNote": "Not a syntactic candidate (private extension, ComponentScript.swift:40). The target is SwiftUMLBridgeFramework (library).",
+    "law": false,
+    "lawNote": "Line 48 `  [\u27e8interfaceName\u27e9]` is true (verbatim interpolation, ComponentScript.swift:48). Lines 46 and 53 use `\u27e8ids.id(for: \u2026)\u27e9` as element text, but `ids` is a local `var DiagramIdentifiers` (:43), a stateful uniquifier (DiagramIdentifiers.swift:31-45). Its result depends on every name claimed before: a later name that sanitizes like an earlier one gets `_2`, `_3`. A test cannot evaluate the function's local `ids`, and evaluating it fresh (or as safeAlias, as the kill arm at e36da59 did) per element mismatches. Example: components \"a b\" then \"a_b\" give `component \"a_b\" as a_b_2 \u2026`, but the template evaluates to `as a_b `. Dependency endpoints that are not component names are claimed fresh in the dependency loop (:53) the same way. So the template text is not what is emitted on sanitize collisions. Stereotype (`stereotypeText(for:)`, :59-66) is a pure function of component.kind and is fine, even for .other's \"\".",
+    "read": false,
+    "readNote": "`ids.id(for: component.name)` was read as a one-argument encoder. It is a mutating method on a local `var` assigned (mutated) inside the loop (`var ids`, :43; `mutating func id`, DiagramIdentifiers.swift:23). \u00a72.4 makes a var assigned inside the loop opaque, so these interpolations should be cuts. Line 46 would then be a segment (`component \"\u27e8component.name\u27e9\" as `, then a cut), and line 53 has no literal-adjacent element text left (` ..> ` sits between two cuts), so it would be refused. The interface line (:48, depth 2, sources right) and the stereotype-as-element-text reading (amendment B) are read right.",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ComponentScript.swift:72 buildMermaidText": {
+    "emittable": null,
+    "emittableNote": "Not a syntactic candidate (private extension, ComponentScript.swift:71). The target is SwiftUMLBridgeFramework (library).",
+    "law": false,
+    "lawNote": "Both statable obligations depend on the stateful uniquifier `var ids = DiagramIdentifiers(sanitize: safeAlias)` (:74). Line 79 uses `alias = ids.id(for: component.name)` (:76), and line 92 uses `ids.id(for: dependency.from/to)`. Ids depend on claim order, and interface ids are claimed between components (:83-86). Component \"A\" with interface \"B\" claims `A_B`, so a later component named \"A_B\" is emitted as `subgraph A_B_2[\"A_B\"]`, while a per-element evaluation of the template gives `subgraph A_B[\"A_B\"]`. Dependency endpoints that are not component names are claimed fresh in the dependency loop. So the templates as a test would evaluate them are false on collisions. The component.name part (`[\\\"\u27e8component.name\u27e9\\\"]`) is verbatim and would hold alone.",
+    "read": false,
+    "readNote": "Two misreads. (1) `alias` / `ids.id(for:)` was treated as encoder element text, although `ids` is a local var mutated in the loop (mutating `id`, DiagramIdentifiers.swift:23,31). By \u00a72.4 that is opaque, so a cut. Line 79 would then be a segment (`[\"\u27e8component.name\u27e9\"]`), and line 92 would be refused (` -.-> ` between two cuts). (2) Line 87 (`\"        \\(interfaceId)[\\\"\\(interfaceName)\\\"]\"`) was classified as an unresolved helper `id`. But the piece is the name `interfaceId`, an opaque tracked let built by a two-argument call (:83-86), so a cut, not a call. By \u00a72.4 the line is a statable segment, `[\"\u27e8interfaceName\u27e9\"]` (depth 2). That segment is true, and it is the kill arm's L82 line, the one that survives both suites. A statable, true obligation was dropped.",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/DepsScript.swift:119 buildMermaidText": {
+    "emittable": null,
+    "emittableNote": "Not a syntactic candidate (private extension, DepsScript.swift:118). The target is SwiftUMLBridgeFramework (library).",
+    "law": false,
+    "lawNote": "Line 160 `    \u27e8fromId\u27e9 --> \u27e8toId\u27e9` has fromId/toId = `ids.id(for: edge.from/to)` (:158-159), from the stateful uniquifier `var ids = DiagramIdentifiers(sanitize: mermaidId)` (:132). It was pre-claimed over `seenNodes.sorted()` (:133-135). With nodes \"a.b\" and \"a_b\", sorted claims give \"a.b\" -> `a_b` and \"a_b\" -> `a_b_2`. So an edge from \"a_b\" emits `    a_b_2 --> \u2026`, while the template evaluated per element (mermaidId, or a fresh ids) gives `    a_b --> \u2026`. False on collision. Line 168 (`style \u27e8safeId\u27e9 \u2026`) has the same dependence, and cycle nodes absent from the edges are claimed fresh, after all the others.",
+    "read": false,
+    "readNote": "(1) `ids.id(for:)` was treated as a one-argument encoder. `ids` is a local var whose state is set by the earlier sorted-claim loop and mutated in this one (DiagramIdentifiers.swift:23,31), so by \u00a72.4 fromId/toId/safeId are opaque. Line 160 would then be refused (` --> ` between cuts), and line 168 a segment at most (` fill:#ffcccc,stroke:#cc0000`, with no element text, so refused). (2) The line-168 obligation comes from `for node in cycleNodes.sorted()`, which the dossier itself labels W1. \u00a72.3 says W1 loops are recorded and not admitted, and \u00a72.7 counts only obligations from qualifying, non-widened loops, yet it is listed as a statable primary. The guard `!cycleNodes.isEmpty` itself is recorded correctly.",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/DepsScript.swift:190 buildNomnomlText": {
+    "emittable": null,
+    "emittableNote": "Not a syntactic candidate (private extension, DepsScript.swift:189). The target is SwiftUMLBridgeFramework (library).",
+    "law": false,
+    "lawNote": "Helper obligation (line 233 -> nomnomlLabel, template `\u27e8escaped\u27e9 \u00ab`, no transform recorded). nomnomlLabel writes `\"\\(escaped) \u00ab\\(stereotype)\u00bb\"` only under `if let stereotype, !stereotype.isEmpty` (DepsScript.swift:244-246); otherwise it returns `escaped` alone (:247). In the non-package flow (targetKinds empty and no edge modules), nodeStereotypes returns [:] (:103-112), so no ` \u00ab` is emitted at all. Also `escaped = name.nomnomlEscaped` (:243; String+Extensions.swift:44): the element text is transformed before output, and the dossier records no transform. False.",
+    "read": false,
+    "readNote": "(1) The line-233 accumulation `\"[\\(safeFrom)] \\(arrow) [\\(safeTo)]\"` interpolates names, not calls. safeFrom/safeTo are tracked lets built by a two-argument call (`nomnomlLabel(edge.from, stereotype: stereotypes[edge.from])`, :231-232), so opaque. `arrow` is set in a switch, so opaque too. By \u00a72.4 every interpolation is a cut, and there is no element text, so nothing is statable. R instead followed a let's initialiser as a helper call. (2) Inside the helper, the write it found is conditional (`if let stereotype \u2026`, :244), which is unrestatable and should have made it call-guarded. (3) Its template names `escaped`, a helper local, rather than q (`name`). The `.nomnomlEscaped` transform on q is not recorded (helper.transform is absent).",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/DepsScript.swift:43 buildPlantUMLText": {
+    "emittable": null,
+    "emittableNote": "Not a syntactic candidate (private extension, DepsScript.swift:42). The target is SwiftUMLBridgeFramework (library).",
+    "law": true,
+    "lawNote": "Line 54 `\"\\(edge.from) --> \\(edge.to) : \\(edge.kind.rawValue)\"` is appended for every edge, with no guard, skip or early exit in the loop (DepsScript.swift:53-55). edge.kind is DependencyEdgeKind, a String-raw enum (Model/DependencyEdge.swift:4,19). After the loop there are only appends: the literal lines and `\"  Cyclic nodes: \\(sorted.joined(\u2026))\"` (:58-66). The return is `lines.joined(separator: \"\\n\")`, and nothing removes or transforms earlier lines. True.",
+    "read": true,
+    "readNote": "The obligation (line 54, primary, depth 1, source model.edges, no guards) is read right. A note on admission, not on reading: after the last qualifying loop, :62 appends an interpolated (non-literal) string. \u00a72.5 strictly refuses anything other than an append of a literal there. It cannot break presence, so the law tests the right thing.",
+    "strictTailRefusal": "strict tail: lines.append(\"  Cyclic nodes: \\(sorted.joined(separator: \", ",
+    "target": "SwiftUMLBridgeFramework (library)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ERScript.swift:30 buildPlantUMLText": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate false: the function is declared inside `private extension ERScript` (:29). It gets widening advice and is not counted. For the record, the target is SwiftUMLBridgeFramework, a library (.target in SwiftUMLBridge/Package.swift).",
+    "law": true,
+    "lawNote": "ERScript.swift:30-49. Helper obligation (line 34): plantUMLEntityLines(entity) at :51-52 starts its array with `entity \"\\(entity.name)\" {`, and that array is appended whole (append(contentsOf:)) into `lines`. Nothing in :53-66 removes or rewrites it. Primary obligation (line 42-44): leftSymbol, rightSymbol and label are one-argument encoder lets on tracked paths (:39-41), and the whole interpolated line is appended verbatim. Neither loop has a skip, break or return. The only statement after the last loop is `lines.append(\"@enduml\")`, a literal. The function returns `lines.joined(separator: \"\\n\")`. Both obligations hold for every entity and every relationship.",
+    "read": true,
+    "readNote": "Both statable obligations are on the right lines and loops, at depth 1 with no guards. The helper resolves uniquely to plantUMLEntityLines(_:) (:51) and its written template is right. One cosmetic point: the helper's `transform` is recorded as \".name\", which is a path of q, not a transform; the template already spells it as entity.name, so the law tests the right text. The loops inside the helper run over the local filtered arrays `primaries` and `others` (:53-54), so they correctly add no nested obligations.",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/ERScript.swift:91 buildMermaidText": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate false: the function is inside `private extension ERScript` (:90). The target is SwiftUMLBridgeFramework, a library.",
+    "law": true,
+    "lawNote": "ERScript.swift:91-112. Primary at :98-100: the encoder lets leftSymbol, rightSymbol and label (:95-97) go into a line appended verbatim, with its 4-space indent. Primary at :104: `    \\(entity.name) {` is appended for every entity. No skip, dedupe or escaping is applied. There is no statement after the last loop, and the function returns `lines.joined(separator: \"\\n\")`. Both obligations hold.",
+    "read": true,
+    "readNote": "Primaries at :98 and :104, depth 1, no guards: correct. The nested :106 line is correctly classified as bare and refused: mermaidAttributeLine(attribute) is an encoder, and only whitespace literal sits next to it.",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/SVGRenderer.swift:31 render": {
+    "emittable": true,
+    "emittableNote": "(a) The target is SwiftUMLBridgeFramework, a library (.target in SwiftUMLBridge/Package.swift; the executable is the separate `swiftumlbridge` target). (b) The function is static, so only the parameter needs a generator. LayoutGraph (Model/LayoutGraph.swift:6) is a struct with explicit `init(nodes:edges:)` (:24). Its stored properties are all derivable: [LayoutNode], [LayoutEdge], [LayoutCluster], Double, Double, String?. LayoutNode (:57) has an explicit init over String, String?, [NodeCompartment], SourceLocation? and String?. NodeCompartment (:100) is String? plus [String]. SourceLocation (Model/SourceLocation.swift:8) is String, Int, Int with an explicit init. LayoutEdge (:113) has an init over String, String?, EdgeStyle; EdgeStyle (:137) is a payload-less String enum, and points is a [LayoutPoint] var defaulting to []. LayoutCluster (:35) has `init(id:label:)`. (c) The function is `public static`. All three hold, but there is a serious caveat. `init(nodes:edges:)` does not take `clusters`, which defaults to [] (:13). An initializer-based derived generator therefore always yields empty clusters, so the row's only statable obligation, the cluster loop, is never exercised. The emitted law would be vacuous unless the stub sets `graph.clusters` after the init.",
+    "law": true,
+    "lawNote": "SVGRenderer.swift:31-62. The only statable obligation is the cluster helper (:46-48). renderCluster (:161-179) writes `svg += \"\\(cluster.label.xmlEscaped)</text>\\n\"` (:176) into its local `svg` and returns it, and render appends the result with `svg += renderCluster(cluster)`. The loop has no skip. After the last loop the only statement is `svg += \"\\n</svg>\"`, a literal, and the function returns `svg`. For every cluster the output contains label.xmlEscaped + \"</text>\\n\", which matches the recorded template and transform. Caveat outside the law: `Int(svgWidth)` / `Int(svgHeight)` (:37-38) trap when graph.width or graph.height is non-finite or out of Int range. The presence law holds wherever the function returns.",
+    "read": true,
+    "readNote": "The helper hop resolves uniquely to the private renderCluster(_:) (:161), with the right template and transform. The two refusals are correct. renderEdge (:190) writes only `label`, which is bound by `if let` from edge.label (:230), not a path of q. renderNode is ambiguous: SVGRenderer.swift:89 and ActivitySVGRenderer+Shapes.swift:8 both declare `renderNode(_:)`, so \u00a72.6's unique-match rule leaves it unresolved.",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/SVGRenderer.swift:89 renderNode": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate false: the function is declared `private static func renderNode` (:89). The target is SwiftUMLBridgeFramework, a library.",
+    "law": true,
+    "lawNote": "SVGRenderer.swift:135-147. The loop is `for compartment in node.compartments where !compartment.items.isEmpty`, then `for item in compartment.items`. At :146, `svg += \"\\(item.xmlEscaped)</text>\\n\"`. Nothing is skipped or broken out of. After the loops the only statement is `svg += \"</g>\\n\"`, a literal, and the function returns `svg`. Every item yields item.xmlEscaped + \"</text>\\n\" in the output. The where guard is redundant (an empty items array iterates nothing) but true.",
+    "read": true,
+    "readNote": "The obligation is on the right line (:146), at depth 2, with sources node.compartments then compartment.items, and the where guard was read verbatim. The xmlEscaped transform is carried in the template.",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/SequenceSVGRenderer.swift:125 renderFromLayout": {
+    "emittable": true,
+    "emittableNote": "(a) The target is SwiftUMLBridgeFramework, a library. (b) The function is static. SequenceLayout (Model/SequenceLayout.swift:6) has an explicit init covering every stored property (:22-38): [SequenceParticipant], [SequenceMessage], String and four Doubles. SequenceParticipant (:44) has an init over String, five Doubles and SourceLocation?; id is set from name. SourceLocation is String/Int/Int with an explicit init. SequenceMessage (:88) has an init over Int, String, Double\u00d73, Bool\u00d72 and String?. All are derivable. (c) The function is `public static`. Emittable.",
+    "law": true,
+    "lawNote": "SequenceSVGRenderer.swift:125-180. Helper obligations at :150 and :173: renderParticipantBox (:184-195) writes `\\(name.xmlEscaped)</text>\\n` (:192) into `svg` and returns it, and the result is appended with `svg +=`, once per participant in each of the two loops. Segment at :154: the output contains `<line x1=\"FMT(centerX)\" y1=\"`. Segment at :155: it contains `x2=\"FMT(centerX)\" y2=\"`. Each segment's kept run correctly stops at the cut fmt(layout.lifelineStartY) / fmt(layout.lifelineEndY), a parameter path that is not tracked. No loop has a skip, break or return. After the last loop the only statement is `svg += \"\\n</svg>\"`, a literal, and the function returns `svg`. All four statable obligations hold. Caveat: `Int(layout.totalWidth)` / `Int(layout.totalHeight)` (:127-128) trap on non-finite or out-of-range Doubles.",
+    "read": true,
+    "readNote": "The helper hop resolves uniquely to the private renderParticipantBox(name:centerX:topY:) (:184), with q = name receiving participant.name and transform .xmlEscaped. The segments are on :154/:155 in the first participants loop. The two message accumulations are correctly call-guarded (an `if let` binding at :161). One note for the stub writer: the segment templates contain \u27e8fmt(participant.centerX)\u27e9, and fmt (:255) is private, so a test target cannot call it and must restate String(format: \"%.1f\", \u2026).",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Emitters/StateScript.swift:43 transitionLines": {
+    "emittable": null,
+    "emittableNote": "syntacticCandidate false: the function is inside `private extension StateScript` (:32). The target is SwiftUMLBridgeFramework, a library.",
+    "law": true,
+    "lawNote": "StateScript.swift:43-62. Primary at :54: from and toState are encoder lets via renderStateToken (:52-53), and transitionLabel(transition) is a one-argument encoder. The line is appended verbatim for every transition. Primary at :58: `\\(state.name) --> [*]` is appended for every state with isFinal (a where clause, :57). The conditional append at :47-48 comes before the loops and is irrelevant. Nothing follows the last loop, and the function returns `lines`, a [String] that contains each line as an element. Both obligations hold.",
+    "read": true,
+    "readNote": "Both obligations are on the right lines, at depth 1. The guard `state.isFinal` was correctly read from the where clause, and the transition obligation correctly has no guard.",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer+SVG.swift:13 renderSVG": {
+    "emittable": true,
+    "emittableNote": "(a) The target is SwiftUMLBridgeFramework, a library. (b) The function is static, on `public enum ComponentSVGRenderer` (Model/ComponentSVGRenderer.swift:8). ComponentLayout (Model/ComponentLayout.swift:44) has an explicit init covering all four stored properties (:50-60): [PositionedComponent], [ComponentDependency], Double, Double. PositionedComponent (:8) has an init covering all stored properties: String, String, ComponentKind, [String] and four Doubles. ComponentKind (Model/ComponentKind.swift:11) is a payload-less String enum (executable/library/test/other). ComponentDependency (Model/ComponentModel.swift:38) is String/String with an init. All are derivable. (c) The function is `public static`. Emittable.",
+    "law": true,
+    "lawNote": "ComponentSVGRenderer+SVG.swift:13-33. The early `guard !layout.components.isEmpty else { return \"\" }` sits before the first loop, which \u00a72.2 allows, and it cannot affect the components loop: when components is empty, that loop visits nothing. For each component, componentSVGLines (:73-106) appends textElement(..., text: component.name) (:89-94). textElement (:141-153) builds `...text-anchor=\"\\(style.anchor)\">` + text.xmlEscaped + `</text>` (:149-151) and returns it unchanged. So the output contains `\">` + component.name.xmlEscaped + `</text>`, matching the 2-hop template. After the last loop the only statement is `lines.append(\"</svg>\")`, a literal, and the function returns `lines.joined(separator: \"\\n\")`. Caveat: svgHeader's `Int(width.rounded(.up))` (:38-39) traps on non-finite or huge totalWidth/totalHeight.",
+    "read": true,
+    "readNote": "This matches the frozen control. The edge obligation is call-guarded (`if let edgeLine`, :22). The component obligation resolves at 2 hops, componentSVGLines(for:) then textElement(originX:originY:style:text:), with transform xmlEscaped. The value passed down is component.name (:93). The stereotype call passes a local, not a path of q, so it is correctly not followed. The nested providedInterfaces loop inside the helper (:96) is not listed as a nested obligation here. That makes the law weaker, not wrong.",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "SwiftUMLStudio:SwiftUMLBridge/Sources/SwiftUMLBridgeFramework/Model/ComponentSVGRenderer+SVG.swift:73 componentSVGLines": {
+    "emittable": true,
+    "emittableNote": "(a) The target is SwiftUMLBridgeFramework, a library. (b) The function is static, internal, inside a non-private `extension ComponentSVGRenderer`. The parameter PositionedComponent (Model/ComponentLayout.swift:8) has an init over String, String, ComponentKind (a payload-less String enum), [String] and Doubles, so it is derivable. (c) The function is internal, so it is callable via @testable import. Emittable.",
+    "law": true,
+    "lawNote": "ComponentSVGRenderer+SVG.swift:96-104. For every interfaceName in component.providedInterfaces, `lines.append(textElement(..., text: interfaceName))`. textElement (:141-153) returns a string containing `\">` + text.xmlEscaped + `</text>`. The loop has no skip, break or return. Nothing follows the loop, and the function returns `lines`. The law holds for every interface name.",
+    "read": true,
+    "readNote": "The helper resolves uniquely to textElement(originX:originY:style:text:) (:141), with q = text receiving the loop variable interfaceName, transform .xmlEscaped. The template's literal `\">` is the tail of the preceding `element += ...\">` statement (:149) in the helper's run of consecutive `element +=` statements. The stereotype line is correctly left unresolved, as the control expects.",
+    "target": "SwiftUMLBridgeFramework (library .target, SwiftUMLBridge/Package.swift)"
+  },
+  "pbt-workbook-grader:Sources/WorkbookGraderCore/Grade.swift:127 render": {
+    "emittable": true,
+    "emittableNote": "(a) The file is in `.target(name: \"WorkbookGraderCore\")`, a library (Package.swift). (b) Instance method with no parameters. The receiver Grade (:34) is a struct with stored properties String, String, Bool, String?, [DetectedDefect], [UndetectedDefect] and Int, and it has a public init (:49). DetectedDefect (:10) is a struct of three Strings with a public init. UndetectedDefect (:24) is a struct of two Strings with a public init. The computed properties need no generator. Everything derives. (c) `public func render()`.",
+    "law": false,
+    "lawNote": "Grade.swift:131-139: `guard referenceHeld else { ...; return out }` sits before both loops. It returns the accumulator, not a literal, and drops every detected/undetected line. The obligations at :148, :149 and :156 carry only `!detected.isEmpty` / `!undetected.isEmpty`. Counterexample: Grade(corpusName: \"c\", propertyName: \"p\", referenceHeld: false, referenceCounterexample: nil, detected: [DetectedDefect(id: \"d1\", explanation: \"e\", counterexample: \"x\")], undetected: [UndetectedDefect(id: \"u1\", explanation: \"f\")], sampleCount: 1).render() contains neither \"      d1 \u2014 e\\n\" nor \"      u1 \u2014 f\\n\". The public init (:49-63) allows this. The law holds only under the unrecorded guard `referenceHeld`.",
+    "read": false,
+    "readNote": "The guard-else-return at :131 is an early `return out` before the first loop. That makes `referenceHeld` a guard on all three statable obligations, and R did not record it. \u00a72.2 allows only an early `return LIT`, so this return is not that shape, and the row should have carried the guard or been refused. The lines (:148, :149, :156), loops, depth 1 and the `!detected.isEmpty` / `!undetected.isEmpty` guards are otherwise right. The emitted law would test the wrong thing: it fails on any draw with referenceHeld == false.",
+    "target": "WorkbookGraderCore (library)"
+  }
+}
