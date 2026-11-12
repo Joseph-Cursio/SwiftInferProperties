@@ -193,6 +193,33 @@ enum Reader {
         if walker.sawW1 { reading.widenings.append("W1") }
         if walker.obligations.contains(where: { $0.kind == "W3" }) { reading.widenings.append("W3") }
         if reading.refusal == nil, let tail = walker.postLoopRefusal { reading.refusal = tail }
+        // Sensitivity run (recorded after the first report, not part of the frozen run): §2.5's tail rule applied to
+        // every accumulator statement after the top-level statement holding the last obligation, nested ones
+        // included. The frozen run looked only at top-level statements, so it missed appends inside a later `if`,
+        // `for` or `switch`.
+        if reading.refusal == nil, ProcessInfo.processInfo.environment["EMITTER_STRICT_TAIL"] == "1",
+           let lastLine = walker.obligations.map(\.line).max() {
+            let items = Array(body.statements)
+            if let holder = items.lastIndex(where: {
+                converter.location(for: $0.positionAfterSkippingLeadingTrivia).line <= lastLine
+            }) {
+                final class Items: SyntaxVisitor {
+                    var found: [CodeBlockItemSyntax] = []
+                    override func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
+                        found.append(node); return .visitChildren
+                    }
+                    override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind { .skipChildren }
+                }
+                for item in items[(holder + 1)...] {
+                    let finder = Items(viewMode: .sourceAccurate)
+                    finder.walk(item)
+                    if let refusal = finder.found.lazy.compactMap({ walker.tailMutation($0) }).first {
+                        reading.refusal = "strict \(refusal)"
+                        break
+                    }
+                }
+            }
+        }
         if reading.refusal == nil {
             let statable = walker.obligations.filter(\.statable)
             if statable.isEmpty {
