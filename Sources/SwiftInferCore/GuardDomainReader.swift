@@ -1,3 +1,4 @@
+import SwiftParser
 import SwiftSyntax
 
 /// Reads the sub-domain a function's first statement carves out with an early return.
@@ -81,13 +82,17 @@ public enum GuardDomainReader {
         let ternaries = elements.indices.filter { elements[$0].is(UnresolvedTernaryExprSyntax.self) }
         guard ternaries.count == 1, let index = ternaries.first, index > 0, index < elements.count - 1,
               let ternary = elements[index].as(UnresolvedTernaryExprSyntax.self) else { return nil }
+        let conditionNodes = elements[..<index].map(Syntax.init)
+        let elseNodes = elements[(index + 1)...].map(Syntax.init)
         let condition = elements[..<index].map(\.trimmedDescription).joined(separator: " ")
         let thenBranch = ternary.thenExpression.trimmedDescription
         let elseBranch = elements[(index + 1)...].map(\.trimmedDescription).joined(separator: " ")
-        guard mentionsOnly(parameter, in: condition) else { return nil }
-        let (returned, fires) = thenBranch == parameter ? (elseBranch, false) : (thenBranch, true)
+        guard mentionsOnly(parameter, in: conditionNodes) else { return nil }
+        let thenIsParameter = thenBranch == parameter
+        let (returned, fires) = thenIsParameter ? (elseBranch, false) : (thenBranch, true)
+        let returnedNodes = thenIsParameter ? elseNodes : [Syntax(ternary.thenExpression)]
         guard returned != parameter, !returned.isEmpty,
-              mentionsOnly(parameter, in: returned, allowingTypeNames: true) else { return nil }
+              mentionsOnly(parameter, in: returnedNodes, allowingTypeNames: true) else { return nil }
         return GuardDomain(
             condition: condition,
             returnedExpression: returned,
@@ -104,19 +109,20 @@ public enum GuardDomainReader {
     ) -> GuardDomain? {
         // Every element must be a plain expression: one `let` or `case` and this is a binding,
         // not a predicate.
-        var texts: [String] = []
+        var expressions: [ExprSyntax] = []
         for element in conditions {
             guard case .expression(let expression) = element.condition else { return nil }
-            texts.append(expression.trimmedDescription)
+            expressions.append(expression)
         }
-        guard !texts.isEmpty else { return nil }
-        let condition = texts.joined(separator: " && ")
-        guard mentionsOnly(parameter, in: condition) else { return nil }
+        guard !expressions.isEmpty else { return nil }
+        let condition = expressions.map(\.trimmedDescription).joined(separator: " && ")
+        guard mentionsOnly(parameter, in: expressions.map(Syntax.init)) else { return nil }
 
         guard body.statements.count == 1,
               let returnStmt = body.statements.first?.item.as(ReturnStmtSyntax.self),
-              let returned = returnStmt.expression?.trimmedDescription,
-              !returned.isEmpty else { return nil }
+              let returnedNode = returnStmt.expression else { return nil }
+        let returned = returnedNode.trimmedDescription
+        guard !returned.isEmpty else { return nil }
         // **The returned expression has to be writable at a call site too**, and checking only
         // the condition was the first version's gap. `guard node.catchClauses.isEmpty else {
         // return walkBlock(node.body.statements) }` has a perfectly evaluable condition and a
@@ -124,7 +130,7 @@ public enum GuardDomainReader {
         // uncompilable-stub shape this walk has spent its length closing. Type names are
         // permitted because a test that imports the module can name them; lowercase free
         // identifiers are not.
-        guard mentionsOnly(parameter, in: returned, allowingTypeNames: true) else { return nil }
+        guard mentionsOnly(parameter, in: [Syntax(returnedNode)], allowingTypeNames: true) else { return nil }
 
         return GuardDomain(
             condition: condition,
@@ -134,64 +140,28 @@ public enum GuardDomainReader {
         )
     }
 
-    /// Whether every free identifier in `condition` is the parameter itself.
+    /// Whether every free name in `nodes` is the parameter itself, `self` or `Self`, or, when
+    /// `allowingTypeNames`, a type a test importing the module can name.
     ///
-    /// Free means *not* preceded by a dot: `value.isEmpty` has one free identifier, `value`, and
-    /// `isEmpty` is a member of it. A call like `isValidValue(value)` has two, so it is refused —
-    /// the emitted test cannot be assumed to reach `isValidValue`.
+    /// Free is read off the syntax (`GuardDomainFreeNames`): an argument label, a member, a closure's
+    /// own parameter and a word inside a string literal are not names, and `super`, a macro and a
+    /// `$`-projection are. A call like `isValidValue(value)` still has two free names, so it is
+    /// refused: the emitted test cannot be assumed to reach `isValidValue`.
     ///
-    /// Literals and the keywords a condition may legitimately carry are not identifiers for this
-    /// purpose.
-    static func mentionsOnly(
-        _ parameter: String,
-        in condition: String,
-        allowingTypeNames: Bool = false
-    ) -> Bool {
-        var free: Set<String> = []
-        var previousWasDot = false
-        var current = ""
-        for character in withoutPlainStringLiterals(condition) {
-            if character.isLetter || character.isNumber || character == "_" {
-                current.append(character)
-                continue
-            }
-            if !current.isEmpty {
-                if !previousWasDot, Self.isName(current) { free.insert(current) }
-                current = ""
-            }
-            previousWasDot = character == "."
-        }
-        if !current.isEmpty, !previousWasDot, Self.isName(current) { free.insert(current) }
-        free.subtract([parameter, "true", "false", "nil", "self", "Self"])
+    /// The first version scanned text and read any identifier not preceded by `.` as free. It refused
+    /// labelled calls, and it admitted `user.id == $user.id`, reading the projection `$user` as the
+    /// parameter `user` (`docs/measurements/guard-domain-syntax-gate.md`).
+    static func mentionsOnly(_ parameter: String, in nodes: [Syntax], allowingTypeNames: Bool = false) -> Bool {
+        var free = GuardDomainFreeNames.of(nodes)
+        free.subtract([parameter, "self", "Self"])
         // A type name is judged past its leading underscores: `_AttributeStorage` is a type, which a
-        // test importing the module can name, exactly as it can `AttributeStorage`.
+        // test importing the module can name, exactly as it can `AttributeStorage`. `_base` is not.
         if allowingTypeNames { free = free.filter { $0.drop { $0 == "_" }.first?.isUppercase != true } }
         return free.isEmpty
     }
 
-    /// Whether a scanned token is an identifier: it starts with a letter, or with an underscore and
-    /// is more than the bare wildcard `_`.
-    ///
-    /// **`_base` is a name.** The first version counted only tokens starting with a letter, so
-    /// `index.base == _base.endIndex` passed as if `_base` were the parameter's, and a law naming a
-    /// private stored property no test can reach was proposed — `_offset`, `_fastPath` and `_root`
-    /// among them, the whole 27-of-156 gap `guard-domain-stub-writer.md` recorded and left for an A/B.
-    static func isName(_ token: String) -> Bool {
-        guard let first = token.first else { return false }
-        return first.isLetter || (first == "_" && token.count > 1)
-    }
-
-    /// `text` with every string literal that interpolates nothing emptied to `""`.
-    ///
-    /// **A word inside quotes is not a name.** `return "relates"` was refused because the scan read
-    /// `relates` as a free identifier, so every guard returning a word literal — and every ternary
-    /// swapping one in (`raw.isEmpty ? "relates" : raw`) — was invisible to the law. A literal that
-    /// interpolates keeps its text: `"\(name)!"` does reach `name`.
-    static func withoutPlainStringLiterals(_ text: String) -> String {
-        text.replacingOccurrences(
-            of: #""(?:[^"\\]|\\[^(])*""#,
-            with: "\"\"",
-            options: .regularExpression
-        )
+    /// `mentionsOnly` over `text` parsed as an expression.
+    static func mentionsOnly(_ parameter: String, in text: String, allowingTypeNames: Bool = false) -> Bool {
+        mentionsOnly(parameter, in: [Syntax(Parser.parse(source: text))], allowingTypeNames: allowingTypeNames)
     }
 }

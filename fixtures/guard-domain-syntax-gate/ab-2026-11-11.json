@@ -1,0 +1,703 @@
+{
+  "changedReading" : [
+
+  ],
+  "functions" : 31022,
+  "gained" : [
+    {
+      "condition" : "node.modifiers.contains(anyOf: [.override])",
+      "key" : "swift-format:Sources/SwiftFormat/Rules/AlwaysUseLowerCamelCase.swift:50 visit",
+      "returned" : ".visitChildren",
+      "templateEligible" : true,
+      "textFree" : [
+        "anyOf"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "node.modifiers.contains(anyOf: [.override])",
+      "key" : "swift-format:Sources/SwiftFormat/Rules/AlwaysUseLowerCamelCase.swift:113 visit",
+      "returned" : ".visitChildren",
+      "templateEligible" : true,
+      "textFree" : [
+        "anyOf"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "columnCounts.isEmpty",
+      "key" : "GRDB.swift:GRDB/Core/RowAdapter.swift:133 splittingRowAdapters",
+      "returned" : "[SuffixRowAdapter(fromIndex: 0)]",
+      "templateEligible" : true,
+      "textFree" : [
+        "fromIndex"
+      ],
+      "writerUnbound" : [
+        "SuffixRowAdapter"
+      ]
+    },
+    {
+      "condition" : "self.first._isIdentical(to: other.first)",
+      "key" : "swift-collections:Sources/DequeModule/_UnsafeDequeSegments.swift:65 isIdentical",
+      "returned" : "false",
+      "templateEligible" : true,
+      "textFree" : [
+        "to"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "self < other",
+      "key" : "swift-collections:Sources/HashTreeCollections/HashNode/_HashSlot.swift:93 distance",
+      "returned" : "Int(truncatingIfNeeded: other._value - self._value)",
+      "templateEligible" : true,
+      "textFree" : [
+        "truncatingIfNeeded"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "scale != 0",
+      "key" : "swift-collections:Sources/OrderedCollections/OrderedSet/OrderedSet+Testing.swift:57 _biasRange",
+      "returned" : "Range(uncheckedBounds: (0, 1))",
+      "templateEligible" : true,
+      "textFree" : [
+        "uncheckedBounds"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "self._base.isIdentical(to: other._base)",
+      "key" : "swift-collections:Sources/RopeModule/BigString/Views/BigSubstring+UTF16View.swift:93 isIdentical",
+      "returned" : "false",
+      "templateEligible" : true,
+      "textFree" : [
+        "to"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "self._base.isIdentical(to: other._base)",
+      "key" : "swift-collections:Sources/RopeModule/BigString/Views/BigSubstring+UTF8View.swift:68 isIdentical",
+      "returned" : "false",
+      "templateEligible" : true,
+      "textFree" : [
+        "to"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "self._base.isIdentical(to: other._base)",
+      "key" : "swift-collections:Sources/RopeModule/BigString/Views/BigSubstring+UnicodeScalarView.swift:98 isIdentical",
+      "returned" : "false",
+      "templateEligible" : true,
+      "textFree" : [
+        "to"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "self._base.isIdentical(to: other._base)",
+      "key" : "swift-collections:Sources/RopeModule/BigString/Views/BigSubstring.swift:95 isIdentical",
+      "returned" : "false",
+      "templateEligible" : true,
+      "textFree" : [
+        "to"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "left.rebalance(nextNeighbor: &self)",
+      "key" : "swift-collections:Sources/RopeModule/Rope/Basics/Rope+_Node.swift:310 rebalance",
+      "returned" : "false",
+      "templateEligible" : false,
+      "textFree" : [
+        "nextNeighbor"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "left.rebalance(nextNeighbor: &self)",
+      "key" : "swift-collections:Sources/RopeModule/Rope/Basics/RopeElement.swift:73 rebalance",
+      "returned" : "false",
+      "templateEligible" : false,
+      "textFree" : [
+        "nextNeighbor"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "viewMode.shouldTraverse(node: self)",
+      "key" : "swift-syntax:Sources/SwiftSyntax/Raw/RawSyntax.swift:713 firstToken",
+      "returned" : "nil",
+      "templateEligible" : true,
+      "textFree" : [
+        "node"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "viewMode.shouldTraverse(node: self)",
+      "key" : "swift-syntax:Sources/SwiftSyntax/Raw/RawSyntax.swift:729 lastToken",
+      "returned" : "nil",
+      "templateEligible" : true,
+      "textFree" : [
+        "node"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "self.contains(text: value)",
+      "key" : "swift-syntax:Sources/SwiftSyntax/Raw/RawSyntaxArena.swift:117 intern",
+      "returned" : "value",
+      "templateEligible" : true,
+      "textFree" : [
+        "text"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "self <= 0xffff_ffff_ffff_ffff",
+      "key" : "swift-foundation:Sources/FoundationEssentials/Decimal/Decimal.swift:310 _ascii",
+      "returned" : "UInt64(truncatingIfNeeded: self)._ascii(&buffer)",
+      "templateEligible" : true,
+      "textFree" : [
+        "truncatingIfNeeded"
+      ],
+      "writerUnbound" : [
+        "UInt64"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7049 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7056 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7063 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7070 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7077 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7084 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7091 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7098 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7105 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7113 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7120 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7127 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7134 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7141 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7148 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7156 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "try !self.isAtEnd && !self.decodeNil()",
+      "key" : "swift:stdlib/public/core/Codable.swift:7163 decodeIfPresent",
+      "returned" : "nil",
+      "templateEligible" : false,
+      "textFree" : [
+        "try"
+      ],
+      "writerUnbound" : [
+        "try"
+      ]
+    },
+    {
+      "condition" : "unsafe (self._storage === other._storage)",
+      "key" : "swift:stdlib/public/core/NativeDictionary.swift:648 isEqual",
+      "returned" : "true",
+      "templateEligible" : true,
+      "textFree" : [
+        "unsafe"
+      ],
+      "writerUnbound" : [
+        "unsafe"
+      ]
+    },
+    {
+      "condition" : "unsafe (self._storage === other._storage)",
+      "key" : "swift:stdlib/public/core/NativeSet.swift:508 isEqual",
+      "returned" : "true",
+      "templateEligible" : true,
+      "textFree" : [
+        "unsafe"
+      ],
+      "writerUnbound" : [
+        "unsafe"
+      ]
+    },
+    {
+      "condition" : "node.arguments.contains(where: { $0.label?.text == \"systemName\" })",
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Accessibility/Visitors/DecorativeImageMissingTraitVisitor.swift:65 isAssetImage",
+      "returned" : "false",
+      "templateEligible" : true,
+      "textFree" : [
+        "where"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "node.arguments.contains(where: { $0.label?.text == \"coordinateSpace\" })",
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Accessibility/Visitors/OnTapGestureInsteadOfButtonVisitor.swift:62 hasLocationAwareness",
+      "returned" : "true",
+      "templateEligible" : true,
+      "textFree" : [
+        "where"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "value.truncatingRemainder(dividingBy: 1) == 0",
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Accessibility/Visitors/TapTargetTooSmallVisitor.swift:116 formatDimension",
+      "returned" : "String(Int(value))",
+      "templateEligible" : true,
+      "textFree" : [
+        "dividingBy"
+      ],
+      "writerUnbound" : [
+        "Int"
+      ]
+    },
+    {
+      "condition" : "site.returnKind == \"implicit-member\"",
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Architecture/Visitors/ScatteredEnumMappingVisitor.swift:320 returnPhrase",
+      "returned" : "\"a uniform value (`.\" + site.members.joined(separator: \"`, `.\") + \"`)\"",
+      "templateEligible" : true,
+      "textFree" : [
+        "separator"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "Self.mainActorProtocols.contains(name) || Self.mainActorClasses.contains(name)",
+      "key" : "SwiftProjectLint:Packages/SwiftProjectLintRules/Sources/SwiftProjectLintRules/Performance/Visitors/MainActorTypeTable.swift:111 isolation",
+      "returned" : ".mainActor(\"it extends \\(name), which is @MainActor\")",
+      "templateEligible" : true,
+      "textFree" : [
+        "extends",
+        "is",
+        "it",
+        "which"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "value.contains(\",\") || value.contains(\"\\\"\") || value.contains(\"\\n\")",
+      "key" : "LintStudioUI:Sources/LintStudioCore/Export/CSVEscaping.swift:13 escape",
+      "returned" : "\"\\\"\\(value.replacingOccurrences(of: \"\\\"\", with: \"\\\"\\\"\"))\\\"\"",
+      "templateEligible" : true,
+      "textFree" : [
+        "of",
+        "with"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "count == 1",
+      "key" : "pbt-workbook-corpus:Sources/WorkbookCorpus/Set6ShapelessBugs.swift:117 describe",
+      "returned" : "\"\\(count) item\"",
+      "templateEligible" : true,
+      "textFree" : [
+        "item"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "(count == 1 || count == 0)",
+      "key" : "pbt-workbook-corpus:Sources/WorkbookCorpus/Set6ShapelessBugs.swift:130 describe",
+      "returned" : "\"\\(count) item\"",
+      "templateEligible" : true,
+      "textFree" : [
+        "item"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "matches.isEmpty",
+      "key" : "SwiftAssist:Sources/SwiftAssist/Learning/ConfidenceScorer+SignalFactories.swift:169 antiPatternRecurrenceSignal",
+      "returned" : "ConfidenceSignal(\n                source: \"anti-pattern-recurrence\",\n                weight: .medium,\n                passed: true,\n                detail: nil\n            )",
+      "templateEligible" : true,
+      "textFree" : [
+        "detail",
+        "passed",
+        "source",
+        "weight"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "analysis.wordCount == 0",
+      "key" : "SwiftAssist:Sources/SwiftAssist/Learning/ConfidenceScorer+SignalFactories.swift:196 thinkingSignal",
+      "returned" : "ConfidenceSignal(\n                source: \"thinking\",\n                weight: .medium,\n                passed: true,\n                detail: nil\n            )",
+      "templateEligible" : true,
+      "textFree" : [
+        "detail",
+        "passed",
+        "source",
+        "weight"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "report.isEmpty",
+      "key" : "SwiftAssist:Sources/SwiftAssist/Learning/ConfidenceScorer+SignalFactories.swift:224 lintSignal",
+      "returned" : "ConfidenceSignal(source: \"swift-lint\", weight: .high, passed: true, detail: nil)",
+      "templateEligible" : true,
+      "textFree" : [
+        "detail",
+        "passed",
+        "source",
+        "weight"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "generatedByAssistant",
+      "key" : "SwiftAssist:Sources/SwiftAssist/Learning/ConfidenceScorer+SignalFactories.swift:266 skillAuthorSignal",
+      "returned" : "ConfidenceSignal(\n                source: \"skill-author\",\n                weight: .low,\n                passed: true,\n                detail: \"Human-authored pattern\"\n            )",
+      "templateEligible" : true,
+      "textFree" : [
+        "detail",
+        "passed",
+        "source",
+        "weight"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "!signals.isEmpty",
+      "key" : "SwiftAssist:Sources/SwiftAssist/Learning/ConfidenceScorer.swift:66 score",
+      "returned" : "ConfidenceScore(value: 0.0, signals: signals, blocked: false)",
+      "templateEligible" : true,
+      "textFree" : [
+        "blocked",
+        "value"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "package.promptContent.isEmpty",
+      "key" : "SwiftAssist:Sources/SwiftAssist/Skills/Core/SkillValidator.swift:90 validateArchiveIntegrity",
+      "returned" : "StageResult(\n                stage: .archiveIntegrity, passed: false,\n                message: \"prompt.md is empty\"\n            )",
+      "templateEligible" : true,
+      "textFree" : [
+        "message",
+        "passed",
+        "stage"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "source.isSwiftEvolution",
+      "key" : "SwiftAssist:Sources/SwiftAssistApp/Corpus/CorpusSourceRow+Actions.swift:63 reloadMessage",
+      "returned" : "\"\"\"\n                Fetches the latest proposals (needs internet), deletes their \\(source.chunkCount) chunks, \\\n                and indexes them again, which takes a few minutes. Chat can't use them until it finishes.\n                \"\"\"",
+      "templateEligible" : true,
+      "textFree" : [
+        "a",
+        "again",
+        "and",
+        "can",
+        "chunks",
+        "deletes",
+        "few",
+        "finishes",
+        "indexes",
+        "internet",
+        "it",
+        "latest",
+        "minutes",
+        "needs",
+        "proposals",
+        "t",
+        "takes",
+        "the",
+        "their",
+        "them",
+        "until",
+        "use",
+        "which"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "source.isSwiftEvolution",
+      "key" : "SwiftAssist:Sources/SwiftAssistApp/Corpus/CorpusViewModel+Loading.swift:12 loadJob",
+      "returned" : "source.state == .notLoaded ? .swiftEvolution(sourceKey: source.identifier, force: false) : nil",
+      "templateEligible" : true,
+      "textFree" : [
+        "force",
+        "sourceKey"
+      ],
+      "writerUnbound" : [
+
+      ]
+    },
+    {
+      "condition" : "source.isSwiftEvolution",
+      "key" : "SwiftAssist:Sources/SwiftAssistApp/Corpus/CorpusViewModel+Loading.swift:29 reloadJob",
+      "returned" : "source.state == .notLoaded ? nil : .swiftEvolution(sourceKey: source.identifier, force: true)",
+      "templateEligible" : true,
+      "textFree" : [
+        "force",
+        "sourceKey"
+      ],
+      "writerUnbound" : [
+
+      ]
+    }
+  ],
+  "lost" : [
+    {
+      "condition" : "user.id == $user.id",
+      "key" : "MacCloud_server:Sources/MacCloudServer/Models/File.swift:309 canAccess",
+      "returned" : "true",
+      "templateEligible" : true,
+      "textFree" : [
+
+      ],
+      "writerUnbound" : [
+        "$user"
+      ]
+    },
+    {
+      "condition" : "user.id == $user.id",
+      "key" : "MacCloud_server:Sources/MacCloudServer/Models/File.swift:326 canWrite",
+      "returned" : "true",
+      "templateEligible" : true,
+      "textFree" : [
+
+      ],
+      "writerUnbound" : [
+        "$user"
+      ]
+    }
+  ],
+  "newRows" : 315,
+  "oldRows" : 265
+}
