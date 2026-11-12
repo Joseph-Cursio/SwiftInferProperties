@@ -1,0 +1,207 @@
+{
+  "controls_passed": true,
+  "date": "2026-11-11",
+  "deleted_line": {
+    "L48-RemoveSideEffects": "lines.append(\"component \\\"\\(component.name)\\\" as \\(safeAlias(component.name)) \\(stereotype) {\") // L48",
+    "L50-RemoveSideEffects": "lines.append(\"  [\\(interfaceName)]\") // L50",
+    "L52-RemoveSideEffects": "lines.append(\"}\") // L52",
+    "L55-RemoveSideEffects": "lines.append(\"\\(safeAlias(dependency.from)) ..> \\(safeAlias(dependency.to))\") // L55",
+    "L57-RemoveSideEffects": "lines.append(\"@enduml\") // L57",
+    "L80-RemoveSideEffects": "lines.append(\"    subgraph \\(alias)[\\\"\\(component.name)\\\"]\") // L80",
+    "L82-RemoveSideEffects": "lines.append(\"        \\(safeAlias(\"\\(component.name)_\\(interfaceName)\"))[\\\"\\(interfaceName)\\\"]\") // L82",
+    "L84-RemoveSideEffects": "lines.append(\"    end\") // L84",
+    "L87-RemoveSideEffects": "lines.append(\"    \\(safeAlias(dependency.from)) -.-> \\(safeAlias(dependency.to))\") // L87",
+    "original": null
+  },
+  "element_lines": [
+    "L48",
+    "L50",
+    "L55",
+    "L80",
+    "L82",
+    "L87"
+  ],
+  "frame_lines": [
+    "L52",
+    "L57",
+    "L84"
+  ],
+  "killed_by": {
+    "bareDisciplined": [
+      "L48-RemoveSideEffects",
+      "L50-RemoveSideEffects",
+      "L80-RemoveSideEffects",
+      "L82-RemoveSideEffects"
+    ],
+    "bareNaive": [
+      "L48-RemoveSideEffects",
+      "L50-RemoveSideEffects",
+      "L55-RemoveSideEffects",
+      "L80-RemoveSideEffects",
+      "L82-RemoveSideEffects",
+      "L87-RemoveSideEffects"
+    ],
+    "determinismDisciplined": [],
+    "determinismNaive": [],
+    "templateDisciplined": [
+      "L48-RemoveSideEffects",
+      "L50-RemoveSideEffects",
+      "L55-RemoveSideEffects",
+      "L80-RemoveSideEffects",
+      "L82-RemoveSideEffects",
+      "L87-RemoveSideEffects"
+    ],
+    "templateNaive": [
+      "L48-RemoveSideEffects",
+      "L50-RemoveSideEffects",
+      "L55-RemoveSideEffects",
+      "L80-RemoveSideEffects",
+      "L82-RemoveSideEffects",
+      "L87-RemoveSideEffects"
+    ]
+  },
+  "laws_sha256": "6aadbbcd4e392d00a8e8e11132117797598efb547f21409314ddc0f91cfece79",
+  "matrix": {
+    "L48-RemoveSideEffects": {
+      "bareDisciplined": "FAIL",
+      "bareNaive": "FAIL",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "FAIL",
+      "templateNaive": "FAIL"
+    },
+    "L50-RemoveSideEffects": {
+      "bareDisciplined": "FAIL",
+      "bareNaive": "FAIL",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "FAIL",
+      "templateNaive": "FAIL"
+    },
+    "L52-RemoveSideEffects": {
+      "bareDisciplined": "PASS",
+      "bareNaive": "PASS",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "PASS",
+      "templateNaive": "PASS"
+    },
+    "L55-RemoveSideEffects": {
+      "bareDisciplined": "PASS",
+      "bareNaive": "FAIL",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "FAIL",
+      "templateNaive": "FAIL"
+    },
+    "L57-RemoveSideEffects": {
+      "bareDisciplined": "PASS",
+      "bareNaive": "PASS",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "PASS",
+      "templateNaive": "PASS"
+    },
+    "L80-RemoveSideEffects": {
+      "bareDisciplined": "FAIL",
+      "bareNaive": "FAIL",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "FAIL",
+      "templateNaive": "FAIL"
+    },
+    "L82-RemoveSideEffects": {
+      "bareDisciplined": "FAIL",
+      "bareNaive": "FAIL",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "FAIL",
+      "templateNaive": "FAIL"
+    },
+    "L84-RemoveSideEffects": {
+      "bareDisciplined": "PASS",
+      "bareNaive": "PASS",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "PASS",
+      "templateNaive": "PASS"
+    },
+    "L87-RemoveSideEffects": {
+      "bareDisciplined": "PASS",
+      "bareNaive": "FAIL",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "FAIL",
+      "templateNaive": "FAIL"
+    },
+    "original": {
+      "bareDisciplined": "PASS",
+      "bareNaive": "PASS",
+      "determinismDisciplined": "PASS",
+      "determinismNaive": "PASS",
+      "reach": "PASS",
+      "reachLines": [
+        "REACH naive components=84 interfaces=82 dependencies=86 emptyName=32",
+        "REACH disciplined components=100 interfaces=93 dependencies=76 emptyName=0"
+      ],
+      "templateDisciplined": "PASS",
+      "templateNaive": "PASS"
+    }
+  },
+  "note": "reach lines count, among 100 draws under a Xoshiro on the seed state, the draws that fill each loop; the backend may sequence its draws differently, so they are indicative only",
+  "pins": {
+    "swift-async-algorithms": "1.1.7",
+    "swift-collections": "1.7.6",
+    "swift-numerics": "1.1.1",
+    "swift-property-based": "2.0.1",
+    "swift-syntax": "603.0.2",
+    "swiftpropertylaws": "4.11.0"
+  },
+  "subject": "SwiftUMLStudio e36da59, ComponentScript.swift lines 41-100 (builders, stereotypeText, safeAlias)",
+  "swift": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)"
+}
