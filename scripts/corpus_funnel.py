@@ -21,6 +21,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import corpus_funnel_stage5 as s5  # noqa: E402
+import memory_guard  # noqa: E402
 
 SWIFT_ORG = os.path.expanduser(
     "~/Library/Developer/Toolchains/swift-6.4.1-RELEASE.xctoolchain/usr/bin/swift")
@@ -706,6 +707,16 @@ def main(argv):
     scratch, infer, cli = argv[1], argv[2], argv[3]
     repos = argv[4:]
     os.makedirs(scratch, exist_ok=True)
+    # ⚠ **Every test process this run starts is held under a memory limit** (`memory_guard.py`): one
+    # law that allocates without bound took the machine down on 2026-11-12. A kill is recorded on
+    # the repository's result as `memory_guard_kills`, and only there, so a run with none writes the
+    # result files it always wrote.
+    with memory_guard.MemoryGuard([os.path.join(scratch, "trees")],
+                                  log_path=os.path.join(scratch, "memory-guard.jsonl")) as guard:
+        return _walk_repos(scratch, infer, cli, repos, guard)
+
+
+def _walk_repos(scratch, infer, cli, repos, guard):
     for repo in repos:
         out = os.path.join(scratch, f"result-{repo}.json")
         if os.path.exists(out):
@@ -725,6 +736,9 @@ def main(argv):
                                  text=True).stdout
         for pid in census_helpers(listing, scratch):
             subprocess.run(["kill", pid], check=False, capture_output=True)
+        kills = guard.drain()
+        if kills:
+            result["memory_guard_kills"] = kills
         json.dump(result, open(out, "w"), indent=2)
         print(summary_line(repo, result), flush=True)
     return 0
