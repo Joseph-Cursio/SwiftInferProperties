@@ -1,8 +1,9 @@
 # Encoder collision census (#674): scope, frozen before the run
 
-> **Status:** `proposed` · **As of:** 2026-11-12
+> **Status:** `shipped` · **As of:** 2026-11-12
 
-**Issue:** Joseph-Cursio/SwiftInferProperties#674.
+**Issue:** Joseph-Cursio/SwiftInferProperties#674. **Run 2026-11-12; result DECLINE (population: 0 admitted sites; 18 colliding
+chains, none an id beside its name)**, in `docs/measurements/encoder-collision-census.md`.
 
 ## 0. The question, and what this decides
 
