@@ -46,7 +46,7 @@ public enum OutputDeterminismVerifierEmitter {
 
         let drives = role.actions
             .filter { $0.parameterTypes.isEmpty && !$0.isAsync && !$0.isThrows }
-            .map { "        subject.\($0.name)()" }
+            .map { "        subject.\(ViewModelActionEnumEmitter.escapeIfKeyword($0.name))()" }
         let recorderType = RecordingFakeEmitter.typeName(for: outputProtocol.name)
         let construction = "\(role.typeName)(\(args.joined(separator: ", ")))"
 

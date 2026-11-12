@@ -58,6 +58,34 @@ struct OutputDeterminismVerifierEmitterTests {
         #expect(source.contains("VERIFY_DEFAULT_RESULT: FAIL"))
     }
 
+    /// #693: the recognizer now stores a method's identifier without backticks, so this emitter escapes it.
+    /// `subject.init()` and `subject.self()` do not compile; ``subject.`init`()`` does.
+    @Test("a keyword-named action is escaped at the drive call")
+    func escapesKeywordAction() throws {
+        let source = """
+        protocol CountViewProtocol {
+            func show(count: Int)
+        }
+        final class CountPresenter {
+            var count = 0
+            let view: CountViewProtocol
+            init(view: CountViewProtocol) { self.view = view }
+            func `init`() { count = 0; view.show(count: count) }
+            func `self`() { count += 1; view.show(count: count) }
+        }
+        """
+        let role = try #require(ConventionRoleDiscoverer.discover(source: source, file: "F.swift").first)
+        let protocols = ViewModelProtocolScanner.scan(source: source)
+        let output = try #require(protocols.first { $0.name == "CountViewProtocol" })
+        let emitted = try #require(
+            OutputDeterminismVerifierEmitter.emit(
+                role: role, outputProtocol: output, dependencyProtocols: protocols, moduleName: "Corpus"
+            )
+        )
+        #expect(emitted.contains("subject.`init`()"))
+        #expect(emitted.contains("subject.`self`()"))
+    }
+
     @Test("gated: an output protocol with a non-recordable requirement returns nil")
     func gatesNonRecordableOutput() throws {
         let source = """

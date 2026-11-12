@@ -218,12 +218,13 @@ public enum ViewModelInvariantStubEmitter {
     /// single-arg call.
     private static func applyStepArms(_ inputs: Inputs) -> String {
         let arms = inputs.drivers.enumerated().map { index, driver -> String in
+            let method = ViewModelActionEnumEmitter.escapeIfKeyword(driver.name)
             guard let values = driver.valuesExpression else {
-                return "        case \(index): probe.\(driver.name)()"
+                return "        case \(index): probe.\(method)()"
             }
             let element = "values[argIndex % values.count]"
-            let call = driver.label.map { "probe.\(driver.name)(\($0): \(element))" }
-                ?? "probe.\(driver.name)(\(element))"
+            let call = driver.label.map { "probe.\(method)(\($0): \(element))" }
+                ?? "probe.\(method)(\(element))"
             return "        case \(index): let values = \(values); \(call)"
         }
         return arms.joined(separator: "\n")

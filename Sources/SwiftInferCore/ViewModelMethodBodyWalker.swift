@@ -61,7 +61,8 @@ final class ViewModelMethodBodyWalker: SyntaxVisitor {
     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
         let callee = node.calledExpression
         if let member = callee.as(MemberAccessExprSyntax.self) {
-            let methodName = member.declName.baseName.text
+            // Backticks stripped, so a call matches the method the visitor names (#693).
+            let methodName = member.declName.baseName.identifier?.name ?? member.declName.baseName.text
             if let base = member.base, ViewModelMutatorNames.curated.contains(methodName),
                let receiver = Self.rootIdentifier(of: base) {
                 // `foo.removeAll()` — foo is mutated.
@@ -75,7 +76,7 @@ final class ViewModelMethodBodyWalker: SyntaxVisitor {
             // Bare `bar(…)` — a same-object method call (or a free
             // function; the second-pass intersection with the type's own
             // method names filters free functions out).
-            signals.calledMethodNames.insert(ref.baseName.text)
+            signals.calledMethodNames.insert(ref.baseName.identifier?.name ?? ref.baseName.text)
         }
         return .visitChildren
     }
