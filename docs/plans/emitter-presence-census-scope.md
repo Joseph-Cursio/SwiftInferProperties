@@ -400,3 +400,18 @@ false law about correct code.
   scope, not copied from the harness.
 - **A misread counts against precision.** It is not excused as a harness defect. The precision measured is the
   rule's as this scope writes it, implemented once.
+
+## 10. Amendments
+
+Both were made on 2026-11-12, when the controls first ran, before the harness read any universe subject.
+
+- **A. §2.2, the accumulator.** An array literal whose elements are not all string literals is admitted when the
+  declaration is annotated `[String]`.
+  - **Why:** `componentSVGLines` seeds its accumulator with two `boxRect(…)` calls, and §2.2 refused it, which
+    contradicted §4's expectation for that control. The initial lines are frame, and no obligation reads them.
+- **B. §4, `buildPlantUMLText`'s expectation.** The component line is primary, not segment.
+  - **Why:** §2.4 makes `stereotype` element text, because its initialiser (`stereotypeText(for: component.kind)`)
+    is a one-argument call on an element path. So nothing in the line is a cut. The rule stands, and the control
+    table had misapplied it.
+  - **Consequence for the kill arm:** its law cut the run at `stereotype` (§1.3). That is the weaker reading, and it
+    still killed L48.
