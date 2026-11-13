@@ -160,7 +160,8 @@ extension PurityRefactoringReachMeasuredTests {
     static func witnessSplit(for subjects: [Subject], purity: PackagePurity) -> WitnessSplit {
         var cache: [String: [Int: FunctionDeclSyntax]] = [:]
         let attributor = PurityRefutationCensusMeasuredTests.Attributor(
-            inferrer: PurityInferrer(constructionFacts: purity.constructionFacts)
+            inferrer: PurityInferrer(constructionFacts: purity.constructionFacts),
+            tcaNamesAreTCAs: purity.oracle.tcaNamesAreTCAs
         )
 
         var propertyCache: [String: Set<Int>] = [:]
