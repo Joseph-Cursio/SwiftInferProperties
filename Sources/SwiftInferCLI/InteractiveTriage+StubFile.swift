@@ -105,6 +105,8 @@ extension InteractiveTriage {
         // Read from the `.subjectNotVisibleToTests` signal rather than re-derived, so the remedy
         // has one author: `AccessRestriction.remedy`, the same sentence triage printed.
         let accessLine = Self.accessCaveat(for: suggestion)
+        // #665 4b: the header names a reach test when the stub carries one.
+        let reachLines = Self.reachLines(for: stub)
 
         // Foundation, unconditionally. It used to be added only for the Codable round-trip
         // generator scaffold, which needs `JSONEncoder`. That is not the only thing that
@@ -132,8 +134,8 @@ extension InteractiveTriage {
         let header = Self.provenanceLines(for: suggestion, packageRoot: packageRoot).joined(separator: "\n")
         return GeneratedFileLayout.laidOut("""
         \(header)
-        \(Self.lawClassLine(for: suggestion, isScaffold: Self.isScaffold(stub)))\(accessLine)
-        \(imports)\(unresolvedModuleNote)\(namespacedStub)
+        \(Self.lawClassLine(for: suggestion, isScaffold: Self.isScaffold(stub)))\(reachLines)\(accessLine)
+        \(imports)\(unresolvedModuleNote)\(Self.suiteTraitLine(for: stub))\(namespacedStub)
         """)
     }
 
@@ -302,6 +304,29 @@ extension InteractiveTriage {
         //            counterexamples lie outside the generator's reach passes while being false.
 
         """
+    }
+
+    /// The header's two `// Reach:` lines, for a stub that carries a reach test, else nothing.
+    ///
+    /// Read from the stub, as `isScaffold` is, so the lines follow what the file holds (#665 4b).
+    /// Exactly two lines, the second indented under the first: #665 §9's crosscheck drops a
+    /// `// Reach:` line and the indented comment lines after it, and nothing else.
+    static func reachLines(for stub: String) -> String {
+        guard stub.contains("_reachesBothOutcomes()") else { return "" }
+        return """
+        // Reach: a second test re-draws the law's inputs and warns, never fails, when none of them
+        //        made the subject return true, or none false. It is a reach claim, not a law.
+
+        """
+    }
+
+    /// `@Suite(.serialized)` on its own line, for a suite that carries a reach test, else nothing.
+    ///
+    /// The reach test reads the subject after the law's 100 calls, the census's `class_again`, and
+    /// only a serialized suite runs it after the law. In parallel the two raced a stateful subject and
+    /// crashed the test process (#724's amendment A2). #665 §9's crosscheck drops this exact line.
+    static func suiteTraitLine(for stub: String) -> String {
+        stub.contains("_reachesBothOutcomes()") ? "@Suite(.serialized)\n" : ""
     }
 
     /// Whether a stub body is a scaffold: a test that records an issue on purpose, its message

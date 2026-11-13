@@ -9,7 +9,8 @@ unchanged.** #665 decided NONE at G = 42.8%. #684's generator levers then moved 
 **The predicted decision is W:** a warning-form reach `@Test` beside every `predicate` stub, never failing CI.
 
 **Result (2026-11-13): DECISION W, at G = 58.9% and G_loo = 58.8%**
-(`docs/measurements/predicate-reach-check-reopen.md`). Commits 4a, 4b and 5 below are not built yet.
+(`docs/measurements/predicate-reach-check-reopen.md`). Commits 4a and 4b are built (2026-11-13); commit 5,
+the funnel re-take, has not run.
 
 **Issue:** Joseph-Cursio/SwiftInferProperties#724. This scope changes no threshold. It names the fresh arm, the predictions, and what happens under each outcome. The
 rule, the instrument and the crosscheck are #665's, by reference: `docs/plans/predicate-outcome-reach-scope.md`.
@@ -131,3 +132,22 @@ nothing; if G at 1,000 is 20 or more points above G at 100, the doc files the st
   by at most one row's share, about 0.1 point, and G_loo by about 0.4. SwiftLintRuleStudio is not the largest
   repository, so that change applies to G_loo as well as G. Either way it is under R3's and R4's widths. The doc
   reports G with the row restored as red beside the measured G, so no reading depends on it.
+
+**A2 (2026-11-13, while building 4b, before commit 5 ran): a suite that carries a reach test is `@Suite(.serialized)`,
+and #665 §9's normalisation drops that one line.**
+- **Why.** #665 §9 and the emitter assumed the reach test runs after its law, so that it sees the subject after the
+  law's 100 calls, the census's `class_again`. That holds only under `--no-parallel`, which every harness passes. A
+  plain `swift test` runs a suite's tests at once. On the V1 toy's `Sightings.isFirstSighting`, a subject with an
+  unsynchronised static set, the law and its reach test then raced. The test process crashed in 10 of 10 parallel runs,
+  and a run that finished could name either side. The law alone never crashed. An adversarial review of 4b found this
+  and two verifiers reproduced it.
+- **What changed.** The suite line of a stub with a reach test is preceded by `@Suite(.serialized)`
+  (`InteractiveTriage.suiteTraitLine`). `strip_reach` drops that line only where it sits directly on the suite's
+  `struct`, and the probe's self-test checks both that it is dropped and that the trait anywhere else is not.
+- **Which section it overrides.** #665 §9's normalisation list, step 1, which now names four shapes, not three. #665 §7
+  is not touched: the reach check is still its own `@Test` after `_isTotal`, in the W form. The rejected alternative,
+  running the reach loop inside `_isTotal`, is the "record inside `_isTotal`" row that §7 rejects.
+- **Not changed, and recorded instead:** the helper's `#if compiler(>=6.3)` guard reads the compiler, not the Testing
+  library linked. A test target that builds the swift-testing package below 6.3 from source gets a 6.3+ compiler and an
+  `Issue.record(_:severity:)` that is still SPI there, so its predicate files stop compiling. §7 fixes the W form as this
+  helper and is not amendable, so the case is documented, not fixed. No corpus package builds swift-testing from source.

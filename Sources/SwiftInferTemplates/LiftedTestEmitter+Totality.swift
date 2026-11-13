@@ -84,13 +84,12 @@ extension LiftedTestEmitter {
         let bind = isTuple
             ? tupleBinding(argumentTypes: argumentTypes, count: generators.count)
             : "value"
-        let drawn = isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
-        let copies = drawn.indices.filter(inoutArguments.contains).map { "var inout\($0) = \(drawn[$0]); " }
-        var invocation = callee.call(drawn.indices.map { inoutArguments.contains($0) ? "&inout\($0)" : drawn[$0] })
-        if isAsync { invocation = "await \(invocation)" }
-        if isThrowing { invocation = "try? \(invocation)" }
+        let call = TotalityCall(
+            callee: callee, drawCount: generators.count, isThrowing: isThrowing, isAsync: isAsync,
+            inoutArguments: inoutArguments
+        )
         // `_ =` discards the result: the law is that we GOT one, not what it was.
-        let body = copies.joined() + "_ = \(invocation); return true"
+        let body = call.copies + "_ = \(call.invocation); return true"
         // **An async subject must not be wrapped in an actor hop.** `MainActor.run` takes a
         // *synchronous* `@MainActor` closure, so an `await` cannot appear inside one — and it does
         // not need to: awaiting an isolated async function from a nonisolated context performs the

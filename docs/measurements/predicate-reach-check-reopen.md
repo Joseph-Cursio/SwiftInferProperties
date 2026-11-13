@@ -9,8 +9,8 @@ anything ran. One amendment, A1, was recorded before any census figure was read.
 **DECISION: W.** **279 of 474** rows in R reach both answers (**G = 58.9%**). Leaving out SwiftProjectLint, which
 holds 75.9% of R, gives **G_loo = 58.8%**. Both clear the 0.50 floor for W and fall short of 0.80 for E. The
 instrument passed (V0, V1 and V2a). |R| ≥ 100, NO READING is 0%, and no row is unstable. Under W, the scope's
-next step is #665's commits 4a and 4b, then commit 5's funnel re-take, and **none of them is built yet: they
-wait for approval.**
+next step is #665's commits 4a and 4b, then commit 5's funnel re-take. **4a and 4b are built (2026-11-13); commit 5
+has not run** (§7).
 
 **5 of 6 scored predictions held.** R1 missed on two counts:
 - V1 passed only after one fix round, because its toy oracles predated #684's pairing line;
@@ -241,8 +241,28 @@ The scope's W row, unchanged:
 - **5:** the funnel re-take: arm B against A′, with #665 §9's crosscheck. Any crosscheck difference that §9 says blocks,
   blocks.
 
-**None is built.** They wait for approval. Under W a reach test records a note and never fails, so it kills nothing
-under exit-status tools (#665 N9).
+**4a and 4b are built (2026-11-13). Commit 5 has not run, so R7 is still unscored.**
+- **4a is behaviour-neutral.** `TotalityCall` holds the call, and `stubTrialCount` names the 100-trial budget. On the
+  V1 toy, the 20 stubs written by a build of 4a are byte-identical to a build of `main` at `25434303`.
+- **4b emits the reach test.** It is `LiftedTestEmitter.reachesBothOutcomes`, the note text comes from `NotApplied`, and
+  the header lines from `InteractiveTriage.reachLines`. It is written for `predicate` stubs only, never for a throwing or
+  `async` subject. It replays the law's draws in a `Xoshiro(seed:)` loop over the law's four seed words, the backend's
+  own loop, written out as `guard-domain`'s coverage pass writes it. It calls the subject through `TotalityCall`.
+- **Amendment A2: the suite is `@Suite(.serialized)`.** An adversarial review found that a plain, parallel
+  `swift test` ran the reach test beside its law. On the toy's stateful `isFirstSighting` that crashed the test
+  process in 10 of 10 runs; the census never saw it, because every harness passes `--no-parallel`. Serialized, 8 of 8
+  parallel runs passed with the census's true-side note. #665 §9's normalisation now also drops that one line.
+- **A known limitation, recorded and not fixed:** the helper's `#if compiler(>=6.3)` reads the compiler, not the
+  Testing library linked. So a test target that builds the swift-testing package below 6.3 from source cannot compile
+  the predicate files. #665 §7 fixes the W form as this helper and is not amendable.
+- **Checked end to end on the V1 toy:**
+  - all 20 stubs built under `-warnings-as-errors`;
+  - each of the 20 equals `main`'s after #665 §9's normalisation (`normalised_predicate`), as do SwiftAssist's 225
+    stubs, whose 160 non-predicate files are byte-identical;
+  - every reach verdict with a known class matched the toy's `class_again`: four notes on the expected sides, and the
+    stateful `isFirstSighting`'s true-side note when its law runs first, as in the funnel's serial run.
+
+Under W a reach test records a note and never fails, so it kills nothing under exit-status tools (#665 N9).
 
 ## 8. Not answered here
 

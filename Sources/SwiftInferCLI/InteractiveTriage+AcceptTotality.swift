@@ -31,7 +31,10 @@ extension InteractiveTriage {
             return totalityStub(
                 for: suggestion,
                 customGenerator: customGenerator,
-                receiverExpression: receiverExpression
+                receiverExpression: receiverExpression,
+                // #665 4b: only a predicate's answer is a `Bool` whose reach can be read, and the
+                // census decided W for predicates alone (`docs/measurements/predicate-reach-check-reopen.md`).
+                reach: suggestion.templateName == "predicate"
             )
 
         // Same call as totality, and a predicate on what it returns: a count is never negative.
@@ -187,7 +190,8 @@ extension InteractiveTriage {
         for suggestion: Suggestion,
         customGenerator: ((String) -> String?)?,
         receiverExpression: ((String) -> String?)? = nil,
-        law: ArityFreeLaw = .totality
+        law: ArityFreeLaw = .totality,
+        reach: Bool = false
     ) -> String? {
         guard let evidence = suggestion.evidence.first,
               let parsed = CalleeReference(evidence: evidence),
@@ -217,79 +221,38 @@ extension InteractiveTriage {
         }
         // A result law that could not be written is declined, never written as totality instead.
         guard law == .totality else { return nil }
-        return LiftedTestEmitter.total(
+        let isThrowing = evidence.signature.contains(" throws")
+        let isAsync = evidence.signature.contains(" async")
+        // Parameter positions, shifted past the receiver an instance method draws first.
+        let inoutArguments = Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) })
+        // #684 lever 2, shipped on +16 rows to BOTH (`docs/measurements/predicate-reach-at-source.md`).
+        // `inout` arguments are copied into their own `var`s, so a paired one is left unpaired.
+        let pairings = DrawPairing.plan(argumentTypes: argumentTypes, generators: generators)
+            .filter { !evidence.inoutParameterIndices.contains($0.key - (callee.isInstanceMethod ? 1 : 0)) }
+        let totality = LiftedTestEmitter.total(
             callee: callee,
             seed: seed,
             generators: generators,
-            isThrowing: evidence.signature.contains(" throws"),
-            isAsync: evidence.signature.contains(" async"),
+            isThrowing: isThrowing,
+            isAsync: isAsync,
             // #498 — `arityFreeArgumentTypes` already returned these, in the same order the
             // generators were built from; they just never reached the property closure.
             argumentTypes: argumentTypes,
-            // Parameter positions, shifted past the receiver an instance method draws first.
-            inoutArguments: Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) }),
+            inoutArguments: inoutArguments,
             failureLabel: failureLabel,
-            // #684 lever 2, shipped on +16 rows to BOTH (`docs/measurements/predicate-reach-at-source.md`).
-            // `inout` arguments are copied into their own `var`s, so a paired one is left unpaired.
-            pairings: DrawPairing.plan(argumentTypes: argumentTypes, generators: generators)
-                .filter { !evidence.inoutParameterIndices.contains($0.key - (callee.isInstanceMethod ? 1 : 0)) }
+            pairings: pairings
         )
-    }
-
-    /// The laws that check what the call returned — a non-negative measure, a documented range, a
-    /// comparator's order — or `nil` for totality, which checks only that it returned. Split out of
-    /// `totalityStub`, which builds the call all four share.
-    private static func resultLawStub(
-        _ law: ArityFreeLaw,
-        callee: CalleeReference,
-        label: String,
-        seed: SamplingSeed.Value,
-        draws: (generators: [String], argumentTypes: [String])
-    ) -> String? {
-        let (generators, argumentTypes) = draws
-        switch law {
-        case .totality:
-            return nil
-
-        case .nonNegative:
-            return LiftedTestEmitter.nonNegative(
-                callee: callee,
-                seed: seed,
-                generators: generators,
-                argumentTypes: argumentTypes,
-                failureLabel: "\(label) returned a negative measure"
-            )
-
-        case .withinRange(let range):
-            return LiftedTestEmitter.withinDocumentedRange(
-                callee: callee,
-                range: range,
-                seed: seed,
-                generators: generators,
-                failureLabel: "\(label) left its documented range \(range.lower)...\(range.upper)",
-                argumentTypes: argumentTypes
-            )
-
-        case .sortedBy(let ordering):
-            return LiftedTestEmitter.sortedByKey(
-                callee: callee,
-                ordering: ordering,
-                seed: seed,
-                generators: generators,
-                failureLabel: "\(label) returned a result out of its comparator's order",
-                argumentTypes: argumentTypes
-            )
-
-        case .independentOfInputOrder(let ordering):
-            return LiftedTestEmitter.inputOrderIndependent(
-                callee: callee,
-                ordering: ordering,
-                seed: seed,
-                generators: generators,
-                failureLabel: "\(label) returned another order for the same input reversed",
-                argumentTypes: argumentTypes
-            )
-        }
+        // A predicate admits neither `throws` nor `async` (#665 N5); a subject that somehow carries
+        // one keeps its law and gets no reach test, rather than one whose answer cannot be read.
+        guard reach, !isThrowing, !isAsync else { return totality }
+        return totality + LiftedTestEmitter.reachesBothOutcomes(
+            callee: callee,
+            seed: seed,
+            generators: generators,
+            subjectLabel: parsed.displaySignature,
+            inoutArguments: inoutArguments,
+            pairings: pairings
+        )
     }
 
     /// The two laws over a sorted result, both the totality call checked against what it returned:

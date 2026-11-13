@@ -1856,9 +1856,12 @@ def _selftest_compare(check):
 
 def strip_reach(text):
     """A predicate stub with every #665 addition removed: the `// Reach:` header, the reach test, and
-    the `reachNote` helper (Q6.4 step 1, parts 1-2)."""
+    the `reachNote` helper (Q6.4 step 1, parts 1-2), plus the suite's `@Suite(.serialized)` line
+    (#724's amendment A2: without it the reach test ran beside its law and raced a stateful subject)."""
     lines, out, skipping = text.split("\n"), [], False
-    for line in lines:
+    for number, line in enumerate(lines):
+        if line == "@Suite(.serialized)" and number + 1 < len(lines) and lines[number + 1].startswith("struct "):
+            continue
         if line.startswith("// Reach:"):
             skipping = True
             continue
@@ -2618,7 +2621,9 @@ def _selftest_kill(check):
 
 def _selftest_crosscheck(check):
     arm_a = CANNED_HOISTED
-    arm_b = arm_a.replace("// Source: Sources/Toy/Toy.swift:24",
+    arm_b = arm_a.replace("\nstruct ", "\n@Suite(.serialized)\nstruct ", 1)
+    check("canned stub has a suite line", arm_b != arm_a)
+    arm_b = arm_b.replace("// Source: Sources/Toy/Toy.swift:24",
                           "// Source: Sources/Toy/Toy.swift:24\n// Reach: a second test checks the draws reach both\n"
                           "//        answers; it is not a law.")
     arm_b = arm_b.rstrip("}\n") + ("\n    }\n\n    @Test func isRightOf_reachesBothOutcomes() {\n        var reachRNG = 1\n"
@@ -2634,6 +2639,8 @@ def _selftest_crosscheck(check):
     check("normalise de-hoist", normalised_predicate(arm_a) == normalised_predicate(inline),
           normalised_predicate(inline)[:300])
     check("normalise catches a change", normalised_predicate(arm_a) != normalised_predicate(arm_a.replace("100,", "99,")))
+    elsewhere = arm_a.replace("    @Test func", "    @Suite(.serialized)\n    @Test func", 1)
+    check("only the suite's trait line is dropped", normalised_predicate(arm_a) != normalised_predicate(elsewhere))
     entry = {"reach": {"green": ["S1.f_reachesBothOutcomes()"], "not_applied": {"S2.g_reachesBothOutcomes()": ["true"]},
                        "other": ["S3.h_reachesBothOutcomes()"], "crashed": ["S4.k_reachesBothOutcomes()"],
                        "hung": [], "skipped_after_law": ["S5.m_reachesBothOutcomes()"]}}
