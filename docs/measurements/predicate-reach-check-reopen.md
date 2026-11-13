@@ -9,15 +9,20 @@ anything ran. One amendment, A1, was recorded before any census figure was read.
 **DECISION: W.** **279 of 474** rows in R reach both answers (**G = 58.9%**). Leaving out SwiftProjectLint, which
 holds 75.9% of R, gives **G_loo = 58.8%**. Both clear the 0.50 floor for W and fall short of 0.80 for E. The
 instrument passed (V0, V1 and V2a). |R| ≥ 100, NO READING is 0%, and no row is unstable. Under W, the scope's
-next step is #665's commits 4a and 4b, then commit 5's funnel re-take. **4a and 4b are built (2026-11-13); commit 5
-has not run** (§7).
+next step is #665's commits 4a and 4b, then commit 5's funnel re-take. **All three are done (2026-11-13).** The
+crosscheck of arm B against A′ found 0 blocking differences: 0 law rows moved, every stub equal after #665 §9's
+normalisation, and 496 reach verdicts equal to the census's `class_again` (§7).
 
-**5 of 6 scored predictions held.** R1 missed on two counts:
+**6 of 7 scored predictions held.** R1 missed on two counts:
 - V1 passed only after one fix round, because its toy oracles predated #684's pairing line;
 - V2b read 5 of 10, not 10.
 
 All five V2b misses are generator drift from #684's own levers: rows that the issue measured as red now reach both
-answers. R7 (arm B's crosscheck) is not scored until commit 5 runs.
+answers. R7 held: arm B moved 0 law rows, its content diff is clean, and its reach green in R is A′'s 279.
+
+**Commit 5's first pass found one emitter defect, now fixed.** Two SwiftProjectLint stubs build their receiver with
+`try #require(…)`, which compiles in the law's `async throws` closure but not in a plain `async` reach test, so they
+were set aside. The reach test now throws when its call does; the re-run is clean (§7).
 
 **Caveats:**
 - **G moved for the reason #684 measured.** G is 41.1% → 58.9% against #684's A0, and 42.8% → 58.9% against #665.
@@ -218,7 +223,7 @@ Each row's witness or reason is in `fixtures/predicate-reach-check-reopen/judgem
 | R4 | G_loo in [0.52, 0.63], SwiftProjectLint still the largest | 0.588; SwiftProjectLint 75.9% of R | held |
 | R5 | DECISION = W | W | held |
 | R6 | constant-by-design at most 25% of the hand sample | 22.6% weighted | held |
-| R7 | under W, arm B moves 0 law rows, a clean content diff, reach-bucket green = A′'s green | not run: needs commits 4a, 4b and 5 | not scored |
+| R7 | under W, arm B moves 0 law rows, a clean content diff, reach-bucket green = A′'s green | 0 rows moved; 1,700/1,700 and 1,377/1,377 equal; green 279 = 279 | held, after one emitter fix |
 
 ## 6. Amendment A1, and what it can move
 
@@ -241,7 +246,7 @@ The scope's W row, unchanged:
 - **5:** the funnel re-take: arm B against A′, with #665 §9's crosscheck. Any crosscheck difference that §9 says blocks,
   blocks.
 
-**4a and 4b are built (2026-11-13). Commit 5 has not run, so R7 is still unscored.**
+**4a, 4b and 5 are done (2026-11-13). R7 held.**
 - **4a is behaviour-neutral.** `TotalityCall` holds the call, and `stubTrialCount` names the 100-trial budget. On the
   V1 toy, the 20 stubs written by a build of 4a are byte-identical to a build of `main` at `25434303`.
 - **4b emits the reach test.** It is `LiftedTestEmitter.reachesBothOutcomes`, the note text comes from `NotApplied`, and
@@ -263,6 +268,68 @@ The scope's W row, unchanged:
     stateful `isFirstSighting`'s true-side note when its law runs first, as in the funnel's serial run.
 
 Under W a reach test records a note and never fails, so it kills nothing under exit-status tools (#665 N9).
+
+### Commit 5: the funnel re-take
+
+Arm B is A′'s binary plus 4a and 4b (amendment A3): `05d97356` with #729's sources applied, built with A′'s
+`Package.resolved`. The scripts were byte-identical to A′'s and the 19 trees were at A′'s HEADs. SwiftLintRuleStudio
+carried A1's skip marker, and arm B's `discover` named the URL law zero times before anything ran. The crosscheck ran
+`scripts/predicate_outcome_reach.py` at `d6b5a225`, with A2's normalisation and `--rerun 10`. Its output is
+`fixtures/predicate-reach-check-reopen/crosscheck-2026-11-13.jsonl`.
+
+> Law rows moved: 0 (compiled 992 → 992; passed 823 → 823 = 279 behaviour + 544 does not crash). The reach check
+> adds 498 tests in its own bucket: 292 green, 191 NOT APPLIED on the true side, 13 on the false side, 0 crashed,
+> 0 hung, 2 skipped after their law trapped or hung. These are reach claims, not laws.
+
+```
+content: predicate 1700/1700 normalised-equal, non-predicate 1377/1377 byte-equal
+verdicts: agree 496, law-level 2
+0 blocking
+```
+
+- **In R the reach buckets are the census's buckets row for row:** 279 green against 279 BOTH, 184 true-side notes
+  against 184 ONLY-FALSE, and 11 false-side notes against 11 ONLY-TRUE. No stable row disagreed, so `--rerun` re-ran
+  nothing.
+- **The 2 law-level rows** are reach tests skipped because their law trapped: SwiftEffectInference's
+  `DeclarationShapeAccepts` and pbt-book's `SwiftOrgPartitionVerifier`, both `law_a == crashed` and `class100`
+  TRAPPED in the census. Neither is a reach reading.
+- **An unpatched harness** would count every reach test that passed as a passing law under W, reading
+  `passed_does_not_crash` as 544 + 292 + 191 + 13 = 1,040. That is why the harness bucket exists.
+
+**The first pass blocked on one emitter defect.** Its crosscheck listed 17 blocking lines. All 17 were two
+SwiftProjectLint stubs, `AnimationPerformanceVisitor.isAnimationModifierCall` and `isNearHighFrequencyCallback`,
+compiled in A′ and set aside in arm B, so `SwiftProjectLintRules`' compiled count was 333 → 331 (the shared set-aside
+directory repeats them under each package). The compiler said "errors thrown from here are not handled". Their
+constructed receiver is `AnimationPerformanceVisitor(pattern: try #require(…))`. That compiles inside the law's
+`async throws` property closure, but the reach test made the same call in a plain `async` body. §9 counts a set-aside
+whose first error is in a reach test as a defect to fix before reporting. The reach test is now `async throws` exactly
+when its call contains a `try`. A throw can only come from the receiver's own construction, which fails the law first,
+so a file whose law passes still never goes red. Arm B was then rebuilt and re-run in full, into fresh trees.
+
+<details><summary>Per repository, arm B against A′</summary>
+
+| repository | compiled A′ → B | passed A′ → B | reach green | NOT APPLIED true · false | skipped after law |
+|---|---:|---:|---:|---:|---:|
+| SwiftProjectLint | 415 → 415 | 405 → 405 | 212 | 140 · 8 | 0 |
+| SwiftEffectInference | 40 → 40 | 38 → 38 | 20 | 11 · 0 | 1 |
+| SwiftPropertyLaws | 46 → 46 | 41 → 41 | 11 | 11 · 1 | 0 |
+| SwiftLintRuleStudio | 46 → 46 | 42 → 42 | 10 | 7 · 0 | 0 |
+| pbt-book | 122 → 122 | 71 → 71 | 10 | 2 · 2 | 1 |
+| SwiftUMLStudio | 56 → 56 | 47 → 47 | 10 | 3 · 0 | 0 |
+| SwiftMarkdownWiki | 27 → 27 | 20 → 20 | 2 | 8 · 0 | 0 |
+| pbt-workbook-corpus | 153 → 153 | 98 → 98 | 3 | 5 · 0 | 0 |
+| SwiftCloneDetector | 11 → 11 | 8 → 8 | 3 | 2 · 1 | 0 |
+| SwiftFormatRuleStudio | 20 → 20 | 18 → 18 | 2 | 2 · 1 | 0 |
+| MacCloud_server | 8 → 8 | 6 → 6 | 5 | 0 · 0 | 0 |
+| SwiftAssist | 8 → 8 | 8 → 8 | 2 | 0 · 0 | 0 |
+| SwiftIdempotency | 5 → 5 | 3 → 3 | 2 | 0 · 0 | 0 |
+
+Repositories with no predicate stub carry no reach test and are left out. One package was flagged by time: pbt-book's
+`code` ran 375 s in A′ and 386 s in arm B, over §9's 240 s. Its columns did not move, so §9's 1,800 s re-run did not
+apply. No package bisected in either arm, and the summed `run_seconds` were 516 in A′ and 509 in arm B. The funnel took 40 minutes for
+the first pass and 39 for the re-run.
+
+</details>
 
 ## 8. Not answered here
 

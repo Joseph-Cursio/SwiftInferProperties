@@ -1,6 +1,6 @@
 # Reopen #665's predicate outcome-reach check after #684: scope, frozen before the re-take
 
-> **Status:** `open` · **As of:** 2026-11-13
+> **Status:** `shipped` · **As of:** 2026-11-13
 
 **#665's reopen condition is met, so its census is re-taken on what shipped and its frozen rule is applied
 unchanged.** #665 decided NONE at G = 42.8%. #684's generator levers then moved net +81 rows to BOTH. Under
@@ -9,8 +9,8 @@ unchanged.** #665 decided NONE at G = 42.8%. #684's generator levers then moved 
 **The predicted decision is W:** a warning-form reach `@Test` beside every `predicate` stub, never failing CI.
 
 **Result (2026-11-13): DECISION W, at G = 58.9% and G_loo = 58.8%**
-(`docs/measurements/predicate-reach-check-reopen.md`). Commits 4a and 4b are built (2026-11-13); commit 5,
-the funnel re-take, has not run.
+(`docs/measurements/predicate-reach-check-reopen.md`). Commits 4a, 4b and 5 are done (2026-11-13): the crosscheck
+found 0 blocking differences after one emitter fix, and R7 held.
 
 **Issue:** Joseph-Cursio/SwiftInferProperties#724. This scope changes no threshold. It names the fresh arm, the predictions, and what happens under each outcome. The
 rule, the instrument and the crosscheck are #665's, by reference: `docs/plans/predicate-outcome-reach-scope.md`.
@@ -151,3 +151,16 @@ and #665 §9's normalisation drops that one line.**
   library linked. A test target that builds the swift-testing package below 6.3 from source gets a 6.3+ compiler and an
   `Issue.record(_:severity:)` that is still SPI there, so its predicate files stop compiling. §7 fixes the W form as this
   helper and is not amendable, so the case is documented, not fixed. No corpus package builds swift-testing from source.
+
+**A3 (2026-11-13, before arm B's funnel ran): arm B is A′'s binary plus 4a and 4b, not a build of `main`.**
+- **Why.** #665 §9 step 1 makes arm B differ from arm A only by the reach work, and it blocks on any stub-path or
+  content difference. `main` at `d6b5a225` also carries SEI `ba3624d` (#727), which moves verdicts: on
+  SwiftLintRuleStudio it withholds `MirrorLock.isHeld`, a predicate in A′. A build of `main` would fail step 1 for a
+  reason that has nothing to do with the reach test.
+- **What arm B is.** `05d97356`, A′'s commit, with `git diff 25434303 d6b5a225 -- Sources` applied: exactly #729's 4a and
+  4b sources. Those files and the one source file changed between `05d97356` and `25434303`
+  (`FunctionSummary+Builders.swift`, #725) are disjoint. It was built with A′'s `Package.resolved` copied in, and the
+  resolved pins are identical to A′'s.
+- **What is unchanged.** The funnel scripts are byte-identical between `05d97356` and `d6b5a225`. The crosscheck runs
+  `scripts/predicate_outcome_reach.py` at `d6b5a225`, which carries amendment A2's normalisation. SwiftLintRuleStudio's
+  tree carries A1's skip marker, as A′'s did.
