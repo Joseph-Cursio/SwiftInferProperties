@@ -117,14 +117,14 @@ extension LiftedTestEmitter {
             // four seed words the check below uses, so these are the draws it will make.
             var coverageRNG = Xoshiro(seed: (\(seedWords)))
             var entered = 0
-            for _ in 0 ..< 100 {
+            for _ in 0 ..< \(stubTrialCount) {
         \(draws)
                 if \(call.domainPredicate) { entered += 1 }
             }
             if entered == 0 {
                 Issue.record(
                     \"\"\"
-                    NOT APPLIED — no draw entered the sub-domain in 100 trials, so the pass below \\
+                    NOT APPLIED — no draw entered the sub-domain in \(stubTrialCount) trials, so the pass below \\
                     means nothing. The law is: \(law). Narrow the generator until it \\
                     reaches the sub-domain, or delete this test.
                     \"\"\"
@@ -137,7 +137,7 @@ extension LiftedTestEmitter {
     private static func checkBlock(_ call: GuardDomainCall, invocation: String) -> String {
         """
             let result = await backend.check(
-                trials: 100,
+                trials: \(stubTrialCount),
                 seed: seed,
                 sample: \(guardDomainSample(call)),
                 property: { drawn in

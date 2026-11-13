@@ -60,7 +60,7 @@ extension LiftedTestEmitter {
                 stateD: 0x\(hex(seed.stateD))
             )
             let result = await backend.check(
-                trials: 100,
+                trials: \(stubTrialCount),
                 seed: seed,
                 sample: { rng in
                     let dense = Bool.random(using: &rng)

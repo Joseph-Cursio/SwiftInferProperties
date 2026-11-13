@@ -114,7 +114,7 @@ extension LiftedTestEmitter {
         \(equivalenceCoverage(call, seedWords: seedWords, draws: draws, notApplied: notApplied))
 
             let result = await backend.check(
-                trials: 100,
+                trials: \(stubTrialCount),
                 seed: seed,
                 sample: { rng in
         \(draws.map { "            " + $0.replacingOccurrences(of: "RNG", with: "rng") }.joined(separator: "\n"))
@@ -148,7 +148,7 @@ extension LiftedTestEmitter {
             // the triples that chain, over the SAME four seed words the check below uses.
             var coverageRNG = Xoshiro(seed: (\(seedWords)))
             var chained = 0
-            for _ in 0 ..< 100 {
+            for _ in 0 ..< \(stubTrialCount) {
         \(redraws.joined(separator: "\n"))
                 if \(call.relates("a", "b")) && \(call.relates("b", "c")) { chained += 1 }
             }
