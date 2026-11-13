@@ -72,13 +72,19 @@ extension LiftedTestEmitter {
             + ["reachedAnswers.insert(reachAnswer)"])
             .map { "        " + $0 }
             .joined(separator: "\n")
+        // The law's call runs inside the backend's `async throws` property closure, so a constructed
+        // receiver may carry a `try` (`try #require(…)` building a rule visitor's pattern). The reach test
+        // makes that call in its own body, which must then throw too, or the file does not compile:
+        // commit 5's crosscheck set aside two SwiftProjectLint stubs on exactly that. A throw can only
+        // come from the receiver's own construction, which fails the law first.
+        let effects = call.invocation.contains("try ") ? "async throws" : "async"
         let notes = [true, false]
             .map { reachNote(side: $0, subject: subjectLabel, lawTest: lawTest) }
             .joined(separator: "\n")
         return """
 
 
-        @Test func \(callee.identifierName)_reachesBothOutcomes() async {
+        @Test func \(callee.identifierName)_reachesBothOutcomes() \(effects) {
             // A reach claim, not a law. It re-draws \(lawTest)'s \(stubTrialCount) inputs, from its seed
             // and in its order, and notes an answer none of them got: the law's pass then says nothing
             // about the inputs that give it. It only warns. A predicate that no value of its argument

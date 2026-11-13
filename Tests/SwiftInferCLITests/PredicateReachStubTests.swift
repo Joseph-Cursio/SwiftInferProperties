@@ -152,6 +152,29 @@ struct PredicateReachStubTests {
         #expect(stub.contains(hop))
     }
 
+    /// A constructed receiver that throws while it is built (`try #require(…)`) is legal inside the law's
+    /// `async throws` property closure, and needs a throwing reach test. Commit 5's crosscheck set aside
+    /// two SwiftProjectLint stubs whose reach test was plain `async`: "errors thrown from here are not
+    /// handled".
+    @Test func aThrowingReceiverMakesTheReachTestThrow() {
+        let callee = CalleeReference(
+            bareName: "isAnimationModifierCall",
+            qualifier: "AnimationPerformanceVisitor(pattern: try #require(Pattern.first))",
+            isInstanceMethod: false
+        )
+        let stub = LiftedTestEmitter.reachesBothOutcomes(
+            callee: callee, seed: SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4),
+            generators: ["Gen<Int>.int()"], subjectLabel: "isAnimationModifierCall(_:)"
+        )
+        #expect(stub.contains("@Test func isAnimationModifierCall_reachesBothOutcomes() async throws {"))
+        let plain = LiftedTestEmitter.reachesBothOutcomes(
+            callee: CalleeReference(bareName: "isBlank", qualifier: "Text"),
+            seed: SamplingSeed.Value(stateA: 1, stateB: 2, stateC: 3, stateD: 4),
+            generators: ["Gen<Int>.int()"], subjectLabel: "isBlank(_:)"
+        )
+        #expect(plain.contains("@Test func isBlank_reachesBothOutcomes() async {"))
+    }
+
     @Test func aPlainCallIsTheLawsCall() throws {
         let stub = try Self.stub(Self.isBlank)
         #expect(stub.contains("_ = Text.isBlank(value); return true"))

@@ -22,8 +22,8 @@ enum NotApplied {
         reachSideClauses(side, subject: subject, lawTest: lawTest, trials: trials).joined()
     }
 
-    /// `reachSide`'s text in the three pieces a stub writes it as, one string literal each, so the
-    /// call stays inside 120 columns. Joined, they are the note exactly.
+    /// `reachSide`'s text in the three pieces a stub writes it as, one string literal each, which keeps
+    /// the call inside 120 columns for a subject of ordinary length. Joined, they are the note exactly.
     static func reachSideClauses(_ side: Bool, subject: String, lawTest: String, trials: Int) -> [String] {
         [
             "NOT APPLIED — the \(side) side: no draw made \(subject) return \(side) in \(trials) trials ",
