@@ -1,8 +1,9 @@
 // Hand-written oracles for the V1 toy of `scripts/predicate_outcome_reach.py validate`.
 //
 // Each test replays one stub's draws WITHOUT the stub: its four seed words and its generator text
-// are copied verbatim from the stub `swift-infer` emitted at `fef2971d`, a plain `Xoshiro(seed:)`
-// loop draws from them, and the subject is called directly. No wrap, no clone and no parse of a
+// are copied verbatim from the stub `swift-infer` emitted at `fef2971d` (for `isRightOf` and
+// `isWithin`, with the pairing line #684 added at `05d97356`: the re-take's V1 fix round 1,
+// `docs/measurements/predicate-reach-check-reopen.md`). A plain `Xoshiro(seed:)` loop draws from them, and the subject is called directly. No wrap, no clone and no parse of a
 // stub is involved, so `validate` compares two independent readings bit for bit.
 //
 // It replays the clone's process, not only its first test: 100 trials (`law`), 100 more from a
@@ -281,7 +282,8 @@ struct PredicateReachOracles {
             seed: (0xFFC75A11D38F79F4, 0x68AF390FD7D6AC7F, 0xF4B0D928035F0D85, 0x0EB2CB970F16E48A),
             draw: { rng in
                 let arg0 = Self.isRightOfGenerator.run(using: &rng)
-                let arg1 = Self.isRightOfGenerator.run(using: &rng)
+                var arg1 = Self.isRightOfGenerator.run(using: &rng)
+                if Int.random(in: 0 ..< 4, using: &rng) == 0 { arg1 = arg0 }
                 return (arg0, arg1)
             }
         ) { args in args.0.isRightOf(args.1) }
@@ -293,7 +295,8 @@ struct PredicateReachOracles {
             seed: (0xB9FC1F805D0C986A, 0x57B6DA2E3371CC40, 0x8A512A429F7A430A, 0xEE30555C023E506F),
             draw: { rng in
                 let arg0 = (Gen<Int>.int()).run(using: &rng)
-                let arg1 = (Gen<Int>.int()).run(using: &rng)
+                var arg1 = (Gen<Int>.int()).run(using: &rng)
+                if Int.random(in: 0 ..< 4, using: &rng) == 0 { arg1 = arg0 }
                 return (arg0, arg1)
             }
         ) { args in Rules.isWithin(args.0, limit: args.1) }
