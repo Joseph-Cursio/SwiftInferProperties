@@ -1,6 +1,10 @@
 # Let the purity join see impurity behind member calls: scope, frozen before the build and the runs
 
-> **Status:** `proposed` · **As of:** 2026-11-13
+> **Status:** `declined` · **As of:** 2026-11-13
+
+> **Ran and decided 2026-11-13: nothing ships.** J1 79.4% and J2 78.9% of added retractions hand-checked real,
+> against a 90% bar; J0L 40%. The result is `docs/measurements/purity-join-member-calls.md`. This scope stays as
+> frozen (hash `0cf1fbe4`, recorded before any run), with no amendments.
 
 **`PackagePurityJoin` takes back a `.pure` verdict only one hop up, and only through a bare free-function name.**
 So an impurity reached through `Type.method(…)`, or two calls down, stays `.pure`. This scope measures two

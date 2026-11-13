@@ -1,0 +1,77 @@
+arm	file	line	owner	name	result
+j0	ConstructionUniverse+Bound.swift	16	ConstructionUniverse	bound	RETRACTED hop 1 via holdsXcodeProject
+j0	PackagePurity.swift	70	PackagePurity	forScan	pure
+j0l	ConstructionUniverse+Bound.swift	16	ConstructionUniverse	bound	RETRACTED hop 1 via holdsXcodeProject
+j0l	PackagePurity.swift	70	PackagePurity	forScan	pure
+j1	ConstructionUniverse+Bound.swift	16	ConstructionUniverse	bound	RETRACTED hop 1 via holdsXcodeProject
+j1	PackagePurity.swift	70	PackagePurity	forScan	RETRACTED hop 1 via LargeStackWorkers.run
+j2	ConstructionUniverse+Bound.swift	16	ConstructionUniverse	bound	RETRACTED hop 1 via holdsXcodeProject
+j2	PackagePurity.swift	70	PackagePurity	forScan	RETRACTED hop 1 via LargeStackWorkers.run
+j0	SwiftSourceScanner.swift	72	SwiftSourceScanner	scan	pure
+j0	SwiftSourceScanner.swift	80	SwiftSourceScanner	scanUnlexed	pure
+j0l	SwiftSourceScanner.swift	72	SwiftSourceScanner	scan	pure
+j0l	SwiftSourceScanner.swift	80	SwiftSourceScanner	scanUnlexed	pure
+j1	SwiftSourceScanner.swift	72	SwiftSourceScanner	scan	pure
+j1	SwiftSourceScanner.swift	80	SwiftSourceScanner	scanUnlexed	pure
+j2	SwiftSourceScanner.swift	72	SwiftSourceScanner	scan	pure
+j2	SwiftSourceScanner.swift	80	SwiftSourceScanner	scanUnlexed	pure
+j0	ParallelListDriftVisitor.swift	146	ParallelListDriftVisitor	visit	pure
+j0l	ParallelListDriftVisitor.swift	146	ParallelListDriftVisitor	visit	pure
+j1	ParallelListDriftVisitor.swift	146	ParallelListDriftVisitor	visit	pure
+j2	ParallelListDriftVisitor.swift	146	ParallelListDriftVisitor	visit	pure
+j0	SpaceSampler.swift	78	SpaceSampler	draw	pure
+j0	InputSource.swift	44	InputSource	sampling	pure
+j0	CodableTrial.swift	10	CodableTrial	run	pure
+j0l	SpaceSampler.swift	78	SpaceSampler	draw	pure
+j0l	InputSource.swift	44	InputSource	sampling	pure
+j0l	CodableTrial.swift	10	CodableTrial	run	pure
+j1	SpaceSampler.swift	78	SpaceSampler	draw	pure
+j1	InputSource.swift	44	InputSource	sampling	pure
+j1	CodableTrial.swift	10	CodableTrial	run	pure
+j2	SpaceSampler.swift	78	SpaceSampler	draw	pure
+j2	InputSource.swift	44	InputSource	sampling	pure
+j2	CodableTrial.swift	10	CodableTrial	run	pure
+j0	DagreLayoutEngine.swift	381	DagreLayoutEngine	layout	RETRACTED hop 1 via layoutOnThisThread
+j0	DependencyGraphModel.swift	30	DependencyGraphModel	detectCycles	pure
+j0	ActivityFlowExtractor.swift	29	ActivityFlowExtractor	extract	pure
+j0	CallGraphExtractor.swift	127	CallGraphExtractor	extract	pure
+j0	ERModelExtractor.swift	362	ERModelExtractor	extract	pure
+j0	ImportExtractor.swift	71	ImportExtractor	extract	pure
+j0	PersistenceSchemaExtractor.swift	37	PersistenceSchemaExtractor	extract	pure
+j0	StateMachineExtractor.swift	316	StateMachineExtractor	extract	pure
+j0	SyntaxStructureProvider.swift	97	SyntaxStructure	build	pure
+j0l	DagreLayoutEngine.swift	381	DagreLayoutEngine	layout	RETRACTED hop 1 via layoutOnThisThread
+j0l	DependencyGraphModel.swift	30	DependencyGraphModel	detectCycles	pure
+j0l	ActivityFlowExtractor.swift	29	ActivityFlowExtractor	extract	pure
+j0l	CallGraphExtractor.swift	127	CallGraphExtractor	extract	pure
+j0l	ERModelExtractor.swift	362	ERModelExtractor	extract	pure
+j0l	ImportExtractor.swift	71	ImportExtractor	extract	pure
+j0l	PersistenceSchemaExtractor.swift	37	PersistenceSchemaExtractor	extract	pure
+j0l	StateMachineExtractor.swift	316	StateMachineExtractor	extract	pure
+j0l	SyntaxStructureProvider.swift	97	SyntaxStructure	build	RETRACTED hop 2 via buildTypenameMap
+j1	DagreLayoutEngine.swift	381	DagreLayoutEngine	layout	RETRACTED hop 1 via layoutOnThisThread
+j1	DependencyGraphModel.swift	30	DependencyGraphModel	detectCycles	pure
+j1	ActivityFlowExtractor.swift	29	ActivityFlowExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j1	CallGraphExtractor.swift	127	CallGraphExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j1	ERModelExtractor.swift	362	ERModelExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j1	ImportExtractor.swift	71	ImportExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j1	PersistenceSchemaExtractor.swift	37	PersistenceSchemaExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j1	StateMachineExtractor.swift	316	StateMachineExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j1	SyntaxStructureProvider.swift	97	SyntaxStructure	build	RETRACTED hop 1 via ParsingStack.run
+j2	DagreLayoutEngine.swift	381	DagreLayoutEngine	layout	RETRACTED hop 1 via layoutOnThisThread
+j2	DependencyGraphModel.swift	30	DependencyGraphModel	detectCycles	pure
+j2	ActivityFlowExtractor.swift	29	ActivityFlowExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j2	CallGraphExtractor.swift	127	CallGraphExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j2	ERModelExtractor.swift	362	ERModelExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j2	ImportExtractor.swift	71	ImportExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j2	PersistenceSchemaExtractor.swift	37	PersistenceSchemaExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j2	StateMachineExtractor.swift	316	StateMachineExtractor	extract	RETRACTED hop 1 via ParsingStack.run
+j2	SyntaxStructureProvider.swift	97	SyntaxStructure	build	RETRACTED hop 1 via ParsingStack.run
+j0	MutationTesting.swift	41		isKilled	pure
+j0l	MutationTesting.swift	41		isKilled	pure
+j1	MutationTesting.swift	41		isKilled	pure
+j2	MutationTesting.swift	41		isKilled	pure
+j0	SwiftBinding.swift	42	SwiftInputSource	next	pure
+j0l	SwiftBinding.swift	42	SwiftInputSource	next	pure
+j1	SwiftBinding.swift	42	SwiftInputSource	next	pure
+j2	SwiftBinding.swift	42	SwiftInputSource	next	pure

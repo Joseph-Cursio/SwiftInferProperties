@@ -53,7 +53,10 @@ public extension FunctionSummary {
             inferredEffect: effect,
             purityVerdict: purityVerdict,
             bodyFingerprint: bodyFingerprint,
-            calledFreeFunctionNames: calledFreeFunctionNames
+            globalActor: globalActor,
+            declaresNonisolated: declaresNonisolated,
+            calledFreeFunctionNames: calledFreeFunctionNames,
+            genericParameters: genericParameters
         )
     }
 
@@ -88,7 +91,10 @@ public extension FunctionSummary {
             inferredEffect: inferredEffect,
             purityVerdict: .refuted,
             bodyFingerprint: bodyFingerprint,
-            calledFreeFunctionNames: calledFreeFunctionNames
+            globalActor: globalActor,
+            declaresNonisolated: declaresNonisolated,
+            calledFreeFunctionNames: calledFreeFunctionNames,
+            genericParameters: genericParameters
         )
     }
 }
