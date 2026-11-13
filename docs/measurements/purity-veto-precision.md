@@ -16,6 +16,14 @@
 > same evidence. None of this is counted by `theShippedVetoMatchesTheScope`, which still prices the
 > template path alone.
 
+> ⚠ **Re-taken 2026-11-13 at SEI `ba3624d` (before = `main` at `409b595b`, SEI `5fbee6f`).** Both arms grew by
+> one row: the broad arm 35 → 36 removed, the witness-scoped arm 21 → 22 (still unpriceable). The new row is
+> `predicate :: waitForExit`. SEI #31's `c273160` refutes `VerifierSubprocess.waitForExit` through its
+> base-less `.now() + timeout`, a true refutation: the function blocks on a child process and signals it. The
+> 2026-09-17 key priced that law while its subject still read pure, as `inert`, so it is the one scoped row
+> with an outcome. `theScopedArmIsUnpriceable` excuses it by name (`refutedAfterTheKey`) and fails if the
+> excuse ever goes stale. Nothing refuted or passed is lost.
+
 Re-derivable at any time — `PurityVetoPrecisionMeasuredTests` *is* the harness, and
 `make batch2` runs it.
 

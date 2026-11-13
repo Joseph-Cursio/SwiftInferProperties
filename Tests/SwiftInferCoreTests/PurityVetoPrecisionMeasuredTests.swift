@@ -103,16 +103,34 @@ struct PurityVetoPrecisionMeasuredTests {
     /// **If this goes RED the veto has stopped suppressing** — rows are reaching the index again,
     /// which is exactly when re-pricing the scoped arm becomes possible. Re-derive the 2026-08-18
     /// verdict then, and restore the comparisons this issue removed.
+    ///
+    /// **An SEI bump is a second way a scoped removal can carry an outcome**, and it is not the veto
+    /// failing: a subject first refuted with a witness AFTER the key was taken was surveyed while it
+    /// still read pure. Those are named in `refutedAfterTheKey`, each with the commit that refuted it,
+    /// and only those are excused. A listed subject that stops being priced fails too, so the list
+    /// cannot outlive what it records.
     @Test("control — the scoped arm is unpriceable, by the veto's own doing")
     func theScopedArmIsUnpriceable() {
         let priced = Self.measured.narrow.filter { $0.cost != .unrecorded }
-        #expect(priced.isEmpty, """
-        \(priced.count) of \(Self.measured.narrow.count) witness-scoped removals now carry a \
-        recorded outcome: \(priced.map(\.subject).joined(separator: ", ")). The shipped veto is \
+        let excused = Set(priced.map(\.subject)).intersection(Self.refutedAfterTheKey)
+        #expect(excused == Self.refutedAfterTheKey, """
+        `refutedAfterTheKey` names \(Self.refutedAfterTheKey.subtracting(excused).sorted()), which the \
+        scoped arm no longer prices. Remove them: the list records only what the key still prices.
+        """)
+        let unexcused = priced.filter { !Self.refutedAfterTheKey.contains($0.subject) }
+        #expect(unexcused.isEmpty, """
+        \(unexcused.count) of \(Self.measured.narrow.count) witness-scoped removals now carry a \
+        recorded outcome: \(unexcused.map(\.subject).joined(separator: ", ")). The shipped veto is \
         no longer suppressing them before the index is built, so the scoped arm can be priced \
         again — re-derive it rather than deleting this control.
         """)
     }
+
+    /// Subjects first refuted with a witness after `fixtures/whole-corpus-survey/2026-09-17-whole-corpus.jsonl` was
+    /// taken, so the key priced their laws while they still read pure (`theScopedArmIsUnpriceable`).
+    /// - `waitForExit` (`VerifierSubprocess`): SEI `c273160` (#31) refutes its base-less `.now() + timeout`. The key
+    ///   records its `predicate` law as `inert`.
+    static let refutedAfterTheKey: Set<String> = ["waitForExit"]
 
     @Test("the veto has something to remove")
     func theVetoRemovesSomething() {

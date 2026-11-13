@@ -213,40 +213,8 @@ extension PurityRefutationCensusMeasuredTests {
     /// The refuters, re-derived from `PurityInferrer` because they are `private`
     /// there. Guarded by `verdictAgreesWithSoundPurity` over the whole corpus.
     struct Attributor {
-        /// `PurityInferrer.sideEffectMarkers`.
-        ///
-        /// **`FileHandle` / `Process` / `Pipe` joined at SEI `3ea25f2`**, which
-        /// closed the non-throwing half of the I/O hole: `throwsOnlyItsOwnErrors`
-        /// only ever covered *throwing* functions, and
-        /// `FileHandle.standardError.write(_:)` does not throw. `String` and
-        /// `Data` are deliberately still absent — matched by bare identifier they
-        /// would refute nearly everything.
-        ///
-        /// **The file-system read members joined at SEI `fff33cf`**, which closed
-        /// the case the sentence above used to end with: `String(contentsOf:)`
-        /// and `Data(contentsOf:)` throw, so the `try` gate was said to reach
-        /// them — true only while the throw propagates, and `try?` swallows it.
-        ///
-        /// **`contentsOf` is deliberately not here, and must not be added.** SEI
-        /// carried it as a bare token from `fff33cf` to `23d1dab`, where it also
-        /// matched `append(contentsOf:)` and refuted every function that appends
-        /// one collection to another — 43 of this corpus's functions. It is
-        /// matched on the callee instead; see `CensusFileReadChecker`.
-        static let sideEffectMarkers: Set<String> = [
-            "print", "NSLog", "FileManager", "URLSession", "UserDefaults",
-            "NotificationCenter", "DispatchQueue",
-            "FileHandle", "Process", "Pipe",
-            "resourceValues", "checkResourceIsReachable", "checkPromisedItemIsReachable",
-            "startAccessingSecurityScopedResource", "stopAccessingSecurityScopedResource",
-            "contentsOfFile", "contentsOfDirectory",
-        ]
-
-        /// `PurityInferrer.nondeterministicMarkers`.
-        static let nondeterministicMarkers: Set<String> = [
-            "arc4random", "arc4random_uniform", "drand48", "CFAbsoluteTimeGetCurrent",
-            "random", "randomElement", "shuffled",
-            "Date", "UUID",
-        ]
+        // The marker sets and SEI's token rules live in
+        // `PurityRefutationCensusMeasuredTests.Attributor+Markers.swift`, for this file's length cap.
 
         /// Injected so the control can truncate it.
         let markers: Set<String>
@@ -301,7 +269,7 @@ extension PurityRefutationCensusMeasuredTests {
             }
             if hasMarker(in: body) { causes.insert(.marker) }
             if !isTotal(body) { causes.insert(.nonTotal) }
-            if hasRefutingDefault(function.signature) { causes.insert(.markerInDefault) }
+            if hasRefutingDefault(function) { causes.insert(.markerInDefault) }
             if constructionWitness(of: function) { causes.insert(.construction) }
             if function.signature.effectSpecifiers?.throwsClause != nil, sawTry(in: body) {
                 causes.insert(.propagatedTry)
@@ -318,7 +286,7 @@ extension PurityRefutationCensusMeasuredTests {
             guard let body = function.body else { return .refuted }
             guard function.signature.effectSpecifiers?.asyncSpecifier == nil else { return .refuted }
             guard !hasMarker(in: body), isTotal(body),
-                  !hasRefutingDefault(function.signature),
+                  !hasRefutingDefault(function),
                   !constructionWitness(of: function) else { return .refuted }
             guard function.signature.effectSpecifiers?.throwsClause != nil else { return .pure }
             return sawTry(in: body) ? .refuted : .pureButPartial
@@ -334,12 +302,12 @@ extension PurityRefutationCensusMeasuredTests {
         /// value only — a marker in a parameter *type* is not an impurity, and
         /// scanning the whole signature would refute `func f(_ d: Date)`, the
         /// shape dependency injection produces.
-        private func hasRefutingDefault(_ signature: FunctionSignatureSyntax) -> Bool {
-            signature.parameterClause.parameters.contains { parameter in
+        private func hasRefutingDefault(_ function: FunctionDeclSyntax) -> Bool {
+            function.signature.parameterClause.parameters.contains { parameter in
                 guard let value = parameter.defaultValue?.value else { return false }
                 let checker = CensusTotalityChecker(viewMode: .sourceAccurate)
                 checker.walk(value)
-                return hasMarker(in: value) || !checker.isTotal
+                return hasMarker(in: value) || !checker.isTotal || typedDefaultRefutes(parameter, of: function)
             }
         }
 
@@ -358,23 +326,8 @@ extension PurityRefutationCensusMeasuredTests {
         /// refuter in this Attributor: `NondeterminismSources` is `public`, and a
         /// fourth hand-rolled copy of "does this reach for ambient time" is
         /// exactly the drift that type was extracted to end.
-        /// `PurityInferrer.isMarkerPosition`, re-derived (SEI `caa37ca`): a marker
-        /// is an identifier, and not a key path's component. The text of a string
-        /// literal is not code — `"Date"` names nothing — and a key-path component
-        /// names a property, where no marker is one. Every token scan in these
-        /// censuses goes through this, so they cannot disagree about it.
-        static func isMarkerPosition(_ token: TokenSyntax) -> Bool {
-            guard case .identifier = token.tokenKind else { return false }
-            if let reference = token.parent?.as(DeclReferenceExprSyntax.self),
-               reference.parent?.is(KeyPathPropertyComponentSyntax.self) == true {
-                return false
-            }
-            return true
-        }
-
-        private func hasMarker(in syntax: some SyntaxProtocol) -> Bool {
-            let tokenHit = syntax.tokens(viewMode: .sourceAccurate)
-                .contains { markers.contains($0.text) && Self.isMarkerPosition($0) }
+        func hasMarker(in syntax: some SyntaxProtocol) -> Bool {
+            let tokenHit = syntax.tokens(viewMode: .sourceAccurate).contains { Self.tokenRefutes($0, markers: markers) }
             if tokenHit { return true }
             let fileRead = CensusFileReadChecker(viewMode: .sourceAccurate)
             fileRead.walk(syntax)
