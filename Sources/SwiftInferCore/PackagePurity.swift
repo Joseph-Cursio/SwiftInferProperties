@@ -92,14 +92,18 @@ public struct PackagePurity: Sendable {
             universe: used,
             members: universeMembers.map(\.relativePath),
             coverage: Coverage(builtFor: directory),
-            oracle: SoundPurity(constructionFacts: facts),
+            oracle: SoundPurity(
+                constructionFacts: facts, tcaNamesAreTCAs: TCAPresence.shows(in: ordered, root: scanUniverse.root)
+            ),
             trees: treesByKey
         )
     }
 
     /// One source that is its own package — what a single-file scan is.
     public static func selfContained(_ tree: SourceFileSyntax) -> Self {
-        let purityOracle = SoundPurity(constructionFacts: .build(from: [tree]))
+        let purityOracle = SoundPurity(
+            constructionFacts: .build(from: [tree]), tcaNamesAreTCAs: TCAPresence.shows(in: [tree], root: nil)
+        )
         return Self(
             root: nil, universe: [], members: [], coverage: Coverage(builtFor: nil), oracle: purityOracle, trees: [:]
         )
@@ -114,7 +118,10 @@ public struct PackagePurity: Sendable {
     /// The same root and the same trees, judged with no facts — the A/B arm a census needs to say
     /// what the table moved on IDENTICAL input. `internal` for the same reason as `unconfigured`.
     var withoutConstructionFacts: Self {
-        Self(root: root, universe: universe, members: members, coverage: coverage, oracle: .unconfigured, trees: trees)
+        Self(
+            root: root, universe: universe, members: members, coverage: coverage,
+            oracle: SoundPurity(constructionFacts: .empty, tcaNamesAreTCAs: oracle.tcaNamesAreTCAs), trees: trees
+        )
     }
 
     /// The tree this value parsed for `url`, when `url` is in the universe.

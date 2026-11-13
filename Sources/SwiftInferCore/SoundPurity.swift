@@ -50,11 +50,26 @@ public struct SoundPurity: Sendable {
     /// immutable value, and building it per call was how the table had nowhere to go.
     private let inferrer: PurityInferrer
 
+    /// Whether `Effect`, `EffectOf` and `EffectTask` mean TCA's types in this package. `false` only
+    /// when `TCAPresence` found no sign of TCA anywhere in it, and then those names do not refute
+    /// (`ReducerPurityAnalyzer.analyzeForPurity`); SEI's own effect lattice is the case that motivated it.
+    /// **Defaults to `true`**, the answer every package got before, so a caller that does not know
+    /// keeps the conservative one.
+    public let tcaNamesAreTCAs: Bool
+
     /// The oracle for one package: `constructionFacts` built once, from that package's
-    /// production sources in a fixed order — `PackagePurity` is what does that.
-    public init(constructionFacts: ConstructionFacts) {
+    /// production sources in a fixed order — `PackagePurity` is what does that, and it also
+    /// decides `tcaNamesAreTCAs` from the same trees.
+    public init(constructionFacts: ConstructionFacts, tcaNamesAreTCAs: Bool = true) {
         self.constructionFacts = constructionFacts
         self.inferrer = PurityInferrer(constructionFacts: constructionFacts)
+        self.tcaNamesAreTCAs = tcaNamesAreTCAs
+    }
+
+    /// The first refuter, asked the purity question with this package's reading of TCA's names.
+    /// Every verdict below goes through this, and so does the refutation census's replica.
+    public func reducerPurity(of function: FunctionDeclSyntax) -> ReducerPurity {
+        ReducerPurityAnalyzer.analyzeForPurity(function, readingTCANames: tcaNamesAreTCAs)
     }
 
     /// No construction facts — the oracle exactly as it answered before the table existed.
@@ -70,7 +85,7 @@ public struct SoundPurity: Sendable {
     public func inferredEffect(for function: FunctionDeclSyntax) -> Effect? {
         // First refuter: TCA effects / hidden mutation. Cheap, and the common
         // reason a reducer is not pure.
-        guard ReducerPurityAnalyzer.analyze(function) == .pure else { return nil }
+        guard reducerPurity(of: function) == .pure else { return nil }
         // Second refuter: I/O / nondeterminism / partiality. Catches exactly
         // what ReducerPurity is blind to — this is what makes the mapping sound.
         return inferrer.inferredEffect(for: function)
@@ -124,7 +139,7 @@ public struct SoundPurity: Sendable {
     /// body contain **no `try` at all**, so a throw propagated from a dependency
     /// still refutes. Only a function raising its own errors qualifies.
     public func verdict(for function: FunctionDeclSyntax) -> PurityVerdict {
-        guard ReducerPurityAnalyzer.analyze(function) == .pure else { return .refuted }
+        guard reducerPurity(of: function) == .pure else { return .refuted }
         return inferrer.verdict(for: function)
     }
 
@@ -164,7 +179,9 @@ public struct SoundPurity: Sendable {
     /// why the shape it admits (`var now: Date { Date() }`, advised `pure`) is
     /// pinned by a test rather than left to the next corpus to discover.
     public func verdict(forGetter accessor: AccessorBlockSyntax) -> PurityVerdict {
-        guard ReducerPurityAnalyzer.analyze(Self.getterOnly(of: accessor)) == .pure else { return .refuted }
+        guard ReducerPurityAnalyzer.analyzeForPurity(
+            Self.getterOnly(of: accessor), readingTCANames: tcaNamesAreTCAs
+        ) == .pure else { return .refuted }
         return inferrer.isPure(accessor) ? .pure : .refuted
     }
 

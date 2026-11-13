@@ -258,9 +258,23 @@ extension PurityRefutationCensusMeasuredTests {
         /// `constructionBlindReplicaIsDetected` demonstrates.
         let inferrer: PurityInferrer
 
-        init(inferrer: PurityInferrer, markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers)) {
+        /// The package's reading of TCA's type names (`SoundPurity.tcaNamesAreTCAs`). Defaults to
+        /// the census's own package, which is the corpus every caller here judges.
+        let tcaNamesAreTCAs: Bool
+
+        init(
+            inferrer: PurityInferrer,
+            markers: Set<String> = sideEffectMarkers.union(nondeterministicMarkers),
+            tcaNamesAreTCAs: Bool = CensusPurity.oracle.tcaNamesAreTCAs
+        ) {
             self.markers = markers
             self.inferrer = inferrer
+            self.tcaNamesAreTCAs = tcaNamesAreTCAs
+        }
+
+        /// `SoundPurity`'s first refuter, asked exactly as `SoundPurity.reducerPurity(of:)` asks it.
+        func reducerPurity(of function: FunctionDeclSyntax) -> ReducerPurity {
+            ReducerPurityAnalyzer.analyzeForPurity(function, readingTCANames: tcaNamesAreTCAs)
         }
 
         /// Whether SEI's first witness for `function` is a construction — in the body, or in a
@@ -277,7 +291,7 @@ extension PurityRefutationCensusMeasuredTests {
         /// real implementation would short-circuit in.
         func causes(of function: FunctionDeclSyntax) -> Set<RefutationCause> {
             var causes: Set<RefutationCause> = []
-            if ReducerPurityAnalyzer.analyze(function) != .pure { causes.insert(.reducerEffect) }
+            if reducerPurity(of: function) != .pure { causes.insert(.reducerEffect) }
             guard let body = function.body else {
                 causes.insert(.noBody)
                 return causes
@@ -300,7 +314,7 @@ extension PurityRefutationCensusMeasuredTests {
         /// answer on every function in the corpus — that comparison is the whole
         /// warrant for the replication above.
         func reassembledVerdict(of function: FunctionDeclSyntax) -> PurityVerdict {
-            guard ReducerPurityAnalyzer.analyze(function) == .pure else { return .refuted }
+            guard reducerPurity(of: function) == .pure else { return .refuted }
             guard let body = function.body else { return .refuted }
             guard function.signature.effectSpecifiers?.asyncSpecifier == nil else { return .refuted }
             guard !hasMarker(in: body), isTotal(body),

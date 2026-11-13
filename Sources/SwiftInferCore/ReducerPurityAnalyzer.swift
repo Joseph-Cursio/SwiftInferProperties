@@ -14,6 +14,14 @@ private final class Visitor: SyntaxVisitor {
     var foundEffectSignal = false
     var foundHiddenMutability = false
 
+    /// `false` only for the purity question in a package that shows no sign of TCA, where `Effect`,
+    /// `EffectOf` and `EffectTask` are the package's own names (`ReducerPurityAnalyzer.analyzeForPurity`).
+    private let readsTCANames: Bool
+
+    /// TCA's effect types. The rest of `effectTypeNames` names Swift's own concurrency surface, which
+    /// means the same thing in every file.
+    static let tcaEffectTypeNames: Set<String> = ["Effect", "EffectOf", "EffectTask"]
+
     /// Identifier names that strongly indicate effect-bearing code.
     /// Conservative — we'd rather route to subprocess (slow but
     /// correct) than run effect code in-process.
@@ -35,8 +43,13 @@ private final class Visitor: SyntaxVisitor {
         "fireAndForget",
     ]
 
-    init() {
+    init(readsTCANames: Bool = true) {
+        self.readsTCANames = readsTCANames
         super.init(viewMode: .sourceAccurate)
+    }
+
+    private func refutes(typeName name: String) -> Bool {
+        Self.effectTypeNames.contains(name) && (readsTCANames || !Self.tcaEffectTypeNames.contains(name))
     }
 
     // MARK: - async / await
@@ -49,7 +62,7 @@ private final class Visitor: SyntaxVisitor {
     // MARK: - Type-reference effect signals
 
     override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
-        if Self.effectTypeNames.contains(node.baseName.text) {
+        if refutes(typeName: node.baseName.text) {
             foundEffectSignal = true
         }
         return .visitChildren
@@ -59,7 +72,7 @@ private final class Visitor: SyntaxVisitor {
     /// `Task<Void, Never>` surface as `IdentifierTypeSyntax`, not
     /// `DeclReferenceExprSyntax`. Cover that path too.
     override func visit(_ node: IdentifierTypeSyntax) -> SyntaxVisitorContinueKind {
-        if Self.effectTypeNames.contains(node.name.text) {
+        if refutes(typeName: node.name.text) {
             foundEffectSignal = true
         }
         return .visitChildren
@@ -174,6 +187,9 @@ private final class Visitor: SyntaxVisitor {
 /// **Heuristic, not type-resolution.** Detection is textual /
 /// name-based. False positives (a user-defined `Effect` type that
 /// isn't TCA's) cause subprocess routing — slower but not incorrect.
+/// **That holds for routing only.** `SoundPurity` reads a false positive
+/// as `.refuted`, so it asks `analyzeForPurity`, which reads TCA's type
+/// names as TCA's only in a package that shows a sign of TCA.
 /// False negatives (a side-effect via `print`, file I/O, etc. that
 /// isn't routed here) result in the in-process path running real
 /// side effects in swift-infer's host process. PRD §16 #1a documents
@@ -201,7 +217,37 @@ public enum ReducerPurityAnalyzer {
     /// `Reduce { state, action in ... }` closure rather than a
     /// function decl).
     public static func analyze(_ subtree: Syntax) -> ReducerPurity {
-        let visitor = Visitor()
+        classify(subtree, with: Visitor())
+    }
+
+    /// The same walk asked the **purity** question, for `SoundPurity`. `analyze` stays the routing
+    /// question for its four routing callers, which this leaves alone.
+    ///
+    /// **Why the two questions differ.** For routing, a false positive costs a subprocess, so a name is
+    /// enough. For purity it becomes `.refuted`, and the impure-subject veto withholds every law over
+    /// the subject. Measured 2026-11-12 over the pinned corpus: of 84 functions refuted by this analyzer
+    /// alone, 21 were name collisions, every one an `Effect` type name or a `.run` call.
+    /// `docs/measurements/reducer-purity-name-tokens.md` has the ledger.
+    ///
+    /// **Only the type names are narrowed.** When `readingTCANames` is `false` — the package shows no
+    /// sign of TCA (`TCAPresence`) — `Effect`, `EffectOf` and `EffectTask` do not refute: in such a
+    /// package they can only be its own types, like SEI's effect lattice. **`.run` is NOT narrowed**,
+    /// although 18 of its 19 survey hits were collisions: the name also spells `Process.run()` and
+    /// `RunLoop.run()`, and for a `Process` that arrives as a parameter nothing else refutes the spawn.
+    /// And 8 of its 19 hits would have read `.pure` while impure (a SourceKit request, file reads, a
+    /// thread and a global notice), through calls neither SEI nor the package join follows: the token
+    /// was the only thing refuting them. Every other signal is the routing one.
+    public static func analyzeForPurity(_ function: FunctionDeclSyntax, readingTCANames: Bool) -> ReducerPurity {
+        guard let body = function.body else { return .pure }
+        return analyzeForPurity(Syntax(body), readingTCANames: readingTCANames)
+    }
+
+    /// `analyzeForPurity` over any subtree: a getter's statements, say.
+    public static func analyzeForPurity(_ subtree: Syntax, readingTCANames: Bool) -> ReducerPurity {
+        classify(subtree, with: Visitor(readsTCANames: readingTCANames))
+    }
+
+    private static func classify(_ subtree: Syntax, with visitor: Visitor) -> ReducerPurity {
         visitor.walk(subtree)
         if visitor.foundHiddenMutability { return .hiddenMutability }
         if visitor.foundEffectSignal { return .effectBearing }

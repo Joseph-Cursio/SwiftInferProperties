@@ -35,7 +35,7 @@ extension PurityRefutationCensusMeasuredTests {
     /// witness the replica names itself, and SEI has no say in them.
     static func misclassified(by attributor: Attributor) -> [String] {
         zip(corpus, verdicts).compactMap { subject, verdict in
-            guard verdict == .refuted, ReducerPurityAnalyzer.analyze(subject.function) == .pure else { return nil }
+            guard verdict == .refuted, attributor.reducerPurity(of: subject.function) == .pure else { return nil }
             let replica = attributor.causes(of: subject.function).contains(where: \.isWitness)
             let sei = seiNamesAWitness(CensusPurity.oracle.inferrerRefutation(for: subject.function))
             return replica == sei ? nil : "\(subject.file):\(subject.name) replica=\(replica) sei=\(sei)"
