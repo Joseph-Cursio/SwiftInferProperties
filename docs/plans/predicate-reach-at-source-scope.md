@@ -1,6 +1,9 @@
 # Reach at the source for predicate stubs (#684): scope, frozen before the build and the runs
 
-> **Status:** `proposed` · **As of:** 2026-11-12
+> **Status:** `shipped` · **As of:** 2026-11-13
+
+> **Ran and decided 2026-11-13: both levers ship** (seeded, then pairing; net +81 to BOTH against A0). The result is
+> `docs/measurements/predicate-reach-at-source.md`; this scope stays as frozen, with amendments A1–A6.
 
 **Issue:** Joseph-Cursio/SwiftInferProperties#684. Two generator levers for `predicate` stubs, each scored as
 **rows moved to BOTH** by `scripts/predicate_outcome_reach.py` on fresh funnels. **Lever 1** changes which
@@ -227,7 +230,7 @@ its syntax corpus source.
 
 ## 9. Amendments
 
-A1–A4 were recorded before any arm ran. A5 was recorded after A0–A2's funnels, before any arm was compared. None changes §6 or §7.
+A1–A4 were recorded before any arm ran. A5 was recorded after A0–A2's funnels, before any arm was compared. A6 was recorded after the lever-1 DECISION line, before A3 ran. None changes §6 or §7.
 
 **A1: how the build reads §2 (with the lever commits).**
 - **Seeded admission (§2.3) is tested per snippet, not per node.** A snippet past the cap is admitted when it
@@ -318,3 +321,22 @@ repository was set aside. That was a baseline defect, not a lever. It was fixed 
   A0's census 5 predicate rows (2 BOTH, 2 ONLY-FALSE, 1 ONLY-TRUE).
 - **What had been read when A5 was recorded:** the funnel totals of A0–A2 and A0's census. No arm had been
   compared with `compare`, and no DECISION line had been written.
+
+**A6: A3 withholds the one law that opens a URL on the host.**
+- **Why.** SwiftLintRuleStudio's `SystemXcodeLauncher.open(_:)` is `NSWorkspace.shared.open(url)`. Its
+  `predicate` stub (identity `0x83347B0CF1C8F7D8`) calls that once per trial, so every census pass asked the
+  machine to open a generated URL: about 4,500 calls across A0–A2. Nothing stopped it. SEI's side-effect markers
+  did not include `NSWorkspace`, and the totality template does not check purity. Both are now handled
+  elsewhere: SEI work adds `NSWorkspace` and other system calls as markers (unpinned here), and the kit's
+  `Gen<URL>` now draws hosts under `.invalid` (SwiftPropertyLaws#99, not yet in a tagged release).
+  The user approved skipping the law in A3.
+- **How.** A3's SwiftLintRuleStudio tree carries one comment-only file,
+  `SwiftLintRuleStudioCore/Sources/SwiftLintRuleStudioCore/ZZSwiftInferSkip684.swift`, holding
+  `// swiftinfer: skip 0x83347B0CF1C8F7D8`. `SkipMarkerScanner` reads it, and `discover` drops the law. Checked
+  before the run: `discover --include-possible` on that target names the identity twice without the file and
+  zero times with it.
+- **Why it cannot move §6's lever-2 rule.** The row is ONLY-TRUE in A0, A1 and A2, at every reading
+  (`class100`, `class1000`, both re-runs). `NSWorkspace.open` answers `true`, so no lever can move it to BOTH.
+  In `compare A2 A3` it shows as disappeared, which never enters the net.
+- **What had been read when A6 was recorded:** A0–A2 compared and the lever-1 DECISION line written. A3 had not
+  run.
