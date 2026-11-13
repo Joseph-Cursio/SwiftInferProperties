@@ -1754,6 +1754,104 @@ def command_record(args):
     return 0
 
 
+# ---------------------------------------------------------------- compare (#684: rows moved between arms)
+
+def row_key(row):
+    """One row across arms. A stub can carry two rows (`String.isMatching` did in #665), so the label and
+    the line are part of the key (`docs/plans/predicate-reach-at-source-scope.md` §4)."""
+    return (row["repo"], row["stub"], row.get("label"), row.get("line"))
+
+
+def keyed(rows):
+    rows = [row for row in rows if not str(row.get("arm", "")).startswith("control")]
+    table = {}
+    for row in rows:
+        key = row_key(row)
+        if key in table:
+            raise SystemExit(f"two rows share the key {key}")
+        table[key] = row
+    return table
+
+
+def compare_rows(rows_a, rows_b):
+    """§4's metric, B against A: over keys in R in both arms, net = (red → BOTH) − (BOTH → red). Rows in
+    only one arm, and rows leaving or entering R, are reported apart and never enter the net."""
+    a, b = keyed(rows_a), keyed(rows_b)
+    shared = sorted(set(a) & set(b), key=str)
+    both_r = [k for k in shared if in_r(a[k]) and in_r(b[k])]
+    # §4 counts classes: red is ONLY-FALSE or ONLY-TRUE. `is_green` also drops an unstable BOTH row, so
+    # it would move a row whose class never changed; instability is reported apart.
+    red = ("ONLY-FALSE", "ONLY-TRUE")
+    up = [k for k in both_r if a[k]["class100"] in red and b[k]["class100"] == "BOTH"]
+    down = [k for k in both_r if a[k]["class100"] == "BOTH" and b[k]["class100"] in red]
+    return {
+        "up": up, "down": down, "net": len(up) - len(down),
+        "unstable_changed": [k for k in both_r if bool(a[k].get("unstable")) != bool(b[k].get("unstable"))],
+        "left_r": [k for k in shared if in_r(a[k]) and not in_r(b[k])],
+        "entered_r": [k for k in shared if in_r(b[k]) and not in_r(a[k])],
+        "appeared": sorted((k for k in set(b) - set(a) if in_r(b[k])), key=str),
+        "disappeared": sorted((k for k in set(a) - set(b) if in_r(a[k])), key=str),
+        "A": population(list(a.values())), "B": population(list(b.values())), "rows_a": a, "rows_b": b,
+    }
+
+
+def command_compare(args):
+    result = compare_rows(load_rows(args.a), load_rows(args.b))
+    a, b = result["A"], result["B"]
+    print(f"B = {args.b}\nA = {args.a}\n")
+    print(f"net rows moved to BOTH: {result['net']:+d}  (red → BOTH {len(result['up'])}, "
+          f"BOTH → red {len(result['down'])})")
+    print(f"G   A {pct(a['G'])} ({a['green']}/{len(a['R'])})   B {pct(b['G'])} ({b['green']}/{len(b['R'])})")
+    print(f"G_loo  A {pct(a['G_loo'])} without {a['largest']}   B {pct(b['G_loo'])} without {b['largest']}")
+    print(f"left R {len(result['left_r'])} · entered R {len(result['entered_r'])} · "
+          f"appeared in R {len(result['appeared'])} · disappeared from R {len(result['disappeared'])}")
+    rows_b = result["rows_b"]
+    for field in ("repo", "primary_kind", "row_kind"):
+        ups = collections.Counter(rows_b[k].get(field) for k in result["up"])
+        downs = collections.Counter(rows_b[k].get(field) for k in result["down"])
+        print(f"\nby {field}:")
+        for value in sorted(set(ups) | set(downs), key=str):
+            print(f"  {str(value):32} +{ups[value]:<4} -{downs[value]:<4} net {ups[value] - downs[value]:+d}")
+    for name in ("up", "down", "left_r", "entered_r", "appeared", "disappeared", "unstable_changed"):
+        if result[name]:
+            print(f"\n{name}:")
+            for key in result[name]:
+                print(f"  {key[0]}  {key[2]}  ({key[1]}:{key[3]})")
+    if args.json:
+        keys = ("up", "down", "left_r", "entered_r", "appeared", "disappeared", "unstable_changed")
+        summary = {name: [list(k) for k in result[name]] for name in keys}
+        summary.update(net=result["net"], G_A=a["G"], G_B=b["G"], G_loo_A=a["G_loo"], G_loo_B=b["G_loo"],
+                       R_A=len(a["R"]), R_B=len(b["R"]))
+        with open(args.json, "w", encoding="utf-8") as handle:
+            json.dump(summary, handle, indent=2, sort_keys=True)
+    return 0
+
+
+def _selftest_compare(check):
+    def row(label, cls, law="passed", repo="R1", **extra):
+        return dict({"repo": repo, "stub": f"predicate/{label}.swift", "label": label, "line": 1,
+                     "class100": cls, "law_a": law, "teaching": False, "arm": "A"}, **extra)
+    a = [row("up", "ONLY-FALSE"), row("down", "BOTH"), row("same", "BOTH"), row("gone", "ONLY-FALSE"),
+         row("trap", "ONLY-FALSE"), row("teach", "ONLY-FALSE", teaching=True),
+         row("ctl", "ONLY-FALSE", arm="control-x")]
+    b = [row("up", "BOTH"), row("down", "ONLY-TRUE"), row("same", "BOTH", unstable=True), row("new", "BOTH"),
+         row("trap", "BOTH", law="crashed"), row("teach", "BOTH", teaching=True), row("ctl", "BOTH", arm="control-x")]
+    result = compare_rows(a, b)
+    check("compare up", [k[2] for k in result["up"]] == ["up"], result["up"])
+    check("compare down", [k[2] for k in result["down"]] == ["down"], result["down"])
+    check("compare net", result["net"] == 0, result["net"])
+    check("compare unstable apart", [k[2] for k in result["unstable_changed"]] == ["same"], result["unstable_changed"])
+    check("compare left R", [k[2] for k in result["left_r"]] == ["trap"], result["left_r"])
+    check("compare appeared", [k[2] for k in result["appeared"]] == ["new"], result["appeared"])
+    check("compare disappeared", [k[2] for k in result["disappeared"]] == ["gone"], result["disappeared"])
+    check("compare teaching out of R", all(k[2] != "teach" for k in result["up"]), result["up"])
+    try:
+        compare_rows(a + [row("up", "BOTH")], b)
+        check("compare duplicate key", False, "no error")
+    except SystemExit:
+        pass
+
+
 # ---------------------------------------------------------------- crosscheck (Q6.4, E or W only)
 
 def strip_reach(text):
@@ -2102,6 +2200,7 @@ def self_test(quiet=False):
     _selftest_decision(check)
     _selftest_kill(check)
     _selftest_crosscheck(check)
+    _selftest_compare(check)
     if not quiet:
         for failure in failures:
             print("FAIL", failure)
@@ -2111,7 +2210,7 @@ def self_test(quiet=False):
         return 1
     if not quiet:
         print("predicate_outcome_reach.py self-test OK  (12 wrap shapes + the `run` guard, stub parse, "
-              "clone, bit packing, process status, flags, sampling, DECISION, kill match, crosscheck)")
+              "clone, bit packing, process status, flags, sampling, DECISION, kill match, crosscheck, compare)")
     return 0
 
 
@@ -2598,6 +2697,10 @@ def parse_arguments(argv):
     cross.add_argument("census_b")
     cross.add_argument("out")
     cross.add_argument("--rerun", type=int, default=10)
+    compare = sub.add_parser("compare", help="#684: rows moved to BOTH, arm B against arm A")
+    compare.add_argument("a")
+    compare.add_argument("b")
+    compare.add_argument("--json", help="write the moves and G figures here")
     return parser, parser.parse_args(argv[1:])
 
 
@@ -2607,7 +2710,7 @@ def main(argv):
     parser, args = parse_arguments(argv)
     handlers = {"validate": command_validate, "run": command_run, "oracle": command_oracle,
                 "sample": command_sample, "report": command_report, "record": command_record,
-                "crosscheck": command_crosscheck}
+                "crosscheck": command_crosscheck, "compare": command_compare}
     if args.command not in handlers:
         parser.print_help()
         return 2

@@ -127,9 +127,13 @@ extension InteractiveTriage {
 
     /// `customGenerator(for:)`, recording every project type a stub asks it for, so the ones a
     /// check will draw can be made `Sendable` in the target's shim file once the stub is written.
-    static func recordingGenerator(for context: Context) -> ((String) -> String?, DrawnTypeRecorder) {
+    static func recordingGenerator(
+        for context: Context,
+        suggestion: Suggestion? = nil
+    ) -> ((String) -> String?, DrawnTypeRecorder) {
         let drawn = DrawnTypeRecorder()
-        let resolve = customGenerator(for: context)
+        let seeds = context.syntaxCorpus == nil ? nil : suggestion.flatMap(SeedReading.reading)
+        let resolve = customGenerator(for: context, seeds: seeds)
         let recording: (String) -> String? = { typeName in
             let generator = resolve(typeName)
             if generator != nil { drawn.record(typeName) }

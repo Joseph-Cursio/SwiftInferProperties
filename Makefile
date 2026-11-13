@@ -166,6 +166,10 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 # run root and size, the limit, and a live kill of a process named like a helper; the stage-5 sweep
 # that kills a timed-out run's leftovers is checked live in its own self-test. ~1s.
 #
+# #684's arms wrapper joined with the census's `compare` subcommand: the corpus-cost count, the arm
+# environment (the switch set, deterministic hashing unset), the run claim and the 19 pins.
+# No compiler, ~0.05s.
+#
 # The generator-diversity census joined after #665: which stub files a build error names, in both of
 # Swift 6.4's error forms, and which generators a stub draws, hoisted or inline. No compiler, ~0.1s.
 #
@@ -206,6 +210,7 @@ measurement-selftest: ## Guard the shared measurement primitives (corpus scope, 
 	@python3 scripts/corpus_funnel_stage5.py --self-test
 	@python3 scripts/corpus_funnel.py --self-test
 	@python3 scripts/predicate_outcome_reach.py --self-test
+	@python3 scripts/reach_arms.py --self-test
 	@python3 scripts/generator_diversity.py --self-test
 	@python3 scripts/mutation_check.py --self-test
 	@python3 scripts/regex_acceptor_census.py --self-test

@@ -45,7 +45,7 @@ extension InteractiveTriage {
             )
             return nil
         }
-        let (customGenerator, drawn) = recordingGenerator(for: context)
+        let (customGenerator, drawn) = recordingGenerator(for: context, suggestion: suggestion)
         // The gates above read the suggestion as discovered; the writers read it held.
         let (writable, written) = heldStub(for: suggestion, customGenerator: customGenerator, context: context)
         guard let stub = written else {

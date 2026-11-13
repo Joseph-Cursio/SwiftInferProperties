@@ -106,7 +106,8 @@ public enum SyntaxSnippetHarvester {
         }
     }
 
-    private final class KindCollector: SyntaxAnyVisitor {
+    /// The node kinds `corpus(of:)` offers generators for, read from one snippet's tree.
+    final class KindCollector: SyntaxAnyVisitor {
         var names: Set<String> = []
 
         override func visitAny(_ node: Syntax) -> SyntaxVisitorContinueKind {
@@ -118,6 +119,27 @@ public enum SyntaxSnippetHarvester {
             if node.is(TypeSyntax.self) { names.insert("TypeSyntax") }
             if node.is(PatternSyntax.self) { names.insert("PatternSyntax") }
             return .visitChildren
+        }
+    }
+
+    /// The snippets an emitted `SwiftInferSyntaxCorpus.swift` holds, in order: the plain string
+    /// literals of its `snippets` array. `[]` for text that is not one.
+    public static func snippets(inCorpusFile text: String) -> [String] {
+        let collector = SnippetArrayCollector(viewMode: .sourceAccurate)
+        collector.walk(Parser.parse(source: text))
+        return collector.found
+    }
+
+    private final class SnippetArrayCollector: SyntaxVisitor {
+        var found: [String] = []
+
+        override func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
+            guard node.pattern.as(IdentifierPatternSyntax.self)?.identifier.text == "snippets",
+                  let array = node.initializer?.value.as(ArrayExprSyntax.self) else { return .visitChildren }
+            found += array.elements.compactMap {
+                $0.expression.as(StringLiteralExprSyntax.self)?.representedLiteralValue
+            }
+            return .skipChildren
         }
     }
 }

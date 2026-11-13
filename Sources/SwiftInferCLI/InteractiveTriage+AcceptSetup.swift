@@ -15,13 +15,41 @@ extension InteractiveTriage {
     /// emitter can render a custom-typed parameter without the subject having hand-written a
     /// `gen()`. Lifted out of `acceptDecision`, which crossed SwiftLint's body-length cap once
     /// #493's gate and #498's argument types both landed in it.
-    static func customGenerator(for context: Context) -> (String) -> String? {
+    ///
+    /// - Parameter seeds: what the subject compares a syntax node against, read only when a syntax node
+    ///   is asked for (#684). `nil` draws as before.
+    static func customGenerator(for context: Context, seeds: SeedReading? = nil) -> (String) -> String? {
         let corpus = context.syntaxCorpus
         return projectTypeGenerator(
             types: presentedShapes(typeShapesByName: context.typeShapesByName, visible: context.testVisibleTypeNames),
             aliases: context.typeAliases,
-            syntaxNode: corpus.map { source in { source.generator(for: $0) } }
+            syntaxNode: corpus.map { source in
+                { source.generator(for: $0, seeds: seeds?.value ?? SyntaxSeeds()) }
+            }
         )
+    }
+
+    /// The templates whose stubs read `SyntaxSeeds` — the totality family, which #684 measured
+    /// (`docs/plans/predicate-reach-at-source-scope.md` §2.1).
+    static let seededTemplates: Set<String> = ["predicate", "input-totality", "measure-non-negativity"]
+
+    /// A suggestion's `SyntaxSeeds`, read from its files once and only if a syntax node is drawn.
+    final class SeedReading {
+        private let suggestion: Suggestion
+        private lazy var read = SyntaxSeeds.of(suggestion)
+
+        init(_ suggestion: Suggestion) {
+            self.suggestion = suggestion
+        }
+
+        var value: SyntaxSeeds { read }
+
+        /// A reading for `suggestion` when its template reads seeds; otherwise `nil`, which draws
+        /// uniformly.
+        static func reading(_ suggestion: Suggestion) -> SeedReading? {
+            guard seededTemplates.contains(suggestion.templateName) else { return nil }
+            return SeedReading(suggestion)
+        }
     }
 
     /// The type universe the resolver derives over: every scanned shape, with each class a shim

@@ -76,7 +76,8 @@ extension LiftedTestEmitter {
         isAsync: Bool,
         argumentTypes: [String] = [],
         inoutArguments: Set<Int> = [],
-        failureLabel: String? = nil
+        failureLabel: String? = nil,
+        pairings: [Int: DrawPairing] = [:]
     ) -> String {
         let testFunctionName = "\(callee.identifierName)_isTotal"
         let isTuple = generators.count > 1
@@ -99,22 +100,29 @@ extension LiftedTestEmitter {
         return makeTestStubExpression(
             testFunctionName: testFunctionName,
             seed: seed,
-            sampleExpression: totalitySample(generators: generators),
+            sampleExpression: totalitySample(generators: generators, pairings: pairings),
             propertyExpression: property,
             failureLabel: failureLabel ?? "\(callee.displaySignature) failed totality"
         )
     }
 
     /// One draw for a single generator; a tuple of draws, in argument order, for several.
-    static func totalitySample(generators: [String]) -> String {
+    ///
+    /// `pairings` (#684) declare their arguments `var` and, after every draw, apply each pairing in
+    /// argument order — so an unpaired draw takes the same place in the random stream it took without.
+    static func totalitySample(generators: [String], pairings: [Int: DrawPairing] = [:]) -> String {
         guard generators.count > 1 else {
             return "{ rng in (\(generators.first ?? "")).run(using: &rng) }"
         }
+        let indent = "                    "
         let draws = generators.indices.map { index in
-            "                    let arg\(index) = (\(generators[index])).run(using: &rng)"
+            "\(indent)\(pairings[index] == nil ? "let" : "var") arg\(index) = (\(generators[index])).run(using: &rng)"
+        }
+        let paired = pairings.keys.sorted().compactMap { index in
+            pairings[index].map { indent + $0.statement(for: index) }
         }
         let slots = generators.indices.map { "arg\($0)" }.joined(separator: ", ")
-        return (["{ rng in"] + draws + ["                    return (\(slots))", "                }"])
+        return (["{ rng in"] + draws + paired + ["\(indent)return (\(slots))", "                }"])
             .joined(separator: "\n")
     }
 }
