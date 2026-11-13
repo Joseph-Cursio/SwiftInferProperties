@@ -44,10 +44,10 @@ extension InteractiveTriage {
 
         var value: SyntaxSeeds { read }
 
-        /// A reading for `suggestion` when this arm biases its draws and the template reads seeds;
-        /// otherwise `nil`, which draws exactly as before.
-        static func reading(_ suggestion: Suggestion, arm: ReachArm) -> SeedReading? {
-            guard arm.corpus != .baseline, seededTemplates.contains(suggestion.templateName) else { return nil }
+        /// A reading for `suggestion` when its template reads seeds; otherwise `nil`, which draws
+        /// uniformly.
+        static func reading(_ suggestion: Suggestion) -> SeedReading? {
+            guard seededTemplates.contains(suggestion.templateName) else { return nil }
             return SeedReading(suggestion)
         }
     }

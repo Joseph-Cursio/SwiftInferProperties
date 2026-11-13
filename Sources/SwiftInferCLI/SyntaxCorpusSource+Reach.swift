@@ -12,9 +12,9 @@ extension SyntaxCorpusSource {
         return "[" + quoted.joined(separator: ", ") + "]"
     }
 
-    /// The #684 half, emitted under every arm but the pure baseline (`ReachArm.needsReachMachinery`):
-    /// a draw biased toward the nodes a subject compares against, and a name taken from a drawn node
-    /// for relational pairing. Raw, so the interpolations inside it stay in the emitted file.
+    /// The #684 half, emitted in every corpus file: a draw biased toward the nodes a subject compares
+    /// against, and a name taken from a drawn node for relational pairing. Raw, so the interpolations
+    /// inside it stay in the emitted file.
     static let reachMachinery = #"""
             /// Whether `node` holds a token whose text is in `tokens`, or it, an ancestor or a
             /// descendant is of a kind named in `kinds`.

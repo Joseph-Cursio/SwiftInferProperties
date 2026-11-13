@@ -132,7 +132,7 @@ extension InteractiveTriage {
         suggestion: Suggestion? = nil
     ) -> ((String) -> String?, DrawnTypeRecorder) {
         let drawn = DrawnTypeRecorder()
-        let seeds = suggestion.flatMap { SeedReading.reading($0, arm: context.syntaxCorpus?.arm ?? .baseline) }
+        let seeds = context.syntaxCorpus == nil ? nil : suggestion.flatMap(SeedReading.reading)
         let resolve = customGenerator(for: context, seeds: seeds)
         let recording: (String) -> String? = { typeName in
             let generator = resolve(typeName)

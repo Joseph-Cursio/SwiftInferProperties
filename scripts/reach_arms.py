@@ -85,7 +85,22 @@ def claim(run, arm):
         open(marker, "w", encoding="utf-8").write(arm + "\n")
 
 
+def binary_reads_switch(path):
+    """Whether the `swift-infer` at `path` still reads `SWIFT_INFER_REACH_ARM`. #684's cleanup removed the switch
+    and shipped `seeded+paired` as the only behaviour, so a later binary runs that arm whatever this script asks."""
+    with open(path, "rb") as binary:
+        return b"SWIFT_INFER_REACH_ARM" in binary.read()
+
+
+def require_arm_binary(arm, infer):
+    """Refuses to label a run with an arm the binary cannot run: the measured arms need binary `62f10aa8`."""
+    if arm != "seeded+paired" and not binary_reads_switch(infer):
+        raise SystemExit(f"{infer} has no reach switch, so it would run seeded+paired and record it as {arm}; "
+                         "reproduce the other arms with binary 62f10aa8 (decisions.log)")
+
+
 def funnel(run, arm, infer, cli):
+    require_arm_binary(arm, infer)
     claim(run, arm)
     prepare(run)
     command = [sys.executable, os.path.join(HERE, "corpus_funnel.py"), run, infer, cli, *PINS]
@@ -244,11 +259,22 @@ def self_test():
             failures.append(f"census_command parses as {parsed}")
     except SystemExit:
         failures.append("predicate_outcome_reach.py rejects the command census builds")
+    with tempfile.TemporaryDirectory() as scratch:
+        old, new = os.path.join(scratch, "old"), os.path.join(scratch, "new")
+        open(old, "wb").write(b"\x00SWIFT_INFER_REACH_ARM\x00")
+        open(new, "wb").write(b"\x00no switch here\x00")
+        require_arm_binary("baseline", old)
+        require_arm_binary("seeded+paired", new)
+        try:
+            require_arm_binary("baseline", new)
+            failures.append("a binary without the switch was allowed to run the baseline arm")
+        except SystemExit:
+            pass
     for failure in failures:
         print("FAIL", failure)
     if failures:
         return 1
-    print("reach_arms.py self-test OK  (corpus cost, arm environment, run claim, pins, census command parses, rerun file selection and row drop)")
+    print("reach_arms.py self-test OK  (corpus cost, arm environment, run claim, pins, census command parses, rerun file selection and row drop, arm binary guard)")
     return 0
 
 

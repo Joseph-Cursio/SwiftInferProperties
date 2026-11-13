@@ -229,12 +229,10 @@ extension InteractiveTriage {
             // Parameter positions, shifted past the receiver an instance method draws first.
             inoutArguments: Set(evidence.inoutParameterIndices.map { $0 + (callee.isInstanceMethod ? 1 : 0) }),
             failureLabel: failureLabel,
-            // #684 lever 2 — a measurement arm until its decision (`ReachArm`). `inout` arguments
-            // are copied into their own `var`s, so a paired one is left unpaired.
-            pairings: ReachArm.current.paired
-                ? DrawPairing.plan(argumentTypes: argumentTypes, generators: generators)
-                    .filter { !evidence.inoutParameterIndices.contains($0.key - (callee.isInstanceMethod ? 1 : 0)) }
-                : [:]
+            // #684 lever 2, shipped on +16 rows to BOTH (`docs/measurements/predicate-reach-at-source.md`).
+            // `inout` arguments are copied into their own `var`s, so a paired one is left unpaired.
+            pairings: DrawPairing.plan(argumentTypes: argumentTypes, generators: generators)
+                .filter { !evidence.inoutParameterIndices.contains($0.key - (callee.isInstanceMethod ? 1 : 0)) }
         )
     }
 
