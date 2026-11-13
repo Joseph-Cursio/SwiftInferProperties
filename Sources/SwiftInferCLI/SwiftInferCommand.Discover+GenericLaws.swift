@@ -46,12 +46,19 @@ extension SwiftInferCommand.Discover {
             restrictedFunctions.map { (coordinate(of: $0.summary.location), $0.restriction) }
         ) { first, _ in first }
         let requirements = seedRequirements(in: manifest)
+        // **A seed does not outrank this analyzer's own witness.** The lint seed vouches for purity,
+        // but a subject this scan refutes WITH a witness — the impure-subject veto's scope — gets no
+        // law here, exactly as it gets none from a template. Without this the veto made such a
+        // subject *uncovered*, and an uncovered seed earned `f(x) == f(x)`: a stub calling the
+        // impurity twice per trial (found 2026-11-12, tracing an `NSWorkspace.open` wrapper).
+        var gate = ImpureSeedGate(summaries: summaries + restrictedFunctions.map(\.summary), diagnostics: diagnostics)
         var synthesized: [Suggestion] = []
         var seen: Set<String> = []
         for summary in summaries {
             let key = genericLawKey(file: summary.location.file, symbol: summary.name)
             guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
             guard qualifiesForDeterminism(summary) else { continue }
+            if gate.withholds(summary) { continue }
             seen.insert(key)
             let restriction = restrictionByCoordinate[coordinate(of: summary.location)]
             synthesized.append(determinismSuggestion(
@@ -74,6 +81,7 @@ extension SwiftInferCommand.Discover {
             let key = genericLawKey(file: summary.location.file, symbol: summary.name)
             guard seedKeys.contains(key), !coveredKeys.contains(key), !seen.contains(key) else { continue }
             guard qualifiesForDeterminism(summary) else { continue }
+            if gate.withholds(summary) { continue }
             seen.insert(key)
             synthesized.append(determinismSuggestion(
                 for: summary, accessRestriction: restricted.restriction, requirement: requirements[key]
@@ -91,6 +99,54 @@ extension SwiftInferCommand.Discover {
             )
         }
         return synthesized
+    }
+
+    /// The withholding both `--seeds` fallbacks apply, with its note said once per subject.
+    ///
+    /// Keyed by COORDINATE, not by the seed's `(file, symbol)` key: a pure namesake in the same file is
+    /// a different function and still earns its law, and a restricted function met twice is noted once.
+    struct ImpureSeedGate {
+        private let refutingNames: Set<String>
+        private let diagnostics: any DiagnosticOutput
+        private let law: String
+        private var noted: Set<String> = []
+
+        init(summaries: [FunctionSummary], diagnostics: any DiagnosticOutput, law: String = "determinism") {
+            refutingNames = PackagePurityJoin.refutingNames(in: summaries)
+            self.diagnostics = diagnostics
+            self.law = law
+        }
+
+        mutating func withholds(_ summary: FunctionSummary) -> Bool {
+            guard SwiftInferCommand.Discover.isWithheldAsImpure(summary, refutingNames: refutingNames) else {
+                return false
+            }
+            if noted.insert(SwiftInferCommand.Discover.coordinate(of: summary.location)).inserted {
+                diagnostics.writeDiagnostic(SwiftInferCommand.Discover.withheldNote(for: summary, law: law))
+            }
+            return true
+        }
+    }
+
+    /// Whether a seed fallback withholds its law: the impure-subject veto's scope
+    /// (`TemplateRegistry.isImpureWithWitness`), less the one case `qualifiesForDeterminism` admits on
+    /// a claim the veto cannot read.
+    ///
+    /// **A `@ClockDeterministic` async function keeps its law.** SEI refutes every `async`
+    /// declaration on its signature (`.declaredAsync`), which is no witness of anything, and the
+    /// clock claim is what substitutes for the seed's purity there. A summary carries no refutation
+    /// kind, so an async clock-deterministic body that ALSO names a real marker keeps its law too,
+    /// exactly as before this gate; `AsyncDeterminismLawTests` pins the case the gate must not take.
+    static func isWithheldAsImpure(_ summary: FunctionSummary, refutingNames: Set<String>) -> Bool {
+        if summary.isAsync, summary.isClockDeterministic { return false }
+        return TemplateRegistry.isImpureWithWitness(summary, refutingNames: refutingNames)
+    }
+
+    /// Why a seeded function got no law: the reader asked for it by seeding it, so the withholding is
+    /// said out loud, in the impure-subject veto's own words.
+    static func withheldNote(for summary: FunctionSummary, law: String = "determinism") -> String {
+        "note: seeded function `\(summary.name)` (\(summary.location)) is judged impure with a witness — "
+            + "no \(law) law is synthesized, because a generated law would execute that impurity in-process"
     }
 
     /// A seeded function earns the determinism law when it takes inputs and returns a value. The

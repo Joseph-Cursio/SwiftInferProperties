@@ -43,12 +43,17 @@ extension SwiftInferCommand.Discover {
             restrictedFunctions.map { (coordinate(of: $0.summary.location), $0.restriction) }
         ) { first, _ in first }
 
+        // The determinism fallback's gate, for the same reason (`isWithheldAsImpure`): a seed does not
+        // outrank the scan's own witness, and both laws here call the mutator at least twice per trial.
+        let candidates = summaries + restrictedFunctions.map(\.summary)
+        var gate = ImpureSeedGate(summaries: candidates, diagnostics: diagnostics, law: "mutator")
         var synthesized: [Suggestion] = []
         var seen: Set<String> = []
-        for summary in summaries + restrictedFunctions.map(\.summary) {
+        for summary in candidates {
             let key = genericLawKey(file: summary.location.file, symbol: summary.name)
             guard let seed = seeds[key], !coveredKeys.contains(key), !seen.contains(key),
                   mutatedType(of: summary) != nil else { continue }
+            if gate.withholds(summary) { continue }
             seen.insert(key)
             let law = MutatorLawInput(
                 summary: summary,

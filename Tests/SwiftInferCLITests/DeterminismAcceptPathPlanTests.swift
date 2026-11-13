@@ -41,7 +41,7 @@ struct DeterminismAcceptPathPlanTests {
     @Test func aScannedInoutSubjectIsDeclinedByBothSides() throws {
         let law = try Self.law("""
             enum Tokenizer {
-                static func consume(_ scanner: inout Scanner) -> Token { fatalError() }
+                static func consume(_ scanner: inout Scanner) -> Token { Token() }
             }
             """, named: "consume")
         #expect(InteractiveTriage.deterministicStub(for: law) == nil)
