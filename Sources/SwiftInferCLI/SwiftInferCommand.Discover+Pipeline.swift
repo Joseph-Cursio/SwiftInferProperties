@@ -209,9 +209,15 @@ extension SwiftInferCommand.Discover {
         // counter-signal. Per M7 plan OD #1, the user's explicit
         // negative assertion is dispositive on the lifted side.
         let counterSignalKeys = liftedArtifacts.counterSignalKeys
-        let filteredPromotedLifted = counterSignalKeys.isEmpty
+        let counterFiltered = counterSignalKeys.isEmpty
             ? skipFiltered
             : skipFiltered.filter { !counterSignalKeys.contains($0.crossValidationKey) }
+        // The impure-subject veto, for the rows that joined after `TemplateRegistry.discover`
+        // ran it. By callee name, unanimously: see `applyImpureSubjectVetoByCallee`.
+        let filteredPromotedLifted = TemplateRegistry.applyImpureSubjectVetoByCallee(
+            to: counterFiltered,
+            summaries: artifacts.summaries
+        )
         // Collapse rows that are the same law about the same function before anything
         // downstream counts them. `crossValidationKey` suppression above catches the
         // TE-vs-lifted overlap; this catches copies whose identity is equal outright —

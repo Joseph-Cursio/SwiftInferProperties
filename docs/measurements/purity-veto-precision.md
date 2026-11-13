@@ -1,11 +1,20 @@
 # What would a purity veto cost?
 
-> **Status:** `measured` · **As of:** 2026-10-06
+> **Status:** `measured` · **As of:** 2026-11-12
 > ⚠ **Re-taken 2026-09-17 — read that section first.** The broad arm re-prices; **the witness-scoped arm can no longer be priced by any survey**, so its verdict below stands as a dated 2026-08-18 result, and the suite now prices the COMPLEMENT — the rows scoping spares — which is fully recorded ([#514](https://github.com/Joseph-Cursio/SwiftInferProperties/issues/514), resolved 2026-09-18).
 
 > ⚠ **Re-taken 2026-10-06 with construction facts wired in.** (head `c432f691` · SEI `f2ea8d6` · before = main `67f77e54`, same pin) **No arm moved with the table** — configured
 > and unconfigured agree on every figure. New code only: the broad arm removes 24 → 25, the
 > witness-scoped arm 11 → 12 (still unpriceable post-veto).
+
+> ⚠ **Extended 2026-11-12 to the two paths that bypassed it — read *Two paths around the veto*.**
+> TestLifter's promoted rows and the `--seeds` fallbacks reached the stub writers without the
+> veto. Closed with the same predicate, they move **3 lifted rows** (all real impurities) and
+> **13 determinism laws withheld, 2 regained** over 87 seeded targets of the pinned corpus. **10 of
+> the 13 rest on `ReducerPurityAnalyzer`'s name tokens** (a type named `Effect`, a call named
+> `.run`), not on an impurity: the template veto already suppresses those subjects' laws on the
+> same evidence. None of this is counted by `theShippedVetoMatchesTheScope`, which still prices the
+> template path alone.
 
 Re-derivable at any time — `PurityVetoPrecisionMeasuredTests` *is* the harness, and
 `make batch2` runs it.
@@ -37,6 +46,62 @@ removes **2**. The 8 spared are all `encode(to:)` under `codable-round-trip` —
 template measured at 100% yield.
 
 ---
+
+## Two paths around the veto (2026-11-12)
+
+**Found** tracing why a generated totality law over SwiftLintRuleStudio's `NSWorkspace.shared.open(url)`
+wrapper ran about 4,500 times in #684's measurement. That subject was missed by SEI (no `NSWorkspace`
+marker), not by this veto. But tracing the veto showed it runs only inside `TemplateRegistry.discover`,
+and two paths reach a stub writer after it:
+
+- **TestLifter's promoted rows** join in `combineAndFilter`. Their evidence sits at the test assertion
+  they were lifted from, or at `<corpus>`, so a location-keyed veto could not match them even if it ran.
+  `applyImpureSubjectVetoByCallee` matches the callee by bare name, as TestLifter's own recovery does,
+  and vetoes only when **every** production function of that name is impure with a witness, so a pure
+  namesake leaves the row alone.
+- **The `--seeds` fallbacks** (`synthesizeGenericLaws`, `synthesizeMutatorLaws`) write a law for a
+  seeded function no template covers. The veto made an impure subject *uncovered*, so it earned
+  `f(x) == f(x)`, a stub calling the impurity twice per trial. `ImpureSeedGate` withholds those laws
+  with a note. An `async` function carrying `@ClockDeterministic` keeps its law: SEI refutes every
+  `async` declaration on its signature, which is no witness, and the clock claim is what admits it.
+
+Both reuse `isImpureWithWitness`, the predicate this document priced, extracted rather than restated.
+
+**Measured** with `discover --include-possible`, plain and with each repository's seed manifest, by
+`main` (`7e4d8e5e`) and the branch, over every seeded source target of the 19 pinned trees (#684's
+pins, SwiftFormatRuleStudio at `61cfea1`): 87 targets, 348 runs, every one exit 0.
+
+| path | rows removed | rows added | real impurity | name-token refutation |
+|---|---|---|---|---|
+| lifted, plain run | 3 | 0 | 3 | 0 |
+| determinism fallback, seeded run | 13 | 2 | 3 | 10 |
+| mutator fallback, seeded run | 0 | 0 | | |
+
+**Every moved row was checked by hand against its witness:**
+- **The 3 lifted rows are real:** two Strong `differential-equivalence` rows over SwiftAssist's
+  `loadConfig` (it reads `Data(contentsOf:)`) and the advisory chain into SwiftUMLStudio's
+  `matchGlobs` (`FileManager`).
+- **3 withheld determinism laws are real:** SwiftAssist's `execute` and SwiftUMLStudio's
+  `extractModuleEdges(from:configuration:)` read files; `inferredTypename` sends a SourceKit request.
+- **10 rest on `ReducerPurityAnalyzer`'s name tokens, not on an impurity:** SEI's own `combine` and
+  `nameGatedInference` name its lattice type `Effect`, and `inferEffects` inherits that through the
+  package join; SwiftUMLStudio's five `extract`s call `ParsingStack.run { … }`; pbt-book's `isKilled`
+  calls `generator.run(using:)`, and `mutationScore` inherits it. The template veto already
+  suppresses every template law over these subjects on the same evidence, which is why only the
+  fallback was left. **The defect is the analyzer's tokens, and fixing it restores both.**
+- **The 2 added rows are pure namesakes** (SwiftAssist's other `execute(call:context:)`,
+  `extractModuleEdges(forPackage:configuration:)`): under `main` the impure same-file twin took the
+  seed's `(file, symbol)` key first.
+
+**What it costs, in refutable laws: nothing.** Determinism is the advisory floor, tautological on pure
+code, and every lifted row removed sits over a real file read. What the 10 lose is a law that could
+only ever fail by executing the impurity the analyzer believes is there.
+
+**Not answered:** the census apparatus (`theShippedVetoMatchesTheScope`, the measured suites) still
+counts only the template path; this section's figures come from a one-off A/B, not from a pinned
+suite. The lifted path keys on a bare name, which this document's own *Provenance* warns against at
+an exact join; unanimity makes it refuse rather than guess, and every lifted row it moved here was a
+true impurity, but it was measured on one corpus.
 
 ## "False positive" had to be defined before it could be counted
 
