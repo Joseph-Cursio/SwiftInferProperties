@@ -1,12 +1,15 @@
 # Reopen #665's predicate outcome-reach check after #684: scope, frozen before the re-take
 
-> **Status:** `proposed` · **As of:** 2026-11-13
+> **Status:** `open` · **As of:** 2026-11-13
 
 **#665's reopen condition is met, so its census is re-taken on what shipped and its frozen rule is applied
 unchanged.** #665 decided NONE at G = 42.8%. #684's generator levers then moved net +81 rows to BOTH. Under
 #684's shipped arm, G is 58.9% and G_loo 58.8%, both above #665's W floor of 0.50.
 
 **The predicted decision is W:** a warning-form reach `@Test` beside every `predicate` stub, never failing CI.
+
+**Result (2026-11-13): DECISION W, at G = 58.9% and G_loo = 58.8%**
+(`docs/measurements/predicate-reach-check-reopen.md`). Commits 4a, 4b and 5 below are not built yet.
 
 **Issue:** Joseph-Cursio/SwiftInferProperties#724. This scope changes no threshold. It names the fresh arm, the predictions, and what happens under each outcome. The
 rule, the instrument and the crosscheck are #665's, by reference: `docs/plans/predicate-outcome-reach-scope.md`.
@@ -110,4 +113,21 @@ nothing; if G at 1,000 is 20 or more points above G at 100, the doc files the st
 
 ## 7. Amendments
 
-None yet.
+**A1 (2026-11-13, before any census figure was read): A′ withholds the one law that opens a URL on the host, as
+#684's amendment A6 did.**
+- **Why.** A′'s fresh SwiftLintRuleStudio tree carried no skip marker, so `discover` emitted the `predicate` law over
+  `SystemXcodeLauncher.open(_:)` (identity `0x83347B0CF1C8F7D8`), which is `NSWorkspace.shared.open(url)`. The
+  funnel ran it, and the pinned kit (4.10.0 and 4.11.0, both before SwiftPropertyLaws#99's `.invalid` hosts) drew
+  `example.org` URLs, so it opened browser pages on the user's machine. The user stopped the run by reporting it.
+- **What was done.** A′'s funnel was killed during pbt-book, after SwiftLintRuleStudio had finished. SwiftLintRuleStudio
+  alone was reset (`reach_arms.reset_repo`), re-created at `77cc792`, and given one comment-only file holding
+  `// swiftinfer: skip 0x83347B0CF1C8F7D8`. Before the funnel resumed, `discover --include-possible` on that target named
+  the identity zero times. The funnel then resumed and re-ran SwiftLintRuleStudio and pbt-book. The repositories it had
+  already finished keep their results.
+- **Every other match was checked.** Files that mention `NSWorkspace` or similar exist in SwiftAssist, SwiftProjectLint,
+  SwiftLintRuleStudio, MacCloud_client_MacOS and SwiftUMLStudio. Of the laws emitted before the stop, only this one has
+  a subject that opens anything. The `CodeSandbox` and `ConcreteTypeUsageVisitor` laws name the word in rule tables.
+- **What it can move.** That row was ONLY-TRUE in every #684 arm, so it was a red row in R. Withholding it can raise G
+  by at most one row's share, about 0.1 point, and G_loo by about 0.4. SwiftLintRuleStudio is not the largest
+  repository, so that change applies to G_loo as well as G. Either way it is under R3's and R4's widths. The doc
+  reports G with the row restored as red beside the measured G, so no reading depends on it.
