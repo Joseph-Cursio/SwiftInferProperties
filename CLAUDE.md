@@ -78,12 +78,11 @@ reached a batch shows up here as the fast count rising while the batch count sta
 still. **Flake note:** the long measured/calibration suites occasionally drop one issue
 under load — rerun before diagnosing.
 
-**Both repos pin SEI `5fbee6f` (bumped 2026-10-30, jointly with SwiftProjectLint), and
-`SEICrossRepoPinTests` is green as of that day's `make test`** — the guard compares this manifest against
-SwiftProjectLint's, so green means the pins agree. **`5fbee6f` is `f34cee3` plus SEI's swift-syntax
-603 pin and nothing else**: it was cut from `f34cee3` so that the move to swift-syntax 603 left the
-oracle unchanged, and SEI's later refutations (its #30 and #31) arrive at the next deliberate bump.
-The figures below were taken at `3ea25f2`.
+**Both repos pin SEI `ba3624d` (bumped 2026-11-13, jointly with SwiftProjectLint), and
+`SEICrossRepoPinTests` is green against SwiftProjectLint's bump that day** — the guard compares this manifest
+against SwiftProjectLint's, so green means the pins agree. **`ba3624d` merges SEI #35 (`cc5b126`, the same
+tree) and brings SEI #31 with it**; the pin before, `5fbee6f`, was `f34cee3` plus SEI's swift-syntax 603
+pin and nothing else. The figures below were taken at `3ea25f2`.
 Bumped as a joint act across all four manifests, which is what the guard exists to enforce:
 disjoint pins mean the linter and the inference engine are not consulting one purity
 oracle, and that guard is the only thing that can say so. **⚠ Since construction facts were wired
@@ -150,7 +149,18 @@ batch2` printed every one of 853 census lines again, with the replica guard nami
 never expanded inside its own expansion — every SEI before it overflowed the stack on
 `protocol P { typealias F = Self.E }; struct F: P {}`. Taken with the universe's amendment 5 (a
 `test` / `tests` / `validation-test` folder is a test suite's, and out), `make batch2` against
-`main` at `97bb56a` printed all 853 census lines again.
+`main` at `97bb56a` printed all 853 census lines again. **`ba3624d` moves verdicts again**, through two SEI
+PRs at once: #31 (clock and settings reads that spell no marker) and #35 (system effects outside the
+process: opening a URL in another app, modal UI, notifications, scripts, the keychain and SQLite). `make batch2` went red with
+7 issues, as expected; the replica was re-synced (`Attributor+Markers.swift`) and is green again. In
+`Sources/` it moves one verdict: `VerifierSubprocess.waitForExit` reads `.now() + timeout` and #31's
+`c273160` refutes it, truly. Over the 18 manifest roots the construction census went 262 → 270 rows:
+GRDB +9 through `sqlite3_column_text` (6 true; 3 false, through a resolution defect SEI already had),
+swift-foundation 21 → 20 (two rows that were already false, which #31's `d98f8d5` now refutes with no
+table), and every other root unchanged. Every moved row was attributed and then checked adversarially.
+And it closes the hole that opened browser pages: on SwiftLintRuleStudio at `77cc792` with no skip
+marker, `discover` at `ba3624d` withholds `SystemXcodeLauncher.open(_:)` and `MirrorLock.isHeld`,
+which `main` proposed.
 
 ## Where to look
 
@@ -188,7 +198,7 @@ decline, because the hook states the verdict and the annotation states what was 
 | **Does taking the `pure` advice change anything?** | `docs/measurements/pure-advisory-round-trip.md` | **Measured NO — 3,250 annotations, 0 suggestions moved.** The channel is live (`non_idempotent` vetoes); `pure` is the inert tier |
 | **Does moving from `throws` to `Result` put more code within a law's reach?** | `docs/measurements/result-carrier-reach.md` | **Measured NO.** Quote the performable refactor, **−53** — never −218 or −66. One in six throwing functions cannot change signature |
 | **Would refactoring toward purity put more code within a law's reach?** | `docs/measurements/purity-refactoring-reach.md` | **Measured NO at a ceiling — zero suggestions moved**; read back, 22 of 921 rest on a witness-refuted subject, so the signal's use is a veto |
-| **What would a purity veto cost?** | `docs/measurements/purity-veto-precision.md` | **Affordable when witness-scoped; SHIPPED as `applyImpureSubjectVeto`.** The scoped arm is unpriceable post-veto; priced from the pre-veto key, 3 of 10. **Extended 2026-11-12 to lifted rows and the `--seeds` fallbacks: 3 lifted rows, 13 laws withheld (10 on `ReducerPurityAnalyzer` name tokens), 2 regained** |
+| **What would a purity veto cost?** | `docs/measurements/purity-veto-precision.md` | **Affordable when witness-scoped; SHIPPED as `applyImpureSubjectVeto`.** The scoped arm is unpriceable post-veto; priced from the pre-veto key, 3 of 10. **Extended 2026-11-12 to lifted rows and the `--seeds` fallbacks: 3 lifted rows, 13 laws withheld (10 on `ReducerPurityAnalyzer` name tokens), 2 regained**. At SEI `ba3624d` both arms grew by one row, `waitForExit` |
 | **Why was a MUTABLE property offered as a law subject?** | `docs/measurements/modify-accessor-misclassification.md` | `isReadOnlyGetter` missed mutating accessors — now an allowlist, **6 → 0** admitted |
 | **Does `ReducerPurityAnalyzer` refute pure code by NAME?** | `docs/measurements/reducer-purity-name-tokens.md` | **Yes, `Effect` and `.run`; only `Effect` is fixed** — not refuting where the package shows no sign of TCA moves 6 verdicts (all SEI, all pure), 0 rows against `main`, 3 against PR #721. `.run` stays: it also spells `Process.run()` |
 | Full historical changelog (every shipped cycle, verbatim) | `docs/archive/claude-md-narrative-history.md` | The rest of `docs/archive/` is shipped-then-archived design records. Archived ≠ superseded — read for reasoning, never for counts |
