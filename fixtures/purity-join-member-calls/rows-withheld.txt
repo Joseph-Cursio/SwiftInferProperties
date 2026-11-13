@@ -1,0 +1,34 @@
+## j0 -> j0l
+- plain	SwiftAssist/SwiftAssist	idempotence	20 (Possible)	T -> T	0x045B19BABB3A1CF9
+- seeds	SwiftAssist/swift-assist-cli	determinism	30 (Advisory)	Equatable	0x66616E3B93A2C53D
+## j0 -> j1
+- seeds	SwiftAssist/SwiftAssistApp	determinism	30 (Advisory)	?	0x34866E5C6CF4F7B9
+- plain	SwiftAssist/SwiftAssist	round-trip	35 (Possible)	T -> T	0x05F35EF78D07147B
+- plain	SwiftAssist/SwiftAssist	idempotence	30 (Possible)	String	0x2246FE715C14CFCD
+- seeds	SwiftAssist/SwiftAssist	determinism	30 (Advisory)	?	0x0103527B1647CF15
+- seeds	SwiftAssist/SwiftAssist	round-trip	35 (Possible)	T -> T	0x05F35EF78D07147B
+- seeds	SwiftAssist/SwiftAssist	idempotence	30 (Possible)	String	0x2246FE715C14CFCD
+- seeds	SwiftLintRuleStudio/SwiftLintRuleStudioCore	determinism	30 (Advisory)	Equatable	0x3A36B08D2BD6ACD8
+- seeds	SwiftPropertyLaws/PropertyLawCore	determinism	30 (Advisory)	?	0xD2AC2738A6DAADE6
+- seeds	SwiftUMLStudio/SwiftUMLBridgeFramework	determinism	30 (Advisory)	Equatable	0x81D7C72FD644E9D1
+- seeds	SwiftUMLStudio/SwiftUMLBridgeFramework	determinism	30 (Advisory)	Equatable	0x7B368C4649904FB4
+## j0 -> j2
+- seeds	SwiftAssist/SwiftAssistApp	determinism	30 (Advisory)	?	0x34866E5C6CF4F7B9
+- plain	SwiftAssist/SwiftAssist	idempotence	30 (Possible)	String	0x2246FE715C14CFCD
+- plain	SwiftAssist/SwiftAssist	round-trip	35 (Possible)	T -> T	0x05F35EF78D07147B
+- plain	SwiftAssist/SwiftAssist	idempotence	20 (Possible)	T -> T	0x045B19BABB3A1CF9
+- seeds	SwiftAssist/SwiftAssist	determinism	30 (Advisory)	?	0xE82F8B91FF279C23
+- seeds	SwiftAssist/SwiftAssist	idempotence	30 (Possible)	String	0x2246FE715C14CFCD
+- seeds	SwiftAssist/SwiftAssist	determinism	30 (Advisory)	?	0x40CEEC8106D38153
+- seeds	SwiftAssist/SwiftAssist	determinism	30 (Advisory)	?	0x0103527B1647CF15
+- seeds	SwiftAssist/SwiftAssist	round-trip	35 (Possible)	T -> T	0x05F35EF78D07147B
+- seeds	SwiftAssist/swift-assist-cli	determinism	30 (Advisory)	Equatable	0x66616E3B93A2C53D
+- seeds	SwiftLintRuleStudio/SwiftLintRuleStudioCore	determinism	30 (Advisory)	Equatable	0x3A36B08D2BD6ACD8
+- seeds	SwiftPropertyLaws/PropertyLawCore	determinism	30 (Advisory)	?	0x5060911006D1FBD3
+- seeds	SwiftPropertyLaws/PropertyLawCore	determinism	30 (Advisory)	?	0xD2AC2738A6DAADE6
+- plain	SwiftUMLStudio/SwiftUMLBridgeFramework	idempotence	35 (Possible)	Array	0x4C668FA354FDAE47
+- plain	SwiftUMLStudio/SwiftUMLBridgeFramework	idempotence	35 (Possible)	Array	0xAA929674101300A6
+- seeds	SwiftUMLStudio/SwiftUMLBridgeFramework	idempotence	35 (Possible)	Array	0xAA929674101300A6
+- seeds	SwiftUMLStudio/SwiftUMLBridgeFramework	idempotence	35 (Possible)	Array	0x4C668FA354FDAE47
+- seeds	SwiftUMLStudio/SwiftUMLBridgeFramework	determinism	30 (Advisory)	Equatable	0x7B368C4649904FB4
+- seeds	SwiftUMLStudio/SwiftUMLBridgeFramework	determinism	30 (Advisory)	Equatable	0x81D7C72FD644E9D1

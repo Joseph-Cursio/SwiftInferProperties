@@ -53,7 +53,11 @@ struct BuilderFieldParityTests {
         declaredEffect: .pure,
         inferredEffect: nil,
         purityVerdict: .pureButPartial,
-        bodyFingerprint: "FEEDFACE"
+        bodyFingerprint: "FEEDFACE",
+        globalActor: "MainActor",
+        declaresNonisolated: true,
+        calledFreeFunctionNames: ["helper"],
+        genericParameters: [TypeDecl.GenericParameter(name: "T", constraint: "Hashable")]
     )
 
     /// The one field `withInferredEffect` is allowed to change.
@@ -80,6 +84,24 @@ struct BuilderFieldParityTests {
         #expect(copied.inferredEffect == .pure, "the builder did not apply the effect it was given")
     }
 
+    /// Found 2026-11-13, while measuring a wider join (`docs/measurements/purity-join-member-calls.md`): both
+    /// builders dropped `globalActor`, `declaresNonisolated` and `genericParameters`, so a summary the join took
+    /// back lost its isolation and its generics. The test above could not see it: it covered `withInferredEffect`
+    /// only, and its subject left those three fields at their defaults.
+    @Test("withPurityRetracted changes only the verdict and its collapse")
+    func withPurityRetractedCarriesEveryOtherField() {
+        let copied = Self.populated.withPurityRetracted()
+        let before = Self.fields(of: Self.populated)
+        let after = Self.fields(of: copied)
+        #expect(before.keys.sorted() == after.keys.sorted(), "the copy has a different field set")
+        for (label, value) in before where !["purityVerdict", "isInferredPure"].contains(label) {
+            let copiedValue = after[label] ?? "<absent>"
+            #expect(after[label] == value, "`withPurityRetracted` dropped `\(label)`: \(value) → \(copiedValue)")
+        }
+        #expect(copied.purityVerdict == .refuted)
+        #expect(!copied.isInferredPure)
+    }
+
     /// **The control.** If reflection stopped reaching the stored properties — a
     /// `Mirror` over an empty-looking value, a type that stops being a struct — every
     /// loop above would iterate nothing and pass. That is this repo's confident zero, so
@@ -94,6 +116,7 @@ struct BuilderFieldParityTests {
         #expect(fields["declaresUnknownEffect"] != nil, "the field that was dropped is not being read")
         #expect(fields["bodyFingerprint"] != nil)
         #expect(fields["qualifiedContainingTypeName"] != nil)
+        #expect(fields["globalActor"] == "Optional(\"MainActor\")", "a field the builders once dropped is populated")
     }
 
     /// Stored properties as `label → rendered value`. Rendering rather than comparing
