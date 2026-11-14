@@ -65,6 +65,8 @@ struct IndexProjectionParityPropertyTests {
                 enumCases: [IndexedTypeShape.EnumCase(name: "case\(tag)")]
             ),
             secondaryFunctionName: "secondary\(tag)",
+            secondaryMemberShape: MemberAccessShape(isComputedProperty: flags),
+            documentedRange: DocumentedRange(lower: "0", upper: "1\(tag)"),
             carrierTypeName: "Carrier\(tag)",
             isInstanceMethod: flags,
             isMutatingMethod: flags,
@@ -118,6 +120,12 @@ struct IndexProjectionParityPropertyTests {
             #expect(merged.decisionAt != nil, "decisionAt dropped")
             #expect(merged.typeShape != nil, "typeShape dropped")
             #expect(merged.secondaryFunctionName != nil, "secondaryFunctionName dropped")
+            // Optional, and drawn from `flags`: `!flags` on `theirs` tells a dropped column (nil,
+            // or `self`'s value) from one taken from the fresh scan.
+            #expect(merged.secondaryMemberShape == theirs.secondaryMemberShape, "secondaryMemberShape dropped")
+            // Drawn from `tag`, which differs between the two inputs whenever the property
+            // draws `left != right`; equal to `theirs` either way when the column is carried.
+            #expect(merged.documentedRange == theirs.documentedRange, "documentedRange dropped")
             #expect(merged.carrierTypeName != nil, "carrierTypeName dropped")
             // The five Bool columns were added after the type shipped and all
             // default to `false`; `!flags` on `theirs` makes a dropped one visible.
@@ -209,6 +217,7 @@ struct IndexProjectionParityPropertyTests {
             // Named explicitly: whole-value `==` would still pass if the nested
             // shape's own cases were dropped, since both sides would lose them.
             #expect(decoded?.typeShape?.enumCases.isEmpty == false, "nested enumCases dropped")
+            #expect(decoded?.documentedRange != nil, "documentedRange dropped")
         }
     }
 

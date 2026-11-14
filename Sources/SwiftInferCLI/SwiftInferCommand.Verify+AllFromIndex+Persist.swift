@@ -45,7 +45,9 @@ extension SwiftInferCommand.Verify {
                 corpusProvenance: corpusProvenance,
                 // The body this verdict was measured against, so `discover` can later tell
                 // a live measurement from one taken on code that has since been rewritten.
-                subjectFingerprint: record.subjectFingerprint
+                // Folded with a `documented-range` row's bounds (#701) — `evidenceFingerprint`,
+                // not the bodies-only `subjectFingerprint` the survey diff reads.
+                subjectFingerprint: record.evidenceFingerprint
             )
         }
         let corpusEntries: [VerifyCorpusEntry] = collected.compactMap { record in

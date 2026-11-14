@@ -170,8 +170,10 @@ extension SwiftInferCommand.Discover {
         let byLocation = SubjectFingerprint.byLocation(summaries)
         var result: [String: String] = [:]
         for suggestion in suggestions {
+            // The same helper `Index.buildEntry` stamps with, so the fingerprint verify recorded
+            // and the one checked here follow one rule (#701: a law's doc-comment bounds count).
             guard let fingerprint = SubjectFingerprint.forSuggestion(
-                evidenceLocations: suggestion.evidence.map(\.location),
+                suggestion,
                 byLocation: byLocation
             ) else { continue }
             result[suggestion.identity.normalized] = fingerprint

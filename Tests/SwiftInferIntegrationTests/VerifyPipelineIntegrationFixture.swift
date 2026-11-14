@@ -177,10 +177,8 @@ enum VerifyPipelineIntegrationFixture {
         budget: StrategistDispatchEmitter.TrialBudget = .small,
         preamble: String = ""
     ) throws -> VerifyOutcome {
-        let workdir = try makeWorkdir()
-        defer { cleanUp(workdir) }
-        let stubSource = try StrategistDispatchEmitter.emit(
-            StrategistDispatchEmitter.Inputs(
+        try runStrategistPipeline(
+            inputs: StrategistDispatchEmitter.Inputs(
                 carrier: carrier,
                 typeShape: typeShape,
                 template: template,
@@ -191,6 +189,15 @@ enum VerifyPipelineIntegrationFixture {
                 preamble: preamble
             )
         )
+    }
+
+    /// The same pipeline over a caller-built `Inputs`, for a law whose composer reads fields the
+    /// convenience form does not take (`documented-range`'s bounds, a receiver, per-parameter
+    /// types). The caller supplies the seed; `canonicalSeed` keeps runs reproducible.
+    static func runStrategistPipeline(inputs: StrategistDispatchEmitter.Inputs) throws -> VerifyOutcome {
+        let workdir = try makeWorkdir()
+        defer { cleanUp(workdir) }
+        let stubSource = try StrategistDispatchEmitter.emit(inputs)
         _ = try VerifierWorkdir.synthesize(
             VerifierWorkdir.Inputs(
                 workdir: workdir,

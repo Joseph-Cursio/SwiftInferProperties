@@ -124,8 +124,9 @@ extension SwiftInferCommand.Verify {
     /// stamp — SwiftProjectLint's Non-Injected Nondeterminism rule. The stamp is
     /// persisted at whole-second `.iso8601` resolution, and two records tying on
     /// it are exactly what makes the log `merge` folds non-commutative (see
-    /// `MergeAlgebraPropertyTests`).
-    private static func persistEvidence(
+    /// `MergeAlgebraPropertyTests`). Internal, not private, so a test can check what it
+    /// stamps without running a subprocess (`DocumentedRangeEvidenceStampTests`).
+    static func persistEvidence(
         parsed: VerifyOutcome,
         entry: SemanticIndexEntry,
         packageRoot: URL,
@@ -160,8 +161,9 @@ extension SwiftInferCommand.Verify {
                 // `discover` can tell "this was measured on the code in front of you" from
                 // "this was measured on something else". Without it the outcome outlives any
                 // edit to the subject, because `identityHash` is deliberately blind to the
-                // body (PRD §7.5) — road test §10.2.
-                subjectFingerprint: entry.subjectFingerprint
+                // body (PRD §7.5) — road test §10.2. Folded with the bounds a
+                // `documented-range` entry ran (#701); the bodies alone everywhere else.
+                subjectFingerprint: entry.evidenceFingerprint
             ),
             packageRoot: packageRoot
         )

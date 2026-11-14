@@ -95,9 +95,11 @@ struct RangeLawTemplateTests {
         let suggestion = try #require(DocumentedRangeTemplate.suggest(for: try Self.summary("progress")))
         #expect(suggestion.templateName == "documented-range")
         #expect(suggestion.score.tier == .likely)
-        #expect(suggestion.match?.documentedRangeMatch == DocumentedRange(lower: "0.0", upper: "1.0"))
+        #expect(suggestion.match?.documentedRangeMatch
+            == DocumentedRange(lower: "0.0", upper: "1.0", resultTypeName: "Double"))
         let integer = try #require(DocumentedRangeTemplate.suggest(for: try Self.summary("percent")))
-        #expect(integer.match?.documentedRangeMatch == DocumentedRange(lower: "0", upper: "100"))
+        #expect(integer.match?.documentedRangeMatch
+            == DocumentedRange(lower: "0", upper: "100", resultTypeName: "Int"))
     }
 
     @Test("not proposed without exactly one closed range", arguments: ["ambiguous", "index", "halfOpen"])
@@ -118,6 +120,43 @@ struct RangeLawTemplateTests {
             failureLabel: "progress left its documented range",
             argumentTypes: ["Progress"]
         )
-        #expect(stub.contains("(0.0...1.0 as ClosedRange<Double>).contains(Double(value.progress))"), "got:\n\(stub)")
+        #expect(stub.contains("(0.0 ... 1.0 as ClosedRange<Double>).contains(Double(value.progress))"), "got:\n\(stub)")
+    }
+
+    /// In step with verify's composer: a correct `Float` clamp to 0.3 widens to 0.30000001192…,
+    /// above the `Double` 0.3, so the bounds round through `Float` first.
+    @Test("the stub rounds the bounds through Float for a Float result")
+    func documentedRangeStubFloat() throws {
+        let suggestion = try #require(DocumentedRangeTemplate.suggest(for: try Self.summary("progress")))
+        let evidence = try #require(suggestion.evidence.first)
+        let callee = try #require(CalleeReference(evidence: evidence))
+        let stub = LiftedTestEmitter.withinDocumentedRange(
+            callee: callee,
+            range: DocumentedRange(lower: "0.0", upper: "0.3", resultTypeName: "Float"),
+            seed: SamplingSeed.derive(from: suggestion.identity),
+            generators: ["Progress.gen()"],
+            failureLabel: "progress left its documented range",
+            argumentTypes: ["Progress"]
+        )
+        #expect(stub.contains("(Double(Float(0.0)) ... Double(Float(0.3)) as ClosedRange<Double>)"), "got:\n\(stub)")
+    }
+
+    /// `-10...-1` lexes `...-` as one operator and does not compile; the bounds are spaced, as in
+    /// verify's composer, so a negative upper bound spells a range.
+    @Test("the stub spaces the bounds so a negative upper bound parses")
+    func documentedRangeStubNegativeUpper() throws {
+        let suggestion = try #require(DocumentedRangeTemplate.suggest(for: try Self.summary("progress")))
+        let evidence = try #require(suggestion.evidence.first)
+        let callee = try #require(CalleeReference(evidence: evidence))
+        let stub = LiftedTestEmitter.withinDocumentedRange(
+            callee: callee,
+            range: DocumentedRange(lower: "-10", upper: "-1"),
+            seed: SamplingSeed.derive(from: suggestion.identity),
+            generators: ["Progress.gen()"],
+            failureLabel: "progress left its documented range",
+            argumentTypes: ["Progress"]
+        )
+        #expect(stub.contains("(-10 ... -1 as ClosedRange<Double>)"), "got:\n\(stub)")
+        #expect(!stub.contains("...-"), "got:\n\(stub)")
     }
 }

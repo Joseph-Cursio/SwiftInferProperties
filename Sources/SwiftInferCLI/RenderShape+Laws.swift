@@ -1,3 +1,5 @@
+import SwiftInferTemplates
+
 // MARK: - The laws
 
 extension RenderShape {
@@ -158,6 +160,77 @@ extension RenderShape {
         expected: { _ in "satisfies the role's guarantee" }
     )
 
+    /// A predicate on the result again, so the bound framing. The `expected` slot carries the
+    /// reading of a refutation as well as the law, because this law rests on a NAMING
+    /// convention — `to:` is an exclusive end — and a function whose `to:` is meant to be
+    /// inclusive fails it by design. Reported as a plain defect, that refutation would send the
+    /// reader to fix code that may be right and named wrong (`through:` says inclusive).
+    static let emptyRange = RenderShape(
+        framing: .bound,
+        subject: { "empty-range on \($0.forwardName) over \($0.carrierType)" },
+        // No trailing space: `valueLines` writes ` = ` itself, and the space its siblings carry
+        // prints as a doubled one.
+        forward: { "\($0.forwardName)(from: input, to: input)" },
+        inverse: { _ in "(an empty-range law states no second expression)" },
+        expected: { _ in
+            "empty — an empty range selects nothing. A `to:` meant to be inclusive fails this "
+                + "by design: a naming finding (`through:` says inclusive), not necessarily a defect"
+        }
+    )
+
+    /// A check of two members against each other on one value, so the bound framing: the
+    /// composer prints `(predicate, count)` as FORWARD and the law as INVERSE, and `.bound` shows
+    /// FORWARD beside the law in words. The equation frame would claim the two are
+    /// approximately equal, which is not what a `Bool` and a count can be.
+    ///
+    /// The `expected` slot carries the template's caveat as well as the law, because the law is a
+    /// NAMING conjecture (`EmptinessAgreementTemplate`): a predicate narrower than its count is
+    /// correct code that fails it, and a refutation phrased as a plain defect would send the
+    /// reader to break the predicate to match the count.
+    static let emptinessAgreement = RenderShape(
+        framing: .bound,
+        subject: { "emptiness-agreement on \($0.forwardName) / \($0.inverseName) over \($0.carrierType)" },
+        forward: { "(input.\($0.forwardName), input.\($0.inverseName))" },
+        inverse: { _ in "(an agreement law states no second expression)" },
+        expected: { context in
+            "\(emptinessAgreementLaw(context)) — a conjecture read from the names. A predicate "
+                + "that means something narrower than its count is correct code that fails this: "
+                + "confirm the two are meant to agree before reading it as a defect"
+        }
+    )
+
+    /// A predicate on the result, so the bound framing. `inverseName` carries the range literal
+    /// (`0.0...1.0`), set by `resolveDocumentedRangeCalls` because `Context` has no slot for the
+    /// bounds and this law names no second function — so the verdict prints the contract it
+    /// checked rather than "the documented range" with the numbers left out.
+    ///
+    /// The `expected` slot carries the template's caveat as well as the law: a failure is a
+    /// disagreement between code and comment, and either may be the one to change.
+    static let documentedRange = RenderShape(
+        framing: .bound,
+        subject: { "documented-range on \($0.forwardName) over \($0.carrierType)" },
+        // No trailing space, as for `emptyRange`.
+        forward: { "\($0.forwardName)(input)" },
+        inverse: { _ in "(a documented-range law states no second expression)" },
+        expected: { context in
+            "within \(context.inverseName), as its doc comment states. A failure is a "
+                + "disagreement: clamp the code to the range, or correct the comment. Inputs "
+                + "callers never pass still count"
+        }
+    )
+
+    /// `p == (m > 0)` with the polarity the template reads from the names, or a plain
+    /// "agrees with" for names that do not pair (only a hand-built context has those).
+    private static func emptinessAgreementLaw(_ context: Context) -> String {
+        let predicate = context.forwardName
+        let measure = context.inverseName
+        switch EmptinessAgreementPairing.polarity(predicate: predicate, measure: measure) {
+        case .holdsWhenPositive: return "\(predicate) == (\(measure) > 0)"
+        case .holdsWhenZero: return "\(predicate) == (\(measure) == 0)"
+        case nil: return "\(predicate) agrees with \(measure)"
+        }
+    }
+
     /// Template name → phrasing. A dictionary rather than a `switch` so adding a law costs one
     /// row and no control flow; `round-trip` and `codable-round-trip` share a value on purpose.
     ///
@@ -180,5 +253,8 @@ extension RenderShape {
         "measure-non-negativity": .measureNonNegativity,
         "differential-equivalence": .differentialEquivalence,
         "role-postcondition": .rolePostcondition,
+        "empty-range": .emptyRange,
+        "emptiness-agreement": .emptinessAgreement,
+        "documented-range": .documentedRange,
     ]
 }

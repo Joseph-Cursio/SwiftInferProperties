@@ -29,6 +29,14 @@ import Foundation
 /// `SurveyRecord.subjectFingerprint` already carries what separates them. A `nil` on either
 /// side means "cannot tell" and is reported as its own answer rather than folded into either
 /// — the same posture `VerifyEvidence`'s missing-fingerprint gate takes.
+///
+/// **A third reading since #701: the body is identical and the law's data outside it moved.** A
+/// `documented-range` law's bounds live in the doc comment, so editing only them changes the law
+/// and leaves the body alone. `subjectFingerprint` stays bodies-only for exactly this reason, and
+/// the folded value rides beside it (`SurveyRecord.lawDataFingerprint`); when both sides carry one
+/// and they differ over an identical body, the row says so instead of `body IDENTICAL`. When only
+/// one side carries it — a run from before the field, against one after — the bodies decide, and
+/// a verdict move over identical bodies is the tool's, as it should read.
 enum SurveyRunDiff {
 
     /// Which of the reader-facing buckets a record lands in.
@@ -61,12 +69,32 @@ enum SurveyRunDiff {
         case bodyChanged = "body changed"
         /// The body is byte-identical, so the change is in the tool or in the run. Read this.
         case bodyIdentical = "body IDENTICAL — the tool changed, not the code"
+        /// The body is byte-identical but the law's data outside it differs — a `documented-range`
+        /// row whose doc-comment bounds, as PARSED, are not the same on both sides.
+        ///
+        /// That has two causes the fingerprints cannot separate: the doc comment was edited, or
+        /// the tool now reads the same doc comment differently (`lawDataFingerprint` folds the
+        /// bounds the parser extracted, not the comment's bytes). So the label names both and
+        /// claims neither; check the subject's history or the tool's to say which. It stays
+        /// distinct from `bodyIdentical` because the law itself moved, whichever side moved it.
+        case lawDataChanged = "body identical, law data differs — bounds edited or read differently, cannot tell which"
         /// One side or both carried no fingerprint. Not evidence either way.
         case unknown = "body unknown (no fingerprint on one side)"
 
-        static func of(before: String?, after: String?) -> Self {
+        /// `before` / `after` are BODY fingerprints (`SurveyRecord.subjectFingerprint`); the
+        /// law-data values are `SurveyRecord.lawDataFingerprint`, compared only when both exist.
+        static func of(
+            before: String?,
+            after: String?,
+            beforeLawData: String? = nil,
+            afterLawData: String? = nil
+        ) -> Self {
             guard let before, let after else { return .unknown }
-            return before == after ? .bodyIdentical : .bodyChanged
+            guard before == after else { return .bodyChanged }
+            if let beforeLawData, let afterLawData, beforeLawData != afterLawData {
+                return .lawDataChanged
+            }
+            return .bodyIdentical
         }
     }
 
@@ -134,7 +162,9 @@ enum SurveyRunDiff {
                     afterDetail: afterRecord.outcomeDetail,
                     movement: SubjectMovement.of(
                         before: beforeRecord.subjectFingerprint,
-                        after: afterRecord.subjectFingerprint
+                        after: afterRecord.subjectFingerprint,
+                        beforeLawData: beforeRecord.lawDataFingerprint,
+                        afterLawData: afterRecord.lawDataFingerprint
                     )
                 )
             )

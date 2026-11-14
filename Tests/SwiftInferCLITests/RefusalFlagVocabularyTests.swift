@@ -79,9 +79,35 @@ struct RefusalFlagVocabularyTests {
         .unsupportedTemplate(template: "comparator", expected: ["idempotence"]),
         .unsupportedPair(forward: "encode", supported: ["serialize"]),
         .missingPairedFunction(template: "differential-equivalence", primary: "render"),
+        .staleIndexEntry(template: "emptiness-agreement", primary: "isEmpty()", reason: "no count"),
+        .noInputToGenerate(template: "documented-range", primary: "standard"),
         .monotonicityDomainNotComparable(domain: "Widget"),
+        .carrierNotEquatable(carrier: "Aggregate", template: "inverse-pair"),
+        .declinedByDesign(
+            template: "sorted-output",
+            reason: DeliberateVerifyDecline.reason(forTemplate: "sorted-output") ?? "(no reason recorded)"
+        ),
+        .deferredComposer(
+            template: "input-order-independence",
+            reason: DeliberateVerifyDecline.reason(forTemplate: "input-order-independence")
+                ?? "(no reason recorded)"
+        ),
         .invalidArguments(reason: "pick one"),
     ]
+
+    /// The case each refusal sample stands for (`VerifyError.sampledCase`, in VerifyErrorCase+Sampled.swift).
+    static func caseName(of error: VerifyError) -> String { error.sampledCase.rawValue }
+
+    /// Whether `refusals` samples every `VerifyError` case exactly once.
+    ///
+    /// The expected set is `VerifyErrorCase.allCases`, never a hand-kept count: a new
+    /// `VerifyError` case fails to compile in `sampledCase`'s `default`-free `switch` until it is
+    /// given an arm, the arm needs a `VerifyErrorCase` to return, and that new name then joins
+    /// `allCases` — so both lists fail this check until each carries a sample of it.
+    static func coversEveryCase(_ refusals: [VerifyError]) -> Bool {
+        let sampled = refusals.map(\.sampledCase)
+        return sampled.count == Set(sampled).count && Set(sampled) == Set(VerifyErrorCase.allCases)
+    }
 
     static let interactionRefusals: [VerifyInteractionError] = [
         .noReducersDetected,
@@ -155,10 +181,35 @@ struct RefusalFlagVocabularyTests {
         #expect(Self.flagTokens(in: "no flags here").isEmpty)
     }
 
-    @Test("the refusal corpus is not empty")
+    @Test("the refusal corpus samples every VerifyError case")
     func corpusIsPopulated() {
-        #expect(Self.verifyRefusals.count >= 12)
+        #expect(Self.coversEveryCase(Self.verifyRefusals), "\(Self.verifyRefusals.map(Self.caseName(of:)))")
         #expect(!Self.interactionRefusals.isEmpty)
+    }
+
+    /// **The guard can fail**: a list one case short, or one case twice, is refused. Without
+    /// this a `coversEveryCase` that returned `true` would pass both list checks.
+    @Test("the coverage check refuses a list missing a case or doubling one")
+    func coverageCheckCanFail() {
+        let short = Array(Self.verifyRefusals.dropLast())
+        #expect(!Self.coversEveryCase(short))
+        #expect(!Self.coversEveryCase(short + [Self.verifyRefusals[0]]))
+        #expect(!Self.coversEveryCase(Self.verifyRefusals + [Self.verifyRefusals[0]]))
+    }
+
+    /// `sampledCase`'s arms are hand-written, so an arm could return another case's name and a
+    /// list would then cover a name twice and the real case never. Reflection reads the case a
+    /// value actually is (an enum with a payload mirrors as one child labelled with the case),
+    /// independently of the arm, so every sampled arm is checked against it.
+    @Test("each sampled arm names the case it is handed")
+    func sampledArmsNameTheirOwnCase() {
+        for refusal in Self.verifyRefusals {
+            let reflected = Mirror(reflecting: refusal).children.first?.label
+            #expect(
+                reflected == refusal.sampledCase.rawValue,
+                "\(refusal.sampledCase) reflects as \(reflected ?? "nil")"
+            )
+        }
     }
 
     /// The regression witness: the message as it shipped, checked against the real

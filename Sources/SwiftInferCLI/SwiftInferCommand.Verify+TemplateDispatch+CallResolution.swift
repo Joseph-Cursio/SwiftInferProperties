@@ -83,11 +83,11 @@ extension SwiftInferCommand.Verify {
         let typeQualifier = RoundTripPairResolver.bareTypeName(from: qualifier)
         let funcName = RoundTripPairResolver.stripParameterLabels(entry.primaryFunctionName)
         switch entry.templateName {
-        // The two-function laws. Both resolve a pair and render each half with
-        // `roundTripHalfCall`; they differ only in how the second half is found
-        // (curated-then-entry vs entry-only), so they share one arm here rather
-        // than each costing the switch a branch against its complexity cap.
-        case "round-trip", "differential-equivalence":
+        // The two-function laws. They share one arm here rather than each costing
+        // the switch a branch against its complexity cap; `resolveTwoFunctionCalls`
+        // tells them apart. Round-trip and differential render each half with
+        // `roundTripHalfCall`; `emptiness-agreement` reads two members off one value.
+        case "round-trip", "differential-equivalence", "emptiness-agreement":
             return try resolveTwoFunctionCalls(entry: entry, typeQualifier: typeQualifier)
 
         case "codable-round-trip":
@@ -113,7 +113,7 @@ extension SwiftInferCommand.Verify {
                 receiverShape: takesOperandIdempotenceShape(entry)
             )
 
-        case "predicate":
+        case "predicate", "documented-range":
             // Totality takes ONE call and applies it to one generated value, so the plain
             // static/free reference is all it needs — no pairing, no receiver closure.
             //
@@ -123,12 +123,11 @@ extension SwiftInferCommand.Verify {
             // `unsupportedTemplate` the composer exists to stop. All 49 indexed `predicate`
             // entries declined here — measured before this line existed, which is the only
             // reason it was found.
-            return singleCallResolved(
-                entry: entry,
-                typeQualifier: typeQualifier,
-                funcName: funcName,
-                receiverShape: entry.isInstanceMethod
-            )
+            //
+            // `documented-range` (#701) shares the arm — and the cyclomatic budget a case of its
+            // own would exceed — because it shares the call; `resolveTotalityShapedCalls` adds
+            // its two refusals (no bounds indexed, no input to draw).
+            return try resolveTotalityShapedCalls(entry: entry, typeQualifier: typeQualifier, funcName: funcName)
 
         case "commutativity", "associativity":
             // Binary instance ops emit the receiver shape here.
@@ -148,13 +147,16 @@ extension SwiftInferCommand.Verify {
             )
 
         case "involution", "homomorphism", "multiplicative-homomorphism", "measure-non-negativity",
-             "role-postcondition":
+             "role-postcondition", "empty-range":
             // Single-function laws. Involution's self-returning instance form and
             // measure's 0-param instance form both emit the receiver shape from
             // `inputs` flags in the composer; the free/static call resolves the
             // same way idempotence's non-receiver shape does.
             // `role-postcondition` joins them: same shape as measure — one function, one
             // generated value, a predicate on the RESULT.
+            // `empty-range` too: its template admits free/static callees only, and the
+            // labels it requires make `labeledCallExpression` write the trampoline
+            // `{ Q.f(from: $0, to: $1) }` the composer applies to one value twice.
             return singleCallResolved(
                 entry: entry, typeQualifier: typeQualifier, funcName: funcName, receiverShape: false
             )
@@ -209,10 +211,16 @@ extension SwiftInferCommand.Verify {
         entry: SemanticIndexEntry,
         typeQualifier: String
     ) throws -> ResolvedCalls {
-        if entry.templateName == "differential-equivalence" {
+        switch entry.templateName {
+        case "differential-equivalence":
             return try resolveDifferentialCalls(entry: entry, typeQualifier: typeQualifier)
+
+        case TemplateName.emptinessAgreement.rawValue:
+            return try resolveEmptinessAgreementCalls(entry: entry)
+
+        default:
+            return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
         }
-        return try resolveRoundTripCalls(entry: entry, typeQualifier: typeQualifier)
     }
 
     /// Resolve the two halves of `reference(x) == variant(x)`.

@@ -42,6 +42,21 @@ public enum VerifyError: Error, CustomStringConvertible {
     /// list; saying "not in the curated pair list" would send the reader to fix
     /// the wrong thing.
     case missingPairedFunction(template: String, primary: String)
+    /// An entry indexed before a column its law needs existed (#701).
+    ///
+    /// A sibling of `.missingPairedFunction` rather than a reuse of it: that message dates
+    /// the round-trip column (2026-08-08), and an `emptiness-agreement` entry also lacks the
+    /// measure's property-or-method shape, which no function name carries. `reason` names
+    /// the missing datum. The remedy is the same — re-index — and the alternative, guessing,
+    /// emits `value.count()` against a property or `value.count` against a method, both of
+    /// which fail to compile and read downstream as `build-failed`.
+    case staleIndexEntry(template: String, primary: String, reason: String)
+    /// A law over a subject that takes no input at all — a static member with no parameters
+    /// (#701, `documented-range`). There is nothing to generate, so a property test over it
+    /// cannot be written: the stub would pass a drawn value to a call that takes none, and fail
+    /// to compile as `build-failed`, which reads as an instrument defect. `accept` declines the
+    /// same shape, so this refusal and the absent stub agree.
+    case noInputToGenerate(template: String, primary: String)
     /// Monotonicity pre-flight: the property `a ≤ b ⟹ f(a) ≤ f(b)` orders the
     /// input domain with `min`/`max`, so a non-`Comparable` domain can't be
     /// verified (the ordering is undefined). Thrown at emit so the doomed
@@ -52,6 +67,23 @@ public enum VerifyError: Error, CustomStringConvertible {
     /// See `UnverifiableCause.carrierNotEquatable` for why this is neither an
     /// `unsupportedTemplate` nor an `unsupportedCarrier`.
     case carrierNotEquatable(carrier: String, template: String)
+
+    /// Verify does not measure this template, by a recorded decision rather than for want of a
+    /// composer — see `DeliberateVerifyDecline` for each template's measured reason.
+    ///
+    /// Distinct from `.unsupportedTemplate`, whose remedy calls the row a swift-infer gap that
+    /// will close: for a characterisation law a composer was weighed and refused, because a
+    /// verify pass re-reads the law from the code under test and so passes by construction.
+    /// `reason` is the user-facing sentence, carried so every channel prints the same one.
+    case declinedByDesign(template: String, reason: String)
+
+    /// Verify does not measure this template YET: a composer is planned, and `reason` says what
+    /// it waits on and what ends the wait (`DeliberateVerifyDecline.Disposition.deferred`).
+    ///
+    /// Distinct from `.declinedByDesign`, whose wording is a permanent refusal, and from
+    /// `.unsupportedTemplate`, which names no reason at all. Until the composer exists the
+    /// accepted, checked-in stub runs the law.
+    case deferredComposer(template: String, reason: String)
 
     /// V1.50.B — argument-validation error surfaced when the user
     /// passes a forbidden combination (e.g., `--suggestion` and

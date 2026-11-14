@@ -103,6 +103,29 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// `primaryFunctionName` carries (e.g. `"_scale(forMinimumCapacity:)"`).
     public var secondaryFunctionName: String?
 
+    /// #701 — whether the second function (`secondaryFunctionName`) is a computed property
+    /// (`value.count`) or a nullary method (`value.count()`). Written for `emptiness-agreement`
+    /// only, whose second half is a member read off the generated value; `nil` for every other
+    /// template and for entries indexed before the column existed.
+    ///
+    /// **A column, because the name cannot carry it** — see `MemberAccessShape`.
+    /// `round-trip` / `differential-equivalence` never need it — their halves are applied as
+    /// functions to a value — so they stay `nil` rather than gain a datum nothing reads. `nil` on
+    /// an `emptiness-agreement` entry means *not recorded*, and verify declines it as stale
+    /// (`VerifyError.staleIndexEntry`) instead of guessing.
+    public var secondaryMemberShape: MemberAccessShape?
+
+    /// #701 — the closed range a `documented-range` entry's doc comment states, as the two
+    /// literals the author wrote (`0.0`, `1.0`). `nil` for every other template and for entries
+    /// indexed before the column existed.
+    ///
+    /// **A column, because nothing else in the index carries it**: the bounds were parsed at
+    /// discover time (`TemplateMatch.documentedRange`) and dropped by the projection, and the
+    /// doc comment itself is not indexed, so verify cannot re-derive them. `nil` on a
+    /// `documented-range` entry means *not recorded*, and verify declines it as stale
+    /// (`VerifyError.staleIndexEntry`) rather than emit a check with no bounds.
+    public var documentedRange: DocumentedRange?
+
     /// V1.149 — the *generator* carrier, distinct from `typeName` (which
     /// is the function's owner / call-site qualifier). For a method
     /// defined on the carrier (`extension Int { … }`) the two coincide
@@ -187,6 +210,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         decisionAt: String? = nil,
         typeShape: IndexedTypeShape? = nil,
         secondaryFunctionName: String? = nil,
+        secondaryMemberShape: MemberAccessShape? = nil,
+        documentedRange: DocumentedRange? = nil,
         carrierTypeName: String? = nil,
         isInstanceMethod: Bool = false,
         isMutatingMethod: Bool = false,
@@ -217,6 +242,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             lastSeenAt: lastSeenAt,
             typeShape: typeShape,
             secondaryFunctionName: secondaryFunctionName,
+            secondaryMemberShape: secondaryMemberShape,
+            documentedRange: documentedRange,
             carrierTypeName: carrierTypeName,
             isInstanceMethod: isInstanceMethod,
             isMutatingMethod: isMutatingMethod,
@@ -261,6 +288,11 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         lastSeenAt: String,
         typeShape: IndexedTypeShape?,
         secondaryFunctionName: String?,
+        // No default — see `EveryColumn`. A converter that forgot it would silently write `nil`,
+        // which verify reads as a stale entry and declines.
+        secondaryMemberShape: MemberAccessShape?,
+        // No default, for the same reason: a forgotten `nil` reads as a stale entry.
+        documentedRange: DocumentedRange?,
         carrierTypeName: String?,
         isInstanceMethod: Bool,
         isMutatingMethod: Bool,
@@ -290,6 +322,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.lastSeenAt = lastSeenAt
         self.typeShape = typeShape
         self.secondaryFunctionName = secondaryFunctionName
+        self.secondaryMemberShape = secondaryMemberShape
+        self.documentedRange = documentedRange
         self.carrierTypeName = carrierTypeName
         self.isInstanceMethod = isInstanceMethod
         self.isMutatingMethod = isMutatingMethod
@@ -318,6 +352,11 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             lastSeenAt: other.lastSeenAt,
             typeShape: other.typeShape,
             secondaryFunctionName: other.secondaryFunctionName,
+            // From `other`, with the name it describes: a member that changed from a property to
+            // a method between scans changes how the law must be spelled.
+            secondaryMemberShape: other.secondaryMemberShape,
+            // From `other`: an edited doc comment is an edited law.
+            documentedRange: other.documentedRange,
             carrierTypeName: carrierTypeName,
             isInstanceMethod: other.isInstanceMethod,
             isMutatingMethod: other.isMutatingMethod,

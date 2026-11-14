@@ -58,6 +58,19 @@ public extension SwiftInferCommand.Verify {
         /// a pre-v1.149 index, which reads downstream as "cannot validate".
         public let subjectFingerprint: String?
 
+        /// #701 — `subjectFingerprint` folded with the law's data outside every body (a
+        /// `documented-range` row's doc-comment bounds), or `nil` on every row whose law has
+        /// none. **A field of its own, so `subjectFingerprint` keeps meaning the BODY**:
+        /// `SurveyRunDiff` reads it that way to tell "the code moved" from "the tool moved", and
+        /// a folded value there reported `body changed` on rows whose bodies were identical.
+        /// Optional and additive; a stream written before it decodes as `nil`.
+        public let lawDataFingerprint: String?
+
+        /// What the persisted evidence is stamped with: the folded value where the law has data
+        /// outside its bodies, the body fingerprint otherwise. Equals
+        /// `SemanticIndexEntry.evidenceFingerprint` for the entry this record came from.
+        public var evidenceFingerprint: String? { lawDataFingerprint ?? subjectFingerprint }
+
         public init(
             identityHash: String,
             templateName: String,
@@ -68,7 +81,8 @@ public extension SwiftInferCommand.Verify {
             tier: String? = nil,
             counterexample: String? = nil,
             shrunkCounterexample: String? = nil,
-            subjectFingerprint: String? = nil
+            subjectFingerprint: String? = nil,
+            lawDataFingerprint: String? = nil
         ) {
             self.identityHash = identityHash
             self.templateName = templateName
@@ -80,6 +94,7 @@ public extension SwiftInferCommand.Verify {
             self.counterexample = counterexample
             self.shrunkCounterexample = shrunkCounterexample
             self.subjectFingerprint = subjectFingerprint
+            self.lawDataFingerprint = lawDataFingerprint
         }
     }
 }

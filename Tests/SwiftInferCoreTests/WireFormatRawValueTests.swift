@@ -29,6 +29,12 @@ struct WireFormatRawValueTests {
         #expect(Decision.allCases.map(\.rawValue) == ["accepted", "acceptedAsConformance", "rejected", "skipped"])
     }
 
+    /// `SemanticIndexEntry.secondaryMemberShape` (#701): a renamed case would make a stored
+    /// shape decode as a failure and the whole index unreadable.
+    @Test func memberAccessShape() {
+        #expect(MemberAccessShape.allCases.map(\.rawValue) == ["computed-property", "nullary-method"])
+    }
+
     @Test func tier() {
         #expect(Tier.allCases.map(\.rawValue) == ["verified", "strong", "likely", "possible", "suppressed", "advisory"])
     }
@@ -38,8 +44,9 @@ struct WireFormatRawValueTests {
             "round-trip", "codable-round-trip", "idempotence", "commutativity", "associativity",
             "idempotence-lifted", "dual-style-consistency", "monotonicity", "involution",
             "binary-idempotence", "homomorphism", "multiplicative-homomorphism", "measure-non-negativity",
-            "role-postcondition", "differential-equivalence", "predicate", "inverse-pair",
-            "identity-element", "composition", "invariant-preservation", "replay-idempotence",
+            "role-postcondition", "differential-equivalence", "predicate", "empty-range", "emptiness-agreement",
+            "documented-range",
+            "inverse-pair", "identity-element", "composition", "invariant-preservation", "replay-idempotence",
         ])
     }
 
