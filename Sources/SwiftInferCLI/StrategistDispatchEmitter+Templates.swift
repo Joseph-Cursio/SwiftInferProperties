@@ -113,14 +113,24 @@ extension StrategistDispatchEmitter {
 
     // MARK: - Commutativity (2 values per trial; f(a, b) == f(b, a))
 
-    /// Routes the one template whose law is neither algebraic nor comparison-based.
+    /// Routes the laws built on totality's one-generator-per-parameter operands.
     ///
     /// A sibling of `algebraicLawPass` and deliberately checked *before* it: `predicate` is in
     /// `TemplateName.verifiable` but excluded from `strategistAlgebraicLaws`, so the algebraic
     /// fallthrough would reject it with an `unsupportedTemplate` naming a set it was never in.
+    /// `documented-range` (#701) joins it for the reason it shares `totalityOperands`: its
+    /// subject takes any number of parameters plus a receiver, which no algebraic shape draws.
     static func totalityLawPass(inputs: Inputs, recipe: GeneratorRecipe) throws -> String? {
-        guard inputs.template == TemplateName.predicate.rawValue else { return nil }
-        return try composePredicatePass(inputs: inputs, recipe: recipe)
+        switch inputs.template {
+        case TemplateName.predicate.rawValue:
+            return try composePredicatePass(inputs: inputs, recipe: recipe)
+
+        case TemplateName.documentedRange.rawValue:
+            return try composeDocumentedRangePass(inputs: inputs, recipe: recipe)
+
+        default:
+            return nil
+        }
     }
 
     /// **Totality** — the predicate returns a value for every input its type admits.

@@ -82,10 +82,15 @@ struct VerifiableTemplateReachTests {
         }
     }
 
-    /// The function names this gate probes with. Only `role-postcondition` needs a real
-    /// one, because its composer resolves the law from the name; the rest ignore it.
+    /// The function names this gate probes with. Two templates need real ones, because their
+    /// composers read the law from the names: `role-postcondition` its role, and
+    /// `emptiness-agreement` its polarity (`isEmpty` with `count` reads `== 0`). The rest ignore it.
     static func probeCalls(for template: TemplateName) -> [String] {
-        template == .rolePostcondition ? ["lowercased", "inverse"] : ["subject", "inverse"]
+        switch template {
+        case .rolePostcondition: ["lowercased", "inverse"]
+        case .emptinessAgreement: ["isEmpty", "count"]
+        default: ["subject", "inverse"]
+        }
     }
 
     /// Gate 3. Green today, and here so the pair of gates is checked as a pair — a future template
@@ -184,6 +189,7 @@ struct VerifiableTemplateReachTests {
             #expect(name != .predicate, "predicate is not an algebraic law and must stay excluded")
             #expect(name != .codableRoundTrip)
             #expect(name != .measureNonNegativity)
+            #expect(name != .documentedRange, "documented-range routes through totalityLawPass")
         }
     }
 }

@@ -42,6 +42,28 @@ struct EmptinessAgreementTemplateTests {
         ]), "found \(found.sorted())")
     }
 
+    @Test("two nested types sharing an innermost name do not pair across each other")
+    func nestedNamesakesDoNotPair() {
+        // TCA's shape: every feature nests a `State`. Grouped by the bare name, `FeatureA`'s
+        // predicate paired with `FeatureB`'s count, a member the drawn `FeatureA.State` lacks.
+        let features = """
+            public enum FeatureA { public struct State { public var hasItems: Bool { false } } }
+            public enum FeatureB { public struct State { public var itemCount: Int { 0 } } }
+            public enum FeatureC {
+                public struct State {
+                    public var hasRows: Bool { false }
+                    public var rowCount: Int { 0 }
+                }
+            }
+            """
+        let corpus = FunctionScanner.scanCorpus(source: features, file: "Features.swift")
+        let found = EmptinessAgreementPairing.candidates(in: corpus.summaries).map {
+            "\($0.predicate.qualifiedContainingTypeName ?? "").\($0.predicate.name)|"
+                + "\($0.measure.qualifiedContainingTypeName ?? "").\($0.measure.name)"
+        }
+        #expect(found == ["FeatureC.State.hasRows|FeatureC.State.rowCount"], "found \(found)")
+    }
+
     @Test("names that do not pair", arguments: [
         ("hasPendingWork", "totalIssueCount"), ("hasIssues", "retryCount"), ("has", "count"),
         ("hashValue", "count"), ("isEmpty", "totalIssueCount"), ("isValid", "count"),

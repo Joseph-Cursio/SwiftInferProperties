@@ -1,13 +1,39 @@
 /// `documented-range`'s match: the bounds a doc comment states, as numeric literals a writer can
 /// splice — `0.0` and `1.0` from "Fraction of files processed (0.0 to 1.0)". Nothing in the
 /// signature carries them, so without the payload a writer would re-read prose it cannot see.
-public struct DocumentedRange: Sendable, Equatable {
+///
+/// `Codable` since #701, and the only `TemplateMatch` payload that is: verify reads it from the
+/// index (`SemanticIndexEntry.documentedRange`), and the doc comment it came from is not in the
+/// index, so verify has no other way to learn the bounds. Two literal strings, kept verbatim
+/// rather than as `Double`s, so the stub splices exactly what the author wrote.
+public struct DocumentedRange: Sendable, Equatable, Codable {
     public let lower: String
     public let upper: String
 
-    public init(lower: String, upper: String) {
+    /// The subject's return type as written (`Float`, `Int`), or `nil` when the range was read
+    /// from prose alone (`statedRange(in:)`) or from an index written before the field existed.
+    ///
+    /// Recorded because both stubs widen the result to `Double` and compare it with the literal
+    /// bounds, and for a `Float` result that comparison is wrong at the bound: a correct
+    /// `min(max(x, 0), 0.3)` returns `Float(0.3)`, which widens to 0.30000001192… and lies
+    /// above the `Double` 0.3. Every other admitted codomain is exact in a `Double` (`CGFloat`
+    /// is one on 64-bit; the integers are exact up to 2^53), so only `Float` needs it.
+    public let resultTypeName: String?
+
+    public init(lower: String, upper: String, resultTypeName: String? = nil) {
         self.lower = lower
         self.upper = upper
+        self.resultTypeName = resultTypeName
+    }
+
+    /// The two bounds as a stub must spell them beside `Double(result)`: verbatim, or for a
+    /// `Float` result rounded through `Float` first (`Double(Float(0.3))`), so a bound and a
+    /// result clamped to it round the same way. Rounding the bound, not widening the tolerance,
+    /// keeps the law exactly the doc comment's for every value a `Float` can hold. A `nil`
+    /// type keeps the verbatim bounds, which is the pre-field behaviour.
+    public var checkedBounds: (lower: String, upper: String) {
+        guard resultTypeName == "Float" || resultTypeName == "Swift.Float" else { return (lower, upper) }
+        return ("Double(Float(\(lower)))", "Double(Float(\(upper)))")
     }
 }
 

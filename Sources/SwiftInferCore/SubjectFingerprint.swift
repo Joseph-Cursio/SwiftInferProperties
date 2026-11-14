@@ -71,8 +71,10 @@ public enum SubjectFingerprint {
         return result
     }
 
-    /// The fingerprint of everything a suggestion is ABOUT, or `nil` if any subject's
-    /// fingerprint is unavailable.
+    /// The fingerprint of every function a suggestion's evidence names, or `nil` if any
+    /// subject's fingerprint is unavailable. **Bodies only** — callers fingerprinting a
+    /// SUGGESTION go through `forSuggestion(_:byLocation:)`, which also covers the law's data
+    /// that lives outside every body (a `documented-range` row's doc-comment bounds).
     ///
     /// **`nil` when any piece is missing, deliberately.** A partial fingerprint would
     /// validate a two-function law against one of its functions, so an edit to the other
@@ -102,7 +104,8 @@ public enum SubjectFingerprint {
 
     /// `SHA256` truncated to 8 bytes, rendered as 16 uppercase hex characters — the same
     /// budget and rendering `SuggestionIdentity` uses, so the two read alike in a store.
-    private static func digest(_ input: String) -> String {
+    /// Internal rather than private so `SubjectFingerprint+LawData.swift` folds with the same hash.
+    static func digest(_ input: String) -> String {
         let hashed = SHA256.hash(data: Data(input.utf8))
         let hex = hashed.prefix(8).map { byte in
             let raw = String(byte, radix: 16, uppercase: true)

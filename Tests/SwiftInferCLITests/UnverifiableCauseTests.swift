@@ -20,10 +20,39 @@ struct UnverifiableCauseTests {
             ("not-a-candidate: no test can name the subject: it is `private`", .subjectNotVisible),
             ("instance-method-shape-not-supported", .instanceMethodShape),
             ("monotonicity-domain-not-comparable: Money", .monotonicityDomainNotComparable),
+            ("carrier-not-equatable: Aggregate (inverse-pair)", .carrierNotEquatable),
+            ("declined-by-design: sorted-output — a characterisation law", .declinedByDesign),
+            ("deferred-composer: input-order-independence — the law needs", .deferredComposer),
+            ("stale-index-entry: documented-range — no documented range", .staleIndexEntry),
+            ("no-input-to-generate: documented-range (defaultOpacity())", .noInputToGenerate),
         ]
     )
     func classifies(detail: String, expected: UnverifiableCause) {
         #expect(UnverifiableCause.classify(detail: detail) == expected)
+    }
+
+    /// `classify` is a plain first-match, so a prefix that began another would steal that
+    /// cause's rows — silently, in whichever order the table lists them.
+    @Test("no cause's prefix is a prefix of another's")
+    func prefixesAreUnambiguous() {
+        let prefixes = UnverifiableCause.prefixes.map(\.0)
+        for (index, prefix) in prefixes.enumerated() {
+            for (otherIndex, other) in prefixes.enumerated() where otherIndex != index {
+                #expect(!other.hasPrefix(prefix), "`\(prefix)` is a prefix of `\(other)`")
+            }
+        }
+    }
+
+    @Test("a deferred composer is its own cause, and its remedy is not a refusal")
+    func deferredComposerIsNotARefusal() {
+        let cause = UnverifiableCause.deferredComposer
+        #expect(UnverifiableCause.prefixes.contains { $0 == ("deferred-composer", cause) })
+        #expect(cause.label != UnverifiableCause.declinedByDesign.label)
+        #expect(cause.remedy.contains("planned"))
+        #expect(cause.remedy.contains("checked-in stub"))
+        #expect(!cause.remedy.contains("by design"))
+        #expect(!cause.remedy.contains("not a missing composer"))
+        #expect(!cause.remedy.contains("static func gen()"))
     }
 
     @Test("an unknown detail is unrecognised, NOT folded into a known cause")
@@ -118,6 +147,23 @@ struct UnverifiableCauseTests {
     }
 
     // MARK: - The producers
+
+    @Test("#701's two refusals write details that classify, not `unrecognised`")
+    func newRefusalsClassify() {
+        // Through `detail(for:)`'s `default` both began "swift-infer verify: …", and `report`
+        // told a reader with a re-index remedy that no category was recorded.
+        let stale = SwiftInferCommand.Verify.detail(for: .staleIndexEntry(
+            template: "documented-range",
+            primary: "progress()",
+            reason: SwiftInferCommand.Verify.documentedRangeMissingReason
+        ))
+        let noInput = SwiftInferCommand.Verify.detail(
+            for: .noInputToGenerate(template: "documented-range", primary: "defaultOpacity()")
+        )
+        #expect(UnverifiableCause.classify(detail: stale) == .staleIndexEntry, "got: \(stale)")
+        #expect(UnverifiableCause.classify(detail: noInput) == .noInputToGenerate, "got: \(noInput)")
+        #expect(UnverifiableCause.staleIndexEntry.remedy.contains("swift-infer index"))
+    }
 
     @Test("the prefixes this reads are the ones the verify path writes")
     func prefixesMatchProducers() throws {

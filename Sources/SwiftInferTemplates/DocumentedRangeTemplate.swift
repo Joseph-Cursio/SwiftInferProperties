@@ -68,8 +68,11 @@ public enum DocumentedRangeTemplate {
               let returnType = summary.returnTypeText, numericCodomains.contains(returnType),
               summary.parameters.allSatisfy({ !$0.isInout }),
               !summary.parameters.isEmpty || summary.containingTypeName != nil,
-              let doc = summary.docComment else { return nil }
-        return statedRange(in: doc)
+              let doc = summary.docComment,
+              let range = statedRange(in: doc) else { return nil }
+        // The codomain rides along so a stub can round the bounds the way the result rounds
+        // (`DocumentedRange.checkedBounds`); prose alone cannot say what type it describes.
+        return DocumentedRange(lower: range.lower, upper: range.upper, resultTypeName: returnType)
     }
 
     private static let number = #"(-?\d+(?:\.\d+)?)"#

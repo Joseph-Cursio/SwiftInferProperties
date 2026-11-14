@@ -187,7 +187,14 @@ orders, and the defect is in what they do not order.
 - **It compares keys, not elements.** A member that keeps a group in arrival order is not
   checked. The first caveat says so.
 - **Not a `verify` composer**, like `sorted-output`: accept writes it and `verify` does not run
-  it.
+  it. **Since #701 verify says so** (`DeliberateVerifyDecline`, cause `deferred-composer`, kept
+  apart from `declined-by-design` so it does not read as a refusal) and records it as DEFERRED,
+  not declined: the oracle needs `SortedOutput.member` and
+  `dictionaryKeyMember`, which the index drops, and of §3's four rows none would reach a verdict
+  today (two `private`, `ImpactReport.from` needs a MainActor hop no verify composer makes,
+  `ruleHotspots` traps on full-range counts first) (falsifier: `composeInputOrderIndependencePass`).
+  `sorted-output` is declined outright: a characterisation law, which verify would re-read from
+  the code it runs against and pass by construction.
 - **Not reported upstream.** The two defects are in this toolchain's sibling repositories, and
   filing them is the owner's call.
 

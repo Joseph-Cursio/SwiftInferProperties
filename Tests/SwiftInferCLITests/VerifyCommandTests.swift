@@ -108,8 +108,13 @@ struct VerifyCommandTests {
     /// the current wording would only check that two copies of it agree. A refusal must name what
     /// would have to be true, which does not go stale, rather than when it will supposedly happen.
     ///
-    /// Every case is enumerated with a representative payload rather than sampled, so a case added
-    /// later cannot slip past — the compiler forces this list to be updated when the enum grows.
+    /// Every case is enumerated with a representative payload rather than sampled. The compiler
+    /// does not check an array literal for coverage — #701 grew the enum by four cases
+    /// (`staleIndexEntry`, `noInputToGenerate`, `declinedByDesign`, `deferredComposer`) and this
+    /// list on `main` held none of them — so the list is held to
+    /// `RefusalFlagVocabularyTests.coversEveryCase`, which checks it
+    /// against `VerifyErrorCase.allCases`; `VerifyError.sampledCase`'s `default`-free `switch` is
+    /// what fails to compile when the enum grows, and forces the new name into that set.
     @Test("no verify refusal dates itself or promises a release")
     func refusalsNameTheGateRatherThanAVersion() {
         let refusals: [VerifyError] = [
@@ -123,9 +128,25 @@ struct VerifyCommandTests {
             .unsupportedTemplate(template: "comparator", expected: ["idempotence"]),
             .unsupportedPair(forward: "encode", supported: ["serialize"]),
             .missingPairedFunction(template: "differential-equivalence", primary: "render"),
+            .staleIndexEntry(template: "emptiness-agreement", primary: "isEmpty()", reason: "no count"),
+            .noInputToGenerate(template: "documented-range", primary: "standard"),
             .monotonicityDomainNotComparable(domain: "Widget"),
+            .carrierNotEquatable(carrier: "Aggregate", template: "inverse-pair"),
+            .declinedByDesign(
+                template: "sorted-output",
+                reason: DeliberateVerifyDecline.reason(forTemplate: "sorted-output") ?? "(no reason recorded)"
+            ),
+            .deferredComposer(
+                template: "input-order-independence",
+                reason: DeliberateVerifyDecline.reason(forTemplate: "input-order-independence")
+                    ?? "(no reason recorded)"
+            ),
             .invalidArguments(reason: "pick one"),
         ]
+        #expect(
+            RefusalFlagVocabularyTests.coversEveryCase(refusals),
+            "\(refusals.map(RefusalFlagVocabularyTests.caseName(of:)))"
+        )
 
         for refusal in refusals {
             let description = String(describing: refusal)

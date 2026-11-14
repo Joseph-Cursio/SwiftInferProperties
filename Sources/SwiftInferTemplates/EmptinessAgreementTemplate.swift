@@ -30,7 +30,15 @@ public enum EmptinessAgreementPairing {
     /// the thing, `isEmpty` / `isNotEmpty` with `count`.
     public static func candidates(in summaries: [FunctionSummary]) -> [EmptinessAgreementPair] {
         let members = summaries.filter(isArgumentFreeMember)
-        let byType = Dictionary(grouping: members) { $0.containingTypeName ?? "" }
+        // Grouped by the QUALIFIED owner: the bare innermost name put `FeatureA.State.hasItems`
+        // and `FeatureB.State.itemCount` in one group, and since #701 verify emits
+        // `value.itemCount` on a drawn `FeatureA.State`, a build failure that reads as an
+        // instrument defect rather than the false pairing it is. Members written in a bare
+        // `extension State` of a nested type now group apart from it; that loses a pair, never
+        // invents one.
+        let byType = Dictionary(grouping: members) {
+            $0.qualifiedContainingTypeName ?? $0.containingTypeName ?? ""
+        }
         var pairs: [EmptinessAgreementPair] = []
         for (type, typeMembers) in byType.sorted(by: { $0.key < $1.key }) where !type.isEmpty {
             let predicates = typeMembers.filter { $0.returnTypeText == "Bool" }

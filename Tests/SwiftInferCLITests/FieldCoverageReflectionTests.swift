@@ -229,6 +229,8 @@ struct FieldCoverageReflectionTests {
                     name: "Carrier", kind: .struct, inheritedTypes: [], hasUserGen: false
                 ),
                 secondaryFunctionName: "denormalize",
+                secondaryMemberShape: .computedProperty,
+                documentedRange: DocumentedRange(lower: "0.0", upper: "1.0"),
                 carrierTypeName: "Carrier",
                 isInstanceMethod: true,
                 isMutatingMethod: true,

@@ -208,6 +208,11 @@ extension StrategistDispatchEmitter {
         inputs: Inputs,
         recipe: GeneratorRecipe
     ) throws -> String {
+        // Checked before the carrier's edge recipe: on the per-parameter path that recipe is
+        // never read, so a non-nil one would label ordinary draws a boundary pass.
+        if let section = try documentedRangeEdgePassSection(inputs: inputs, recipe: recipe) {
+            return section
+        }
         guard let edge = edgeRecipe(from: recipe) else {
             return edgeSentinelSection()
         }

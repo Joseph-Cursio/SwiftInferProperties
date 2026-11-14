@@ -77,6 +77,58 @@ public enum TemplateName: String, Sendable, Equatable, Hashable, CaseIterable, C
     /// `setvbuf(stdout, nil, _IONBF, 0)`.
     case predicate
 
+    /// The **empty range** law — a free or static `f(from: T, to: T)` returning a collection
+    /// selects nothing when both ends are the same value: `f(from: v, to: v).isEmpty`.
+    ///
+    /// **Verifiable since #701, because nothing about the law needs the author.** `accept`
+    /// has written it complete since commit 18f8eb2e, with no placeholder in the law, and it
+    /// passed on SwiftLintRuleStudioCore's `rulesAdded(from:to:)` while killing that file's
+    /// `&&` → `||` mutant. Verify declined it `unsupported-template` only because no composer
+    /// named it: the oracle is `.isEmpty`, which every admitted return type has, so it needs
+    /// no conformance the tool would have to prove, and the index already carries everything
+    /// the call needs (the labels, the owner and `T`).
+    ///
+    /// A refutation is **not necessarily a defect**: the law rests on Swift's convention
+    /// that `to:` is an exclusive end, so a function whose `to:` is meant to be inclusive
+    /// fails it by design. That is a naming finding (`through:` says inclusive), and the
+    /// rendered verdict says so.
+    case emptyRange = "empty-range"
+
+    /// The **emptiness agreement** law — an argument-free `Bool` member and an argument-free
+    /// count on one type agree on one value: `value.p == (value.m > 0)`, or `== 0` when `p` is
+    /// `isEmpty`. The polarity is re-read from the two names (`EmptinessAgreementPairing.polarity`).
+    ///
+    /// **Verifiable since #701, because `accept` already writes the whole law from the two
+    /// evidence rows alone** — no placeholder, and on SwiftLintRuleStudioCore's
+    /// `CompatibilityReport` it killed both `||` → `&&` mutants in `hasIssues` (commit 021196a3).
+    /// The oracle compares a `Bool` with a signed-integer comparison, so it needs no
+    /// conformance the tool would have to prove. What verify lacked was the index: the measure's
+    /// name was dropped, and nothing recorded whether it is a computed property or a nullary
+    /// method — and either guess fails to compile on the other shape. Both are persisted now
+    /// (`secondaryFunctionName`, `secondaryMemberShape`), and an entry indexed before
+    /// that declines as stale rather than guessing.
+    ///
+    /// A refutation is **not necessarily a defect**: the pairing is a naming conjecture, so a
+    /// predicate narrower than its count (`hasUnreadIssues` beside a count of all issues) is
+    /// correct code that fails it. The rendered verdict says so.
+    case emptinessAgreement = "emptiness-agreement"
+
+    /// The **documented range** law — a numeric result whose doc comment states one closed
+    /// range lies in it: `(L...U as ClosedRange<Double>).contains(Double(f(x)))`, checked as a
+    /// `Double` so NaN and infinity fail.
+    ///
+    /// **Verifiable since #701, because the author wrote the oracle down.** `accept` has written
+    /// the law complete since commit 18f8eb2e, with no placeholder, and on SwiftLintRuleStudioCore
+    /// it refuted the unclamped `AnalysisProgress.progress` (4.3 of a documented `0.0 to 1.0`)
+    /// and passed once clamped. Verify lacked only the bounds: discover parsed them from the doc
+    /// comment and the index dropped them. They are persisted now
+    /// (`SemanticIndexEntry.documentedRange`), and an entry indexed before that declines as
+    /// stale rather than guessing.
+    ///
+    /// A refutation is a **disagreement**, and either side may be wrong: the code, or a comment
+    /// that no longer describes it. Inputs the type admits but callers never pass still count.
+    case documentedRange = "documented-range"
+
     // Additional discovery / pack template names — surfaced by discovery and
     // grouped into `TemplatePack`s, but not members of the verifiable set above
     // (they are witnessed or routed differently).

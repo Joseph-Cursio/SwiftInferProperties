@@ -33,6 +33,12 @@ extension StrategistDispatchEmitter {
         case "role-postcondition":
             return composeRolePostconditionPass(inputs: inputs, recipe: recipe)
 
+        case "empty-range":
+            return composeEmptyRangePass(inputs: inputs, recipe: recipe)
+
+        case "emptiness-agreement":
+            return composeEmptinessAgreementPass(inputs: inputs, recipe: recipe)
+
         default:
             return nil
         }

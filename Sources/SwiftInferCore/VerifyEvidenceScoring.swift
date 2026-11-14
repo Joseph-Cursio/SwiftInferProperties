@@ -208,8 +208,22 @@ public enum VerifyEvidenceScoring {
         }
         guard recorded != current else { return nil }
         return "Verify evidence from \(captured) is NOT being applied: it was measured against "
-            + "a DIFFERENT version of this function's body (recorded \(recorded), now "
-            + "\(current)). The law may no longer hold — re-run `swift-infer verify`."
+            + "a DIFFERENT version of \(fingerprintedSubject(template: evidence.template)) "
+            + "(recorded \(recorded), now \(current)). The law may no longer hold — re-run "
+            + "`swift-infer verify`."
+    }
+
+    /// What a mismatched fingerprint can mean for `template`, named in the staleness caveat.
+    ///
+    /// For most templates the fingerprint is the subject's body alone. A `documented-range`
+    /// fingerprint also folds the bounds read from the doc comment (`SubjectFingerprint+LawData`),
+    /// so a mismatch there may be a body edit, a doc-comment edit, or the same comment now read
+    /// differently, and the caveat must not claim the body moved when only the bounds did.
+    static func fingerprintedSubject(template: String) -> String {
+        if template == TemplateName.documentedRange.rawValue {
+            return "this function's body or of the bounds swift-infer reads from its doc comment"
+        }
+        return "this function's body"
     }
 }
 

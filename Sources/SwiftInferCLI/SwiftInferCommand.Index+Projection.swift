@@ -102,12 +102,7 @@ extension SwiftInferCommand.Index {
     ) -> SemanticIndexEntry {
         let evidence = suggestion.evidence.first
         let primaryName = evidence?.displayName ?? "(unknown)"
-        let location: String
-        if let loc = evidence?.location {
-            location = "\(loc)"
-        } else {
-            location = "(unknown)"
-        }
+        let location = evidence.map { "\($0.location)" } ?? "(unknown)"
         // SuggestionIdentity.display = "0x<16-char hex>".
         // DecisionRecord.identityHash = "<16-char hex>" (no 0x prefix).
         // Join on the normalized form.
@@ -120,11 +115,15 @@ extension SwiftInferCommand.Index {
             for: suggestion,
             typeShapesByName: typeShapesByName
         )
-        let secondaryFunctionName = secondaryFunctionName(for: suggestion)
+        let secondary = secondaryHalf(for: suggestion)
         // Hoisted out of the initializer call below rather than inlined: that literal already
         // has ~20 arguments, and SourceKit reports it as unable to type-check in reasonable
         // time once another call joins it. This repo has already shipped a type-check
         // timeout that compiled locally and failed only on CI (`bbd634c`).
+        // BODIES ONLY, deliberately: `SurveyRunDiff` reads this column (through the survey
+        // record) as a body fingerprint. A `documented-range` row's bounds are folded in where
+        // evidence is stamped instead (`SemanticIndexEntry.evidenceFingerprint`), by the same
+        // rule discover checks with (#701, `SubjectFingerprint+LawData.swift`).
         let subjectFingerprint = SubjectFingerprint.forSuggestion(
             evidenceLocations: suggestion.evidence.map(\.location),
             byLocation: fingerprintsByLocation
@@ -144,7 +143,11 @@ extension SwiftInferCommand.Index {
             decision: decisionString,
             decisionAt: decisionAt,
             typeShape: typeShape,
-            secondaryFunctionName: secondaryFunctionName,
+            secondaryFunctionName: secondary.name,
+            secondaryMemberShape: secondary.shape,
+            // #701 — the bounds the doc comment states, which only `DocumentedRangeTemplate`
+            // computes; every other template's match carries none, so this is `nil` there.
+            documentedRange: suggestion.match?.documentedRangeMatch,
             carrierTypeName: suggestion.carrierTypeName,
             isInstanceMethod: evidence?.isInstanceMethod ?? false,
             isMutatingMethod: evidence?.isMutatingMethod ?? false,
@@ -188,15 +191,42 @@ extension SwiftInferCommand.Index {
     /// carrier or a corroborating test, and persisting that as a *function*
     /// name would hand the verify resolver a call expression that does not
     /// exist.
+    ///
+    /// **`emptiness-agreement` joined for #701**, on the same evidence shape:
+    /// `[predicate, measure]` (`EmptinessAgreementTemplate.makeConstraint`). Its verify
+    /// resolver needs the measure's name to state the law at all.
     private static let twoFunctionTemplates: Set<String> = [
         "round-trip",
         "differential-equivalence",
+        TemplateName.emptinessAgreement.rawValue,
     ]
 
     private static func secondaryFunctionName(for suggestion: Suggestion) -> String? {
         guard twoFunctionTemplates.contains(suggestion.templateName) else { return nil }
         guard suggestion.evidence.count >= 2 else { return nil }
         return suggestion.evidence[1].displayName
+    }
+
+    /// Both second-half columns at once, so `buildEntry` spends one line on them, not two —
+    /// it sits at SwiftLint's 50-line body cap.
+    private static func secondaryHalf(
+        for suggestion: Suggestion
+    ) -> (name: String?, shape: MemberAccessShape?) {
+        (secondaryFunctionName(for: suggestion), secondaryMemberShape(for: suggestion))
+    }
+
+    /// #701 — whether the second evidence row is a computed property, for the one template
+    /// whose verify law READS the second half off a value (`value.count` vs `value.count()`).
+    ///
+    /// Only `emptiness-agreement`, and deliberately not every two-function template: the
+    /// round-trip and differential halves are applied as functions, so the flag would be a
+    /// column nothing reads, and writing it would change rows that verify spells the same way
+    /// either way. `nil` therefore means "this template does not need it" on those rows and
+    /// "indexed before the column existed" on an `emptiness-agreement` row.
+    private static func secondaryMemberShape(for suggestion: Suggestion) -> MemberAccessShape? {
+        guard suggestion.templateName == TemplateName.emptinessAgreement.rawValue,
+              suggestion.evidence.count >= 2 else { return nil }
+        return MemberAccessShape(isComputedProperty: suggestion.evidence[1].isComputedProperty)
     }
 
     /// V1.47.C — look up the carrier's TypeShape by bare name (no generic

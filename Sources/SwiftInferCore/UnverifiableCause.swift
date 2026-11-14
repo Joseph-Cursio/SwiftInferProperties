@@ -82,6 +82,37 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
     /// over: a law needing an ordered domain against a carrier that has none.
     case carrierNotEquatable
 
+    /// Verify does not measure this template, by a recorded decision (`DeliberateVerifyDecline`).
+    ///
+    /// **A fourth answer, because `unsupportedTemplate` promised a composer that is not coming**
+    /// (#701). Its remedy says *a gap in swift-infer*, which reads as work queued; for
+    /// `sorted-output` and `marker-dispatch` a composer was weighed and refused — they are
+    /// characterisation laws, and verify re-reads the law from the code it runs against, so a
+    /// pass is by construction and would promote to Verified. The reason is on the row's detail,
+    /// and the remedy points there rather than restating one template's case. A deferral is NOT
+    /// this cause: see `deferredComposer`.
+    case declinedByDesign
+
+    /// Verify does not measure this template yet: a composer is planned
+    /// (`VerifyError.deferredComposer`, #701; today `input-order-independence`).
+    ///
+    /// **Split from `declinedByDesign` because that remedy is a permanent refusal** — *a
+    /// decision, not a missing composer* — and filed there a deferral read as a law verify will
+    /// never measure. The row's detail says what the composer waits on and what ends the wait.
+    case deferredComposer
+
+    /// The index entry predates a column its law needs (`VerifyError.staleIndexEntry`, #701):
+    /// `documented-range`'s bounds or `emptiness-agreement`'s measure shape. Its own cause
+    /// because its remedy is the one no other cause has — re-run `swift-infer index` — and
+    /// filed as `unrecognised` it told the reader nothing could be done.
+    case staleIndexEntry
+
+    /// The subject takes no input, so the law is one value and not a property over a domain
+    /// (`VerifyError.noInputToGenerate`, #701). Permanent like `declinedByDesign`, but kept
+    /// apart because that remedy sends the reader to the accepted stub, and `accept` writes none
+    /// for this shape.
+    case noInputToGenerate
+
     /// The detail did not match any known prefix — or there was none. Reported, never merged.
     case unrecognised
 
@@ -111,6 +142,10 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
         ("instance-method-shape-not-supported", .instanceMethodShape),
         ("monotonicity-domain-not-comparable", .monotonicityDomainNotComparable),
         ("carrier-not-equatable", .carrierNotEquatable),
+        ("declined-by-design", .declinedByDesign),
+        ("deferred-composer", .deferredComposer),
+        ("stale-index-entry", .staleIndexEntry),
+        ("no-input-to-generate", .noInputToGenerate),
     ]
 
     /// Short label for a count breakdown.
@@ -123,6 +158,10 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
         case .instanceMethodShape: "instance-method shape"
         case .monotonicityDomainNotComparable: "domain not ordered"
         case .carrierNotEquatable: "carrier has no equality"
+        case .declinedByDesign: "not measured by verify, by design"
+        case .deferredComposer: "verify composer planned, not built yet"
+        case .staleIndexEntry: "index entry predates its law's data"
+        case .noInputToGenerate: "subject takes no input"
         case .unrecognised: "unrecognised"
         }
     }
@@ -187,6 +226,26 @@ public enum UnverifiableCause: String, Sendable, Equatable, CaseIterable {
                 + "Neither writing a `gen()` nor waiting for swift-infer changes it. Give the "
                 + "type an `Equatable` conformance if equality is meaningful for it, or read "
                 + "the row as the structural observation it is."
+
+        case .declinedByDesign:
+            "verify does not measure this law, for the reason recorded in the row's detail — a "
+                + "decision, not a missing composer. The accepted, checked-in stub is where the "
+                + "law runs; nothing about the subject unblocks it here."
+
+        case .deferredComposer:
+            "a composer for this law is planned and not built yet; the row's detail says what it "
+                + "waits on and what ends the wait. Until it exists, the accepted, checked-in stub "
+                + "runs the law."
+
+        case .staleIndexEntry:
+            "the index entry was written before swift-infer recorded what this law needs, and "
+                + "verify will not guess it. Re-run `swift-infer index` to repopulate it; nothing "
+                + "about the subject needs to change."
+
+        case .noInputToGenerate:
+            "the subject takes no input — a static member with no parameters — so the law is "
+                + "one value, not a property over a domain, and there is nothing to generate. "
+                + "`accept` writes no stub for it either; read the value against its doc comment."
 
         case .instanceMethodShape:
             "the emitter cannot call that instance-method shape — a gap in swift-infer, not "

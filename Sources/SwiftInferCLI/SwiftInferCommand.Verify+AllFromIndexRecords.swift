@@ -28,7 +28,8 @@ extension SwiftInferCommand.Verify {
             outcome: outcome,
             outcomeDetail: detail,
             tier: context.tier,
-            subjectFingerprint: context.subjectFingerprint
+            subjectFingerprint: context.subjectFingerprint,
+            lawDataFingerprint: context.lawDataFingerprint
         )
     }
 
@@ -78,7 +79,8 @@ extension SwiftInferCommand.Verify {
                 outcome: .architecturalCoveragePending,
                 outcomeDetail: detail,
                 tier: context.tier,
-                subjectFingerprint: context.subjectFingerprint
+                subjectFingerprint: context.subjectFingerprint,
+                lawDataFingerprint: context.lawDataFingerprint
             )
         }
         return SurveyRecord(
@@ -89,7 +91,8 @@ extension SwiftInferCommand.Verify {
             outcome: .measuredError,
             outcomeDetail: BuildDiagnostics.surveyDetail(from: buildOutput),
             tier: context.tier,
-            subjectFingerprint: context.subjectFingerprint
+            subjectFingerprint: context.subjectFingerprint,
+            lawDataFingerprint: context.lawDataFingerprint
         )
     }
 
@@ -145,7 +148,8 @@ extension SwiftInferCommand.Verify {
             tier: context.tier,
             counterexample: counterexample,
             shrunkCounterexample: shrunkCounterexample,
-            subjectFingerprint: context.subjectFingerprint
+            subjectFingerprint: context.subjectFingerprint,
+            lawDataFingerprint: context.lawDataFingerprint
         )
     }
 
@@ -167,6 +171,24 @@ extension SwiftInferCommand.Verify {
         case let .carrierNotEquatable(carrier, template):
             return "carrier-not-equatable: \(carrier) (\(template))"
 
+        case let .declinedByDesign(template, reason):
+            // The reason rides on the row: `UnverifiableCause.declinedByDesign`'s remedy points
+            // the reader at it, and the survey stream is read without the binary that wrote it.
+            return "declined-by-design: \(template) — \(reason)"
+
+        case let .deferredComposer(template, reason):
+            // Its own prefix so `report` files a planned composer apart from a refusal.
+            return "deferred-composer: \(template) — \(reason)"
+
+        case let .staleIndexEntry(template, _, reason):
+            // Stable prefixes for #701's two refusals: through `default` they began
+            // "swift-infer verify: …", matched no `UnverifiableCause` prefix, and `report` filed
+            // a re-index remedy and a permanent refusal alike as `unrecognised`.
+            return "stale-index-entry: \(template) — \(reason)"
+
+        case let .noInputToGenerate(template, primary):
+            return "no-input-to-generate: \(template) (\(primary))"
+
         default:
             return error.description
         }
@@ -184,6 +206,9 @@ extension SwiftInferCommand.Verify {
         /// Carried so every survey record — verdict or decline alike — can stamp the
         /// persisted evidence with the body it was measured against.
         let subjectFingerprint: String?
+        /// The body fingerprint folded with a `documented-range` row's bounds, or `nil` on every
+        /// row whose law has no data outside its bodies. See `SurveyRecord.lawDataFingerprint`.
+        let lawDataFingerprint: String?
     }
 
     static func recordContext(for entry: SemanticIndexEntry) -> RecordContext {
@@ -193,7 +218,8 @@ extension SwiftInferCommand.Verify {
             primaryFunctionName: entry.primaryFunctionName,
             carrier: entry.typeName,
             tier: entry.tier,
-            subjectFingerprint: entry.subjectFingerprint
+            subjectFingerprint: entry.subjectFingerprint,
+            lawDataFingerprint: entry.documentedRange == nil ? nil : entry.evidenceFingerprint
         )
     }
 

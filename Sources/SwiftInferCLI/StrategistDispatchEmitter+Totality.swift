@@ -24,6 +24,9 @@ extension StrategistDispatchEmitter {
         /// What gets printed as `VERIFY_TRIAL_INPUT`, and what is passed to the call.
         let inputExpression: String
         let argumentList: String
+        /// How many parameter recipes `leafRecipe` replaced; 0 on the single-carrier path, where
+        /// the caller's own recipe is used verbatim.
+        var substitutedLeafCount = 0
     }
 
     /// The types a totality call actually needs a value for — **including the receiver**.
@@ -54,6 +57,13 @@ extension StrategistDispatchEmitter {
         inputs.parameterCount + (inputs.receiverTypeName == nil ? 0 : 1)
     }
 
+    /// Whether `totalityOperands` takes the per-parameter path for `inputs` — the same condition
+    /// as its guard, named so a caller can tell when the recipe it passes will be ignored.
+    static func usesPerParameterOperands(_ inputs: Inputs) -> Bool {
+        let count = effectiveParameterTypes(of: inputs).count
+        return count > 1 && count == expectedArity(of: inputs)
+    }
+
     /// Resolve one generator per parameter type.
     ///
     /// **Falls back to the single-carrier form whenever the signature is not fully recorded.**
@@ -61,9 +71,14 @@ extension StrategistDispatchEmitter {
     /// `parameterCount` means labels and types were derived from different places — in either
     /// case the honest move is the old behaviour, which fails to compile with a message naming the
     /// missing argument, rather than a guessed generator that fails somewhere less legible.
+    ///
+    /// `leafRecipe` may replace a parameter's resolved recipe (`documented-range`'s edge pass
+    /// swaps in `edgeRecipe(from:)`); `nil` keeps it. It is never consulted on the single-carrier
+    /// path, where `recipe` is already whatever the caller wanted drawn.
     static func totalityOperands(
         inputs: Inputs,
-        recipe: GeneratorRecipe
+        recipe: GeneratorRecipe,
+        leafRecipe: (GeneratorRecipe) -> GeneratorRecipe? = { _ in nil }
     ) throws -> TotalityOperands {
         let types = effectiveParameterTypes(of: inputs)
         // The SAME whole-module resolver `emit` builds for the carrier. Omitting it was a real
@@ -75,7 +90,7 @@ extension StrategistDispatchEmitter {
             ? nil
             : GeneratorResolver(types: inputs.allShapes.values.map { $0.toKitShape() })
         let resolve = syntaxAwareResolve(resolver?.customTypeGenerator ?? { _ in nil })
-        guard types.count > 1, types.count == expectedArity(of: inputs) else {
+        guard usesPerParameterOperands(inputs) else {
             return TotalityOperands(
                 declarations: """
                 let defaultGenerator: Generator<\(recipe.carrierTypeName), some SendableSequenceType> =
@@ -90,6 +105,7 @@ extension StrategistDispatchEmitter {
         var declarations: [String] = []
         var draws: [String] = []
         var names: [String] = []
+        var substituted = 0
         for (offset, typeText) in types.enumerated() {
             // Each parameter is resolved on its own, through the same path the carrier took.
             // A parameter the strategist cannot derive throws here and the whole entry declines —
@@ -111,12 +127,15 @@ extension StrategistDispatchEmitter {
             // `TypeDecl.qualifiedName`, so a bare lookup MISSES every nested type and the
             // strategist then derives without a shape. The bare fallback keeps the previous
             // behaviour for everything the qualifier leaves alone.
-            let parameterRecipe = try resolveRecipe(
+            let resolvedRecipe = try resolveRecipe(
                 carrier: qualifiedTypeText,
                 typeShape: inputs.allShapes[qualifiedTypeText]
                     ?? inputs.allShapes[RoundTripPairResolver.bareTypeName(from: typeText)],
                 resolve: resolve
             )
+            let replacement = leafRecipe(resolvedRecipe)
+            if replacement != nil { substituted += 1 }
+            let parameterRecipe = replacement ?? resolvedRecipe
             let name = "candidate\(offset)"
             names.append(name)
             declarations.append("""
@@ -131,7 +150,8 @@ extension StrategistDispatchEmitter {
             // Printed as a tuple so one marker still names the whole counterexample — the parser
             // reads one `VERIFY_TRIAL_INPUT` line and must not have to know the arity.
             inputExpression: "(\(names.joined(separator: ", ")))",
-            argumentList: names.joined(separator: ", ")
+            argumentList: names.joined(separator: ", "),
+            substitutedLeafCount: substituted
         )
     }
 }

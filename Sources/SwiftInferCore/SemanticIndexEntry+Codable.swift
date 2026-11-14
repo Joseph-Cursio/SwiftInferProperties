@@ -27,6 +27,8 @@ extension SemanticIndexEntry {
         case lastSeenAt
         case typeShape
         case secondaryFunctionName
+        case secondaryMemberShape
+        case documentedRange
         case carrierTypeName
         case isInstanceMethod
         case isMutatingMethod
@@ -56,6 +58,16 @@ extension SemanticIndexEntry {
         self.typeShape = try container.decodeIfPresent(IndexedTypeShape.self, forKey: .typeShape)
         self.secondaryFunctionName = try container.decodeIfPresent(
             String.self, forKey: .secondaryFunctionName
+        )
+        // Added for #701. Absent on any earlier index → `nil`, which verify reads as "not
+        // recorded" and declines an `emptiness-agreement` entry as stale rather than guessing.
+        self.secondaryMemberShape = try container.decodeIfPresent(
+            MemberAccessShape.self, forKey: .secondaryMemberShape
+        )
+        // Added for #701, and read the same way: absent → `nil` → a `documented-range` entry
+        // declines as stale.
+        self.documentedRange = try container.decodeIfPresent(
+            DocumentedRange.self, forKey: .documentedRange
         )
         self.carrierTypeName = try container.decodeIfPresent(String.self, forKey: .carrierTypeName)
         self.isInstanceMethod =
@@ -120,5 +132,11 @@ extension SemanticIndexEntry {
         try container.encode(qualifiedTypeName, forKey: .qualifiedTypeName)
         try container.encode(structuralBlocker, forKey: .structuralBlocker)
         try container.encode(subjectFingerprint, forKey: .subjectFingerprint)
+        // Unconditional, for the reason the three above are: back-compat lives on the decoder,
+        // and `FieldCoverageReflectionTests` rejects a stored property that can miss the encoded
+        // form. Each is null except on its own template's rows: `secondaryMemberShape` on
+        // `emptiness-agreement` rows, `documentedRange` on `documented-range` rows.
+        try container.encode(secondaryMemberShape, forKey: .secondaryMemberShape)
+        try container.encode(documentedRange, forKey: .documentedRange)
     }
 }

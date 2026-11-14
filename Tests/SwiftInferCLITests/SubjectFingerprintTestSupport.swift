@@ -19,7 +19,7 @@ import Foundation
 func subjectFingerprint(of suggestion: Suggestion, in directory: URL) throws -> String? {
     let summaries = try FunctionScanner.scan(directory: directory)
     return SubjectFingerprint.forSuggestion(
-        evidenceLocations: suggestion.evidence.map(\.location),
+        suggestion,
         byLocation: SubjectFingerprint.byLocation(summaries)
     )
 }

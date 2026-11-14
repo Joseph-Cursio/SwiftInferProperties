@@ -21,7 +21,11 @@ public extension LiftedTestEmitter {
             : isTuple ? tupleBinding(argumentTypes: argumentTypes, count: generators.count) : "value"
         let drawn = generators.isEmpty ? []
             : isTuple ? generators.indices.map { "args.\($0)" } : ["value"]
-        let bounds = "(\(range.lower)...\(range.upper) as ClosedRange<Double>)"
+        // `checkedBounds`, not the raw literals: a `Float` result is compared with bounds rounded
+        // through `Float`, in step with verify's `composeDocumentedRangePass` (#701). Spaced, as
+        // there: `-10...-1` lexes `...-` as one operator, so a negative upper bound did not compile.
+        let checked = range.checkedBounds
+        let bounds = "(\(checked.lower) ... \(checked.upper) as ClosedRange<Double>)"
         // No `return`: the body is one expression, and SwiftLint's `implicit_return` flags the
         // spelled-out form in the emitted closure.
         let body = "\(bounds).contains(Double(\(callee.call(drawn))))"

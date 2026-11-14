@@ -284,6 +284,9 @@ public extension SwiftInferCommand {
                 return (.obsolete, "identity hash no longer surfaces in current source")
             } catch let VerifyError.unsupportedTemplate(template, _) {
                 return (.error, "unsupported template '\(template)'")
+            } catch let error as VerifyError where recordedDecisionDetail(for: error) != nil {
+                // A decline or a deferral `DeliberateVerifyDecline` recorded; see the helper.
+                return (.error, recordedDecisionDetail(for: error))
             } catch let VerifyError.unsupportedCarrier(carrier, _) {
                 return (.error, "unsupported carrier '\(carrier)'")
             } catch let VerifyError.unsupportedPair(forward, _) {

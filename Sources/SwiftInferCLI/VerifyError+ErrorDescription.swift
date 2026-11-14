@@ -82,6 +82,18 @@ public extension VerifyError {
                 + "index persisted second-half names for round-trip only before 2026-08-08. "
                 + "Re-run `swift-infer index` to repopulate the entry."
 
+        case let .staleIndexEntry(template, primary, reason):
+            return "swift-infer verify: the '\(template)' entry for '\(primary)' was indexed "
+                + "without what its law needs: \(reason). Verify will not guess it, because a "
+                + "guess emits a call that may not compile. Re-run `swift-infer index` to "
+                + "repopulate the entry."
+
+        case let .noInputToGenerate(template, primary):
+            return "swift-infer verify: '\(primary)' takes no input — a static member with no "
+                + "parameters — so the '\(template)' law has nothing to generate: it is one "
+                + "value, not a property over a domain. `accept` declines it for the same reason. "
+                + "Read the value against its doc comment directly."
+
         case let .invalidArguments(reason):
             return "swift-infer verify: \(reason)"
 
@@ -93,6 +105,16 @@ public extension VerifyError {
                 + "only for non-Equatable carriers by design, since `round-trip` covers the "
                 + "Equatable case. Add an `Equatable` conformance if equality is meaningful "
                 + "for this type, or read the suggestion as a structural observation."
+
+        case let .declinedByDesign(template, reason):
+            return "swift-infer verify: '\(template)' is not measured by verify, by design: "
+                + "\(reason). This is a decision, not a missing composer; the law runs where "
+                + "`accept` wrote it."
+
+        case let .deferredComposer(template, reason):
+            return "swift-infer verify: '\(template)' is not measured by verify yet — a composer "
+                + "is planned, and it waits on this: \(reason). Until then the accepted, "
+                + "checked-in stub runs the law."
 
         case let .monotonicityDomainNotComparable(domain):
             return "swift-infer verify: monotonicity domain '\(domain)' is not Comparable, so "

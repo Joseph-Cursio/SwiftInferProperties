@@ -99,6 +99,12 @@ public extension StrategistDispatchEmitter {
         /// trampoline and has no receiver argument.
         public let receiverTypeName: String?
 
+        /// #701 — the closed range a `documented-range` entry's doc comment states, from
+        /// `SemanticIndexEntry.documentedRange`. `nil` for every other template; `nil` for a
+        /// `documented-range` entry means the index predates the column, and the composer
+        /// refuses rather than emit a check with no bounds.
+        public let documentedRange: DocumentedRange?
+
         public init(
             carrier: String,
             typeShape: IndexedTypeShape?,
@@ -116,7 +122,8 @@ public extension StrategistDispatchEmitter {
             isComputedProperty: Bool = false,
             parameterCount: Int = 0,
             parameterTypeNames: [String] = [],
-            receiverTypeName: String? = nil
+            receiverTypeName: String? = nil,
+            documentedRange: DocumentedRange? = nil
         ) {
             self.carrier = carrier
             self.typeShape = typeShape
@@ -135,6 +142,7 @@ public extension StrategistDispatchEmitter {
             self.parameterCount = parameterCount
             self.parameterTypeNames = parameterTypeNames
             self.receiverTypeName = receiverTypeName
+            self.documentedRange = documentedRange
         }
     }
 }
