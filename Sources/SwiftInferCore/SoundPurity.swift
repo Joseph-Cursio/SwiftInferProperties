@@ -143,6 +143,39 @@ public struct SoundPurity: Sendable {
         return inferrer.verdict(for: function)
     }
 
+    /// The trap that is the **only** thing refuting `function`, or `nil`.
+    ///
+    /// A `.refuted` verdict collapses two different findings: the body does something (I/O,
+    /// the clock, a write), or the body can trap. The impure-subject veto exists for the first
+    /// and is wrong for the second under `input-totality`, whose whole claim is *no trap* — a
+    /// visible one is the strongest static sign that law can fail, not a reason to withhold it.
+    /// This separates them without a second copy of SEI's refuters.
+    ///
+    /// **Sound only because of the order SEI checks in, and each clause closes a refuter the
+    /// single witness could hide:**
+    /// - SEI reports its *first* witness, and runs every body marker, file read,
+    ///   nondeterminism source and construction **before** the trap scan, so a
+    ///   `.partiality` witness means none of those fired.
+    /// - It checks default arguments **after** the body, so a trap could hide a refuting
+    ///   default. Any parameter with a default answers `nil` here rather than re-asking: an
+    ///   under-claim keeps the veto, which is the safe direction.
+    /// - `ReducerPurityAnalyzer` is the other half of the meet and names no witness, so it must
+    ///   independently say `.pure`.
+    ///
+    /// What this cannot see is a callee settled impure elsewhere in the package. That is
+    /// `PackagePurityJoin.refutingNames`, which the veto checks beside this.
+    ///
+    /// The scanner asks only of a `.refuted` function — no other can have a sole trap — so this
+    /// second walk stays off the common path.
+    public func soleTrap(of function: FunctionDeclSyntax) -> PurityRefutation.Partiality? {
+        let hasDefault = function.signature.parameterClause.parameters.contains { $0.defaultValue != nil }
+        guard !hasDefault, ReducerPurityAnalyzer.analyze(function) == .pure,
+              case .partiality(let trap) = inferrer.refutation(for: function) else {
+            return nil
+        }
+        return trap
+    }
+
     /// The same verdict for a **read-only computed property's getter**, which
     /// the templates model as a nullary `self -> T` map.
     ///

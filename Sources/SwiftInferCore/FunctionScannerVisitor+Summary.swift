@@ -106,6 +106,7 @@ extension FunctionScannerVisitor {
             docComment: docComment,
             declaredEffect: claims.declared,
             purityVerdict: purityVerdict,
+            soleTrap: purityVerdict == .refuted ? purity.soleTrap(of: node) : nil,
             bodyFingerprint: bodyFingerprint,
             globalActor: resolvedGlobalActor(of: node),
             declaresNonisolated: Self.declaresNonisolated(node.modifiers),

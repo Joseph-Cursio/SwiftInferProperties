@@ -142,7 +142,9 @@ visible trap is the strongest static sign that the totality law can fail. The la
 on exactly the subjects it is most likely to refute, and silently, because a vetoed row is not
 printed. `purity-veto-precision.md` priced `input-totality` removals together with every other
 template's, without separating trap witnesses from side-effect witnesses. Not fixed here; the
-fix needs its own A/B over the manifest corpora.
+fix needs its own A/B over the manifest corpora. **Fixed since, with that A/B:**
+`totality-trap-exemption.md` (2026-11-21), where 14 `input-totality` rows are restored, `tokenize(_:)`
+among them, and no other template moves.
 
 ## 6. What would reopen it
 

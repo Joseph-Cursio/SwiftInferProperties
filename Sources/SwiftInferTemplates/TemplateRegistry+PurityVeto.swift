@@ -1,3 +1,4 @@
+import SwiftEffectInference
 import SwiftInferCore
 
 /// The impure-subject veto: withhold a law whose subject this analyzer judges impure
@@ -59,13 +60,20 @@ public extension TemplateRegistry {
         let summaryAt = Dictionary(summaries.map { ($0.location, $0) }) { first, _ in first }
 
         return suggestions.map { suggestion in
+            var trapsOnly: [(FunctionSummary, PurityRefutation.Partiality)] = []
             let impure = suggestion.evidence.compactMap { row -> FunctionSummary? in
                 guard let summary = summaryAt[row.location],
                       isImpureWithWitness(summary, refutingNames: refutingNames)
                 else { return nil }
+                if suggestion.templateName == Self.totalityTemplateName,
+                   let trap = summary.soleTrap,
+                   !summary.calledFreeFunctionNames.contains(where: refutingNames.contains) {
+                    trapsOnly.append((summary, trap))
+                    return nil
+                }
                 return summary
             }
-            guard !impure.isEmpty else { return suggestion }
+            guard !impure.isEmpty else { return trapsOnly.isEmpty ? suggestion : trapNoted(suggestion, trapsOnly) }
             return vetoed(suggestion, on: impure)
         }
     }
@@ -125,6 +133,34 @@ public extension TemplateRegistry {
         let base = displayName.prefix { $0 != "(" }
         guard let first = base.first, first.isLetter || first == "_" else { return String(base) }
         return String(base.split(separator: ".").last ?? base[...])
+    }
+
+    /// The one template a trap witness does not veto: `input-totality` claims *no input traps*,
+    /// so a trap the body visibly holds is evidence FOR stating the law, not against running it.
+    ///
+    /// Measured before the exemption (`docs/measurements/totality-trap-exemption.md`): every
+    /// non-throwing parser holding an `assert`, a `precondition`, a `fatalError` or a `!` lost its
+    /// `input-totality` row to this veto, silently — SwiftFormat's `tokenize(_:)`, six
+    /// `assert`s, among them. Every other template keeps the veto on a trap: their laws are not
+    /// about traps, and a trap there is a precondition the generator does not know.
+    static let totalityTemplateName = "input-totality"
+
+    /// The exempted suggestion, saying which trap it rests on — a withheld veto is as much a
+    /// decision as an applied one, and the reader deserves the line that reads the body.
+    private static func trapNoted(
+        _ suggestion: Suggestion,
+        _ traps: [(FunctionSummary, PurityRefutation.Partiality)]
+    ) -> Suggestion {
+        let lines = traps.map { summary, trap in
+            "`\(summary.name)` can trap (\(trap)) — the case this law exists to catch, so it is "
+                + "stated rather than withheld as impure"
+        }
+        var updated = suggestion
+        updated.explainability = ExplainabilityBlock(
+            whySuggested: suggestion.explainability.whySuggested + lines,
+            whyMightBeWrong: suggestion.explainability.whyMightBeWrong
+        )
+        return updated
     }
 
     private static func vetoed(_ suggestion: Suggestion, on impure: [FunctionSummary]) -> Suggestion {
