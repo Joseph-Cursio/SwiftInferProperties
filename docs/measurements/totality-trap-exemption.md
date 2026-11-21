@@ -98,6 +98,9 @@ Each body was read for where its trap sits. None was run.
 
 **7 of 14** is the yield. The 2 `==` rows are the template's gate admitting an operator; the veto
 masked that until now. It is recorded here, not fixed: it is a separate change, with its own A/B.
+**Filed as #733**, with a census of the whole byte route. Operators are 4 of its 164 rows, and 7
+more name an `unchecked` precondition. SwiftSoup, whose house string type is `[UInt8]`, supplies
+114.
 
 ## 4. What this does not claim
 
