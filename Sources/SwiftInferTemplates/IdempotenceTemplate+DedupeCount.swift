@@ -18,12 +18,13 @@ extension IdempotenceTemplate {
             "a `Set` local, and an element reaches the result only through a successful insert"
 
         case .dictionary:
-            "a dictionary local written once per key, every skip guarded by a read of that key, "
-                + "and a return of its values"
+            "a dictionary local written `d[k] = x` for each element it keeps, every skip taken only "
+                + "when the element's key already has an entry, and a return of its values"
         }
         let equality = body.keepsFirst
             ? "Keep-first, so C2 is stated as equality: `f(value + value) == f(value)`."
-            : "Its result is in hash order, so C2 compares counts only."
+            : "Its result is in hash order, so C2 compares counts only, and the stub states idempotence "
+                + "without order too."
         return [
             "The body keeps one element per key: \(route). So the accepted stub also checks two count "
                 + "laws idempotence cannot see (#671): C1, a singleton survives "

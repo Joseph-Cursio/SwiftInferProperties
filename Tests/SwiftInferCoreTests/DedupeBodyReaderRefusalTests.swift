@@ -19,7 +19,8 @@ struct DedupeBodyReaderRefusalTests {
         return DedupeBodyReader.reading(of: function)
     }
 
-    /// A correct Set-route body over `[Int]`, with `extra` spliced in at the top of the loop.
+    /// A correct Set-route body over `[Int]` named `name`, with `loopPrefix` spliced in at the top of
+    /// the loop and `afterLoop` between the loop and the return.
     private static func setLoop(name: String = "dedupe", loopPrefix: String = "", afterLoop: String = "") -> String {
         """
         func \(name)(_ xs: [Int]) -> [Int] {

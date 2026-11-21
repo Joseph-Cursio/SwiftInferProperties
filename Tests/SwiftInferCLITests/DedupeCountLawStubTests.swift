@@ -38,7 +38,8 @@ struct DedupeCountLawStubTests {
             "value.allSatisfy { element in Extractor.dedupe(relationships: [element]).count == 1 }"
         ))
         #expect(stub.contains(
-            "Extractor.dedupe(relationships: value + value) == Extractor.dedupe(relationships: value)"
+            "let doubled = Extractor.dedupe(relationships: value + value); "
+                + "let once = Extractor.dedupe(relationships: value); return doubled == once"
         ))
         let seeds = stub.split(separator: "\n").filter { $0.contains("stateA:") }
         #expect(seeds.count == 3 && Set(seeds).count == 1, "one seed across the three laws")
@@ -57,10 +58,30 @@ struct DedupeCountLawStubTests {
             }
         }
         """)
-        #expect(stub.contains(
-            "Universe.deduplicated(value + value).count == Universe.deduplicated(value).count"
-        ))
-        #expect(!stub.contains("Universe.deduplicated(value + value) == "))
+        #expect(stub.contains("let doubled = Universe.deduplicated(value + value)"))
+        #expect(stub.contains("return doubled.count == once.count"))
+        #expect(!stub.contains("return doubled == once"))
+        // Idempotence on this route is stated without order, too: strict `==` fails correct code.
+        #expect(stub.contains("let twice = Universe.deduplicated(once)"))
+        #expect(stub.contains("twice.allSatisfy { element in once.contains(element) }"))
+        #expect(!stub.contains("Universe.deduplicated(Universe.deduplicated(value)) =="))
+    }
+
+    @Test("an actor's callee gets C1 and C2 with each call awaited, not silently dropped")
+    func actorCallee() throws {
+        let laws = LiftedTestEmitter.dedupeCountLaws(
+            callee: CalleeReference(
+                bareName: "dedupe", qualifier: "Uniq()", isolation: CalleeReference.actorReceiverIsolation
+            ),
+            typeName: "[Int]",
+            seed: SamplingSeed.derive(from: SuggestionIdentity(canonicalInput: "actor")),
+            generator: "Gen<Int>.int().array(of: 0...8)",
+            keepsFirst: true
+        )
+        #expect(laws.contains("for element in value { if await Uniq().dedupe([element]).count != 1"))
+        #expect(laws.contains("let doubled = await Uniq().dedupe(value + value)"))
+        #expect(laws.contains("let once = await Uniq().dedupe(value)"))
+        #expect(laws.contains("return doubled == once"))
     }
 
     @Test("a dedupe the gate refuses gets today's stub: idempotence alone")

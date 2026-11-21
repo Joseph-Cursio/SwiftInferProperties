@@ -99,6 +99,7 @@ extension DedupeBodyReader {
                 } else {
                     return .refused(Refusal.otherSkip)
                 }
+                guard isClean(clause) else { return .refused(Refusal.unread) }
             }
             for item in loop.body.statements.map(\.item) {
                 if let refusal = step(item, &progress) { return .refused(refusal) }
@@ -111,32 +112,41 @@ extension DedupeBodyReader {
 
         /// One loop statement; the refusal, or `nil` when it is allowed.
         private func step(_ item: CodeBlockItemSyntax.Item, _ progress: inout SetLoopProgress) -> String? {
-            if isLet(item) { return nil }
+            if let refusal = letRefusal(item) { return refusal.isEmpty ? nil : refusal }
             if isAppend(item) {
                 guard progress.guarded || progress.pendingKey != nil else { return Refusal.appendNotBehindInsert }
+                // One append per element: a second would make `f([x]).count == 2`, and C1 false.
+                guard !progress.appended else { return Refusal.unread }
                 progress.appended = true
                 return nil
             }
-            if let key = progress.pendingKey, insertKey(item) == key {
+            if let key = progress.pendingKey, insertKey(item) == key, isClean(item) {
                 progress.inserted = true
                 return nil
             }
             if let guardStatement = item.as(GuardStmtSyntax.self) {
-                if let condition = DedupeBodyReader.singleCondition(guardStatement.conditions),
-                   DedupeBodyReader.insertedKey(condition, set: set) != nil,
-                   DedupeBodyReader.isContinueOnly(guardStatement.body) {
-                    progress.guarded = true
-                    return nil
-                }
-                return DedupeBodyReader.appends(to: array, in: guardStatement)
-                    ? Refusal.appendNotBehindInsert : Refusal.otherSkip
+                return readGuard(guardStatement, &progress)
             }
             if let branch = DedupeBodyReader.ifExpression(item), let verdict = readBranch(branch) {
-                if verdict == nil { progress.appended = true }
-                return verdict
+                guard verdict == nil else { return verdict }
+                guard !progress.appended else { return Refusal.unread }
+                progress.appended = true
+                return nil
             }
             if DedupeBodyReader.appends(to: array, in: item) { return Refusal.appendNotBehindInsert }
             return DedupeBodyReader.skips(item) ? Refusal.otherSkip : Refusal.unread
+        }
+
+        /// `guard s.insert(k).inserted else { continue }`, which guards every later statement.
+        private func readGuard(_ statement: GuardStmtSyntax, _ progress: inout SetLoopProgress) -> String? {
+            if let condition = DedupeBodyReader.singleCondition(statement.conditions),
+               isClean(condition), DedupeBodyReader.insertedKey(condition, set: set) != nil,
+               DedupeBodyReader.isContinueOnly(statement.body) {
+                progress.guarded = true
+                return nil
+            }
+            let appended = DedupeBodyReader.appends(to: array, in: statement)
+            return appended ? Refusal.appendNotBehindInsert : Refusal.otherSkip
         }
 
         /// `if s.insert(k).inserted { … }` or `if !s.contains(k) { s.insert(k); … }`, with no
@@ -145,6 +155,7 @@ extension DedupeBodyReader {
         private func readBranch(_ branch: IfExprSyntax) -> String?? {
             guard branch.elseBody == nil,
                   let condition = DedupeBodyReader.singleCondition(branch.conditions) else { return nil }
+            guard isClean(condition) else { return .some(Refusal.unread) }
             var pendingKey: String?
             if DedupeBodyReader.insertedKey(condition, set: set) == nil {
                 guard let key = DedupeBodyReader.absentKey(condition, set: set) else { return nil }
@@ -153,10 +164,13 @@ extension DedupeBodyReader {
             var inserted = pendingKey == nil
             var appended = false
             for item in branch.body.statements.map(\.item) {
-                if isLet(item) { continue }
-                if let key = pendingKey, insertKey(item) == key {
+                if let refusal = letRefusal(item) {
+                    if refusal.isEmpty { continue }
+                    return .some(refusal)
+                }
+                if let key = pendingKey, insertKey(item) == key, isClean(item) {
                     inserted = true
-                } else if isAppend(item) {
+                } else if isAppend(item), !appended {
                     appended = true
                 } else {
                     return .some(Refusal.unread)
@@ -165,8 +179,24 @@ extension DedupeBodyReader {
             return appended && inserted ? .some(nil) : .some(Refusal.unread)
         }
 
-        private func isLet(_ item: CodeBlockItemSyntax.Item) -> Bool {
-            item.as(VariableDeclSyntax.self)?.bindingSpecifier.tokenKind == .keyword(.let)
+        /// For a `let`: `""` when it is inert (a key's computation), a refusal when it touches the set
+        /// or the result. `nil` when the item is not a `let`.
+        ///
+        /// A `let` is read, not waved through: `let _ = seen.insert(x)` pre-inserts a key and
+        /// `let _ = result.append(x)` appends outside any insert. Either makes C1 or C2 false of the
+        /// function as written.
+        private func letRefusal(_ item: CodeBlockItemSyntax.Item) -> String? {
+            guard let decl = item.as(VariableDeclSyntax.self), decl.bindingSpecifier.tokenKind == .keyword(.let) else {
+                return nil
+            }
+            if DedupeBodyReader.appends(to: array, in: decl) { return Refusal.appendNotBehindInsert }
+            return DedupeBodyReader.mentions([set, array], in: decl) ? Refusal.unread : ""
+        }
+
+        /// An insert or `contains` that names the set once, as its receiver, and never the result: a
+        /// key computed from `seen` or from `result` is not a key of the element.
+        private func isClean(_ node: some SyntaxProtocol) -> Bool {
+            DedupeBodyReader.occurrences(of: set, in: node) == 1 && !DedupeBodyReader.mentions([array], in: node)
         }
 
         /// `r.append(x)`, with `x` the loop variable.
@@ -191,11 +221,14 @@ extension DedupeBodyReader {
             var writtenKeys: Set<String> = []
             var readKeys: Set<String> = []
             for item in loop.body.statements.map(\.item) {
-                if item.as(VariableDeclSyntax.self)?.bindingSpecifier.tokenKind == .keyword(.let) { continue }
-                if let key = writeKey(item) {
+                if let decl = item.as(VariableDeclSyntax.self), decl.bindingSpecifier.tokenKind == .keyword(.let) {
+                    guard !DedupeBodyReader.mentions([dictionary], in: decl) else { return .refused(Refusal.unread) }
+                    continue
+                }
+                if let key = writeKey(item), DedupeBodyReader.occurrences(of: dictionary, in: item) == 1 {
                     writtenKeys.insert(key)
-                } else if let keys = guardedSkipKeys(item) {
-                    readKeys.formUnion(keys)
+                } else if let key = presenceSkipKey(item) {
+                    readKeys.insert(key)
                 } else {
                     return .refused(DedupeBodyReader.skips(item) ? Refusal.otherSkip : Refusal.unread)
                 }
@@ -208,31 +241,52 @@ extension DedupeBodyReader {
 
         /// The key of `d[k] = x`, with `x` the loop variable, at the loop's top level.
         private func writeKey(_ item: CodeBlockItemSyntax.Item) -> String? {
-            guard let expression = item.as(ExprSyntax.self) else { return nil }
-            let parts: [ExprSyntax]
-            if let infix = expression.as(InfixOperatorExprSyntax.self) {
-                parts = [infix.leftOperand, infix.operator, infix.rightOperand]
-            } else if let sequence = expression.as(SequenceExprSyntax.self) {
-                parts = Array(sequence.elements)
-            } else {
-                return nil
-            }
-            guard parts.count == 3, parts[1].is(AssignmentExprSyntax.self),
+            guard let expression = item.as(ExprSyntax.self),
+                  let parts = DedupeBodyReader.binaryParts(expression), parts.count == 3,
+                  parts[1].is(AssignmentExprSyntax.self),
                   parts[2].trimmedDescription == element else { return nil }
             return subscriptKey(parts[0])
         }
 
-        /// The keys `d[k]` read in the condition of `if … { continue }`, which must read at least one.
-        private func guardedSkipKeys(_ item: CodeBlockItemSyntax.Item) -> Set<String>? {
+        /// The key of `if <d[k] is present>, … { continue }`, or `nil` for any other statement.
+        ///
+        /// The first condition must be a presence test on one key, `let v = d[k]` or `d[k] != nil`,
+        /// and the others may only narrow it: they are conjuncts, and none may name `d`. So the skip
+        /// fires only where the key already has an entry. Merely *mentioning* `d[k]` is not enough:
+        /// `d[k] != nil || x < 0` and `x < 0, d[k] == nil` also filter, and C1 is false of a filter.
+        private func presenceSkipKey(_ item: CodeBlockItemSyntax.Item) -> String? {
             guard let branch = DedupeBodyReader.ifExpression(item), branch.elseBody == nil,
-                  DedupeBodyReader.isContinueOnly(branch.body) else {
+                  DedupeBodyReader.isContinueOnly(branch.body),
+                  let first = branch.conditions.first, let key = presenceKey(first.condition),
+                  DedupeBodyReader.occurrences(of: dictionary, in: first) == 1,
+                  !narrowingNamesDictionary(branch.conditions) else {
                 return nil
             }
-            let subscripts = branch.conditions.tokens(viewMode: .sourceAccurate).compactMap { token in
-                token.parent?.as(DeclReferenceExprSyntax.self)?.parent?.as(SubscriptCallExprSyntax.self)
+            return key
+        }
+
+        /// Whether a condition after the first names `d`: a conjunct may narrow the skip, not consult `d`.
+        private func narrowingNamesDictionary(_ conditions: ConditionElementListSyntax) -> Bool {
+            conditions.dropFirst().contains { DedupeBodyReader.mentions([dictionary], in: $0) }
+        }
+
+        /// The key of `let v = d[k]` or `d[k] != nil`.
+        private func presenceKey(_ condition: ConditionElementSyntax.Condition) -> String? {
+            switch condition {
+            case .optionalBinding(let binding):
+                return binding.initializer.flatMap { subscriptKey($0.value) }
+
+            case .expression(let expression):
+                guard let parts = DedupeBodyReader.binaryParts(expression), parts.count == 3,
+                      parts[1].as(BinaryOperatorExprSyntax.self)?.operator.text == "!=",
+                      parts[2].is(NilLiteralExprSyntax.self) else {
+                    return nil
+                }
+                return subscriptKey(parts[0])
+
+            default:
+                return nil
             }
-            let keys = Set(subscripts.compactMap(subscriptKey))
-            return keys.isEmpty ? nil : keys
         }
 
         /// The key text of `d[k]`, or `nil` when `expression` subscripts anything else.
@@ -244,6 +298,28 @@ extension DedupeBodyReader {
             }
             return only.expression.trimmedDescription
         }
+    }
+
+    /// An operator expression's operands and operators in source order, folded or not; `nil` for any
+    /// other expression.
+    static func binaryParts(_ expression: ExprSyntax) -> [ExprSyntax]? {
+        if let infix = expression.as(InfixOperatorExprSyntax.self) {
+            return [infix.leftOperand, infix.operator, infix.rightOperand]
+        }
+        return expression.as(SequenceExprSyntax.self).map { Array($0.elements) }
+    }
+
+    /// How many identifier tokens in `node` spell `name`.
+    static func occurrences(of name: String, in node: some SyntaxProtocol) -> Int {
+        node.tokens(viewMode: .sourceAccurate).filter { token in
+            guard case .identifier(let text) = token.tokenKind else { return false }
+            return text == name
+        }.count
+    }
+
+    /// Whether any identifier token in `node` spells one of `names`.
+    static func mentions(_ names: [String], in node: some SyntaxProtocol) -> Bool {
+        names.contains { occurrences(of: $0, in: node) > 0 }
     }
 
     /// The sole expression condition of a `guard` or `if`.

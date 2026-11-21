@@ -7,10 +7,12 @@
 /// - **C1** `value.allSatisfy { f([$0]).count == 1 }`: a singleton survives;
 /// - **C2** `f(value + value).count == f(value).count`: a duplicate of everything adds nothing.
 ///
-/// Both compare counts, so they compile for any element type and need neither `Hashable` nor a
-/// collision-biased generator: C2 builds its own duplicates. Idempotence holds of the identity and
-/// of `[]`, the two simplest dedupe bugs; C2 fails the first and C1 the second
-/// (`fixtures/dedupe-count-law/kill-arm/`, measured).
+/// As counts, both compile for any element type and need neither `Hashable` nor a collision-biased
+/// generator: C2 builds its own duplicates. On the keep-first route the stub states C2 as equality,
+/// `f(value + value) == f(value)`, which needs the `==` the idempotence row already needs.
+///
+/// Idempotence holds of the identity and of `[]`, the two simplest dedupe bugs; C2 fails the first
+/// and C1 the second (`fixtures/dedupe-count-law/kill-arm/`, measured).
 public struct DedupeBody: Sendable, Equatable, Codable {
 
     /// The two body shapes the gate admits.
