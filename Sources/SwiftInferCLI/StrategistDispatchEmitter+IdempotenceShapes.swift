@@ -26,6 +26,9 @@ extension StrategistDispatchEmitter {
         dedupeBody: DedupeBody? = nil
     ) -> String {
         let oracle = "applyOnce(applyOnce(candidate)) != applyOnce(candidate)"
+        let mismatch = dedupeMismatch(
+            "onceResult != twiceResult", once: "onceResult", twice: "twiceResult", body: dedupeBody
+        )
         let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
             ? singleShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
             : ""
@@ -49,7 +52,7 @@ extension StrategistDispatchEmitter {
             let value = defaultGenerator.run(using: &rng)
             let onceResult = applyOnce(value)
             let twiceResult = applyOnce(onceResult)
-            if \(dedupeMismatch(once: "onceResult", twice: "twiceResult", body: dedupeBody)) {
+            if \(mismatch) {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
@@ -66,7 +69,7 @@ extension StrategistDispatchEmitter {
         ))
 
         print("VERIFY_DEFAULT_RESULT: PASS")
-        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")\(dedupeBody.map(dedupeCompanionLaws) ?? "")
         """
     }
 

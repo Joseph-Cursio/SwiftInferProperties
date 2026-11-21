@@ -341,3 +341,30 @@ Measured on `SwiftInferCore` (§9.2): `NonDeterministicAPIs.matches(_:)`.
 **Two of the four restrictions only.** `.internalOrSPI` is genuinely reached by
 `@testable`, and blocking it would suppress rows that verify today. `.nestedLocal` is
 also unreachable but is left out until measured, on the same conservative footing.
+
+## `inferredRetryHostileCallee`
+
+Relocated 2026-11-21, when `verifyCompanionRefuted` (#711) took `Signal+Kind.swift` past its
+400-line cap. It was the longest remaining rationale in that file.
+
+This function **calls** something declared retry-hostile, so
+`EffectResolver` inferred `nonIdempotent` / `externallyIdempotent`
+upward from its body. Opt-in (`--resolve-effects`); never fires on a
+default-path run.
+
+**−45, a demotion, where the same effect DECLARED on the function is a
+full veto** — and the split is the same directness axis `KitEvidence`
+uses, applied one layer out. A declaration denies *this law about this
+function*; an inference says *something this function calls is
+retry-hostile*, which is one step removed from the law's own subject.
+The template's law is over **return values**, and a function may call a
+side-effecting callee and still return the same value for the same
+input — so this is evidence, not refutation, and vetoing on it would
+suppress true laws.
+
+The magnitude is borrowed from `KitEvidence`'s −45 deliberately, and it
+lands where it should: a shape-only candidate (35) drops to −10 and
+disappears, while one carrying a curated verb or an author's own
+`@Idempotent` (75) lands at 30 and stays visible as `Possible` with the
+reason attached. The weak ones go; the corroborated ones are demoted,
+not silenced.

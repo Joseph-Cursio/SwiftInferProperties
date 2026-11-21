@@ -284,6 +284,16 @@ extension SwiftInferCommand.Verify {
         let autoDerivable = Set(TemplateName.regressionAutoDerivable.rawValues)
         // Not auto-derivable: the normal case, deliberately silent.
         guard autoDerivable.contains(entry.templateName) else { return nil }
+        // #711: the bridge writes strict `f(f(x)) == f(x)`, which is false of a correct
+        // dictionary-route dedupe (hash order). Verify ran the order-free law; banking the strict
+        // one would turn a real refutation into a test that fails for the wrong reason.
+        if entry.dedupeBody?.keepsFirst == false {
+            diagnostic(
+                "note: \(entry.primaryFunctionName) was refuted, but no regression test is banked: "
+                    + "its result is in hash order and the bridge can only write strict idempotence."
+            )
+            return nil
+        }
         let calls: ResolvedCalls
         do {
             calls = try resolveFunctionCalls(for: entry)

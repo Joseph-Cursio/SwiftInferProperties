@@ -162,27 +162,9 @@ public extension Signal {
         /// any real corroboration keeps the counter from firing at all.
         case unsupportedAlgebraicShape
 
-        /// This function **calls** something declared retry-hostile, so
-        /// `EffectResolver` inferred `nonIdempotent` / `externallyIdempotent`
-        /// upward from its body. Opt-in (`--resolve-effects`); never fires on a
-        /// default-path run.
-        ///
-        /// **−45, a demotion, where the same effect DECLARED on the function is a
-        /// full veto** — and the split is the same directness axis `KitEvidence`
-        /// uses, applied one layer out. A declaration denies *this law about this
-        /// function*; an inference says *something this function calls is
-        /// retry-hostile*, which is one step removed from the law's own subject.
-        /// The template's law is over **return values**, and a function may call a
-        /// side-effecting callee and still return the same value for the same
-        /// input — so this is evidence, not refutation, and vetoing on it would
-        /// suppress true laws.
-        ///
-        /// The magnitude is borrowed from `KitEvidence`'s −45 deliberately, and it
-        /// lands where it should: a shape-only candidate (35) drops to −10 and
-        /// disappears, while one carrying a curated verb or an author's own
-        /// `@Idempotent` (75) lands at 30 and stays visible as `Possible` with the
-        /// reason attached. The weak ones go; the corroborated ones are demoted,
-        /// not silenced.
+        /// This function **calls** something declared retry-hostile (`EffectResolver`, opt-in
+        /// `--resolve-effects`): −45, a demotion, where the same effect DECLARED is a full veto.
+        /// Rationale in `docs/design/signal-kind-rationales.md`.
         case inferredRetryHostileCallee
         /// A `comparator` candidate matched on the `(T, T) -> Bool` **shape alone**, with
         /// no ordering name to corroborate that the relation is meant to *order* its
@@ -316,6 +298,11 @@ public extension Signal {
         /// statement about the evidence, not about the law. Rationale in
         /// `docs/design/signal-kind-rationales.md`.
         case verifyEvidenceStale
+        /// #711 — verify's idempotence run held, but a companion law the accepted stub also
+        /// checks (#671's dedupe count laws C1 / C2) failed on its default pass. Weight 0 and never
+        /// a veto: it is not evidence against idempotence. It withholds `verifyBothPass`'s +50 and
+        /// the `Verified` label, which a row whose accepted test fails must not carry.
+        case verifyCompanionRefuted
         /// The kit measured this carrier's `==` to be broken, so any law
         /// stated with it cannot be checked. See `docs/design/signal-kind-rationales.md`
         /// — the rationale is long and the file is at its cap.

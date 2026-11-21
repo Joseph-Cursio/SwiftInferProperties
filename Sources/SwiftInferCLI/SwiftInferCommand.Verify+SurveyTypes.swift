@@ -1,3 +1,5 @@
+import SwiftInferCore
+
 // V1.143 lint pass — the survey-mode public output types, split out of
 // `SwiftInferCommand.Verify+AllFromIndex.swift` (which had hit SwiftLint's 400-line
 // file-length cap). These are the canonical Phase 2 measurement vocabulary
@@ -70,6 +72,12 @@ public extension SwiftInferCommand.Verify {
         /// outside its bodies, the body fingerprint otherwise. Equals
         /// `SemanticIndexEntry.evidenceFingerprint` for the entry this record came from.
         public var evidenceFingerprint: String? { lawDataFingerprint ?? subjectFingerprint }
+
+        /// #711 — the companion laws the stub ran beside the primary law (`CompanionLawOutcome`),
+        /// or `nil` when it ran none. Synthesized `Codable` skips a `nil` and decodes an absent
+        /// key as `nil`, so every stream without companions is unchanged. `outcome` stays the
+        /// primary law's.
+        public var companionLaws: [CompanionLawOutcome]?
 
         public init(
             identityHash: String,

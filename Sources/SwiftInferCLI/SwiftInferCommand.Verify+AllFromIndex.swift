@@ -383,7 +383,9 @@ extension SwiftInferCommand.Verify {
                 parsed, entry: member.entry, packageRoot: packageRoot,
                 enabled: config.emitRegression
             )
-            return surveyRecord(from: parsed, context: context)
+            var record = surveyRecord(from: parsed, context: context)
+            record.companionLaws = VerifyResultParser.recordedCompanionLaws(runOutput)
+            return record
         } catch let error as VerifyError {
             if case let .runnerCrashed(reason) = error, reason.hasPrefix("timed-out:") {
                 return surveyErrorRecord(context, .measuredError, reason)

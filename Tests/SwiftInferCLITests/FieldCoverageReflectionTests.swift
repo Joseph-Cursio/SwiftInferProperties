@@ -285,7 +285,8 @@ struct FieldCoverageReflectionTests {
                 // v1.149 — the body this verdict was measured against. Caught by this guard
                 // when the field was added: a `nil` optional is dropped by the synthesized
                 // encoder, so an unpopulated fixture reads as "never encoded".
-                subjectFingerprint: "A1B2C3D4A1B2C3D4"
+                subjectFingerprint: "A1B2C3D4A1B2C3D4",
+                companionLaws: [CompanionLawOutcome(law: "C2", pass: .default, status: .failed, trial: 1)]
             ),
             "VerifyEvidence"
         )

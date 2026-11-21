@@ -88,6 +88,9 @@ public enum VerifyEvidenceScoring {
         )
         return evidenceByIdentity.filter { identity, evidence in
             guard !contradicted.contains(identity) else { return false }
+            // #711: an accepted test that fails must not sit under a `Verified` label. Dropping
+            // the record is the only rule every renderer inherits; the score side says why.
+            guard (evidence.companionLaws ?? []).refutation == nil else { return false }
             return stalenessCaveat(
                 evidence: evidence, current: currentFingerprintByIdentity[identity]
             ) == nil
@@ -154,6 +157,13 @@ public enum VerifyEvidenceScoring {
                 explainabilityArm: .whyMightBeWrong
             )
         }
+        if let refutation = (evidence.companionLaws ?? []).refutation,
+           evidence.outcome != .measuredDefaultFails {
+            return suggestion.appendingScoreSignal(
+                Signal(kind: .verifyCompanionRefuted, weight: 0, detail: companionCaveat(refutation)),
+                explainabilityArm: .whyMightBeWrong
+            )
+        }
         switch evidence.outcome {
         case .measuredBothPass:
             return suggestion.appendingScoreSignal(
@@ -193,6 +203,14 @@ public enum VerifyEvidenceScoring {
     /// deliberate cost of the fix: every record written before this shipped stops promoting
     /// until re-verified. Trusting them instead would preserve exactly the defect being
     /// closed, on exactly the records known to be stale.
+    /// #711 — why a measured pass is withheld: a companion law the accepted stub also checks
+    /// failed. Not a veto: the primary law held, and nothing here is evidence against it.
+    static func companionCaveat(_ refutation: CompanionLawOutcome) -> String {
+        "Verify evidence is NOT being applied: the primary law held, but \(refutation.rendered). "
+            + "The accepted stub checks that law too, so it would fail; the row is not `Verified`. "
+            + "This is not evidence against the primary law, so nothing is vetoed."
+    }
+
     static func stalenessCaveat(evidence: VerifyEvidence, current: String?) -> String? {
         let captured = ISO8601DateFormatter().string(from: evidence.capturedAt)
         guard let recorded = evidence.subjectFingerprint else {

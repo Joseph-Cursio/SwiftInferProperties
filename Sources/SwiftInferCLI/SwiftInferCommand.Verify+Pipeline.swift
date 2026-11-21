@@ -19,7 +19,8 @@ extension SwiftInferCommand.Verify {
         budgetString: String,
         workingDirectory: URL,
         emitRegression: Bool = false,
-        target: String? = nil
+        target: String? = nil,
+        acceptedDedupeBody: DedupeBody? = nil
     ) throws -> VerifyRun {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
@@ -28,7 +29,7 @@ extension SwiftInferCommand.Verify {
             indexPathOverride: indexPathOverride,
             packageRoot: packageRoot
         )
-        let entry = resolved.entry
+        let entry = withAcceptedRoute(resolved.entry, acceptedDedupeBody)
         // V1.149 — path-depend on the user package and `@testable`-import the module, so the
         // stub can call functions defined there (incl. `internal`). Absent `--target`, the module
         // is DERIVED from the entry's own source path: the flag was optional and its absence
@@ -54,6 +55,7 @@ extension SwiftInferCommand.Verify {
         )
         let runOutput = try buildAndRun(workdir: workdir)
         let parsed = VerifyResultParser.parse(runOutput)
+        let companions = VerifyResultParser.companionLaws(runOutput)
         // V1.142 — emit the regression test once; its path feeds both the
         // persisted evidence and the rendered output note.
         let regressionPath: URL? = {
@@ -64,22 +66,18 @@ extension SwiftInferCommand.Verify {
             parsed: parsed,
             entry: entry,
             packageRoot: packageRoot,
-            regressionPath: regressionPath
+            regressionPath: regressionPath,
+            companionLaws: companions
         )
         persistCorpus(parsed: parsed, entry: entry, packageRoot: packageRoot)
         // The verdict and its rendering come back TOGETHER, from one `parsed`. Returning only
         // the prose is what let the speculative runner match it for "bothPass" — a word this
         // renderer never emits — and report `not-runnable` for every candidate, forever. See #116.
-        return VerifyRun(
-            outcome: parsed,
-            rendered: renderOutcome(
-                parsed: parsed,
-                context: stubBundle.rendererContext,
-                entry: entry,
-                packageRoot: packageRoot,
-                regressionPath: regressionPath
-            )
-        )
+        let rendered = renderOutcome(
+            parsed: parsed, context: stubBundle.rendererContext, entry: entry,
+            packageRoot: packageRoot, regressionPath: regressionPath
+        ) + VerifyResultRenderer.renderCompanions(companions)
+        return VerifyRun(outcome: parsed, rendered: rendered, companionLaws: companions)
     }
 
     /// One verify run: the verdict, and the prose for a human.
@@ -92,12 +90,28 @@ extension SwiftInferCommand.Verify {
     struct VerifyRun {
         let outcome: VerifyOutcome
         let rendered: String
+        /// #711 — the companion laws the stub ran beside the primary law (`CompanionLawOutcome`).
+        /// Empty for every entry with none. `outcome` stays the primary law's.
+        var companionLaws: [CompanionLawOutcome] = []
 
         /// The persisted five-way classification, via the same mapper the evidence log uses,
         /// so a consumer never has to re-derive it from prose or from disk.
         var evidenceOutcome: VerifyEvidenceOutcome {
             VerifyEvidenceRecorder.evidence(for: outcome).outcome
         }
+    }
+
+    /// #711 — `entry`, carrying the dedupe route its row had when accepted if a re-scan no longer
+    /// finds one. `accept-check` re-checks what the accepted stub checks: after an edit the body
+    /// gate refuses (the insert deleted, the check negated), the accepted count laws still run,
+    /// and that edit is the regression they exist to catch. A route found by the re-scan wins.
+    static func withAcceptedRoute(_ entry: SemanticIndexEntry, _ accepted: DedupeBody?) -> SemanticIndexEntry {
+        guard entry.dedupeBody == nil, let accepted, entry.templateName == TemplateName.idempotence.rawValue else {
+            return entry
+        }
+        var routed = entry
+        routed.dedupeBody = accepted
+        return routed
     }
 
     /// V1.142 — the verify stub's replayable seed (deterministic Xoshiro state
@@ -131,6 +145,7 @@ extension SwiftInferCommand.Verify {
         entry: SemanticIndexEntry,
         packageRoot: URL,
         regressionPath: URL?,
+        companionLaws: [CompanionLawOutcome] = [],
         now: Date = Date()
     ) {
         let (evidenceOutcome, evidenceDetail) = VerifyEvidenceRecorder.evidence(for: parsed)
@@ -163,7 +178,8 @@ extension SwiftInferCommand.Verify {
                 // edit to the subject, because `identityHash` is deliberately blind to the
                 // body (PRD §7.5) — road test §10.2. Folded with the bounds a
                 // `documented-range` entry ran (#701); the bodies alone everywhere else.
-                subjectFingerprint: entry.evidenceFingerprint
+                subjectFingerprint: entry.evidenceFingerprint,
+                companionLaws: companionLaws.isEmpty ? nil : companionLaws
             ),
             packageRoot: packageRoot
         )
