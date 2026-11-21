@@ -10,26 +10,41 @@ import SwiftInferCore
 ///   stopped deduplicating, which idempotence also passes.
 ///
 /// The accepted stub writes both (`LiftedTestEmitter.dedupeCountLaws`), so verify checks both and
-/// the two cannot disagree. Three rules keep them companions rather than a second verdict:
+/// the two cannot disagree. Four rules keep them companions rather than a second verdict:
 ///
-/// 1. **They run after idempotence printed PASS, and never `exit`.** A failure prints
-///    `VERIFY_DEFAULT_LAW_<law>_RESULT: FAIL` and the run goes on, so the parser's verdict stays
-///    idempotence's. `VerifyResultParser.companionLaws` reads them separately.
-/// 2. **They draw from their own stream**, `companionRng`, seeded like `collisionBase`. The edge
-///    pass re-runs this composer on the same `rng`, so draws taken from it would shift every
-///    Pass-2 input and break replay.
-/// 3. **Each law prints `_BEGIN` before it runs.** A law that begins and never reports trapped,
-///    and the parser says so instead of reading a silent pass.
-///
-/// The edge pass re-runs the composer with `VERIFY_DEFAULT_` renamed `VERIFY_EDGE_`, so the laws
-/// also run on the boundary recipe under `VERIFY_EDGE_LAW_*`. Those results are advisory.
+/// 1. **They run last, after both of idempotence's passes printed their verdicts**, spliced in
+///    before the stub's final `exit(0)` (`withCompanionLaws`). A first version ran them inside the
+///    composer, so the edge pass re-ran them, and a trap there turned idempotence's both-pass
+///    verdict into an error (#734's second review). Where they are now, Pass 1's
+///    `defaultGenerator` and `applyOnce` are back in scope, and they draw from the default
+///    generator, as the accepted stub does.
+/// 2. **They never `exit`.** A failure prints `VERIFY_DEFAULT_LAW_<law>_RESULT: FAIL` and the run
+///    goes on, so the parser's verdict stays idempotence's. `VerifyResultParser.companionLaws`
+///    reads them separately.
+/// 3. **They draw from their own stream**, `companionRng`, seeded like `collisionBase`, so
+///    nothing they draw moves the primary law's inputs or its replay.
+/// 4. **Each law prints `_BEGIN` before it runs.** A law that begins and never reports trapped;
+///    the parser names it and keeps idempotence's `.bothPass`
+///    (`VerifyResultParser.verdictSurvivingTrappedCompanion`).
 extension StrategistDispatchEmitter {
+
+    /// `finalPass` (the edge pass, or its sentinel) with the companion laws spliced in before its
+    /// final `exit(0)`, or `finalPass` unchanged when the entry has none: only an `idempotence`
+    /// entry with a route, composed in the direct shape that binds `applyOnce` at top level (the
+    /// only shape a `[T] -> [T]` dedupe reaches).
+    static func withCompanionLaws(_ finalPass: String, inputs: Inputs, defaultPass: String) -> String {
+        guard inputs.template == TemplateName.idempotence.rawValue, let body = inputs.dedupeBody,
+              defaultPass.contains("let applyOnce: ("),
+              let exit = finalPass.range(of: "exit(0)", options: .backwards) else {
+            return finalPass
+        }
+        return finalPass.replacingCharacters(in: exit, with: dedupeCompanionLaws(body) + "\nexit(0)")
+    }
 
     static func dedupeCompanionLaws(_ body: DedupeBody) -> String {
         let c2Mismatch = body.keepsFirst ? "doubled != once" : "doubled.count != once.count"
         return """
-
-        // --- #711: #671's count laws, companions to idempotence. They never exit. ---
+        // --- #711: #671's count laws, companions to idempotence: run last, never exit. ---
         var companionRng = Xoshiro(seed: seedTuple)
         print("VERIFY_DEFAULT_LAW_C1_BEGIN")
         var companionC1Failed = false

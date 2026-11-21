@@ -64,7 +64,9 @@ extension SwiftInferCommand.Verify {
         }()
         persistEvidence(
             parsed: parsed,
-            entry: entry,
+            // The RE-SCANNED entry, not `entry`: its fingerprint is the one discover checks. An
+            // accepted route (`withAcceptedRoute`) changes what ran, not what code it ran on.
+            entry: resolved.entry,
             packageRoot: packageRoot,
             regressionPath: regressionPath,
             companionLaws: companions
@@ -101,12 +103,19 @@ extension SwiftInferCommand.Verify {
         }
     }
 
-    /// #711 — `entry`, carrying the dedupe route its row had when accepted if a re-scan no longer
-    /// finds one. `accept-check` re-checks what the accepted stub checks: after an edit the body
-    /// gate refuses (the insert deleted, the check negated), the accepted count laws still run,
-    /// and that edit is the regression they exist to catch. A route found by the re-scan wins.
+    /// #711 — `entry`, carrying the dedupe route its row had when accepted. `accept-check`
+    /// re-checks what the accepted stub checks:
+    /// - after an edit the body gate refuses (the insert deleted, the check negated), the accepted
+    ///   count laws still run, and that edit is the regression they exist to catch;
+    /// - after an edit that changes the route, the ACCEPTED route still wins. A keep-first stub
+    ///   states C2 and idempotence with `==`, so a body that now returns `Array(d.values)` fails
+    ///   it, and checking the re-scanned route's count form would report still-passes over a
+    ///   failing test (#734's second review).
+    ///
+    /// The run's evidence is still stamped with the RE-SCANNED entry's fingerprint (`runPipeline`),
+    /// so discover, which knows only the re-scan, can apply it.
     static func withAcceptedRoute(_ entry: SemanticIndexEntry, _ accepted: DedupeBody?) -> SemanticIndexEntry {
-        guard entry.dedupeBody == nil, let accepted, entry.templateName == TemplateName.idempotence.rawValue else {
+        guard let accepted, entry.templateName == TemplateName.idempotence.rawValue else {
             return entry
         }
         var routed = entry

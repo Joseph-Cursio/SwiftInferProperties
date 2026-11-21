@@ -55,14 +55,14 @@ struct VerifyPipelineDedupeCountLawsTests {
     }
 
     private static func statuses(_ laws: [CompanionLawOutcome]) -> [String] {
-        laws.map { "\($0.law)/\($0.pass.rawValue)=\($0.status.rawValue)" }
+        laws.map { "\($0.law)=\($0.status.rawValue)" }
     }
 
-    @Test("a correct keep-first dedupe holds idempotence and both companions, on both passes")
+    @Test("a correct keep-first dedupe holds idempotence and both companions")
     func correctDedupeHolds() throws {
         let (outcome, laws) = try Self.run("Planted.dedupe", route: .set)
         guard case .bothPass = outcome else { Issue.record("expected .bothPass; got \(outcome)"); return }
-        #expect(Self.statuses(laws) == ["C1/default=held", "C2/default=held", "C1/edge=held", "C2/edge=held"])
+        #expect(Self.statuses(laws) == ["C1=held", "C2=held"])
     }
 
     @Test("the identity passes idempotence and fails C2, and idempotence's verdict stands")
@@ -70,7 +70,7 @@ struct VerifyPipelineDedupeCountLawsTests {
         let (outcome, laws) = try Self.run("Planted.identity", route: .set)
         guard case .bothPass = outcome else { Issue.record("expected .bothPass; got \(outcome)"); return }
         #expect(laws.refutation?.law == "C2")
-        #expect(laws.first { $0.law == "C1" && $0.pass == .default }?.status == .held)
+        #expect(laws.first { $0.law == "C1" }?.status == .held)
     }
 
     @Test("`{ _ in [] }` passes idempotence and fails C1, and idempotence's verdict stands")

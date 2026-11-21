@@ -4,7 +4,7 @@
 The accept-side arm (`dedupe_count_laws_kill_arm.py`) runs the stub `discover --interactive` writes.
 This runs what `verify` builds instead. For the original and each mutant it reports:
 - idempotence's verdict;
-- each companion law's result (C1 and C2, on both passes);
+- each companion law's result (C1 and C2, run once after both idempotence passes);
 - what the evidence store recorded;
 - what `accept-check` says about the row accepted on the original. Accepting also records the row's
   route, so `accept-check` re-checks the accepted count laws after an edit the body gate refuses.
@@ -35,7 +35,7 @@ VARIANTS = {
     "L161-negate-check ([])": ("            if !seen.contains(key) { // L161", "            if seen.contains(key) { // L161"),
     "L163-delete-append ([])": ("                result.append(relationship) // L163", "                // L163 deleted"),
 }
-COMPANION = re.compile(r"companion law: (C\d) (held|FAILED|TRAPPED) on the (default|edge)")
+COMPANION = re.compile(r"companion law: (C\d) (held|FAILED|TRAPPED)")
 
 
 def run(binary, arm, *args):
@@ -74,14 +74,14 @@ def main(binary):
             rendered = out.stdout + out.stderr
             verdict = next((line.strip() for line in rendered.splitlines() if line.startswith(("✓", "✗", "⚠", "?"))),
                            rendered.strip().splitlines()[-1] if rendered.strip() else "(no output)")
-            laws = "  ".join(f"{law}/{p}={s}" for law, s, p in COMPANION.findall(rendered))
+            laws = "  ".join(f"{law}={status}" for law, status in COMPANION.findall(rendered))
             store = json.load(open(os.path.join(arm, ".swiftinfer/verify-evidence.json")))
             records = store.get("records", store) if isinstance(store, dict) else store
             record = next(r for r in records if row["identityHash"].lstrip("0x").upper().endswith(r["identityHash"]))
             print(f"{name:<32} {verdict[:70]}")
             print(f"{'':<32} {laws}")
             print(f"{'':<32} evidence: outcome={record['outcome']} companions="
-                  f"{[(c['law'], c['pass'], c['status']) for c in record.get('companionLaws') or []]}")
+                  f"{[(c['law'], c['status']) for c in record.get('companionLaws') or []]}")
             check = run(binary, arm, "accept-check")
             lines = [line.strip() for line in (check.stdout + check.stderr).splitlines() if row["identityHash"][2:10].upper() in line.upper() or "nowFails" in line or "stillPasses" in line]
             print(f"{'':<32} accept-check: {lines[:2] if lines else (check.stdout + check.stderr).strip()[-200:]}")

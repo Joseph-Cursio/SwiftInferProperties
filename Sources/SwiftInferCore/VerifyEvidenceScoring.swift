@@ -151,19 +151,16 @@ public enum VerifyEvidenceScoring {
         // Evidence is only about the code it was measured on. `identityHash` cannot
         // establish that — it is deliberately blind to the body (PRD §7.5) — so the
         // fingerprint is what licenses USING this outcome at all.
-        if let staleness = stalenessCaveat(evidence: evidence, current: currentFingerprint) {
+        if let staleness = stalenessCaveat(
+            evidence: evidence, current: currentFingerprint,
+            readsDedupeRoute: suggestion.match?.dedupeCountMatch != nil
+        ) {
             return suggestion.appendingScoreSignal(
                 Signal(kind: .verifyEvidenceStale, weight: 0, detail: staleness),
                 explainabilityArm: .whyMightBeWrong
             )
         }
-        if let refutation = (evidence.companionLaws ?? []).refutation,
-           evidence.outcome != .measuredDefaultFails {
-            return suggestion.appendingScoreSignal(
-                Signal(kind: .verifyCompanionRefuted, weight: 0, detail: companionCaveat(refutation)),
-                explainabilityArm: .whyMightBeWrong
-            )
-        }
+        if let withheld = withheldByCompanion(suggestion, evidence) { return withheld }
         switch evidence.outcome {
         case .measuredBothPass:
             return suggestion.appendingScoreSignal(
@@ -190,6 +187,23 @@ public enum VerifyEvidenceScoring {
         }
     }
 
+    /// #711 — why a measured pass is withheld: a companion law the accepted stub also checks
+    /// failed. Not a veto: the primary law held, and nothing here is evidence against it.
+    static func withheldByCompanion(_ suggestion: Suggestion, _ evidence: VerifyEvidence) -> Suggestion? {
+        guard let refutation = (evidence.companionLaws ?? []).refutation,
+              evidence.outcome != .measuredDefaultFails else { return nil }
+        return suggestion.appendingScoreSignal(
+            Signal(kind: .verifyCompanionRefuted, weight: 0, detail: companionCaveat(refutation)),
+            explainabilityArm: .whyMightBeWrong
+        )
+    }
+
+    static func companionCaveat(_ refutation: CompanionLawOutcome) -> String {
+        "Verify evidence is NOT being applied: the primary law held, but \(refutation.rendered). "
+            + "The accepted stub checks that law too, so it would fail; the row is not `Verified`. "
+            + "This is not evidence against the primary law, so nothing is vetoed."
+    }
+
     /// Why this evidence may not be used, or `nil` when it is valid for the code in front of
     /// the reader.
     ///
@@ -203,15 +217,9 @@ public enum VerifyEvidenceScoring {
     /// deliberate cost of the fix: every record written before this shipped stops promoting
     /// until re-verified. Trusting them instead would preserve exactly the defect being
     /// closed, on exactly the records known to be stale.
-    /// #711 — why a measured pass is withheld: a companion law the accepted stub also checks
-    /// failed. Not a veto: the primary law held, and nothing here is evidence against it.
-    static func companionCaveat(_ refutation: CompanionLawOutcome) -> String {
-        "Verify evidence is NOT being applied: the primary law held, but \(refutation.rendered). "
-            + "The accepted stub checks that law too, so it would fail; the row is not `Verified`. "
-            + "This is not evidence against the primary law, so nothing is vetoed."
-    }
-
-    static func stalenessCaveat(evidence: VerifyEvidence, current: String?) -> String? {
+    static func stalenessCaveat(
+        evidence: VerifyEvidence, current: String?, readsDedupeRoute: Bool = false
+    ) -> String? {
         let captured = ISO8601DateFormatter().string(from: evidence.capturedAt)
         guard let recorded = evidence.subjectFingerprint else {
             return "Verify evidence from \(captured) is NOT being applied: it was recorded "
@@ -226,7 +234,8 @@ public enum VerifyEvidenceScoring {
         }
         guard recorded != current else { return nil }
         return "Verify evidence from \(captured) is NOT being applied: it was measured against "
-            + "a DIFFERENT version of \(fingerprintedSubject(template: evidence.template)) "
+            + "a DIFFERENT version of "
+            + "\(fingerprintedSubject(template: evidence.template, readsDedupeRoute: readsDedupeRoute)) "
             + "(recorded \(recorded), now \(current)). The law may no longer hold — re-run "
             + "`swift-infer verify`."
     }
@@ -237,9 +246,15 @@ public enum VerifyEvidenceScoring {
     /// fingerprint also folds the bounds read from the doc comment (`SubjectFingerprint+LawData`),
     /// so a mismatch there may be a body edit, a doc-comment edit, or the same comment now read
     /// differently, and the caveat must not claim the body moved when only the bounds did.
-    static func fingerprintedSubject(template: String) -> String {
+    static func fingerprintedSubject(template: String, readsDedupeRoute: Bool = false) -> String {
         if template == TemplateName.documentedRange.rawValue {
             return "this function's body or of the bounds swift-infer reads from its doc comment"
+        }
+        // #711: the route is folded in too, and a record stamped before verify knew it reads as
+        // different although the body did not move. The tool's law did.
+        if readsDedupeRoute {
+            return "this function's body or of the dedupe route verify checks it by (C1/C2, order-free "
+                + "idempotence), which a record taken before #711 did not run"
         }
         return "this function's body"
     }

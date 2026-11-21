@@ -69,7 +69,7 @@ extension StrategistDispatchEmitter {
         ))
 
         print("VERIFY_DEFAULT_RESULT: PASS")
-        print("VERIFY_DEFAULT_TRIALS: \\(trials)")\(dedupeBody.map(dedupeCompanionLaws) ?? "")
+        print("VERIFY_DEFAULT_TRIALS: \\(trials)")
         """
     }
 

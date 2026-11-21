@@ -49,27 +49,23 @@ struct VerifyCompanionScoringTests {
     @Test("a default-pass companion failure withholds +50 and Verified, with a weight-0 caveat")
     func refutationWithholds() {
         let failing = Self.evidence(
-            .measuredBothPass, [CompanionLawOutcome(law: "C2", pass: .default, status: .failed, trial: 3)]
+            .measuredBothPass, [CompanionLawOutcome(law: "C2", status: .failed, trial: 3)]
         )
         let result = Self.applied(failing)
         #expect(result.score.total == 40, "no +50")
         #expect(!result.score.isVetoed, "not a veto: the primary law held")
         #expect(result.score.signals.last?.kind == .verifyCompanionRefuted)
         #expect(result.score.signals.last?.weight == 0)
-        #expect(result.explainability.whyMightBeWrong.contains { $0.contains("C2 FAILED on the default pass") })
+        #expect(result.explainability.whyMightBeWrong.contains { $0.contains("C2 FAILED at trial 3") })
         let applicable = VerifyEvidenceScoring.applicable(
             to: [Self.suggestion], evidenceByIdentity: failing, currentFingerprintByIdentity: Self.current
         )
         #expect(applicable.isEmpty, "dropped, so no renderer derives `Verified` from the outcome")
     }
 
-    @Test("held companions and an edge-pass failure leave the measured pass applied")
+    @Test("held companions, and none at all, leave the measured pass applied")
     func nonBindingCompanionsApply() {
-        for companions in [
-            [CompanionLawOutcome(law: "C1", pass: .default, status: .held)],
-            [CompanionLawOutcome(law: "C1", pass: .edge, status: .failed)],
-            nil,
-        ] {
+        for companions in [[CompanionLawOutcome(law: "C1", status: .held)], nil] {
             let result = Self.applied(Self.evidence(.measuredBothPass, companions))
             #expect(result.score.total == 40 + VerifyEvidenceScoring.verifyBothPassWeight)
             #expect(result.score.signals.last?.kind == .verifyBothPass)
@@ -79,7 +75,7 @@ struct VerifyCompanionScoringTests {
     @Test("a refuted primary law keeps its veto whatever the companions say")
     func primaryRefutationStillVetoes() {
         let result = Self.applied(Self.evidence(
-            .measuredDefaultFails, [CompanionLawOutcome(law: "C1", pass: .default, status: .trapped)]
+            .measuredDefaultFails, [CompanionLawOutcome(law: "C1", status: .trapped)]
         ))
         #expect(result.score.isVetoed)
         #expect(result.score.signals.last?.kind == .verifyDisproven)

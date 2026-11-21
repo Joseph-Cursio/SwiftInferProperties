@@ -68,7 +68,9 @@ public enum StrategistDispatchEmitter: SeededStubEmitter {
         // values cannot simply be mixed into Pass 1's generator. Falls back to
         // the zero-trial sentinel for carriers with no curated boundary set;
         // the renderer then says no edge pass ran rather than claiming one did.
-        let edgeSentinel = try edgePassSection(inputs: inputs, recipe: recipe)
+        let edgeSentinel = withCompanionLaws(
+            try edgePassSection(inputs: inputs, recipe: recipe), inputs: inputs, defaultPass: defaultPass
+        )
         // A recursive carrier's helper must sit above the check that calls it.
         // Empty otherwise, so non-recursive output is byte-identical to before.
         let declarations = recipe.declarations.isEmpty
