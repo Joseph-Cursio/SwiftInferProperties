@@ -223,6 +223,10 @@ public enum TemplateMatch: Sendable, Equatable {
     /// `uniquifier` — the body's shape, where the state lives, and which parameter carries a name.
     case uniquifier(UniquifierMatch)
 
+    /// `idempotence` on a recognised dedupe whose body passes #671's gate — the route, so the stub
+    /// writer can emit the count laws C1 and C2 beside idempotence. See `DedupeBody`.
+    case dedupeCount(DedupeBody)
+
     /// The `GuardDomain` this match carries, or `nil` for any other template.
     ///
     /// Present so a writer reads one accessor rather than spelling a `switch` with three
@@ -258,5 +262,11 @@ public enum TemplateMatch: Sendable, Equatable {
     public var uniquifierMatch: UniquifierMatch? {
         guard case .uniquifier(let match) = self else { return nil }
         return match
+    }
+
+    /// The `DedupeBody` this match carries, or `nil` for any other template.
+    public var dedupeCountMatch: DedupeBody? {
+        guard case .dedupeCount(let body) = self else { return nil }
+        return body
     }
 }

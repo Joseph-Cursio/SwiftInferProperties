@@ -218,6 +218,11 @@ public struct BodySignals: Sendable, Equatable {
     /// `UniquifierTemplate` can read a uniquifier's siblings for a setup call or a recycling pool.
     public let stateWrites: StateWrites?
 
+    /// How a recognised dedupe keeps one element per key (`DedupeBodyReader`, #671's body gate). Read
+    /// only for `dedupe` / `deduplicate` / `deduplicated` of shape `[T] -> [T]`, the same bargain.
+    /// Read by `IdempotenceTemplate`, which carries it as `TemplateMatch.dedupeCount`.
+    public let dedupeBody: DedupeBody?
+
     public init(
         hasNonDeterministicCall: Bool,
         hasSelfComposition: Bool,
@@ -235,8 +240,10 @@ public struct BodySignals: Sendable, Equatable {
         buildsIdempotencyKey: Bool = false,
         callsIdempotentWrite: Bool = false,
         uniquifierShape: UniquifierShape? = nil,
-        stateWrites: StateWrites? = nil
+        stateWrites: StateWrites? = nil,
+        dedupeBody: DedupeBody? = nil
     ) {
+        self.dedupeBody = dedupeBody
         self.uniquifierShape = uniquifierShape
         self.stateWrites = stateWrites
         self.guardDomain = guardDomain

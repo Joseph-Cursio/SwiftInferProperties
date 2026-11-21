@@ -113,7 +113,9 @@ public enum IdempotenceTemplate {
                     inheritedTypesByName: inheritedTypesByName
                 )
             },
-            generators: Self.makeGenerators(for:)
+            additionalWhySuggested: Self.dedupeCountWhySuggested(for:),
+            generators: Self.makeGenerators(for:),
+            match: Self.dedupeCountMatch(for:)
         )
     }
 
@@ -239,6 +241,9 @@ public enum IdempotenceTemplate {
         }
         if summary?.declaresUnknownEffect == true {
             caveats.append(unknownEffectCaveat)
+        }
+        if summary?.bodySignals.dedupeBody != nil {
+            caveats.append(dedupeCountCaveat)
         }
         return caveats
     }

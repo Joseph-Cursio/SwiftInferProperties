@@ -173,12 +173,16 @@ extension InteractiveTriage {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
-        return LiftedTestEmitter.idempotent(
-            callee: callee,
-            typeName: typeName,
-            seed: seed,
-            generator: generatorFor(typeName),
-            equalityKind: equalityKind(forTypeText: typeName)
+        let generator = generatorFor(typeName)
+        let kind = equalityKind(forTypeText: typeName)
+        let idempotence = LiftedTestEmitter.idempotent(
+            callee: callee, typeName: typeName, seed: seed, generator: generator, equalityKind: kind
+        )
+        // #671: a dedupe whose body passed the gate also owes the count laws idempotence cannot see.
+        guard let dedupe = suggestion.match?.dedupeCountMatch else { return idempotence }
+        return idempotence + "\n" + LiftedTestEmitter.dedupeCountLaws(
+            callee: callee, typeName: typeName, seed: seed, generator: generator,
+            keepsFirst: dedupe.keepsFirst, equalityKind: kind
         )
     }
 
