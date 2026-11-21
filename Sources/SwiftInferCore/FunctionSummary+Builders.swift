@@ -52,6 +52,7 @@ public extension FunctionSummary {
             declaredEffect: declaredEffect,
             inferredEffect: effect,
             purityVerdict: purityVerdict,
+            soleTrap: soleTrap,
             bodyFingerprint: bodyFingerprint,
             globalActor: globalActor,
             declaresNonisolated: declaresNonisolated,

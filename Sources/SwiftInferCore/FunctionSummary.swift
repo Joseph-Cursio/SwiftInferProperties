@@ -1,57 +1,5 @@
 import SwiftEffectInference
 
-/// One parameter of a `FunctionSummary`. Captures the label/name distinction
-/// Swift parameters carry: an external label (or no-label `_`) and an
-/// internal binding name.
-public struct Parameter: Sendable, Equatable {
-
-    /// External argument label as the caller writes it. `nil` when the
-    /// declaration uses `_` to suppress the label.
-    public let label: String?
-
-    /// Internal binding name used inside the function body.
-    public let internalName: String
-
-    /// Trimmed source representation of the parameter's type, with any
-    /// `inout` specifier stripped. `inout` is captured separately in
-    /// `isInout`.
-    public let typeText: String
-
-    /// `true` when the parameter is declared `inout`.
-    public let isInout: Bool
-
-    /// `true` when the declaration supplies a default value
-    /// (`func formatted(using format: BasicFormat = BasicFormat())`).
-    ///
-    /// The distinction this records is **operand vs configuration**. A
-    /// defaulted parameter is one the caller may omit, so `x.formatted()` is a
-    /// legal call and the method reads as a unary transform of `self` that
-    /// happens to be configurable. A required parameter is part of the
-    /// operation's arity and cannot be elided.
-    ///
-    /// Added for the erased-self-form arm of `IdempotenceTemplate`
-    /// (`docs/measurements/parsing-catalog-gap.md` §4/§5): `SyntaxProtocol.formatted(using:)`
-    /// was rejected partly because the self-form gate required
-    /// `parameters.isEmpty`, which a *configuration* parameter should not
-    /// trip. Defaults to `false` so every existing call site — including the
-    /// hand-built `Parameter`s across the test suites — compiles unchanged.
-    public let hasDefault: Bool
-
-    public init(
-        label: String?,
-        internalName: String,
-        typeText: String,
-        isInout: Bool,
-        hasDefault: Bool = false
-    ) {
-        self.label = label
-        self.internalName = internalName
-        self.typeText = typeText
-        self.isInout = isInout
-        self.hasDefault = hasDefault
-    }
-}
-
 /// Structured record produced by `FunctionScanner` for every function
 /// declaration found in a Swift source file. Carries the header info the
 /// scoring engine (M1.3+) needs to evaluate templates against, plus a
@@ -318,6 +266,15 @@ public struct FunctionSummary: Sendable, Equatable {
 
     public let purityVerdict: PurityVerdict
 
+    /// The trap that alone refutes this function's purity — `SoundPurity.soleTrap(of:)` — or
+    /// `nil` when it was not refuted, was refuted by anything else, or was never analysed.
+    ///
+    /// Read by the impure-subject veto, which must not withhold `input-totality` from a subject
+    /// whose only "impurity" is a trap: that law is about traps. `nil` is the reading every
+    /// hand-built summary and every copy that drops it has, and it keeps the veto — so losing
+    /// this field can only withhold a law, never admit one.
+    public let soleTrap: PurityRefutation.Partiality?
+
     /// Fingerprint of this function's BODY, for validating verify evidence against the code
     /// it was measured on. `nil` for summaries built without a body (a protocol requirement,
     /// or one of the many hand-built summaries in tests).
@@ -362,6 +319,7 @@ public struct FunctionSummary: Sendable, Equatable {
         declaredEffect: Effect? = nil,
         inferredEffect: Effect? = nil,
         purityVerdict: PurityVerdict = .refuted,
+        soleTrap: PurityRefutation.Partiality? = nil,
         bodyFingerprint: String? = nil,
         globalActor: String? = nil,
         declaresNonisolated: Bool = false,
@@ -390,6 +348,7 @@ public struct FunctionSummary: Sendable, Equatable {
         self.declaredEffect = declaredEffect
         self.inferredEffect = inferredEffect
         self.purityVerdict = purityVerdict
+        self.soleTrap = soleTrap
         self.bodyFingerprint = bodyFingerprint
         self.globalActor = globalActor
         self.declaresNonisolated = declaresNonisolated
