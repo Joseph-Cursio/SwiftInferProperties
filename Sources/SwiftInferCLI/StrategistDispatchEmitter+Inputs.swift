@@ -105,6 +105,11 @@ public extension StrategistDispatchEmitter {
         /// refuses rather than emit a check with no bounds.
         public let documentedRange: DocumentedRange?
 
+        /// #711 — an `idempotence` dedupe's route, from `SemanticIndexEntry.dedupeBody`. `nil` is
+        /// plain idempotence. The dictionary route states idempotence without order, and both
+        /// routes add #671's count laws as companions (`StrategistDispatchEmitter+DedupeCountLaws`).
+        public let dedupeBody: DedupeBody?
+
         public init(
             carrier: String,
             typeShape: IndexedTypeShape?,
@@ -123,7 +128,8 @@ public extension StrategistDispatchEmitter {
             parameterCount: Int = 0,
             parameterTypeNames: [String] = [],
             receiverTypeName: String? = nil,
-            documentedRange: DocumentedRange? = nil
+            documentedRange: DocumentedRange? = nil,
+            dedupeBody: DedupeBody? = nil
         ) {
             self.carrier = carrier
             self.typeShape = typeShape
@@ -143,6 +149,7 @@ public extension StrategistDispatchEmitter {
             self.parameterTypeNames = parameterTypeNames
             self.receiverTypeName = receiverTypeName
             self.documentedRange = documentedRange
+            self.dedupeBody = dedupeBody
         }
     }
 }

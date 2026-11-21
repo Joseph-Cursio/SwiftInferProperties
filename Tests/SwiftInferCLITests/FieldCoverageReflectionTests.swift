@@ -231,6 +231,7 @@ struct FieldCoverageReflectionTests {
                 secondaryFunctionName: "denormalize",
                 secondaryMemberShape: .computedProperty,
                 documentedRange: DocumentedRange(lower: "0.0", upper: "1.0"),
+                dedupeBody: DedupeBody(route: .dictionary),
                 carrierTypeName: "Carrier",
                 isInstanceMethod: true,
                 isMutatingMethod: true,

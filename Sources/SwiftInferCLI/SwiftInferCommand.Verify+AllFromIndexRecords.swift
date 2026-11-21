@@ -219,7 +219,7 @@ extension SwiftInferCommand.Verify {
             carrier: entry.typeName,
             tier: entry.tier,
             subjectFingerprint: entry.subjectFingerprint,
-            lawDataFingerprint: entry.documentedRange == nil ? nil : entry.evidenceFingerprint
+            lawDataFingerprint: entry.carriesLawData ? entry.evidenceFingerprint : nil
         )
     }
 

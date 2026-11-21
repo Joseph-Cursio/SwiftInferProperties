@@ -242,7 +242,8 @@ extension SwiftInferCommand.Verify {
             receiverTypeName: entry.isInstanceMethod && !entry.isMutatingMethod
                 ? entry.typeName
                 : nil,
-            documentedRange: entry.documentedRange
+            documentedRange: entry.documentedRange,
+            dedupeBody: entry.templateName == TemplateName.idempotence.rawValue ? entry.dedupeBody : nil
         )
         let source = try StrategistDispatchEmitter.emit(inputs)
         let context = VerifyResultRenderer.Context(

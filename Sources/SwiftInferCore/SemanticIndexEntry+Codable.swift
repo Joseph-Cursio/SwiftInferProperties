@@ -29,6 +29,7 @@ extension SemanticIndexEntry {
         case secondaryFunctionName
         case secondaryMemberShape
         case documentedRange
+        case dedupeBody
         case carrierTypeName
         case isInstanceMethod
         case isMutatingMethod
@@ -66,6 +67,7 @@ extension SemanticIndexEntry {
         )
         // Added for #701, and read the same way: absent → `nil` → a `documented-range` entry
         // declines as stale.
+        self.dedupeBody = try container.decodeIfPresent(DedupeBody.self, forKey: .dedupeBody)
         self.documentedRange = try container.decodeIfPresent(
             DocumentedRange.self, forKey: .documentedRange
         )
@@ -138,5 +140,6 @@ extension SemanticIndexEntry {
         // `emptiness-agreement` rows, `documentedRange` on `documented-range` rows.
         try container.encode(secondaryMemberShape, forKey: .secondaryMemberShape)
         try container.encode(documentedRange, forKey: .documentedRange)
+        try container.encode(dedupeBody, forKey: .dedupeBody)
     }
 }
