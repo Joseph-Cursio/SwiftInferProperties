@@ -173,12 +173,23 @@ extension InteractiveTriage {
             return nil
         }
         let seed = SamplingSeed.derive(from: suggestion.identity)
-        return LiftedTestEmitter.idempotent(
-            callee: callee,
-            typeName: typeName,
-            seed: seed,
-            generator: generatorFor(typeName),
-            equalityKind: equalityKind(forTypeText: typeName)
+        let generator = generatorFor(typeName)
+        let kind = equalityKind(forTypeText: typeName)
+        let dedupe = suggestion.match?.dedupeCountMatch
+        // A dictionary-route dedupe returns its values in hash order, so idempotence is stated
+        // without order there; strict `==` fails correct code.
+        let idempotence = dedupe?.keepsFirst == false && kind == .strict
+            ? LiftedTestEmitter.idempotentIgnoringOrder(
+                callee: callee, typeName: typeName, seed: seed, generator: generator
+            )
+            : LiftedTestEmitter.idempotent(
+                callee: callee, typeName: typeName, seed: seed, generator: generator, equalityKind: kind
+            )
+        // #671: a dedupe whose body passed the gate also owes the count laws idempotence cannot see.
+        guard let dedupe else { return idempotence }
+        return idempotence + "\n" + LiftedTestEmitter.dedupeCountLaws(
+            callee: callee, typeName: typeName, seed: seed, generator: generator,
+            keepsFirst: dedupe.keepsFirst, equalityKind: kind
         )
     }
 

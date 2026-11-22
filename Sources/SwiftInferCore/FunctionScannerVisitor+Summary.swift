@@ -339,13 +339,13 @@ extension FunctionScannerVisitor {
             uniquifierShape: keepsState(node) && Self.returnsValue(node)
                 ? UniquifierShapeReader.read(node)
                 : nil,
-            stateWrites: recordedStateWrites(node)
+            stateWrites: recordedStateWrites(node),
+            dedupeBody: DedupeBodyReader.read(node)
         )
     }
 
-    /// The `throws`/`async` gate for `dedupGateShape`: a replay-idempotency dedup
-    /// gate guards a side effect, so it lives in an effectful handler. Skipping
-    /// pure-sync functions keeps the extra statement walk off most of the corpus.
+    /// The `throws`/`async` gate for `dedupGateShape`: a replay-idempotency dedup gate guards a side
+    /// effect, so it lives in an effectful handler, and the walk stays off most of the corpus.
     static func couldCarryDedupGate(_ node: FunctionDeclSyntax) -> Bool {
         let effects = node.signature.effectSpecifiers
         return effects?.throwsClause != nil || effects?.asyncSpecifier != nil
