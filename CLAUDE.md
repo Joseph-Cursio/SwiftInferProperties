@@ -37,15 +37,19 @@ must equal the package pin and is guarded by `VerifierWorkdirKitPinTests`. Gener
 stubs import the opt-in `PropertyLawComplex` product; the main `PropertyLawKit` line
 keeps a zero `swift-numerics` footprint.
 
-**⚠ swift-property-based 2.0.0 and 2.0.1 ignore an error thrown from a `propertyCheck` body on
-Swift 6.2+** ([x-sheep/swift-property-based#29](https://github.com/x-sheep/swift-property-based/issues/29),
+**⚠ swift-property-based, every release through 2.0.1, ignores an error thrown from a
+`propertyCheck` body on Swift 6.2+** ([x-sheep/swift-property-based#29](https://github.com/x-sheep/swift-property-based/issues/29),
 open): `countIssues` runs the body under `try?`, so the property passes. Before 6.2 the
-`withKnownIssue` path recorded it. **Kit verdicts are not affected** — SwiftPropertyLaws'
-`SwiftPropertyBasedBackend` runs its own trial loop and catches the throw, so `verify` and the kit
-suites never reach `countIssues`. **Direct `propertyCheck` callers are**: this repo's own property
-tests (17 files, none with a bare `try` in a body as of 2026-11-24) and `ProxyConstruction`'s
-emitted recipe. Until a fix ships, fail inside a body with `#expect` or `try #require` (which
-records before it throws), never a bare `try`.
+`withKnownIssue` path recorded it. A test under `.fixedSeed` runs its WHOLE body through the same
+path. **Kit verdicts are not affected** — SwiftPropertyLaws' `SwiftPropertyBasedBackend` runs its
+own trial loop and catches the throw, so `verify` and the kit suites never reach `countIssues`.
+**Direct `propertyCheck` callers are**: this repo's own property tests (79 calls in 16 files, none
+exposed as of 2026-11-24, every body read) and `ProxyConstruction`'s emitted recipe.
+**Only a RECORDED failure counts.** Measured on 2.0.1 / Swift 6.4.1, with a callee that throws: a
+bare `try`, `#expect(try f() == x)` and `try #require(try f())` all PASS, because both macros
+rethrow an error from their own expression instead of recording it. `#expect(cond)` and
+`try #require(cond)` are safe only when `cond` itself cannot throw. For a step that throws, write
+`try #require(try? f())`, or catch and `Issue.record(error)` to keep the error's message.
 
 ## Current state
 
