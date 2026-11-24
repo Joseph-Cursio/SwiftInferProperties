@@ -287,12 +287,15 @@ The two foundational templates — round-trip and idempotence — are specified 
 //          .high generator confidence (.derived(.memberwise))
 // Evidence: encode(_:) -> Data (MyType.swift:14), decode(_:) -> MyType (MyType.swift:22)
 // Seed: 0x9F2C8B14 (derived from suggestion identity hash)
-@Test func roundTripEncoding() async throws {
+@Test func roundTripEncoding() async {
     await propertyCheck(input: Gen.derived(MyType.self)) { value in
-        #expect(try decode(encode(value)) == value)
+        let decoded = try #require(try? decode(encode(value)))
+        #expect(decoded == value)
     }
 }
 ```
+
+The `#require(try? …)` is what makes the caveat above true. On Swift 6.2+, swift-property-based through 2.0.1 drops an error that escapes a `propertyCheck` body ([x-sheep/swift-property-based#29](https://github.com/x-sheep/swift-property-based/issues/29)), and `#expect(try …)` rethrows such an error instead of recording it. This example used to read `#expect(try decode(encode(value)) == value)`, which passed when either side threw (corrected 2026-11-24).
 
 #### Idempotence
 
