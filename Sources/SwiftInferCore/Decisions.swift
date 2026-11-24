@@ -96,6 +96,13 @@ public struct DecisionRecord: Sendable, Equatable, Codable {
     /// which predates this schema).
     public let signalWeights: [SignalSnapshot]
 
+    /// #711 — the dedupe route the accepted row carried (`TemplateMatch.dedupeCount`), so
+    /// `accept-check` re-checks the count laws the ACCEPTED stub writes, even after an edit the
+    /// body gate no longer admits. That edit is the regression the laws exist to catch, and a
+    /// re-scan alone would stop checking them on exactly that code. `nil` for every other row, and
+    /// on records written before the field; synthesized `Codable` decodes it with `decodeIfPresent`.
+    public let dedupeBody: DedupeBody?
+
     public init(
         identityHash: String,
         template: String,
@@ -103,7 +110,8 @@ public struct DecisionRecord: Sendable, Equatable, Codable {
         tier: Tier,
         decision: Decision,
         timestamp: Date,
-        signalWeights: [SignalSnapshot] = []
+        signalWeights: [SignalSnapshot] = [],
+        dedupeBody: DedupeBody? = nil
     ) {
         self.identityHash = identityHash
         self.template = template
@@ -112,6 +120,7 @@ public struct DecisionRecord: Sendable, Equatable, Codable {
         self.decision = decision
         self.timestamp = timestamp
         self.signalWeights = signalWeights
+        self.dedupeBody = dedupeBody
     }
 }
 

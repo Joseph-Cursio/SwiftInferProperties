@@ -1,3 +1,5 @@
+import SwiftInferCore
+
 /// The four idempotence *emit shapes*. `composeIdempotencePass` in
 /// `StrategistDispatchEmitter+Templates.swift` stays the dispatcher; the bodies
 /// live here because the fourth shape pushed that file past the 400-line cap.
@@ -14,11 +16,19 @@ extension StrategistDispatchEmitter {
     /// The plain `f(f(x)) == f(x)` shape — everything that is not a mutating or
     /// self-returning instance method. Split out to keep
     /// `composeIdempotencePass`'s dispatch inside the function-body budget.
+    ///
+    /// `dedupeBody` (#711) is the route of a dedupe the body gate admitted. On the dictionary
+    /// route the law is stated without order (`dedupeMismatch`), since a correct body returns
+    /// `Array(d.values)` in hash order.
     static func composeDirectIdempotencePass(
         functionCall: String,
-        recipe: GeneratorRecipe
+        recipe: GeneratorRecipe,
+        dedupeBody: DedupeBody? = nil
     ) -> String {
         let oracle = "applyOnce(applyOnce(candidate)) != applyOnce(candidate)"
+        let mismatch = dedupeMismatch(
+            "onceResult != twiceResult", once: "onceResult", twice: "twiceResult", body: dedupeBody
+        )
         let shrink = shrinkableScalarCarriers.contains(recipe.carrierTypeName)
             ? singleShrinkPhase(carrier: recipe.carrierTypeName, oracle: oracle)
             : ""
@@ -42,7 +52,7 @@ extension StrategistDispatchEmitter {
             let value = defaultGenerator.run(using: &rng)
             let onceResult = applyOnce(value)
             let twiceResult = applyOnce(onceResult)
-            if onceResult != twiceResult {
+            if \(mismatch) {
                 print("VERIFY_DEFAULT_RESULT: FAIL")
                 print("VERIFY_DEFAULT_TRIAL: \\(trial)")
                 print("VERIFY_DEFAULT_INPUT: \\(value)")
@@ -55,7 +65,7 @@ extension StrategistDispatchEmitter {
 
         \(CollisionPass.unarySweep(
             carrier: recipe.carrierTypeName,
-            body: idempotenceCollisionBody()
+            body: idempotenceCollisionBody(dedupeBody: dedupeBody)
         ))
 
         print("VERIFY_DEFAULT_RESULT: PASS")

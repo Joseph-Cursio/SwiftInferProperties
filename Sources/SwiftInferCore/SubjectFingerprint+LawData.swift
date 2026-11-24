@@ -46,17 +46,28 @@ extension SubjectFingerprint {
                 evidenceLocations: suggestion.evidence.map(\.location),
                 byLocation: byLocation
             ),
-            lawData: suggestion.match?.documentedRangeMatch
+            lawData: suggestion.match?.documentedRangeMatch,
+            dedupeBody: suggestion.match?.dedupeCountMatch
         )
     }
 
     /// The one rule both sides of evidence staleness follow: `bodies` folded with the law's data
     /// outside them, `bodies` unchanged when there is none, and `nil` when `bodies` is — bounds
     /// alone are not a fingerprint of the subject.
-    public static func stamped(bodies: String?, lawData range: DocumentedRange?) -> String? {
+    ///
+    /// **#711 folds a dedupe's route in too.** The route is read from the body, so the body
+    /// fingerprint already moves when the code does. What it cannot see is the TOOL changing what
+    /// it runs for one body: verify used to check every dedupe with strict `==` idempotence, which
+    /// is false of a correct dictionary-route dedupe (hash order), and now runs an order-free
+    /// oracle plus the count laws. A record stamped before the column existed cannot say which it
+    /// ran, so it must read as unvalidatable, the same rule as `documentedRange`'s above.
+    public static func stamped(
+        bodies: String?, lawData range: DocumentedRange?, dedupeBody: DedupeBody? = nil
+    ) -> String? {
         guard let bodies else { return nil }
-        guard let range else { return bodies }
-        return folding(range, into: bodies)
+        let ranged = range.map { folding($0, into: bodies) } ?? bodies
+        guard let dedupeBody else { return ranged }
+        return digest(["dedupe-count", ranged, dedupeBody.route.rawValue].joined(separator: "|"))
     }
 
     /// Fold a doc comment's stated range into a body fingerprint. All three fields count:
@@ -82,9 +93,13 @@ public extension SemanticIndexEntry {
 
     /// What verify stamps its evidence with: the entry's body fingerprint (`subjectFingerprint`,
     /// bodies only) folded with the bounds the entry carries — the bounds verify actually ran.
-    /// Equal to `subjectFingerprint` on every row with no `documentedRange`. Computed, never
-    /// stored, so the index column keeps one meaning (#701).
+    /// Equal to `subjectFingerprint` on every row with no `documentedRange` and no `dedupeBody`.
+    /// Computed, never stored, so the index column keeps one meaning (#701, #711).
     var evidenceFingerprint: String? {
-        SubjectFingerprint.stamped(bodies: subjectFingerprint, lawData: documentedRange)
+        SubjectFingerprint.stamped(bodies: subjectFingerprint, lawData: documentedRange, dedupeBody: dedupeBody)
     }
+
+    /// Whether this row's law has data outside its bodies, so its evidence fingerprint differs
+    /// from `subjectFingerprint`.
+    var carriesLawData: Bool { documentedRange != nil || dedupeBody != nil }
 }

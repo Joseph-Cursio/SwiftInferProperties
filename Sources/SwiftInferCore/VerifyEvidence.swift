@@ -226,6 +226,13 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
     /// §10.2 — see `VerifyEvidenceScoring`.
     public let subjectFingerprint: String?
 
+    /// #711 — the companion laws verify ran inside this entry (`CompanionLawOutcome`): #671's
+    /// dedupe count laws on a dedupe's `idempotence` entry. `nil` when the entry has none, and on
+    /// every record written before the field existed; synthesized `Codable` decodes it with
+    /// `decodeIfPresent`, so no schema bump, the argument `excludedActionCount` makes above.
+    /// `outcome` stays the primary law's: a companion failure never becomes `measuredDefaultFails`.
+    public let companionLaws: [CompanionLawOutcome]?
+
     public init(
         identityHash: String,
         template: String,
@@ -239,7 +246,8 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         seed: String? = nil,
         regressionTestPath: String? = nil,
         corpusProvenance: String? = nil,
-        subjectFingerprint: String? = nil
+        subjectFingerprint: String? = nil,
+        companionLaws: [CompanionLawOutcome]? = nil
     ) {
         self.identityHash = identityHash
         self.template = template
@@ -254,5 +262,6 @@ public struct VerifyEvidence: Sendable, Equatable, Codable {
         self.regressionTestPath = regressionTestPath
         self.corpusProvenance = corpusProvenance
         self.subjectFingerprint = subjectFingerprint
+        self.companionLaws = companionLaws
     }
 }

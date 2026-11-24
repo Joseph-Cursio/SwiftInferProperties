@@ -8,8 +8,8 @@
 > own fallback says, and not a new template. The kill arm turned #671's REASONED kills into MEASURED ones, cell
 > for cell.
 >
-> **Built since (#711), accept stub only: `dedupe-count-laws.md`.** The emitted stub kills all three mutants,
-> cell for cell, and `verify` is not wired.
+> **Built since (#711): `dedupe-count-laws.md`.** The emitted stub kills all three mutants, cell for cell. `verify`
+> checks C1/C2 as companion laws of the idempotence entry, and `accept-check` reports each mutant as now-fails.
 
 #671 argues that idempotence cannot tell a dedupe from the identity or from `[]`. Those are what the two simplest
 dedupe bugs produce, so three SwiftUMLBridge mutants of `CoreDataModelExtractor.dedupe(relationships:)` pass it.

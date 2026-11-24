@@ -187,7 +187,7 @@ public enum VerifyResultParser {
 
         if let survived = verdictSurvivingTrappedEdgePass(
             defaultPass: defaultPass, edgePass: edgePass, output: output, lines: lines
-        ) {
+        ) ?? verdictSurvivingTrappedCompanion(output, lines: lines) {
             return survived
         }
 

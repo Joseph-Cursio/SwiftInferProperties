@@ -169,7 +169,8 @@ extension InteractiveTriage {
             timestamp: timestamp,
             signalWeights: suggestion.score.signals.map { signal in
                 SignalSnapshot(kind: signal.kind.rawValue, weight: signal.weight)
-            }
+            },
+            dedupeBody: suggestion.match?.dedupeCountMatch
         )
     }
 }

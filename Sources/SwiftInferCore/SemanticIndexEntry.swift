@@ -126,6 +126,10 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
     /// (`VerifyError.staleIndexEntry`) rather than emit a check with no bounds.
     public var documentedRange: DocumentedRange?
 
+    /// #711 — how an `idempotence` dedupe's body keeps one element per key (`TemplateMatch.dedupeCount`).
+    /// `nil` means plain idempotence: no gate admitted the body, or the row predates the column.
+    public var dedupeBody: DedupeBody?
+
     /// V1.149 — the *generator* carrier, distinct from `typeName` (which
     /// is the function's owner / call-site qualifier). For a method
     /// defined on the carrier (`extension Int { … }`) the two coincide
@@ -212,6 +216,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         secondaryFunctionName: String? = nil,
         secondaryMemberShape: MemberAccessShape? = nil,
         documentedRange: DocumentedRange? = nil,
+        dedupeBody: DedupeBody? = nil,
         carrierTypeName: String? = nil,
         isInstanceMethod: Bool = false,
         isMutatingMethod: Bool = false,
@@ -244,6 +249,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             secondaryFunctionName: secondaryFunctionName,
             secondaryMemberShape: secondaryMemberShape,
             documentedRange: documentedRange,
+            dedupeBody: dedupeBody,
             carrierTypeName: carrierTypeName,
             isInstanceMethod: isInstanceMethod,
             isMutatingMethod: isMutatingMethod,
@@ -293,6 +299,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         secondaryMemberShape: MemberAccessShape?,
         // No default, for the same reason: a forgotten `nil` reads as a stale entry.
         documentedRange: DocumentedRange?,
+        // No default: a forgotten `nil` would silently verify a dedupe as plain idempotence.
+        dedupeBody: DedupeBody?,
         carrierTypeName: String?,
         isInstanceMethod: Bool,
         isMutatingMethod: Bool,
@@ -324,6 +332,7 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
         self.secondaryFunctionName = secondaryFunctionName
         self.secondaryMemberShape = secondaryMemberShape
         self.documentedRange = documentedRange
+        self.dedupeBody = dedupeBody
         self.carrierTypeName = carrierTypeName
         self.isInstanceMethod = isInstanceMethod
         self.isMutatingMethod = isMutatingMethod
@@ -357,6 +366,8 @@ public struct SemanticIndexEntry: Codable, Sendable, Equatable {
             secondaryMemberShape: other.secondaryMemberShape,
             // From `other`: an edited doc comment is an edited law.
             documentedRange: other.documentedRange,
+            // From `other`: an edited body is an edited route.
+            dedupeBody: other.dedupeBody,
             carrierTypeName: carrierTypeName,
             isInstanceMethod: other.isInstanceMethod,
             isMutatingMethod: other.isMutatingMethod,

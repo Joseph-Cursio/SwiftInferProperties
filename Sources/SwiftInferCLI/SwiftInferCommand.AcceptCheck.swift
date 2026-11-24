@@ -277,9 +277,10 @@ public extension SwiftInferCommand {
                     suggestionPrefix: record.identityHash,
                     indexPathOverride: indexPathOverride,
                     budgetString: budgetString,
-                    workingDirectory: workingDirectory
+                    workingDirectory: workingDirectory,
+                    acceptedDedupeBody: record.dedupeBody
                 )
-                return classify(evidence: run.evidenceOutcome)
+                return classify(run: run)
             } catch VerifyError.suggestionNotFound {
                 return (.obsolete, "identity hash no longer surfaces in current source")
             } catch let VerifyError.unsupportedTemplate(template, _) {
@@ -318,6 +319,16 @@ public extension SwiftInferCommand {
         /// - `measuredError` and `architecturalCoveragePending` both
         ///   mean "could not measure" → `.error`. The architectural
         ///   sub-state isn't a verdict either way.
+        /// A verify run's post-acceptance verdict. #711: the accepted stub also checks the
+        /// companion laws, so a binding companion failure is a failing accepted test whatever the
+        /// primary law's verdict, and it reports `.nowFails` with the law named.
+        static func classify(run: Verify.VerifyRun) -> (kind: PostAcceptanceOutcomeKind, detail: String?) {
+            if let refutation = run.companionLaws.refutation, run.evidenceOutcome != .measuredDefaultFails {
+                return (.nowFails, "companion law \(refutation.law) \(refutation.status.rawValue)")
+            }
+            return classify(evidence: run.evidenceOutcome)
+        }
+
         static func classify(
             evidence: VerifyEvidenceOutcome
         ) -> (kind: PostAcceptanceOutcomeKind, detail: String?) {

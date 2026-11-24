@@ -204,6 +204,9 @@ extension SpeculativeRefactorRunner {
                 )
 
             case .measuredBothPass, .measuredEdgeCaseAdvisory:
+                // #711: a companion law the accepted stub also checks failed, so applying the
+                // patch would not give a passing test. Not refuted either: the primary law held.
+                guard (record.companionLaws ?? []).refutation == nil else { continue }
                 if firstHeld == nil {
                     firstHeld = SpeculativeProposal(
                         path: path, diff: diff, sourceDigest: digest, lawDescription: law,

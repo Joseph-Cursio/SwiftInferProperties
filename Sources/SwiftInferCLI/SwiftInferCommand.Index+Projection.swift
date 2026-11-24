@@ -148,6 +148,7 @@ extension SwiftInferCommand.Index {
             // #701 — the bounds the doc comment states, which only `DocumentedRangeTemplate`
             // computes; every other template's match carries none, so this is `nil` there.
             documentedRange: suggestion.match?.documentedRangeMatch,
+            dedupeBody: suggestion.match?.dedupeCountMatch,
             carrierTypeName: suggestion.carrierTypeName,
             isInstanceMethod: evidence?.isInstanceMethod ?? false,
             isMutatingMethod: evidence?.isMutatingMethod ?? false,

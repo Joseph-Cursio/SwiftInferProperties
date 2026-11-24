@@ -108,7 +108,9 @@ extension StrategistDispatchEmitter {
                 recipe: recipe
             )
         }
-        return composeDirectIdempotencePass(functionCall: functionCall, recipe: recipe)
+        return composeDirectIdempotencePass(
+            functionCall: functionCall, recipe: recipe, dedupeBody: inputs.dedupeBody
+        )
     }
 
     // MARK: - Commutativity (2 values per trial; f(a, b) == f(b, a))
