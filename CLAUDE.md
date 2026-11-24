@@ -37,6 +37,16 @@ must equal the package pin and is guarded by `VerifierWorkdirKitPinTests`. Gener
 stubs import the opt-in `PropertyLawComplex` product; the main `PropertyLawKit` line
 keeps a zero `swift-numerics` footprint.
 
+**⚠ swift-property-based 2.0.0 and 2.0.1 ignore an error thrown from a `propertyCheck` body on
+Swift 6.2+** ([x-sheep/swift-property-based#29](https://github.com/x-sheep/swift-property-based/issues/29),
+open): `countIssues` runs the body under `try?`, so the property passes. Before 6.2 the
+`withKnownIssue` path recorded it. **Kit verdicts are not affected** — SwiftPropertyLaws'
+`SwiftPropertyBasedBackend` runs its own trial loop and catches the throw, so `verify` and the kit
+suites never reach `countIssues`. **Direct `propertyCheck` callers are**: this repo's own property
+tests (17 files, none with a bare `try` in a body as of 2026-11-24) and `ProxyConstruction`'s
+emitted recipe. Until a fix ships, fail inside a body with `#expect` or `try #require` (which
+records before it throws), never a bare `try`.
+
 ## Current state
 
 **v1.160.0.** Two disjoint surfaces, both discovered → surfaced → verified → promoted end
