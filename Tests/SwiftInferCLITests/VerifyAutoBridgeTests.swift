@@ -130,6 +130,30 @@ struct VerifyAutoBridgeTests {
         #expect(rendered.contains("shrank 3 steps"))
     }
 
+    /// `--no-persist-evidence` recorded nothing, so the block must not quote the on-disk corpus
+    /// count or point at a replay gate that does not hold this counterexample.
+    @Test("unified failure block under --no-persist-evidence says the corpus was not recorded")
+    func renderOutcomeUnpersistedBlock() throws {
+        let root = try tempRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let context = VerifyResultRenderer.Context(
+            templateName: "idempotence", forwardName: "Int.f", inverseName: "Int.f", carrierType: "Int"
+        )
+        let rendered = SwiftInferCommand.Verify.renderOutcome(
+            parsed: .defaultFails(trial: 7, input: "999", forwardResult: "a", inverseResult: "b"),
+            context: context,
+            entry: Self.entry(template: "idempotence"),
+            packageRoot: root,
+            regressionPath: nil,
+            persistEvidence: false
+        )
+        #expect(rendered.contains("seed: "))
+        #expect(rendered.contains("corpus: not recorded (--no-persist-evidence)"))
+        #expect(rendered.contains("re-verify: swift-infer verify --suggestion"))
+        #expect(rendered.contains("recorded ·") == false)
+        #expect(rendered.contains("--replay-only") == false)
+    }
+
     @Test("v1.144 unified block is suppressed for non-failing outcomes")
     func renderOutcomeNoBlockOnPass() throws {
         let root = try tempRoot()

@@ -111,10 +111,8 @@ extension SwiftInferCommand.Index {
         let decisionRecord = decisionsByHash[normalizedHash]
         let decisionString = decisionRecord?.decision.rawValue
         let decisionAt = decisionRecord.map { isoTimestamp(from: $0.timestamp) }
-        let typeShape = indexedTypeShape(
-            for: suggestion,
-            typeShapesByName: typeShapesByName
-        )
+        let carrier = attributedCarrier(for: suggestion, typeShapesByName: typeShapesByName)
+        let typeShape = carrier.typeShape
         let secondary = secondaryHalf(for: suggestion)
         // Hoisted out of the initializer call below rather than inlined: that literal already
         // has ~20 arguments, and SourceKit reports it as unable to type-check in reasonable
@@ -149,7 +147,7 @@ extension SwiftInferCommand.Index {
             // computes; every other template's match carries none, so this is `nil` there.
             documentedRange: suggestion.match?.documentedRangeMatch,
             dedupeBody: suggestion.match?.dedupeCountMatch,
-            carrierTypeName: suggestion.carrierTypeName,
+            carrierTypeName: carrier.carrierTypeName,
             isInstanceMethod: evidence?.isInstanceMethod ?? false,
             isMutatingMethod: evidence?.isMutatingMethod ?? false,
             isNullary: evidence?.isNullary ?? false,
@@ -163,6 +161,31 @@ extension SwiftInferCommand.Index {
             // reads downstream as "cannot validate".
             subjectFingerprint: subjectFingerprint
         )
+    }
+
+    /// The entry's generator carrier and its shape: the suggestion's own, except for a `(T) -> T`
+    /// round trip over a namespace, which quantifies over `T` and not over the namespace (a type
+    /// with no values). Re-attributing that one shape is what stops `caselessEnumCarrier`'s
+    /// decline from firing where the carrier is unambiguous — see
+    /// `StructuralBlocker.endomorphicNamespaceRoundTripDomain`, which keeps every other shape on
+    /// the namespace and so keeps it declining.
+    ///
+    /// **Only a new projection sees this.** An `index.json` written before it keeps the old
+    /// `structuralBlocker` until `swift-infer index` runs again: verify's implicit reindex
+    /// (`VerifyHarness.isStale`) compares source mtimes, not the tool that wrote the index, so a
+    /// survey over an untouched package still files the pair as `not-a-candidate`.
+    private static func attributedCarrier(
+        for suggestion: Suggestion,
+        typeShapesByName: [String: PropertyLawCore.TypeShape]
+    ) -> (carrierTypeName: String?, typeShape: IndexedTypeShape?) {
+        let ownerShape = indexedTypeShape(for: suggestion, typeShapesByName: typeShapesByName)
+        let namespaceDomain = StructuralBlocker.endomorphicNamespaceRoundTripDomain(
+            templateName: suggestion.templateName,
+            ownerShape: ownerShape,
+            evidence: suggestion.evidence
+        ) { indexedTypeShape(named: $0, in: typeShapesByName) }
+        guard let namespaceDomain else { return (suggestion.carrierTypeName, ownerShape) }
+        return (namespaceDomain, indexedTypeShape(named: namespaceDomain, in: typeShapesByName))
     }
 
     /// V1.49.C.2 — read the second-half function name from the Suggestion's
@@ -243,9 +266,16 @@ extension SwiftInferCommand.Index {
         // `Gen<T>` must produce) over the owner when they diverge, so a
         // non-raw `T` on an unrelated owner resolves its own shape.
         guard let carrier = suggestion.carrierTypeName ?? suggestion.carrier else { return nil }
-        let bareName = bareTypeName(from: carrier)
-        guard let kitShape = typeShapesByName[bareName] else { return nil }
-        return IndexedTypeShape(from: kitShape)
+        return indexedTypeShape(named: carrier, in: typeShapesByName)
+    }
+
+    /// The scanned shape of `typeName` (generic arguments stripped), or `nil` for a type the
+    /// scan did not declare — `String`, or anything from another package.
+    private static func indexedTypeShape(
+        named typeName: String,
+        in typeShapesByName: [String: PropertyLawCore.TypeShape]
+    ) -> IndexedTypeShape? {
+        typeShapesByName[bareTypeName(from: typeName)].map(IndexedTypeShape.init(from:))
     }
 
     /// Strip the generic argument list from a carrier name so the

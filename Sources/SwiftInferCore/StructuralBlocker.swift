@@ -76,11 +76,21 @@ public enum StructuralBlocker {
     /// where the containing type is the value being round-tripped, and wrong for a static on
     /// a namespace.
     ///
-    /// **Why this declines rather than re-attributing.** The obvious repair — use the
-    /// forward function's parameter type — is ambiguous for a round trip, which has two
+    /// **Why this declines rather than re-attributing, in general.** The obvious repair — use
+    /// the forward function's parameter type — is ambiguous for a round trip, which has two
     /// legitimate carriers depending on which direction the stub runs (`g(f(a)) == a`
     /// generates `A`; `f(g(b)) == b` generates `B`). "A caseless enum has no values" needs no
-    /// such choice and cannot be wrong. Re-attribution stays open, and would supersede this.
+    /// such choice and cannot be wrong.
+    ///
+    /// **The one shape that IS re-attributed: `(T) -> T` both ways** — see
+    /// `endomorphicNamespaceRoundTripDomain`. When both halves map `T` to `T`, `A` and `B` are
+    /// the same type, so the ambiguity above does not arise and the parameter type is the only
+    /// carrier there is. Found on a toy codec (`enum Slug { static func encode(_: String) ->
+    /// String; static func decode(_: String) -> String }`, 2026-11-24): `verify --suggestion`
+    /// measured the pair over `String` and found its planted bug, while `--all-from-index`
+    /// filed the same entry as `not-a-candidate` here, so the survey could never find it. Every
+    /// other namespace round trip — `SamplingSeed`'s `String -> Value` included — still
+    /// declines, which is this arm's job.
     ///
     /// **The enum-cases field must be populated for this to be sound.** It was dropped from
     /// the index once, and an enum whose cases had gone missing would look caseless here —
@@ -91,6 +101,46 @@ public enum StructuralBlocker {
         guard let shape, shape.kind == .enum, shape.enumCases.isEmpty else { return nil }
         return "carrier `\(shape.name)` is a caseless enum — a namespace with no values, "
             + "so no generator can exist for it"
+    }
+
+    /// The carrier a `round-trip` pair over a namespace really quantifies over, or `nil` to keep
+    /// the namespace (and so `caselessEnumCarrier`'s decline).
+    ///
+    /// Re-attributes ONLY the unambiguous shape: both halves are non-generic static functions of
+    /// one parameter whose signature is exactly `(T) -> T` — no `async`, no `throws`, no
+    /// `inout` — with the same `T`, and `T` is a value type rather than another namespace or the
+    /// owner itself (`Self`). Each guard keeps the general case declining, as
+    /// `caselessEnumCarrier` documents:
+    /// - **`T -> U` with `U != T`** is the two-carrier ambiguity, and stays declined;
+    /// - **an instance method** cannot live on a caseless enum's values, there being none;
+    /// - **empty `parameterTypeNames`** means *not recorded* (an index from before the field),
+    ///   which is no evidence of the shape;
+    /// - **a caseless `T`** would only move the decline from one namespace to another.
+    ///
+    /// The `T` it returns is what `verify --suggestion` already generated for this entry
+    /// (`roundTripDomainCarrier` reads the forward's single parameter type), so survey mode and
+    /// suggestion mode now measure the same law.
+    public static func endomorphicNamespaceRoundTripDomain(
+        templateName: String,
+        ownerShape: IndexedTypeShape?,
+        evidence: [Evidence],
+        shapeNamed: (String) -> IndexedTypeShape?
+    ) -> String? {
+        guard templateName == "round-trip",
+              let ownerShape, caselessEnumCarrier(ownerShape) != nil,
+              evidence.count == 2,
+              let domain = evidence[0].parameterTypeNames.first, !domain.isEmpty,
+              domain != "Self", domain != ownerShape.name
+        else { return nil }
+        let endomorphic = evidence.allSatisfy { half in
+            !half.isInstanceMethod
+                && half.genericParameters.isEmpty
+                && half.inoutParameterIndices.isEmpty
+                && half.parameterTypeNames == [domain]
+                && half.signature == "(\(domain)) -> \(domain)"
+        }
+        guard endomorphic, caselessEnumCarrier(shapeNamed(domain)) == nil else { return nil }
+        return domain
     }
 
     /// The reason to record for an entry, or `nil` when nothing structural blocks it.

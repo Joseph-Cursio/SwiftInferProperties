@@ -10,9 +10,10 @@ extension SwiftInferCommand.Verify {
 
     /// Orchestration glue. Pure-ish entry point so tests can drive verify
     /// end-to-end without the AsyncParsableCommand shell. Resolves the entry,
-    /// emits + builds + runs the verifier workdir, persists evidence, and
-    /// renders the outcome (appending the auto-bridge regression-test note
-    /// when `emitRegression` and the run found a counterexample).
+    /// emits + builds + runs the verifier workdir, persists evidence (unless
+    /// `persistEvidence` is off), and renders the outcome (appending the
+    /// auto-bridge regression-test note when `emitRegression` and the run found
+    /// a counterexample).
     static func runPipeline(
         suggestionPrefix: String,
         indexPathOverride: String?,
@@ -20,7 +21,8 @@ extension SwiftInferCommand.Verify {
         workingDirectory: URL,
         emitRegression: Bool = false,
         target: String? = nil,
-        acceptedDedupeBody: DedupeBody? = nil
+        acceptedDedupeBody: DedupeBody? = nil,
+        persistEvidence: Bool = true
     ) throws -> VerifyRun {
         let packageRoot = findPackageRoot(startingFrom: workingDirectory)
             ?? workingDirectory
@@ -62,22 +64,24 @@ extension SwiftInferCommand.Verify {
             guard emitRegression, case let .defaultFails(detail) = parsed else { return nil }
             return emitRegressionTest(entry: entry, detail: detail, packageRoot: packageRoot)
         }()
-        persistEvidence(
+        persistSingleRun(
             parsed: parsed,
             // The RE-SCANNED entry, not `entry`: its fingerprint is the one discover checks. An
             // accepted route (`withAcceptedRoute`) changes what ran, not what code it ran on.
-            entry: resolved.entry,
+            evidenceEntry: resolved.entry,
+            corpusEntry: entry,
             packageRoot: packageRoot,
             regressionPath: regressionPath,
-            companionLaws: companions
+            companionLaws: companions,
+            persistEvidence: persistEvidence
         )
-        persistCorpus(parsed: parsed, entry: entry, packageRoot: packageRoot)
         // The verdict and its rendering come back TOGETHER, from one `parsed`. Returning only
         // the prose is what let the speculative runner match it for "bothPass" — a word this
         // renderer never emits — and report `not-runnable` for every candidate, forever. See #116.
         let rendered = renderOutcome(
             parsed: parsed, context: stubBundle.rendererContext, entry: entry,
-            packageRoot: packageRoot, regressionPath: regressionPath
+            packageRoot: packageRoot, regressionPath: regressionPath,
+            persistEvidence: persistEvidence
         ) + VerifyResultRenderer.renderCompanions(companions)
         return VerifyRun(outcome: parsed, rendered: rendered, companionLaws: companions)
     }
@@ -138,6 +142,38 @@ extension SwiftInferCommand.Verify {
     static func packageRelative(_ url: URL, packageRoot: URL) -> String {
         let prefix = packageRoot.path + "/"
         return url.path.hasPrefix(prefix) ? String(url.path.dropFirst(prefix.count)) : url.path
+    }
+
+    /// Persist one `--suggestion` run: the evidence record and, for a counterexample, the replay
+    /// corpus entry. **`persistEvidence: false` skips both**, exactly what the `--all-from-index`
+    /// arm skips (`persistSurveyBatch`, #129): both are outputs of the run, and a run being
+    /// COMPARED against `.swiftinfer/verify-evidence.json` must not rewrite it first. The flag was
+    /// parsed in both modes and read only by the survey arm, so a single-suggestion re-check
+    /// silently overwrote the baseline it was meant to be compared against.
+    ///
+    /// The auto-bridge regression test is not gated here, as it is not in the survey arm:
+    /// `--emit-regression` governs it, and the test is written before this runs.
+    /// `now` is injected (defaulting to the wall clock) so a test can pin the stamp.
+    static func persistSingleRun(
+        parsed: VerifyOutcome,
+        evidenceEntry: SemanticIndexEntry,
+        corpusEntry: SemanticIndexEntry,
+        packageRoot: URL,
+        regressionPath: URL?,
+        companionLaws: [CompanionLawOutcome] = [],
+        persistEvidence: Bool = true,
+        now: Date = Date()
+    ) {
+        guard persistEvidence else { return }
+        self.persistEvidence(
+            parsed: parsed,
+            entry: evidenceEntry,
+            packageRoot: packageRoot,
+            regressionPath: regressionPath,
+            companionLaws: companionLaws,
+            now: now
+        )
+        persistCorpus(parsed: parsed, entry: corpusEntry, packageRoot: packageRoot, now: now)
     }
 
     /// V1.64.B — persist the outcome to `.swiftinfer/verify-evidence.json` so
@@ -229,12 +265,17 @@ extension SwiftInferCommand.Verify {
     /// upstream), the replayable seed, and the corpus + replay-gate hints — so
     /// the developer sees the whole loop (minimal counterexample → durable test
     /// → replay) in one place. Non-failures render unchanged.
+    ///
+    /// With `persistEvidence: false` this run recorded nothing (`persistSingleRun`), so the corpus
+    /// count on disk is not this counterexample's and `--replay-only` would not replay it: the
+    /// line says so instead of printing either. The re-verify hint still holds.
     static func renderOutcome(
         parsed: VerifyOutcome,
         context: VerifyResultRenderer.Context,
         entry: SemanticIndexEntry,
         packageRoot: URL,
-        regressionPath: URL?
+        regressionPath: URL?,
+        persistEvidence: Bool = true
     ) -> String {
         var rendered = VerifyResultRenderer.render(parsed, context: context)
         guard case .defaultFails = parsed else { return rendered }
@@ -242,10 +283,15 @@ extension SwiftInferCommand.Verify {
             rendered += "\n    regression test → \(packageRelative(regressionPath, packageRoot: packageRoot))"
         }
         rendered += "\n    seed: \(seedString(for: entry.identityHash))"
-        let corpusCount = VerifyCorpusStore.load(packageRoot: packageRoot).corpus.entries.count
         let prefix = String(entry.identityHash.prefix(10))
+        let reVerify = "re-verify: swift-infer verify --suggestion \(prefix)"
+        guard persistEvidence else {
+            rendered += "\n    corpus: not recorded (--no-persist-evidence) · \(reVerify)"
+            return rendered
+        }
+        let corpusCount = VerifyCorpusStore.load(packageRoot: packageRoot).corpus.entries.count
         rendered += "\n    corpus: \(corpusCount) recorded"
-            + " · re-verify: swift-infer verify --suggestion \(prefix)"
+            + " · \(reVerify)"
             + " · gate: swift-infer verify --replay-only"
         return rendered
     }
