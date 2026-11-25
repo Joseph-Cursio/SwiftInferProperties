@@ -380,7 +380,10 @@ let package = Package(
                 // `self.init(…)` to its target. Declared rather than reached through
                 // SwiftInferCore, for the clean-build reason `SwiftInferCoreTests` records.
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax")
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                // `NamespaceRoundTripVerifyMeasuredTests` drives `verify` through its command
+                // shell and matches the `ExitCode` that `--fail-on-refutation` throws.
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),
         // Wall-clock performance budgets, isolated in their own target so their

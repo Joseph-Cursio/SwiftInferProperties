@@ -97,7 +97,7 @@ BATCH5 := ResultCarrierReachMeasuredTests|ViewModelVerifyCorpusMeasuredTests|Vie
 BATCH6 := CompositionPayloadCorpusMeasuredTests|IdentifiedActionCorpusMeasuredTests|BindingActionCorpusMeasuredTests|TraceMiningMeasuredTests
 # TCA/redux determinism / real-examples / unknown-action / multi-module corpora,
 # plus the generator-recipe compile guard (a single light kit-only build).
-BATCH7 := DeterminismVerifyCorpusMeasuredTests|TCADeterminismCorpusMeasuredTests|TCAExamplesMeasuredTests|UnknownActionCorpusMeasuredTests|MultiModuleVerifyMeasuredTests|GeneratorRecipeCompileMeasuredTests|AlgebraicLawsVerifyMeasuredTests|VerifyEmitterMatrixMeasuredTests|RecursiveCarrierMeasuredTests
+BATCH7 := DeterminismVerifyCorpusMeasuredTests|TCADeterminismCorpusMeasuredTests|TCAExamplesMeasuredTests|UnknownActionCorpusMeasuredTests|MultiModuleVerifyMeasuredTests|GeneratorRecipeCompileMeasuredTests|AlgebraicLawsVerifyMeasuredTests|VerifyEmitterMatrixMeasuredTests|RecursiveCarrierMeasuredTests|NamespaceRoundTripVerifyMeasuredTests
 # Codec round-trip / output-determinism / reorder / value-semantics corpora.
 # These eight had NEVER run — matched by SUBPROCESS_RE (so skipped by the fast
 # path) and named by no batch, from the day each was written until 2026-08-05.

@@ -300,10 +300,29 @@ public extension SwiftInferCommand {
         )
         public var scanDependencies: Bool = false
 
+        @Flag(
+            name: .long,
+            help: """
+            Exit non-zero when any verified property is refuted — a counterexample found \
+            (measured-defaultFails, or a failed companion law) — in --suggestion and \
+            --all-from-index modes (CI gate). Errors, not-a-candidate declines, skipped \
+            entries and edge-case advisories do not trip it. Off by default — the tool's \
+            advisory, human-reviewed posture.
+            """
+        )
+        public var failOnRefutation: Bool = false
+
         public init() { /* no-op */ }
 
         public func run() throws {
-            let workingDirectory = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            try execute(workingDirectory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath))
+        }
+
+        /// `run()`'s body, with the working directory passed in rather than read from the
+        /// process, so a test can drive the whole command (flags, exit gate and all) against a
+        /// fixture package without changing the shared current directory. `runners` is the
+        /// real pipeline and survey unless a test substitutes them to check the dispatch alone.
+        func execute(workingDirectory: URL, runners: Runners = .live) throws {
             let regression = SettingOverride(emitRegression, enabledBy: .emitRegression)
             if replayOnly {
                 try Self.runReplayOnly(
@@ -319,7 +338,7 @@ public extension SwiftInferCommand {
                         reason: "--suggestion and --all-from-index are mutually exclusive"
                     )
                 }
-                try Self.runAllFromIndex(
+                let records = try runners.survey(SurveyRequest(
                     indexPathOverride: indexPath,
                     budgetString: budget,
                     workingDirectory: workingDirectory,
@@ -329,7 +348,10 @@ public extension SwiftInferCommand {
                     scanDependencies: scanDependencies,
                     corpusModuleName: corpusModule,
                     emitRegression: regression.resolved(otherwise: false)
-                )
+                ))
+                if Self.failsRefutationGate(enabled: failOnRefutation, records: records) {
+                    throw ExitCode.failure
+                }
                 return
             }
             guard let suggestion else {
@@ -337,17 +359,21 @@ public extension SwiftInferCommand {
                     reason: "either --suggestion <hash> or --all-from-index is required"
                 )
             }
-            let run = try Self.runPipeline(
+            let run = try runners.suggestion(SuggestionRequest(
                 suggestionPrefix: suggestion,
                 indexPathOverride: indexPath,
                 budgetString: budget,
                 workingDirectory: workingDirectory,
                 emitRegression: regression.resolved(otherwise: true),
-                target: target
-            )
+                target: target,
+                persistEvidence: persistEvidence
+            ))
             // `.rendered`, not the value itself — printing the struct compiles fine and emits a
             // memberwise description, which is the same class of silent wrong answer #116 is about.
             print(run.rendered)
+            if Self.failsRefutationGate(enabled: failOnRefutation, run: run) {
+                throw ExitCode.failure
+            }
         }
     }
 }

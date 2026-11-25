@@ -334,6 +334,7 @@ Compile and run a candidate property test (PRD §20.2 follow-up). Opt-in; nothin
 | `--replay-only` | Re-check every recorded counterexample in .swiftinfer/verify-corpus.json (regression gate). Exits non-zero if any still fail. |
 | `--persist-evidence/--no-persist-evidence` | Persist this run's verdicts to .swiftinfer/verify-evidence.json (and the replay corpus). On by default. Pass --no-persist-evidence when the run is being COMPARED against that file: persisting first makes the comparison a comparison against this run's own output, which has silently produced a false "0 drift" twice. (default: --persist-evidence) |
 | `--scan-dependencies` | When verify reindexes on demand, also record shapes for types declared in resolved dependencies. Off by default — see `index --scan-dependencies`. Without it, a law whose carrier is declared in a dependency keeps declining as `unsupported-carrier`. |
+| `--fail-on-refutation` | Exit non-zero when any verified property is refuted — a counterexample found (measured-defaultFails, or a failed companion law) — in --suggestion and --all-from-index modes (CI gate). Errors, not-a-candidate declines, skipped entries and edge-case advisories do not trip it. Off by default — the tool's advisory, human-reviewed posture. |
 
 ### `accept-check`
 
@@ -459,6 +460,7 @@ Record a decision against a BridgeSuggestion identity (`.swiftinfer/interaction-
 | `drift` | always (drift never fails) | bad `--target`, missing `Sources/<target>/`, malformed flags |
 | `convert-counterexample` | success | invalid `--template`, missing required flags for the template, package root not found |
 | `metrics` | success | missing decisions file (when `--decisions` is explicit), malformed JSON beyond what the loader can recover from |
+| `verify` | every run that completes, including one that finds a counterexample (unless `--fail-on-refutation`) | argument errors; a `--suggestion` the index cannot resolve, or one verify declines or cannot build; `--replay-only` when a recorded counterexample still fails; `--fail-on-refutation` when any verified property is refuted (`measured-defaultFails`, or a failed companion law). Under `--all-from-index` a per-entry error or decline is a record in the stream, not an exit status |
 
 The non-fatal posture for `discover` + `drift` is deliberate (PRD §3 non-goal: "never fails the build"). To gate CI on suggestions, parse stderr.
 
