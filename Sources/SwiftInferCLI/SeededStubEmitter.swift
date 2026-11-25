@@ -36,6 +36,29 @@ extension SeededStubEmitter {
         """
     }
 
+    /// The stub's statement that unbuffers stdout, spelled for the host that builds the stub
+    /// (the one rendering it). On Darwin it is `setvbuf(stdout, nil, _IONBF, 0)`, unchanged.
+    /// Glibc imports `stdout` as a mutable global, and Swift 6 mode rejects any reference to it
+    /// ("not concurrency-safe"), so on Linux no stub built and `verify` recorded
+    /// `.error(build failed)` for everything. `@preconcurrency import Glibc`, a
+    /// `nonisolated(unsafe)` alias and a wrapper function all still name the global and still
+    /// fail. Swift 5 language mode compiles it but makes the kit's `@available(swift 6.2)`
+    /// generators (`Gen.frequency`, `Gen.oneOf`) unavailable: measured, the String strategist
+    /// stub then fails to build instead. So the Linux spelling reads the same C variable through
+    /// the dynamic linker, which never names it. Measured in `swift:6.4-noble`: it compiles in
+    /// Swift 6 mode, and a marker printed before a trap reaches a pipe (without it, it is lost).
+    static var unbufferStdoutStatement: String {
+        #if canImport(Darwin)
+        "setvbuf(stdout, nil, _IONBF, 0)"
+        #else
+        """
+        if let stdoutSymbol = dlsym(dlopen(nil, RTLD_NOW), "stdout") {
+            setvbuf(stdoutSymbol.load(as: UnsafeMutablePointer<FILE>.self), nil, _IONBF, 0)
+        }
+        """
+        #endif
+    }
+
     /// Imports + optional preamble + a seeded `Xoshiro` RNG + `trials` count —
     /// the common header every seeded verification stub opens with.
     static func setupSection(
@@ -53,7 +76,7 @@ extension SeededStubEmitter {
         // every marker printed before it, and the run comes back with an
         // opaque signal and two empty streams. Diagnosing one such trap cost
         // two attempts for precisely this reason.
-        setvbuf(stdout, nil, _IONBF, 0)
+        \(unbufferStdoutStatement)
 
         let seedTuple: (UInt64, UInt64, UInt64, UInt64) = (
             0x\(hex(seed.stateA)),

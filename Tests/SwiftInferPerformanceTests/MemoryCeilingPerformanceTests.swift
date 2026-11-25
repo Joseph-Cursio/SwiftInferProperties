@@ -1,3 +1,8 @@
+// The peak-RSS sampler reads Mach's `task_info`, which exists only on Darwin. Porting it to Linux
+// (`/proc/self/status`'s `VmHWM`, say) is a measurement change, not a build fix, so on any other
+// platform this suite compiles out rather than half-measuring; the PRD §13 memory budget is
+// checked on macOS only.
+#if canImport(Darwin)
 import Darwin
 import Foundation
 import SwiftInferTemplates
@@ -219,3 +224,4 @@ struct MemoryCeilingPerformanceTests {
         String(format: "%.1f", value)
     }
 }
+#endif

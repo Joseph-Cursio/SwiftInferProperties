@@ -47,7 +47,8 @@ struct InteractionBaselineLoaderTests {
         let result = InteractionBaselineLoader.load(startingFrom: sources)
         #expect(result.baseline == baseline)
         #expect(result.warnings.isEmpty)
-        #expect(result.packageRoot?.standardizedFileURL == root.standardizedFileURL)
+        // `.path`, not the URLs: swift-foundation on Linux tells `…/root/` from `…/root`.
+        #expect(result.packageRoot?.standardizedFileURL.path == root.standardizedFileURL.path)
     }
 
     @Test("implicit load: missing file is silent (no warnings, empty baseline)")

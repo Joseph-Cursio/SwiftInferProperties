@@ -465,6 +465,12 @@ it, and `make test` does not run it.
   This is the opposite constraint to SwiftMarkdownWiki, which needs Xcode's toolchain because the
   swift.org one cannot see SwiftUI cross-import overlay types. On Xcode 26 no single toolchain built
   both; Xcode 27's builds this package too, and whether it builds both is unchecked.
+- **Linux builds and verifies.** CI's `test-linux` job runs the fast suite in `swift:6.4-noble`.
+  The four SHA-256 sites import swift-crypto's `Crypto` where CryptoKit is absent (a `.linux`-only
+  dependency), and `CrossPlatformHashPinTests` pins the hashes, which are keys. Off Darwin the stub
+  unbuffers stdout through `dlsym` (`SeededStubEmitter.unbufferStdoutStatement`): Swift 6 rejects
+  naming Glibc's `stdout`, and Swift 5 mode loses `Gen.frequency`. Run measured suites there with
+  `--no-parallel`; only batch3 and three single suites have been checked on Linux.
 - `swift package clean && swift test` on session start — with the toolchain caveat above.
 - **Use the Makefile** — `make test-fast` (regex-skip fast path; the Makefile says ~35s and runs on 2026-09-23 took ~50–70s) · `make test` (fast suite + sequential subprocess batches, fail-fast) · `make batch1`…`batch8` · `make perf` · `make clean-temp` · `make help`. Prefer `make test` over a bare `swift test`: the batches bound peak temp-disk and avoid §13 perf-budget contention flakes.
 - A killed-mid-run subprocess suite skips its cleanup `defer` and can leak tens of GB to `$TMPDIR` — that is what `make clean-temp` is for. It also sweeps `.swiftinfer/verify-workdir/`, which is gitignored and accumulates silently.

@@ -45,7 +45,8 @@ struct DiscoverCLITestDirResolverTests {
         ) { warnings.append($0) }
         // Walk-up found Package.swift + Tests/ — that's what the
         // resolver returns.
-        #expect(resolved.standardizedFileURL == tests.standardizedFileURL)
+        // `.path`, not the URLs: swift-foundation on Linux tells `…/root/` from `…/root`.
+        #expect(resolved.standardizedFileURL.path == tests.standardizedFileURL.path)
         #expect(warnings.count == 1)
         #expect(warnings.first?.contains("--test-dir path") == true)
         #expect(warnings.first?.contains("does not exist") == true)
@@ -65,7 +66,8 @@ struct DiscoverCLITestDirResolverTests {
             productionTarget: prodTarget,
             explicitTestDir: nil
         ) { warnings.append($0) }
-        #expect(resolved.standardizedFileURL == tests.standardizedFileURL)
+        // `.path`, not the URLs: swift-foundation on Linux tells `…/root/` from `…/root`.
+        #expect(resolved.standardizedFileURL.path == tests.standardizedFileURL.path)
         #expect(warnings.isEmpty)
     }
 

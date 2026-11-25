@@ -1,4 +1,12 @@
+// SHA-256 only. CryptoKit is Apple-only; on Linux the same `SHA256` API comes from
+// apple/swift-crypto's `Crypto` (a Linux-only dependency in Package.swift). Both compute the
+// standard digest, so every hash is byte-identical across platforms — `CrossPlatformHashPinTests`
+// pins the values, because suggestion identities are keys.
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 import Foundation
 
 /// Deterministic sampling-seed derivation per PRD §16 #6. Each
