@@ -56,14 +56,18 @@ struct ConstructionUniverseDependencyPathTests {
     /// user pastes from either named a directory "outside the root", and `mint()` read pure.
     @Test("an absolute path is compared resolved, whichever way /var or /tmp is spelled")
     func absolutePathIsComparedResolved() throws {
-        let spellings: [(String, (URL) -> String)] = [
+        var spellings: [(String, (URL) -> String)] = [
             ("as created", { $0.path + "/Packages/Q" }),
-            ("through /private", { root in
-                let path = root.path
-                return (path.hasPrefix("/private/") ? path : "/private" + path) + "/Packages/Q"
-            }),
             ("resolved", { $0.resolvingSymlinksInPath().path + "/Packages/Q" }),
         ]
+        // `/var` and `/tmp` are links into `/private` on Darwin only; Linux has no `/private`, so
+        // that spelling names a directory that does not exist there.
+        #if canImport(Darwin)
+        spellings.insert(("through /private", { root in
+            let path = root.path
+            return (path.hasPrefix("/private/") ? path : "/private" + path) + "/Packages/Q"
+        }), at: 1)
+        #endif
         for (label, spell) in spellings {
             let root = try Self.package(dependingOn: spell)
             defer { try? FileManager.default.removeItem(at: root) }

@@ -125,7 +125,16 @@ let package = Package(
         .package(
             url: "https://github.com/Joseph-Cursio/SwiftEffectInference.git",
             revision: "ba3624d754c3c9150c946f66468c2c356be3e7e0"
-        )
+        ),
+        // SHA-256 on Linux. The four hashing sites (`SuggestionIdentity`, `SamplingSeed`,
+        // `SubjectFingerprint`, `LiftedTestEmitter.regressionFileHash`) import CryptoKit where it
+        // exists and swift-crypto's `Crypto` where it does not; both expose the same
+        // `SHA256.hash(data:)`. Every product below takes it only `.when(platforms: [.linux])`,
+        // so nothing on Apple platforms builds or links it. SwiftPM still FETCHES and resolves it
+        // there (with swift-asn1, its own dependency), because resolution is platform-independent.
+        // The range is wide on purpose: `SHA256` has been stable since swift-crypto 1.0, and a
+        // consumer pinning any 3.x–5.x release must still resolve this package.
+        .package(url: "https://github.com/apple/swift-crypto.git", "3.0.0"..<"6.0.0")
     ],
     targets: [
         // SwiftInferCore — shared data model (FunctionSummary, Suggestion,
@@ -145,7 +154,9 @@ let package = Package(
                 // resolves and the public API is callable); active calls
                 // into `DerivationStrategist.strategy(for:)` come in M4.
                 .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),
-                .product(name: "PropertyLawSyntaxSupport", package: "SwiftPropertyLaws")
+                .product(name: "PropertyLawSyntaxSupport", package: "SwiftPropertyLaws"),
+                // `SHA256` where CryptoKit does not exist — see the dependency's comment.
+                .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))
             ]
         ),
         // SwiftInferTemplates — TemplateEngine template registry. M1 ships
@@ -158,7 +169,9 @@ let package = Package(
             name: "SwiftInferTemplates",
             dependencies: [
                 "SwiftInferCore",
-                .product(name: "PropertyLawCore", package: "SwiftPropertyLaws")
+                .product(name: "PropertyLawCore", package: "SwiftPropertyLaws"),
+                // `LiftedTestEmitter.regressionFileHash` hashes with `SHA256`.
+                .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))
             ]
         ),
         // SwiftInferTestLifter — TestLifter M1.0. Mirror of SwiftInferTemplates'
@@ -278,7 +291,9 @@ let package = Package(
                 // via PropertyBased) against accidental tightening.
                 // Same posture as the v1.6.0 DerivationStrategist
                 // smoke test.
-                .product(name: "PropertyLawKit", package: "SwiftPropertyLaws")
+                .product(name: "PropertyLawKit", package: "SwiftPropertyLaws"),
+                // `SamplingSeedTests` re-derives a seed with `SHA256` directly.
+                .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: [.linux]))
             ]
         ),
         .testTarget(

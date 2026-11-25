@@ -27,6 +27,21 @@ struct VerifierTimeoutTests {
 
     private static let scratch = FileManager.default.temporaryDirectory
 
+    /// A child that never exits and writes far past the 64 KB pipe buffer.
+    ///
+    /// On Darwin, `yes` alone. GNU `yes` on Linux writes gigabytes a second, and the concurrent
+    /// drain keeps everything it reads, so two seconds of it exhausted an 8 GB container before
+    /// the deadline fired (2026-11-24, swift:6.4-noble). There the flood is capped at 1 MB — still
+    /// sixteen buffers' worth — and the child then hangs, which is the shape the test is about.
+    private static let floodingChild: (executable: URL, arguments: [String]) = {
+        let line = String(repeating: "x", count: 60)
+        #if canImport(Darwin)
+        return (URL(fileURLWithPath: "/usr/bin/yes"), [line])
+        #else
+        return (URL(fileURLWithPath: "/bin/sh"), ["-c", "yes \(line) | head -c 1048576; exec sleep 60"])
+        #endif
+    }()
+
     /// A run that exceeds its deadline is killed and reported — not waited on.
     /// Bounded at ~1s so the test is fast; the production ceiling is 300s.
     @Test("a run past its deadline is killed and surfaces as timed-out")
@@ -98,9 +113,8 @@ struct VerifierTimeoutTests {
         var reason = ""
         do {
             _ = try VerifierSubprocess.runProcessForTesting(
-                // `yes` never exits and floods stdout — far past the 64 KB buffer.
-                executable: URL(fileURLWithPath: "/usr/bin/yes"),
-                arguments: [String(repeating: "x", count: 60)],
+                executable: Self.floodingChild.executable,
+                arguments: Self.floodingChild.arguments,
                 workingDirectory: Self.scratch,
                 timeout: 2
             )

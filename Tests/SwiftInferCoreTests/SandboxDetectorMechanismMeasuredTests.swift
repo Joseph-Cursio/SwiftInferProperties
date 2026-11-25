@@ -1,5 +1,11 @@
+#if canImport(Darwin)
 // swiftlint:disable:next unused_import - EPERM needs it; the analyzer misses that
 import Darwin
+#else
+// Linux: `EPERM` lives in Glibc. The suite itself drives macOS's `sandbox-exec` and is a
+// `make batch2` measurement, not a fast-path test; this only lets the test target compile.
+import Glibc
+#endif
 import Testing
 
 /// **Can §6.3's soundness arm be built from what this toolchain already has?**

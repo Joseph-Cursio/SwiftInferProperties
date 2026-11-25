@@ -50,8 +50,14 @@ struct ViewModelActionEnumTypecheckTests {
 
     static func typecheck(_ file: URL) throws -> (Int32, String) {
         let process = Process()
+        #if canImport(Darwin)
         process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
         process.arguments = ["swiftc", "-typecheck", file.path]
+        #else
+        // No `xcrun` off Apple platforms; the toolchain's `swiftc` is on PATH.
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["swiftc", "-typecheck", file.path]
+        #endif
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe

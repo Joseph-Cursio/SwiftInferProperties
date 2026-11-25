@@ -112,9 +112,10 @@ struct TargetIsolationGateTests {
         let nested = root.appendingPathComponent("Sources/Walk/Deep/Deeper")
         try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
 
+        // `.path`, not the URLs: swift-foundation on Linux tells `…/root/` from `…/root`.
         #expect(
-            TargetIsolation.packageRoot(containing: nested)?.standardizedFileURL
-                == root.standardizedFileURL
+            TargetIsolation.packageRoot(containing: nested)?.standardizedFileURL.path
+                == root.standardizedFileURL.path
         )
         #expect(TargetIsolation.packageRoot(containing: URL(fileURLWithPath: "/")) == nil)
     }

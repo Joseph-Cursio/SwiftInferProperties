@@ -82,3 +82,57 @@ jobs:
           swift test --disable-experimental-prebuilts
           --skip 'MeasuredTests|MeasuredExecutionTests|VerifyPipeline|PerformanceTests'
           --skip 'theManifestResolves|tildePathsResolve|revisionsDoNotPostdateTheirMeasurement'
+
+  test-linux:
+    name: Test (Linux)
+    # The same fast suite as `test-macos`, in the official Swift image on a standard
+    # GitHub-hosted Ubuntu runner (free while the repository is public, as above). Pinned to the
+    # 6.4 line the package is developed on, so a new Swift release cannot change the compiler
+    # under an unchanged commit; move it with the macOS job's Xcode. On Linux the four SHA-256
+    # sites take `SHA256` from swift-crypto instead of CryptoKit, and
+    # `CrossPlatformHashPinTests` (in the fast suite) fails if any identity, seed or fingerprint
+    # differs from the macOS value — suggestion identities are keys.
+    runs-on: ubuntu-24.04
+    container: swift:6.4-noble
+    timeout-minutes: 60
+    steps:
+      # The same four checkouts as `test-macos`, for the same reason: some fast tests read the
+      # sibling repositories at `../<name>`.
+      - name: Checkout SwiftInferProperties
+        uses: actions/checkout@v6
+        with:
+          path: SwiftInferProperties
+      - name: Checkout SwiftPropertyLaws
+        uses: actions/checkout@v6
+        with:
+          repository: Joseph-Cursio/SwiftPropertyLaws
+          path: SwiftPropertyLaws
+      - name: Checkout SwiftProjectLint
+        uses: actions/checkout@v6
+        with:
+          repository: Joseph-Cursio/SwiftProjectLint
+          path: SwiftProjectLint
+      - name: Checkout SwiftIdempotency
+        uses: actions/checkout@v6
+        with:
+          repository: Joseph-Cursio/SwiftIdempotency
+          path: SwiftIdempotency
+      # Inside a container the workspace belongs to another user, and git refuses to read a
+      # repository it does not own; a few fast tests ask git whether a file is tracked.
+      - name: Trust the checkouts
+        run: git config --global --add safe.directory '*'
+      - name: Show toolchain
+        run: swift --version
+      # The macOS job's command: keep both in step with the Makefile's SUBPROCESS_RE and
+      # PERF_RE, and see that job for why the second `--skip` drops three corpus tests.
+      #
+      # The third `--skip` is this job's own. A container job runs as root, and both tests make a
+      # file unreadable with mode 000 — which root reads anyway, so neither case can be built.
+      # Each says so in its own failure ("running as root?"); they run in the macOS job.
+      - name: Run tests
+        working-directory: SwiftInferProperties
+        run: >-
+          swift test --disable-experimental-prebuilts
+          --skip 'MeasuredTests|MeasuredExecutionTests|VerifyPipeline|PerformanceTests'
+          --skip 'theManifestResolves|tildePathsResolve|revisionsDoNotPostdateTheirMeasurement'
+          --skip 'unreadableManifestIsDoubt|unreadableUniverseFileIsSkipped'

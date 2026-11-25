@@ -185,7 +185,8 @@ struct RoundTripPairResolverTests {
             encoding: .utf8
         )
         let found = SwiftInferCommand.Verify.findPackageRoot(startingFrom: nested)
-        #expect(found?.standardizedFileURL == temp.standardizedFileURL)
+        // `.path`, not the URLs: swift-foundation on Linux tells `…/root/` from `…/root`.
+        #expect(found?.standardizedFileURL.path == temp.standardizedFileURL.path)
     }
 
     @Test("findPackageRoot returns nil when no Package.swift exists upward")

@@ -43,6 +43,8 @@ swift package clean && swift test
 
 The test suite is 1200+ tests across 180+ suites covering every shipped template, every TestLifter detector, the §13 performance budgets, and the §16 hard guarantees. SwiftLint config lives at `.swiftlint.yml`; `swiftlint lint --quiet` should be silent.
 
+**Linux.** The package builds on Linux, and the fast suite passes in the `swift:6.4-noble` image (CI's `test-linux` job). There SHA-256 comes from [swift-crypto](https://github.com/apple/swift-crypto) instead of CryptoKit, a dependency taken on Linux only; `CrossPlatformHashPinTests` holds suggestion identities, sampling seeds and subject fingerprints to the values macOS computes. `verify` works there too: its generated stub reaches Glibc's `stdout` through `dlsym`, because Swift 6 rejects naming that global. The `VerifyPipeline` suites (`make batch3`) pass in the image when run with `--no-parallel`; run in parallel, their per-test package builds exhausted a 7.7 GB Docker VM. The other measured batches are unchecked on Linux, and CI's Linux job runs the fast suite only.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

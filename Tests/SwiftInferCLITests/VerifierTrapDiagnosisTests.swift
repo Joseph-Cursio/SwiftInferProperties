@@ -157,6 +157,14 @@ struct VerifierTrapDiagnosisTests {
                 trialBudget: .small
             )
         )
-        #expect(stub.contains("setvbuf(stdout"), "a trap must not swallow the markers")
+        #expect(stub.contains(StrategistDispatchEmitter.unbufferStdoutStatement), "a trap must not swallow the markers")
+        #if canImport(Darwin)
+        #expect(stub.contains("setvbuf(stdout, nil, _IONBF, 0)"))
+        #else
+        // Swift 6 rejects any reference to Glibc's mutable `stdout`, so naming it would fail the
+        // build; the stub reaches the same variable through the dynamic linker instead.
+        #expect(stub.contains("setvbuf(stdout,") == false)
+        #expect(stub.contains("dlsym(dlopen(nil, RTLD_NOW), \"stdout\")"))
+        #endif
     }
 }

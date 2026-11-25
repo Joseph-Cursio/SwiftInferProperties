@@ -1,4 +1,8 @@
 import Foundation
+#if canImport(FoundationNetworking)
+// Linux: `URLProtocol`, `URLRequest` and `URLSession` live in FoundationNetworking.
+import FoundationNetworking
+#endif
 import SwiftInferCLI
 import SwiftInferTestLifter
 import Testing
