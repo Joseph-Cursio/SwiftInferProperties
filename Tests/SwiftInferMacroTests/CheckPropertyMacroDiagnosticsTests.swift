@@ -157,15 +157,13 @@ func formattedStringGenerator() -> String {
         String(repeating: " ", count: depth) + line
     }
     return [
-        "Gen.frequency((3.0, Gen<Character>.letterOrNumber.string(of: 0 ... 8)), (1.0, \(tokens).map {",
-        indented(28, "$0!"),
-        indented(24, "}), (3.0, \(tokens).map {"),
-        indented(28, "$0!"),
-        indented(24, "} .map {"),
+        "Gen.frequency((3.0, Gen<Character>.letterOrNumber.string(of: 0 ... 8)), (1.0, \(tokens).compactMap(\\.self)), "
+            + "(3.0, \(tokens).compactMap(\\.self).map {",
         indented(28, "$0 + $0"),
-        indented(24, "}), (1.0, zip(\(tokens).map {"),
-        indented(32, "$0!"),
-        indented(28, "}, Gen<Character>.letterOrNumber.string(of: 0 ... 4)).map {"),
+        indented(
+            24,
+            "}), (1.0, zip(\(tokens).compactMap(\\.self), Gen<Character>.letterOrNumber.string(of: 0 ... 4)).map {"
+        ),
         indented(28, "$0 + $1"),
         indented(24, "}))"),
     ].joined(separator: "\n")
